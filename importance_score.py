@@ -3,6 +3,9 @@ from ollama import ChatResponse
 from collections import OrderedDict
 import fitz
 import re
+import argparse
+from pathlib import Path
+
 pdf_path = "adv_res_paper.pdf"
 
 
@@ -377,6 +380,22 @@ def print_section_hierarchy(section_scores, indent=0):
             print_section_hierarchy(section_data['subsections'], indent + 1)
 
 
+def unique_path(path: Path):
+    """Return a non-existing path by appending _1, _2, ... if needed."""
+    if not path.exists():
+        return path
+
+    stem = path.stem
+    suffix = path.suffix
+    parent = path.parent
+
+    i = 1
+    while True:
+        candidate = parent / f"{stem}_{i}{suffix}"
+        if not candidate.exists():
+            return candidate
+        i += 1
+
 # Example usage:
 if __name__ == "__main__":
     # Extract citations and content
@@ -402,18 +421,31 @@ if __name__ == "__main__":
     'Conclusion': None,
     'Limitations': None
     }
-
+    parser = argparse.ArgumentParser(description="Process output file names.")
+    parser.add_argument(
+        "--output1",
+        required=True,
+        help="Path to the first output file"
+    )
+    parser.add_argument(
+        "--output2",
+        required=True,
+        help="Path to the second output file"
+    )
+    args = parser.parse_args()
+    out1 = args.output1
+    out2 = args.output2
     citations, content = extract_citations_by_section(text, sections)
     
     # Assign importance scores
     citation_importance, section_importance = assign_importance_scores(content, citations)
     
     # Save citation results
-    with open('citation_importance_scores.json', 'w') as f:
+    with open(out1+ '_citation_scores.json', 'w') as f:
         json.dump(citation_importance, f, indent=2)
     
     # Save section results
-    with open('section_importance_scores.json', 'w') as f:
+    with open(out2 + '_section_scores.json', 'w') as f:
         json.dump(section_importance, f, indent=2)
     
     print("\n" + "="*50)
