@@ -183,30 +183,148 @@ def flatten_content_to_text(content: Any, limit: int = 700) -> str:
     return ""
 
 
-def canonical_pair_map(pairwise_raw: Dict[str, Any]) -> Dict[Tuple[str, str], float]:
-    canonical: Dict[Tuple[str, str], float] = {}
-    for key, value in pairwise_raw.items():
-        if not isinstance(key, str) or "|" not in key:
+def extract_probability_from_response(response_text: str) -> float:
+    parsed = parse_json_response(response_text)
+    if isinstance(parsed, dict):
+        for key in ("p", "probability", "score", "item_a_prob"):
+            if key in parsed:
+                value = safe_float(parsed.get(key), -1.0)
+                if 0.0 <= value <= 1.0:
+                    return value
+        if len(parsed) == 1:
+            only_value = safe_float(next(iter(parsed.values())), -1.0)
+            if 0.0 <= only_value <= 1.0:
+                return only_value
+
+    match = re.search(r"\b(0(?:\.\d+)?|1(?:\.0+)?)\b", response_text)
+    if match:
+        value = safe_float(match.group(1), -1.0)
+        if 0.0 <= value <= 1.0:
+            return value
+    return -1.0
+
+
+def query_pair_probability(
+    client: Client,
+    parent_name: str,
+    model: str,
+    temperature: float,
+    item_a: str,
+    item_b: str,
+    excerpt_a: str,
+    excerpt_b: str,
+    max_retries: int,
+    debug_log_path: str,
+    sample_idx: int,
+) -> Tuple[float, bool]:
+    system_prompt = (
+        "You compare two academic-paper sections/subsections. "
+        "Return JSON only."
+    )
+    prompt = f"""Parent node: "{parent_name}"
+Compare importance of item A vs item B to the paper's main contribution.
+
+Item A name: "{item_a}"
+Item A excerpt:
+{excerpt_a}
+
+Item B name: "{item_b}"
+Item B excerpt:
+{excerpt_b}
+
+Return ONLY JSON:
+{{
+  "p": 0.0
+}}
+
+Where p = P(item A is more important than item B), in [0, 1].
+"""
+
+    for attempt in range(max(1, max_retries)):
+        response = client.chat(
+            model=model,
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+            options={"temperature": temperature},
+        )
+        raw_response = response.message.content if getattr(response, "message", None) else ""
+        append_debug_log(
+            debug_log_path,
+            (
+                f"[pair] parent={parent_name} sample={sample_idx} "
+                f"attempt={attempt + 1}/{max(1, max_retries)} key={item_a}|{item_b}\n"
+                f"{raw_response}\n"
+            ),
+        )
+
+        p = extract_probability_from_response(raw_response)
+        if 0.0 <= p <= 1.0:
+            return p, True
+
+    return 0.5, False
+
+
+def direct_allocate_scores_fallback(
+    client: Client,
+    item_to_content: Dict[str, Any],
+    total_score: float,
+    parent_name: str,
+    model: str,
+    temperature: float,
+    max_retries: int,
+    debug_log_path: str,
+    sample_idx: int,
+) -> Dict[str, float]:
+    items = list(item_to_content.keys())
+    snippets = {name: flatten_content_to_text(item_to_content[name], limit=500) for name in items}
+    system_prompt = (
+        "You score academic paper sections by importance. "
+        "Return JSON only."
+    )
+    prompt = f"""Parent node: "{parent_name}"
+Items:
+{json.dumps(snippets, indent=2)}
+
+Return ONLY JSON mapping each item to a non-negative raw score:
+{{
+  "item_name_1": 12.0,
+  "item_name_2": 5.0
+}}
+"""
+
+    parsed_scores: Dict[str, float] = {}
+    for attempt in range(max(1, max_retries)):
+        response = client.chat(
+            model=model,
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+            options={"temperature": temperature},
+        )
+        raw_response = response.message.content if getattr(response, "message", None) else ""
+        append_debug_log(
+            debug_log_path,
+            (
+                f"[fallback] parent={parent_name} sample={sample_idx} "
+                f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
+            ),
+        )
+        parsed = parse_json_response(raw_response)
+        if not isinstance(parsed, dict) or not parsed:
             continue
-        left, right = key.split("|", 1)
-        canonical[(left.strip(), right.strip())] = safe_float(value, 0.5)
-    return canonical
 
+        parsed_scores = {}
+        for item in items:
+            parsed_scores[item] = max(0.0, safe_float(parsed.get(item), 0.0))
 
-def resolve_pair_probability(pair_map: Dict[Tuple[str, str], float], a: str, b: str) -> float:
-    if (a, b) in pair_map:
-        return min(1.0, max(0.0, pair_map[(a, b)]))
-    if (b, a) in pair_map:
-        return min(1.0, max(0.0, 1.0 - pair_map[(b, a)]))
-    return 0.5
+        if any(v > 0 for v in parsed_scores.values()):
+            return normalize_distribution(parsed_scores, total_score)
 
-
-def pairwise_coverage(pair_map: Dict[Tuple[str, str], float], pairs: List[Tuple[str, str]]) -> int:
-    covered = 0
-    for a, b in pairs:
-        if (a, b) in pair_map or (b, a) in pair_map:
-            covered += 1
-    return covered
+    # Deterministic local heuristic fallback if LLM fallback also fails.
+    heuristic_raw: Dict[str, float] = {}
+    for item in items:
+        snippet = snippets.get(item, "")
+        word_count = max(1, len(snippet.split()))
+        citation_count = len(re.findall(r"\([A-Z][^)]*\d{4}[a-z]?\)", snippet))
+        heuristic_raw[item] = float(word_count + (4 * citation_count))
+    return normalize_distribution(heuristic_raw, total_score)
 
 
 def pairwise_allocate_scores(
@@ -227,110 +345,35 @@ def pairwise_allocate_scores(
         return {items[0]: total_score}
 
     snippets = {name: flatten_content_to_text(item_to_content[name], limit=450) for name in items}
-    pairs = []
+    pairs: List[Tuple[str, str]] = []
     for i in range(len(items)):
         for j in range(i + 1, len(items)):
             pairs.append((items[i], items[j]))
-
-    system_prompt = (
-        "You are an expert evaluator for academic paper structure. "
-        "Use pairwise comparisons and return JSON only."
-    )
-    few_shot = {
-        "annotated_example_top_level": {
-            "parent": "Whole Paper",
-            "notes": "Empirical papers usually weight Experiment Results above Introduction.",
-            "pairwise": {
-                "Introduction|Experiment Results": 0.15,
-                "Method|Experiment Results": 0.35,
-                "Conclusion|Experiment Results": 0.2,
-            },
-        },
-        "annotated_example_subsection": {
-            "parent": "Experiment Results",
-            "notes": "Insight-heavy analyses often outweigh setup details.",
-            "pairwise": {
-                "Experiments Setting|Insights from Experimental Observations": 0.25,
-                "Collaboration Setup|Insights from Experimental Observations": 0.3,
-            },
-        },
-    }
-
-    pair_payload = []
-    for a, b in pairs:
-        pair_payload.append(
-            {
-                "pair_key": f"{a}|{b}",
-                "item_a": a,
-                "item_b": b,
-                "item_a_excerpt": snippets[a],
-                "item_b_excerpt": snippets[b],
-            }
-        )
 
     sample_distributions: List[Dict[str, float]] = []
     sample_count = max(1, n_samples)
     retry_count = max(1, max_retries)
 
     for s in range(sample_count):
-        prompt = f"""Parent node: "{parent_name}"
-Target total score to allocate: {total_score}
-
-Few-shot annotated references:
-{json.dumps(few_shot, indent=2)}
-
-Compare each pair and estimate P(item_a > item_b) in [0, 1].
-Return ONLY JSON in this format:
-{{
-  "pairwise": {{
-    "item_a|item_b": 0.65
-  }}
-}}
-
-Pairs to compare:
-{json.dumps(pair_payload, indent=2)}
-"""
-
-        pair_map: Dict[Tuple[str, str], float] = {}
-        coverage = 0
-
-        for attempt in range(retry_count):
-            messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
-            response = client.chat(
-                model=model,
-                messages=messages,
-                options={"temperature": min(1.0, temperature + (0.05 * s))},
-            )
-
-            raw_response = response.message.content if getattr(response, "message", None) else ""
-            append_debug_log(
-                debug_log_path,
-                (
-                    f"[pairwise] parent={parent_name} sample={s + 1}/{sample_count} "
-                    f"attempt={attempt + 1}/{retry_count}\n{raw_response}\n"
-                ),
-            )
-
-            parsed = parse_json_response(raw_response)
-            pairwise_raw = parsed.get("pairwise", parsed) if isinstance(parsed, dict) else {}
-            pair_map = canonical_pair_map(pairwise_raw if isinstance(pairwise_raw, dict) else {})
-            coverage = pairwise_coverage(pair_map, pairs)
-
-            if coverage == len(pairs):
-                break
-
-            print(
-                f"[WARN] Incomplete/invalid pairwise response for '{parent_name}' "
-                f"(sample {s + 1}, attempt {attempt + 1}): "
-                f"covered {coverage}/{len(pairs)} pairs. Retrying."
-            )
-
         raw_scores = {item: 0.0 for item in items}
         fallback_pairs = 0
+
         for a, b in pairs:
-            if (a, b) not in pair_map and (b, a) not in pair_map:
+            p, ok = query_pair_probability(
+                client=client,
+                parent_name=parent_name,
+                model=model,
+                temperature=min(1.0, temperature + (0.05 * s)),
+                item_a=a,
+                item_b=b,
+                excerpt_a=snippets[a],
+                excerpt_b=snippets[b],
+                max_retries=retry_count,
+                debug_log_path=debug_log_path,
+                sample_idx=s + 1,
+            )
+            if not ok:
                 fallback_pairs += 1
-            p = resolve_pair_probability(pair_map, a, b)
             raw_scores[a] += p
             raw_scores[b] += 1.0 - p
 
@@ -339,13 +382,27 @@ Pairs to compare:
                 f"[WARN] Pairwise fallback used for '{parent_name}' (sample {s + 1}): "
                 f"{fallback_pairs}/{len(pairs)} pairs defaulted to 0.5."
             )
-            if fallback_pairs == len(pairs):
-                print(
-                    f"[WARN] All pairs defaulted to 0.5 for '{parent_name}' (sample {s + 1}); "
-                    "this can produce equal section scores."
-                )
 
-        sample_distributions.append(normalize_distribution(raw_scores, total_score))
+        if fallback_pairs == len(pairs):
+            print(
+                f"[WARN] All pairwise calls failed for '{parent_name}' (sample {s + 1}). "
+                "Using direct allocation fallback."
+            )
+            sample_distributions.append(
+                direct_allocate_scores_fallback(
+                    client=client,
+                    item_to_content=item_to_content,
+                    total_score=total_score,
+                    parent_name=parent_name,
+                    model=model,
+                    temperature=min(1.0, temperature + (0.05 * s)),
+                    max_retries=retry_count,
+                    debug_log_path=debug_log_path,
+                    sample_idx=s + 1,
+                )
+            )
+        else:
+            sample_distributions.append(normalize_distribution(raw_scores, total_score))
 
     averaged = {item: 0.0 for item in items}
     for dist in sample_distributions:
