@@ -1,6 +1,7 @@
 import argparse
 import json
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import PyPDF2
@@ -131,6 +132,15 @@ def parse_json_response(response_text: str) -> Dict[str, Any]:
         return {}
 
 
+def append_debug_log(debug_log_path: str, entry: str) -> None:
+    if not debug_log_path:
+        return
+    path = Path(debug_log_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(entry.rstrip() + "\n")
+
+
 def safe_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
@@ -191,6 +201,14 @@ def resolve_pair_probability(pair_map: Dict[Tuple[str, str], float], a: str, b: 
     return 0.5
 
 
+def pairwise_coverage(pair_map: Dict[Tuple[str, str], float], pairs: List[Tuple[str, str]]) -> int:
+    covered = 0
+    for a, b in pairs:
+        if (a, b) in pair_map or (b, a) in pair_map:
+            covered += 1
+    return covered
+
+
 def pairwise_allocate_scores(
     client: Client,
     item_to_content: Dict[str, Any],
@@ -199,6 +217,8 @@ def pairwise_allocate_scores(
     model: str,
     n_samples: int,
     temperature: float,
+    max_retries: int = 3,
+    debug_log_path: str = "",
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
     if not items:
@@ -250,6 +270,7 @@ def pairwise_allocate_scores(
 
     sample_distributions: List[Dict[str, float]] = []
     sample_count = max(1, n_samples)
+    retry_count = max(1, max_retries)
 
     for s in range(sample_count):
         prompt = f"""Parent node: "{parent_name}"
@@ -270,22 +291,59 @@ Pairs to compare:
 {json.dumps(pair_payload, indent=2)}
 """
 
-        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
-        response = client.chat(
-            model=model,
-            messages=messages,
-            options={"temperature": min(1.0, temperature + (0.05 * s))},
-        )
+        pair_map: Dict[Tuple[str, str], float] = {}
+        coverage = 0
 
-        parsed = parse_json_response(response.message.content)
-        pairwise_raw = parsed.get("pairwise", parsed) if isinstance(parsed, dict) else {}
-        pair_map = canonical_pair_map(pairwise_raw if isinstance(pairwise_raw, dict) else {})
+        for attempt in range(retry_count):
+            messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
+            response = client.chat(
+                model=model,
+                messages=messages,
+                options={"temperature": min(1.0, temperature + (0.05 * s))},
+            )
+
+            raw_response = response.message.content if getattr(response, "message", None) else ""
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[pairwise] parent={parent_name} sample={s + 1}/{sample_count} "
+                    f"attempt={attempt + 1}/{retry_count}\n{raw_response}\n"
+                ),
+            )
+
+            parsed = parse_json_response(raw_response)
+            pairwise_raw = parsed.get("pairwise", parsed) if isinstance(parsed, dict) else {}
+            pair_map = canonical_pair_map(pairwise_raw if isinstance(pairwise_raw, dict) else {})
+            coverage = pairwise_coverage(pair_map, pairs)
+
+            if coverage == len(pairs):
+                break
+
+            print(
+                f"[WARN] Incomplete/invalid pairwise response for '{parent_name}' "
+                f"(sample {s + 1}, attempt {attempt + 1}): "
+                f"covered {coverage}/{len(pairs)} pairs. Retrying."
+            )
 
         raw_scores = {item: 0.0 for item in items}
+        fallback_pairs = 0
         for a, b in pairs:
+            if (a, b) not in pair_map and (b, a) not in pair_map:
+                fallback_pairs += 1
             p = resolve_pair_probability(pair_map, a, b)
             raw_scores[a] += p
             raw_scores[b] += 1.0 - p
+
+        if fallback_pairs > 0:
+            print(
+                f"[WARN] Pairwise fallback used for '{parent_name}' (sample {s + 1}): "
+                f"{fallback_pairs}/{len(pairs)} pairs defaulted to 0.5."
+            )
+            if fallback_pairs == len(pairs):
+                print(
+                    f"[WARN] All pairs defaulted to 0.5 for '{parent_name}' (sample {s + 1}); "
+                    "this can produce equal section scores."
+                )
 
         sample_distributions.append(normalize_distribution(raw_scores, total_score))
 
@@ -332,6 +390,8 @@ def assign_importance_scores(
     host: str = "localhost:11434",
     n_samples: int = 3,
     temperature: float = 0.2,
+    max_retries: int = 3,
+    debug_log_path: str = "",
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Assign hierarchical section and citation scores with:
@@ -351,6 +411,8 @@ def assign_importance_scores(
         model=model,
         n_samples=n_samples,
         temperature=temperature,
+        max_retries=max_retries,
+        debug_log_path=debug_log_path,
     )
     top_level_scores = enforce_top_level_constraints(top_level_scores, total=1.0)
 
@@ -426,6 +488,8 @@ def assign_importance_scores(
                 model=model,
                 n_samples=n_samples,
                 temperature=temperature,
+                max_retries=max_retries,
+                debug_log_path=debug_log_path,
             )
 
             for subsection_name, subsection_content in section_content.items():
@@ -476,6 +540,12 @@ def main() -> None:
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
     parser.add_argument("--n-samples", type=int, default=3, help="Number of LLM samples to average")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature")
+    parser.add_argument("--max-retries", type=int, default=3, help="Retries per sample for pairwise JSON")
+    parser.add_argument(
+        "--debug-log",
+        default="pairwise_debug.log",
+        help="Path to write raw pairwise model responses for debugging",
+    )
     args = parser.parse_args()
 
     text = read_pdf_text(args.pdf)
@@ -487,6 +557,8 @@ def main() -> None:
         host=args.host,
         n_samples=max(1, args.n_samples),
         temperature=max(0.0, args.temperature),
+        max_retries=max(1, args.max_retries),
+        debug_log_path=args.debug_log,
     )
 
     citation_path = f"{args.output1}_citation_scores.json"
