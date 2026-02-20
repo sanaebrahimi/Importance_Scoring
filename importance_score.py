@@ -359,7 +359,7 @@ def pairwise_allocate_scores(
         fallback_pairs = 0
 
         for a, b in pairs:
-            p, ok = query_pair_probability(
+            p_ab, ok_ab = query_pair_probability(
                 client=client,
                 parent_name=parent_name,
                 model=model,
@@ -372,8 +372,32 @@ def pairwise_allocate_scores(
                 debug_log_path=debug_log_path,
                 sample_idx=s + 1,
             )
-            if not ok:
+
+            p_ba, ok_ba = query_pair_probability(
+                client=client,
+                parent_name=parent_name,
+                model=model,
+                temperature=min(1.0, temperature + (0.05 * s)),
+                item_a=b,
+                item_b=a,
+                excerpt_a=snippets[b],
+                excerpt_b=snippets[a],
+                max_retries=retry_count,
+                debug_log_path=debug_log_path,
+                sample_idx=s + 1,
+            )
+
+            if ok_ab and ok_ba:
+                # Symmetric estimate removes fixed-order bias.
+                p = (p_ab + (1.0 - p_ba)) / 2.0
+            elif ok_ab:
+                p = p_ab
+            elif ok_ba:
+                p = 1.0 - p_ba
+            else:
+                p = 0.5
                 fallback_pairs += 1
+
             raw_scores[a] += p
             raw_scores[b] += 1.0 - p
 
