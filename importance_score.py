@@ -317,14 +317,9 @@ Return ONLY JSON mapping each item to a non-negative raw score:
         if any(v > 0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
-    # Deterministic local heuristic fallback if LLM fallback also fails.
-    heuristic_raw: Dict[str, float] = {}
-    for item in items:
-        snippet = snippets.get(item, "")
-        word_count = max(1, len(snippet.split()))
-        citation_count = len(re.findall(r"\([A-Z][^)]*\d{4}[a-z]?\)", snippet))
-        heuristic_raw[item] = float(word_count + (4 * citation_count))
-    return normalize_distribution(heuristic_raw, total_score)
+    # Final neutral fallback if LLM fallback also fails.
+    equal_raw = {item: 1.0 for item in items}
+    return normalize_distribution(equal_raw, total_score)
 
 
 def pairwise_allocate_scores(
