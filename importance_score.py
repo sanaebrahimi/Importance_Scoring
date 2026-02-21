@@ -209,6 +209,27 @@ def split_text_into_paragraphs(text: str) -> List[str]:
     return [" ".join(sentences[i : i + chunk_size]).strip() for i in range(0, len(sentences), chunk_size)]
 
 
+def estimate_tokens_approx(text: str) -> int:
+    # Rough rule-of-thumb for English text in many tokenizers.
+    return max(1, (len(text) + 3) // 4)
+
+
+def estimate_direct_allocation_tokens(parent_name: str, item_to_content: Dict[str, Any], snippet_limit: int = 500) -> int:
+    snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in item_to_content}
+    prompt = f"""Parent node: "{parent_name}"
+Items:
+{json.dumps(snippets, indent=2)}
+
+Return ONLY JSON mapping each item to a non-negative raw score:
+{{
+  "item_name_1": 12.0,
+  "item_name_2": 5.0
+}}
+"""
+    system_prompt = "You score academic paper sections by importance. Return JSON only."
+    return estimate_tokens_approx(system_prompt) + estimate_tokens_approx(prompt)
+
+
 def extract_probability_from_response(response_text: str) -> float:
     parsed = parse_json_response(response_text)
     if isinstance(parsed, dict):
@@ -519,6 +540,7 @@ def assign_importance_scores(
     n_samples: int = 3,
     temperature: float = 0.2,
     max_retries: int = 3,
+    paragraph_direct_max_tokens: int = 1200,
     debug_log_path: str = "",
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
@@ -571,17 +593,47 @@ def assign_importance_scores(
             paragraphs = [normalized_text]
 
         paragraph_items = {f"Paragraph {idx + 1}": paragraph for idx, paragraph in enumerate(paragraphs)}
-        paragraph_scores = pairwise_allocate_scores(
-            client=client,
-            item_to_content=paragraph_items,
-            total_score=section_score,
-            parent_name=f"{section_name}::paragraphs",
-            model=model,
-            n_samples=n_samples,
-            temperature=temperature,
-            max_retries=max_retries,
-            debug_log_path=debug_log_path,
-        )
+        paragraph_parent_name = f"{section_name}::paragraphs"
+        est_tokens = estimate_direct_allocation_tokens(paragraph_parent_name, paragraph_items, snippet_limit=500)
+
+        if paragraph_direct_max_tokens > 0 and est_tokens <= paragraph_direct_max_tokens:
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[paragraph_scoring] parent={paragraph_parent_name} method=direct "
+                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens}"
+                ),
+            )
+            paragraph_scores = direct_allocate_scores_fallback(
+                client=client,
+                item_to_content=paragraph_items,
+                total_score=section_score,
+                parent_name=paragraph_parent_name,
+                model=model,
+                temperature=temperature,
+                max_retries=max_retries,
+                debug_log_path=debug_log_path,
+                sample_idx=1,
+            )
+        else:
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[paragraph_scoring] parent={paragraph_parent_name} method=pairwise "
+                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens}"
+                ),
+            )
+            paragraph_scores = pairwise_allocate_scores(
+                client=client,
+                item_to_content=paragraph_items,
+                total_score=section_score,
+                parent_name=paragraph_parent_name,
+                model=model,
+                n_samples=n_samples,
+                temperature=temperature,
+                max_retries=max_retries,
+                debug_log_path=debug_log_path,
+            )
 
         paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
         paragraph_tokens = {
@@ -732,6 +784,15 @@ def main() -> None:
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature")
     parser.add_argument("--max-retries", type=int, default=3, help="Retries per sample for pairwise JSON")
     parser.add_argument(
+        "--paragraph-direct-max-tokens",
+        type=int,
+        default=1200,
+        help=(
+            "Use direct paragraph scoring when estimated prompt tokens are <= this value; "
+            "otherwise use pairwise paragraph scoring."
+        ),
+    )
+    parser.add_argument(
         "--debug-log",
         default="pairwise_debug.log",
         help="Path to write raw pairwise model responses for debugging",
@@ -748,6 +809,7 @@ def main() -> None:
         n_samples=max(1, args.n_samples),
         temperature=max(0.0, args.temperature),
         max_retries=max(1, args.max_retries),
+        paragraph_direct_max_tokens=max(0, args.paragraph_direct_max_tokens),
         debug_log_path=args.debug_log,
     )
 
