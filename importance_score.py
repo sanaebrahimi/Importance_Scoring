@@ -108,8 +108,9 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
                 local_content[section_name] = nested_content
             else:
                 local_citations[section_name] = process_section_text(content)
-                cleaned = re.sub(r"\s+", " ", content.replace("\n", "")).strip()
-                local_content[section_name] = cleaned
+                # Keep line breaks so we can score paragraph-level importance later.
+                normalized_content = re.sub(r"[ \t]+", " ", content).strip()
+                local_content[section_name] = normalized_content
 
         return local_citations, local_content
 
@@ -181,6 +182,31 @@ def flatten_content_to_text(content: Any, limit: int = 700) -> str:
         merged = " ".join(chunks)
         return merged[:limit]
     return ""
+
+
+def normalize_for_match(text: str) -> str:
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
+def split_text_into_paragraphs(text: str) -> List[str]:
+    normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not normalized:
+        return []
+
+    paragraphs = [normalize_for_match(p) for p in re.split(r"\n\s*\n+", normalized) if normalize_for_match(p)]
+    if len(paragraphs) > 1:
+        return paragraphs
+
+    # PDF extraction often collapses paragraphs; use sentence chunks as a fallback.
+    single = normalize_for_match(normalized)
+    if not single:
+        return []
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", single) if s.strip()]
+    if len(sentences) <= 3:
+        return [single]
+
+    chunk_size = 3
+    return [" ".join(sentences[i : i + chunk_size]).strip() for i in range(0, len(sentences), chunk_size)]
 
 
 def extract_probability_from_response(response_text: str) -> float:
@@ -457,15 +483,32 @@ def enforce_top_level_constraints(scores: Dict[str, float], total: float) -> Dic
 
 def split_citation_block(citation_block: str) -> List[str]:
     block = citation_block.strip()
+    left_delim = ""
+    right_delim = ""
     if block.startswith("(") and block.endswith(")"):
+        left_delim, right_delim = "(", ")"
+        inner = block[1:-1]
+    elif block.startswith("[") and block.endswith("]"):
+        left_delim, right_delim = "[", "]"
         inner = block[1:-1]
     else:
         inner = block
 
-    parts = [re.sub(r"\s+", " ", p).strip() for p in inner.split(";") if p.strip()]
+    if ";" in inner:
+        raw_parts = inner.split(";")
+    elif left_delim == "[" and right_delim == "]" and "," in inner:
+        raw_parts = inner.split(",")
+    elif re.fullmatch(r"\s*\d+(?:\s*,\s*\d+)+\s*", inner):
+        raw_parts = inner.split(",")
+    else:
+        raw_parts = [inner]
+
+    parts = [re.sub(r"\s+", " ", p).strip() for p in raw_parts if p.strip()]
     if not parts:
         return [block]
-    return [f"({p})" for p in parts]
+    if left_delim and right_delim:
+        return [f"{left_delim}{p}{right_delim}" for p in parts]
+    return parts
 
 
 def assign_importance_scores(
@@ -510,12 +553,42 @@ def assign_importance_scores(
         }
 
     def assign_citation_scores(
-        section_name: str, section_score: float, section_citations: Dict[str, Any], level: int
+        section_name: str,
+        section_score: float,
+        section_content: Any,
+        section_citations: Dict[str, Any],
+        level: int,
     ) -> None:
         if not section_citations or not isinstance(section_citations, dict):
             return
 
-        expanded_mentions: List[Tuple[str, str, str]] = []
+        raw_text = section_content if isinstance(section_content, str) else flatten_content_to_text(section_content, 6000)
+        paragraphs = split_text_into_paragraphs(raw_text)
+        if not paragraphs:
+            normalized_text = normalize_for_match(raw_text)
+            if not normalized_text:
+                return
+            paragraphs = [normalized_text]
+
+        paragraph_items = {f"Paragraph {idx + 1}": paragraph for idx, paragraph in enumerate(paragraphs)}
+        paragraph_scores = pairwise_allocate_scores(
+            client=client,
+            item_to_content=paragraph_items,
+            total_score=section_score,
+            parent_name=f"{section_name}::paragraphs",
+            model=model,
+            n_samples=n_samples,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+        )
+
+        paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
+        paragraph_tokens = {
+            name: set(re.findall(r"[a-z0-9]+", paragraph_norms[name].lower())) for name in paragraph_items
+        }
+        mention_buckets: Dict[str, List[Tuple[str, str, str]]] = {name: [] for name in paragraph_items}
+
         for citation_block, context_value in section_citations.items():
             if isinstance(context_value, list):
                 contexts = context_value
@@ -523,27 +596,59 @@ def assign_importance_scores(
                 contexts = [context_value]
 
             for context in contexts:
+                context_str = str(context)
+                context_norm = normalize_for_match(context_str)
+                target_paragraph = None
+
+                if context_norm:
+                    for paragraph_name, paragraph_norm in paragraph_norms.items():
+                        if context_norm in paragraph_norm:
+                            target_paragraph = paragraph_name
+                            break
+
+                if target_paragraph is None and context_norm:
+                    context_tokens = set(re.findall(r"[a-z0-9]+", context_norm.lower()))
+                    if context_tokens:
+                        best_name = None
+                        best_overlap = -1
+                        for paragraph_name, p_tokens in paragraph_tokens.items():
+                            overlap = len(context_tokens & p_tokens)
+                            if overlap > best_overlap:
+                                best_overlap = overlap
+                                best_name = paragraph_name
+                        if best_name is not None and best_overlap > 0:
+                            target_paragraph = best_name
+
+                if target_paragraph is None:
+                    target_paragraph = max(paragraph_scores, key=paragraph_scores.get)
+
                 for citation in split_citation_block(citation_block):
-                    expanded_mentions.append((citation, citation_block, context))
+                    mention_buckets[target_paragraph].append((citation, citation_block, context_str))
 
-        if not expanded_mentions:
-            return
+        for paragraph_name, mentions in mention_buckets.items():
+            if not mentions:
+                continue
 
-        score_per_mention = section_score / len(expanded_mentions)
-        for citation, source_block, context in expanded_mentions:
-            if citation not in citation_scores:
-                citation_scores[citation] = {"score": 0.0, "mentions": 0, "occurrences": []}
+            paragraph_score = paragraph_scores.get(paragraph_name, 0.0)
+            if paragraph_score <= 0:
+                continue
 
-            citation_scores[citation]["score"] += score_per_mention
-            citation_scores[citation]["mentions"] += 1
-            citation_scores[citation]["occurrences"].append(
-                {
-                    "section": section_name,
-                    "level": level,
-                    "source_block": source_block,
-                    "context": context,
-                }
-            )
+            score_per_mention = paragraph_score / len(mentions)
+            for citation, source_block, context in mentions:
+                if citation not in citation_scores:
+                    citation_scores[citation] = {"score": 0.0, "mentions": 0, "occurrences": []}
+
+                citation_scores[citation]["score"] += score_per_mention
+                citation_scores[citation]["mentions"] += 1
+                citation_scores[citation]["occurrences"].append(
+                    {
+                        "section": section_name,
+                        "level": level,
+                        "source_block": source_block,
+                        "context": context,
+                        "paragraph": paragraph_name,
+                    }
+                )
 
     def process_section(
         section_name: str,
@@ -595,7 +700,7 @@ def assign_importance_scores(
                     parent_ref=current_ref["subsections"],
                 )
         else:
-            assign_citation_scores(section_name, section_score, section_citations, level)
+            assign_citation_scores(section_name, section_score, section_content, section_citations, level)
 
     for section_name, section_content in content_dict.items():
         score = top_level_scores.get(section_name, 1.0 / max(1, len(content_dict)))
