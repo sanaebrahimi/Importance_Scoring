@@ -218,27 +218,39 @@ def query_pair_probability(
     sample_idx: int,
 ) -> Tuple[float, bool]:
     system_prompt = (
-        "You compare two academic-paper sections/subsections. "
-        "Return JSON only."
+        """ You are an expert academic reviewer.
+        You compare two sections, subsections, or paragraphs from the same research paper.
+        Your task is to estimate:
+        p = P(Item A contributes more to the paper’s main scientific contribution than Item B),
+        where 0.0 <= p <= 1.0.
+        Importance is defined strictly as contribution to the paper’s central claim, novel method, primary findings, or core empirical validation — not writing quality, length, or stylistic emphasis.
+        If both contribute equally, return p = 0.5.
+        Return JSON only."""
     )
     prompt = f"""Parent node: "{parent_name}"
-Compare importance of item A vs item B to the paper's main contribution.
-
-Item A name: "{item_a}"
-Item A excerpt:
-{excerpt_a}
-
-Item B name: "{item_b}"
-Item B excerpt:
-{excerpt_b}
-
-Return ONLY JSON:
-{{
-  "p": 0.0
-}}
-
-Where p = P(item A is more important than item B), in [0, 1].
-"""
+    The goal is to assess importance relative to the paper’s main contribution.
+    Importance should prioritize:
+    • Direct definition of the research problem
+    • Description of the novel method or model
+    • Core theoretical results or algorithmic contributions
+    • Primary experimental results validating the contribution
+    • Critical comparisons to state-of-the-art
+    Lower importance includes:
+    • Background information
+    • Minor implementation details
+    • Auxiliary experiments
+    • Formatting or structural transitions
+    Item A name: "{item_a}"
+    Item A excerpt:
+    {excerpt_a}
+    Item B name: "{item_b}"
+    Item B excerpt:
+    {excerpt_b}
+    Return ONLY JSON:
+    {{
+    "p": a float between 0.0 and 1.0 representing P(Item A > Item B)
+    }}
+    """
 
     for attempt in range(max(1, max_retries)):
         response = client.chat(
@@ -277,19 +289,35 @@ def direct_allocate_scores_fallback(
     items = list(item_to_content.keys())
     snippets = {name: flatten_content_to_text(item_to_content[name], limit=500) for name in items}
     system_prompt = (
-        "You score academic paper sections by importance. "
+       "You are an expert academic reviewer. Your task is to read two sections, subsections, or paragraphs from the same \
+        research paper and  estimate the importance of each item that is defined strictly as contribution to the paper’s central \
+        claim, novel method, primary findings, or core empirical validation, not writing quality, length, or stylistic emphasis."
         "Return JSON only."
     )
     prompt = f"""Parent node: "{parent_name}"
-Items:
-{json.dumps(snippets, indent=2)}
-
-Return ONLY JSON mapping each item to a non-negative raw score:
-{{
-  "item_name_1": 12.0,
-  "item_name_2": 5.0
-}}
-"""
+    Assess the importance of each item relative to the paper’s main scientific contribution.
+    Importance should reflect how strongly the item contributes to:
+    • Defining the central research problem
+    • Presenting the novel method, model, or theoretical contribution
+    • Reporting core empirical results or primary validation
+    • Distinguishing the work from prior state-of-the-art
+    • Explaining key findings that support the main claim
+    Lower importance includes:
+    • Background or contextual material
+    • Minor implementation details
+    • Auxiliary or secondary experiments
+    • Transitional or structural text
+    Items:
+    "{json.dumps(snippets, indent=2)}"
+    Assign each item a non-negative raw importance score.
+    Higher scores indicate greater contribution to the paper’s main contribution.
+    Scores are relative within this set (they need not sum to any fixed value).
+    Return ONLY JSON mapping each item to its raw score:
+    {{
+    "item_name_1": a float between 0.0 and 1.0 representing P(Item A > Item B),
+    "item_name_2": a float between 0.0 and 1.0 representing P(Item A > Item B)
+    }}
+    """
 
     parsed_scores: Dict[str, float] = {}
     for attempt in range(max(1, max_retries)):
@@ -368,8 +396,27 @@ def pairwise_allocate_scores(
                 sample_idx=s + 1,
             )
 
-            if ok_ab:
+            p_ba, ok_ba = query_pair_probability(
+                client=client,
+                parent_name=parent_name,
+                model=model,
+                temperature=min(1.0, temperature + (0.05 * s)),
+                item_a=b,
+                item_b=a,
+                excerpt_a=snippets[b],
+                excerpt_b=snippets[a],
+                max_retries=retry_count,
+                debug_log_path=debug_log_path,
+                sample_idx=s + 1,
+            )
+
+            if ok_ab and ok_ba:
+                # Symmetric estimate removes fixed-order bias.
+                p = (p_ab + (1.0 - p_ba)) / 2.0
+            elif ok_ab:
                 p = p_ab
+            elif ok_ba:
+                p = 1.0 - p_ba
             else:
                 p = 0.5
                 fallback_pairs += 1
