@@ -396,27 +396,8 @@ def pairwise_allocate_scores(
                 sample_idx=s + 1,
             )
 
-            p_ba, ok_ba = query_pair_probability(
-                client=client,
-                parent_name=parent_name,
-                model=model,
-                temperature=min(1.0, temperature + (0.05 * s)),
-                item_a=b,
-                item_b=a,
-                excerpt_a=snippets[b],
-                excerpt_b=snippets[a],
-                max_retries=retry_count,
-                debug_log_path=debug_log_path,
-                sample_idx=s + 1,
-            )
-
-            if ok_ab and ok_ba:
-                # Symmetric estimate removes fixed-order bias.
-                p = (p_ab + (1.0 - p_ba)) / 2.0
-            elif ok_ab:
+            if ok_ab:
                 p = p_ab
-            elif ok_ba:
-                p = 1.0 - p_ba
             else:
                 p = 0.5
                 fallback_pairs += 1
