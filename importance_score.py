@@ -151,10 +151,10 @@ def append_run_separator(debug_log_path: str, args: argparse.Namespace) -> None:
     entry = (
         f"{separator}\n"
         f"[run_start] time={timestamp} model={args.model} host={args.host} "
+        f"scoring_mode={args.scoring_mode} "
         f"n_samples={max(1, args.n_samples)} temperature={max(0.0, args.temperature)} "
         f"max_retries={max(1, args.max_retries)} "
         f"paragraph_direct_max_tokens={max(0, args.paragraph_direct_max_tokens)} "
-        f"paragraph_pairwise_max_items={max(1, args.paragraph_pairwise_max_items)} "
         f"paragraph_pairwise_n_samples={max(1, args.paragraph_pairwise_n_samples)} "
         f"paragraph_pairwise_max_retries={max(1, args.paragraph_pairwise_max_retries)} "
         f"paragraph_compressed_snippet_limit={max(60, args.paragraph_compressed_snippet_limit)}\n"
@@ -376,7 +376,7 @@ Constraints:
     return 0.5, False
 
 
-def direct_allocate_scores_fallback(
+def direct_allocate_scores(
     client: Client,
     item_to_content: Dict[str, Any],
     total_score: float,
@@ -387,39 +387,39 @@ def direct_allocate_scores_fallback(
     debug_log_path: str,
     sample_idx: int,
     snippet_limit: int = 500,
+    log_tag: str = "all_together",
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
     snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in items}
+    if not items:
+        return {}
+    if len(items) == 1:
+        return {items[0]: total_score}
+
     system_prompt = (
-       "You are an expert academic reviewer. Your task is to read two sections, subsections, or paragraphs from the same \
-        research paper and  estimate the importance of each item that is defined strictly as contribution to the paper’s central \
-        claim, novel method, primary findings, or core empirical validation, not writing quality, length, or stylistic emphasis."
+        "You are an expert academic reviewer. "
+        "Score multiple items from the same paper by contribution to the paper's main scientific contribution. "
         "Return JSON only."
     )
     prompt = f"""Parent node: "{parent_name}"
-    Assess the importance of each item relative to the paper’s main scientific contribution.
-    Importance should reflect how strongly the item contributes to:
-    • Defining the central research problem
-    • Presenting the novel method, model, or theoretical contribution
-    • Reporting core empirical results or primary validation
-    • Distinguishing the work from prior state-of-the-art
-    • Explaining key findings that support the main claim
-    Lower importance includes:
-    • Background or contextual material
-    • Minor implementation details
-    • Auxiliary or secondary experiments
-    • Transitional or structural text
-    Items:
-    "{json.dumps(snippets, indent=2)}"
-    Assign each item a non-negative raw importance score.
-    Higher scores indicate greater contribution to the paper’s main contribution.
-    Scores are relative within this set (they need not sum to any fixed value).
-    Return ONLY JSON mapping each item to its raw score:
-    {{
-    "item_name_1": a float between 0.0 and 1.0 representing P(Item A > Item B),
-    "item_name_2": a float between 0.0 and 1.0 representing P(Item A > Item B)
-    }}
-    """
+Task: score all items together (not pairwise) by contribution to the paper's main contribution.
+
+Scoring guidance:
+- Higher score: defines core problem, novel method, key theory/algorithm, primary validation.
+- Lower score: background, minor details, auxiliary discussion, transitions.
+- Use non-negative raw scores; larger means more important.
+- Scores are relative within this set and do NOT need to sum to 1.
+
+Items (name -> excerpt):
+{json.dumps(snippets, indent=2)}
+
+Return ONLY JSON mapping every item name to a non-negative raw score.
+Example format:
+{{
+  "item_name_1": 12.0,
+  "item_name_2": 4.5
+}}
+"""
 
     parsed_scores: Dict[str, float] = {}
     for attempt in range(max(1, max_retries)):
@@ -432,7 +432,7 @@ def direct_allocate_scores_fallback(
         append_debug_log(
             debug_log_path,
             (
-                f"[fallback] parent={parent_name} sample={sample_idx} "
+                f"[{log_tag}] parent={parent_name} sample={sample_idx} "
                 f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
             ),
         )
@@ -447,9 +447,97 @@ def direct_allocate_scores_fallback(
         if any(v > 0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
-    # Final neutral fallback if LLM fallback also fails.
+    # Final neutral fallback if direct allocation fails.
     equal_raw = {item: 1.0 for item in items}
     return normalize_distribution(equal_raw, total_score)
+
+
+def all_together_allocate_scores(
+    client: Client,
+    item_to_content: Dict[str, Any],
+    total_score: float,
+    parent_name: str,
+    model: str,
+    n_samples: int,
+    temperature: float,
+    max_retries: int,
+    debug_log_path: str,
+    snippet_limit: int = 500,
+    log_tag: str = "all_together",
+) -> Dict[str, float]:
+    items = list(item_to_content.keys())
+    if not items:
+        return {}
+    if len(items) == 1:
+        return {items[0]: total_score}
+
+    sample_count = max(1, n_samples)
+    sample_distributions: List[Dict[str, float]] = []
+    for s in range(sample_count):
+        sample_distributions.append(
+            direct_allocate_scores(
+                client=client,
+                item_to_content=item_to_content,
+                total_score=total_score,
+                parent_name=parent_name,
+                model=model,
+                temperature=min(1.0, temperature + (0.05 * s)),
+                max_retries=max(1, max_retries),
+                debug_log_path=debug_log_path,
+                sample_idx=s + 1,
+                snippet_limit=snippet_limit,
+                log_tag=log_tag,
+            )
+        )
+
+    averaged = {item: 0.0 for item in items}
+    for dist in sample_distributions:
+        for item, value in dist.items():
+            averaged[item] += value
+    averaged = {item: value / sample_count for item, value in averaged.items()}
+    return normalize_distribution(averaged, total_score)
+
+
+def allocate_scores_by_mode(
+    client: Client,
+    item_to_content: Dict[str, Any],
+    total_score: float,
+    parent_name: str,
+    model: str,
+    n_samples: int,
+    temperature: float,
+    max_retries: int,
+    debug_log_path: str,
+    scoring_mode: str,
+    snippet_limit: int = 500,
+    log_tag: str = "all_together",
+) -> Dict[str, float]:
+    if scoring_mode == "pairwise":
+        return pairwise_allocate_scores(
+            client=client,
+            item_to_content=item_to_content,
+            total_score=total_score,
+            parent_name=parent_name,
+            model=model,
+            n_samples=n_samples,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+        )
+
+    return all_together_allocate_scores(
+        client=client,
+        item_to_content=item_to_content,
+        total_score=total_score,
+        parent_name=parent_name,
+        model=model,
+        n_samples=n_samples,
+        temperature=temperature,
+        max_retries=max_retries,
+        debug_log_path=debug_log_path,
+        snippet_limit=snippet_limit,
+        log_tag=log_tag,
+    )
 
 
 def pairwise_allocate_scores(
@@ -553,7 +641,7 @@ def pairwise_allocate_scores(
                     "Using direct allocation fallback."
                 )
             sample_distributions.append(
-                direct_allocate_scores_fallback(
+                direct_allocate_scores(
                     client=client,
                     item_to_content=item_to_content,
                     total_score=total_score,
@@ -563,6 +651,7 @@ def pairwise_allocate_scores(
                     max_retries=retry_count,
                     debug_log_path=debug_log_path,
                     sample_idx=s + 1,
+                    log_tag="fallback",
                 )
             )
         else:
@@ -626,11 +715,11 @@ def assign_importance_scores(
     citations_dict: Dict[str, Any],
     model: str = "llama3.2",
     host: str = "localhost:11434",
+    scoring_mode: str = "all_together",
     n_samples: int = 3,
     temperature: float = 0.2,
     max_retries: int = 3,
     paragraph_direct_max_tokens: int = 4000,
-    paragraph_pairwise_max_items: int = 8,
     paragraph_pairwise_n_samples: int = 1,
     paragraph_pairwise_max_retries: int = 1,
     paragraph_compressed_snippet_limit: int = 180,
@@ -638,7 +727,7 @@ def assign_importance_scores(
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Assign hierarchical section and citation scores with:
-    - pairwise scoring,
+    - configurable pairwise or all-together scoring,
     - repeated LLM sampling + averaging,
     - strict normalization at each tree level.
     """
@@ -646,7 +735,7 @@ def assign_importance_scores(
     citation_scores: Dict[str, Any] = {}
     section_scores: Dict[str, Any] = {}
 
-    top_level_scores = pairwise_allocate_scores(
+    top_level_scores = allocate_scores_by_mode(
         client=client,
         item_to_content=content_dict,
         total_score=1.0,
@@ -656,6 +745,9 @@ def assign_importance_scores(
         temperature=temperature,
         max_retries=max_retries,
         debug_log_path=debug_log_path,
+        scoring_mode=scoring_mode,
+        snippet_limit=500,
+        log_tag="all_together_top",
     )
     top_level_scores = enforce_top_level_constraints(top_level_scores, total=1.0)
 
@@ -689,71 +781,55 @@ def assign_importance_scores(
         paragraph_parent_name = f"{section_name}::paragraphs"
         est_tokens = estimate_direct_allocation_tokens(paragraph_parent_name, paragraph_items, snippet_limit=500)
 
-        if paragraph_direct_max_tokens > 0 and est_tokens <= paragraph_direct_max_tokens:
+        if scoring_mode == "all_together":
+            use_compressed = paragraph_direct_max_tokens > 0 and est_tokens > paragraph_direct_max_tokens
+            snippet_limit = (
+                max(60, paragraph_compressed_snippet_limit) if use_compressed else 500
+            )
+            method = "all_together_compressed" if use_compressed else "all_together"
             append_debug_log(
                 debug_log_path,
                 (
-                    f"[paragraph_scoring] parent={paragraph_parent_name} method=direct "
-                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens}"
+                    f"[paragraph_scoring] parent={paragraph_parent_name} method={method} "
+                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
+                    f"paragraphs={len(paragraph_items)} snippet_limit={snippet_limit}"
                 ),
             )
-            paragraph_scores = direct_allocate_scores_fallback(
+            paragraph_scores = all_together_allocate_scores(
                 client=client,
                 item_to_content=paragraph_items,
                 total_score=section_score,
                 parent_name=paragraph_parent_name,
                 model=model,
+                n_samples=1,
                 temperature=temperature,
                 max_retries=1,
                 debug_log_path=debug_log_path,
-                sample_idx=1,
-                snippet_limit=500,
+                snippet_limit=snippet_limit,
+                log_tag="all_together_paragraphs",
             )
         else:
-            if len(paragraph_items) <= max(1, paragraph_pairwise_max_items):
-                append_debug_log(
-                    debug_log_path,
-                    (
-                        f"[paragraph_scoring] parent={paragraph_parent_name} method=pairwise "
-                        f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
-                        f"paragraphs={len(paragraph_items)} pairwise_max_items={paragraph_pairwise_max_items} "
-                        f"n_samples={max(1, paragraph_pairwise_n_samples)} "
-                        f"max_retries={max(1, paragraph_pairwise_max_retries)}"
-                    ),
-                )
-                paragraph_scores = pairwise_allocate_scores(
-                    client=client,
-                    item_to_content=paragraph_items,
-                    total_score=section_score,
-                    parent_name=paragraph_parent_name,
-                    model=model,
-                    n_samples=max(1, paragraph_pairwise_n_samples),
-                    temperature=temperature,
-                    max_retries=max(1, paragraph_pairwise_max_retries),
-                    debug_log_path=debug_log_path,
-                )
-            else:
-                append_debug_log(
-                    debug_log_path,
-                    (
-                        f"[paragraph_scoring] parent={paragraph_parent_name} method=direct_compressed "
-                        f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
-                        f"paragraphs={len(paragraph_items)} pairwise_max_items={paragraph_pairwise_max_items} "
-                        f"snippet_limit={max(60, paragraph_compressed_snippet_limit)}"
-                    ),
-                )
-                paragraph_scores = direct_allocate_scores_fallback(
-                    client=client,
-                    item_to_content=paragraph_items,
-                    total_score=section_score,
-                    parent_name=paragraph_parent_name,
-                    model=model,
-                    temperature=temperature,
-                    max_retries=1,
-                    debug_log_path=debug_log_path,
-                    sample_idx=1,
-                    snippet_limit=max(60, paragraph_compressed_snippet_limit),
-                )
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[paragraph_scoring] parent={paragraph_parent_name} method=pairwise "
+                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
+                    f"paragraphs={len(paragraph_items)} "
+                    f"n_samples={max(1, paragraph_pairwise_n_samples)} "
+                    f"max_retries={max(1, paragraph_pairwise_max_retries)}"
+                ),
+            )
+            paragraph_scores = pairwise_allocate_scores(
+                client=client,
+                item_to_content=paragraph_items,
+                total_score=section_score,
+                parent_name=paragraph_parent_name,
+                model=model,
+                n_samples=max(1, paragraph_pairwise_n_samples),
+                temperature=temperature,
+                max_retries=max(1, paragraph_pairwise_max_retries),
+                debug_log_path=debug_log_path,
+            )
 
         paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
         paragraph_tokens = {
@@ -842,7 +918,7 @@ def assign_importance_scores(
             current_ref = parent_ref[section_name]
 
         if isinstance(section_content, dict) and section_content:
-            subsection_scores = pairwise_allocate_scores(
+            subsection_scores = allocate_scores_by_mode(
                 client=client,
                 item_to_content=section_content,
                 total_score=section_score,
@@ -852,6 +928,9 @@ def assign_importance_scores(
                 temperature=temperature,
                 max_retries=max_retries,
                 debug_log_path=debug_log_path,
+                scoring_mode=scoring_mode,
+                snippet_limit=500,
+                log_tag="all_together_subsections",
             )
 
             for subsection_name, subsection_content in section_content.items():
@@ -900,6 +979,16 @@ def main() -> None:
     parser.add_argument("--pdf", default=DEFAULT_PDF_PATH, help="Path to PDF file")
     parser.add_argument("--model", default="llama3.2", help="Ollama model name")
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
+    parser.add_argument(
+        "--scoring-mode",
+        choices=["all_together", "pairwise"],
+        default="all_together",
+        help=(
+            "Scoring strategy for sections/subsections/paragraphs: "
+            "'all_together' scores all items in one prompt (default), "
+            "'pairwise' compares items pair-by-pair."
+        ),
+    )
     parser.add_argument("--n-samples", type=int, default=3, help="Number of LLM samples to average")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature")
     parser.add_argument("--max-retries", type=int, default=3, help="Retries per sample for pairwise JSON")
@@ -910,14 +999,6 @@ def main() -> None:
         help=(
             "Use direct paragraph scoring when estimated prompt tokens are <= this value; "
             "otherwise use pairwise paragraph scoring."
-        ),
-    )
-    parser.add_argument(
-        "--paragraph-pairwise-max-items",
-        type=int,
-        default=8,
-        help=(
-            "If paragraph count exceeds this value, skip paragraph pairwise and use compressed direct scoring."
         ),
     )
     parser.add_argument(
@@ -953,11 +1034,11 @@ def main() -> None:
         citations_dict=citations,
         model=args.model,
         host=args.host,
+        scoring_mode=args.scoring_mode,
         n_samples=max(1, args.n_samples),
         temperature=max(0.0, args.temperature),
         max_retries=max(1, args.max_retries),
         paragraph_direct_max_tokens=max(0, args.paragraph_direct_max_tokens),
-        paragraph_pairwise_max_items=max(1, args.paragraph_pairwise_max_items),
         paragraph_pairwise_n_samples=max(1, args.paragraph_pairwise_n_samples),
         paragraph_pairwise_max_retries=max(1, args.paragraph_pairwise_max_retries),
         paragraph_compressed_snippet_limit=max(60, args.paragraph_compressed_snippet_limit),
