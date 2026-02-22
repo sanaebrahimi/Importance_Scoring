@@ -155,8 +155,6 @@ def append_run_separator(debug_log_path: str, args: argparse.Namespace) -> None:
         f"n_samples={max(1, args.n_samples)} temperature={max(0.0, args.temperature)} "
         f"max_retries={max(1, args.max_retries)} "
         f"paragraph_direct_max_tokens={max(0, args.paragraph_direct_max_tokens)} "
-        f"paragraph_pairwise_n_samples={max(1, args.paragraph_pairwise_n_samples)} "
-        f"paragraph_pairwise_max_retries={max(1, args.paragraph_pairwise_max_retries)} "
         f"paragraph_compressed_snippet_limit={max(60, args.paragraph_compressed_snippet_limit)}\n"
         f"{separator}"
     )
@@ -720,8 +718,6 @@ def assign_importance_scores(
     temperature: float = 0.2,
     max_retries: int = 3,
     paragraph_direct_max_tokens: int = 4000,
-    paragraph_pairwise_n_samples: int = 1,
-    paragraph_pairwise_max_retries: int = 1,
     paragraph_compressed_snippet_limit: int = 180,
     debug_log_path: str = "",
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -801,9 +797,9 @@ def assign_importance_scores(
                 total_score=section_score,
                 parent_name=paragraph_parent_name,
                 model=model,
-                n_samples=1,
+                n_samples=max(1, n_samples),
                 temperature=temperature,
-                max_retries=1,
+                max_retries=max(1, max_retries),
                 debug_log_path=debug_log_path,
                 snippet_limit=snippet_limit,
                 log_tag="all_together_paragraphs",
@@ -815,8 +811,8 @@ def assign_importance_scores(
                     f"[paragraph_scoring] parent={paragraph_parent_name} method=pairwise "
                     f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
                     f"paragraphs={len(paragraph_items)} "
-                    f"n_samples={max(1, paragraph_pairwise_n_samples)} "
-                    f"max_retries={max(1, paragraph_pairwise_max_retries)}"
+                    f"n_samples={max(1, n_samples)} "
+                    f"max_retries={max(1, max_retries)}"
                 ),
             )
             paragraph_scores = pairwise_allocate_scores(
@@ -825,9 +821,9 @@ def assign_importance_scores(
                 total_score=section_score,
                 parent_name=paragraph_parent_name,
                 model=model,
-                n_samples=max(1, paragraph_pairwise_n_samples),
+                n_samples=max(1, n_samples),
                 temperature=temperature,
-                max_retries=max(1, paragraph_pairwise_max_retries),
+                max_retries=max(1, max_retries),
                 debug_log_path=debug_log_path,
             )
 
@@ -1002,18 +998,6 @@ def main() -> None:
         ),
     )
     parser.add_argument(
-        "--paragraph-pairwise-n-samples",
-        type=int,
-        default=1,
-        help="Number of samples to use for paragraph pairwise scoring (when enabled).",
-    )
-    parser.add_argument(
-        "--paragraph-pairwise-max-retries",
-        type=int,
-        default=1,
-        help="Retries per paragraph pairwise query (when enabled).",
-    )
-    parser.add_argument(
         "--paragraph-compressed-snippet-limit",
         type=int,
         default=180,
@@ -1039,8 +1023,6 @@ def main() -> None:
         temperature=max(0.0, args.temperature),
         max_retries=max(1, args.max_retries),
         paragraph_direct_max_tokens=max(0, args.paragraph_direct_max_tokens),
-        paragraph_pairwise_n_samples=max(1, args.paragraph_pairwise_n_samples),
-        paragraph_pairwise_max_retries=max(1, args.paragraph_pairwise_max_retries),
         paragraph_compressed_snippet_limit=max(60, args.paragraph_compressed_snippet_limit),
         debug_log_path=args.debug_log,
     )
