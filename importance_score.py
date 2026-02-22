@@ -1,6 +1,7 @@
 import argparse
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -142,6 +143,26 @@ def append_debug_log(debug_log_path: str, entry: str) -> None:
         f.write(entry.rstrip() + "\n")
 
 
+def append_run_separator(debug_log_path: str, args: argparse.Namespace) -> None:
+    if not debug_log_path:
+        return
+    timestamp = datetime.now().isoformat(timespec="seconds")
+    separator = "=" * 80
+    entry = (
+        f"{separator}\n"
+        f"[run_start] time={timestamp} model={args.model} host={args.host} "
+        f"n_samples={max(1, args.n_samples)} temperature={max(0.0, args.temperature)} "
+        f"max_retries={max(1, args.max_retries)} "
+        f"paragraph_direct_max_tokens={max(0, args.paragraph_direct_max_tokens)} "
+        f"paragraph_pairwise_max_items={max(1, args.paragraph_pairwise_max_items)} "
+        f"paragraph_pairwise_n_samples={max(1, args.paragraph_pairwise_n_samples)} "
+        f"paragraph_pairwise_max_retries={max(1, args.paragraph_pairwise_max_retries)} "
+        f"paragraph_compressed_snippet_limit={max(60, args.paragraph_compressed_snippet_limit)}\n"
+        f"{separator}"
+    )
+    append_debug_log(debug_log_path, entry)
+
+
 def safe_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
@@ -205,7 +226,7 @@ def split_text_into_paragraphs(text: str) -> List[str]:
     if len(sentences) <= 3:
         return [single]
 
-    chunk_size = 3
+    chunk_size = 5
     return [" ".join(sentences[i : i + chunk_size]).strip() for i in range(0, len(sentences), chunk_size)]
 
 
@@ -233,6 +254,14 @@ Return ONLY JSON mapping each item to a non-negative raw score:
 def extract_probability_from_response(response_text: str) -> float:
     parsed = parse_json_response(response_text)
     if isinstance(parsed, dict):
+        a_credit = parsed.get("a_credit", parsed.get("credit_a", parsed.get("item_a_credit")))
+        b_credit = parsed.get("b_credit", parsed.get("credit_b", parsed.get("item_b_credit")))
+        if a_credit is not None and b_credit is not None:
+            a_val = safe_float(a_credit, -1.0)
+            b_val = safe_float(b_credit, -1.0)
+            if a_val >= 0.0 and b_val >= 0.0 and (a_val + b_val) > 0.0:
+                return a_val / (a_val + b_val)
+
         for key in ("p", "probability", "score", "item_a_prob"):
             if key in parsed:
                 value = safe_float(parsed.get(key), -1.0)
@@ -265,39 +294,39 @@ def query_pair_probability(
     sample_idx: int,
 ) -> Tuple[float, bool]:
     system_prompt = (
-        """ You are an expert academic reviewer.
-        You compare two sections, subsections, or paragraphs from the same research paper.
-        Your task is to estimate:
-        p = P(Item A contributes more to the paper’s main scientific contribution than Item B),
-        where 0.0 <= p <= 1.0.
-        Importance is defined strictly as contribution to the paper’s central claim, novel method, primary findings, or core empirical validation — not writing quality, length, or stylistic emphasis.
-        If both contribute equally, return p = 0.5.
-        Return JSON only."""
+        "You are an expert academic reviewer. "
+        "Compare two items from the same paper by contribution to the paper's main scientific contribution. "
+        "Distribute a total credit of 1.0 between item A and item B. "
+        "Return JSON only."
     )
     prompt = f"""Parent node: "{parent_name}"
-    The goal is to assess importance relative to the paper’s main contribution.
-    Importance should prioritize:
-    • Direct definition of the research problem
-    • Description of the novel method or model
-    • Core theoretical results or algorithmic contributions
-    • Primary experimental results validating the contribution
-    • Critical comparisons to state-of-the-art
-    Lower importance includes:
-    • Background information
-    • Minor implementation details
-    • Auxiliary experiments
-    • Formatting or structural transitions
-    Item A name: "{item_a}"
-    Item A excerpt:
-    {excerpt_a}
-    Item B name: "{item_b}"
-    Item B excerpt:
-    {excerpt_b}
-    Return ONLY JSON:
-    {{
-    "p": a float between 0.0 and 1.0 representing P(Item A > Item B)
-    }}
-    """
+Task: distribute a credit of 1.0 between A and B based on contribution to the paper's main contribution.
+
+Scoring guidance:
+- Higher credit: defines core problem, novel method, key theory/algorithm, primary validation.
+- Lower credit: background, minor details, auxiliary discussion, transitions.
+- If one item contributes 3x the other, credits should be 0.75 and 0.25.
+- If equal, credits should be 0.5 and 0.5.
+
+Item A name: "{item_a}"
+Item A excerpt:
+{excerpt_a}
+
+Item B name: "{item_b}"
+Item B excerpt:
+{excerpt_b}
+
+Return ONLY JSON:
+{{
+  "a_credit": 0.75,
+  "b_credit": 0.25
+}}
+
+Constraints:
+- 0.0 <= a_credit <= 1.0
+- 0.0 <= b_credit <= 1.0
+- a_credit + b_credit = 1.0
+"""
 
     for attempt in range(max(1, max_retries)):
         response = client.chat(
@@ -332,9 +361,10 @@ def direct_allocate_scores_fallback(
     max_retries: int,
     debug_log_path: str,
     sample_idx: int,
+    snippet_limit: int = 500,
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=500) for name in items}
+    snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in items}
     system_prompt = (
        "You are an expert academic reviewer. Your task is to read two sections, subsections, or paragraphs from the same \
         research paper and  estimate the importance of each item that is defined strictly as contribution to the paper’s central \
@@ -443,8 +473,27 @@ def pairwise_allocate_scores(
                 sample_idx=s + 1,
             )
 
-            if ok_ab:
+            p_ba, ok_ba = query_pair_probability(
+                client=client,
+                parent_name=parent_name,
+                model=model,
+                temperature=min(1.0, temperature + (0.05 * s)),
+                item_a=b,
+                item_b=a,
+                excerpt_a=snippets[b],
+                excerpt_b=snippets[a],
+                max_retries=retry_count,
+                debug_log_path=debug_log_path,
+                sample_idx=s + 1,
+            )
+
+            if ok_ab and ok_ba:
+                # Symmetric estimate removes fixed-order bias.
+                p = (p_ab + (1.0 - p_ba)) / 2.0
+            elif ok_ab:
                 p = p_ab
+            elif ok_ba:
+                p = 1.0 - p_ba
             else:
                 p = 0.5
                 fallback_pairs += 1
@@ -541,6 +590,10 @@ def assign_importance_scores(
     temperature: float = 0.2,
     max_retries: int = 3,
     paragraph_direct_max_tokens: int = 4000,
+    paragraph_pairwise_max_items: int = 8,
+    paragraph_pairwise_n_samples: int = 1,
+    paragraph_pairwise_max_retries: int = 1,
+    paragraph_compressed_snippet_limit: int = 180,
     debug_log_path: str = "",
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
@@ -614,26 +667,53 @@ def assign_importance_scores(
                 max_retries=1,
                 debug_log_path=debug_log_path,
                 sample_idx=1,
+                snippet_limit=500,
             )
         else:
-            append_debug_log(
-                debug_log_path,
-                (
-                    f"[paragraph_scoring] parent={paragraph_parent_name} method=pairwise "
-                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens}"
-                ),
-            )
-            paragraph_scores = pairwise_allocate_scores(
-                client=client,
-                item_to_content=paragraph_items,
-                total_score=section_score,
-                parent_name=paragraph_parent_name,
-                model=model,
-                n_samples=n_samples,
-                temperature=temperature,
-                max_retries=max_retries,
-                debug_log_path=debug_log_path,
-            )
+            if len(paragraph_items) <= max(1, paragraph_pairwise_max_items):
+                append_debug_log(
+                    debug_log_path,
+                    (
+                        f"[paragraph_scoring] parent={paragraph_parent_name} method=pairwise "
+                        f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
+                        f"paragraphs={len(paragraph_items)} pairwise_max_items={paragraph_pairwise_max_items} "
+                        f"n_samples={max(1, paragraph_pairwise_n_samples)} "
+                        f"max_retries={max(1, paragraph_pairwise_max_retries)}"
+                    ),
+                )
+                paragraph_scores = pairwise_allocate_scores(
+                    client=client,
+                    item_to_content=paragraph_items,
+                    total_score=section_score,
+                    parent_name=paragraph_parent_name,
+                    model=model,
+                    n_samples=max(1, paragraph_pairwise_n_samples),
+                    temperature=temperature,
+                    max_retries=max(1, paragraph_pairwise_max_retries),
+                    debug_log_path=debug_log_path,
+                )
+            else:
+                append_debug_log(
+                    debug_log_path,
+                    (
+                        f"[paragraph_scoring] parent={paragraph_parent_name} method=direct_compressed "
+                        f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
+                        f"paragraphs={len(paragraph_items)} pairwise_max_items={paragraph_pairwise_max_items} "
+                        f"snippet_limit={max(60, paragraph_compressed_snippet_limit)}"
+                    ),
+                )
+                paragraph_scores = direct_allocate_scores_fallback(
+                    client=client,
+                    item_to_content=paragraph_items,
+                    total_score=section_score,
+                    parent_name=paragraph_parent_name,
+                    model=model,
+                    temperature=temperature,
+                    max_retries=1,
+                    debug_log_path=debug_log_path,
+                    sample_idx=1,
+                    snippet_limit=max(60, paragraph_compressed_snippet_limit),
+                )
 
         paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
         paragraph_tokens = {
@@ -793,11 +873,38 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--paragraph-pairwise-max-items",
+        type=int,
+        default=8,
+        help=(
+            "If paragraph count exceeds this value, skip paragraph pairwise and use compressed direct scoring."
+        ),
+    )
+    parser.add_argument(
+        "--paragraph-pairwise-n-samples",
+        type=int,
+        default=1,
+        help="Number of samples to use for paragraph pairwise scoring (when enabled).",
+    )
+    parser.add_argument(
+        "--paragraph-pairwise-max-retries",
+        type=int,
+        default=1,
+        help="Retries per paragraph pairwise query (when enabled).",
+    )
+    parser.add_argument(
+        "--paragraph-compressed-snippet-limit",
+        type=int,
+        default=180,
+        help="Per-paragraph snippet length used by compressed direct paragraph scoring.",
+    )
+    parser.add_argument(
         "--debug-log",
         default="pairwise_debug.log",
         help="Path to write raw pairwise model responses for debugging",
     )
     args = parser.parse_args()
+    append_run_separator(args.debug_log, args)
 
     text = read_pdf_text(args.pdf)
     citations, content = extract_citations_by_section(text, DEFAULT_SECTIONS)
@@ -810,6 +917,10 @@ def main() -> None:
         temperature=max(0.0, args.temperature),
         max_retries=max(1, args.max_retries),
         paragraph_direct_max_tokens=max(0, args.paragraph_direct_max_tokens),
+        paragraph_pairwise_max_items=max(1, args.paragraph_pairwise_max_items),
+        paragraph_pairwise_n_samples=max(1, args.paragraph_pairwise_n_samples),
+        paragraph_pairwise_max_retries=max(1, args.paragraph_pairwise_max_retries),
+        paragraph_compressed_snippet_limit=max(60, args.paragraph_compressed_snippet_limit),
         debug_log_path=args.debug_log,
     )
 
