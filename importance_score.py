@@ -280,6 +280,19 @@ def extract_probability_from_response(response_text: str) -> float:
     return -1.0
 
 
+def is_template_credit_response(response_text: str) -> bool:
+    parsed = parse_json_response(response_text)
+    if not isinstance(parsed, dict) or len(parsed) > 2:
+        return False
+
+    if "a_credit" not in parsed or "b_credit" not in parsed:
+        return False
+
+    a_val = safe_float(parsed.get("a_credit"), -1.0)
+    b_val = safe_float(parsed.get("b_credit"), -1.0)
+    return abs(a_val - 0.75) < 1e-9 and abs(b_val - 0.25) < 1e-9
+
+
 def query_pair_probability(
     client: Client,
     parent_name: str,
@@ -305,8 +318,9 @@ Task: distribute a credit of 1.0 between A and B based on contribution to the pa
 Scoring guidance:
 - Higher credit: defines core problem, novel method, key theory/algorithm, primary validation.
 - Lower credit: background, minor details, auxiliary discussion, transitions.
-- If one item contributes 3x the other, credits should be 0.75 and 0.25.
-- If equal, credits should be 0.5 and 0.5.
+- If one item contributes 3x the other, A should get three times B's credit.
+- If equal, both credits should be equal.
+- Do not copy placeholder values; use pair-specific values from the provided excerpts.
 
 Item A name: "{item_a}"
 Item A excerpt:
@@ -318,8 +332,8 @@ Item B excerpt:
 
 Return ONLY JSON:
 {{
-  "a_credit": 0.75,
-  "b_credit": 0.25
+  "a_credit": <float>,
+  "b_credit": <float>
 }}
 
 Constraints:
@@ -343,6 +357,17 @@ Constraints:
                 f"{raw_response}\n"
             ),
         )
+
+        if is_template_credit_response(raw_response):
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[pair_reject] parent={parent_name} sample={sample_idx} "
+                    f"attempt={attempt + 1}/{max(1, max_retries)} key={item_a}|{item_b} "
+                    "reason=template_075_025"
+                ),
+            )
+            continue
 
         p = extract_probability_from_response(raw_response)
         if 0.0 <= p <= 1.0:
@@ -457,6 +482,7 @@ def pairwise_allocate_scores(
     for s in range(sample_count):
         raw_scores = {item: 0.0 for item in items}
         fallback_pairs = 0
+        pair_ps: List[float] = []
 
         for a, b in pairs:
             p_ab, ok_ab = query_pair_probability(
@@ -500,6 +526,7 @@ def pairwise_allocate_scores(
 
             raw_scores[a] += p
             raw_scores[b] += 1.0 - p
+            pair_ps.append(p)
 
         if fallback_pairs > 0:
             print(
@@ -507,11 +534,24 @@ def pairwise_allocate_scores(
                 f"{fallback_pairs}/{len(pairs)} pairs defaulted to 0.5."
             )
 
-        if fallback_pairs == len(pairs):
+        degenerate_pairwise = len(pair_ps) >= 3 and (max(pair_ps) - min(pair_ps)) <= 0.02
+        if degenerate_pairwise:
             print(
-                f"[WARN] All pairwise calls failed for '{parent_name}' (sample {s + 1}). "
-                "Using direct allocation fallback."
+                f"[WARN] Degenerate pairwise outputs for '{parent_name}' (sample {s + 1}); "
+                "switching to direct allocation fallback."
             )
+
+        if fallback_pairs == len(pairs) or degenerate_pairwise:
+            if fallback_pairs == len(pairs):
+                print(
+                    f"[WARN] All pairwise calls failed for '{parent_name}' (sample {s + 1}). "
+                    "Using direct allocation fallback."
+                )
+            else:
+                print(
+                    f"[WARN] Pairwise outputs lacked variation for '{parent_name}' (sample {s + 1}). "
+                    "Using direct allocation fallback."
+                )
             sample_distributions.append(
                 direct_allocate_scores_fallback(
                     client=client,
