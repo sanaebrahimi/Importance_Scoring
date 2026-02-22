@@ -540,7 +540,7 @@ def assign_importance_scores(
     n_samples: int = 3,
     temperature: float = 0.2,
     max_retries: int = 3,
-    paragraph_direct_max_tokens: int = 1200,
+    paragraph_direct_max_tokens: int = 4000,
     debug_log_path: str = "",
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
@@ -611,7 +611,7 @@ def assign_importance_scores(
                 parent_name=paragraph_parent_name,
                 model=model,
                 temperature=temperature,
-                max_retries=max_retries,
+                max_retries=1,
                 debug_log_path=debug_log_path,
                 sample_idx=1,
             )
@@ -786,7 +786,7 @@ def main() -> None:
     parser.add_argument(
         "--paragraph-direct-max-tokens",
         type=int,
-        default=1200,
+        default=4000,
         help=(
             "Use direct paragraph scoring when estimated prompt tokens are <= this value; "
             "otherwise use pairwise paragraph scoring."
