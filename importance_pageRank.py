@@ -210,13 +210,18 @@ def append_debug_log(debug_log_path: str, entry: str) -> None:
 def append_run_separator(debug_log_path: str, args: argparse.Namespace) -> None:
     if not debug_log_path:
         return
+    n_samples_val = args.n_samples if getattr(args, "n_samples", None) is not None else 1
+    max_tries_val = getattr(args, "max_tries", 1)
+    effective_samples = getattr(args, "effective_samples", max(max(1, n_samples_val), max(1, max_tries_val)))
     timestamp = datetime.now().isoformat(timespec="seconds")
     separator = "=" * 80
     entry = (
         f"{separator}\n"
         f"[run_start] time={timestamp} model={args.model} host={args.host} "
         f"paper_id={args.paper_id} alpha={args.alpha} beta={args.beta} "
-        f"lambda_weight={args.lambda_weight} n_samples={max(1, args.n_samples)} "
+        f"lambda_weight={args.lambda_weight} max_tries={max(1, max_tries_val)} "
+        f"n_samples_override={max(1, n_samples_val)} "
+        f"effective_samples={max(1, effective_samples)} "
         f"temperature={max(0.0, args.temperature)} max_retries={max(1, args.max_retries)} "
         f"{separator}"
     )
@@ -1144,7 +1149,20 @@ def main() -> None:
     parser.add_argument("--alpha", type=float, default=0.85, help="Technical propagation parameter")
     parser.add_argument("--beta", type=float, default=0.85, help="Citation propagation parameter")
     parser.add_argument("--lambda-weight", type=float, default=0.5, help="Blend weight for combined score")
-    parser.add_argument("--n-samples", type=int, default=3, help="Number of LLM samples for T(p)")
+    parser.add_argument(
+        "--max-tries",
+        "--max_tries",
+        dest="max_tries",
+        type=int,
+        default=3,
+        help="Minimum number of LLM runs per scoring block; results are averaged.",
+    )
+    parser.add_argument(
+        "--n-samples",
+        type=int,
+        default=None,
+        help="Optional override for number of LLM runs; effective runs = max(max_tries, n_samples).",
+    )
     parser.add_argument("--temperature", type=float, default=0.2, help="Base LLM temperature")
     parser.add_argument("--max-retries", type=int, default=3, help="Retries for each LLM batch")
     parser.add_argument("--batch-size", type=int, default=12, help="Paragraphs per LLM scoring batch")
@@ -1158,6 +1176,8 @@ def main() -> None:
         help="Optional path to save the exact prompt strings as JSON",
     )
     args = parser.parse_args()
+    n_samples_val = args.n_samples if args.n_samples is not None else 1
+    args.effective_samples = max(max(1, args.max_tries), max(1, n_samples_val))
 
     append_run_separator(args.debug_log, args)
 
@@ -1174,7 +1194,7 @@ def main() -> None:
         alpha=max(0.0, min(0.999999, args.alpha)),
         beta=max(0.0, min(0.999999, args.beta)),
         lambda_weight=max(0.0, min(1.0, args.lambda_weight)),
-        n_samples=max(1, args.n_samples),
+        n_samples=max(1, args.effective_samples),
         temperature=max(0.0, args.temperature),
         max_retries=max(1, args.max_retries),
         batch_size=max(1, args.batch_size),
