@@ -4,12 +4,12 @@
     "section": "Introduction",
     "paragraph_index": 1,
     "text": "Multi-agent LLM systems have risen as a pow- erful paradigm, exemplified by frameworks such as CAMEL, AutoGen, and MetaGPT (Wu et al., 2023; Hong et al., 2023; Li et al., 2023), demon- strating promising performance in crucial domains, including coding, mathematical problem-solving, and collaborative decision-making. Despite their advancements, the performance of multi-agent LLM systems is highly sensitive to ad- versarial and low-performing agents. Particularly, a subset of compromised team members with adver- sarial behavior can corrupt the system\u2019s collective output. The susceptibility of LLM agents to persua- sive inputs further amplifies this risk, potentially leading to incorrect group consensus. Although prior studies have highlighted this vulnerability (Zhang et al., 2024b; Amayuelas et al., 2024; Xi et al., 2025), existing solutions are predominantly limited to specific, predefined architectures.",
-    "local_total": 0.26333333333333336,
-    "local_technical": 0.13,
-    "local_citation": 0.13333333333333336,
-    "technical_rank": 0.0011818181818181819,
-    "citation_rank": 0.0012121212121212123,
-    "combined_score": 0.0011969696969696972,
+    "local_total": 0.22666666666666668,
+    "local_technical": 0.10000000000000002,
+    "local_citation": 0.12666666666666665,
+    "technical_rank": 0.0009424583899756026,
+    "citation_rank": 0.0010526934118888554,
+    "combined_score": 0.000997575900932229,
     "citation_count": 6,
     "citations": [
       "(Wu et al.,2023)",
@@ -18,183 +18,196 @@
       "(Zhang et al., 2024b)",
       "(Amayuelas et al., 2024)",
       "(Xiet al., 2025)"
-    ]
+    ],
+    "normalized_combined_score": 0.00392527146889326
   },
   "target_paper::Introduction::p2": {
     "paper_id": "target_paper",
     "section": "Introduction",
     "paragraph_index": 2,
     "text": "These approaches and the related work are further dis- cussed in Appendix A.To the best of our knowledge, the literature lacks a general framework that enables users to design robust multi-agent systems resilient to adversar- ial influence while minimizing the impact of such attacks without the need to eliminate an agent. In this paper, we fill this research gap by propos- ing an adversary-resistant multi-agent LLM sys- tem based on credibility scoring. Specifically, we model the query-answering pro- cess as an iterative cooperative game, where a team of agents is formed to find the answer to a given query. The team members may have different roles and communicate based on the team\u2019s topology to finalize their individual answers, which are then aggregated into the system\u2019s answer to the query. Instead of equally trusting all agents, our sys- tem follows a credibility-score aware aggregation strategy that weighs each agent\u2019s individual output proportional to their trustworthiness.",
-    "local_total": 0.5066666666666667,
-    "local_technical": 0.5066666666666667,
+    "local_total": 0.42333333333333334,
+    "local_technical": 0.42333333333333334,
     "local_citation": 0.0,
-    "technical_rank": 0.004606060606060607,
+    "technical_rank": 0.003989740517563384,
     "citation_rank": 0.0,
-    "combined_score": 0.0023030303030303033,
+    "combined_score": 0.001994870258781692,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.007849435119294701
   },
   "target_paper::Introduction::p3": {
     "paper_id": "target_paper",
     "section": "Introduction",
     "paragraph_index": 3,
     "text": "The credibil- ity scores reflect the collective performance of each agent in answering the previous queries and are learned on the fly during the lifetime of the system. For each query, the team receives a reward (or gets penalized) based on the quality of the gener- ated output. In order to fairly distribute the reward among the team members, we introduce the contri- bution scores , with larger values reflecting a larger impact of an agent in the generated output. We propose two approaches based on Shapley values and LLM-as-Judge for measuring the contribution scores. At the end of each round, the credibility scores are updated by distributing the reward to the agents proportional to their contribution.",
-    "local_total": 0.57,
-    "local_technical": 0.57,
+    "local_total": 0.6533333333333333,
+    "local_technical": 0.6533333333333333,
     "local_citation": 0.0,
-    "technical_rank": 0.0051818181818181815,
+    "technical_rank": 0.006157394814507269,
     "citation_rank": 0.0,
-    "combined_score": 0.0025909090909090908,
+    "combined_score": 0.0030786974072536345,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.012114088845525678
   },
   "target_paper::Introduction::p4": {
     "paper_id": "target_paper",
     "section": "Introduction",
     "paragraph_index": 4,
     "text": "Our system has a unique ability to tolerate adversary-majority settings, a more extreme case than the typically considered settings that assume the adversaries are in the minority. We emphasize a critical yet under-explored challenge: when ad- versaries constitute more than 50% of the agents, honest agents must either exert disproportionate influence or possess superior capabilities to avoidFigure 1: System architecture. being outvoted or manipulated. Our approach is applicable across different team structures and integration mechanisms for existing methods. It empowers users to minimize the im- pact of low-performing and malicious agents within the teams with various formations and communi- cations topologies.",
-    "local_total": 0.31,
-    "local_technical": 0.31,
+    "local_total": 0.45,
+    "local_technical": 0.45,
     "local_citation": 0.0,
-    "technical_rank": 0.002818181818181818,
+    "technical_rank": 0.004241062754890211,
     "citation_rank": 0.0,
-    "combined_score": 0.001409090909090909,
+    "combined_score": 0.0021205313774451057,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.008343887725234525
   },
   "target_paper::Introduction::p5": {
     "paper_id": "target_paper",
     "section": "Introduction",
     "paragraph_index": 5,
     "text": "By leveraging this adaptability, our method enhances the resilience of multi-agent systems, ensuring more robust and reliable coop- eration of the agents. We conduct comprehensive experiments on various tasks, benchmark datasets, and settings to evaluate our system. Our experi- ment results verify the effectiveness of credibility scoring, demonstrating the ability of our system in detecting and minimizing the effect of the ad- versary agents, even for the adversary-majority set- tings. Paper Organization: We first introduce the con- cepts and provide an overview of our system in Section 2. Next in Section 3, we discuss the com- position details of a team of agents, followed by the explanation of the credibility-score aware ag- gregation of the team outputs in Section 4.",
-    "local_total": 0.7333333333333334,
-    "local_technical": 0.7333333333333334,
+    "local_total": 0.6833333333333332,
+    "local_technical": 0.6833333333333332,
     "local_citation": 0.0,
-    "technical_rank": 0.006666666666666667,
+    "technical_rank": 0.0064401323314999485,
     "citation_rank": 0.0,
-    "combined_score": 0.0033333333333333335,
+    "combined_score": 0.0032200661657499742,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.012670348027207977
   },
   "target_paper::Introduction::p6": {
     "paper_id": "target_paper",
     "section": "Introduction",
     "paragraph_index": 6,
     "text": "We then conclude our technical discussions in Section 5 by explaining how the credibility scores are gradually learned in our system. The experimental evalua- tions are provided in Section 6, followed by the concluding remarks and a discussion of our sys- tem\u2019s limitations in Sections 7 and 8. 2",
-    "local_total": 0.08,
-    "local_technical": 0.08,
+    "local_total": 0.11333333333333333,
+    "local_technical": 0.11333333333333333,
     "local_citation": 0.0,
-    "technical_rank": 0.0007272727272727273,
+    "technical_rank": 0.001068119508639016,
     "citation_rank": 0.0,
-    "combined_score": 0.00036363636363636367,
+    "combined_score": 0.000534059754319508,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.0021014235752442505
   },
   "target_paper::System Overview::p1": {
     "paper_id": "target_paper",
     "section": "System Overview",
     "paragraph_index": 1,
     "text": "We consider a system, with the architecture shown in Figure 1, that uses a universe Aof LLM agents for answering user queries specified in the form of natural language instructions, known as prompts .The answer to each query qis generated by a team of agents A={a1,\u00b7\u00b7\u00b7, aN} \u2286 A . We model this system as an iterative coopera- tive game, where at each iteration t, a team Atis formed based on a specific topology that specifies the communication rules, while the agents may have various roles in the team. The team members collaborate, and each agent, in the end, generates an output. In Section 3, we shall further discuss the structure of the teams of agents. Our system then aggregates the individual out- puts to generate the final output for the user query, using the Credibility Score : we allocate each agent ajwith a credibility score CrS(j)\u2208[0,1], a nu- merical value that reflects the collective reliability ofajover the previous iterations.",
-    "local_total": 0.30666666666666664,
-    "local_technical": 0.30666666666666664,
+    "local_total": 0.31,
+    "local_technical": 0.31,
     "local_citation": 0.0,
-    "technical_rank": 0.0027878787878787875,
+    "technical_rank": 0.0029216210089243674,
     "citation_rank": 0.0,
-    "combined_score": 0.0013939393939393938,
+    "combined_score": 0.0014608105044621837,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.00574801154405045
   },
   "target_paper::System Overview::p2": {
     "paper_id": "target_paper",
     "section": "System Overview",
     "paragraph_index": 2,
     "text": "The credibility scores of the agents are gradually \u201clearned\u201d during the life time of the system (see Section 5). Introducing the credibility scores gives our sys- tem the unique feature to be able to tolerate and detect malicious agents with adversarial behaviors. While faithful agents pursue a correct solution, the adversarial agents deliberately attempt to mislead or derail the group to generate wrong answers. We extensively evaluate the robustness of our system in our experiments (Section 6). For each generated answer (final output) otfor the query qt, we consider a reward rt\u2208[\u22121,1], specified based on the \u201cquality\u201d of otas an answer forqt.",
-    "local_total": 0.5533333333333333,
-    "local_technical": 0.5533333333333333,
+    "local_total": 0.5166666666666667,
+    "local_technical": 0.5166666666666667,
     "local_citation": 0.0,
-    "technical_rank": 0.00503030303030303,
+    "technical_rank": 0.00486936834820728,
     "citation_rank": 0.0,
-    "combined_score": 0.002515151515151515,
+    "combined_score": 0.00243468417410364,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009580019240084083
   },
   "target_paper::System Overview::p3": {
     "paper_id": "target_paper",
     "section": "System Overview",
     "paragraph_index": 3,
     "text": "Specifically, a negative value of rtpenal- izesthe team Atfor generating a misleading result, while a positive rtrewards the team for generating a good answer. We view otas the outcome of the team\u2019s collec- tive effort anddistribute the reward among agents in proportion to their, \u201ccontribution\u201d to generating ot. We introduce the Contribution Score (CSc) to measure each team member\u2019s contribution. Finally, we update the credibility score of each team member ai\u2208At, using a learning step, based on the amount of the reward aicollected by collab- orating in answering the query qt. In Section 5, we shall provide the technical details of this process.",
-    "local_total": 0.5233333333333333,
-    "local_technical": 0.5233333333333333,
+    "local_total": 0.6866666666666666,
+    "local_technical": 0.6866666666666666,
     "local_citation": 0.0,
-    "technical_rank": 0.004757575757575757,
+    "technical_rank": 0.006471547611165803,
     "citation_rank": 0.0,
-    "combined_score": 0.0023787878787878787,
+    "combined_score": 0.0032357738055829015,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.012732154602950458
   },
   "target_paper::System Overview::p4": {
     "paper_id": "target_paper",
     "section": "System Overview",
     "paragraph_index": 4,
     "text": "3",
-    "local_total": 0.0033333333333333335,
-    "local_technical": 0.0033333333333333335,
+    "local_total": 0.013333333333333334,
+    "local_technical": 0.013333333333333334,
     "local_citation": 0.0,
-    "technical_rank": 3.0303030303030306e-05,
+    "technical_rank": 0.00012566111866341365,
     "citation_rank": 0.0,
-    "combined_score": 1.5151515151515153e-05,
+    "combined_score": 6.283055933170683e-05,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.00024722630296991177
   },
   "target_paper::Team of Agents::p1": {
     "paper_id": "target_paper",
     "section": "Team of Agents",
     "paragraph_index": 1,
     "text": "In this section, we explain the key components in the formation of a team of agents, including the topology and the gent roles. Agent Roles. In a multi-agent LLM system all team members may be assigned to the same task (Liu et al., 2023; Liang et al., 2023a), or theymay have different roles aligned with their specific expertise or subtasks (Zhang et al., 2024a; Qian et al., 2024). Another important consideration is the agents\u2019 adaptability: whether they can learn, adapt, or modify their strategies over time by up- dating internal parameters. These aspects have been explored in varying degrees across existing research.",
-    "local_total": 0.35333333333333333,
-    "local_technical": 0.32666666666666666,
-    "local_citation": 0.026666666666666672,
-    "technical_rank": 0.00296969696969697,
-    "citation_rank": 0.0002424242424242425,
-    "combined_score": 0.001606060606060606,
+    "local_total": 0.39666666666666667,
+    "local_technical": 0.32,
+    "local_citation": 0.07666666666666666,
+    "technical_rank": 0.003015866847921928,
+    "citation_rank": 0.0006371565387748335,
+    "combined_score": 0.0018265116933483807,
     "citation_count": 4,
     "citations": [
       "(Liu et al., 2023)",
       "(Liang et al., 2023a)",
       "(Zhang et al., 2024a)",
       "(Qianet al., 2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.007186976179757757
   },
   "target_paper::Team of Agents::p2": {
     "paper_id": "target_paper",
     "section": "Team of Agents",
     "paragraph_index": 2,
     "text": "For instance, Alfonso et al. (Amayuelas et al., 2024) demonstrated that models could be influenced to alter their behavior in ways that ulti- mately degrade overall system performance. Such interference may occur through direct manipulation of agents\u2019 individual contributions or deceptive communication tactics (Amayuelas et al., 2024). Further details about incentives and adversarial be- havior of LLM agents is discussed in Appendix B. Therefore, establishing robust mechanisms to mitigate adversarial threats is essential to main- taining the integrity and reliability of multi-agent collaborations.",
-    "local_total": 0.5633333333333334,
-    "local_technical": 0.3333333333333333,
-    "local_citation": 0.23000000000000004,
-    "technical_rank": 0.0030303030303030303,
-    "citation_rank": 0.002090909090909091,
-    "combined_score": 0.002560606060606061,
+    "local_total": 0.49,
+    "local_technical": 0.36333333333333334,
+    "local_citation": 0.12666666666666665,
+    "technical_rank": 0.003424265483578022,
+    "citation_rank": 0.0010526934118888554,
+    "combined_score": 0.0022384794477334387,
     "citation_count": 2,
     "citations": [
       "(Amayuelaset al., 2024)",
       "(Amayuelas et al., 2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.008807990952549017
   },
   "target_paper::Team of Agents::p3": {
     "paper_id": "target_paper",
     "section": "Team of Agents",
     "paragraph_index": 3,
     "text": "A major benefit of our systems is therobustness against adversarial agents . Specif- ically, allocating the agents with credibility scores, our system gradually penalizes the agents with ad- versarial behaviors (see Section 5). In Section 6, we demonstrate that our system can tolerate even more than half of the agents being adversary. Communication Structure (Topology). The topology of a multi-agent system defines the ar- rangement and interconnections among agents, ef- fectively determining which agents can directly communicate.",
-    "local_total": 0.37666666666666665,
-    "local_technical": 0.37666666666666665,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.0034242424242424243,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0017121212121212121,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Team of Agents::p4": {
     "paper_id": "target_paper",
@@ -202,11 +215,11 @@
     "paragraph_index": 4,
     "text": "This structure can be conceptual- ized as a graph, where each node represents an agent, and each edge represents a direct communi- cation link between two agents. Previous research has investigated various topological arrangements from (a) no connection to (b) fully-connected struc- tures, including (c) chain , (d) ring, (e) hierarchi- cal, and (f) randomly-connected networks (Wang et al., 2024; Huang et al., 2024; Qian et al., 2024; Liu et al., 2023). The choice of topology signifi- cantly impacts both scalability and robustness of the multi-agent system. For example, fully con- nected topologies facilitate rapid consensus due to their direct communication paths, yet they exhibit vulnerability when faced with adversarial agents or limited network resources (Amayuelas et al., 2024). Conversely, sparse topologies, such as ring or chain structures, lower communication overhead but might be more susceptible to localized adver- sarial influence, potentially compromising subsets of agents (Shoham and Leyton-Brown, 2008).Our system is flexible to the choice of communi- cation structures: we assume each agent first drafts a candidate solution ( local inference ).",
     "local_total": 0.5,
-    "local_technical": 0.47,
-    "local_citation": 0.030000000000000027,
-    "technical_rank": 0.004272727272727273,
-    "citation_rank": 0.00027272727272727295,
-    "combined_score": 0.0022727272727272726,
+    "local_technical": 0.5,
+    "local_citation": 0.0,
+    "technical_rank": 0.004712291949878013,
+    "citation_rank": 0.0,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 6,
     "citations": [
       "(Wanget al., 2024)",
@@ -215,35 +228,38 @@
       "(Liu et al., 2023)",
       "(Amayuelas et al.,2024)",
       "(Shoham and Leyton-Brown, 2008)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Team of Agents::p5": {
     "paper_id": "target_paper",
     "section": "Team of Agents",
     "paragraph_index": 5,
     "text": "Then, during thepeer interaction phase, the agents optionally exchange information according to the communica- tion graph prescribed by the topology. 4",
-    "local_total": 0.3433333333333333,
-    "local_technical": 0.3433333333333333,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.003121212121212121,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0015606060606060605,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::CrS-Aware Aggregation::p1": {
     "paper_id": "target_paper",
     "section": "CrS-Aware Aggregation",
     "paragraph_index": 1,
     "text": "As illustrated in Figure 1, after peer interactions, each agent ai\u2208Atgenerates an output. Exist- ing coordination mechanisms (discussed in Ap- pendix C) integrate these outputs into an answer to the user query, following the strategies such as majority voting. Building on top of the existing aggregation schemes, our system adds credibility-scores (CrS) to make the final output more reliable and robust against adversaries and low-performing agents. Formally, the credibility score CrS(j)\u2208[0,1] of an agent aj\u2208 A is a non-negative number that reflects how reliable the system views the agent ai according to its performance in the previous query answering rounds. The credibility scores can be used in various co- ordination mechanism by replacing the unweighted aggregation with the weighted aggregation using the CrS scores.",
-    "local_total": 0.5566666666666666,
-    "local_technical": 0.5566666666666666,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.005060606060606061,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0025303030303030303,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::CrS-Aware Aggregation::p2": {
     "paper_id": "target_paper",
@@ -251,29 +267,31 @@
     "paragraph_index": 2,
     "text": "Without loss of generality, in the following, we illustrate their integration into two integration mechanisms: (a) centroid-based aggregation: (Ebrahimi et al., 2024) proposes an aggregation strategy that first finds the centroid of the generated outputs in the embedding space, and then returns the closest an- swer to the centroid as the final output (see Ap- pendix A for more details). We use the CrS scores to find the CrS-aware centroid x \u20d7+as the weighted average of the generated outputs: x \u20d7+=1 N\u2211\ufe02 i:ai\u2208AtCrS(i) t\u22121v \u20d7(O(ai, qt)) (1) Where O(ai, qt)is the output of agent aiforqt, v \u20d7(o)is the embedding of an output o, andCrS(i) t\u22121 is the current credibility score of ai. (b) LLM-assisted aggregation: Instead of using a specific formula for aggregation, one can use an LLM for this step, where in addition to the out- putso1,\u00b7\u00b7\u00b7, oN, the CrS scores of the participating agents are sent to a Credibility -aware Coordina- tor LLM , which we trust. The coordinator then aggregates the individual outputs and generates the final output while considering the CrS scores.5",
     "local_total": 0.5,
-    "local_technical": 0.4066666666666667,
-    "local_citation": 0.09333333333333332,
-    "technical_rank": 0.0036969696969696973,
-    "citation_rank": 0.0008484848484848484,
-    "combined_score": 0.0022727272727272726,
+    "local_technical": 0.5,
+    "local_citation": 0.0,
+    "technical_rank": 0.004712291949878013,
+    "citation_rank": 0.0,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 1,
     "citations": [
       "(Ebrahimi et al.,2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Learning Credibility Scores On-The-Fly::p1": {
     "paper_id": "target_paper",
     "section": "Learning Credibility Scores On-The-Fly",
     "paragraph_index": 1,
     "text": "Our system learns the credibility scores of the agents on the fly based on their performance in answering previous queries {q1,\u00b7\u00b7\u00b7, qt\u22121}. Initially, assuming there are no prior information about the reliability of the agents, all credibility scores are set to a default value (e.g., 0.5). Then, at the end of each round t, the system computes acontribution score CSc(i)for each of the team members ai\u2208At. Depending on the quality of the generated an- swerotfor the query qt, the team is rewarded with a value rt\u2208[\u22121,1]. The contribution scores and the reward value are then used for updating the credibility scores.",
-    "local_total": 0.5033333333333333,
-    "local_technical": 0.5033333333333333,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004575757575757576,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.002287878787878788,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Learning Credibility Scores On-The-Fly::p2": {
     "paper_id": "target_paper",
@@ -281,57 +299,61 @@
     "paragraph_index": 2,
     "text": "The computation of the reward values is discussed in Appendix D. In the following, we first discuss the computation of the contribution scores, and then explain how the credibility scores are updated. 5.1 Calculating the agent contributions Given a query qt, we model the process of generat- ing the output otas a game, where the team mem- bers collaboratively obtain the reward rt. Since the team members may have different impacts in the generation of the output, their share of the reward should be proportional to their contribution. We propose the following approaches for com- puting the contribution scores (CSc): (i) Shapley Values for CSc computation: Our first approach for computing the contribution scores is based on Shapley values \u2013 the popular con- cept in Game Theory for fairly distributing the reward among a team of players who have collab- orated (Shapley, 1951).",
     "local_total": 0.5,
-    "local_technical": 0.45999999999999996,
-    "local_citation": 0.040000000000000036,
-    "technical_rank": 0.0041818181818181815,
-    "citation_rank": 0.000363636363636364,
-    "combined_score": 0.0022727272727272726,
+    "local_technical": 0.5,
+    "local_citation": 0.0,
+    "technical_rank": 0.004712291949878013,
+    "citation_rank": 0.0,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 1,
     "citations": [
       "(Shapley, 1951)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Learning Credibility Scores On-The-Fly::p3": {
     "paper_id": "target_paper",
     "section": "Learning Credibility Scores On-The-Fly",
     "paragraph_index": 3,
     "text": "Specifically, we consider Shapley values for no-communication topologies and when the aggregation strategy is not LLM- assisted. LetO={o1,\u00b7\u00b7\u00b7, oN}be the set of indi- vidual responses generated by a agents At= {a1,\u00b7\u00b7\u00b7, aN}. Let \u03a3(S)be the final output gen- erated by aggregating the responses of a subset of responses S\u2286O. Also, let R(ot)be the reward allocated based on the quality of otas the answer of the query qt. The contribution score of the agent aiis then computed using the following equation: CSc(i)=\u2211\ufe02 S\u2286R\\oi|S|!(N\u2212|S|\u22121)!",
-    "local_total": 0.64,
-    "local_technical": 0.64,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.005818181818181819,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0029090909090909093,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Learning Credibility Scores On-The-Fly::p4": {
     "paper_id": "target_paper",
     "section": "Learning Credibility Scores On-The-Fly",
     "paragraph_index": 4,
     "text": "N!(\ufe02 R(\u03a3(\ufe01 S\u222axn))\ufe01 \u2212R(\ufe01 \u03a3(S))\ufe01)\ufe02(ii) LLM-as-Judge for CSc computation: Despite their advantages such as theoretical guarantees, it is #P-hard to compute Shapley values. As a result, computing the CSc values based on Shapley values require a combinatorial number of reward value computations for the aggregated outputs generated by each subset of (At\\ai). This makes it practi- cally infeasible to compute the contribution scores for the following cases. (A) When the team mem- bers communicate, their output may be impacted by the composition of the team. As a result, for each subset S\u2286At, one would need to form a new team and observe new outputs.",
-    "local_total": 0.43,
-    "local_technical": 0.43,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.003909090909090909,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0019545454545454545,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Learning Credibility Scores On-The-Fly::p5": {
     "paper_id": "target_paper",
     "section": "Learning Credibility Scores On-The-Fly",
     "paragraph_index": 5,
     "text": "(B) When the aggregation of reward value computation is LLM- assisted, an LLM query would be needed for each subset S\u2286Atto compute the reward. Therefore, we instead use an LLM Judge to com- pute the contribution scores in such settings. Specif- ically, given a query qt, we send the final answer ot, the dialogue log, and the agent outputs to the LLM Judge, and ask the judge to quantify the contribu- tion of each agent in the generation of the final out- putot. The judge can analyze the message-passing log and observe which agents changed their re- sponse after the communication. The Agents never see these numbers to prevent strategic gaming.",
-    "local_total": 0.37000000000000005,
-    "local_technical": 0.37000000000000005,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.0033636363636363642,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0016818181818181821,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Learning Credibility Scores On-The-Fly::p6": {
     "paper_id": "target_paper",
@@ -341,11 +363,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Experiments Setting::p1": {
     "paper_id": "target_paper",
@@ -353,18 +376,19 @@
     "paragraph_index": 1,
     "text": "Backbone Models & Datasets. We deploy three lightweight open-source LLMs; Llama3.2(3B) (Ol- lama, 2024b), Mistral(7B) (AI, 2023) and Qwen2.5(7B) (Yang et al., 2024) as both agentsTable 1: Accuracy results for multi-agent LLMs using LLaMA 3.2 3B, Mistral 7B, and Qwen2.5 7B. CrSindicates use of the Credibility Scoring mechanism, and the accuracy gain over naive coordination is denoted by \u2206. Backbone Model Architecture GSM8K MMLU-MS MATH Research QA CrS \u2206 CrS \u2206 CrS \u2206 CrS \u2206 LLaMA 3.2(3B)SIA 47.5 +8% 35.5 +15% 40.0 +7% 52.0 +51% CrS-ordered Chain 43.0 +20% 44.0 +16% 32.0 +15% 84.0 +20% Mistral(7B)SIA 12.0 +6% 21.0 +9% 11.5 +5.5% 86.0 +14% CrS-ordered Chain 13.0 +11% 32.0 +6% 08.0 +6% 77.0 \u22127% Qwen2.5(7B)SIA 75.5 +10.5% 43.0 +25.5% 65.0 - 59.0 +17% CrS-ordered Chain 60.0 +10% 52.0 +10% 59.8 +9% 90.0 +5% and coordinator, allowing cost-efficient scaling while testing models that remain susceptible to adversarial noise. A stronger GPT-4o mini (Ol- lama, 2024a) acts as an external judge, evaluating and scoring the team\u2019s final answers.",
     "local_total": 0.5,
-    "local_technical": 0.33666666666666667,
-    "local_citation": 0.16333333333333333,
-    "technical_rank": 0.003060606060606061,
-    "citation_rank": 0.001484848484848485,
-    "combined_score": 0.002272727272727273,
+    "local_technical": 0.5,
+    "local_citation": 0.0,
+    "technical_rank": 0.004712291949878013,
+    "citation_rank": 0.0,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 4,
     "citations": [
       "(Ol-lama, 2024b)",
       "(AI, 2023)",
       "(Yang et al., 2024)",
       "(Ol-lama, 2024a)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Experiments Setting::p2": {
     "paper_id": "target_paper",
@@ -374,9 +398,9 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 5,
     "citations": [
       "(Hendrycks et al., 2020)",
@@ -384,7 +408,8 @@
       "(Cobbeet al., 2021)",
       "(Chen et al., 2021)",
       "(Rosset et al.,2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Experiments Setting::p3": {
     "paper_id": "target_paper",
@@ -394,13 +419,14 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 1,
     "citations": [
       "(Li et al., 2024a)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Collaboration Setup::p1": {
     "paper_id": "target_paper",
@@ -410,11 +436,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Collaboration Setup::p2": {
     "paper_id": "target_paper",
@@ -424,11 +451,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Collaboration Setup::p3": {
     "paper_id": "target_paper",
@@ -438,13 +466,14 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 1,
     "citations": [
       "(Ebrahimi et al., 2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p1": {
     "paper_id": "target_paper",
@@ -454,11 +483,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p2": {
     "paper_id": "target_paper",
@@ -468,11 +498,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p3": {
     "paper_id": "target_paper",
@@ -482,11 +513,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p4": {
     "paper_id": "target_paper",
@@ -496,11 +528,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p5": {
     "paper_id": "target_paper",
@@ -510,11 +543,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p6": {
     "paper_id": "target_paper",
@@ -524,11 +558,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p7": {
     "paper_id": "target_paper",
@@ -538,11 +573,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p8": {
     "paper_id": "target_paper",
@@ -552,11 +588,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p9": {
     "paper_id": "target_paper",
@@ -566,11 +603,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p10": {
     "paper_id": "target_paper",
@@ -580,11 +618,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p11": {
     "paper_id": "target_paper",
@@ -594,11 +633,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Reasoning vs Multi-Choice Tasks::p12": {
     "paper_id": "target_paper",
@@ -608,11 +648,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Judge Alters the Outcome::p1": {
     "paper_id": "target_paper",
@@ -622,11 +663,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Judge Alters the Outcome::p2": {
     "paper_id": "target_paper",
@@ -636,11 +678,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Judge Alters the Outcome::p3": {
     "paper_id": "target_paper",
@@ -650,11 +693,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Topology and Link Density::p1": {
     "paper_id": "target_paper",
@@ -664,11 +708,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Topology and Link Density::p2": {
     "paper_id": "target_paper",
@@ -678,11 +723,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Topology and Link Density::p3": {
     "paper_id": "target_paper",
@@ -692,11 +738,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Adversary Proportion::p1": {
     "paper_id": "target_paper",
@@ -706,11 +753,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Experiment Results > Insights from Experimental Observations > Adversary Proportion::p2": {
     "paper_id": "target_paper",
@@ -720,11 +768,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Conclusion::p1": {
     "paper_id": "target_paper",
@@ -734,11 +783,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p1": {
     "paper_id": "target_paper",
@@ -748,11 +798,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p2": {
     "paper_id": "target_paper",
@@ -762,11 +813,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p3": {
     "paper_id": "target_paper",
@@ -776,11 +828,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p4": {
     "paper_id": "target_paper",
@@ -790,11 +843,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p5": {
     "paper_id": "target_paper",
@@ -804,11 +858,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p6": {
     "paper_id": "target_paper",
@@ -818,11 +873,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p7": {
     "paper_id": "target_paper",
@@ -832,11 +888,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p8": {
     "paper_id": "target_paper",
@@ -846,11 +903,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p9": {
     "paper_id": "target_paper",
@@ -860,11 +918,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p10": {
     "paper_id": "target_paper",
@@ -874,179 +933,192 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p11": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 11,
     "text": "Sana Ebrahimi, Nima Shahbazi, and Abolfazl Asudeh. 2024. Requal-lm: Reliability and equity through aggregation in large language models. In NAACL- HLT (Findings) . Neel Guha, Mayee Chen, Trevor Chow, Ishan Khare, and Christopher Re.",
-    "local_total": 0.47,
-    "local_technical": 0.47,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004272727272727273,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0021363636363636363,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p12": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 12,
     "text": "2024. Smoothie: Label free language model routing. Advances in Neural Infor- mation Processing Systems , 37:127645\u2013127672. Taicheng Guo, Xiuying Chen, Yaqi Wang, Ruidi Chang, Shichao Pei, Nitesh V Chawla, Olaf Wiest, and Xi- angliang Zhang. 2024.",
-    "local_total": 0.37666666666666665,
-    "local_technical": 0.37666666666666665,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.0034242424242424243,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0017121212121212121,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p13": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 13,
     "text": "Large language model based multi-agents: A survey of progress and challenges. arXiv preprint arXiv:2402.01680 .Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Xiaodong Song, and Jacob Steinhardt. 2020. Measuring massive multitask language understanding. ArXiv , abs/2009.03300.",
-    "local_total": 0.43,
-    "local_technical": 0.43,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.003909090909090909,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0019545454545454545,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p14": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 14,
     "text": "Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt. 2021. Measuring mathematical problem solving with the math dataset. NeurIPS . Sirui Hong, Xiawu Zheng, Jonathan Chen, Yuheng Cheng, Jinlin Wang, Ceyao Zhang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, Liyang Zhou, et al.",
-    "local_total": 0.3933333333333333,
-    "local_technical": 0.3933333333333333,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.003575757575757576,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.001787878787878788,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p15": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 15,
     "text": "2023. Metagpt: Meta programming for multi-agent collabo- rative framework. arXiv preprint arXiv:2308.00352 . Jen-tse Huang, Jiaxu Zhou, Tailin Jin, Xuhui Zhou, Zixi Chen, Wenxuan Wang, Youliang Yuan, Maarten Sap, and Michael R Lyu. 2024.",
-    "local_total": 0.4066666666666667,
-    "local_technical": 0.4066666666666667,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.0036969696969696973,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0018484848484848486,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p16": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 16,
     "text": "On the resilience of multi- agent systems with malicious agents. arXiv preprint arXiv:2408.00989 . Guohao Li, Hasan Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem. 2023. Camel: Communicative agents for\" mind\" exploration of large language model society.",
-    "local_total": 0.4766666666666666,
-    "local_technical": 0.4766666666666666,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004333333333333333,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0021666666666666666,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p17": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 17,
     "text": "Advances in Neural Information Processing Systems , 36:51991\u201352008. Junyou Li, Qin Zhang, Yangbin Yu, Qiang Fu, and Deheng Ye. 2024a. More agents is all you need. arXiv preprint arXiv:2402.05120 .",
-    "local_total": 0.4633333333333334,
-    "local_technical": 0.4633333333333334,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004212121212121212,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.002106060606060606,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p18": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 18,
     "text": "Xinyi Li, Sai Wang, Siqi Zeng, Yu Wu, and Yi Yang. 2024b. A survey on llm-based multi-agent sys- tems: workflow, infrastructure, and challenges. Vici- nagearth , 1(1):9. Tian Liang, Zhiwei He, Wenxiang Jiao, Xing Wang, Yan Wang, Rui Wang, Yujiu Yang, Shuming Shi, and Zhaopeng Tu.",
-    "local_total": 0.4166666666666667,
-    "local_technical": 0.4166666666666667,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.003787878787878788,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.001893939393939394,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p19": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 19,
     "text": "2023a. Encouraging divergent think- ing in large language models through multi-agent debate. arXiv preprint arXiv:2305.19118 . Tian Liang, Zhiwei He, Wenxiang Jiao, Xing Wang, Yan Wang, Rui Wang, Yujiu Yang, Shuming Shi, and Zhaopeng Tu. 2023b.",
-    "local_total": 0.4366666666666667,
-    "local_technical": 0.4366666666666667,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.00396969696969697,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.001984848484848485,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p20": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 20,
     "text": "Encouraging divergent think- ing in large language models through multi-agent debate. arXiv preprint arXiv:2305.19118 . Zijun Liu, Yanzhe Zhang, Peng Li, Yang Liu, and Diyi Yang. 2023. Dynamic llm-agent network: An llm- agent collaboration framework with agent team opti- mization.",
-    "local_total": 0.37000000000000005,
-    "local_technical": 0.37000000000000005,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.0033636363636363642,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0016818181818181821,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p21": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 21,
     "text": "arXiv preprint arXiv:2310.02170 . Scott M Lundberg and Su-In Lee. 2017. A unified ap- proach to interpreting model predictions. Advances in neural information processing systems , 30.",
-    "local_total": 0.48333333333333334,
-    "local_technical": 0.48333333333333334,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.0043939393939393945,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0021969696969696972,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p22": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 22,
     "text": "Ollama. 2024a. Gpt-4o mini - cheval blanc. Accessed: 2025-04-24. Ollama.",
-    "local_total": 0.3333333333333333,
-    "local_technical": 0.3333333333333333,
+    "local_total": 0.5,
+    "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.0030303030303030303,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0015151515151515152,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p23": {
     "paper_id": "target_paper",
@@ -1056,11 +1128,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p24": {
     "paper_id": "target_paper",
@@ -1070,11 +1143,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p25": {
     "paper_id": "target_paper",
@@ -1084,11 +1158,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p26": {
     "paper_id": "target_paper",
@@ -1098,11 +1173,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p27": {
     "paper_id": "target_paper",
@@ -1112,11 +1188,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p28": {
     "paper_id": "target_paper",
@@ -1126,11 +1203,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p29": {
     "paper_id": "target_paper",
@@ -1140,11 +1218,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p30": {
     "paper_id": "target_paper",
@@ -1154,11 +1233,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p31": {
     "paper_id": "target_paper",
@@ -1168,13 +1248,14 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 1,
     "citations": [
       "(BEA 2023)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p32": {
     "paper_id": "target_paper",
@@ -1184,11 +1265,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p33": {
     "paper_id": "target_paper",
@@ -1198,11 +1280,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p34": {
     "paper_id": "target_paper",
@@ -1212,11 +1295,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p35": {
     "paper_id": "target_paper",
@@ -1226,11 +1310,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p36": {
     "paper_id": "target_paper",
@@ -1240,9 +1325,9 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 11,
     "citations": [
       "(Xiao et al., 2023)",
@@ -1256,7 +1341,8 @@
       "(Li et al., 2024b)",
       "(Guo et al.,2024)",
       "(Xi et al., 2025)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p37": {
     "paper_id": "target_paper",
@@ -1266,9 +1352,9 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 7,
     "citations": [
       "(Liang et al.,2023b)",
@@ -1278,7 +1364,8 @@
       "(Wu et al., 2023)",
       "(Hong et al., 2023)",
       "(Li et al., 2023)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p38": {
     "paper_id": "target_paper",
@@ -1288,15 +1375,16 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 3,
     "citations": [
       "(Zhang et al., 2024b)",
       "(Amayuelas et al., 2024)",
       "(Xiet al., 2025)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p39": {
     "paper_id": "target_paper",
@@ -1306,11 +1394,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p40": {
     "paper_id": "target_paper",
@@ -1320,15 +1409,16 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 3,
     "citations": [
       "(Liu et al., 2023)",
       "(Yanget al., 2025)",
       "(Liang et al., 2023a)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p41": {
     "paper_id": "target_paper",
@@ -1338,11 +1428,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p42": {
     "paper_id": "target_paper",
@@ -1352,13 +1443,14 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 1,
     "citations": [
       "(Lundberg and Lee, 2017)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p43": {
     "paper_id": "target_paper",
@@ -1368,13 +1460,14 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 1,
     "citations": [
       "(Wang et al., 2022)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p44": {
     "paper_id": "target_paper",
@@ -1384,9 +1477,9 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 5,
     "citations": [
       "(Li et al.,2024a)",
@@ -1394,7 +1487,8 @@
       "(Amayuelas et al., 2024)",
       "(Chen et al., 2023)",
       "(Pitis et al., 2023)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p45": {
     "paper_id": "target_paper",
@@ -1404,15 +1498,16 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 3,
     "citations": [
       "(Li et al., 2024a)",
       "(Guha et al., 2024)",
       "(Ebrahimi et al., 2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p46": {
     "paper_id": "target_paper",
@@ -1422,11 +1517,12 @@
     "local_total": 0.5,
     "local_technical": 0.5,
     "local_citation": 0.0,
-    "technical_rank": 0.004545454545454545,
+    "technical_rank": 0.004712291949878013,
     "citation_rank": 0.0,
-    "combined_score": 0.0022727272727272726,
+    "combined_score": 0.0023561459749390063,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009270986361371693
   },
   "target_paper::Limitations::p47": {
     "paper_id": "target_paper",
@@ -1436,15 +1532,16 @@
     "local_total": 0.5,
     "local_technical": 0.25333333333333335,
     "local_citation": 0.24666666666666665,
-    "technical_rank": 0.0023030303030303033,
-    "citation_rank": 0.0022424242424242424,
-    "combined_score": 0.0022727272727272726,
+    "technical_rank": 0.00238756125460486,
+    "citation_rank": 0.002049981907362508,
+    "combined_score": 0.002218771580983684,
     "citation_count": 3,
     "citations": [
       "(Liang et al., 2023b)",
       "(Zhang et al., 2024a)",
       "(Wang et al.,2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.00873044424458096
   },
   "target_paper::Limitations::p48": {
     "paper_id": "target_paper",
@@ -1452,29 +1549,31 @@
     "paragraph_index": 48,
     "text": "D Reward Calculation Evaluation and feedback ensure that agents\u2019 con- tributions are measured against some reliable stan- dard. Often, a ground truth or external judge is used to compare the collective, final solution with a correct reference or quality metric. This judge can be an oracle, a human evaluator, or a special- ized LLM that scores how accurate or useful each solution is (Rosset et al., 2024). The resulting re- ward/penalty can then guide learning, credibility score updates, ultimately improving the system\u2019s performance over time. We propose a comprehensive framework suit- able for a variety of scenarios, emphasizing pre- ventive measures to penalize adversarial behavior and facilitating informed aggregation to improve decision-making reliability.",
     "local_total": 0.5,
-    "local_technical": 0.4466666666666666,
-    "local_citation": 0.0533333333333334,
-    "technical_rank": 0.00406060606060606,
-    "citation_rank": 0.00048484848484848543,
-    "combined_score": 0.0022727272727272726,
+    "local_technical": 0.41333333333333333,
+    "local_citation": 0.08666666666666667,
+    "technical_rank": 0.0038954946785658235,
+    "citation_rank": 0.0007202639133976379,
+    "combined_score": 0.0023078792959817305,
     "citation_count": 1,
     "citations": [
       "(Rosset et al., 2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.009081066158174948
   },
   "target_paper::Limitations::p49": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 49,
     "text": "Our framework com- prises three key components: 1) a team of agents organized into diverse topologies to accommodate multiple modes of multi-agent collaboration, 2) an evaluation mechanism designed to objectively assess the performance of individual agents, and 3) a coordination mechanism that systematically integrates agent responses. Furthermore, we intro- duce two critical metrics\u2014the Credibility Score (Src) and the Contribution Score\u2014to effectively measure each agent\u2019s reliability and contribution. These components are designed flexibly, allowing our method to adapt seamlessly to any collabora- tion graph topology and coordination strategy. E Experiments Setting Details Backbone Models. Although powerful models such as GPT-4 exhibit notable robustness to adver- sarial interference, smaller and less sophisticated models remain highly vulnerable, experiencing sig- nificant accuracy drop under adversarial conditions.To effectively assess the robustness and efficiency of our proposed framework, we select lightweight open-source models as the backbone for both in- dividual agents and the coordinator.",
-    "local_total": 0.6933333333333334,
-    "local_technical": 0.6933333333333334,
+    "local_total": 0.5933333333333334,
+    "local_technical": 0.5933333333333334,
     "local_citation": 0.0,
-    "technical_rank": 0.006303030303030303,
+    "technical_rank": 0.005591919780521908,
     "citation_rank": 0.0,
-    "combined_score": 0.0031515151515151517,
+    "combined_score": 0.002795959890260954,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.011001570482161077
   },
   "target_paper::Limitations::p50": {
     "paper_id": "target_paper",
@@ -1484,9 +1583,9 @@
     "local_total": 0.5,
     "local_technical": 0.30333333333333334,
     "local_citation": 0.19666666666666666,
-    "technical_rank": 0.0027575757575757577,
-    "citation_rank": 0.0017878787878787877,
-    "combined_score": 0.0022727272727272726,
+    "technical_rank": 0.002858790449592661,
+    "citation_rank": 0.001634445034248486,
+    "combined_score": 0.0022466177419205734,
     "citation_count": 9,
     "citations": [
       "(Rosset et al., 2024)",
@@ -1498,148 +1597,159 @@
       "(Hendrycks et al., 2021)",
       "(Cobbeet al., 2021)",
       "(Chen et al., 2021)"
-    ]
+    ],
+    "normalized_combined_score": 0.008840013592579082
   },
   "target_paper::Limitations::p51": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 51,
     "text": "Specifi- cally, we use high school mathematics and statistics questions from the MMLU dataset, which are re- ferred to as MMLU-MS, to assess the performance of the model in multiple-choice question answering. The MATH and GSM8K datasets are employed to evaluate mathematical reasoning capabilities, while HumanEval is used to assess coding proficiency. The Researchy Questions dataset consists of non- factoid questions derived from real-world search engine queries, characterized by their subjective nature and absence of a singularly correct answer. In this context, a human judge or an external judge must carefully evaluate agent responses, determin- ing correctness based on provided instructions and contextual information. E.1 Collaboration Setup Our primary experiments involve a team of five agents, comprising two faithful agents and three adversarial agents explicitly instructed to introduce subtle inaccuracies in their responses without re- vealing their adversarial nature.",
-    "local_total": 0.39999999999999997,
-    "local_technical": 0.39999999999999997,
+    "local_total": 0.42,
+    "local_technical": 0.42,
     "local_citation": 0.0,
-    "technical_rank": 0.003636363636363636,
+    "technical_rank": 0.00395832523789753,
     "citation_rank": 0.0,
-    "combined_score": 0.001818181818181818,
+    "combined_score": 0.001979162618948765,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.007787628543552222
   },
   "target_paper::Limitations::p52": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 52,
     "text": "We employ con- sistent prompts across various tasks, adapting only the task-specific details. Our analysis primarily explores two main communication structures: a Stochastic Interaction Architecture (SIA) , Stan- dalone Agent Architecture (SAA) and a Credibility- ordered Chain. E.1.1 Standalone Agent Architecture (SAA) In SAA every agent receives the same question Q and produces an answer without any communica-tion. The resulting communication graph is edge- less: G= (A,\u2205). We aggregate the set of agent answers R={x1, .",
-    "local_total": 0.47333333333333333,
-    "local_technical": 0.47333333333333333,
+    "local_total": 0.63,
+    "local_technical": 0.63,
     "local_citation": 0.0,
-    "technical_rank": 0.004303030303030303,
+    "technical_rank": 0.005937487856846295,
     "citation_rank": 0.0,
-    "combined_score": 0.0021515151515151517,
+    "combined_score": 0.0029687439284231476,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.011681442815328333
   },
   "target_paper::Limitations::p53": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 53,
     "text": ". . , x |R|}using the centroid- based ensemble method of (Ebrahimi et al., 2024). Letv(x)be the embedding of answer xand let wi\u221dCrS(i)be the credibility weight of agent i. The credibility-weighted centroid is vc=1 |R||R|\u2211\ufe02 i=1wiv(xi), and the final answer is the one whose embedding is closest (cosine distance d) to that centroid: x\u22c6= arg min x\u2208Rd(\ufe01 v(x),vc)\ufe01 .",
-    "local_total": 0.7333333333333334,
-    "local_technical": 0.7333333333333334,
+    "local_total": 0.7766666666666667,
+    "local_technical": 0.7766666666666667,
     "local_citation": 0.0,
-    "technical_rank": 0.006666666666666667,
+    "technical_rank": 0.007319760162143847,
     "citation_rank": 0.0,
-    "combined_score": 0.0033333333333333335,
+    "combined_score": 0.0036598800810719234,
     "citation_count": 1,
     "citations": [
       "(Ebrahimi et al., 2024)"
-    ]
+    ],
+    "normalized_combined_score": 0.014400932147997475
   },
   "target_paper::Limitations::p54": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 54,
     "text": "Finally, we calculate each agent\u2019s Contribution Score (CSc)\u2014derived from the Shapley value as described in\u00a75.1\u2014and, from these, obtain the Cred- ibility Scores (CrS) for the entire set of responses. E.1.2 Stochastic Interaction Architecture (SIA) SIA adds a sparse, random communication graph Gtthat is resampled for every query. For each ques- tion we draw mundirected edges from the(\ufe01N 2)\ufe01 possible pairs with replacment ( N= 5, m= 6in our experiments), typically creating six links. Con- nected agents exchange their current answers and may revise them, producing diverse topologies such as trees, rings, and other sparse structures\u2014while avoiding full information saturation that would oth- erwise aid adversaries. E.1.3 Credibility-ordered Chain To further test our hypothesis within a specific, stable structure, we introduce the chain-based ar- chitecture.",
-    "local_total": 0.44,
-    "local_technical": 0.44,
+    "local_total": 0.53,
+    "local_technical": 0.53,
     "local_citation": 0.0,
-    "technical_rank": 0.004,
+    "technical_rank": 0.004995029466870693,
     "citation_rank": 0.0,
-    "combined_score": 0.002,
+    "combined_score": 0.0024975147334353465,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.009827245543053994
   },
   "target_paper::Limitations::p55": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 55,
     "text": "In the chain architecture agents are sorted in descending order of their credibility score in the beginning of the experiment. Communica- tion in this structure only occurs between adjacent agents. Positioning the most reliable agents ear- lier in the chain limits the influence of adversaries further down the chain. Although the communica- tion pattern remains fixed, CrS values continue to be updated throughout the interactions within the chain. E.2 Why Three Architectures?",
-    "local_total": 0.6133333333333333,
-    "local_technical": 0.6133333333333333,
+    "local_total": 0.52,
+    "local_technical": 0.52,
     "local_citation": 0.0,
-    "technical_rank": 0.005575757575757575,
+    "technical_rank": 0.0049007836278731325,
     "citation_rank": 0.0,
-    "combined_score": 0.0027878787878787875,
+    "combined_score": 0.0024503918139365663,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.00964182581582656
   },
   "target_paper::Limitations::p56": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 56,
     "text": "SAA provides a lower bound on performance\u2014no interactions means no adversarial persua- sion\u2014while SIA explores the hard regime whereadversaries may form majorities and hijack discussions by persuading other agents. The credibility -ordered chain tests our hypothesis in a stable yet asymmetric structure. Experiments in \u00a76 demonstrate that CSc/CrS significantly improve robustness across all three settings. F Extended Experiment Results F.1 Judge Alters the Outcome The effectiveness of the judge is highly task- dependent. To illustrate this, we present results on two different benchmarks: HumanEval for code completion, and GSM8K for mathematical reason- ing.",
-    "local_total": 0.7433333333333333,
-    "local_technical": 0.7433333333333333,
+    "local_total": 0.6766666666666667,
+    "local_technical": 0.6766666666666667,
     "local_citation": 0.0,
-    "technical_rank": 0.006757575757575757,
+    "technical_rank": 0.0063773017721682436,
     "citation_rank": 0.0,
-    "combined_score": 0.0033787878787878787,
+    "combined_score": 0.0031886508860841218,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.012546734875723026
   },
   "target_paper::Limitations::p57": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 57,
     "text": "On the HumanEval benchmark, using GPT-4o mini as the judge proves problematic. In this task, the judge receives a reference solution, a set of test functions, and the final response generated by the CrS coordinator. However, it often fails to correctly determine whether the generated code is function- ally correct. This results in numerous cases where incorrect solutions are mistakenly rewarded with a score of 1, severely distorting the Contribution Scores (CSc) and, consequently, the Credibility Scores (CrS). As shown in Table 3, these misjudg- ments ultimately hurt overall system accuracy.",
-    "local_total": 0.2333333333333333,
-    "local_technical": 0.2333333333333333,
+    "local_total": 0.25333333333333335,
+    "local_technical": 0.25333333333333335,
     "local_citation": 0.0,
-    "technical_rank": 0.002121212121212121,
+    "technical_rank": 0.00238756125460486,
     "citation_rank": 0.0,
-    "combined_score": 0.0010606060606060605,
+    "combined_score": 0.00119378062730243,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.004697299756428326
   },
   "target_paper::Limitations::p58": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 58,
     "text": "For mathematical reasoning questions from GSM8K, we observe a different failure mode when using a weaker judge. Figure 7 shows the CrStrajectories for five agents\u2014two faithful and three adversarial\u2014when LLaMA 3.2\u2019s is used as the evaluator. Compared to the more stable CrS pat- terns seen with GPT-4o mini (Figure 2), the scores here fluctuate significantly. This instability stems from LLaMA 3.2\u2019s tendency to produce malformed outputs or to incorrectly assess agent contribu- tions\u2014such as returning a two-element array (e.g., [0.2,0.8]) in a five-agent setting\u2014indicating its lim- ited ability to follow contribution-scoring instruc- tions accurately. 0 10 20 30 40 50 Queries0.00.20.40.60.81.0Credibility Score (CrS) Faithful Agent 1- Qwen2.5 Faithful Agent 2- Qwen2.5 Adversarial Agent1- Qwen2.5 Adversarial Agent2- Qwen2.5 Adversarial Agent3- Qwen2.5 Figure 7: CrS evolution with a LLaMA-3.2(3B) judge supervising five Qwen2.5(7B) agents on GSM8K\u2014directly comparable to Figure2a.Agent L1 L2 L3 L4 L5 L6 CrS (curr \u2192fut.) CSc Agent 1: B B B B X X X 0.4593\u21920.4617 0.15 Agent 2: B B B D D C C 0.4143\u21920.4143 0.20 Agent 3: B B B B B B D0.4224\u21920.4225 0.20 Agent 4: B B C X C C D0.4711\u21920.4688 0.25 Agent 5: C C C C C C C 0.4655\u21920.4656 0.20 Final Answer C Correct Answer D Reward -1 Table 4: Compact illustration of agent response dynamics and credibility updates.",
-    "local_total": 0.4166666666666667,
-    "local_technical": 0.4166666666666667,
+    "local_total": 0.43333333333333335,
+    "local_technical": 0.43333333333333335,
     "local_citation": 0.0,
-    "technical_rank": 0.003787878787878788,
+    "technical_rank": 0.004083986356560944,
     "citation_rank": 0.0,
-    "combined_score": 0.001893939393939394,
+    "combined_score": 0.002041993178280472,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.008034854846522135
   },
   "target_paper::Limitations::p59": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 59,
     "text": "Yellow cells indicate response changes. Agent L1 L2 L3 L4 L5 L6 CrS (\u2192) CSc Agent 1: D B B B B B A0.4841\u21920.4940 0.00 Agent 2: B X X A A A A 0.3613\u21920.3686 0.00 Agent 3: B B B B X X X 0.4034\u21920.3951 0.40 Agent 4: B B A A C A C0.4561\u21920.4468 0.40 Agent 5: C C C C C C C 0.5139\u21920.5139 0.20 Final Answer C Correct Answer B Reward -1 Table 5: Illustrative example from MMLU with two faithful agents. Although the final response was incorrect, these agents were not penalized\u2014 the judge identified adversarial influence from Agent 4 based on the communication history. 0 20 40 60 80 100 Queries0.550.600.650.700.750.800.85Credibility Score (CrS) Faithful Agent 1- Llama3.2 Adversarial Agent1- Llama3.2 (a)After exchanging messages, Each agent outputs a revised solution, and an identical LLaMA-3.2 coordinator produces the final response using CrS-weighted aggregation of their answers. 0 20 40 60 80 100 Queries0.20.40.60.81.0Credibility Score (CrS) Faithful Agent 1- Llama3.2 Adversarial Agent1- Llama3.2(b)The agents have no inter-agent communication (SAA).",
-    "local_total": 0.7233333333333333,
-    "local_technical": 0.7233333333333333,
+    "local_total": 0.57,
+    "local_technical": 0.57,
     "local_citation": 0.0,
-    "technical_rank": 0.006575757575757576,
+    "technical_rank": 0.005372012822860933,
     "citation_rank": 0.0,
-    "combined_score": 0.003287878787878788,
+    "combined_score": 0.0026860064114304664,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.010568924451963727
   },
   "target_paper::Limitations::p60": {
     "paper_id": "target_paper",
     "section": "Limitations",
     "paragraph_index": 60,
     "text": "Each agent generates a candidate answer, and the coordination mechanism selects the answer nearest to their CrS-weighted centroid. Figure 8: CrS evolution for two independent LLaMA-3.2 (3B).",
-    "local_total": 0.35000000000000003,
-    "local_technical": 0.35000000000000003,
+    "local_total": 0.16666666666666666,
+    "local_technical": 0.16666666666666666,
     "local_citation": 0.0,
-    "technical_rank": 0.003181818181818182,
+    "technical_rank": 0.0015707639832926708,
     "citation_rank": 0.0,
-    "combined_score": 0.001590909090909091,
+    "combined_score": 0.0007853819916463354,
     "citation_count": 0,
-    "citations": []
+    "citations": [],
+    "normalized_combined_score": 0.0030903287871238976
   }
 }
