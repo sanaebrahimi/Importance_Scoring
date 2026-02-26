@@ -32,6 +32,7 @@ DEFAULT_SECTIONS = {
             "Adversary Proportion": None,
         },
     },
+    "Related Work": None,
     "Conclusion": None,
     "Limitations": None,
 }
