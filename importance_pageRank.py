@@ -612,6 +612,7 @@ def aggregate_section_local_scores(
     paragraphs: List[Dict[str, Any]],
     technical_scores: Dict[str, float],
     citation_scores: Dict[str, float],
+    total_scores: Dict[str, float],
 ) -> Dict[str, Any]:
     section_to_paragraphs: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for paragraph in paragraphs:
@@ -621,17 +622,30 @@ def aggregate_section_local_scores(
     for section_name, section_items in section_to_paragraphs.items():
         if not section_items:
             continue
-        weight = 1.0 / len(section_items)
-        weights = {item["paragraph_id"]: weight for item in section_items}
+
+        raw_weights = {
+            item["paragraph_id"]: max(0.0, safe_float(total_scores.get(item["paragraph_id"]), 0.0))
+            for item in section_items
+        }
+        raw_weight_sum = sum(raw_weights.values())
+        if raw_weight_sum <= 0.0:
+            equal_weight = 1.0 / len(section_items)
+            weights = {item["paragraph_id"]: equal_weight for item in section_items}
+            weight_mode = "uniform_fallback_zero_total"
+        else:
+            weights = {pid: raw / raw_weight_sum for pid, raw in raw_weights.items()}
+            weight_mode = "llm_total_normalized"
 
         t_section = sum(weights[p["paragraph_id"]] * technical_scores.get(p["paragraph_id"], 0.0) for p in section_items)
         c_section = sum(weights[p["paragraph_id"]] * citation_scores.get(p["paragraph_id"], 0.0) for p in section_items)
 
         section_scores[section_name] = {
             "weights": weights,
+            "weight_mode": weight_mode,
             "paragraph_count": len(section_items),
             "technical_local": t_section,
             "citation_local": c_section,
+            "overall_local": t_section + c_section,
         }
 
     return section_scores
@@ -641,16 +655,102 @@ def aggregate_paper_local_scores(
     paragraphs: List[Dict[str, Any]],
     technical_scores: Dict[str, float],
     citation_scores: Dict[str, float],
+    total_scores: Dict[str, float],
     paper_id: str,
 ) -> Dict[str, float]:
     paper_paragraphs = [p for p in paragraphs if p.get("paper_id") == paper_id]
     if not paper_paragraphs:
         return {"technical_local": 0.0, "citation_local": 0.0}
 
-    weight = 1.0 / len(paper_paragraphs)
-    t_paper = sum(weight * technical_scores.get(p["paragraph_id"], 0.0) for p in paper_paragraphs)
-    c_paper = sum(weight * citation_scores.get(p["paragraph_id"], 0.0) for p in paper_paragraphs)
-    return {"technical_local": t_paper, "citation_local": c_paper}
+    raw_weights = {
+        p["paragraph_id"]: max(0.0, safe_float(total_scores.get(p["paragraph_id"]), 0.0))
+        for p in paper_paragraphs
+    }
+    raw_weight_sum = sum(raw_weights.values())
+    if raw_weight_sum <= 0.0:
+        equal_weight = 1.0 / len(paper_paragraphs)
+        weights = {p["paragraph_id"]: equal_weight for p in paper_paragraphs}
+        weight_mode = "uniform_fallback_zero_total"
+    else:
+        weights = {pid: raw / raw_weight_sum for pid, raw in raw_weights.items()}
+        weight_mode = "llm_total_normalized"
+
+    t_paper = sum(weights[p["paragraph_id"]] * technical_scores.get(p["paragraph_id"], 0.0) for p in paper_paragraphs)
+    c_paper = sum(weights[p["paragraph_id"]] * citation_scores.get(p["paragraph_id"], 0.0) for p in paper_paragraphs)
+    return {
+        "technical_local": t_paper,
+        "citation_local": c_paper,
+        "overall_local": t_paper + c_paper,
+        "weights": weights,
+        "weight_mode": weight_mode,
+    }
+
+
+def build_normalized_section_tree(
+    paragraphs: List[Dict[str, Any]],
+    paragraph_scores: Dict[str, Any],
+) -> Dict[str, Any]:
+    if not paragraphs:
+        return {}
+
+    paragraph_ids = [p["paragraph_id"] for p in paragraphs if p.get("paragraph_id") in paragraph_scores]
+    if not paragraph_ids:
+        return {}
+
+    raw_combined = {
+        pid: max(0.0, safe_float(paragraph_scores[pid].get("combined_score"), 0.0))
+        for pid in paragraph_ids
+    }
+    total_raw = sum(raw_combined.values())
+    if total_raw <= 0.0:
+        equal = 1.0 / len(paragraph_ids)
+        normalized = {pid: equal for pid in paragraph_ids}
+    else:
+        normalized = {pid: value / total_raw for pid, value in raw_combined.items()}
+
+    # Keep top-level sum numerically exact.
+    residual = 1.0 - sum(normalized.values())
+    if normalized:
+        best_pid = max(normalized, key=normalized.get)
+        normalized[best_pid] += residual
+
+    tree: Dict[str, Any] = {}
+    paragraph_lookup = {p["paragraph_id"]: p for p in paragraphs}
+
+    for pid in paragraph_ids:
+        paragraph = paragraph_lookup[pid]
+        payload = paragraph_scores[pid]
+        norm_score = normalized.get(pid, 0.0)
+        payload["normalized_combined_score"] = norm_score
+
+        path = paragraph.get("section_path") or [paragraph.get("section_name", payload.get("section", "Unknown"))]
+        current = tree
+        for level, section_name in enumerate(path, start=1):
+            if section_name not in current:
+                current[section_name] = {
+                    "type": "section" if level == 1 else "subsection",
+                    "level": level,
+                    "score": 0.0,
+                    "raw_combined_score": 0.0,
+                    "technical_rank": 0.0,
+                    "citation_rank": 0.0,
+                    "subsections": {},
+                }
+
+            node = current[section_name]
+            node["score"] += norm_score
+            node["raw_combined_score"] += safe_float(payload.get("combined_score"), 0.0)
+            node["technical_rank"] += safe_float(payload.get("technical_rank"), 0.0)
+            node["citation_rank"] += safe_float(payload.get("citation_rank"), 0.0)
+            current = node["subsections"]
+
+    top_sum = sum(node["score"] for node in tree.values())
+    top_residual = 1.0 - top_sum
+    if tree:
+        best_top = max(tree, key=lambda k: tree[k]["score"])
+        tree[best_top]["score"] += top_residual
+
+    return tree
 
 
 def load_citation_graph(
@@ -900,8 +1000,7 @@ def run_two_channel_pagerank(
     )
     local_c, citation_local_credit, local_total = compute_citation_local_scores(paragraphs, local_t, local_overall)
 
-    section_local = aggregate_section_local_scores(paragraphs, local_t, local_c)
-    paper_local = aggregate_paper_local_scores(paragraphs, local_t, local_c, paper_id=paper_id)
+    paper_local = aggregate_paper_local_scores(paragraphs, local_t, local_c, local_total, paper_id=paper_id)
 
     nodes, edges, graph_t_seed, graph_c_seed = load_citation_graph(citation_graph_path, paper_id=paper_id)
     paper_local_t = {node: graph_t_seed.get(node, 0.0) for node in nodes}
@@ -961,14 +1060,7 @@ def run_two_channel_pagerank(
             "citations": p.get("citations", []),
         }
 
-    for section_name, section_payload in section_local.items():
-        pids = list(section_payload["weights"].keys())
-        section_payload["technical_rank"] = sum(paragraph_scores[pid]["technical_rank"] for pid in pids)
-        section_payload["citation_rank"] = sum(paragraph_scores[pid]["citation_rank"] for pid in pids)
-        section_payload["combined_score"] = (
-            lambda_weight * section_payload["technical_rank"]
-            + (1.0 - lambda_weight) * section_payload["citation_rank"]
-        )
+    section_scores = build_normalized_section_tree(paragraphs, paragraph_scores)
 
     paper_scores = {
         "paper_id": paper_id,
@@ -978,8 +1070,10 @@ def run_two_channel_pagerank(
         "local": {
             "technical": paper_local["technical_local"],
             "citation": paper_local["citation_local"],
-            "overall_total": paper_local["technical_local"] + paper_local["citation_local"],
+            "overall_total": paper_local["overall_local"],
         },
+        "paragraph_weights": paper_local.get("weights", {}),
+        "paragraph_weight_mode": paper_local.get("weight_mode", "unknown"),
         "technical_rank": tr_paper.get(paper_id, 0.0),
         "citation_rank": cr_paper.get(paper_id, 0.0),
         "combined_score": (
@@ -1008,7 +1102,7 @@ def run_two_channel_pagerank(
         lambda_weight=lambda_weight,
     )
 
-    return citation_scores, section_local, {"paper": paper_scores, "paragraphs": paragraph_scores}, PROMPT_CATALOG
+    return citation_scores, section_scores, {"paper": paper_scores, "paragraphs": paragraph_scores}, PROMPT_CATALOG
 
 
 def print_top_scores(citation_scores: Dict[str, Any], paragraph_scores: Dict[str, Any], limit: int = 10) -> None:
