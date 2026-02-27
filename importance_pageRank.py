@@ -51,6 +51,13 @@ OVERALL_SYSTEM_PROMPT = (
     "Return JSON only."
 )
 
+SPLIT_SYSTEM_PROMPT = (
+    "You are an expert academic reviewer. "
+    "For each paragraph, provide two non-negative raw strengths: "
+    "technical (intrinsic) and citation-added contribution. "
+    "Return JSON only."
+)
+
 TECHNICAL_USER_PROMPT_TEMPLATE = """Task: assign a technical contribution score T(p) in [0, 1] for each paragraph.
 
 Scoring rubric:
@@ -90,11 +97,33 @@ Example:
 }}
 """
 
+SPLIT_USER_PROMPT_TEMPLATE = """Task: for each paragraph, output two non-negative raw values:
+- t_raw: intrinsic technical contribution from the paragraph text itself.
+- c_raw: citation-added contribution due to cited prior work in that paragraph.
+
+Rules:
+- Use raw strengths (not normalized probabilities).
+- Both values must be >= 0.
+- Larger value means stronger contribution in that channel.
+- If citation influence is weak, c_raw can be near 0.
+
+Paragraphs (id -> text snippet):
+{paragraphs_json}
+
+Return ONLY JSON in this exact shape:
+{{
+  "paragraph_id_1": {{"t_raw": 3.2, "c_raw": 0.6}},
+  "paragraph_id_2": {{"t_raw": 0.8, "c_raw": 0.0}}
+}}
+"""
+
 PROMPT_CATALOG = {
     "technical_system_prompt": TECHNICAL_SYSTEM_PROMPT,
     "technical_user_prompt_template": TECHNICAL_USER_PROMPT_TEMPLATE,
     "overall_system_prompt": OVERALL_SYSTEM_PROMPT,
     "overall_user_prompt_template": OVERALL_USER_PROMPT_TEMPLATE,
+    "split_system_prompt": SPLIT_SYSTEM_PROMPT,
+    "split_user_prompt_template": SPLIT_USER_PROMPT_TEMPLATE,
 }
 
 
@@ -567,51 +596,144 @@ def score_overall_contributions(
     )
 
 
-def compute_citation_local_scores(
+def score_channel_raw_split(
+    client: Client,
     paragraphs: List[Dict[str, Any]],
-    technical_scores: Dict[str, float],
+    model: str,
+    n_samples: int,
+    temperature: float,
+    max_retries: int,
+    batch_size: int,
+    snippet_limit: int,
+    debug_log_path: str,
+) -> Tuple[Dict[str, float], Dict[str, float]]:
+    if not paragraphs:
+        return {}, {}
+
+    sample_count = max(1, n_samples)
+    batches = chunked(paragraphs, max(1, batch_size))
+    per_sample_t: List[Dict[str, float]] = []
+    per_sample_c: List[Dict[str, float]] = []
+
+    for sample_idx in range(sample_count):
+        sample_t: Dict[str, float] = {}
+        sample_c: Dict[str, float] = {}
+        current_temp = min(1.0, max(0.0, temperature) + 0.05 * sample_idx)
+
+        for batch_idx, batch in enumerate(batches):
+            snippets = {
+                item["paragraph_id"]: item["text"][: max(80, snippet_limit)]
+                for item in batch
+            }
+            user_prompt = SPLIT_USER_PROMPT_TEMPLATE.format(paragraphs_json=json.dumps(snippets, indent=2))
+
+            parsed: Dict[str, Any] = {}
+            for attempt in range(max(1, max_retries)):
+                try:
+                    response = client.chat(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": SPLIT_SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        options={"temperature": current_temp},
+                    )
+                    raw_response = response.message.content if getattr(response, "message", None) else ""
+                except Exception as exc:
+                    raw_response = f"[exception] {exc}"
+
+                append_debug_log(
+                    debug_log_path,
+                    (
+                        f"[split_batch] sample={sample_idx + 1}/{sample_count} "
+                        f"batch={batch_idx + 1}/{len(batches)} "
+                        f"attempt={attempt + 1}/{max(1, max_retries)} "
+                        f"temperature={current_temp}\n{raw_response}\n"
+                    ),
+                )
+                parsed = parse_json_response(raw_response)
+                if parsed:
+                    break
+
+            for item in batch:
+                pid = item["paragraph_id"]
+                payload = parsed.get(pid, {})
+                if isinstance(payload, dict):
+                    t_raw = max(0.0, safe_float(payload.get("t_raw"), -1.0))
+                    c_raw = max(0.0, safe_float(payload.get("c_raw"), -1.0))
+                else:
+                    t_raw = 1.0
+                    c_raw = 1.0
+
+                if t_raw < 0.0 or c_raw < 0.0:
+                    t_raw, c_raw = 1.0, 1.0
+
+                sample_t[pid] = t_raw
+                sample_c[pid] = c_raw
+
+        per_sample_t.append(sample_t)
+        per_sample_c.append(sample_c)
+
+    avg_t: Dict[str, float] = {}
+    avg_c: Dict[str, float] = {}
+    for p in paragraphs:
+        pid = p["paragraph_id"]
+        avg_t[pid] = sum(sample.get(pid, 1.0) for sample in per_sample_t) / sample_count
+        avg_c[pid] = sum(sample.get(pid, 1.0) for sample in per_sample_c) / sample_count
+
+    return avg_t, avg_c
+
+
+def compute_local_channel_scores(
+    paragraphs: List[Dict[str, Any]],
     overall_scores: Dict[str, float],
+    technical_raw_scores: Dict[str, float],
+    citation_raw_scores: Dict[str, float],
 ) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
     """
-    Split each paragraph total score into:
-    - T(p): intrinsic technical contribution (from technical_scores)
-    - C(p): citation-added value (from total minus technical)
-    with T(p) + C(p) = total paragraph score.
-    Then distribute C(p) to citation blocks (importance_score.py style).
+    Decompose local_total S(p) into technical and citation channels using
+    normalized raw strengths:
+      w_t = t_raw / (t_raw + c_raw), w_c = c_raw / (t_raw + c_raw)
+      T(p) = S(p) * w_t, C(p) = S(p) * w_c
+    and enforce T(p)+C(p)=S(p).
     """
     if not paragraphs:
         return {}, {}, {}
 
-    paragraph_citation_value: Dict[str, float] = {}
+    paragraph_technical: Dict[str, float] = {}
+    paragraph_citation: Dict[str, float] = {}
     paragraph_total: Dict[str, float] = {}
-    citation_credit: Dict[str, float] = {}
 
     for paragraph in paragraphs:
         pid = paragraph["paragraph_id"]
         mentions = paragraph.get("mentions", [])
 
-        t_val = clamp_unit(safe_float(technical_scores.get(pid), 0.0))
-        overall_val = clamp_unit(safe_float(overall_scores.get(pid), t_val))
-        total_val = max(t_val, overall_val)
+        total_val = clamp_unit(safe_float(overall_scores.get(pid), 0.5))
+        t_raw = max(0.0, safe_float(technical_raw_scores.get(pid), 0.0))
+        c_raw = max(0.0, safe_float(citation_raw_scores.get(pid), 0.0))
 
-        # Citation-added value is the part beyond intrinsic technical value.
-        c_val = max(0.0, total_val - t_val)
-        # No citation mentions -> no citation-added component for this paragraph.
+        # Paragraph without citation mentions cannot carry citation channel locally.
         if not mentions:
+            t_val = total_val
             c_val = 0.0
-            total_val = t_val
+        else:
+            denom = t_raw + c_raw
+            if denom <= 0.0:
+                w_t = 0.5
+                w_c = 0.5
+            else:
+                w_t = t_raw / denom
+                w_c = c_raw / denom
+            t_val = total_val * w_t
+            c_val = total_val * w_c
+            # Numerical exactness for T + C = total.
+            t_val += total_val - (t_val + c_val)
 
-        paragraph_citation_value[pid] = c_val
-        paragraph_total[pid] = total_val
+        paragraph_technical[pid] = t_val
+        paragraph_citation[pid] = c_val
+        paragraph_total[pid] = t_val + c_val
 
-        if not mentions or c_val <= 0.0:
-            continue
-
-        per_mention = c_val / len(mentions)
-        for citation, _, _ in mentions:
-            citation_credit[citation] = citation_credit.get(citation, 0.0) + per_mention
-
-    return paragraph_citation_value, citation_credit, paragraph_total
+    return paragraph_technical, paragraph_citation, paragraph_total
 
 
 def aggregate_section_local_scores(
@@ -1138,17 +1260,6 @@ def run_two_channel_pagerank(
     if not paragraphs:
         return {}, {}, {}, PROMPT_CATALOG
 
-    local_t = score_technical_contributions(
-        client=client,
-        paragraphs=paragraphs,
-        model=model,
-        n_samples=n_samples,
-        temperature=temperature,
-        max_retries=max_retries,
-        batch_size=batch_size,
-        snippet_limit=snippet_limit,
-        debug_log_path=debug_log_path,
-    )
     local_overall = score_overall_contributions(
         client=client,
         paragraphs=paragraphs,
@@ -1160,7 +1271,23 @@ def run_two_channel_pagerank(
         snippet_limit=snippet_limit,
         debug_log_path=debug_log_path,
     )
-    local_c, _citation_local_credit, local_total = compute_citation_local_scores(paragraphs, local_t, local_overall)
+    local_t_raw, local_c_raw = score_channel_raw_split(
+        client=client,
+        paragraphs=paragraphs,
+        model=model,
+        n_samples=n_samples,
+        temperature=temperature,
+        max_retries=max_retries,
+        batch_size=batch_size,
+        snippet_limit=snippet_limit,
+        debug_log_path=debug_log_path,
+    )
+    local_t, local_c, local_total = compute_local_channel_scores(
+        paragraphs=paragraphs,
+        overall_scores=local_overall,
+        technical_raw_scores=local_t_raw,
+        citation_raw_scores=local_c_raw,
+    )
 
     paper_local = aggregate_paper_local_scores(paragraphs, local_t, local_c, local_total, paper_id=paper_id)
     (

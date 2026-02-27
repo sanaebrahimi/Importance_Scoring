@@ -1,49 +1,58 @@
 PageRank scoring guide (short version)
 
-This run uses two local paragraph channels:
-- T(p): technical contribution from paragraph text itself.
-- C(p): citation-added contribution in that paragraph.
+Local paragraph scoring
 
-How local paragraph scores are built
-- The model gives a technical score T(p) and an overall local score S_local(p).
-- Citation part is the difference:
-  C(p) = max(0, S_local(p) - T(p))
-- If a paragraph has no citation mentions, C(p)=0.
-- local_total = local_technical + local_citation
+For each paragraph p, the model provides:
+- S_local(p): overall local contribution in [0,1]
+- t_raw(p): technical raw strength (>=0)
+- c_raw(p): citation-added raw strength (>=0)
 
-Internal graph used for propagation
-- Nodes are built from the paper hierarchy:
-  paper -> section/subsection/... -> paragraph -> citation leaves
-- If a paragraph has no citations, that paragraph is a leaf.
+We normalize raw strengths:
+- w_t = t_raw / (t_raw + c_raw)
+- w_c = c_raw / (t_raw + c_raw)
 
-Propagation equations (applied to every node u)
+Then split local total:
+- T(p) = S_local(p) * w_t
+- C(p) = S_local(p) * w_c
+
+So T(p) + C(p) = S_local(p).
+If p has no citation mentions, we force C(p)=0 and T(p)=S_local(p).
+
+Internal graph for propagation
+- paper -> section/subsection -> paragraph -> citation leaves
+- Paragraphs without citations are leaves.
+
+Propagation equations (for every node u)
 - TR_{t+1}(u) = (1-alpha)*T(u) + alpha*sum_{v->u} TR_t(v)/out_deg(v)
 - CR_{t+1}(u) = (1-beta)*C(u) + beta*sum_{v->u} CR_t(v)/out_deg(v)
+
+Flow meaning
+- Edge v -> u means v sends part of its propagated score to u.
+- out_deg(v) is number of outgoing edges of v.
+- v splits flow equally across outgoing edges.
 
 Final paragraph score
 - combined_score(p) = lambda*technical_rank(p) + (1-lambda)*citation_rank(p)
 
-What each output file contains
+Output files
 
 run_pagerank_paragraph_scores.json
 - local_total, local_technical, local_citation
-- technical_rank, citation_rank (from graph propagation at paragraph node)
+- technical_rank, citation_rank
 - combined_score
-- normalized_combined_score (normalized so all paragraph combined scores sum to 1)
+- normalized_combined_score
 
 run_pagerank_section_scores.json
-- Hierarchical section tree
-- score is normalized contribution
-- top-level section scores sum to 1
-- each parent score equals sum of children scores
+- hierarchical section tree
+- score normalized so top-level sections sum to 1
+- parent score equals sum of children scores
 
 run_pagerank_citation_scores.json
-- Citation-level aggregation from citation leaf nodes
-- technical_rank and citation_rank are summed over all leaf occurrences of the citation
-- combined_score uses the same lambda blend
+- citation-level aggregation from citation leaf nodes
+- technical_rank/citation_rank/combined_score per citation
 
 run_pagerank_paper_scores.json
-- local paper values before propagation
-- propagated paper-node technical_rank and citation_rank
+- local paper totals before propagation
+- propagated paper technical_rank and citation_rank
 - decomposition into kept_local and inherited_flow
-- graph details (nodes, edges, node metadata)
+- graph details (nodes, edges, metadata)
