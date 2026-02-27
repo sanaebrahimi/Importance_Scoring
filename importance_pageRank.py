@@ -692,6 +692,161 @@ def aggregate_paper_local_scores(
     }
 
 
+def dedupe_edges(edges: List[Tuple[str, str]]) -> List[Tuple[str, str]]:
+    seen = set()
+    unique: List[Tuple[str, str]] = []
+    for src, dst in edges:
+        key = (src, dst)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(key)
+    return unique
+
+
+def build_hierarchical_contribution_graph(
+    paragraphs: List[Dict[str, Any]],
+    paper_id: str,
+    local_t: Dict[str, float],
+    local_c: Dict[str, float],
+    local_total: Dict[str, float],
+    paper_local: Dict[str, float],
+) -> Tuple[List[str], List[Tuple[str, str]], Dict[str, float], Dict[str, float], Dict[str, Any], str, Dict[str, float]]:
+    """
+    Build internal graph over hierarchy nodes:
+    paper -> sections/subsections -> paragraphs -> citation leaves (if any).
+    Paragraphs with no citations remain leaves.
+    """
+    paper_node_id = f"paper::{paper_id}"
+    nodes = {paper_node_id}
+    edges: List[Tuple[str, str]] = []
+    node_local_t: Dict[str, float] = {paper_node_id: safe_float(paper_local.get("technical_local"), 0.0)}
+    node_local_c: Dict[str, float] = {paper_node_id: safe_float(paper_local.get("citation_local"), 0.0)}
+    node_meta: Dict[str, Any] = {
+        paper_node_id: {
+            "node_type": "paper",
+            "label": paper_id,
+            "paper_id": paper_id,
+        }
+    }
+
+    section_to_paragraphs: Dict[str, List[str]] = defaultdict(list)
+    citation_local_credit_by_citation: Dict[str, float] = defaultdict(float)
+
+    for paragraph in paragraphs:
+        paragraph_id = paragraph["paragraph_id"]
+        paragraph_nodes_path = paragraph.get("section_path") or [paragraph.get("section_name", "Unknown")]
+
+        nodes.add(paragraph_id)
+        node_local_t[paragraph_id] = safe_float(local_t.get(paragraph_id), 0.0)
+        node_local_c[paragraph_id] = safe_float(local_c.get(paragraph_id), 0.0)
+        node_meta[paragraph_id] = {
+            "node_type": "paragraph",
+            "label": paragraph_id,
+            "paper_id": paragraph.get("paper_id"),
+            "section_name": paragraph.get("section_name"),
+            "section_path": paragraph_nodes_path,
+            "paragraph_index": paragraph.get("paragraph_index"),
+        }
+
+        parent_node = paper_node_id
+        for level, section_name in enumerate(paragraph_nodes_path, start=1):
+            section_path_prefix = paragraph_nodes_path[:level]
+            section_id = "section::" + " > ".join(section_path_prefix)
+            nodes.add(section_id)
+            if section_id not in node_meta:
+                node_meta[section_id] = {
+                    "node_type": "section" if level == 1 else "subsection",
+                    "label": section_name,
+                    "level": level,
+                    "section_path": section_path_prefix,
+                }
+            edges.append((parent_node, section_id))
+            parent_node = section_id
+            section_to_paragraphs[section_id].append(paragraph_id)
+
+        edges.append((parent_node, paragraph_id))
+
+        mentions = paragraph.get("mentions", [])
+        if not mentions:
+            continue
+
+        citation_groups: Dict[str, Dict[str, Any]] = {}
+        for citation, source_block, context in mentions:
+            if citation not in citation_groups:
+                citation_groups[citation] = {
+                    "count": 0,
+                    "source_blocks": [],
+                    "contexts": [],
+                }
+            citation_groups[citation]["count"] += 1
+            citation_groups[citation]["source_blocks"].append(source_block)
+            citation_groups[citation]["contexts"].append(context)
+
+        total_mentions = sum(group["count"] for group in citation_groups.values())
+        paragraph_citation_mass = max(0.0, safe_float(local_c.get(paragraph_id), 0.0))
+        for idx, (citation, group) in enumerate(citation_groups.items(), start=1):
+            citation_node_id = f"{paragraph_id}::citation_leaf::{idx}"
+            nodes.add(citation_node_id)
+            share = (group["count"] / total_mentions) if total_mentions > 0 else 0.0
+            citation_local_value = paragraph_citation_mass * share
+            citation_local_credit_by_citation[citation] += citation_local_value
+
+            node_local_t[citation_node_id] = 0.0
+            node_local_c[citation_node_id] = citation_local_value
+            node_meta[citation_node_id] = {
+                "node_type": "citation",
+                "label": citation,
+                "citation": citation,
+                "paper_id": paragraph.get("paper_id"),
+                "section_name": paragraph.get("section_name"),
+                "section_path": paragraph_nodes_path,
+                "paragraph_id": paragraph_id,
+                "mention_count": group["count"],
+                "source_blocks": group["source_blocks"],
+                "contexts": group["contexts"],
+            }
+            edges.append((paragraph_id, citation_node_id))
+
+    # Section/subsection local scores are weighted by paragraph local total in each subtree.
+    for section_id, paragraph_ids in section_to_paragraphs.items():
+        raw_weights = {pid: max(0.0, safe_float(local_total.get(pid), 0.0)) for pid in paragraph_ids}
+        raw_weight_sum = sum(raw_weights.values())
+        if raw_weight_sum <= 0.0:
+            equal = 1.0 / max(1, len(paragraph_ids))
+            weights = {pid: equal for pid in paragraph_ids}
+        else:
+            weights = {pid: raw / raw_weight_sum for pid, raw in raw_weights.items()}
+
+        node_local_t[section_id] = sum(weights[pid] * safe_float(local_t.get(pid), 0.0) for pid in paragraph_ids)
+        node_local_c[section_id] = sum(weights[pid] * safe_float(local_c.get(pid), 0.0) for pid in paragraph_ids)
+
+    edges = dedupe_edges(edges)
+
+    # Keep leaves stable by adding self-loop where no outgoing edge exists.
+    out_degree: Dict[str, int] = defaultdict(int)
+    for src, _ in edges:
+        out_degree[src] += 1
+    for node_id in nodes:
+        if out_degree.get(node_id, 0) == 0:
+            edges.append((node_id, node_id))
+
+    nodes_sorted = sorted(nodes)
+    for node_id in nodes_sorted:
+        node_local_t.setdefault(node_id, 0.0)
+        node_local_c.setdefault(node_id, 0.0)
+
+    return (
+        nodes_sorted,
+        dedupe_edges(edges),
+        node_local_t,
+        node_local_c,
+        node_meta,
+        paper_node_id,
+        dict(citation_local_credit_by_citation),
+    )
+
+
 def build_normalized_section_tree(
     paragraphs: List[Dict[str, Any]],
     paragraph_scores: Dict[str, Any],
@@ -909,45 +1064,46 @@ def redistribute_paper_rank_to_paragraphs(
     return redistributed
 
 
-def aggregate_citation_scores(
-    paragraphs: List[Dict[str, Any]],
+def aggregate_citation_scores_from_graph(
+    node_meta: Dict[str, Any],
     tr_scores: Dict[str, float],
     cr_scores: Dict[str, float],
     lambda_weight: float,
 ) -> Dict[str, Any]:
     citation_scores: Dict[str, Any] = {}
 
-    for paragraph in paragraphs:
-        pid = paragraph["paragraph_id"]
-        mentions = paragraph.get("mentions", [])
-        if not mentions:
+    for node_id, meta in node_meta.items():
+        if meta.get("node_type") != "citation":
             continue
 
-        mention_count = len(mentions)
-        tr_share = tr_scores.get(pid, 0.0) / mention_count
-        cr_share = cr_scores.get(pid, 0.0) / mention_count
+        citation = str(meta.get("citation", "")).strip()
+        if not citation:
+            continue
 
-        for citation, source_block, context in mentions:
-            if citation not in citation_scores:
-                citation_scores[citation] = {
-                    "technical_rank": 0.0,
-                    "citation_rank": 0.0,
-                    "combined_score": 0.0,
-                    "mentions": 0,
-                    "occurrences": [],
-                }
+        if citation not in citation_scores:
+            citation_scores[citation] = {
+                "technical_rank": 0.0,
+                "citation_rank": 0.0,
+                "combined_score": 0.0,
+                "mentions": 0,
+                "occurrences": [],
+            }
 
-            citation_scores[citation]["technical_rank"] += tr_share
-            citation_scores[citation]["citation_rank"] += cr_share
-            citation_scores[citation]["mentions"] += 1
-            citation_scores[citation]["occurrences"].append(
-                {
-                    "section": paragraph.get("section_name"),
-                    "paragraph_id": pid,
-                    "source_block": source_block,
-                    "context": context,
-                }
-            )
+        tr_val = safe_float(tr_scores.get(node_id), 0.0)
+        cr_val = safe_float(cr_scores.get(node_id), 0.0)
+        mention_count = int(meta.get("mention_count", 1))
+
+        citation_scores[citation]["technical_rank"] += tr_val
+        citation_scores[citation]["citation_rank"] += cr_val
+        citation_scores[citation]["mentions"] += max(0, mention_count)
+        citation_scores[citation]["occurrences"].append(
+            {
+                "section": meta.get("section_name"),
+                "paragraph_id": meta.get("paragraph_id"),
+                "source_blocks": meta.get("source_blocks", []),
+                "contexts": meta.get("contexts", []),
+            }
+        )
 
     for citation in citation_scores:
         tr_val = citation_scores[citation]["technical_rank"]
@@ -1004,44 +1160,41 @@ def run_two_channel_pagerank(
         snippet_limit=snippet_limit,
         debug_log_path=debug_log_path,
     )
-    local_c, citation_local_credit, local_total = compute_citation_local_scores(paragraphs, local_t, local_overall)
+    local_c, _citation_local_credit, local_total = compute_citation_local_scores(paragraphs, local_t, local_overall)
 
     paper_local = aggregate_paper_local_scores(paragraphs, local_t, local_c, local_total, paper_id=paper_id)
+    (
+        nodes,
+        edges,
+        node_local_t,
+        node_local_c,
+        node_meta,
+        paper_node_id,
+        citation_local_credit_by_citation,
+    ) = build_hierarchical_contribution_graph(
+        paragraphs=paragraphs,
+        paper_id=paper_id,
+        local_t=local_t,
+        local_c=local_c,
+        local_total=local_total,
+        paper_local=paper_local,
+    )
 
-    nodes, edges, graph_t_seed, graph_c_seed = load_citation_graph(citation_graph_path, paper_id=paper_id)
-    paper_local_t = {node: graph_t_seed.get(node, 0.0) for node in nodes}
-    paper_local_c = {node: graph_c_seed.get(node, 0.0) for node in nodes}
-    paper_local_t[paper_id] = paper_local["technical_local"]
-    paper_local_c[paper_id] = paper_local["citation_local"]
-
-    tr_paper, tr_kept, tr_inherited = propagate_rank(
+    tr_scores, tr_kept, tr_inherited = propagate_rank(
         nodes=nodes,
         edges=edges,
-        local_scores=paper_local_t,
+        local_scores=node_local_t,
         damping=alpha,
         max_iter=pagerank_max_iter,
         tol=pagerank_tol,
     )
-    cr_paper, cr_kept, cr_inherited = propagate_rank(
+    cr_scores, cr_kept, cr_inherited = propagate_rank(
         nodes=nodes,
         edges=edges,
-        local_scores=paper_local_c,
+        local_scores=node_local_c,
         damping=beta,
         max_iter=pagerank_max_iter,
         tol=pagerank_tol,
-    )
-
-    paragraph_tr = redistribute_paper_rank_to_paragraphs(
-        paragraphs=paragraphs,
-        paper_id=paper_id,
-        paper_rank=tr_paper.get(paper_id, 0.0),
-        local_scores=local_t,
-    )
-    paragraph_cr = redistribute_paper_rank_to_paragraphs(
-        paragraphs=paragraphs,
-        paper_id=paper_id,
-        paper_rank=cr_paper.get(paper_id, 0.0),
-        local_scores=local_c,
     )
 
     lambda_weight = max(0.0, min(1.0, lambda_weight))
@@ -1049,8 +1202,8 @@ def run_two_channel_pagerank(
     paragraph_scores: Dict[str, Any] = {}
     for p in paragraphs:
         pid = p["paragraph_id"]
-        tr_val = paragraph_tr.get(pid, 0.0)
-        cr_val = paragraph_cr.get(pid, 0.0)
+        tr_val = tr_scores.get(pid, 0.0)
+        cr_val = cr_scores.get(pid, 0.0)
         paragraph_scores[pid] = {
             "paper_id": p["paper_id"],
             "section": p["section_name"],
@@ -1080,31 +1233,33 @@ def run_two_channel_pagerank(
         },
         "paragraph_weights": paper_local.get("weights", {}),
         "paragraph_weight_mode": paper_local.get("weight_mode", "unknown"),
-        "technical_rank": tr_paper.get(paper_id, 0.0),
-        "citation_rank": cr_paper.get(paper_id, 0.0),
+        "technical_rank": tr_scores.get(paper_node_id, 0.0),
+        "citation_rank": cr_scores.get(paper_node_id, 0.0),
         "combined_score": (
-            lambda_weight * tr_paper.get(paper_id, 0.0)
-            + (1.0 - lambda_weight) * cr_paper.get(paper_id, 0.0)
+            lambda_weight * tr_scores.get(paper_node_id, 0.0)
+            + (1.0 - lambda_weight) * cr_scores.get(paper_node_id, 0.0)
         ),
         "decomposition": {
             "technical": {
-                "kept_local": tr_kept.get(paper_id, 0.0),
-                "inherited_flow": tr_inherited.get(paper_id, 0.0),
+                "kept_local": tr_kept.get(paper_node_id, 0.0),
+                "inherited_flow": tr_inherited.get(paper_node_id, 0.0),
             },
             "citation": {
-                "kept_local": cr_kept.get(paper_id, 0.0),
-                "inherited_flow": cr_inherited.get(paper_id, 0.0),
+                "kept_local": cr_kept.get(paper_node_id, 0.0),
+                "inherited_flow": cr_inherited.get(paper_node_id, 0.0),
             },
         },
+        "graph_source": "internal_hierarchy",
         "graph_nodes": nodes,
         "graph_edges": edges,
-        "local_citation_credit_by_citation": citation_local_credit,
+        "graph_node_meta": node_meta,
+        "local_citation_credit_by_citation": citation_local_credit_by_citation,
     }
 
-    citation_scores = aggregate_citation_scores(
-        paragraphs=paragraphs,
-        tr_scores=paragraph_tr,
-        cr_scores=paragraph_cr,
+    citation_scores = aggregate_citation_scores_from_graph(
+        node_meta=node_meta,
+        tr_scores=tr_scores,
+        cr_scores=cr_scores,
         lambda_weight=lambda_weight,
     )
 
@@ -1143,7 +1298,11 @@ def main() -> None:
     parser.add_argument("--output2", required=True, help="Prefix for section output file")
     parser.add_argument("--pdf", default=DEFAULT_PDF_PATH, help="Path to PDF file")
     parser.add_argument("--paper-id", default=DEFAULT_PAPER_ID, help="Paper node id for graph propagation")
-    parser.add_argument("--citation-graph", default="", help="Optional JSON graph file (nodes/edges or adjacency)")
+    parser.add_argument(
+        "--citation-graph",
+        default="",
+        help="Compatibility arg. Ignored in current internal hierarchy graph mode.",
+    )
     parser.add_argument("--model", default="llama3.2", help="Ollama model name")
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
     parser.add_argument("--alpha", type=float, default=0.85, help="Technical propagation parameter")

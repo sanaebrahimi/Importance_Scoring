@@ -1,58 +1,49 @@
+PageRank scoring guide (short version)
 
-This run uses two local paragraph channels plus propagation:
+This run uses two local paragraph channels:
+- T(p): technical contribution from paragraph text itself.
+- C(p): citation-added contribution in that paragraph.
 
-1) Local paragraph scores
-- T(p): technical contribution from LLM (citation-agnostic).
-- S_local(p): overall paragraph contribution from LLM.
-- C(p): citation-added value.
+How local paragraph scores are built
+- The model gives a technical score T(p) and an overall local score S_local(p).
+- Citation part is the difference:
+  C(p) = max(0, S_local(p) - T(p))
+- If a paragraph has no citation mentions, C(p)=0.
+- local_total = local_technical + local_citation
 
-Equations:
-- C(p) = max(0, S_local(p) - T(p))
-- If paragraph p has no citation mentions: C(p) = 0 and S_local(p) is set to T(p)
-- So for every paragraph in output: local_total = local_technical + local_citation
+Internal graph used for propagation
+- Nodes are built from the paper hierarchy:
+  paper -> section/subsection/... -> paragraph -> citation leaves
+- If a paragraph has no citations, that paragraph is a leaf.
 
-2) Paper-level propagation (citation graph)
-For paper node u:
+Propagation equations (applied to every node u)
 - TR_{t+1}(u) = (1-alpha)*T(u) + alpha*sum_{v->u} TR_t(v)/out_deg(v)
 - CR_{t+1}(u) = (1-beta)*C(u) + beta*sum_{v->u} CR_t(v)/out_deg(v)
 
-3) Paragraph redistribution from paper-level ranks
-For paragraph p in paper P:
-- technical_rank(p) = TR(P) * T(p) / sum_{q in P} T(q)
-- citation_rank(p)  = CR(P) * C(p) / sum_{q in P} C(q)
+Final paragraph score
+- combined_score(p) = lambda*technical_rank(p) + (1-lambda)*citation_rank(p)
 
-4) Final combined score
-- combined_score(p) = lambda * technical_rank(p) + (1-lambda) * citation_rank(p)
-
-Why local_citation is often 0
-- C(p) is only the part above technical score: max(0, S_local - T).
-- If the overall scorer does not give more than T(p), C(p) becomes 0.
-- Paragraphs without citation mentions are forced to C(p)=0.
-
-Output files
+What each output file contains
 
 run_pagerank_paragraph_scores.json
-- local_total: S_local(p)
-- local_technical: T(p)
-- local_citation: C(p)
-- technical_rank: redistributed TR(p)
-- citation_rank: redistributed CR(p)
-- combined_score: weighted blend of technical_rank and citation_rank
-- normalized_combined_score: paragraph contribution normalized so all paragraphs in paper sum to 1
+- local_total, local_technical, local_citation
+- technical_rank, citation_rank (from graph propagation at paragraph node)
+- combined_score
+- normalized_combined_score (normalized so all paragraph combined scores sum to 1)
 
 run_pagerank_section_scores.json
-- Hierarchical tree (sections/subsections)
-- score: normalized contribution (top-level sections sum to 1)
-- raw_combined_score: unnormalized sum of paragraph combined_score under that node
-- technical_rank / citation_rank: sums of paragraph technical_rank / citation_rank under that node
-
-run_pagerank_paper_scores.json
-- local.technical / local.citation / local.overall_total: paper local values before propagation
-- technical_rank / citation_rank: propagated paper-level values
-- decomposition.technical and decomposition.citation:
-  kept_local = (1-damping)*local, inherited_flow = damping*incoming_flow
+- Hierarchical section tree
+- score is normalized contribution
+- top-level section scores sum to 1
+- each parent score equals sum of children scores
 
 run_pagerank_citation_scores.json
-- Citation-level aggregation from paragraph mentions
-- technical_rank and citation_rank come from splitting paragraph ranks over that paragraph's mentions
-- combined_score is the same lambda blend at citation level
+- Citation-level aggregation from citation leaf nodes
+- technical_rank and citation_rank are summed over all leaf occurrences of the citation
+- combined_score uses the same lambda blend
+
+run_pagerank_paper_scores.json
+- local paper values before propagation
+- propagated paper-node technical_rank and citation_rank
+- decomposition into kept_local and inherited_flow
+- graph details (nodes, edges, node metadata)

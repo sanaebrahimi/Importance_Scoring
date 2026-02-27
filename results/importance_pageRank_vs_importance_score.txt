@@ -1,0 +1,29 @@
+importance_pageRank.py 
+
+This script scores the paper at paragraph level using two channels:
+- T(p): technical value of the paragraph itself (LLM, citation-agnostic)
+- C(p): extra value added by citations in that paragraph
+
+It then runs PageRank-style propagation on a paper citation graph:
+- technical channel -> TR
+- citation channel -> CR
+
+After that, paper-level TR/CR are pushed back down to paragraphs in proportion to local T(p) and C(p).  
+Final paragraph score is a blend:
+combined = lambda * technical_rank + (1 - lambda) * citation_rank
+
+Section output is a hierarchy where top-level section scores are normalized to sum to 1.
+
+
+How this differs from importance_score.py
+
+importance_score.py:
+- Uses direct/pairwise LLM comparisons to allocate scores across sections/subsections/paragraphs.
+- Assigns citation scores by splitting paragraph score across citation mentions.
+- Does not run graph propagation (no PageRank step).
+
+importance_pageRank.py:
+- Separates technical and citation channels explicitly (T and C).
+- Adds graph propagation (TR and CR) and then redistribution to paragraphs.
+- Produces extra outputs for paper-level decomposition and normalized hierarchical section scores.
+
