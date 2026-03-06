@@ -150,7 +150,11 @@ Scoring rubric:
 Paragraphs (id -> text snippet):
 {paragraphs_json}
 
-Return ONLY JSON mapping every paragraph id to a float in [0, 1].
+You may return either:
+1) JSON mapping paragraph id -> score, or
+2) JSON list/array of scores in the same order as the paragraph ids shown above.
+
+If using percentages (0-100), that is also accepted.
 Example:
 {{
   "p1": 0.82,
@@ -177,7 +181,11 @@ Scoring rubric:
 Paragraphs (id -> text snippet):
 {paragraphs_json}
 
-Return ONLY JSON mapping every paragraph id to a float in [0, 1].
+You may return either:
+1) JSON mapping paragraph id -> score, or
+2) JSON list/array of scores in the same order as the paragraph ids shown above.
+
+If using percentages (0-100), that is also accepted.
 Example:
 {{
   "p1": 0.62,
@@ -377,6 +385,21 @@ def parse_score_map_from_response(
         for key, value in json_payload.items():
             assign_from_pair(key, value)
 
+        # Accept simple array forms under common wrapper keys.
+        for seq_key in ("scores", "values", "allocations", "distribution"):
+            seq = json_payload.get(seq_key)
+            if not isinstance(seq, list):
+                continue
+            if not seq:
+                continue
+            if all(not isinstance(entry, dict) for entry in seq):
+                for idx, entry in enumerate(seq):
+                    if idx >= len(expected_ids):
+                        break
+                    score_val = coerce_non_negative_number(entry, allow_percentage=allow_percentage)
+                    if score_val is not None:
+                        parsed_scores[expected_ids[idx]] = score_val
+
         for bucket_key in ("scores", "items", "allocations", "distribution", "results"):
             bucket = json_payload.get(bucket_key)
             if not isinstance(bucket, list):
@@ -408,33 +431,48 @@ def parse_score_map_from_response(
                 assign_from_pair(key_candidate, value_candidate)
 
     elif isinstance(json_payload, list):
-        for entry in json_payload:
-            if not isinstance(entry, dict):
-                continue
-            key_candidate = (
-                entry.get("id")
-                or entry.get("item_id")
-                or entry.get("name")
-                or entry.get("item")
-                or entry.get("key")
-                or entry.get("label")
-            )
-            if key_candidate is None:
-                continue
-            value_candidate = (
-                entry.get("score")
-                if "score" in entry
-                else entry.get("value")
-                if "value" in entry
-                else entry.get("weight")
-                if "weight" in entry
-                else entry.get("allocation")
-                if "allocation" in entry
-                else entry.get("credit")
-            )
-            assign_from_pair(key_candidate, value_candidate)
+        if json_payload and all(not isinstance(entry, dict) for entry in json_payload):
+            for idx, entry in enumerate(json_payload):
+                if idx >= len(expected_ids):
+                    break
+                score_val = coerce_non_negative_number(entry, allow_percentage=allow_percentage)
+                if score_val is not None:
+                    parsed_scores[expected_ids[idx]] = score_val
+        else:
+            for entry in json_payload:
+                if not isinstance(entry, dict):
+                    continue
+                key_candidate = (
+                    entry.get("id")
+                    or entry.get("item_id")
+                    or entry.get("name")
+                    or entry.get("item")
+                    or entry.get("key")
+                    or entry.get("label")
+                )
+                if key_candidate is None:
+                    continue
+                value_candidate = (
+                    entry.get("score")
+                    if "score" in entry
+                    else entry.get("value")
+                    if "value" in entry
+                    else entry.get("weight")
+                    if "weight" in entry
+                    else entry.get("allocation")
+                    if "allocation" in entry
+                    else entry.get("credit")
+                )
+                assign_from_pair(key_candidate, value_candidate)
 
     text = strip_code_fences(response_text)
+    # Accept loose "label: value" lines.
+    for match in re.finditer(
+        r"([A-Za-z][A-Za-z0-9 _-]{0,80}|[A-Za-z]\d+)\s*[:=]\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
+        text,
+    ):
+        assign_from_pair(match.group(1), match.group(2))
+
     for item_id in expected_ids:
         if item_id in parsed_scores:
             continue
@@ -1192,10 +1230,18 @@ def score_paragraph_channel(
                     f"temperature={current_temp}\n{raw_response}\n"
                 ),
             )
+            paragraph_aliases: Dict[str, str] = {}
+            for idx, paragraph_id in enumerate(paragraph_ids, start=1):
+                paragraph_aliases[paragraph_id] = paragraph_id
+                paragraph_aliases[f"p{idx}"] = paragraph_id
+                paragraph_aliases[f"paragraph {idx}"] = paragraph_id
+                paragraph_aliases[f"paragraph{idx}"] = paragraph_id
+                paragraph_aliases[str(idx)] = paragraph_id
             parsed_scores = parse_score_map_from_response(
                 raw_response,
                 paragraph_ids,
                 allow_percentage=True,
+                alias_to_id=paragraph_aliases,
             )
             if parsed_scores:
                 break
