@@ -3,13 +3,14 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import PyPDF2
 from ollama import Client
 
 
 DEFAULT_PDF_PATH = "adv_res_paper.pdf"
+DEFAULT_PAPER_ID = "target_paper"
 
 DEFAULT_SECTIONS = {
     "Introduction": None,
@@ -32,6 +33,135 @@ DEFAULT_SECTIONS = {
     },
     "Conclusion": None,
     "Limitations": None,
+}
+
+SECTION_PAIRWISE_SYSTEM_PROMPT = (
+    "You are an expert academic reviewer. "
+    "Compare two items from the same paper by contribution to the paper's main scientific contribution. "
+    "Distribute a total credit of 1.0 between item A and item B. "
+    "Use both technical contribution and citation-supported contribution. "
+    "Return JSON only."
+)
+
+SECTION_PAIRWISE_USER_PROMPT_TEMPLATE = """Parent node: "{parent_name}"
+Task: distribute a credit of 1.0 between A and B based on contribution to the paper's main contribution.
+
+Scoring rubric:
+- Higher credit: core technical contribution (method/theory/algorithm/findings) and meaningful use of prior work.
+- Lower credit: background context, transitions, setup details, or low-impact narrative.
+- If one item contributes 3x the other, assign 3x credit.
+- If both contribute equally, assign equal credit.
+- Do not copy placeholder values; infer from the provided excerpts.
+
+Item A name: "{item_a}"
+Item A excerpt:
+{excerpt_a}
+
+Item B name: "{item_b}"
+Item B excerpt:
+{excerpt_b}
+
+Return ONLY JSON:
+{{
+  "a_credit": <float>,
+  "b_credit": <float>
+}}
+
+Constraints:
+- 0.0 <= a_credit <= 1.0
+- 0.0 <= b_credit <= 1.0
+- a_credit + b_credit = 1.0
+"""
+
+SECTION_DIRECT_SYSTEM_PROMPT = (
+    "You are an expert academic reviewer. "
+    "Score multiple items from the same paper by contribution to the paper's main scientific contribution. "
+    "Use both technical contribution and citation-supported contribution. "
+    "Return JSON only."
+)
+
+SECTION_DIRECT_USER_PROMPT_TEMPLATE = """Parent node: "{parent_name}"
+Task: score all items together (not pairwise) by contribution to the paper's main contribution.
+
+Scoring rubric:
+- Higher score: core technical contribution (method/theory/algorithm/findings) and meaningful citation-supported value.
+- Lower score: background context, transitions, setup detail, or low-impact narrative.
+- Use non-negative raw scores; larger means more important.
+- Scores are relative within this set and do NOT need to sum to 1.
+
+Items (name -> excerpt):
+{items_json}
+
+Return ONLY JSON mapping every item name to a non-negative raw score.
+Example:
+{{
+  "item_name_1": 12.0,
+  "item_name_2": 4.5
+}}
+"""
+
+PARAGRAPH_TECHNICAL_SYSTEM_PROMPT = (
+    "You are an expert academic reviewer. "
+    "Score each paragraph only for technical contribution. "
+    "Ignore citation popularity or influence. "
+    "Return JSON only."
+)
+
+PARAGRAPH_TECHNICAL_USER_PROMPT_TEMPLATE = """Task: assign a technical contribution score T(p) in [0, 1] for each paragraph.
+
+Scoring rubric:
+- Higher T(p): introduces a novel method, key algorithm, theorem, model, or core experimental insight.
+- Lower T(p): background context, transitions, setup details, or non-technical narrative.
+- Evaluate novelty, methodological contribution, and technical specificity.
+- Ignore citation influence, citation counts, and venue prestige.
+
+Paragraphs (id -> text snippet):
+{paragraphs_json}
+
+Return ONLY JSON mapping every paragraph id to a float in [0, 1].
+Example:
+{{
+  "p1": 0.82,
+  "p2": 0.27
+}}
+"""
+
+PARAGRAPH_CITATION_SYSTEM_PROMPT = (
+    "You are an expert academic reviewer. "
+    "Score each paragraph only for citation-added contribution. "
+    "Measure value added by cited prior work used in the paragraph. "
+    "Do not score intrinsic technical novelty in this channel. "
+    "Return JSON only."
+)
+
+PARAGRAPH_CITATION_USER_PROMPT_TEMPLATE = """Task: assign a citation-added contribution score C(p) in [0, 1] for each paragraph.
+
+Scoring rubric:
+- Higher C(p): cited prior work is used substantively (comparison, evidence, grounding, or dependency).
+- Lower C(p): no citations, perfunctory citation mentions, or weak linkage to the claim.
+- Evaluate citation relevance and how much cited work strengthens this paragraph's contribution.
+- Ignore global citation popularity and venue prestige.
+
+Paragraphs (id -> text snippet):
+{paragraphs_json}
+
+Return ONLY JSON mapping every paragraph id to a float in [0, 1].
+Example:
+{{
+  "p1": 0.62,
+  "p2": 0.05
+}}
+"""
+
+PROMPT_CATALOG = {
+    "section_pairwise_system_prompt": SECTION_PAIRWISE_SYSTEM_PROMPT,
+    "section_pairwise_user_prompt_template": SECTION_PAIRWISE_USER_PROMPT_TEMPLATE,
+    "section_direct_system_prompt": SECTION_DIRECT_SYSTEM_PROMPT,
+    "section_direct_user_prompt_template": SECTION_DIRECT_USER_PROMPT_TEMPLATE,
+    "paragraph_technical_system_prompt": PARAGRAPH_TECHNICAL_SYSTEM_PROMPT,
+    "paragraph_technical_user_prompt_template": PARAGRAPH_TECHNICAL_USER_PROMPT_TEMPLATE,
+    "paragraph_citation_system_prompt": PARAGRAPH_CITATION_SYSTEM_PROMPT,
+    "paragraph_citation_user_prompt_template": PARAGRAPH_CITATION_USER_PROMPT_TEMPLATE,
 }
 
 
@@ -151,11 +281,13 @@ def append_run_separator(debug_log_path: str, args: argparse.Namespace) -> None:
     entry = (
         f"{separator}\n"
         f"[run_start] time={timestamp} model={args.model} host={args.host} "
+        f"paper_id={args.paper_id} "
         f"scoring_mode={args.scoring_mode} "
         f"n_samples={max(1, args.n_samples)} temperature={max(0.0, args.temperature)} "
         f"max_retries={max(1, args.max_retries)} "
         f"paragraph_direct_max_tokens={max(0, args.paragraph_direct_max_tokens)} "
-        f"paragraph_compressed_snippet_limit={max(60, args.paragraph_compressed_snippet_limit)}\n"
+        f"paragraph_compressed_snippet_limit={max(60, args.paragraph_compressed_snippet_limit)} "
+        f"paragraph_batch_size={max(1, args.paragraph_batch_size)}\n"
         f"{separator}"
     )
     append_debug_log(debug_log_path, entry)
@@ -187,18 +319,35 @@ def normalize_distribution(raw_scores: Dict[str, float], total: float) -> Dict[s
     return normalized
 
 
-def flatten_content_to_text(content: Any, limit: int = 700) -> str:
+def clamp_unit(value: float) -> float:
+    return max(0.0, min(1.0, value))
+
+
+def chunked(items: List[Any], size: int) -> List[List[Any]]:
+    block = max(1, size)
+    return [items[i : i + block] for i in range(0, len(items), block)]
+
+
+def flatten_content_to_text(content: Any, limit: Optional[int] = 700) -> str:
     if isinstance(content, str):
+        if limit is None or limit <= 0:
+            return content
         return content[:limit]
     if isinstance(content, dict):
         chunks: List[str] = []
+        remaining = None if limit is None or limit <= 0 else limit
         for value in content.values():
-            chunk = flatten_content_to_text(value, limit=limit)
+            child_limit = remaining if remaining is not None else None
+            chunk = flatten_content_to_text(value, limit=child_limit)
             if chunk:
                 chunks.append(chunk)
-            if sum(len(c) for c in chunks) >= limit:
+                if remaining is not None:
+                    remaining -= len(chunk)
+            if remaining is not None and remaining <= 0:
                 break
         merged = " ".join(chunks)
+        if limit is None or limit <= 0:
+            return merged
         return merged[:limit]
     return ""
 
@@ -233,19 +382,17 @@ def estimate_tokens_approx(text: str) -> int:
     return max(1, (len(text) + 3) // 4)
 
 
-def estimate_direct_allocation_tokens(parent_name: str, item_to_content: Dict[str, Any], snippet_limit: int = 500) -> int:
+def estimate_direct_allocation_tokens(
+    parent_name: str,
+    item_to_content: Dict[str, Any],
+    snippet_limit: Optional[int] = 0,
+) -> int:
     snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in item_to_content}
-    prompt = f"""Parent node: "{parent_name}"
-Items:
-{json.dumps(snippets, indent=2)}
-
-Return ONLY JSON mapping each item to a non-negative raw score:
-{{
-  "item_name_1": 12.0,
-  "item_name_2": 5.0
-}}
-"""
-    system_prompt = "You score academic paper sections by importance. Return JSON only."
+    prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
+        parent_name=parent_name,
+        items_json=json.dumps(snippets, indent=2),
+    )
+    system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     return estimate_tokens_approx(system_prompt) + estimate_tokens_approx(prompt)
 
 
@@ -304,41 +451,14 @@ def query_pair_probability(
     debug_log_path: str,
     sample_idx: int,
 ) -> Tuple[float, bool]:
-    system_prompt = (
-        "You are an expert academic reviewer. "
-        "Compare two items from the same paper by contribution to the paper's main scientific contribution. "
-        "Distribute a total credit of 1.0 between item A and item B. "
-        "Return JSON only."
+    system_prompt = SECTION_PAIRWISE_SYSTEM_PROMPT
+    prompt = SECTION_PAIRWISE_USER_PROMPT_TEMPLATE.format(
+        parent_name=parent_name,
+        item_a=item_a,
+        item_b=item_b,
+        excerpt_a=excerpt_a,
+        excerpt_b=excerpt_b,
     )
-    prompt = f"""Parent node: "{parent_name}"
-Task: distribute a credit of 1.0 between A and B based on contribution to the paper's main contribution.
-
-Scoring guidance:
-- Higher credit: defines core problem, novel method, key theory/algorithm, primary validation.
-- Lower credit: background, minor details, auxiliary discussion, transitions.
-- If one item contributes 3x the other, A should get three times B's credit.
-- If equal, both credits should be equal.
-- Do not copy placeholder values; use pair-specific values from the provided excerpts.
-
-Item A name: "{item_a}"
-Item A excerpt:
-{excerpt_a}
-
-Item B name: "{item_b}"
-Item B excerpt:
-{excerpt_b}
-
-Return ONLY JSON:
-{{
-  "a_credit": <float>,
-  "b_credit": <float>
-}}
-
-Constraints:
-- 0.0 <= a_credit <= 1.0
-- 0.0 <= b_credit <= 1.0
-- a_credit + b_credit = 1.0
-"""
 
     for attempt in range(max(1, max_retries)):
         response = client.chat(
@@ -384,40 +504,22 @@ def direct_allocate_scores(
     max_retries: int,
     debug_log_path: str,
     sample_idx: int,
-    snippet_limit: int = 500,
+    snippet_limit: int = 0,
     log_tag: str = "all_together",
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in items}
+    use_limit = None if snippet_limit <= 0 else snippet_limit
+    snippets = {name: flatten_content_to_text(item_to_content[name], limit=use_limit) for name in items}
     if not items:
         return {}
     if len(items) == 1:
         return {items[0]: total_score}
 
-    system_prompt = (
-        "You are an expert academic reviewer. "
-        "Score multiple items from the same paper by contribution to the paper's main scientific contribution. "
-        "Return JSON only."
+    system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
+    prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
+        parent_name=parent_name,
+        items_json=json.dumps(snippets, indent=2),
     )
-    prompt = f"""Parent node: "{parent_name}"
-Task: score all items together (not pairwise) by contribution to the paper's main contribution.
-
-Scoring guidance:
-- Higher score: defines core problem, novel method, key theory/algorithm, primary validation.
-- Lower score: background, minor details, auxiliary discussion, transitions.
-- Use non-negative raw scores; larger means more important.
-- Scores are relative within this set and do NOT need to sum to 1.
-
-Items (name -> excerpt):
-{json.dumps(snippets, indent=2)}
-
-Return ONLY JSON mapping every item name to a non-negative raw score.
-Example format:
-{{
-  "item_name_1": 12.0,
-  "item_name_2": 4.5
-}}
-"""
 
     parsed_scores: Dict[str, float] = {}
     for attempt in range(max(1, max_retries)):
@@ -460,7 +562,7 @@ def all_together_allocate_scores(
     temperature: float,
     max_retries: int,
     debug_log_path: str,
-    snippet_limit: int = 500,
+    snippet_limit: int = 0,
     log_tag: str = "all_together",
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
@@ -507,7 +609,7 @@ def allocate_scores_by_mode(
     max_retries: int,
     debug_log_path: str,
     scoring_mode: str,
-    snippet_limit: int = 500,
+    snippet_limit: int = 0,
     log_tag: str = "all_together",
 ) -> Dict[str, float]:
     if scoring_mode == "pairwise":
@@ -555,7 +657,7 @@ def pairwise_allocate_scores(
     if len(items) == 1:
         return {items[0]: total_score}
 
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=450) for name in items}
+    snippets = {name: flatten_content_to_text(item_to_content[name], limit=None) for name in items}
     pairs: List[Tuple[str, str]] = []
     for i in range(len(items)):
         for j in range(i + 1, len(items)):
@@ -678,6 +780,137 @@ def enforce_top_level_constraints(scores: Dict[str, float], total: float) -> Dic
     return normalize_distribution(constrained, total)
 
 
+def score_paragraph_channel(
+    client: Client,
+    paragraph_items: Dict[str, str],
+    model: str,
+    n_samples: int,
+    temperature: float,
+    max_retries: int,
+    batch_size: int,
+    snippet_limit: int,
+    debug_log_path: str,
+    system_prompt: str,
+    user_prompt_template: str,
+    log_tag: str,
+) -> Dict[str, float]:
+    if not paragraph_items:
+        return {}
+
+    paragraph_ids = list(paragraph_items.keys())
+    sample_count = max(1, n_samples)
+    batches = chunked(paragraph_ids, max(1, batch_size))
+    per_sample_scores: List[Dict[str, float]] = []
+
+    for sample_idx in range(sample_count):
+        sample_scores: Dict[str, float] = {}
+        current_temp = min(1.0, max(0.0, temperature) + (0.05 * sample_idx))
+
+        for batch_idx, batch_ids in enumerate(batches):
+            snippets = {
+                paragraph_id: paragraph_items[paragraph_id][: max(80, snippet_limit)]
+                for paragraph_id in batch_ids
+            }
+            user_prompt = user_prompt_template.format(paragraphs_json=json.dumps(snippets, indent=2))
+
+            parsed: Dict[str, Any] = {}
+            for attempt in range(max(1, max_retries)):
+                try:
+                    response = client.chat(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        options={"temperature": current_temp},
+                    )
+                    raw_response = response.message.content if getattr(response, "message", None) else ""
+                except Exception as exc:
+                    raw_response = f"[exception] {exc}"
+
+                append_debug_log(
+                    debug_log_path,
+                    (
+                        f"[{log_tag}] sample={sample_idx + 1}/{sample_count} "
+                        f"batch={batch_idx + 1}/{len(batches)} "
+                        f"attempt={attempt + 1}/{max(1, max_retries)} "
+                        f"temperature={current_temp}\n{raw_response}\n"
+                    ),
+                )
+                parsed = parse_json_response(raw_response)
+                if parsed:
+                    break
+
+            for paragraph_id in batch_ids:
+                raw_score = safe_float(parsed.get(paragraph_id), -1.0)
+                sample_scores[paragraph_id] = clamp_unit(raw_score) if 0.0 <= raw_score <= 1.0 else 0.5
+
+        per_sample_scores.append(sample_scores)
+
+    averaged: Dict[str, float] = {}
+    for paragraph_id in paragraph_ids:
+        avg_score = sum(sample.get(paragraph_id, 0.5) for sample in per_sample_scores) / sample_count
+        averaged[paragraph_id] = clamp_unit(avg_score)
+    return averaged
+
+
+def compute_paragraph_channel_scores(
+    section_score: float,
+    paragraph_ids: List[str],
+    mention_buckets: Dict[str, List[Tuple[str, str, str]]],
+    technical_raw_scores: Dict[str, float],
+    citation_raw_scores: Dict[str, float],
+) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
+    if not paragraph_ids:
+        return {}, {}, {}
+
+    cleaned_t_raw: Dict[str, float] = {}
+    cleaned_c_raw: Dict[str, float] = {}
+    total_raw_by_paragraph: Dict[str, float] = {}
+
+    for paragraph_id in paragraph_ids:
+        t_raw = max(0.0, safe_float(technical_raw_scores.get(paragraph_id), 0.0))
+        c_raw = max(0.0, safe_float(citation_raw_scores.get(paragraph_id), 0.0))
+        if not mention_buckets.get(paragraph_id):
+            c_raw = 0.0
+
+        cleaned_t_raw[paragraph_id] = t_raw
+        cleaned_c_raw[paragraph_id] = c_raw
+        total_raw_by_paragraph[paragraph_id] = t_raw + c_raw
+
+    total_raw_sum = sum(total_raw_by_paragraph.values())
+    if total_raw_sum <= 0.0:
+        fallback_raw = {paragraph_id: 1.0 for paragraph_id in paragraph_ids}
+        paragraph_total = normalize_distribution(fallback_raw, section_score)
+    else:
+        paragraph_total = normalize_distribution(total_raw_by_paragraph, section_score)
+
+    paragraph_technical: Dict[str, float] = {}
+    paragraph_citation: Dict[str, float] = {}
+    for paragraph_id in paragraph_ids:
+        total_val = max(0.0, safe_float(paragraph_total.get(paragraph_id), 0.0))
+        t_raw = cleaned_t_raw.get(paragraph_id, 0.0)
+        c_raw = cleaned_c_raw.get(paragraph_id, 0.0)
+
+        if not mention_buckets.get(paragraph_id):
+            t_val = total_val
+            c_val = 0.0
+        else:
+            denom = t_raw + c_raw
+            if denom <= 0.0:
+                t_val = 0.5 * total_val
+                c_val = 0.5 * total_val
+            else:
+                t_val = total_val * (t_raw / denom)
+                c_val = total_val * (c_raw / denom)
+            t_val += total_val - (t_val + c_val)
+
+        paragraph_technical[paragraph_id] = t_val
+        paragraph_citation[paragraph_id] = c_val
+
+    return paragraph_technical, paragraph_citation, paragraph_total
+
+
 def split_citation_block(citation_block: str) -> List[str]:
     block = citation_block.strip()
     left_delim = ""
@@ -719,17 +952,21 @@ def assign_importance_scores(
     max_retries: int = 3,
     paragraph_direct_max_tokens: int = 4000,
     paragraph_compressed_snippet_limit: int = 180,
+    paragraph_batch_size: int = 8,
     debug_log_path: str = "",
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    paper_id: str = DEFAULT_PAPER_ID,
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
-    Assign hierarchical section and citation scores with:
+    Assign hierarchical section, paragraph, and citation scores with:
     - configurable pairwise or all-together scoring,
     - repeated LLM sampling + averaging,
-    - strict normalization at each tree level.
+    - strict normalization at each tree level,
+    - paragraph-level technical and citation channel decomposition.
     """
     client = Client(host=host)
     citation_scores: Dict[str, Any] = {}
     section_scores: Dict[str, Any] = {}
+    paragraph_scores: Dict[str, Any] = {}
 
     top_level_scores = allocate_scores_by_mode(
         client=client,
@@ -757,14 +994,12 @@ def assign_importance_scores(
 
     def assign_citation_scores(
         section_name: str,
+        section_path: List[str],
         section_score: float,
         section_content: Any,
         section_citations: Dict[str, Any],
         level: int,
     ) -> None:
-        if not section_citations or not isinstance(section_citations, dict):
-            return
-
         raw_text = section_content if isinstance(section_content, str) else flatten_content_to_text(section_content, 6000)
         paragraphs = split_text_into_paragraphs(raw_text)
         if not paragraphs:
@@ -774,58 +1009,58 @@ def assign_importance_scores(
             paragraphs = [normalized_text]
 
         paragraph_items = {f"Paragraph {idx + 1}": paragraph for idx, paragraph in enumerate(paragraphs)}
+        paragraph_meta = {
+            name: {
+                "paragraph_id": f"{paper_id}::{' > '.join(section_path)}::p{idx + 1}",
+                "paragraph_index": idx + 1,
+                "text": paragraph,
+            }
+            for idx, (name, paragraph) in enumerate(paragraph_items.items())
+        }
         paragraph_parent_name = f"{section_name}::paragraphs"
         est_tokens = estimate_direct_allocation_tokens(paragraph_parent_name, paragraph_items, snippet_limit=500)
+        use_compressed = paragraph_direct_max_tokens > 0 and est_tokens > paragraph_direct_max_tokens
+        snippet_limit = max(60, paragraph_compressed_snippet_limit) if use_compressed else 500
+        method = "channel_batch_compressed" if use_compressed else "channel_batch"
+        append_debug_log(
+            debug_log_path,
+            (
+                f"[paragraph_scoring] parent={paragraph_parent_name} method={method} "
+                f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
+                f"paragraphs={len(paragraph_items)} snippet_limit={snippet_limit} "
+                f"batch_size={max(1, paragraph_batch_size)} "
+                f"n_samples={max(1, n_samples)} max_retries={max(1, max_retries)}"
+            ),
+        )
 
-        if scoring_mode == "all_together":
-            use_compressed = paragraph_direct_max_tokens > 0 and est_tokens > paragraph_direct_max_tokens
-            snippet_limit = (
-                max(60, paragraph_compressed_snippet_limit) if use_compressed else 500
-            )
-            method = "all_together_compressed" if use_compressed else "all_together"
-            append_debug_log(
-                debug_log_path,
-                (
-                    f"[paragraph_scoring] parent={paragraph_parent_name} method={method} "
-                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
-                    f"paragraphs={len(paragraph_items)} snippet_limit={snippet_limit}"
-                ),
-            )
-            paragraph_scores = all_together_allocate_scores(
-                client=client,
-                item_to_content=paragraph_items,
-                total_score=section_score,
-                parent_name=paragraph_parent_name,
-                model=model,
-                n_samples=max(1, n_samples),
-                temperature=temperature,
-                max_retries=max(1, max_retries),
-                debug_log_path=debug_log_path,
-                snippet_limit=snippet_limit,
-                log_tag="all_together_paragraphs",
-            )
-        else:
-            append_debug_log(
-                debug_log_path,
-                (
-                    f"[paragraph_scoring] parent={paragraph_parent_name} method=pairwise "
-                    f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
-                    f"paragraphs={len(paragraph_items)} "
-                    f"n_samples={max(1, n_samples)} "
-                    f"max_retries={max(1, max_retries)}"
-                ),
-            )
-            paragraph_scores = pairwise_allocate_scores(
-                client=client,
-                item_to_content=paragraph_items,
-                total_score=section_score,
-                parent_name=paragraph_parent_name,
-                model=model,
-                n_samples=max(1, n_samples),
-                temperature=temperature,
-                max_retries=max(1, max_retries),
-                debug_log_path=debug_log_path,
-            )
+        technical_raw_scores = score_paragraph_channel(
+            client=client,
+            paragraph_items=paragraph_items,
+            model=model,
+            n_samples=max(1, n_samples),
+            temperature=temperature,
+            max_retries=max(1, max_retries),
+            batch_size=max(1, paragraph_batch_size),
+            snippet_limit=snippet_limit,
+            debug_log_path=debug_log_path,
+            system_prompt=PARAGRAPH_TECHNICAL_SYSTEM_PROMPT,
+            user_prompt_template=PARAGRAPH_TECHNICAL_USER_PROMPT_TEMPLATE,
+            log_tag="paragraph_technical_batch",
+        )
+        citation_raw_scores = score_paragraph_channel(
+            client=client,
+            paragraph_items=paragraph_items,
+            model=model,
+            n_samples=max(1, n_samples),
+            temperature=temperature,
+            max_retries=max(1, max_retries),
+            batch_size=max(1, paragraph_batch_size),
+            snippet_limit=snippet_limit,
+            debug_log_path=debug_log_path,
+            system_prompt=PARAGRAPH_CITATION_SYSTEM_PROMPT,
+            user_prompt_template=PARAGRAPH_CITATION_USER_PROMPT_TEMPLATE,
+            log_tag="paragraph_citation_batch",
+        )
 
         paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
         paragraph_tokens = {
@@ -833,7 +1068,8 @@ def assign_importance_scores(
         }
         mention_buckets: Dict[str, List[Tuple[str, str, str]]] = {name: [] for name in paragraph_items}
 
-        for citation_block, context_value in section_citations.items():
+        section_citation_dict = section_citations if isinstance(section_citations, dict) else {}
+        for citation_block, context_value in section_citation_dict.items():
             if isinstance(context_value, list):
                 contexts = context_value
             else:
@@ -864,20 +1100,55 @@ def assign_importance_scores(
                             target_paragraph = best_name
 
                 if target_paragraph is None:
-                    target_paragraph = max(paragraph_scores, key=paragraph_scores.get)
+                    target_paragraph = max(
+                        paragraph_items,
+                        key=lambda name: technical_raw_scores.get(name, 0.0) + citation_raw_scores.get(name, 0.0),
+                    )
 
                 for citation in split_citation_block(citation_block):
                     mention_buckets[target_paragraph].append((citation, citation_block, context_str))
 
-        for paragraph_name, mentions in mention_buckets.items():
+        paragraph_names = list(paragraph_items.keys())
+        paragraph_technical, paragraph_citation, paragraph_total = compute_paragraph_channel_scores(
+            section_score=section_score,
+            paragraph_ids=paragraph_names,
+            mention_buckets=mention_buckets,
+            technical_raw_scores=technical_raw_scores,
+            citation_raw_scores=citation_raw_scores,
+        )
+
+        for paragraph_name in paragraph_names:
+            meta = paragraph_meta[paragraph_name]
+            paragraph_id = meta["paragraph_id"]
+            mentions = mention_buckets.get(paragraph_name, [])
+            citations = [citation for citation, _, _ in mentions]
+            paragraph_t = max(0.0, paragraph_technical.get(paragraph_name, 0.0))
+            paragraph_c = max(0.0, paragraph_citation.get(paragraph_name, 0.0))
+            paragraph_total_score = max(0.0, paragraph_total.get(paragraph_name, 0.0))
+
+            paragraph_scores[paragraph_id] = {
+                "paper_id": paper_id,
+                "section_name": section_name,
+                "section_path": list(section_path),
+                "paragraph_index": meta["paragraph_index"],
+                "text": meta["text"],
+                "citation_count": len(citations),
+                "citations": citations,
+                "technical_raw": technical_raw_scores.get(paragraph_name, 0.0),
+                "citation_raw": citation_raw_scores.get(paragraph_name, 0.0) if mentions else 0.0,
+                "local_technical": paragraph_t,
+                "local_citation": paragraph_c,
+                "local_total": paragraph_total_score,
+                "combined_score": paragraph_total_score,
+            }
+
             if not mentions:
                 continue
 
-            paragraph_score = paragraph_scores.get(paragraph_name, 0.0)
-            if paragraph_score <= 0:
+            if paragraph_c <= 0.0:
                 continue
 
-            score_per_mention = paragraph_score / len(mentions)
+            score_per_mention = paragraph_c / len(mentions)
             for citation, source_block, context in mentions:
                 if citation not in citation_scores:
                     citation_scores[citation] = {"score": 0.0, "mentions": 0, "occurrences": []}
@@ -887,10 +1158,12 @@ def assign_importance_scores(
                 citation_scores[citation]["occurrences"].append(
                     {
                         "section": section_name,
+                        "section_path": list(section_path),
                         "level": level,
                         "source_block": source_block,
                         "context": context,
                         "paragraph": paragraph_name,
+                        "paragraph_id": paragraph_id,
                     }
                 )
 
@@ -900,8 +1173,10 @@ def assign_importance_scores(
         section_score: float,
         section_citations: Any,
         level: int = 1,
-        parent_ref: Dict[str, Any] = None,
+        parent_ref: Optional[Dict[str, Any]] = None,
+        section_path: Optional[List[str]] = None,
     ) -> None:
+        current_path = section_path or [section_name]
         if parent_ref is None:
             current_ref = section_scores[section_name]
         else:
@@ -945,16 +1220,32 @@ def assign_importance_scores(
                     subsection_citations,
                     level=level + 1,
                     parent_ref=current_ref["subsections"],
+                    section_path=current_path + [subsection_name],
                 )
         else:
-            assign_citation_scores(section_name, section_score, section_content, section_citations, level)
+            assign_citation_scores(
+                section_name=section_name,
+                section_path=current_path,
+                section_score=section_score,
+                section_content=section_content,
+                section_citations=section_citations,
+                level=level,
+            )
 
     for section_name, section_content in content_dict.items():
         score = top_level_scores.get(section_name, 1.0 / max(1, len(content_dict)))
         section_citations = citations_dict.get(section_name, {}) if isinstance(citations_dict, dict) else {}
-        process_section(section_name, section_content, score, section_citations, level=1, parent_ref=None)
+        process_section(
+            section_name,
+            section_content,
+            score,
+            section_citations,
+            level=1,
+            parent_ref=None,
+            section_path=[section_name],
+        )
 
-    return citation_scores, section_scores
+    return citation_scores, section_scores, paragraph_scores
 
 
 def print_section_hierarchy(section_scores: Dict[str, Any], indent: int = 0) -> None:
@@ -972,7 +1263,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Importance scoring for paper sections and citations.")
     parser.add_argument("--output1", required=True, help="Prefix for citation output file")
     parser.add_argument("--output2", required=True, help="Prefix for section output file")
+    parser.add_argument(
+        "--output3",
+        default="",
+        help="Optional prefix for paragraph output file (default: use output2 prefix).",
+    )
     parser.add_argument("--pdf", default=DEFAULT_PDF_PATH, help="Path to PDF file")
+    parser.add_argument("--paper-id", default=DEFAULT_PAPER_ID, help="Paper identifier used in paragraph ids")
     parser.add_argument("--model", default="llama3.2", help="Ollama model name")
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
     parser.add_argument(
@@ -980,7 +1277,7 @@ def main() -> None:
         choices=["all_together", "pairwise"],
         default="all_together",
         help=(
-            "Scoring strategy for sections/subsections/paragraphs: "
+            "Scoring strategy for sections/subsections: "
             "'all_together' scores all items in one prompt (default), "
             "'pairwise' compares items pair-by-pair."
         ),
@@ -993,27 +1290,38 @@ def main() -> None:
         type=int,
         default=4000,
         help=(
-            "Use direct paragraph scoring when estimated prompt tokens are <= this value; "
-            "otherwise use pairwise paragraph scoring."
+            "Use full paragraph snippets when estimated prompt tokens are <= this value; "
+            "otherwise use compressed snippets for paragraph channel scoring."
         ),
     )
     parser.add_argument(
         "--paragraph-compressed-snippet-limit",
         type=int,
         default=180,
-        help="Per-paragraph snippet length used by compressed direct paragraph scoring.",
+        help="Per-paragraph snippet length used by compressed paragraph channel scoring.",
+    )
+    parser.add_argument(
+        "--paragraph-batch-size",
+        type=int,
+        default=8,
+        help="Paragraphs per LLM call for technical/citation channel scoring.",
     )
     parser.add_argument(
         "--debug-log",
         default="pairwise_debug.log",
-        help="Path to write raw pairwise model responses for debugging",
+        help="Path to write raw model responses for debugging",
+    )
+    parser.add_argument(
+        "--prompts-output",
+        default="",
+        help="Optional path to save the exact prompt strings as JSON.",
     )
     args = parser.parse_args()
     append_run_separator(args.debug_log, args)
 
     text = read_pdf_text(args.pdf)
     citations, content = extract_citations_by_section(text, DEFAULT_SECTIONS)
-    citation_importance, section_importance = assign_importance_scores(
+    citation_importance, section_importance, paragraph_importance = assign_importance_scores(
         content_dict=content,
         citations_dict=citations,
         model=args.model,
@@ -1024,17 +1332,28 @@ def main() -> None:
         max_retries=max(1, args.max_retries),
         paragraph_direct_max_tokens=max(0, args.paragraph_direct_max_tokens),
         paragraph_compressed_snippet_limit=max(60, args.paragraph_compressed_snippet_limit),
+        paragraph_batch_size=max(1, args.paragraph_batch_size),
         debug_log_path=args.debug_log,
+        paper_id=args.paper_id,
     )
 
     citation_path = f"{args.output1}_citation_scores.json"
     section_path = f"{args.output2}_section_scores.json"
+    paragraph_prefix = args.output3 if args.output3 else args.output2
+    paragraph_path = f"{paragraph_prefix}_paragraph_scores.json"
 
-    with open(citation_path, "w") as f:
+    with open(citation_path, "w", encoding="utf-8") as f:
         json.dump(citation_importance, f, indent=2)
 
-    with open(section_path, "w") as f:
+    with open(section_path, "w", encoding="utf-8") as f:
         json.dump(section_importance, f, indent=2)
+
+    with open(paragraph_path, "w", encoding="utf-8") as f:
+        json.dump(paragraph_importance, f, indent=2)
+
+    if args.prompts_output:
+        with open(args.prompts_output, "w", encoding="utf-8") as f:
+            json.dump(PROMPT_CATALOG, f, indent=2)
 
     print("\n" + "=" * 50)
     print("FINAL CITATION SCORES (AGGREGATED ACROSS SECTIONS):")
@@ -1047,6 +1366,21 @@ def main() -> None:
     print("SECTION HIERARCHY WITH SCORES:")
     print("=" * 50)
     print_section_hierarchy(section_importance)
+
+    print("\n" + "=" * 50)
+    print("TOP PARAGRAPH SCORES (LOCAL TOTAL / TECHNICAL / CITATION):")
+    print("=" * 50)
+    sorted_paragraphs = sorted(
+        paragraph_importance.items(),
+        key=lambda x: x[1].get("combined_score", 0.0),
+        reverse=True,
+    )
+    for paragraph_id, payload in sorted_paragraphs[:10]:
+        print(
+            f"{paragraph_id}: total={payload.get('local_total', 0.0):.4f}, "
+            f"T={payload.get('local_technical', 0.0):.4f}, "
+            f"C={payload.get('local_citation', 0.0):.4f}"
+        )
 
 
 if __name__ == "__main__":
