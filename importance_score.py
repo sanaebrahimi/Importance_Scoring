@@ -876,18 +876,10 @@ def direct_allocate_scores(
         if any(v > 0.0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
-    heuristic_raw = {
-        item: max(1.0, float(len(re.findall(r"[a-z0-9]+", snippets[item].lower()))))
-        for item in items
-    }
-    append_debug_log(
-        debug_log_path,
-        (
-            f"[{log_tag}_heuristic] parent={parent_name} sample={sample_idx} "
-            "reason=no_usable_model_scores"
-        ),
+    raise ValueError(
+        f"Model failed to produce usable child scores for parent '{parent_name}' "
+        f"after {max(1, max_retries)} retries."
     )
-    return normalize_distribution(heuristic_raw, total_score)
 
 
 def all_together_allocate_scores(
