@@ -1198,6 +1198,14 @@ def score_paragraph_channel(
         sample_scores: Dict[str, float] = {}
         current_temp = min(1.0, max(0.0, temperature) + (0.05 * sample_idx))
 
+        paragraph_aliases: Dict[str, str] = {}
+        for idx, paragraph_id in enumerate(paragraph_ids, start=1):
+            paragraph_aliases[paragraph_id] = paragraph_id
+            paragraph_aliases[f"p{idx}"] = paragraph_id
+            paragraph_aliases[f"paragraph {idx}"] = paragraph_id
+            paragraph_aliases[f"paragraph{idx}"] = paragraph_id
+            paragraph_aliases[str(idx)] = paragraph_id
+
         if snippet_limit <= 0:
             snippets = {paragraph_id: paragraph_items[paragraph_id] for paragraph_id in paragraph_ids}
         else:
@@ -1230,13 +1238,6 @@ def score_paragraph_channel(
                     f"temperature={current_temp}\n{raw_response}\n"
                 ),
             )
-            paragraph_aliases: Dict[str, str] = {}
-            for idx, paragraph_id in enumerate(paragraph_ids, start=1):
-                paragraph_aliases[paragraph_id] = paragraph_id
-                paragraph_aliases[f"p{idx}"] = paragraph_id
-                paragraph_aliases[f"paragraph {idx}"] = paragraph_id
-                paragraph_aliases[f"paragraph{idx}"] = paragraph_id
-                paragraph_aliases[str(idx)] = paragraph_id
             parsed_scores = parse_score_map_from_response(
                 raw_response,
                 paragraph_ids,
@@ -1245,6 +1246,56 @@ def score_paragraph_channel(
             )
             if parsed_scores:
                 break
+
+        missing_ids = [
+            paragraph_id
+            for paragraph_id in paragraph_ids
+            if not (0.0 <= safe_float(parsed_scores.get(paragraph_id), -1.0) <= 1.0)
+        ]
+        if missing_ids:
+            repair_prompt = (
+                user_prompt
+                + "\n\nIMPORTANT: Return scores for ALL paragraph ids listed above."
+                + f"\nMissing ids from prior output: {missing_ids}"
+            )
+            for recovery_attempt in range(max(1, max_retries)):
+                try:
+                    response = client.chat(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": repair_prompt},
+                        ],
+                        options={"temperature": current_temp},
+                    )
+                    raw_response = response.message.content if getattr(response, "message", None) else ""
+                except Exception as exc:
+                    raw_response = f"[exception] {exc}"
+
+                append_debug_log(
+                    debug_log_path,
+                    (
+                        f"[{log_tag}_missing] sample={sample_idx + 1}/{sample_count} "
+                        f"attempt={recovery_attempt + 1}/{max(1, max_retries)} "
+                        f"missing={missing_ids} mode=full_set_reask\n{raw_response}\n"
+                    ),
+                )
+                recovered = parse_score_map_from_response(
+                    raw_response,
+                    paragraph_ids,
+                    allow_percentage=True,
+                    alias_to_id=paragraph_aliases,
+                )
+                for paragraph_id, value in recovered.items():
+                    parsed_scores[paragraph_id] = value
+
+                missing_ids = [
+                    paragraph_id
+                    for paragraph_id in paragraph_ids
+                    if not (0.0 <= safe_float(parsed_scores.get(paragraph_id), -1.0) <= 1.0)
+                ]
+                if not missing_ids:
+                    break
 
         for paragraph_id in paragraph_ids:
             raw_score = safe_float(parsed_scores.get(paragraph_id), -1.0)
@@ -1365,7 +1416,7 @@ def assign_importance_scores(
     paragraph_compressed_snippet_limit: int = 180,
     debug_log_path: str = "",
     paper_id: str = DEFAULT_PAPER_ID,
-) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+) -> Tuple[Dict[str, Any], Dict[str, Any], List[Dict[str, Any]]]:
     """
     Assign hierarchical section, paragraph, and citation scores with:
     - level-wise all-children-together scoring (parent sees all child nodes in one prompt),
@@ -1376,7 +1427,7 @@ def assign_importance_scores(
     client = Client(host=host)
     citation_scores: Dict[str, Any] = {}
     section_scores: Dict[str, Any] = {}
-    paragraph_scores: Dict[str, Any] = {}
+    paragraph_scores: List[Dict[str, Any]] = []
 
     top_level_scores = all_together_allocate_scores(
         client=client,
@@ -1419,7 +1470,7 @@ def assign_importance_scores(
         paragraph_items = {f"Paragraph {idx + 1}": paragraph for idx, paragraph in enumerate(paragraphs)}
         paragraph_meta = {
             name: {
-                "paragraph_id": f"{paper_id}::{' > '.join(section_path)}::p{idx + 1}",
+                "internal_paragraph_id": f"{paper_id}::{' > '.join(section_path)}::p{idx + 1}",
                 "paragraph_index": idx + 1,
                 "text": paragraph,
             }
@@ -1539,7 +1590,7 @@ def assign_importance_scores(
 
         for paragraph_name in paragraph_names:
             meta = paragraph_meta[paragraph_name]
-            paragraph_id = meta["paragraph_id"]
+            internal_paragraph_id = meta["internal_paragraph_id"]
             mentions = mention_buckets.get(paragraph_name, [])
             paragraph_t = max(0.0, paragraph_technical.get(paragraph_name, 0.0))
             paragraph_c = max(0.0, paragraph_citation.get(paragraph_name, 0.0))
@@ -1547,13 +1598,18 @@ def assign_importance_scores(
             assert_close(
                 paragraph_total_score,
                 max(0.0, safe_float(paragraph_total.get(paragraph_name), 0.0)),
-                f"paragraph {paragraph_id}",
+                f"paragraph {internal_paragraph_id}",
             )
 
-            paragraph_scores[paragraph_id] = {
-                "technical_score": paragraph_t,
-                "citation_score": paragraph_c,
-            }
+            paragraph_scores.append(
+                {
+                    "section_path": list(section_path),
+                    "paragraph_index": meta["paragraph_index"],
+                    "paragraph": meta["text"],
+                    "technical_score": paragraph_t,
+                    "citation_score": paragraph_c,
+                }
+            )
 
             if not mentions:
                 continue
@@ -1573,7 +1629,7 @@ def assign_importance_scores(
 
             citation_split = allocate_citation_scores_for_paragraph(
                 client=client,
-                paragraph_id=paragraph_id,
+                paragraph_id=f"{' > '.join(section_path)}::p{meta['paragraph_index']}",
                 paragraph_text=meta["text"],
                 citation_to_context=citation_to_context,
                 total_score=paragraph_c,
@@ -1584,7 +1640,7 @@ def assign_importance_scores(
                 debug_log_path=debug_log_path,
             )
             split_total = sum(citation_split.values())
-            assert_close(split_total, paragraph_c, f"citation split for {paragraph_id}")
+            assert_close(split_total, paragraph_c, f"citation split for {internal_paragraph_id}")
 
             for citation, citation_value in citation_split.items():
                 if citation not in citation_scores:
@@ -1804,18 +1860,21 @@ def main() -> None:
     print("TOP PARAGRAPH SCORES (TECHNICAL / CITATION):")
     print("=" * 50)
     sorted_paragraphs = sorted(
-        paragraph_importance.items(),
-        key=lambda x: combine_scores(
-            safe_float(x[1].get("technical_score"), 0.0),
-            safe_float(x[1].get("citation_score"), 0.0),
+        paragraph_importance,
+        key=lambda payload: combine_scores(
+            safe_float(payload.get("technical_score"), 0.0),
+            safe_float(payload.get("citation_score"), 0.0),
         ),
         reverse=True,
     )
-    for paragraph_id, payload in sorted_paragraphs[:10]:
+    for payload in sorted_paragraphs[:10]:
         technical_score = safe_float(payload.get("technical_score"), 0.0)
         citation_score = safe_float(payload.get("citation_score"), 0.0)
+        section_path = payload.get("section_path", [])
+        section_label = " > ".join(section_path) if isinstance(section_path, list) else str(section_path)
+        paragraph_index = payload.get("paragraph_index", "?")
         print(
-            f"{paragraph_id}: technical={technical_score:.4f}, citation={citation_score:.4f}"
+            f"{section_label}::p{paragraph_index}: technical={technical_score:.4f}, citation={citation_score:.4f}"
         )
 
     append_run_end(args.debug_log)
