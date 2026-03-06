@@ -90,7 +90,7 @@ Scoring rubric:
 - Use non-negative scores; larger means more important.
 - The children scores must sum to exactly the parent score.
 
-Items (item_id -> {{"name": ..., "excerpt": ...}):
+Items (item_id -> {{"name": ..., "excerpt": ...}}):
 {items_json}
 
 Return ONLY JSON mapping every item_id to a non-negative score.
@@ -120,7 +120,7 @@ Task:
 - Lower share: citation is peripheral or weakly connected.
 - Use non-negative scores and make them sum to exactly the paragraph citation score.
 
-Citation entries (citation_id -> {{"citation": ..., "context": ...}):
+Citation entries (citation_id -> {{"citation": ..., "context": ...}}):
 {citations_json}
 
 Return ONLY JSON mapping every citation_id to a non-negative score.
