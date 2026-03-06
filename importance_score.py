@@ -309,16 +309,34 @@ def append_run_separator(debug_log_path: str, args: argparse.Namespace) -> None:
     if not debug_log_path:
         return
     timestamp = datetime.now().isoformat(timespec="seconds")
-    separator = "=" * 80
+    separator = "=" * 100
     entry = (
+        "\n"
         f"{separator}\n"
+        f"============================== RUN START ==============================\n"
         f"[run_start] time={timestamp} model={args.model} host={args.host} "
         f"paper_id={args.paper_id} "
         f"n_samples={max(1, args.n_samples)} temperature={max(0.0, args.temperature)} "
         f"max_retries={max(1, args.max_retries)} "
         f"paragraph_direct_max_tokens={max(0, args.paragraph_direct_max_tokens)} "
         f"paragraph_compressed_snippet_limit={max(60, args.paragraph_compressed_snippet_limit)}\n"
+        f"============================== RUN START ==============================\n"
         f"{separator}"
+    )
+    append_debug_log(debug_log_path, entry)
+
+
+def append_run_end(debug_log_path: str) -> None:
+    if not debug_log_path:
+        return
+    timestamp = datetime.now().isoformat(timespec="seconds")
+    separator = "=" * 100
+    entry = (
+        f"{separator}\n"
+        f"=============================== RUN END ===============================\n"
+        f"[run_end] time={timestamp}\n"
+        f"=============================== RUN END ===============================\n"
+        f"{separator}\n"
     )
     append_debug_log(debug_log_path, entry)
 
@@ -338,10 +356,12 @@ def normalize_distribution(raw_scores: Dict[str, float], total: float) -> Dict[s
     score_sum = sum(cleaned.values())
 
     if score_sum <= 0:
-        equal = total / len(cleaned)
-        normalized = {k: equal for k in cleaned}
-    else:
-        normalized = {k: (v / score_sum) * total for k, v in cleaned.items()}
+        raise ValueError(
+            "normalize_distribution received non-positive total raw mass; "
+            "refusing equal-score fallback."
+        )
+
+    normalized = {k: (v / score_sum) * total for k, v in cleaned.items()}
 
     residual = total - sum(normalized.values())
     best_key = max(normalized, key=normalized.get)
@@ -586,9 +606,10 @@ def direct_allocate_scores(
         if any(v > 0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
-    # Final neutral fallback if direct allocation fails.
-    equal_raw = {item: 1.0 for item in items}
-    return normalize_distribution(equal_raw, total_score)
+    raise ValueError(
+        f"Model failed to produce usable child scores for parent '{parent_name}' "
+        f"after {max(1, max_retries)} retries; refusing equal-score fallback."
+    )
 
 
 def all_together_allocate_scores(
@@ -691,8 +712,10 @@ def direct_allocate_citation_scores(
         if any(v > 0.0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
-    equal_raw = {citation: 1.0 for citation in citations}
-    return normalize_distribution(equal_raw, total_score)
+    raise ValueError(
+        f"Model failed to split citation score for paragraph '{paragraph_id}' "
+        f"after {max(1, max_retries)} retries; refusing equal-score fallback."
+    )
 
 
 def allocate_citation_scores_for_paragraph(
@@ -983,13 +1006,18 @@ def score_paragraph_channel(
 
         for paragraph_id in paragraph_ids:
             raw_score = safe_float(parsed.get(paragraph_id), -1.0)
-            sample_scores[paragraph_id] = clamp_unit(raw_score) if 0.0 <= raw_score <= 1.0 else 0.5
+            if not (0.0 <= raw_score <= 1.0):
+                raise ValueError(
+                    f"Model failed to produce valid paragraph channel score for '{paragraph_id}' "
+                    f"(sample {sample_idx + 1}); refusing 0.5 fallback."
+                )
+            sample_scores[paragraph_id] = clamp_unit(raw_score)
 
         per_sample_scores.append(sample_scores)
 
     averaged: Dict[str, float] = {}
     for paragraph_id in paragraph_ids:
-        avg_score = sum(sample.get(paragraph_id, 0.5) for sample in per_sample_scores) / sample_count
+        avg_score = sum(sample[paragraph_id] for sample in per_sample_scores) / sample_count
         averaged[paragraph_id] = clamp_unit(avg_score)
     return averaged
 
@@ -1021,10 +1049,10 @@ def compute_paragraph_channel_scores(
 
     total_sum = sum(cleaned_total.values())
     if total_sum <= 0.0:
-        fallback_raw = {paragraph_id: 1.0 for paragraph_id in paragraph_ids}
-        paragraph_total = normalize_distribution(fallback_raw, section_score)
-    else:
-        paragraph_total = normalize_distribution(cleaned_total, section_score)
+        raise ValueError(
+            "Paragraph total score allocation has zero mass; refusing equal-score fallback."
+        )
+    paragraph_total = normalize_distribution(cleaned_total, section_score)
 
     paragraph_technical: Dict[str, float] = {}
     paragraph_citation: Dict[str, float] = {}
@@ -1039,11 +1067,12 @@ def compute_paragraph_channel_scores(
         else:
             denom = t_raw + c_raw
             if denom <= 0.0:
-                t_val = 0.5 * total_val
-                c_val = 0.5 * total_val
-            else:
-                t_val = total_val * (t_raw / denom)
-                c_val = total_val * (c_raw / denom)
+                raise ValueError(
+                    f"Paragraph channel split has zero raw mass for '{paragraph_id}'; "
+                    "refusing equal technical/citation fallback."
+                )
+            t_val = total_val * (t_raw / denom)
+            c_val = total_val * (c_raw / denom)
             t_val += total_val - (t_val + c_val)
 
         paragraph_technical[paragraph_id] = t_val
@@ -1546,6 +1575,8 @@ def main() -> None:
         print(
             f"{paragraph_id}: technical={technical_score:.4f}, citation={citation_score:.4f}"
         )
+
+    append_run_end(args.debug_log)
 
 
 if __name__ == "__main__":
