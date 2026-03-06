@@ -1138,12 +1138,13 @@ def assign_importance_scores(
             if paragraph_c <= 0.0:
                 continue
 
-            score_per_mention = paragraph_c / len(mentions)
-            for citation, _, _ in mentions:
+            unique_citations_in_paragraph = {citation for citation, _, _ in mentions}
+            for citation in unique_citations_in_paragraph:
                 if citation not in citation_scores:
                     citation_scores[citation] = {"citation_score": 0.0}
 
-                citation_scores[citation]["citation_score"] += score_per_mention
+                # Citation score is the sum of citation channel scores of paragraphs that include this citation.
+                citation_scores[citation]["citation_score"] += paragraph_c
 
         leaf_t = sum(paragraph_technical.values())
         leaf_c = sum(paragraph_citation.values())
@@ -1241,9 +1242,6 @@ def assign_importance_scores(
         for payload in section_scores.values()
     )
     assert_close(top_level_total, 1.0, "top-level sections")
-    citation_total_from_paragraphs = sum(payload["citation_score"] for payload in paragraph_scores.values())
-    citation_total_from_citations = sum(payload["citation_score"] for payload in citation_scores.values())
-    assert_close(citation_total_from_citations, citation_total_from_paragraphs, "citation redistribution")
 
     return citation_scores, section_scores, paragraph_scores
 
