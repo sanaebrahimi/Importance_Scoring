@@ -90,14 +90,15 @@ Scoring rubric:
 - Use non-negative scores; larger means more important.
 - The children scores must sum to exactly the parent score.
 
-Items (name -> excerpt):
+Items (item_id -> {{"name": ..., "excerpt": ...}):
 {items_json}
 
-Return ONLY JSON mapping every item name to a non-negative score.
+Return ONLY JSON mapping every item_id to a non-negative score.
+Do NOT use item names as keys.
 Example:
 {{
-  "item_name_1": 0.32,
-  "item_name_2": 0.18
+  "I1": 0.32,
+  "I2": 0.18
 }}
 """
 
@@ -119,14 +120,15 @@ Task:
 - Lower share: citation is peripheral or weakly connected.
 - Use non-negative scores and make them sum to exactly the paragraph citation score.
 
-Citations (citation -> context snippets in this paragraph):
+Citation entries (citation_id -> {{"citation": ..., "context": ...}):
 {citations_json}
 
-Return ONLY JSON mapping every citation string to a non-negative score.
+Return ONLY JSON mapping every citation_id to a non-negative score.
+Do NOT use citation strings as keys.
 Example:
 {{
-  "(Author A, 2020)": 0.06,
-  "(Author B, 2021)": 0.02
+  "C1": 0.06,
+  "C2": 0.02
 }}
 """
 
@@ -296,6 +298,163 @@ def parse_json_response(response_text: str) -> Dict[str, Any]:
         return {}
 
 
+def strip_code_fences(response_text: str) -> str:
+    text = (response_text or "").strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        text = "\n".join(lines[1:-1]) if len(lines) > 2 else text
+        text = text.replace("```json", "").replace("```", "").strip()
+    return text
+
+
+def parse_json_loose(response_text: str) -> Any:
+    text = strip_code_fences(response_text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
+
+
+def normalized_key(key: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (key or "").lower())
+
+
+def coerce_non_negative_number(value: Any, allow_percentage: bool = False) -> Optional[float]:
+    number: Optional[float] = None
+
+    if isinstance(value, (int, float)):
+        number = float(value)
+    elif isinstance(value, str):
+        match = re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", value)
+        if match:
+            number = safe_float(match.group(0), None)
+
+    if number is None:
+        return None
+    if allow_percentage and number > 1.0 and number <= 100.0:
+        number = number / 100.0
+    if number < 0.0:
+        return None
+    return float(number)
+
+
+def parse_score_map_from_response(
+    response_text: str,
+    expected_ids: List[str],
+    allow_percentage: bool = False,
+    alias_to_id: Optional[Dict[str, str]] = None,
+) -> Dict[str, float]:
+    if not expected_ids:
+        return {}
+
+    expected_set = set(expected_ids)
+    norm_to_id = {normalized_key(item_id): item_id for item_id in expected_ids}
+    if alias_to_id:
+        for alias, target_id in alias_to_id.items():
+            if target_id in expected_set:
+                norm_to_id[normalized_key(alias)] = target_id
+    parsed_scores: Dict[str, float] = {}
+
+    def assign_from_pair(key: Any, value: Any) -> None:
+        key_str = str(key)
+        target_id = key_str if key_str in expected_set else norm_to_id.get(normalized_key(key_str))
+        if target_id is None:
+            return
+
+        score_val = coerce_non_negative_number(value, allow_percentage=allow_percentage)
+        if score_val is None and isinstance(value, dict):
+            for field in ("score", "value", "weight", "allocation", "credit"):
+                if field in value:
+                    score_val = coerce_non_negative_number(value.get(field), allow_percentage=allow_percentage)
+                    if score_val is not None:
+                        break
+
+        if score_val is not None:
+            parsed_scores[target_id] = score_val
+
+    json_payload = parse_json_loose(response_text)
+    if isinstance(json_payload, dict):
+        for key, value in json_payload.items():
+            assign_from_pair(key, value)
+
+        for bucket_key in ("scores", "items", "allocations", "distribution", "results"):
+            bucket = json_payload.get(bucket_key)
+            if not isinstance(bucket, list):
+                continue
+            for entry in bucket:
+                if not isinstance(entry, dict):
+                    continue
+                key_candidate = (
+                    entry.get("id")
+                    or entry.get("item_id")
+                    or entry.get("name")
+                    or entry.get("item")
+                    or entry.get("key")
+                    or entry.get("label")
+                )
+                if key_candidate is None:
+                    continue
+                value_candidate = (
+                    entry.get("score")
+                    if "score" in entry
+                    else entry.get("value")
+                    if "value" in entry
+                    else entry.get("weight")
+                    if "weight" in entry
+                    else entry.get("allocation")
+                    if "allocation" in entry
+                    else entry.get("credit")
+                )
+                assign_from_pair(key_candidate, value_candidate)
+
+    elif isinstance(json_payload, list):
+        for entry in json_payload:
+            if not isinstance(entry, dict):
+                continue
+            key_candidate = (
+                entry.get("id")
+                or entry.get("item_id")
+                or entry.get("name")
+                or entry.get("item")
+                or entry.get("key")
+                or entry.get("label")
+            )
+            if key_candidate is None:
+                continue
+            value_candidate = (
+                entry.get("score")
+                if "score" in entry
+                else entry.get("value")
+                if "value" in entry
+                else entry.get("weight")
+                if "weight" in entry
+                else entry.get("allocation")
+                if "allocation" in entry
+                else entry.get("credit")
+            )
+            assign_from_pair(key_candidate, value_candidate)
+
+    text = strip_code_fences(response_text)
+    for item_id in expected_ids:
+        if item_id in parsed_scores:
+            continue
+        patterns = [
+            rf'"{re.escape(item_id)}"\s*:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)',
+            rf"{re.escape(item_id)}\s*[:=]\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
+            rf"{re.escape(item_id)}\s*[-–]\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if not match:
+                continue
+            value = coerce_non_negative_number(match.group(1), allow_percentage=allow_percentage)
+            if value is not None:
+                parsed_scores[item_id] = value
+                break
+
+    return parsed_scores
+
+
 def append_debug_log(debug_log_path: str, entry: str) -> None:
     if not debug_log_path:
         return
@@ -444,11 +603,16 @@ def estimate_direct_allocation_tokens(
     item_to_content: Dict[str, Any],
     snippet_limit: Optional[int] = 0,
 ) -> int:
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in item_to_content}
+    items = list(item_to_content.keys())
+    snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in items}
+    item_payload = {
+        f"I{idx + 1}": {"name": item_name, "excerpt": snippets[item_name]}
+        for idx, item_name in enumerate(items)
+    }
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
         parent_score=1.0,
-        items_json=json.dumps(snippets, indent=2),
+        items_json=json.dumps(item_payload, indent=2),
     )
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     return estimate_tokens_approx(system_prompt) + estimate_tokens_approx(prompt)
@@ -573,11 +737,21 @@ def direct_allocate_scores(
     if len(items) == 1:
         return {items[0]: total_score}
 
+    item_ids = [f"I{idx + 1}" for idx in range(len(items))]
+    item_id_to_name = {item_ids[idx]: items[idx] for idx in range(len(items))}
+    item_payload = {
+        item_id: {
+            "name": item_id_to_name[item_id],
+            "excerpt": snippets[item_id_to_name[item_id]],
+        }
+        for item_id in item_ids
+    }
+
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
         parent_score=total_score,
-        items_json=json.dumps(snippets, indent=2),
+        items_json=json.dumps(item_payload, indent=2),
     )
 
     parsed_scores: Dict[str, float] = {}
@@ -595,15 +769,19 @@ def direct_allocate_scores(
                 f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
             ),
         )
-        parsed = parse_json_response(raw_response)
-        if not isinstance(parsed, dict) or not parsed:
-            continue
+        alias_to_id = {item_id_to_name[item_id]: item_id for item_id in item_ids}
+        parsed_by_id = parse_score_map_from_response(
+            raw_response,
+            item_ids,
+            allow_percentage=False,
+            alias_to_id=alias_to_id,
+        )
+        parsed_scores = {
+            item_id_to_name[item_id]: max(0.0, safe_float(parsed_by_id.get(item_id), 0.0))
+            for item_id in item_ids
+        }
 
-        parsed_scores = {}
-        for item in items:
-            parsed_scores[item] = max(0.0, safe_float(parsed.get(item), 0.0))
-
-        if any(v > 0 for v in parsed_scores.values()):
+        if any(v > 0.0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
     raise ValueError(
@@ -676,11 +854,21 @@ def direct_allocate_citation_scores(
     if len(citations) == 1:
         return {citations[0]: total_score}
 
+    citation_ids = [f"C{idx + 1}" for idx in range(len(citations))]
+    citation_id_to_name = {citation_ids[idx]: citations[idx] for idx in range(len(citations))}
+    citation_payload = {
+        citation_id: {
+            "citation": citation_id_to_name[citation_id],
+            "context": citation_to_context[citation_id_to_name[citation_id]],
+        }
+        for citation_id in citation_ids
+    }
+
     prompt = CITATION_SPLIT_USER_PROMPT_TEMPLATE.format(
         paragraph_id=paragraph_id,
         paragraph_citation_score=total_score,
         paragraph_text=paragraph_text[:1200],
-        citations_json=json.dumps(citation_to_context, indent=2),
+        citations_json=json.dumps(citation_payload, indent=2),
     )
 
     parsed_scores: Dict[str, float] = {}
@@ -701,13 +889,17 @@ def direct_allocate_citation_scores(
                 f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
             ),
         )
-        parsed = parse_json_response(raw_response)
-        if not isinstance(parsed, dict) or not parsed:
-            continue
-
-        parsed_scores = {}
-        for citation in citations:
-            parsed_scores[citation] = max(0.0, safe_float(parsed.get(citation), 0.0))
+        alias_to_id = {citation_id_to_name[citation_id]: citation_id for citation_id in citation_ids}
+        parsed_by_id = parse_score_map_from_response(
+            raw_response,
+            citation_ids,
+            allow_percentage=False,
+            alias_to_id=alias_to_id,
+        )
+        parsed_scores = {
+            citation_id_to_name[citation_id]: max(0.0, safe_float(parsed_by_id.get(citation_id), 0.0))
+            for citation_id in citation_ids
+        }
 
         if any(v > 0.0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
@@ -977,7 +1169,7 @@ def score_paragraph_channel(
             }
         user_prompt = user_prompt_template.format(paragraphs_json=json.dumps(snippets, indent=2))
 
-        parsed: Dict[str, Any] = {}
+        parsed_scores: Dict[str, float] = {}
         for attempt in range(max(1, max_retries)):
             try:
                 response = client.chat(
@@ -1000,12 +1192,16 @@ def score_paragraph_channel(
                     f"temperature={current_temp}\n{raw_response}\n"
                 ),
             )
-            parsed = parse_json_response(raw_response)
-            if parsed:
+            parsed_scores = parse_score_map_from_response(
+                raw_response,
+                paragraph_ids,
+                allow_percentage=True,
+            )
+            if parsed_scores:
                 break
 
         for paragraph_id in paragraph_ids:
-            raw_score = safe_float(parsed.get(paragraph_id), -1.0)
+            raw_score = safe_float(parsed_scores.get(paragraph_id), -1.0)
             if not (0.0 <= raw_score <= 1.0):
                 raise ValueError(
                     f"Model failed to produce valid paragraph channel score for '{paragraph_id}' "
