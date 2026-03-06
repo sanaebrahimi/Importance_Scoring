@@ -75,28 +75,58 @@ Constraints:
 
 SECTION_DIRECT_SYSTEM_PROMPT = (
     "You are an expert academic reviewer. "
-    "Score multiple items from the same paper by contribution to the paper's main scientific contribution. "
+    "Distribute a parent score among child items from the same paper by contribution. "
     "Use both technical contribution and citation-supported contribution. "
     "Return JSON only."
 )
 
 SECTION_DIRECT_USER_PROMPT_TEMPLATE = """Parent node: "{parent_name}"
-Task: score all items together (not pairwise) by contribution to the paper's main contribution.
+Parent score to distribute: {parent_score}
+Task: divide the parent score among all child items together (not pairwise).
 
 Scoring rubric:
 - Higher score: core technical contribution (method/theory/algorithm/findings) and meaningful citation-supported value.
 - Lower score: background context, transitions, setup detail, or low-impact narrative.
-- Use non-negative raw scores; larger means more important.
-- Scores are relative within this set and do NOT need to sum to 1.
+- Use non-negative scores; larger means more important.
+- The children scores must sum to exactly the parent score.
 
 Items (name -> excerpt):
 {items_json}
 
-Return ONLY JSON mapping every item name to a non-negative raw score.
+Return ONLY JSON mapping every item name to a non-negative score.
 Example:
 {{
-  "item_name_1": 12.0,
-  "item_name_2": 4.5
+  "item_name_1": 0.32,
+  "item_name_2": 0.18
+}}
+"""
+
+CITATION_SPLIT_SYSTEM_PROMPT = (
+    "You are an expert academic reviewer. "
+    "Distribute a paragraph citation score among citations appearing in that paragraph. "
+    "Return JSON only."
+)
+
+CITATION_SPLIT_USER_PROMPT_TEMPLATE = """Paragraph id: "{paragraph_id}"
+Paragraph citation score to distribute: {paragraph_citation_score}
+
+Paragraph text:
+{paragraph_text}
+
+Task:
+- Divide the paragraph citation score among the citations below.
+- Higher share: citation contributes more to the paragraph's claims, evidence, grounding, or comparison.
+- Lower share: citation is peripheral or weakly connected.
+- Use non-negative scores and make them sum to exactly the paragraph citation score.
+
+Citations (citation -> context snippets in this paragraph):
+{citations_json}
+
+Return ONLY JSON mapping every citation string to a non-negative score.
+Example:
+{{
+  "(Author A, 2020)": 0.06,
+  "(Author B, 2021)": 0.02
 }}
 """
 
@@ -158,6 +188,8 @@ PROMPT_CATALOG = {
     "section_pairwise_user_prompt_template": SECTION_PAIRWISE_USER_PROMPT_TEMPLATE,
     "section_direct_system_prompt": SECTION_DIRECT_SYSTEM_PROMPT,
     "section_direct_user_prompt_template": SECTION_DIRECT_USER_PROMPT_TEMPLATE,
+    "citation_split_system_prompt": CITATION_SPLIT_SYSTEM_PROMPT,
+    "citation_split_user_prompt_template": CITATION_SPLIT_USER_PROMPT_TEMPLATE,
     "paragraph_technical_system_prompt": PARAGRAPH_TECHNICAL_SYSTEM_PROMPT,
     "paragraph_technical_user_prompt_template": PARAGRAPH_TECHNICAL_USER_PROMPT_TEMPLATE,
     "paragraph_citation_system_prompt": PARAGRAPH_CITATION_SYSTEM_PROMPT,
@@ -395,6 +427,7 @@ def estimate_direct_allocation_tokens(
     snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in item_to_content}
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
+        parent_score=1.0,
         items_json=json.dumps(snippets, indent=2),
     )
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
@@ -523,6 +556,7 @@ def direct_allocate_scores(
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
+        parent_score=total_score,
         items_json=json.dumps(snippets, indent=2),
     )
 
@@ -600,6 +634,108 @@ def all_together_allocate_scores(
         for item, value in dist.items():
             averaged[item] += value
     averaged = {item: value / sample_count for item, value in averaged.items()}
+    return normalize_distribution(averaged, total_score)
+
+
+def direct_allocate_citation_scores(
+    client: Client,
+    paragraph_id: str,
+    paragraph_text: str,
+    citation_to_context: Dict[str, str],
+    total_score: float,
+    model: str,
+    temperature: float,
+    max_retries: int,
+    debug_log_path: str,
+    sample_idx: int,
+) -> Dict[str, float]:
+    citations = list(citation_to_context.keys())
+    if not citations:
+        return {}
+    if len(citations) == 1:
+        return {citations[0]: total_score}
+
+    prompt = CITATION_SPLIT_USER_PROMPT_TEMPLATE.format(
+        paragraph_id=paragraph_id,
+        paragraph_citation_score=total_score,
+        paragraph_text=paragraph_text[:1200],
+        citations_json=json.dumps(citation_to_context, indent=2),
+    )
+
+    parsed_scores: Dict[str, float] = {}
+    for attempt in range(max(1, max_retries)):
+        response = client.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": CITATION_SPLIT_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+            options={"temperature": temperature},
+        )
+        raw_response = response.message.content if getattr(response, "message", None) else ""
+        append_debug_log(
+            debug_log_path,
+            (
+                f"[citation_split] paragraph_id={paragraph_id} sample={sample_idx} "
+                f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
+            ),
+        )
+        parsed = parse_json_response(raw_response)
+        if not isinstance(parsed, dict) or not parsed:
+            continue
+
+        parsed_scores = {}
+        for citation in citations:
+            parsed_scores[citation] = max(0.0, safe_float(parsed.get(citation), 0.0))
+
+        if any(v > 0.0 for v in parsed_scores.values()):
+            return normalize_distribution(parsed_scores, total_score)
+
+    equal_raw = {citation: 1.0 for citation in citations}
+    return normalize_distribution(equal_raw, total_score)
+
+
+def allocate_citation_scores_for_paragraph(
+    client: Client,
+    paragraph_id: str,
+    paragraph_text: str,
+    citation_to_context: Dict[str, str],
+    total_score: float,
+    model: str,
+    n_samples: int,
+    temperature: float,
+    max_retries: int,
+    debug_log_path: str,
+) -> Dict[str, float]:
+    citations = list(citation_to_context.keys())
+    if not citations:
+        return {}
+    if len(citations) == 1:
+        return {citations[0]: total_score}
+
+    sample_count = max(1, n_samples)
+    sample_distributions: List[Dict[str, float]] = []
+    for s in range(sample_count):
+        sample_distributions.append(
+            direct_allocate_citation_scores(
+                client=client,
+                paragraph_id=paragraph_id,
+                paragraph_text=paragraph_text,
+                citation_to_context=citation_to_context,
+                total_score=total_score,
+                model=model,
+                temperature=min(1.0, temperature + (0.05 * s)),
+                max_retries=max(1, max_retries),
+                debug_log_path=debug_log_path,
+                sample_idx=s + 1,
+            )
+        )
+
+    averaged = {citation: 0.0 for citation in citations}
+    for dist in sample_distributions:
+        for citation, value in dist.items():
+            averaged[citation] += value
+    averaged = {citation: value / sample_count for citation, value in averaged.items()}
     return normalize_distribution(averaged, total_score)
 
 
@@ -861,6 +997,7 @@ def score_paragraph_channel(
 def compute_paragraph_channel_scores(
     section_score: float,
     paragraph_ids: List[str],
+    paragraph_total_scores: Dict[str, float],
     mention_buckets: Dict[str, List[Tuple[str, str, str]]],
     technical_raw_scores: Dict[str, float],
     citation_raw_scores: Dict[str, float],
@@ -870,7 +1007,7 @@ def compute_paragraph_channel_scores(
 
     cleaned_t_raw: Dict[str, float] = {}
     cleaned_c_raw: Dict[str, float] = {}
-    total_raw_by_paragraph: Dict[str, float] = {}
+    cleaned_total: Dict[str, float] = {}
 
     for paragraph_id in paragraph_ids:
         t_raw = max(0.0, safe_float(technical_raw_scores.get(paragraph_id), 0.0))
@@ -880,14 +1017,14 @@ def compute_paragraph_channel_scores(
 
         cleaned_t_raw[paragraph_id] = t_raw
         cleaned_c_raw[paragraph_id] = c_raw
-        total_raw_by_paragraph[paragraph_id] = t_raw + c_raw
+        cleaned_total[paragraph_id] = max(0.0, safe_float(paragraph_total_scores.get(paragraph_id), 0.0))
 
-    total_raw_sum = sum(total_raw_by_paragraph.values())
-    if total_raw_sum <= 0.0:
+    total_sum = sum(cleaned_total.values())
+    if total_sum <= 0.0:
         fallback_raw = {paragraph_id: 1.0 for paragraph_id in paragraph_ids}
         paragraph_total = normalize_distribution(fallback_raw, section_score)
     else:
-        paragraph_total = normalize_distribution(total_raw_by_paragraph, section_score)
+        paragraph_total = normalize_distribution(cleaned_total, section_score)
 
     paragraph_technical: Dict[str, float] = {}
     paragraph_citation: Dict[str, float] = {}
@@ -1032,6 +1169,20 @@ def assign_importance_scores(
             ),
         )
 
+        paragraph_total_scores = all_together_allocate_scores(
+            client=client,
+            item_to_content=paragraph_items,
+            total_score=section_score,
+            parent_name=paragraph_parent_name,
+            model=model,
+            n_samples=max(1, n_samples),
+            temperature=temperature,
+            max_retries=max(1, max_retries),
+            debug_log_path=debug_log_path,
+            snippet_limit=snippet_limit,
+            log_tag="all_together_paragraphs",
+        )
+
         technical_raw_scores = score_paragraph_channel(
             client=client,
             paragraph_items=paragraph_items,
@@ -1109,6 +1260,7 @@ def assign_importance_scores(
         paragraph_technical, paragraph_citation, paragraph_total = compute_paragraph_channel_scores(
             section_score=section_score,
             paragraph_ids=paragraph_names,
+            paragraph_total_scores=paragraph_total_scores,
             mention_buckets=mention_buckets,
             technical_raw_scores=technical_raw_scores,
             citation_raw_scores=citation_raw_scores,
@@ -1138,13 +1290,36 @@ def assign_importance_scores(
             if paragraph_c <= 0.0:
                 continue
 
-            unique_citations_in_paragraph = {citation for citation, _, _ in mentions}
-            for citation in unique_citations_in_paragraph:
+            citation_contexts: Dict[str, List[str]] = {}
+            for citation, _, context in mentions:
+                citation_contexts.setdefault(citation, []).append(normalize_for_match(str(context)))
+
+            citation_to_context: Dict[str, str] = {}
+            for citation, contexts in citation_contexts.items():
+                unique_contexts = [ctx for ctx in dict.fromkeys(contexts) if ctx]
+                context_blob = " ".join(unique_contexts)[:700]
+                citation_to_context[citation] = context_blob if context_blob else meta["text"][:700]
+
+            citation_split = allocate_citation_scores_for_paragraph(
+                client=client,
+                paragraph_id=paragraph_id,
+                paragraph_text=meta["text"],
+                citation_to_context=citation_to_context,
+                total_score=paragraph_c,
+                model=model,
+                n_samples=max(1, n_samples),
+                temperature=temperature,
+                max_retries=max(1, max_retries),
+                debug_log_path=debug_log_path,
+            )
+            split_total = sum(citation_split.values())
+            assert_close(split_total, paragraph_c, f"citation split for {paragraph_id}")
+
+            for citation, citation_value in citation_split.items():
                 if citation not in citation_scores:
                     citation_scores[citation] = {"citation_score": 0.0}
 
-                # Citation score is the sum of citation channel scores of paragraphs that include this citation.
-                citation_scores[citation]["citation_score"] += paragraph_c
+                citation_scores[citation]["citation_score"] += citation_value
 
         leaf_t = sum(paragraph_technical.values())
         leaf_c = sum(paragraph_citation.values())
