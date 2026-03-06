@@ -1193,6 +1193,7 @@ def score_paragraph_channel(
     paragraph_ids = list(paragraph_items.keys())
     sample_count = max(1, n_samples)
     per_sample_scores: List[Dict[str, float]] = []
+    dropped_samples = 0
 
     for sample_idx in range(sample_count):
         sample_scores: Dict[str, float] = {}
@@ -1299,19 +1300,34 @@ def score_paragraph_channel(
 
         for paragraph_id in paragraph_ids:
             raw_score = safe_float(parsed_scores.get(paragraph_id), -1.0)
-            if not (0.0 <= raw_score <= 1.0):
-                raise ValueError(
-                    f"Model failed to produce valid paragraph channel score for '{paragraph_id}' "
-                    f"(sample {sample_idx + 1}); refusing 0.5 fallback."
+            if raw_score < 0.0:
+                sample_scores = {}
+                dropped_samples += 1
+                append_debug_log(
+                    debug_log_path,
+                    (
+                        f"[{log_tag}_drop] sample={sample_idx + 1}/{sample_count} "
+                        f"reason=missing_or_invalid paragraph_id={paragraph_id}"
+                    ),
                 )
-            sample_scores[paragraph_id] = clamp_unit(raw_score)
+                break
+            # Channel values are used as non-negative relative strengths.
+            sample_scores[paragraph_id] = raw_score
 
-        per_sample_scores.append(sample_scores)
+        if sample_scores and len(sample_scores) == len(paragraph_ids):
+            per_sample_scores.append(sample_scores)
 
     averaged: Dict[str, float] = {}
+    if not per_sample_scores:
+        raise ValueError(
+            f"Model failed to produce a complete paragraph-channel sample after {sample_count} samples; "
+            f"dropped_samples={dropped_samples}."
+        )
+
+    effective_samples = len(per_sample_scores)
     for paragraph_id in paragraph_ids:
-        avg_score = sum(sample[paragraph_id] for sample in per_sample_scores) / sample_count
-        averaged[paragraph_id] = clamp_unit(avg_score)
+        avg_score = sum(sample[paragraph_id] for sample in per_sample_scores) / effective_samples
+        averaged[paragraph_id] = max(0.0, avg_score)
     return averaged
 
 
