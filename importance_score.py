@@ -144,62 +144,35 @@ Example:
 }}
 """
 
-PARAGRAPH_TECHNICAL_SYSTEM_PROMPT = (
+PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT = (
     "You are an expert academic reviewer. "
-    "Score each paragraph only for technical contribution. "
-    "Ignore citation popularity or influence. "
+    "For each paragraph, split its given total score into technical and citation-added components. "
+    "Technical = intrinsic technical value of the paragraph while ignoring citations. "
+    "Citation = added value contributed by cited prior work in that paragraph. "
     "Return plain text lines only."
 )
 
-PARAGRAPH_TECHNICAL_USER_PROMPT_TEMPLATE = """Task: assign a technical contribution score T(p) in [0, 1] for each paragraph.
+PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE = """Task: for each paragraph id below, split the provided total paragraph score into:
+- technical score
+- citation score
 
-Scoring rubric:
-- Higher T(p): introduces a novel method, key algorithm, theorem, model, or core experimental insight.
-- Lower T(p): background context, transitions, setup details, or non-technical narrative.
-- Evaluate novelty, methodological contribution, and technical specificity.
-- Ignore citation influence, citation counts, and venue prestige.
+Rules:
+- For each paragraph, technical + citation should equal the provided total_score.
+- Higher technical: method/theory/algorithm/experimental insight in the paragraph itself.
+- Higher citation: cited prior work materially strengthens grounding, evidence, dependency, or comparison.
+- If has_citations is false, citation should be 0 and technical should equal total_score.
+- Use non-negative values.
 
-Paragraphs (id -> text snippet):
+Paragraph entries (paragraph_id -> details):
 {paragraphs_json}
 
 Output format (plain text only):
-- One line per paragraph id.
-- Format: paragraph_id: score
+- One line per paragraph_id.
+- Format: paragraph_id: technical=<float>, citation=<float>
 Example:
-Paragraph 1: 0.82
-Paragraph 2: 0.27
+Paragraph 1: technical=0.21, citation=0.04
+Paragraph 2: technical=0.13, citation=0.00
 
-If using percentages (0-100), that is also accepted.
-Do not output JSON.
-"""
-
-PARAGRAPH_CITATION_SYSTEM_PROMPT = (
-    "You are an expert academic reviewer. "
-    "Score each paragraph only for citation-added contribution. "
-    "Measure value added by cited prior work used in the paragraph. "
-    "Do not score intrinsic technical novelty in this channel. "
-    "Return plain text lines only."
-)
-
-PARAGRAPH_CITATION_USER_PROMPT_TEMPLATE = """Task: assign a citation-added contribution score C(p) in [0, 1] for each paragraph.
-
-Scoring rubric:
-- Higher C(p): cited prior work is used substantively (comparison, evidence, grounding, or dependency).
-- Lower C(p): no citations, perfunctory citation mentions, or weak linkage to the claim.
-- Evaluate citation relevance and how much cited work strengthens this paragraph's contribution.
-- Ignore global citation popularity and venue prestige.
-
-Paragraphs (id -> text snippet):
-{paragraphs_json}
-
-Output format (plain text only):
-- One line per paragraph id.
-- Format: paragraph_id: score
-Example:
-Paragraph 1: 0.62
-Paragraph 2: 0.05
-
-If using percentages (0-100), that is also accepted.
 Do not output JSON.
 """
 
@@ -210,10 +183,8 @@ PROMPT_CATALOG = {
     "section_direct_user_prompt_template": SECTION_DIRECT_USER_PROMPT_TEMPLATE,
     "citation_split_system_prompt": CITATION_SPLIT_SYSTEM_PROMPT,
     "citation_split_user_prompt_template": CITATION_SPLIT_USER_PROMPT_TEMPLATE,
-    "paragraph_technical_system_prompt": PARAGRAPH_TECHNICAL_SYSTEM_PROMPT,
-    "paragraph_technical_user_prompt_template": PARAGRAPH_TECHNICAL_USER_PROMPT_TEMPLATE,
-    "paragraph_citation_system_prompt": PARAGRAPH_CITATION_SYSTEM_PROMPT,
-    "paragraph_citation_user_prompt_template": PARAGRAPH_CITATION_USER_PROMPT_TEMPLATE,
+    "paragraph_channel_split_system_prompt": PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT,
+    "paragraph_channel_split_user_prompt_template": PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE,
 }
 
 
@@ -546,6 +517,154 @@ def parse_score_map_from_response(
                 value_idx += 1
 
     return parsed_scores
+
+
+def parse_paragraph_channel_split_response(
+    response_text: str,
+    paragraph_ids: List[str],
+    alias_to_id: Optional[Dict[str, str]] = None,
+) -> Dict[str, Tuple[float, float]]:
+    if not paragraph_ids:
+        return {}
+
+    expected_set = set(paragraph_ids)
+    norm_to_id = {normalized_key(item_id): item_id for item_id in paragraph_ids}
+    if alias_to_id:
+        for alias, target_id in alias_to_id.items():
+            if target_id in expected_set:
+                norm_to_id[normalized_key(alias)] = target_id
+
+    def resolve_id(key: Any) -> Optional[str]:
+        key_str = str(key).strip()
+        if key_str in expected_set:
+            return key_str
+        return norm_to_id.get(normalized_key(key_str))
+
+    def coerce_pair(technical_value: Any, citation_value: Any) -> Optional[Tuple[float, float]]:
+        technical = coerce_non_negative_number(technical_value, allow_percentage=True)
+        citation = coerce_non_negative_number(citation_value, allow_percentage=True)
+        if technical is None or citation is None:
+            return None
+        return max(0.0, technical), max(0.0, citation)
+
+    parsed_pairs: Dict[str, Tuple[float, float]] = {}
+
+    payload = parse_json_loose(response_text)
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            paragraph_id = resolve_id(key)
+            if paragraph_id is None:
+                continue
+            if isinstance(value, dict):
+                pair = coerce_pair(
+                    value.get("technical", value.get("technical_score", value.get("tech", value.get("t")))),
+                    value.get("citation", value.get("citation_score", value.get("cite", value.get("c")))),
+                )
+                if pair is not None:
+                    parsed_pairs[paragraph_id] = pair
+            elif isinstance(value, list) and len(value) >= 2:
+                pair = coerce_pair(value[0], value[1])
+                if pair is not None:
+                    parsed_pairs[paragraph_id] = pair
+            elif isinstance(value, str):
+                nums = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", value)
+                if len(nums) >= 2:
+                    pair = coerce_pair(nums[0], nums[1])
+                    if pair is not None:
+                        parsed_pairs[paragraph_id] = pair
+
+        for list_key in ("scores", "items", "allocations", "results", "distribution"):
+            entries = payload.get(list_key)
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                paragraph_id = resolve_id(
+                    entry.get("id")
+                    or entry.get("item_id")
+                    or entry.get("paragraph_id")
+                    or entry.get("name")
+                    or entry.get("label")
+                )
+                if paragraph_id is None:
+                    continue
+                pair = coerce_pair(
+                    entry.get("technical", entry.get("technical_score", entry.get("tech", entry.get("t")))),
+                    entry.get("citation", entry.get("citation_score", entry.get("cite", entry.get("c")))),
+                )
+                if pair is not None:
+                    parsed_pairs[paragraph_id] = pair
+
+    elif isinstance(payload, list):
+        for entry in payload:
+            if not isinstance(entry, dict):
+                continue
+            paragraph_id = resolve_id(
+                entry.get("id")
+                or entry.get("item_id")
+                or entry.get("paragraph_id")
+                or entry.get("name")
+                or entry.get("label")
+            )
+            if paragraph_id is None:
+                continue
+            pair = coerce_pair(
+                entry.get("technical", entry.get("technical_score", entry.get("tech", entry.get("t")))),
+                entry.get("citation", entry.get("citation_score", entry.get("cite", entry.get("c")))),
+            )
+            if pair is not None:
+                parsed_pairs[paragraph_id] = pair
+
+    text = strip_code_fences(response_text)
+    for raw_line in text.splitlines():
+        line = re.sub(r"^[-*•]\s*", "", raw_line.strip()).strip(",")
+        if not line:
+            continue
+
+        paragraph_id: Optional[str] = None
+        body = line
+
+        if ":" in line:
+            left, right = line.split(":", 1)
+            maybe_id = resolve_id(left)
+            if maybe_id is not None:
+                paragraph_id = maybe_id
+                body = right
+        if paragraph_id is None:
+            prefix_match = re.match(r'^"?(.+?)"?\s+(technical|tech)\b(.*)$', line, flags=re.IGNORECASE)
+            if prefix_match:
+                maybe_id = resolve_id(prefix_match.group(1))
+                if maybe_id is not None:
+                    paragraph_id = maybe_id
+                    body = f"{prefix_match.group(2)} {prefix_match.group(3)}"
+
+        if paragraph_id is None:
+            continue
+
+        technical_match = re.search(
+            r"\b(?:technical|tech)\s*[:=]?\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*%?",
+            body,
+            flags=re.IGNORECASE,
+        )
+        citation_match = re.search(
+            r"\b(?:citation|cite|cit)\s*[:=]?\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*%?",
+            body,
+            flags=re.IGNORECASE,
+        )
+
+        pair: Optional[Tuple[float, float]] = None
+        if technical_match and citation_match:
+            pair = coerce_pair(technical_match.group(1), citation_match.group(1))
+        else:
+            nums = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", body)
+            if len(nums) >= 2:
+                pair = coerce_pair(nums[0], nums[1])
+
+        if pair is not None:
+            parsed_pairs[paragraph_id] = pair
+
+    return parsed_pairs
 
 
 def append_debug_log(debug_log_path: str, entry: str) -> None:
@@ -1236,55 +1355,69 @@ def enforce_top_level_constraints(scores: Dict[str, float], total: float) -> Dic
     return normalize_distribution(constrained, total)
 
 
-def score_paragraph_channel(
+def split_paragraph_channel_scores(
     client: Client,
     paragraph_items: Dict[str, str],
+    paragraph_total_scores: Dict[str, float],
+    mention_buckets: Dict[str, List[Tuple[str, str, str]]],
     model: str,
     n_samples: int,
     temperature: float,
     max_retries: int,
     snippet_limit: int,
     debug_log_path: str,
-    system_prompt: str,
-    user_prompt_template: str,
-    log_tag: str,
-) -> Dict[str, float]:
+) -> Tuple[Dict[str, float], Dict[str, float]]:
     if not paragraph_items:
-        return {}
+        return {}, {}
 
     paragraph_ids = list(paragraph_items.keys())
     sample_count = max(1, n_samples)
-    per_sample_scores: List[Dict[str, float]] = []
-    dropped_samples = 0
+
+    cleaned_totals: Dict[str, float] = {
+        paragraph_id: max(0.0, safe_float(paragraph_total_scores.get(paragraph_id), 0.0))
+        for paragraph_id in paragraph_ids
+    }
+
+    paragraph_aliases: Dict[str, str] = {}
+    for idx, paragraph_id in enumerate(paragraph_ids, start=1):
+        paragraph_aliases[paragraph_id] = paragraph_id
+        paragraph_aliases[f"p{idx}"] = paragraph_id
+        paragraph_aliases[f"paragraph {idx}"] = paragraph_id
+        paragraph_aliases[f"paragraph{idx}"] = paragraph_id
+        paragraph_aliases[str(idx)] = paragraph_id
+
+    if snippet_limit <= 0:
+        snippets = {paragraph_id: paragraph_items[paragraph_id] for paragraph_id in paragraph_ids}
+    else:
+        snippets = {
+            paragraph_id: paragraph_items[paragraph_id][: max(80, snippet_limit)] for paragraph_id in paragraph_ids
+        }
+
+    payload = {
+        paragraph_id: {
+            "total_score": cleaned_totals[paragraph_id],
+            "has_citations": bool(mention_buckets.get(paragraph_id)),
+            "text": snippets[paragraph_id],
+        }
+        for paragraph_id in paragraph_ids
+    }
+    user_prompt = PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE.format(
+        paragraphs_json=json.dumps(payload, indent=2)
+    )
+
+    technical_samples: List[Dict[str, float]] = []
+    citation_samples: List[Dict[str, float]] = []
 
     for sample_idx in range(sample_count):
-        sample_scores: Dict[str, float] = {}
         current_temp = min(1.0, max(0.0, temperature) + (0.05 * sample_idx))
+        parsed_pairs: Dict[str, Tuple[float, float]] = {}
 
-        paragraph_aliases: Dict[str, str] = {}
-        for idx, paragraph_id in enumerate(paragraph_ids, start=1):
-            paragraph_aliases[paragraph_id] = paragraph_id
-            paragraph_aliases[f"p{idx}"] = paragraph_id
-            paragraph_aliases[f"paragraph {idx}"] = paragraph_id
-            paragraph_aliases[f"paragraph{idx}"] = paragraph_id
-            paragraph_aliases[str(idx)] = paragraph_id
-
-        if snippet_limit <= 0:
-            snippets = {paragraph_id: paragraph_items[paragraph_id] for paragraph_id in paragraph_ids}
-        else:
-            snippets = {
-                paragraph_id: paragraph_items[paragraph_id][: max(80, snippet_limit)]
-                for paragraph_id in paragraph_ids
-            }
-        user_prompt = user_prompt_template.format(paragraphs_json=json.dumps(snippets, indent=2))
-
-        parsed_scores: Dict[str, float] = {}
         for attempt in range(max(1, max_retries)):
             try:
                 response = client.chat(
                     model=model,
                     messages=[
-                        {"role": "system", "content": system_prompt},
+                        {"role": "system", "content": PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT},
                         {"role": "user", "content": user_prompt},
                     ],
                     options={"temperature": current_temp},
@@ -1296,172 +1429,82 @@ def score_paragraph_channel(
             append_debug_log(
                 debug_log_path,
                 (
-                    f"[{log_tag}] sample={sample_idx + 1}/{sample_count} "
+                    f"[paragraph_channel_split] sample={sample_idx + 1}/{sample_count} "
                     f"attempt={attempt + 1}/{max(1, max_retries)} "
                     f"temperature={current_temp}\n{raw_response}\n"
                 ),
             )
-            parsed_scores = parse_score_map_from_response(
+            parsed_pairs = parse_paragraph_channel_split_response(
                 raw_response,
                 paragraph_ids,
-                allow_percentage=True,
                 alias_to_id=paragraph_aliases,
             )
-            if parsed_scores:
+            if len(parsed_pairs) == len(paragraph_ids):
                 break
 
-        missing_ids = [
-            paragraph_id
-            for paragraph_id in paragraph_ids
-            if not (0.0 <= safe_float(parsed_scores.get(paragraph_id), -1.0) <= 1.0)
-        ]
-        if missing_ids:
-            repair_prompt = (
-                user_prompt
-                + "\n\nIMPORTANT: Return scores for ALL paragraph ids listed above."
-                + f"\nMissing ids from prior output: {missing_ids}"
-            )
-            for recovery_attempt in range(max(1, max_retries)):
-                try:
-                    response = client.chat(
-                        model=model,
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": repair_prompt},
-                        ],
-                        options={"temperature": current_temp},
-                    )
-                    raw_response = response.message.content if getattr(response, "message", None) else ""
-                except Exception as exc:
-                    raw_response = f"[exception] {exc}"
-
-                append_debug_log(
-                    debug_log_path,
-                    (
-                        f"[{log_tag}_missing] sample={sample_idx + 1}/{sample_count} "
-                        f"attempt={recovery_attempt + 1}/{max(1, max_retries)} "
-                        f"missing={missing_ids} mode=full_set_reask\n{raw_response}\n"
-                    ),
-                )
-                recovered = parse_score_map_from_response(
-                    raw_response,
-                    paragraph_ids,
-                    allow_percentage=True,
-                    alias_to_id=paragraph_aliases,
-                )
-                for paragraph_id, value in recovered.items():
-                    parsed_scores[paragraph_id] = value
-
-                missing_ids = [
-                    paragraph_id
-                    for paragraph_id in paragraph_ids
-                    if not (0.0 <= safe_float(parsed_scores.get(paragraph_id), -1.0) <= 1.0)
-                ]
-                if not missing_ids:
-                    break
-
+        sample_technical: Dict[str, float] = {}
+        sample_citation: Dict[str, float] = {}
         for paragraph_id in paragraph_ids:
-            raw_score = safe_float(parsed_scores.get(paragraph_id), -1.0)
-            if raw_score < 0.0:
-                sample_scores = {}
-                dropped_samples += 1
-                append_debug_log(
-                    debug_log_path,
-                    (
-                        f"[{log_tag}_drop] sample={sample_idx + 1}/{sample_count} "
-                        f"reason=missing_or_invalid paragraph_id={paragraph_id}"
-                    ),
-                )
-                break
-            # Channel values are used as non-negative relative strengths.
-            sample_scores[paragraph_id] = raw_score
+            total_val = cleaned_totals.get(paragraph_id, 0.0)
+            mentions = mention_buckets.get(paragraph_id, [])
+            has_citations = bool(mentions)
 
-        if sample_scores and len(sample_scores) == len(paragraph_ids):
-            per_sample_scores.append(sample_scores)
+            if paragraph_id in parsed_pairs:
+                t_raw, c_raw = parsed_pairs[paragraph_id]
+            else:
+                if has_citations:
+                    fallback_ratio = min(0.4, max(0.1, 0.12 * len(mentions)))
+                    t_raw = 1.0 - fallback_ratio
+                    c_raw = fallback_ratio
+                else:
+                    t_raw = 1.0
+                    c_raw = 0.0
 
-    averaged: Dict[str, float] = {}
-    if not per_sample_scores:
-        heuristic_scores = {
-            paragraph_id: max(1.0, float(len(re.findall(r"[a-z0-9]+", paragraph_items[paragraph_id].lower()))))
-            for paragraph_id in paragraph_ids
-        }
-        append_debug_log(
-            debug_log_path,
-            (
-                f"[{log_tag}_heuristic] reason=no_complete_samples "
-                f"samples={sample_count} dropped={dropped_samples}"
-            ),
-        )
-        return heuristic_scores
+            t_raw = max(0.0, t_raw)
+            c_raw = max(0.0, c_raw)
+            if not has_citations:
+                t_val = total_val
+                c_val = 0.0
+            else:
+                channel_sum = t_raw + c_raw
+                if channel_sum <= 0.0:
+                    t_val = total_val
+                    c_val = 0.0
+                else:
+                    t_val = total_val * (t_raw / channel_sum)
+                    c_val = total_val * (c_raw / channel_sum)
 
-    effective_samples = len(per_sample_scores)
-    for paragraph_id in paragraph_ids:
-        avg_score = sum(sample[paragraph_id] for sample in per_sample_scores) / effective_samples
-        averaged[paragraph_id] = max(0.0, avg_score)
-    return averaged
+            sample_technical[paragraph_id] = t_val
+            sample_citation[paragraph_id] = c_val
 
-
-def compute_paragraph_channel_scores(
-    section_score: float,
-    paragraph_ids: List[str],
-    paragraph_total_scores: Dict[str, float],
-    mention_buckets: Dict[str, List[Tuple[str, str, str]]],
-    technical_raw_scores: Dict[str, float],
-    citation_raw_scores: Dict[str, float],
-) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
-    if not paragraph_ids:
-        return {}, {}, {}
-
-    cleaned_t_raw: Dict[str, float] = {}
-    cleaned_c_raw: Dict[str, float] = {}
-    cleaned_total: Dict[str, float] = {}
-
-    for paragraph_id in paragraph_ids:
-        t_raw = max(0.0, safe_float(technical_raw_scores.get(paragraph_id), 0.0))
-        c_raw = max(0.0, safe_float(citation_raw_scores.get(paragraph_id), 0.0))
-        if not mention_buckets.get(paragraph_id):
-            c_raw = 0.0
-
-        cleaned_t_raw[paragraph_id] = t_raw
-        cleaned_c_raw[paragraph_id] = c_raw
-        cleaned_total[paragraph_id] = max(0.0, safe_float(paragraph_total_scores.get(paragraph_id), 0.0))
-
-    total_sum = sum(cleaned_total.values())
-    if total_sum <= 0.0:
-        alt_raw = {paragraph_id: cleaned_t_raw[paragraph_id] + cleaned_c_raw[paragraph_id] for paragraph_id in paragraph_ids}
-        if sum(alt_raw.values()) <= 0.0:
-            alt_raw = {
-                paragraph_id: float(len(mention_buckets.get(paragraph_id, [])) + 1)
-                for paragraph_id in paragraph_ids
-            }
-        paragraph_total = normalize_distribution(alt_raw, section_score)
-    else:
-        paragraph_total = normalize_distribution(cleaned_total, section_score)
+        technical_samples.append(sample_technical)
+        citation_samples.append(sample_citation)
 
     paragraph_technical: Dict[str, float] = {}
     paragraph_citation: Dict[str, float] = {}
+    effective_samples = max(1, len(technical_samples))
     for paragraph_id in paragraph_ids:
-        total_val = max(0.0, safe_float(paragraph_total.get(paragraph_id), 0.0))
-        t_raw = cleaned_t_raw.get(paragraph_id, 0.0)
-        c_raw = cleaned_c_raw.get(paragraph_id, 0.0)
+        avg_t = sum(sample[paragraph_id] for sample in technical_samples) / effective_samples
+        avg_c = sum(sample[paragraph_id] for sample in citation_samples) / effective_samples
+        total_val = cleaned_totals.get(paragraph_id, 0.0)
+        has_citations = bool(mention_buckets.get(paragraph_id))
 
-        if not mention_buckets.get(paragraph_id):
-            t_val = total_val
-            c_val = 0.0
+        if not has_citations:
+            avg_t = total_val
+            avg_c = 0.0
         else:
-            denom = t_raw + c_raw
-            if denom <= 0.0:
-                t_val = 0.5 * total_val
-                c_val = 0.5 * total_val
+            channel_sum = max(0.0, avg_t) + max(0.0, avg_c)
+            if channel_sum <= 0.0:
+                avg_t = total_val
+                avg_c = 0.0
             else:
-                t_val = total_val * (t_raw / denom)
-                c_val = total_val * (c_raw / denom)
-            t_val += total_val - (t_val + c_val)
+                avg_t = total_val * max(0.0, avg_t) / channel_sum
+                avg_c = total_val * max(0.0, avg_c) / channel_sum
 
-        paragraph_technical[paragraph_id] = t_val
-        paragraph_citation[paragraph_id] = c_val
+        paragraph_technical[paragraph_id] = max(0.0, avg_t)
+        paragraph_citation[paragraph_id] = max(0.0, avg_c)
 
-    return paragraph_technical, paragraph_citation, paragraph_total
+    return paragraph_technical, paragraph_citation
 
 
 def split_citation_block(citation_block: str) -> List[str]:
@@ -1594,33 +1637,7 @@ def assign_importance_scores(
             snippet_limit=snippet_limit,
             log_tag="all_together_paragraphs",
         )
-
-        technical_raw_scores = score_paragraph_channel(
-            client=client,
-            paragraph_items=paragraph_items,
-            model=model,
-            n_samples=max(1, n_samples),
-            temperature=temperature,
-            max_retries=max(1, max_retries),
-            snippet_limit=snippet_limit,
-            debug_log_path=debug_log_path,
-            system_prompt=PARAGRAPH_TECHNICAL_SYSTEM_PROMPT,
-            user_prompt_template=PARAGRAPH_TECHNICAL_USER_PROMPT_TEMPLATE,
-            log_tag="paragraph_technical_batch",
-        )
-        citation_raw_scores = score_paragraph_channel(
-            client=client,
-            paragraph_items=paragraph_items,
-            model=model,
-            n_samples=max(1, n_samples),
-            temperature=temperature,
-            max_retries=max(1, max_retries),
-            snippet_limit=snippet_limit,
-            debug_log_path=debug_log_path,
-            system_prompt=PARAGRAPH_CITATION_SYSTEM_PROMPT,
-            user_prompt_template=PARAGRAPH_CITATION_USER_PROMPT_TEMPLATE,
-            log_tag="paragraph_citation_batch",
-        )
+        paragraph_total = normalize_distribution(paragraph_total_scores, section_score)
 
         paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
         paragraph_tokens = {
@@ -1662,20 +1679,24 @@ def assign_importance_scores(
                 if target_paragraph is None:
                     target_paragraph = max(
                         paragraph_items,
-                        key=lambda name: technical_raw_scores.get(name, 0.0) + citation_raw_scores.get(name, 0.0),
+                        key=lambda name: paragraph_total.get(name, 0.0),
                     )
 
                 for citation in split_citation_block(citation_block):
                     mention_buckets[target_paragraph].append((citation, citation_block, context_str))
 
         paragraph_names = list(paragraph_items.keys())
-        paragraph_technical, paragraph_citation, paragraph_total = compute_paragraph_channel_scores(
-            section_score=section_score,
-            paragraph_ids=paragraph_names,
-            paragraph_total_scores=paragraph_total_scores,
+        paragraph_technical, paragraph_citation = split_paragraph_channel_scores(
+            client=client,
+            paragraph_items=paragraph_items,
+            paragraph_total_scores=paragraph_total,
             mention_buckets=mention_buckets,
-            technical_raw_scores=technical_raw_scores,
-            citation_raw_scores=citation_raw_scores,
+            model=model,
+            n_samples=max(1, n_samples),
+            temperature=temperature,
+            max_retries=max(1, max_retries),
+            snippet_limit=snippet_limit,
+            debug_log_path=debug_log_path,
         )
 
         for paragraph_name in paragraph_names:
