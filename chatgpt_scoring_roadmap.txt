@@ -1,7 +1,7 @@
-Scoring Roadmap (Manual, No Code)
+Scoring Roadmap (Manual)
 
 1) Setup
-- Use the same model and same paper text for both evaluators.
+- Use ChatGPT and the paper of your choice.
 - Start a new chat for each paper.
 - Paste this global instruction once:
 
@@ -68,7 +68,7 @@ I2: <score>
 
 5) Paragraph technical/citation split (single prompt for both)
 Prompt:
-Task: for each paragraph id, split its given total paragraph score into:
+Task: for each paragraph, split its given total paragraph score into:
 - technical score
 - citation score
 
@@ -107,7 +107,7 @@ C1: <score>
 C2: <score>
 ...
 
-Normalization and consistency checks (spreadsheet)
+Normalization and consistency checks 
 1. For every parent node: sum(children) must equal parent score.
 2. Sum(top-level sections) must equal 1.0.
 3. For every paragraph: technical + citation = paragraph total.
@@ -115,7 +115,7 @@ Normalization and consistency checks (spreadsheet)
 5. If sums are slightly off, rescale proportionally:
    new_score_i = old_score_i * (parent_score / sum_old_scores)
 
-Advisor reproducibility checklist
+Output checks:
 1. Use the same prompts and same input excerpts.
 2. Keep outputs in plain-text format only.
 3. Record each stage in a table: parent, child, raw score, normalized score.
