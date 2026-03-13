@@ -1116,27 +1116,42 @@ def all_together_allocate_scores(
     sample_count = max(1, n_samples)
     sample_distributions: List[Dict[str, float]] = []
     for s in range(sample_count):
-        sample_distributions.append(
-            direct_allocate_scores(
-                client=client,
-                item_to_content=item_to_content,
-                total_score=total_score,
-                parent_name=parent_name,
-                model=model,
-                temperature=min(1.0, temperature + (0.05 * s)),
-                max_retries=max(1, max_retries),
-                debug_log_path=debug_log_path,
-                sample_idx=s + 1,
-                snippet_limit=snippet_limit,
-                log_tag=log_tag,
+        try:
+            sample_distributions.append(
+                direct_allocate_scores(
+                    client=client,
+                    item_to_content=item_to_content,
+                    total_score=total_score,
+                    parent_name=parent_name,
+                    model=model,
+                    temperature=min(1.0, temperature + (0.05 * s)),
+                    max_retries=max(1, max_retries),
+                    debug_log_path=debug_log_path,
+                    sample_idx=s + 1,
+                    snippet_limit=snippet_limit,
+                    log_tag=log_tag,
+                )
             )
+        except ValueError as exc:
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[{log_tag}_sample_skip] parent={parent_name} sample={s + 1}/{sample_count} "
+                    f"reason={exc}"
+                ),
+            )
+
+    if not sample_distributions:
+        raise ValueError(
+            f"Model failed to produce any complete child-score sample for parent '{parent_name}' "
+            f"after {sample_count} sampled runs."
         )
 
     averaged = {item: 0.0 for item in items}
     for dist in sample_distributions:
         for item, value in dist.items():
             averaged[item] += value
-    averaged = {item: value / sample_count for item, value in averaged.items()}
+    averaged = {item: value / len(sample_distributions) for item, value in averaged.items()}
     return normalize_distribution(averaged, total_score)
 
 
@@ -1735,14 +1750,15 @@ def assign_importance_scores(
         }
         paragraph_parent_name = f"{section_name}::paragraphs"
         est_tokens = estimate_direct_allocation_tokens(paragraph_parent_name, paragraph_items, snippet_limit=0)
-        use_compressed = paragraph_direct_max_tokens > 0 and est_tokens > paragraph_direct_max_tokens
+        effective_threshold = paragraph_direct_max_tokens
+        use_compressed = paragraph_direct_max_tokens > 0 and est_tokens > effective_threshold
         snippet_limit = max(60, paragraph_compressed_snippet_limit) if use_compressed else 0
         method = "channel_compressed" if use_compressed else "channel_full_parent"
         append_debug_log(
             debug_log_path,
             (
                 f"[paragraph_scoring] parent={paragraph_parent_name} method={method} "
-                f"estimated_tokens={est_tokens} threshold={paragraph_direct_max_tokens} "
+                f"estimated_tokens={est_tokens} threshold={effective_threshold} "
                 f"paragraphs={len(paragraph_items)} snippet_limit={snippet_limit} "
                 f"n_samples={max(1, n_samples)} max_retries={max(1, max_retries)}"
             ),
