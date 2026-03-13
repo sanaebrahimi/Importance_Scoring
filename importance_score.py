@@ -17,7 +17,10 @@ DEFAULT_SECTIONS = {
     "System Overview": None,
     "Team of Agents": None,
     "CrS-Aware Aggregation": None,
-    "Learning Credibility Scores On-The-Fly": None,
+    "Learning Credibility Scores On-The-Fly": {
+        "calculating the agent contributions": None,
+        "Updating the CrS values": None,
+    },
     "Experiment Results": {
         "Experiments Setting": None,
         "Collaboration Setup": None,
