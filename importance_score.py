@@ -379,6 +379,33 @@ def parse_plaintext_score_lines(response_text: str) -> List[Tuple[str, float]]:
     return pairs
 
 
+def parse_ordered_score_values(response_text: str, allow_percentage: bool = False) -> List[float]:
+    text = strip_code_fences(response_text)
+    values: List[float] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip().strip(",")
+        if not line:
+            continue
+        line = re.sub(r"^[-*•]\s*", "", line)
+
+        score_val: Optional[float] = None
+        for pattern in (
+            r"^\d+[.)]\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)(?:\s*%?)\s*$",
+            r"^([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)(?:\s*%?)\s*$",
+        ):
+            match = re.match(pattern, line)
+            if not match:
+                continue
+            score_val = coerce_non_negative_number(match.group(1), allow_percentage=allow_percentage)
+            if score_val is not None:
+                break
+
+        if score_val is None:
+            continue
+        values.append(score_val)
+    return values
+
+
 def parse_score_map_from_response(
     response_text: str,
     expected_ids: List[str],
@@ -416,10 +443,15 @@ def parse_score_map_from_response(
     # Prefer explicit plain-text score lines like "I1: 0.2" / "Paragraph 3: 0.4".
     plaintext_pairs = parse_plaintext_score_lines(response_text)
     ordered_plaintext_values = [value for _, value in plaintext_pairs]
-    if len(ordered_plaintext_values) >= len(expected_ids) and len(ordered_plaintext_values) <= (len(expected_ids) + 6):
-        candidate_values = ordered_plaintext_values[-len(expected_ids) :]
+    ordered_score_values = parse_ordered_score_values(response_text, allow_percentage=allow_percentage)
+    if len(ordered_plaintext_values) == len(expected_ids):
         return {
-            expected_ids[idx]: candidate_values[idx]
+            expected_ids[idx]: ordered_plaintext_values[idx]
+            for idx in range(len(expected_ids))
+        }
+    if len(ordered_score_values) == len(expected_ids):
+        return {
+            expected_ids[idx]: ordered_score_values[idx]
             for idx in range(len(expected_ids))
         }
 
@@ -987,6 +1019,8 @@ def direct_allocate_scores(
         items=json.dumps(item_payload, indent=2),
     )
     prompt = base_prompt
+    accumulated_scores: Dict[str, float] = {}
+    alias_to_id = {item_id_to_name[item_id]: item_id for item_id in item_ids}
 
     for attempt in range(max(1, max_retries)):
         response = client.chat(
@@ -1002,22 +1036,40 @@ def direct_allocate_scores(
                 f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
             ),
         )
-        alias_to_id = {item_id_to_name[item_id]: item_id for item_id in item_ids}
-        parsed_by_id = parse_score_map_from_response(
+        remaining_item_ids = [item_id for item_id in item_ids if item_id not in accumulated_scores]
+        remaining_aliases = {
+            item_id_to_name[item_id]: item_id for item_id in remaining_item_ids
+        }
+        parsed_full = parse_score_map_from_response(
             raw_response,
             item_ids,
             allow_percentage=False,
             alias_to_id=alias_to_id,
         )
-        parsed_scores = {
-            item_id_to_name[item_id]: max(0.0, safe_float(parsed_by_id.get(item_id), 0.0))
-            for item_id in item_ids
+        parsed_remaining = parse_score_map_from_response(
+            raw_response,
+            remaining_item_ids,
+            allow_percentage=False,
+            alias_to_id=remaining_aliases,
+        )
+        parsed_update = {
+            item_id: value
+            for item_id, value in parsed_full.items()
+            if item_id in remaining_item_ids
         }
-        coverage = len(parsed_by_id)
-        if coverage == len(item_ids) and any(v > 0.0 for v in parsed_scores.values()):
+        parsed_update.update(parsed_remaining)
+
+        for item_id, value in parsed_update.items():
+            accumulated_scores[item_id] = max(0.0, safe_float(value, 0.0))
+
+        if len(accumulated_scores) == len(item_ids) and any(v > 0.0 for v in accumulated_scores.values()):
+            parsed_scores = {
+                item_id_to_name[item_id]: accumulated_scores[item_id]
+                for item_id in item_ids
+            }
             return normalize_distribution(parsed_scores, total_score)
 
-        missing_item_ids = [item_id for item_id in item_ids if item_id not in parsed_by_id]
+        missing_item_ids = [item_id for item_id in item_ids if item_id not in accumulated_scores]
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
@@ -1025,7 +1077,8 @@ def direct_allocate_scores(
             f"Missing counters: {', '.join(missing_item_ids) if missing_item_ids else ', '.join(item_ids)}\n"
             "Any readable one-line-per-item list is fine.\n"
             "Separators such as :, -, =, or -> are all acceptable.\n"
-            "If the numbering drifts, line order will be used."
+            "If the numbering drifts, line order will be used.\n"
+            "You may answer with only the missing items."
         )
 
     append_debug_log(
@@ -1122,6 +1175,8 @@ def direct_allocate_citation_scores(
         citations_json=json.dumps(citation_payload, indent=2),
     )
     prompt = base_prompt
+    accumulated_scores: Dict[str, float] = {}
+    alias_to_id = {citation_id_to_name[citation_id]: citation_id for citation_id in citation_ids}
 
     for attempt in range(max(1, max_retries)):
         response = client.chat(
@@ -1140,22 +1195,40 @@ def direct_allocate_citation_scores(
                 f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
             ),
         )
-        alias_to_id = {citation_id_to_name[citation_id]: citation_id for citation_id in citation_ids}
-        parsed_by_id = parse_score_map_from_response(
+        remaining_citation_ids = [citation_id for citation_id in citation_ids if citation_id not in accumulated_scores]
+        remaining_aliases = {
+            citation_id_to_name[citation_id]: citation_id for citation_id in remaining_citation_ids
+        }
+        parsed_full = parse_score_map_from_response(
             raw_response,
             citation_ids,
             allow_percentage=False,
             alias_to_id=alias_to_id,
         )
-        parsed_scores = {
-            citation_id_to_name[citation_id]: max(0.0, safe_float(parsed_by_id.get(citation_id), 0.0))
-            for citation_id in citation_ids
+        parsed_remaining = parse_score_map_from_response(
+            raw_response,
+            remaining_citation_ids,
+            allow_percentage=False,
+            alias_to_id=remaining_aliases,
+        )
+        parsed_update = {
+            citation_id: value
+            for citation_id, value in parsed_full.items()
+            if citation_id in remaining_citation_ids
         }
-        coverage = len(parsed_by_id)
-        if coverage == len(citation_ids) and any(v > 0.0 for v in parsed_scores.values()):
+        parsed_update.update(parsed_remaining)
+
+        for citation_id, value in parsed_update.items():
+            accumulated_scores[citation_id] = max(0.0, safe_float(value, 0.0))
+
+        if len(accumulated_scores) == len(citation_ids) and any(v > 0.0 for v in accumulated_scores.values()):
+            parsed_scores = {
+                citation_id_to_name[citation_id]: accumulated_scores[citation_id]
+                for citation_id in citation_ids
+            }
             return normalize_distribution(parsed_scores, total_score)
 
-        missing_citation_ids = [citation_id for citation_id in citation_ids if citation_id not in parsed_by_id]
+        missing_citation_ids = [citation_id for citation_id in citation_ids if citation_id not in accumulated_scores]
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
@@ -1163,7 +1236,8 @@ def direct_allocate_citation_scores(
             f"Missing counters: {', '.join(missing_citation_ids) if missing_citation_ids else ', '.join(citation_ids)}\n"
             "Any readable one-line-per-item list is fine.\n"
             "Separators such as :, -, =, or -> are all acceptable.\n"
-            "If the numbering drifts, line order will be used."
+            "If the numbering drifts, line order will be used.\n"
+            "You may answer with only the missing items."
         )
 
     append_debug_log(
