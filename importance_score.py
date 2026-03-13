@@ -112,7 +112,9 @@ Child segments (id -> name and excerpt):
 {items}
 
 Output format (plain text only):
-counter: score
+Any clear one-line-per-child list is acceptable.
+Separators such as `:`, `-`, `=`, or `->` are all fine.
+Line order matters more than exact counter formatting.
 
 Example:
 1: 0.32
@@ -155,7 +157,9 @@ Citation entries (citation_id -> citation and context):
 {citations_json}
 
 Output format (plain text only):
-counter: score
+Any clear one-line-per-citation list is acceptable.
+Separators such as `:`, `-`, `=`, or `->` are all fine.
+Line order matters more than exact counter formatting.
 
 Example:
 1: 0.06
@@ -362,7 +366,7 @@ def parse_plaintext_score_lines(response_text: str) -> List[Tuple[str, float]]:
             continue
         line = re.sub(r"^[-*•]\s*", "", line)
         match = re.match(
-            r'^"?([A-Za-z][A-Za-z0-9 _-]{0,120}|[A-Za-z]\d+|\d+)"?\s*(?::|=|->)\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)(?:\s*%?)\s*$',
+            r'^"?(.{1,120}?)"?\s*(?::|=|->|=>|-|–)\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)(?:\s*%?)\s*$',
             line,
         )
         if not match:
@@ -410,7 +414,16 @@ def parse_score_map_from_response(
             parsed_scores[target_id] = score_val
 
     # Prefer explicit plain-text score lines like "I1: 0.2" / "Paragraph 3: 0.4".
-    for key, value in parse_plaintext_score_lines(response_text):
+    plaintext_pairs = parse_plaintext_score_lines(response_text)
+    ordered_plaintext_values = [value for _, value in plaintext_pairs]
+    if len(ordered_plaintext_values) >= len(expected_ids) and len(ordered_plaintext_values) <= (len(expected_ids) + 6):
+        candidate_values = ordered_plaintext_values[-len(expected_ids) :]
+        return {
+            expected_ids[idx]: candidate_values[idx]
+            for idx in range(len(expected_ids))
+        }
+
+    for key, value in plaintext_pairs:
         assign_from_pair(key, value)
 
     json_payload = parse_json_loose(response_text)
@@ -522,25 +535,6 @@ def parse_score_map_from_response(
             if value is not None:
                 parsed_scores[item_id] = value
                 break
-
-    # Last-resort parsing: assign numeric sequence by order if still sparse.
-    if len(parsed_scores) < len(expected_ids):
-        numeric_tokens = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", text)
-        numeric_values: List[float] = []
-        for token in numeric_tokens:
-            value = coerce_non_negative_number(token, allow_percentage=allow_percentage)
-            if value is not None:
-                numeric_values.append(value)
-        # Keep this conservative so we do not accidentally parse unrelated numbers.
-        if len(numeric_values) >= len(expected_ids) and len(numeric_values) <= (len(expected_ids) + 4):
-            value_idx = 0
-            for item_id in expected_ids:
-                if item_id in parsed_scores:
-                    continue
-                if value_idx >= len(numeric_values):
-                    break
-                parsed_scores[item_id] = numeric_values[value_idx]
-                value_idx += 1
 
     return parsed_scores
 
@@ -1027,10 +1021,11 @@ def direct_allocate_scores(
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
-            f"You must return a score for every counter exactly once.\n"
+            f"You must provide one score for every missing child.\n"
             f"Missing counters: {', '.join(missing_item_ids) if missing_item_ids else ', '.join(item_ids)}\n"
-            "Return plain text lines only in the format:\n"
-            "counter: score"
+            "Any readable one-line-per-item list is fine.\n"
+            "Separators such as :, -, =, or -> are all acceptable.\n"
+            "If the numbering drifts, line order will be used."
         )
 
     append_debug_log(
@@ -1164,10 +1159,11 @@ def direct_allocate_citation_scores(
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
-            f"You must return a score for every counter exactly once.\n"
+            f"You must provide one score for every missing citation.\n"
             f"Missing counters: {', '.join(missing_citation_ids) if missing_citation_ids else ', '.join(citation_ids)}\n"
-            "Return plain text lines only in the format:\n"
-            "counter: score"
+            "Any readable one-line-per-item list is fine.\n"
+            "Separators such as :, -, =, or -> are all acceptable.\n"
+            "If the numbering drifts, line order will be used."
         )
 
     append_debug_log(
