@@ -77,47 +77,64 @@ Constraints:
 """
 
 SECTION_DIRECT_SYSTEM_PROMPT = (
-    "You are an expert academic reviewer. "
-    "Distribute a parent score among child items from the same paper by contribution. "
-    "Use both technical contribution and citation-supported contribution. "
-    "Return plain text lines only."
+    "You are an expert academic reviewer evaluating the structure of a scientific paper. "
+    "Your task is to allocate a parent score across its child segments based only on their technical contribution "
+    "to the paper. "
+    "Evaluate how much each segment contributes to the core scientific content of the paper, such as methods, "
+    "algorithms, theory, experimental design, results, and technical analysis. "
+    "Do not consider citation value at this stage. Only evaluate the intrinsic technical importance of the segment. "
+    "Use the entire parent content as context when evaluating children. "
+    "Treat the parent score as a fixed budget that must be fully distributed. "
+    "Scores must be non-negative. "
+    "Segments containing the core technical ideas or results should receive higher scores. "
+    "Segments that are mainly background, motivation, transitions, or narrative should receive lower scores. "
+    "Return plain text lines only. Do not output JSON."
 )
 
-SECTION_DIRECT_USER_PROMPT_TEMPLATE = """Parent node: "{parent_name}"
-Parent score to distribute: {parent_score}
-Task: divide the parent score among all child items together (not pairwise).
+SECTION_DIRECT_USER_PROMPT_TEMPLATE = """Parent segment:
+{parent_name}
 
-Scoring rubric:
-- Higher score: core technical contribution (method/theory/algorithm/findings) and meaningful citation-supported value.
-- Lower score: background context, transitions, setup detail, or low-impact narrative.
-- Use non-negative scores; larger means more important.
-- Prefer child scores that sum to the parent score.
+Parent score to distribute:
+{parent_score}
 
-Items (item_id -> {{"name": ..., "excerpt": ...}}):
-{items_json}
+Parent content (context):
+{parent_content}
+
+Task:
+Divide the parent score among the following child segments according to their technical importance to the paper.
+
+Guidelines:
+- Prioritize technical novelty, algorithmic description, experimental findings, or key analysis.
+- Lower scores should go to background explanations, transitions, or descriptive text.
+- Consider how much the technical understanding of the paper would suffer if the segment were removed.
+
+Child segments (id -> name and excerpt):
+{items}
 
 Output format (plain text only):
-- One line per item_id.
-- Format: item_id: score
+item_id: score
+
 Example:
 I1: 0.32
 I2: 0.18
 
+The scores must sum to {parent_score}.
+
 Do not output JSON.
-Example:
-{{
-  "I1": 0.32,
-  "I2": 0.18
-}}
+Do not include explanations.
 """
 
 CITATION_SPLIT_SYSTEM_PROMPT = (
     "You are an expert academic reviewer. "
-    "Distribute a paragraph citation score among citations appearing in that paragraph. "
+    "Your task is to distribute a paragraph's citation score among the citations that appear in that paragraph, "
+    "based on how much each cited work contributes to the paragraph's claims or grounding. "
+    "Treat the parent score as a fixed budget that must be fully distributed. "
     "Return plain text lines only."
 )
 
-CITATION_SPLIT_USER_PROMPT_TEMPLATE = """Paragraph id: "{paragraph_id}"
+CITATION_SPLIT_USER_PROMPT_TEMPLATE = """Paragraph id:
+{paragraph_id}
+
 Paragraph citation score to distribute: {paragraph_citation_score}
 
 Paragraph text:
@@ -125,26 +142,27 @@ Paragraph text:
 
 Task:
 - Divide the paragraph citation score among the citations below.
-- Higher share: citation contributes more to the paragraph's claims, evidence, grounding, or comparison.
-- Lower share: citation is peripheral or weakly connected.
-- Use non-negative scores. Prefer scores that sum to the paragraph citation score.
+- Higher share:
+  citation directly supports the paragraph's claim
+  citation provides key comparison or baseline
+  citation introduces a method the paragraph builds upon
+- Lower share:
+  citation is peripheral or only mentioned briefly
+- Scores must be non-negative.
+- Prefer scores that sum to the paragraph citation score.
 
-Citation entries (citation_id -> {{"citation": ..., "context": ...}}):
+Citation entries (citation_id -> citation and context):
 {citations_json}
 
 Output format (plain text only):
-- One line per citation_id.
-- Format: citation_id: score
+citation_id: score
+
 Example:
 C1: 0.06
 C2: 0.02
 
 Do not output JSON.
-Example:
-{{
-  "C1": 0.06,
-  "C2": 0.02
-}}
+Do not include explanations.
 """
 
 PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT = (
@@ -152,17 +170,21 @@ PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT = (
     "For each paragraph, split its given total score into technical and citation-added components. "
     "Technical = intrinsic technical value of the paragraph while ignoring citations. "
     "Citation = added value contributed by cited prior work in that paragraph. "
+    "Treat the parent score as a fixed budget that must be fully distributed. "
     "Return plain text lines only."
 )
 
-PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE = """Task: for each paragraph id below, split the provided total paragraph score into:
+PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE = """Task:
+For each paragraph below, split the provided total paragraph score into:
 - technical score
 - citation score
 
 Rules:
 - For each paragraph, technical + citation should equal the provided total_score.
-- Higher technical: method/theory/algorithm/experimental insight in the paragraph itself.
-- Higher citation: cited prior work materially strengthens grounding, evidence, dependency, or comparison.
+- Higher technical score:
+  paragraph introduces method, algorithm, theory, dataset, experiment, or key result
+- Higher citation score:
+  cited work materially strengthens grounding, comparison, dependency, or evidence
 - If has_citations is false, citation should be 0 and technical should equal total_score.
 - Use non-negative values.
 
@@ -170,13 +192,14 @@ Paragraph entries (paragraph_id -> details):
 {paragraphs_json}
 
 Output format (plain text only):
-- One line per paragraph_id.
-- Format: paragraph_id: technical=<float>, citation=<float>
+paragraph_id: technical=<float>, citation=<float>
+
 Example:
-Paragraph 1: technical=0.21, citation=0.04
-Paragraph 2: technical=0.13, citation=0.00
+Paragraph1: technical=0.21, citation=0.04
+Paragraph2: technical=0.13, citation=0.00
 
 Do not output JSON.
+Do not include explanations.
 """
 
 PROMPT_CATALOG = {
@@ -818,7 +841,9 @@ def estimate_direct_allocation_tokens(
     snippet_limit: Optional[int] = 0,
 ) -> int:
     items = list(item_to_content.keys())
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=snippet_limit) for name in items}
+    use_limit = None if snippet_limit is None or snippet_limit <= 0 else snippet_limit
+    snippets = {name: flatten_content_to_text(item_to_content[name], limit=use_limit) for name in items}
+    parent_content = flatten_content_to_text(item_to_content, limit=None)
     item_payload = {
         f"I{idx + 1}": {"name": item_name, "excerpt": snippets[item_name]}
         for idx, item_name in enumerate(items)
@@ -826,7 +851,8 @@ def estimate_direct_allocation_tokens(
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
         parent_score=1.0,
-        items_json=json.dumps(item_payload, indent=2),
+        parent_content=parent_content,
+        items=json.dumps(item_payload, indent=2),
     )
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     return estimate_tokens_approx(system_prompt) + estimate_tokens_approx(prompt)
@@ -960,12 +986,14 @@ def direct_allocate_scores(
         }
         for item_id in item_ids
     }
+    parent_content = flatten_content_to_text(item_to_content, limit=None)
 
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
         parent_score=total_score,
-        items_json=json.dumps(item_payload, indent=2),
+        parent_content=parent_content,
+        items=json.dumps(item_payload, indent=2),
     )
 
     parsed_scores: Dict[str, float] = {}
