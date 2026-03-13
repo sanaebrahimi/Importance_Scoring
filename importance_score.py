@@ -799,6 +799,16 @@ def combine_scores(technical_score: float, citation_score: float) -> float:
     return max(0.0, safe_float(technical_score, 0.0)) + max(0.0, safe_float(citation_score, 0.0))
 
 
+def attach_total_scores_to_sections(section_scores: Dict[str, Any]) -> None:
+    for payload in section_scores.values():
+        technical_score = max(0.0, safe_float(payload.get("technical_score"), 0.0))
+        citation_score = max(0.0, safe_float(payload.get("citation_score"), 0.0))
+        payload["total_score"] = combine_scores(technical_score, citation_score)
+        subsections = payload.get("subsections", {})
+        if isinstance(subsections, dict) and subsections:
+            attach_total_scores_to_sections(subsections)
+
+
 def assert_close(actual: float, expected: float, context: str, tol: float = 1e-8) -> None:
     if abs(actual - expected) > tol:
         print(
@@ -1859,6 +1869,7 @@ def assign_importance_scores(
                     "paragraph": meta["text"],
                     "technical_score": paragraph_t,
                     "citation_score": paragraph_c,
+                    "total_score": paragraph_total_score,
                 }
             )
 
@@ -1895,9 +1906,16 @@ def assign_importance_scores(
 
             for citation, citation_value in citation_split.items():
                 if citation not in citation_scores:
-                    citation_scores[citation] = {"citation_score": 0.0}
+                    citation_scores[citation] = {
+                        "citation_score": 0.0,
+                        "total_score": 0.0,
+                    }
 
                 citation_scores[citation]["citation_score"] += citation_value
+                citation_scores[citation]["total_score"] = max(
+                    0.0,
+                    safe_float(citation_scores[citation]["citation_score"], 0.0),
+                )
 
         leaf_t = sum(paragraph_technical.values())
         leaf_c = sum(paragraph_citation.values())
@@ -1995,6 +2013,7 @@ def assign_importance_scores(
         for payload in section_scores.values()
     )
     assert_close(top_level_total, 1.0, "top-level sections")
+    attach_total_scores_to_sections(section_scores)
 
     return citation_scores, section_scores, paragraph_scores
 
