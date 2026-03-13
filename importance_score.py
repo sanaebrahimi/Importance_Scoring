@@ -112,11 +112,11 @@ Child segments (id -> name and excerpt):
 {items}
 
 Output format (plain text only):
-item_id: score
+counter: score
 
 Example:
-I1: 0.32
-I2: 0.18
+1: 0.32
+2: 0.18
 
 The scores must sum to {parent_score}.
 
@@ -155,11 +155,11 @@ Citation entries (citation_id -> citation and context):
 {citations_json}
 
 Output format (plain text only):
-citation_id: score
+counter: score
 
 Example:
-C1: 0.06
-C2: 0.02
+1: 0.06
+2: 0.02
 
 Do not output JSON.
 Do not include explanations.
@@ -844,10 +844,7 @@ def estimate_direct_allocation_tokens(
     use_limit = None if snippet_limit is None or snippet_limit <= 0 else snippet_limit
     snippets = {name: flatten_content_to_text(item_to_content[name], limit=use_limit) for name in items}
     parent_content = flatten_content_to_text(item_to_content, limit=None)
-    item_payload = {
-        f"I{idx + 1}": {"name": item_name, "excerpt": snippets[item_name]}
-        for idx, item_name in enumerate(items)
-    }
+    item_payload = {str(idx + 1): {"name": item_name, "excerpt": snippets[item_name]} for idx, item_name in enumerate(items)}
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
         parent_score=1.0,
@@ -977,7 +974,7 @@ def direct_allocate_scores(
     if len(items) == 1:
         return {items[0]: total_score}
 
-    item_ids = [f"I{idx + 1}" for idx in range(len(items))]
+    item_ids = [str(idx + 1) for idx in range(len(items))]
     item_id_to_name = {item_ids[idx]: items[idx] for idx in range(len(items))}
     item_payload = {
         item_id: {
@@ -989,14 +986,14 @@ def direct_allocate_scores(
     parent_content = flatten_content_to_text(item_to_content, limit=None)
 
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
-    prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
+    base_prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
         parent_score=total_score,
         parent_content=parent_content,
         items=json.dumps(item_payload, indent=2),
     )
+    prompt = base_prompt
 
-    parsed_scores: Dict[str, float] = {}
     for attempt in range(max(1, max_retries)):
         response = client.chat(
             model=model,
@@ -1022,12 +1019,29 @@ def direct_allocate_scores(
             item_id_to_name[item_id]: max(0.0, safe_float(parsed_by_id.get(item_id), 0.0))
             for item_id in item_ids
         }
-
-        if any(v > 0.0 for v in parsed_scores.values()):
+        coverage = len(parsed_by_id)
+        if coverage == len(item_ids) and any(v > 0.0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
+        missing_item_ids = [item_id for item_id in item_ids if item_id not in parsed_by_id]
+        prompt = (
+            f"{base_prompt}\n\n"
+            "Your previous answer was incomplete or invalid.\n"
+            f"You must return a score for every counter exactly once.\n"
+            f"Missing counters: {', '.join(missing_item_ids) if missing_item_ids else ', '.join(item_ids)}\n"
+            "Return plain text lines only in the format:\n"
+            "counter: score"
+        )
+
+    append_debug_log(
+        debug_log_path,
+        (
+            f"[{log_tag}_error] parent={parent_name} sample={sample_idx} "
+            f"reason=incomplete_or_invalid_model_scores expected_ids={item_ids}"
+        ),
+    )
     raise ValueError(
-        f"Model failed to produce usable child scores for parent '{parent_name}' "
+        f"Model failed to produce complete child scores for parent '{parent_name}' "
         f"after {max(1, max_retries)} retries."
     )
 
@@ -1096,7 +1110,7 @@ def direct_allocate_citation_scores(
     if len(citations) == 1:
         return {citations[0]: total_score}
 
-    citation_ids = [f"C{idx + 1}" for idx in range(len(citations))]
+    citation_ids = [str(idx + 1) for idx in range(len(citations))]
     citation_id_to_name = {citation_ids[idx]: citations[idx] for idx in range(len(citations))}
     citation_payload = {
         citation_id: {
@@ -1106,14 +1120,14 @@ def direct_allocate_citation_scores(
         for citation_id in citation_ids
     }
 
-    prompt = CITATION_SPLIT_USER_PROMPT_TEMPLATE.format(
+    base_prompt = CITATION_SPLIT_USER_PROMPT_TEMPLATE.format(
         paragraph_id=paragraph_id,
         paragraph_citation_score=total_score,
         paragraph_text=paragraph_text[:1200],
         citations_json=json.dumps(citation_payload, indent=2),
     )
+    prompt = base_prompt
 
-    parsed_scores: Dict[str, float] = {}
     for attempt in range(max(1, max_retries)):
         response = client.chat(
             model=model,
@@ -1142,22 +1156,31 @@ def direct_allocate_citation_scores(
             citation_id_to_name[citation_id]: max(0.0, safe_float(parsed_by_id.get(citation_id), 0.0))
             for citation_id in citation_ids
         }
-
-        if any(v > 0.0 for v in parsed_scores.values()):
+        coverage = len(parsed_by_id)
+        if coverage == len(citation_ids) and any(v > 0.0 for v in parsed_scores.values()):
             return normalize_distribution(parsed_scores, total_score)
 
-    heuristic_raw = {
-        citation: max(1.0, float(len(re.findall(r"[a-z0-9]+", citation_to_context[citation].lower()))))
-        for citation in citations
-    }
+        missing_citation_ids = [citation_id for citation_id in citation_ids if citation_id not in parsed_by_id]
+        prompt = (
+            f"{base_prompt}\n\n"
+            "Your previous answer was incomplete or invalid.\n"
+            f"You must return a score for every counter exactly once.\n"
+            f"Missing counters: {', '.join(missing_citation_ids) if missing_citation_ids else ', '.join(citation_ids)}\n"
+            "Return plain text lines only in the format:\n"
+            "counter: score"
+        )
+
     append_debug_log(
         debug_log_path,
         (
-            f"[citation_split_heuristic] paragraph_id={paragraph_id} sample={sample_idx} "
-            "reason=no_usable_model_scores"
+            f"[citation_split_error] paragraph_id={paragraph_id} sample={sample_idx} "
+            f"reason=incomplete_or_invalid_model_scores expected_ids={citation_ids}"
         ),
     )
-    return normalize_distribution(heuristic_raw, total_score)
+    raise ValueError(
+        f"Model failed to produce complete citation scores for paragraph '{paragraph_id}' "
+        f"after {max(1, max_retries)} retries."
+    )
 
 
 def allocate_citation_scores_for_paragraph(
