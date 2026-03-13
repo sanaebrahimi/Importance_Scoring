@@ -1,122 +1,289 @@
-Scoring Roadmap (Manual)
+Scoring Roadmap (Manual, aligned with importance_score.py)
 
-1) Setup
-- Use ChatGPT and the paper of your choice.
-- Start a new chat for each paper.
-- Paste this global instruction once:
-
-You are scoring a paper hierarchically.
-Use only plain-text score lines in outputs.
-Never output JSON.
-Keep scores non-negative.
-When given a parent score, divide that score among children.
+1) Scope and setup
+- Use the paper's hierarchical section tree as the scoring backbone.
+- Start from the whole paper score = 1.0.
+- Use stage-specific prompts rather than one global instruction for the whole workflow.
+- Prefer plain-text outputs throughout the manual workflow.
+- For allocation prompts, any readable one-line-per-item format is acceptable.
+- Acceptable separators: `:`, `-`, `=`, `->`.
+- Keep scores non-negative and fully distribute each parent score across its children.
 
 2) Top-level section scoring
-Prompt:
-Parent node: Whole Paper
-Parent score to distribute: 1.0
+Goal:
+- Divide the whole-paper score `1.0` across the top-level sections.
 
-Task: divide the parent score among all child items together.
+Important update from the code:
+- This stage is technical-only.
+- Do not score citation value here.
+- Use the full parent content as context when judging child sections.
 
-Scoring rubric:
-- Higher score: core technical contribution and meaningful citation-supported value.
-- Lower score: background context, transitions, setup detail, low-impact narrative.
+Prompt shape:
+Parent segment:
+Whole Paper
 
-Items (item_id -> {"name": ..., "excerpt": ...}):
-I1: {"name":"Introduction","excerpt":"..."}
-I2: {"name":"System Overview","excerpt":"..."}
-I3: {"name":"...","excerpt":"..."}
+Parent score to distribute:
+1.0
 
-Output format:
-I1: <score>
-I2: <score>
+Parent content (context):
+<full paper text or a faithful extracted summary of all top-level content>
+
+Task:
+Divide the parent score among the following child segments according to their technical importance to the paper.
+
+Guidelines:
+- Higher score: technical novelty, method, algorithm, theory, experiments, results, key analysis.
+- Lower score: background, motivation, transitions, descriptive narrative.
+- Consider how much technical understanding would be lost if the segment were removed.
+
+Child segments (id -> name and excerpt):
+1: {"name":"Introduction","excerpt":"..."}
+2: {"name":"System Overview","excerpt":"..."}
+3: {"name":"Team of Agents","excerpt":"..."}
 ...
 
-3) Subsection scoring (repeat for every section that has children)
-Prompt:
-Parent node: <Section Name>
-Parent score to distribute: <section_score_from_step_2>
-
-Task: divide the parent score among all child subsections together.
-
-Items (item_id -> {"name": ..., "excerpt": ...}):
-I1: {"name":"Subsection A","excerpt":"..."}
-I2: {"name":"Subsection B","excerpt":"..."}
-
 Output format:
-I1: <score>
-I2: <score>
+Any clear one-line-per-child list is acceptable.
+
+Example:
+1: 0.14
+2: 0.18
+3: 0.10
 ...
 
-Repeat recursively until reaching leaf sections.
+Post-check:
+- Normalize so the section scores sum to `1.0`.
+- Then apply the code's top-level preference: `Introduction` should not exceed `Experiment Results`.
+- If `Introduction > Experiment Results`, transfer half of the gap from `Introduction` to `Experiment Results`, then renormalize.
 
-4) Paragraph total scoring (inside each leaf section)
-Prompt:
-Parent node: <Leaf Section>::paragraphs
-Parent score to distribute: <leaf_section_score>
+3) Recursive subsection scoring
+Goal:
+- For every non-leaf section, divide that section's score among its direct child subsections.
 
-Task: divide the parent score among all paragraphs together.
+Important update from the code:
+- This stage is also technical-only.
+- The current pipeline uses all-children-together allocation, not pairwise scoring, as the default path.
 
-Items (item_id -> {"name": ..., "excerpt": ...}):
-I1: {"name":"Paragraph 1","excerpt":"..."}
-I2: {"name":"Paragraph 2","excerpt":"..."}
+Prompt shape:
+Parent segment:
+<Section Name>
 
-Output format:
-I1: <score>
-I2: <score>
+Parent score to distribute:
+<parent_section_score>
+
+Parent content (context):
+<content of this parent section>
+
+Task:
+Divide the parent score among the following child segments according to their technical importance to the paper.
+
+Child segments (id -> name and excerpt):
+1: {"name":"Subsection A","excerpt":"..."}
+2: {"name":"Subsection B","excerpt":"..."}
 ...
 
-5) Paragraph technical/citation split (single prompt for both)
-Prompt:
-Task: for each paragraph, split its given total paragraph score into:
+Output format:
+Any clear one-line-per-child list is acceptable.
+
+Post-check:
+- Normalize so the child scores sum exactly to the parent score.
+- Recurse until reaching leaf sections.
+
+4) Leaf-section paragraph total scoring
+Goal:
+- Inside each leaf section, divide the leaf section's total score across its paragraphs.
+
+Important updates from the code:
+- Paragraphs are split first by blank lines.
+- If PDF extraction collapses paragraphs, use sentence-chunk fallback (roughly 5 sentences per chunk).
+- Paragraph total scoring still uses the technical-importance allocation prompt.
+- If token budget is too high, the code can use compressed paragraph snippets instead of full paragraph text.
+
+Prompt shape:
+Parent segment:
+<Leaf Section Name>::paragraphs
+
+Parent score to distribute:
+<leaf_section_score>
+
+Parent content (context):
+<all paragraph text for the leaf section>
+
+Task:
+Divide the parent score among the following child segments according to their technical importance to the paper.
+
+Child segments (id -> name and excerpt):
+1: {"name":"Paragraph 1","excerpt":"..."}
+2: {"name":"Paragraph 2","excerpt":"..."}
+...
+
+Output format:
+Any clear one-line-per-child list is acceptable.
+
+Post-check:
+- Normalize so paragraph totals sum to the leaf section score.
+
+5) Map citations to paragraphs before citation-channel scoring
+Goal:
+- Assign each extracted citation mention to the paragraph it belongs to.
+
+Important update from the code:
+- Citation scoring is paragraph-local, so citations are attached to paragraphs first.
+
+Matching order used in the code:
+1. Exact normalized context match inside a paragraph.
+2. Best token-overlap paragraph match.
+3. If still unresolved, fall back to the highest-scoring paragraph in that section.
+
+Citation block handling:
+- Split grouped citation blocks into individual citations when possible.
+- Examples:
+  `(A; B; C)` -> three citations
+  `[1, 2, 3]` -> three citations
+
+6) Paragraph channel split: technical vs citation-added
+Goal:
+- For each paragraph, split its paragraph total into:
+  - `technical_score`
+  - `citation_score`
+
+Important updates from the code:
+- This is where citation value first enters the pipeline.
+- `technical_score` = intrinsic technical value of the paragraph text, ignoring citations.
+- `citation_score` = added value from cited prior work in that paragraph.
+- If a paragraph has no attached citations, force `citation_score = 0` and `technical_score = total_score`.
+- The code averages multiple samples and renormalizes each paragraph's technical/citation pair back to its total.
+
+Prompt shape:
+Task:
+For each paragraph below, split the provided total paragraph score into:
 - technical score
 - citation score
 
 Rules:
-- technical + citation must equal total_score for each paragraph.
-- technical = intrinsic technical value of paragraph text, ignoring citations.
-- citation = added value from cited prior work in that paragraph.
-- if has_citations is false, citation must be 0 and technical must equal total_score.
+- For each paragraph, technical + citation should equal the provided total_score.
+- Higher technical score:
+  paragraph introduces method, algorithm, theory, dataset, experiment, or key result
+- Higher citation score:
+  cited work materially strengthens grounding, comparison, dependency, or evidence
+- If has_citations is false, citation should be 0 and technical should equal total_score.
+- Use non-negative values.
 
-Paragraph entries:
-Paragraph 1: total_score=<...>, has_citations=<true/false>, text="<...>"
-Paragraph 2: total_score=<...>, has_citations=<true/false>, text="<...>"
+Paragraph entries (paragraph_id -> details):
+Paragraph 1: {"total_score":0.24,"has_citations":true,"text":"..."}
+Paragraph 2: {"total_score":0.11,"has_citations":false,"text":"..."}
 
 Output format:
-Paragraph 1: technical=<score>, citation=<score>
-Paragraph 2: technical=<score>, citation=<score>
-...
+paragraph_id: technical=<float>, citation=<float>
 
-6) Citation split inside each paragraph with citation > 0
-Prompt:
-Paragraph id: <Section Path>::p<index>
-Paragraph citation score to distribute: <paragraph_citation_score>
+Example:
+Paragraph 1: technical=0.18, citation=0.06
+Paragraph 2: technical=0.11, citation=0.00
+
+Post-check:
+- For each paragraph, renormalize so `technical + citation = paragraph_total`.
+
+7) Citation split inside each paragraph
+Goal:
+- Only for paragraphs with `citation_score > 0`, divide that citation score among the citations attached to that paragraph.
+
+Important updates from the code:
+- This is done paragraph by paragraph.
+- Each citation gets a merged context blob built from its matched contexts.
+- The code aggregates final citation scores across the whole paper by citation string.
+
+Prompt shape:
+Paragraph id:
+<Section Path>::p<index>
+
+Paragraph citation score to distribute:
+<paragraph_citation_score>
 
 Paragraph text:
 <paragraph_text>
 
 Task:
-Divide this paragraph citation score among citations below based on contribution to claims/evidence/comparison.
+- Divide the paragraph citation score among the citations below.
+- Higher share:
+  citation directly supports the paragraph's claim
+  citation provides key comparison or baseline
+  citation introduces a method the paragraph builds upon
+- Lower share:
+  citation is peripheral or only mentioned briefly
+- Scores must be non-negative.
 
-Citation entries:
-C1: citation="<...>", context="<...>"
-C2: citation="<...>", context="<...>"
+Citation entries (citation_id -> citation and context):
+1: {"citation":"(Smith et al., 2020)","context":"..."}
+2: {"citation":"(Lee et al., 2021)","context":"..."}
 
 Output format:
-C1: <score>
-C2: <score>
-...
+Any clear one-line-per-citation list is acceptable.
 
-Normalization and consistency checks 
-1. For every parent node: sum(children) must equal parent score.
-2. Sum(top-level sections) must equal 1.0.
-3. For every paragraph: technical + citation = paragraph total.
-4. For every paragraph with citations: sum(citation children) = paragraph citation score.
-5. If sums are slightly off, rescale proportionally:
-   new_score_i = old_score_i * (parent_score / sum_old_scores)
+Example:
+1: 0.03
+2: 0.01
 
-Output checks:
-1. Use the same prompts and same input excerpts.
-2. Keep outputs in plain-text format only.
-3. Record each stage in a table: parent, child, raw score, normalized score.
-4. Compare final section totals, paragraph technical/citation totals, and per-citation totals.
+Post-check:
+- Normalize so citation children sum to the paragraph's `citation_score`.
+
+8) Aggregation rules
+Section-level outputs:
+- Every section node stores:
+  - `technical_score`
+  - `citation_score`
+  - `subsections`
+
+Leaf sections:
+- `technical_score` = sum of paragraph technical scores in that leaf section
+- `citation_score` = sum of paragraph citation scores in that leaf section
+
+Internal sections:
+- `technical_score` = sum of child section technical scores
+- `citation_score` = sum of child section citation scores
+
+Paper total:
+- Sum of top-level section totals must equal `1.0`, where
+  `section_total = technical_score + citation_score`
+
+Citation output:
+- Aggregate citation scores across all paragraphs and sections by citation string.
+
+Paragraph output:
+- Store for each paragraph:
+  - `section_path`
+  - `paragraph_index`
+  - `paragraph`
+  - `technical_score`
+  - `citation_score`
+
+9) Output parsing expectations
+Important update from the code:
+- The parser is intentionally flexible.
+- Do not assume a single rigid output format is required.
+
+Accepted patterns include:
+- `1: 0.25`
+- `1 - 0.25`
+- `1 = 0.25`
+- `1 -> 0.25`
+- `Paragraph 1: technical=0.18, citation=0.06`
+
+If counters drift:
+- Line order may still be used when the number of output lines matches the number of expected items.
+
+10) Consistency checks
+At minimum verify:
+1. Sum of top-level section totals = `1.0`.
+2. For every internal section: sum(child totals) = parent total.
+3. For every leaf section: sum(paragraph totals) = leaf section total.
+4. For every paragraph: `technical_score + citation_score = paragraph_total`.
+5. For every paragraph with citation mass: sum(citation children) = paragraph `citation_score`.
+
+Recommended normalization rule:
+- If a set of child scores is slightly off, rescale proportionally:
+  `new_score_i = old_score_i * (parent_score / sum_old_scores)`
+
+11) Notes on legacy behavior still present in the code
+- Pairwise section comparison logic still exists in `importance_score.py`.
+- However, the current `assign_importance_scores(...)` pipeline uses all-children-together scoring for top-level sections, subsections, and paragraph totals.
+- For roadmap purposes, the all-children-together workflow is the one that matches the latest implementation.
