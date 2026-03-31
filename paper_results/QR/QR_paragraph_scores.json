@@ -1,0 +1,1121 @@
+[
+  {
+    "section_path": [
+      "Introduction",
+      "Prior Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In prior work, Barrodale and Robert ( BR) proposed a Simplex-based exterior point technique [ 1], which moves from one exterior point (i.e., a \u201ccorner\u201d of the feasible polytope defined by the linear program) to another exterior point, in the direction of steepest gradient descent. The core idea of BR originates from Edgeworth\u2019s bi-variate weighted median based approach [ 13]. For the special case of the 2-dimensional QR problem (i.e., one dependent variable and one independent variable), the time complexity of this algorithm is O(n2), which is still the best known strongly polynomial result for 2-dimensions. For the general d-dimensional QR problem (i.e., one dependent variable and d\u22121 independent variables), the best known strongly polynomial algorithm is a naive baseline method that runs inO(dnd+1)time (note that this assumes the dimension dis bounded). Later, Portnoy and Koenkar proposed the interior point method ( IPM) which finds the optimal solution by minimizing the difference between primal and dual objective cost [ 24].",
+    "technical_score": 0.029165055614446808,
+    "citation_score": 0.007186088150570351
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Prior Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "This method is reasonably fast for larger input sizes in practice, but the worst-case theoretical time complexity is O(n2.5log 1/\u03f5)where\u03f5is the desired accuracy, which needs to be set to O(2\u2212L)to obtain the optimal result, where Lis the number of bits in the input instance [ 29]. Thus, while the worst case time complexity is independent of the dimension of the QR problem, it is weakly polynomial. Moreover, as shall be clear in later sections, even for a low-dimensional QR problem, e.g., d= 2, the corresponding LP formulation can be extremely high-dimensional, since it requires the addition of O(n)variables. Thus, one cannot leverage well-known efficient and strongly polynomial low-dimensional LP algorithms for solving low dimensional QR problems. 1Dimension Weakly polynomial Strongly Polynomial d= 2LP - \u02dcO(n2+1/18L)[17]O(n2)[1] GeneraldLP -O(n5/2L)[27]Baseline -O(dnd+1) Table 1: A summary of results from prior workTable 1 provides a snapshot of the computational complexity of these priortechniques.Besidestheseresults, there have been prior research on QR algorithms under various distri- butional assumptions of the input data, which are less relevant to the focus of our paper.",
+    "technical_score": 0.023992177577541768,
+    "citation_score": 0.008346026089732715
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Prior Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "We discuss the challenges and some of the state of the art techniques in Appendix A. 1.2",
+    "technical_score": 0.005147926917453066,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Our Technical Contributions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we make the following key technical contributions that give rise to several strongly polynomial algorithms. Our first contribution is to capitalize on the computational geometry concepts of arrangement andduality[11], and map QRvia a duality transform into a problem of traversing an arrangement of hyperplanes in search of the intersection point that optimizes the QRobjective function. To aid this traversal, we leverage the specifics of the QRobjective function and design an algorithm named UpdateNeighbor subroutine, which can update the objective function calculations from a neighboring point in the arrangement very efficiently with O(d)time andO(d)space complexity (i.e., each update is independent of n). This is done by maintaining various aggregate information along every feature. This UpdateNeighbor subroutine allows us to easily improve the naive baseline QR algorithm\u2019s running time from O(dnd+1)toO(dnd).",
+    "technical_score": 0.030348705561374843,
+    "citation_score": 0.008376690686313061
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Our Technical Contributions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Our second contribution is to connect the QR problem with the concept of geometrick-sets[11], which allows our algorithm to restrict its traversal to within the kthlevel of the arrangement. In our case, the parameter kis set to the quantile, e.g., for median regression, k=n/2. This connection withk-sets gives rise to an efficient quantile regression algorithm for 2-dimension, named QReg2D . The deterministic time complexity for our QRalgorithm isO(nk1/3log1+a(n))wherea>0is an arbitrarily small constant. If we use probabilistic k-set enumeration procedures in our algorithm, the expected time complexity of our algorithm is O(nk1/3).These are asymptotically better than any other existing exterior or interior point approaches in two dimensions (recall that BRruns inO(n2) time while IPMruns in \u02dcO(n2.5log (1/\u03f5))time).",
+    "technical_score": 0.021374905004578445,
+    "citation_score": 0.0010466098116468487
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Our Technical Contributions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "In higher dimensions, counting as well as efficiently enumerating k-sets are generally challenging and open problems in computational geometry. Any breakthroughs are likely to have implications in our k-set based algorithms for higher dimensional QR problems. Our third contribution is a probabilistic RandomizedQR algorithm for the QR problem in general ddimensions. We devise a divide-and-conquer approach to split the ddimensional arrangement into two half-spaces based on a randomly chosen hyperplane and determine the half- space that contains the optimal solution. The highlights of our approach include developing an efficient probabilistic technique for sampling uniformly at random vertices contrained within a portion of the arrangement, which we further connect to the problem of counting inversions of a permutation.",
+    "technical_score": 0.007067849473547963,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Our Technical Contributions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Our RandomizedQR algorithm has an expected time complexity of O(nlog2(n)) for two dimensions which is asymptotically better than the other strongly and weakly polynomial algorithms. The time complexity of RandomizedQR in higher dimensions is O(dnd\u22121log2(n)), which is faster than the known deterministic strongly polynomial algorithms. A summary of the time complexities of our algorithms is presented in Table 2. 2Dimension Strongly Polynomial Comments d= 2O(nk1 3log1+a(n))-QReg2D 1 Lemma 1 ExpectedO(nk1 3)-QReg2D 1 Lemma 2 ExpectedO(nlog2(n))-RandomizedQR 4Theorem 4 d= 3ExpectedO(n2log2(n))-RandomizedQR 4Theorem 5 GeneraldExpectedO(dnd\u22121log2(n))-RandomizedQR 4Theorem 5 O(dnd)-UpdateNeighbor subroutine Theorem 3 Table 2: A summary of our algorithmic results. 2",
+    "technical_score": 0.005303404701795708,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Running Example"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "idA1A2 t13.153.13 t21.97 1 t31.3692.43 t40.1491.287 t5-0.390.222 t6-0.51-0.65 t7-2.047.30 Table 3: A 2D dataset.In this paper, we use a toy dataset, shown in Table 3, which will be used throughout the paper. Assume that we want to build a linear model to predict A2fromA1. Figure 3 shows a scatter plot of the data points in 2-dimensional space (where the x-axis isA1andy-axis isA2), and two linear models, one being the classical OLSmodel and the other being the classical QRmodel. The former minimizes the sum of squared errors, while the latter minimizes the sum of absolute errors (this is also known as \u21131-regression ), where the error is defined as the difference between the actual and predicted value of theA2variable. The figure shows that the OLSmodel is heavily affected by the presence of outlier t7, however, the \u21131-regression is less sensitive to the outlier.",
+    "technical_score": 0.011967515202303807,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Running Example"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "2.2",
+    "technical_score": 0.00871707897451759,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Quantile Regression Problem Definition"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Dataset: LetDbe a dataset with npoints and dnumerical variables. We denote the response variable and the vector of predictor variables by yiandXi= [1x1x2...xd\u22121]respectively for ith point. A constant 1is added in Xito make the problem definition (defined later) consistent. Xis a matrix where ithrow corresponds to Xi.Xandyfor the running example are shown in Figure 1. XT=/bracketleft\uf8ecigg 1 1 1 1 1 1 1 3.15 1.97 1.369 0.149\u22120.39\u22120.51\u22122.04/bracketright\uf8ecigg YT=/bracketleft\uf8ecig 3.13 1 2 .43 1.287 0.222\u22120.65 7.30/bracketright\uf8ecig Figure 1: Running example in two dimensionsResidual: If the actual value is y and the predicted value is \u02c6y, then the residual,r, can be defined as y\u2212\u02c6y.",
+    "technical_score": 0.013871674450485177,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Quantile Regression Problem Definition"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The value of rcan be positive, nega- tive, or zero. From this viewpoint, we can also define ri=r+ i\u2212r\u2212 iwhere, for each point iinD,r+ i=max(ri,0)andr\u2212 i=\u2212min(ri,0). The dotted lines in Figure 3 show the residuals.t5has positive residual and t7has negative residual. Quantile Parameter, \u03c4:In Quantile Regression, the quantile parameter \u03c4\u2208(0,1)determines what fraction of a total number of input points will have a negative residual. For \u03c4= 0.5, half of 3the input point will have negative residuals, and the remaining half will have positive residuals.",
+    "technical_score": 0.008120815524578868,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Quantile Regression Problem Definition"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Formal Problem Definition: The formal definition of Quantile Linear Regression (QR) problem in this paper is defined as follows. Quantile Linear Regression : Given the quantile parameter \u03c4and a datasetDwithn points, where yis a vector of the actual response variable and Xis an\u00d7dmatrix constructed from predictor variables, find a parameter vector \u03b2\u2208Rdthat optimizes the following objective function.min \u03b2\u2208Rdn/summationtext i=1\u03c4r+ i+ (1\u2212\u03c4)r\u2212 i s.t.r+ i= max(yi\u2212XT i\u03b2,0) r\u2212 i=\u2212min(yi\u2212XT i\u03b2,0) In Figure 3, we used \u03c4= 0.5for the QRwhich puts equal penalty for both positive and negative residuals. For \u03c4= 0.5,QRis known as \u21131-regression (also known as median regression ). Different applications may require different values of \u03c4. For example, if \u03c4= 0.95, the objective function puts a high penalty (0.95) on any point with positive residual and a low penalty (0.05) on any point with negative residual.",
+    "technical_score": 0.01577100762569752,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Quantile Regression Problem Definition"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "OneofthecommontechniquesthathasbeenusedtosolvetheQRproblemisLinearProgramming. In the LP formulation, 2nvariables are introduced, one for each of the residuals. Additionally, d variables are needed for the optimal QR hyperplane parameters \u03b2. The LP formulation for the QR problem is given in Figure 2: minimizen/summationdisplay i=1(\u03c4r+ i+ (1\u2212\u03c4)r\u2212 i) subject to r+ i\u2265yi\u2212XT i\u03b2 r\u2212 i\u2265XT i\u03b2\u2212yi r+ i\u22650,\u22001\u2264i\u2264n r\u2212 i\u22650,\u22001\u2264i\u2264n Figure 2: QR LP formulation.Based on the LP formulation, even if we assume dis bounded, there are 2n+d=O(n)variables and 2n=O(n)constraints. As the number of variables translate to dimensions in LP and is not a fixed number, the QR problem cannot use some of the strongly polynomial LP results for fixed dimensions.",
+    "technical_score": 0.00965892899321087,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Quantile Regression Problem Definition"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Table 1 summarizes some of latest results for the weakly polynomial LP techniques when applied to QR problem. A detailed description of the current state of the art algorithms for QRis presented in Appendix B.1. 2.3",
+    "technical_score": 0.006805872897737348,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we define the dual space ofD, its connection with the quantile regression problem, and some of the basic properties and definitions that we will use throughout the paper. QRHyperplane,H:LRestimates the response variable as a linear combination of predictor variables with an offset. The hyperplane that minimizes the optimization function is called a QR Hyperplane and denoted by HAs shown in Figure 3,for our running example in 2-dimensions, the regression hyperplanes are lines. The coefficients associated with the QRHyperplane are regression parameters ( \u03b2). Optimal QR Hyperplane, H\u2217:In primal space, there is a QRhyperplane for which QRopti- mization function is minimum.",
+    "technical_score": 0.004368510681412029,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We call this hyperplane Optimal QR Hyperplane and denote it by H\u2217. The Optimal QR Hyperplane geometrically divides the points into \u03c4npoints on one side and (1\u2212\u03c4)npoints on the other side [20]. 4Figure 3: The (primal space) visualization of the running example dataset Figure 4: The dual space visualization of the running example dataset, with the 4-th level of its arrangement highlighted The following two important QRproperties are used throughout our paper. Theorem 1. [2] The objective function of QR is continuous and convex.",
+    "technical_score": 0.0016532770399257375,
+    "citation_score": 0.0001903146237894301
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Theorem 2. [2] TheOptimal QR Hyperplane goes through at least dpoints. Note that Theorem 2 immediately suggests the strongly polynomial naive baseline algorithm for thed-dimensional QRproblem mentioned in Table 1: enumerate all the O(nd)hyperplanes that pass through each d-sized subset of points of the dataset, compute the objective function in O(n) time for each hyperplane, and pick the minimum. This simple algorithm runs in O(dnd+1)time. Dual space : A duality transformation function transforms a given point (hyperplane resp.) in primal space into a hyperplane (point resp.) in the dual space, such that certain properties are maintained in the dual space and vice-versa.",
+    "technical_score": 0.0033696330792156275,
+    "citation_score": 0.0002534253207811377
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Following along similar lines as Edgeworth [ 13], we define the duality transformation function as follows: Given a hyperplane Hinddimensional primal space, the dual of H(point resp.) is a point F(H)\u2208Rd(hyperplaneF(p)resp.) such that: Primal space Dual Space H:y\u2212a1x1\u2212a2x2...\u2212ad\u22121xd\u22121\u2212ad= 0F(H) :{a1,a2,...,ad}\u2208Rd p:{p1,p2,...,pd}\u2208RdF(p) :zd+d\u22121/summationtext i=1pizi\u2212pd= 0 Herezirepresents the variables defining the hyperplane in dual space. We would like to note that thenpoints in the primal space transform into ncorresponding hyperplanes in the dual space. Residual sets : Given a QRhyperplane with parameters \u03b2in the primal space, the set of points for which value yiis greater than or equal to (resp. lesser than) the predicted value \u02c6yi=\u03b2TXiis denoted by I+={i:yi\u2265\u02c6yi}) (resp.I\u2212={j:yj<\u02c6yj}). Note that the two sets are mutually exclusive,I+\u2229I\u2212=\u2205;I+\u222aI\u2212=U.",
+    "technical_score": 0.000793206419477492,
+    "citation_score": 0.0001285894123800918
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Geometrically, the entity I+represents the set of points that lie on or above the regression hyperplane, and I\u2212represents points that lie below the hyperplane. 5Complete Skeleton, S: Given ad-dimensional space, the intersection of dhyperplanes is a 0-dimensional point which is called the vertex. The intersection of d\u22121hyperplanes creates a 1-dimensional line segment which is called an edge. The endpoints of an edge consist of two vertices which are called neighbors. These vertices and edges create a connected graph called Complete Skeleton (S).",
+    "technical_score": 0.000649264890264907,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "The details about the complete skeleton can be found in [11]. k-set: Given a set of npoints ind-dimensional space, a k-set is a subset of kpoints that can be separated by a hyperplane from the remaining points. Much is known about k-sets, their counts, as well as algorithms for their enumeration and construction, especially in lower dimensional space [11]. For our geometric mapping, consider the npoints is given by the data points in the primal space. As the optimal quantile regression hyperplane H\u2217must partition the npoints such that \u03c4n points are on one side and the remaining (1\u2212\u03c4)nlie on the other, the optimal hyperplane is a separating k-set hyperplane.",
+    "technical_score": 0.00021243583681034906,
+    "citation_score": 6.0095104782327854e-05
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "We exploit these observations to design our deterministic strongly polynomial algorithm for 2(and higher) dimensions. Arrangements : Givennhyperplanes in d-dimensional space, the entire space is partitioned into anarrangement consisting of O(nd)d-dimensional convex cells. Much is known about the geometric properties of such arrangements, as well as algorithms for their construction [ 11]. Thenpoints in the primal space transform into ndual hyperplanes, creating a dissection of the dual space into an arrangement [12]. Figure 4 shows the lines in the dual space for the sample points in Figure 3.",
+    "technical_score": 0.0021892742080047898,
+    "citation_score": 0.00043984781677162217
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Other Useful Notations"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "k-level of an arrangement: In an arrangement of nhyperplane, the k-level of an arrangement is a set of points psuch that the number of lines above p\u2264k\u22121and and the number of lines below p\u2264n\u2212k. The black bold lines in Figure 4 shows the 4-level of arrangement. Further details of duality, arrangements, complete skeleton graph, k-sets andk-level of arrange- ment can be found in [11]. 3",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we propose an UpdateNeighbor subroutine which can efficiently and incre- mentally calculate the objective function at a vertex of the complete skeleton graph, by leveraging the calculations performed at a neighboring vertex. The incremental computation only takes O(d) time at a vertex, as compared to O(nd)time if performed from scratch. The update operation relies on maintaining a few aggregate values when moving from one vertex to its neighboring vertex. To 6understand the motivation behind the aggregate values, we rewrite the optimization function into two summations. min \u03b2\u2208Rd\u03c4/summationdisplay i\u2208I+(yi\u2212Xi\u03b2) + (1\u2212\u03c4)/summationdisplay j\u2208I\u2212(Xj\u03b2\u2212yj) First, we will show that if we are given certain aggregate values for a vertex, we can compute the optimization function in O(d)time.",
+    "technical_score": 0.028149710282610308,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "For all i\u2208I+andj\u2208I\u2212, consider the aggregate values/summationtextyi,/summationtextXi[1],...,/summationtextXi[d],/summationtextyjand/summationtextXj[1],...,/summationtextXj[d]were known for a given vertex in the skeleton graph (hyperplane in primal space). Given these aggregate values, the optimization function can be computed for the corresponding primal hyperplane in O(d)time using the following formula. \u03c4/summationdisplay i\u2208Y+yi\u2212\u03c4/summationdisplay 1\u2264m\u2264d(\u03b2m/summationdisplay i\u2208Y+Xi[m] ) + (1\u2212\u03c4)/summationdisplay 1\u2264m\u2264d(\u03b2m/summationdisplay j\u2208Y\u2212Xj[m] )\u2212(1\u2212\u03c4)/summationdisplay j\u2208Y\u2212yj(1) Secondly, we show that, given a vertex and aggregate values corresponding to the vertex, the aggregate values for any neighboring vertex can be computed in O(d)time. An illustration to highlight this result is provided in Section C.3. The formal theorem for this O(d)time update is presented in Theorem 3.",
+    "technical_score": 0.008619415342421818,
+    "citation_score": 0.010532505171451541
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Theorem 3. Given the aggregate values \u22001\u2264m\u2264d/summationtext i\u2208I+Xi[m],/summationtext i\u2208I+yi,/summationtext j\u2208I\u2212yj,\u22001\u2264m\u2264d/summationtext j\u2208I\u2212Xj[m]for a vertex in the complete skeleton graph, the aggregate values can be updated in O(d)time when we move to a neighboring vertex.1 A detailed illustration of UpdateNeighbor subroutine is presented in Appendix C.3. 3.2",
+    "technical_score": 0.011906083603036263,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "Improving the Naive Baseline Using UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "An algorithm that solely relies on UpdateNeighbor subroutine to find the optimal QRline can use a neighborhood exploration in the complete skeleton graph S. Initially, a vertex is Sis arbitrarily chosen as a start vertex. In each step of the algorithm, the neighborhood is explored. The vertex which improves the optimization function the most is visited next. The exploration continues until there are no neighboring vertices with a lower value for the optimization function.",
+    "technical_score": 0.029696759360493177,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "Improving the Naive Baseline Using UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In the worst case, this algorithm may explore the complete skeleton graph, and its worst case time complexity is thereforeO(dnd). Nevertheless, this algorithm is strongly polynomial under the assumption that d",
+    "technical_score": 0.02201906059899981,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Recall from Section 2.3 that a k-set is a subset containing kpoints that can be separated from the rest of the (n\u2212k)points by a hyperplane. An interesting observation is that the optimal QR hyperplane separates the npoints into\u03c4nand(1\u2212\u03c4)npoints [24]. While there are many hyperplanes that separate npoints into two parts (with \u03c4nand(1\u2212\u03c4)npoints), we are interested in the specific hyperplane that provides the lowest optimization score. Since a k-set separate the points into kand n\u2212kpoints,the optimal QR hyperplane must correspond to a k-set, wherek=\u03c4n. In other words, the optimal QR hyperplane is among the set of possible k-set separating hyperplanes, the one with minimum optimization score.",
+    "technical_score": 0.02263345758357838,
+    "citation_score": 0.007215914952340055
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1All proofs are provided in Appendix D. 7Figure 5: The ordered traversal of the k-level of arrangementFor the rest of this subsection, we primarily focus on the 2-dimensional QR problem. The enu- meration of k-sets can also be viewed as a walk along thek-level of an arrangement. More specif- ically, we require the k-set enumerating algorithm to provide us with vertices such that any vertex vjobtained after viis its neighbor. Figure 5 shows the ordered sequence of k-sets for our running example.",
+    "technical_score": 0.011523856659742563,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Any k-set enumeration algorithm that satisfies this property can be used in our algo- rithm. The best-known deterministic approach is a line-sweep algorithm by Edelsbrunner and Welzl [12] using the dynamic data structure from T. Chan [ 5]. The complexity of this algorithm isO(nlog (m)+mlog1+a(n)), wheremis the number of k-set anda >0is an arbitrarily small constant. Additionally, T.",
+    "technical_score": 0.00448398957947609,
+    "citation_score": 0.004175516499464058
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Chan [ 4] has developed a randomized incremental algorithm to perform the enumeration in O(m+nlog (n)). The pseudocode of QReg2D is presented in Appendix E (Algorithm 1). Time complexity of our algorithm with deterministic (randomized resp.) k-set enumeration is presented in Lemma 1 (Lemma 2 resp.). Both the proofs of Lemma 1 and Lemma 2 utilize the upper bound of the number ofk-set [9] and k-set enumeration techniques [4]. Lemma 1.",
+    "technical_score": 0.009726803985399211,
+    "citation_score": 0.0053030967958674746
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "QReg2D has a time complexity of O(n4 3log1+an), wherea>0is an arbitrarily small constant.2 Lemma 2. QReg2D with randomized k-set enumeration [ 4] has an expected time complexity of O(n4 3).2 Interestingly, as also shown in Tables 1 and 2, our k-set based algorithm for two dimensions is asymptotically better than any other existing exterior or interior point approaches in two dimensions (BRor IPM). Extending to higher dimensions is an open problem, as the corresponding problems of counting and enumerating k-sets in higher dimensions are generally challenging and open problems in computational geometry. Any breakthroughs are likely to have implications for our k-sets based algorithm for QR.",
+    "technical_score": 0.01717821594769506,
+    "citation_score": 0.004643272048395287
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "As discussed in in Section 2.3, a hyperplane in the primal space transforms to a point in the dual space. From Theorem 2, we can deduce that the optimal QR hyperplane is specialas it is located at a vertex in the skeleton graph Sof dual space. A naive search of vertices in Sto find the optimal QR hyperplane is computationally expensive as there are ndvertices. Our approach relies on restricting the search space to find the optimal QR vertex in Sefficiently. All our restrictions to the search space will be placed on a single variable, called the search variable.",
+    "technical_score": 0.0057997124769771004,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Initially, an arbitrary variable A\u2032is selected as the search variable . That isA\u2032=Ai, for an arbitrary value of i\u2208[1,d]. Figure 6: Optimization function of a sample 2D QR problem after the sec- ond iterationOur randomized approach breaks the problem into sub-problems based on the divide-and-conquer paradigm. Particularly, starting from A\u2032\u2208(\u2212\u221e,\u221e), it keeps restrict- ing the so-called search interval to smaller ranges denoted asR= (Rs,Re). For example, Figure 6 shows an example whereA\u2032=A1andR= (\u22125,5), specified as the range between the two (blue) planes z1=\u22125andz1= 5.3A vertexPjwould be in the search space if the value of Pjfor variable A\u2032lies within the range R.",
+    "technical_score": 0.0023415584442567083,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The set of all vertices ofSthat lie within the search interval are called embraced vertices (Sin={x\u2208S|x[A\u2032]\u2208R}). At every iteration, the algorithm selects a value v\u2208Rto split the search interval Rin three disjoint intervals - (Rs,v),[v,v] and(v,Re). The hyperplane that splits Rinto the three intervals is called the splitting hyperplane , which is defined as zi=v. The choice of vduring the dividestep gives rise to different nature of algorithms. For instance, if the interval Rwere to be divided into three parts based on the mid-value of the range (i.e., v= (Rs+Re)/2), no matter how fast or accurate the conquer step is designed to be, the approach could only lead to a weakly-polynomial algorithm.",
+    "technical_score": 0.001887949033228682,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Under general positioning assumption, the plane zi=vmight contain at most one vertex of S. Hence, to design a strongly polynomial algorithm, ideally the search interval should be divided in a way that embraced vertices are (almost) split in half. That is,|Sin\u2229(Rs,v)|\u2243|Sin\u2229(v,Re)|. Instead of selecting vfrom the continuous range R,RandomizedQR uses a vertex from the set of embraced vertices in order to perform the split. I.e., it identifies a vertex P\u2208Sinfor splitting, then uses the value of Pon A\u2019 as the splitting value (thus v=P[A\u2032]).",
+    "technical_score": 0.0008991059843216645,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "The challenge, however, is that we would like to identify Psuch that it cuts Sininto two equal halves. Since |Sin|is inO(nd), enumerating Sinfor finding Pis not feasible. We leave the problem of efficiently finding the split point using a deterministic algorithm without enumerating Sinas an open problem. Instead, we draw inspiration from the classical Randomized Quick Sort (RQ-sort) algorithm for identifying the split point. The randomized pivot selection is a key component of RQ-sort to reduce the quadratic worst-case time complexity of quick sort to linearithmic.",
+    "technical_score": 0.0020229996024945414,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Applying a similar idea, at a high level, RandomizedQR aims to select the split vertex Punformly at random from Sin. The interval R is partitioned into three disjoint intervals, and the interval which contains the optimal vertex is identified. Consequently, Ris updated to the new, smaller interval. 3Recall from Section 2.3 that ziis the i-th coordinate in the dual space, corresponding with the variable Ai. 9Based on our randomized divide-and-conquer approach, there are two key questions .",
+    "technical_score": 0.00039684343545961755,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "These questions are addressed in the subsequent sections where we discuss them in detail. \u2022(Divide step ) A major difference between RQ-sort and our problem is that, unlike RQ-sort which has random-access to the elements of an array, in our problem Sinis not materialized . As a result, even the exact size of Sinis not known apriori. Hence, it is not possible to (a) directly generate a random index in range |Sin|and (b) have a random access to a vertex for the generated index. Therefore, a key question is how to efficiently sample (uniformly at random) a vertex from the set of embraced vertices ?",
+    "technical_score": 0.0012467516522060335,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "\u2022(Conquer step ) How to find out which among the 3 intervals contain the optimum vertex? We design two functions SplitandConstrainedSampling to address these two questions. The role of the ConstrainedSampling function is to sample a vertex uniformly at random from the set of embraced vertices . Splitfunction finds out the interval among the three intervals where the optimum vertex lies. The details of both these functions will be discussed in later-part of this section.",
+    "technical_score": 0.0010562115118873446,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR Based on a Randomized Divide-and-Conquer Approach"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "The pseudo-code for our approach is presented in Algorithm 4 in Appendix E. 4.2",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "RandomizedQR relies on two key components - SplitandConstrainedSampling . We describe our approaches for both these problems for two dimensions below. First attempt, a Rejection Sampling approach : In 2D, a vertex is the intersection of a pair of dual lines. Also, following the general positioning assumption, each pair of dual lines intersect exactly once. As a result, in order to draw a uniform random sample from S, one can sample one of the/parenleftbign 2/parenrightbig dual lines and compute their intersection in constant-time to find the drawn vertex.",
+    "technical_score": 0.004129706916449919,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Therefore, it is straightforward to design a rejection sampling to draw a sample from the set of embraced vertices Sin: (1) sample a pair of dual lines, uniformly at random; (2) compute their intersection point P; (3) acceptPifP[A\u2032]\u2208R, otherwise reject it and try again. This approach, however, is not efficient since the probability of accepting a sample when |Sin|=O(1)is as low as1 n2. As a result, the expected cost of generating one sample for such regions is O(n2). ConstrainedSampling : Given the inefficiency of the rejection sampling approach, in the following we propose an efficient approach that only generate samples (uniformly at random) that are already inSinand, hence, no rejection is needed. Our strategy is based on weighted sampling of the dual lines, where the weight of each dual line is the number intersections it has within the search interval R.",
+    "technical_score": 0.0017781371799250702,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The weights are then used to sample one line. Once a line is sampled, all the vertices of Sinthat involve\u2113iwill be enumerated and one of those vertices are returned uniformly at random. Lemma 3. ConstrainedSampling is an unbiased sampler for Sin.4 We still need to find the weight of each dual line \u2113i, that is, the number of vertices in Sin involving\u2113i. Consider the vertical line z1=Rsand the order in which the nlines intersect with it.",
+    "technical_score": 0.0008890685899625351,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "The vertical line that is placed at the start (end, resp.) of the interval Ris termed as start border (end border , resp.). Let this order (top to bottom) in which the lines intersect with the start border be named as start order . Similarly, end order is the order of intersection of the end border with the 4The proof is provided in Appendix D 10Figure 7: Depicting the startandendorderina sample2DQRproblem Figure 8: Optimization function of a sample 2D QR problem -1.2-1-0.8-0.6-0.4-0.2 00.20.40.6 P o i n t s o n s p l i t t i n g - l i n e z i = v1.822.22.42.62.833.23.43.6Optimization functionFigure 9: The optimization function over the splitting line in 2D nlines. In Figure 7, the left and right vertical boundary lines in show the start and end borders in that example, while the ordering of dual line intersections with them are the start and end orders. Note that the order of the lines at \u221e(\u2212\u221eresp.) can be obtained by sorting the slopes of the lines in ascending (descending resp.) order.",
+    "technical_score": 0.00048370866122278465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Consider the two orderings. Suppose the intersection of the line \u2113iis blow line \u2113jon the left line, i.e.,\u2113i<l\u2113j, while this ordering is reverse in the right line, i.e., \u2113j<r\u2113i. In this situation the two lines\u2113iand\u2113jmust intersect somewhere in the search range R. Also, the pairs of lines that their ordering do not change in the two lists must not intersect in the search range R. As a result, the size of embraced vertices |Sin|is equal to the number \u201c inversions \u201d in a permutation.",
+    "technical_score": 0.0002853511775936938,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Counting the number of inversions in a permutation is a well-known textbook example for which the divide and conquer algorithm achieves the time complexity of O(nlogn)[19]. TheSplitfunction : Given the splitting line z1=v, the task of Splitfunction is to determine if optimal solution lies on the line , and if not, identify if it is to the left or to the right of the splitting line (i.e. in (Rs,v)or(v,Re)). Figure 10: Optimization function of a sample 2D QR problem with the first splitting-planeIn order to better describe our solution, consider the dual space being augmented by a third dimension, where the third dimension represents the QR optimization func- tion value (e.g., Figure 8). The curve defined in the new space is a convexshape with piece-wise plane faces.",
+    "technical_score": 0.00014469313081343793,
+    "citation_score": 1.9730881474559715e-05
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "The optimization value for the edges that connect the ver- tices inSform the boundaries for these plane faces (e.g., Figure 10). At the vertex where the optimal solution is located, the convexcurve (e.g., Figure 9) reaches the least possible value. The valuevfor variable A1is used to partition the augmented dual plane into three parts on z1axis, the half- plane (Rs,v), the line - [v,v]and the half-plane (v,Re). The first question to answer is if the optimal solution lies on the splitting-line? 11Our design of the Splitfunction for two dimensions relies on the convexity property of the optimization function (Theorem 1).",
+    "technical_score": 0.0001039604296351496,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "From the theorem, we can deduce that the optimization function is convex within the splitting-plane. Based on convexity, we deploy a divide-and-conquer approach to reach the minima in the plane. The details of our approach are described below. The vertical splitting plane intersects the dual lines at npoints in the plane. Recall that the ordering of these intersections is called the split order.",
+    "technical_score": 6.64791638116753e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "As the curve is convex in the plane, the point where the minima is reached must correspond to one of these npoints. At the minima-point the optimization function score is least within the plane. At a given point in the split order, the slope of the optimization function can be computed using the optimization scores of the neighboring points. Based on this score, the minima-point has a unique property that both the neighboring points in the split order must have larger optimization values (see Figure 9). Our approach is based on this property that the optimization scores in either direction of the minima-point are monotone and increasing.",
+    "technical_score": 0.00030864961786756883,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Note that the slopes on either side keep growing in magnitude but have opposite signs. Our divide-and-conquer approach uses a binary search with two pointers on either end. The sign of the mid-vertex\u2019s slope is used as a marker to update the two ends. The binary search concludes when we have reached a point where the slope on either side have different signs. The neighborhood of the minima-point can be used to determine if it is the global minima.",
+    "technical_score": 8.686303246468228e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "If all points in the neighborhood have a higher optimization value than the minima-point, then it is a global minima. If not, at least one point in the neighborhood must have a lower optimization value. We use this neighborhood property to determine the optimum interval which contains the optimum point. Consider the line (lines resp.) that has (have resp.) intersected with the splitting-line at the minima-point. In order to obtain the neighborhood of these points, we compute the intersection of these lines with the remaining n\u22121dual lines.",
+    "technical_score": 0.00041447128681240284,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "The intersections (vertices) that are closest to the splitting-line on either side are considered as its neighborhood. If the optimization value of all of these neighborhood points is greater than the minima-point in the plane then minima-point is a global minima. If the current point is not a global minima, then the optimization scores on one side must be strictly greater in any direction. That direction along with the plane [v,v]are discarded. The pseudocodes of Splitfunction, BinarySearch2D , and ComputeIntervals are provided in Appendix E, in Algorithms 5, 2, and 3, respectively.",
+    "technical_score": 7.448693281711223e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Theorem 4. The expected time complexity of RandomizedQR in two dimensions is O(nlog2(n)).5 4.3",
+    "technical_score": 1.845482836723553e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we extend Splitfunction and ConstrainedSampling to three and higher dimen- sions. Splitfunction : Given a hyperplane in ddimensions ( zi=v), the key question that Splitfunction has to answer is: does the (global) optimal solution lie on the splitting-hyperplane? If not, does it lie to left of the splitting-plane or the right? To answer this question, our approach uses a property that captures the relation between hyperplanes in ddimension and d\u22121dimensional sub-spaces. A hyperplane in ddimensions is a sub-space with d\u22121dimensions.",
+    "technical_score": 0.0036220671585240533,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "If dwas 3, then the Splitfunction would want to know the point in the plane where the optimization function is the smallest. But this is exactly the QR problem in 5The proof is provided in Appendix D 12two dimensions. Similar observations apply for higher dimensions as well. Hence, as a first step, our solution to the Splitfunction in ddimensions can reuse the RandomizedQR algorithm in d\u22121 dimensions to find the optimal solution within the plane. Once a optimal solution within the ddimensional splitting-plane is computed, the next task is to check if it is the global optima.",
+    "technical_score": 0.0017461939365943878,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The approach is similar to the two dimensional Splitfunction. The neighborhood of the minima-vertex determines the interval that will be used for the next iteration ofRandomizedQR . Two vertices are neighbors if they share an edge in the skeleton graph S. Note that every vertex is formed by intersection of dhyperplanes. As edges in Sare segments of lines in the ddimensional space, two neighboring vertices must have d\u22121hyperplanes in common for them to be incident on an edge.",
+    "technical_score": 0.0009184480451422523,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Therefore, to compute the neighborhood of the minima-vertex, the/parenleftbigd d\u22121/parenrightbig=dlines that pass through the minima-vertex are computed. Consider a line lifor this explanation. Each intersection between liand the remaining n\u2212dplanes gives us a vertex. Among these vertices, the vertices which are closest to the splitting-plane on the left and right gives us the two neighboring vertices for the line li. Similarly, the neighbors along each of the dlines are computed.",
+    "technical_score": 0.0006320097356764027,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "There are a total of 2dneighboring vertices. For each of these vertices, optimization value is computed in linear ( O(nd)) time. If the optimization value of the minima-vertex is lower than all these 2dvertices, then it is a global minima. If there is a direction which has a lower optimization score, the hyperplane [v,v]and the other interval are discarded. The pseudocode of Splitfor three and higher dimensions is presented in Algorithm 7 in Appendix E.",
+    "technical_score": 0.0013208485782562965,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "ConstrainedSampling : The problem of sampling a vertex from the set of embraced vertices in higher dimensions is a much harder problem due to the exponential growth of the number of vertices with dimensions ( O(nd)). Our objective is to achieve a uniform sampling of vertices from the set of embraced vertices . The sampling technique we have devised resembles the approach designed for two dimensions. To obtain a vertex, we must sample a total of dhyperplanes. The intersection point is determined through a step-by-step process involving dsteps.",
+    "technical_score": 0.0016182248461031432,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "During each step, one of the remaining hyperplanes is sampled based on its respective weight. Therefore, in each step, it is necessary to calculate the weights required for the sampling process. First step : In the first step, the weight assigned to a hyperplane corresponds to the count of intersections it generates within the range R. To provide a clearer understanding of the process, consider a three-dimensional example. When examining the plane P1, the remaining planes are represented as lines (typically referred to as d\u22122dimensional objects).",
+    "technical_score": 0.00043767852736265826,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "A simple observation is that any intersection that involves a plane must occur within the range Ron that plane. For example, say planesP1,P2andP3intersected to form a vertex within the search interval R. This intersection vertex must lie on all three planes P1,P2andP3. Counting the number of Intersections on a plane has already been studied in the two dimensional ConstrainedSampling approach. Therefore, to determine the count of intersections a plane has within the range Rin three dimensions, the two-dimensional ConstrainedSampling method is utilized with the appropriate parameters.",
+    "technical_score": 0.0003414435971807534,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "In generalddimensional space, the ddimensional hyperplanes are d\u22121dimensional sub-spaces. As observed in the example of three-dimensional space, if a hyperplane Pihas an intersection within the rangeR, it must be located somewhere on Pi. Hence, we can invoke the ConstrainedSampling ind\u22121dimensional space. Whenever an intersection occurs, the counts of all the hyperplanes that have been a part of the intersection are incremented by one. Our approach for ConstrainedSampling inddimensions goes over each hyperplane and 13accounts for the intersections that happens on each hyperplane.",
+    "technical_score": 0.0002664028210896442,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Once all the intersections for a particular hyperplane Pihave been considered, Piis eliminated from the set of planes and is no longer taken into account for subsequent intersections. At the end of this process, all the hyperplanes are updated with their respective intersections counts. Based on these counts the first hyperplane is sampled. Second and later steps : The process of sampling the next hyperplane follows a similar procedure. In stepi,i\u22121hyperplanes have already been sampled.",
+    "technical_score": 0.00047058553265245907,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "The intersection of the sampled hyperplanes forms ad\u2212idimensional sub-space. There are a total of n\u2212d+ 1hyperplanes left to sample from. ConstrainedSampling from thed\u2212idimensions is used in a similar manner as the first step. The process of sampling these hyperplanes continues until all the dhyperplanes are sampled. This pseudo code is presented in Algorithm 6 in Appendix E.",
+    "technical_score": 0.0006914258239081726,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "Beyond two dimensions"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "Theorem 5. The expected time complexity of our RandomizedQR algorithm in higher dimensions (d\u22653) isO(dnd\u22121log2(n)).6 5",
+    "technical_score": 0.00041679683411326607,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Final remarks"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we studied the Quantile Linear Regression problem in two and higher dimensions. Our first contribution is the UpdateNeighbor subroutine which helps us update the optimization function efficiently ( O(d)) while navigating the neighboring vertices (intersection points) in dual space. We propose two strongly polynomial approaches to solve the QR problem. The k-set based approach is a parameter sensitive algorithm that enumerates the kthlevel of the arrangement while using the UpdateNeighbor subroutine to compute the optimization functions values. We prove that its time complexity is better than all known approaches for two dimensions.",
+    "technical_score": 0.02312949997023792,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Final remarks"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The problem of efficient enumeration of k-sets in higher dimensions is an open problem which can improve our time complexity our higher dimensions. Our second approach - RandomizedQR , is a randomized divide- and-conquer approach to the QR problem which splits the ddimensional arrangement into disjoint half-spaces and determining the half-space that contains the optimal solution. RandomizedQR is also proved to be more efficient than all existing approaches for 2and3dimensions including weakly polynomial approaches. RandomizedQR is faster than all existing strongly-polynomial approaches. The problem of designing a deterministic algorithm that efficiently finding a hyperplane inddimensions such that it splits the vertices in embraced vertices into two \u201cequal\u201d parts is an interesting open problem for future work.",
+    "technical_score": 0.012464657695028369,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Final remarks"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "6The proof is provided in Appendix D 14Appendix A",
+    "technical_score": 0.005274316050622522,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Linear Regression is a seminal approach in statistics and machine learning, used for building linear predictive models between a response (i.e., dependent) variable and one or more predictor (i.e., independent) variables. Linear regression is over two centuries old (dating back to Legendre and Gauss) and is often considered as the forerunner of modern machine learning [ 24]. We revisit two classical linear regression techniques: Ordinary Least Square Regression (OLS) and Quantile Regression (QR). Both build linear models but with different objective functions: in OLS, the objective is to minimize the mean squared error (i.e., \u21132norm) between the dependent variable and that predicted by the model; whereas in QR, the objective is to minimize the mean absolute error (i.e.,\u21131norm). Why Quantile Regression?",
+    "technical_score": 0.008716793535331877,
+    "citation_score": 0.0038241641835286264
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Historically, OLS has been much more widely used than QR. This is primarily because (as we will discuss shortly) QRis plagued by unacceptably high computational resource needs, whereas there exist extremely resource-efficient and scalable algorithms for building OLS models. Nevertheless, despite its computational advantages, OLS has a major limitation: OLS is not a robust model . It can be easily skewed in the presence of outliers in the data, which makes OLS a poor model of choice in several emerging applications where the robustness of the predictive model is critically needed. On the other hand, QR is a robust model .",
+    "technical_score": 0.009264865200261572,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "In simple terms, the comparison of OLS and QRis analogous to the \u201cmean versus median\u201d comparison mentioned above. That is why QRis considered for applications where model robustness in the presence of outliers and skew in the data is critically needed, such as healthcare [ 23], ecology [ 3], and others [ 8]. Beyond robustness, another attraction of quantile regression is that it is advantageous when conditional quantile functions are of interest, which has application in uncertainty quantification and conformal prediction in AI systems as well as approximate query processing in databases [ 25,26]. In fact, if the scalability and computational efficiency of QRcould be significantly improved, its applicability would increase dramatically across an even more broad range of applications [3]. Computational Challenges of Quantile Regression: The computational challenges of QRare best highlighted by the following observations.",
+    "technical_score": 0.004264254404831409,
+    "citation_score": 0.00391235287770969
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Consider a database with npoints and dattributes, of which one attribute is the response (i.e., independent) variable, and the rest are predictor (i.e., dependent) variables. Typically n>>din most data fitting problems. For OLS, since the objective function to be minimized (least square) is quadratic and differentiable, this yields a highly scalable training algorithm with time complexity of O(nd3)time, and space complexity of O(d2)[6]. Note that the time complexity is effectively linear in nfor bounded dimensions. In contrast, the objective function in quantile regression is defined by the \u21131norm, i.e., sum of the absolute error , which has \u201cpiecewise linear\u201d characteristics.",
+    "technical_score": 0.003268726066661127,
+    "citation_score": 0.0023795483068024493
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Hence, its optimization is much more challenging. The state-of-the-art approach for QR[24] applies a reparametrization technique to convert the problem into a huge linear programming formulation involving nlinear constraints and (n+ 2d)variables. Solving these linear programs requiresignificantlymoreresources(timeandmemory)comparedtoOLS[ 24],making QRprohibitive for all but small-to-moderate sized datasets. This need for extensive computational resources has been one of the main reasons for the relative lack of adoption of QRin emerging Big Data applications. 15State of Art Techniques and Tools: Quantile Regression is a well-studied research problem.",
+    "technical_score": 0.001546177355081792,
+    "citation_score": 0.0026295760621072467
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "In the appendix (Section B), we provide a more detailed overview of the literature, but highlight a few key works here. Two prominent classes of exact techniques to solve the QRproblem are exterior-point based [1] andinterior-point based [24] approaches. Barrodale and Robert ( BR) proposed a simplex-based exterior point technique [ 1], which moves from one exterior point (i.e., a \u201ccorner\u201d of the feasible polytope defined by the linear program) to another exterior point, in the direction of steepest gradient descent. The core idea of BRoriginates from Edgeworth\u2019s bi-variate weighted median based 1888 approach [ 13]. The run time of this algorithm is O(n2), which is still the state of the art algorithm for two dimensions (i.e., d= 2).",
+    "technical_score": 0.001637574619945611,
+    "citation_score": 0.001580785694081304
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "All the exterior points based approaches are only suitable for small problem instances with around 1000points and few attributes [ 24]. Portnoy and Koenkar later proposed a primal-dual interior point method ( IPM) which finds the optimal solution by minimizing the difference between primal and dual objective cost [ 24]. This method is reasonably fast for larger input sizes in practice, but worst-case theoretical runtime complexity is O(n3.5log 1/\u03f5) where\u03f5is the desired accuracy [29]. Moreover, BRandIPMare extremely memory hungry, hence not suitable for big data problem instances under resource constraints. B",
+    "technical_score": 0.0002902176685714262,
+    "citation_score": 0.001491264396887335
+  },
+  {
+    "section_path": [
+      "Related work and discussion on state of the art",
+      "Existing State-of-Art Exact Approaches"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we describe a few properties of QR, connection to linear programming, and existing exact techniques to solve problem. There has been extensive research conducted on QRover the last two hundred years [ 2]. Wagner [28] identified the connection between linear programming and \u21131-regression . A reparameterization technique[ 20] is used to convert the QRproblem into a linear programming problem. The linear constraints of a linear programming problem create a convex polytope.",
+    "technical_score": 0.00765313755386295,
+    "citation_score": 0.0037398531653972124
+  },
+  {
+    "section_path": [
+      "Related work and discussion on state of the art",
+      "Existing State-of-Art Exact Approaches"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Solutions to the QRproblem are based on utilizing the exterior (corner) points or interior points of this convex polytope. We give a brief overview of prior algorithms for QR. The focus of QRresearch has been primarily on how to make the algorithms faster, with the eventual goal of trying to make it an alternative toOLSregression. There have been two broad categories of techniques, exact techniques (where the objective function is minimized) and approximate/heuristic techniques. There is a wide body of techniques that belong to the latter category, e.g., modifying the original objective function to achieve a faster performance [ 7,30], as well as other approximation approaches [ 14,22,31].",
+    "technical_score": 0.0048491062192792065,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related work and discussion on state of the art",
+      "Existing State-of-Art Exact Approaches"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "However, since our focus in this paper is to consider regression as a robust and trustworthy technique, we are only interested in exact approaches. Prior research on exact quantile regression techniques can be divided into two categories: exterior point based approaches andinterior point based approaches . In 1888, Edgeworth designed an exterior point approach [ 13] to solve 2-dimensional \u21131-regression. A modern implementation of Edgeworth\u2019s technique that utilizes a linear-time weighted median finding algorithm as subroutine can solve 2-dimensional QRinO(n2)time. Barrodale and Roberts ( BR) [1] designed a simplex algorithm- based approach for any dimension that starts from an exterior point and moves in the direction of the steepest gradient descent of the objective function.",
+    "technical_score": 0.024826120706206736,
+    "citation_score": 0.00968762224197758
+  },
+  {
+    "section_path": [
+      "Related work and discussion on state of the art",
+      "Existing State-of-Art Exact Approaches"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "This algorithm runs in O(n2)time for 2-dimensional QR. However, these types of approaches are not very scalable for large datasets. Portnoy and Koenkar [ 24] introduced a primal-dual interior point method ( IPM) solution for QR. In this approach, the QRproblem is solved using primal and dual space both simultaneously. IPM adds a barrier function in the objective function, which helps explore the the solutions in interior points.",
+    "technical_score": 0.004491835337522887,
+    "citation_score": 0.002531162245634367
+  },
+  {
+    "section_path": [
+      "Related work and discussion on state of the art",
+      "Existing State-of-Art Exact Approaches"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "The algorithm stops when the primal and dual objective difference is smaller than a given small threshold \u03f5. The worst case run time complexity for IPMisO(n3.5log 1/\u03f5)[29]. Although IPMis most widely used QRtechnique in practice, it is not yet ready to handle big data. The detailed related works can be found in Appendix B. 17C",
+    "technical_score": 0.003431184521736116,
+    "citation_score": 0.0008073375345261449
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-Neighbor-Baseline: Algorithm Based on Neighbor Exploration"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we introduce QR2D-Neighbor-Baseline algorithm that utilizes the Up- dateNeighbor subroutine. Exploring the vertices in the complete skeleton graph presents us with an interesting algorithm to obtain the optimal QRline. Let us consider for simplicity that a GetNeighbors oracle exists that can quickly provide us with the neighbors of a given vertex. We can start from any of the O(n2)vertices and explore neighboring vertices around it in a Breadth First Search (BFS) manner while updating the aggregate entities and objective cost. While for simplicity of understanding, we choose BFS for exploration, it does not change the analysis that follows.",
+    "technical_score": 0.016551028085336934,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-Neighbor-Baseline: Algorithm Based on Neighbor Exploration"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We stop when no new neighboring vertices with a lower optimization value are found. The optimal QR hyperplane is the vertex with the smallest optimization function among the explored intersection points. Note that a naive way to build a GetNeighbors Oracle is to compute the O(n2)vertices of the complete skeleton graph beforehand. Computing and storing intersection points consumes O(n2) space andO(n2)time. Often theO(n2)space is prohibitive in practice.",
+    "technical_score": 0.006921165587207223,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-Neighbor-Baseline: Algorithm Based on Neighbor Exploration"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "As the dimensions grow beyond 2, this neighborhood-based approach is prohibitive as there are a total of O(nd)points. Exploring these intersection points is far more expensive than the IPMfor larger dimensions. This algorithm provides an approach that explores the neighbors of vertices until it reaches the optimal solution. While this approach produces a similar complexity as the exterior point method",
+    "technical_score": 0.004931916644329697,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-k-Set-Baseline: -Set Based Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we introduce QR2D-k-Set-Baseline algorithm that utilizes the computational geometry concept of k-set. Recall from Section 2.3 that a k-set is a subset containing kpoints that can be separated from the rest of the n\u2212kpoints by a hyperplane. k-sets have often been used in various computational geometry settings to solve numerous problems. An interesting observation that can be made on the optimal solution QRhyperplane is that it separates the npoints into \u03c4nand(1\u2212\u03c4)npoints [24]. While there are many hyperplanes that separatenpoints into two parts (with \u03c4nand(1\u2212\u03c4)npoints), we are interested in the specific hyperplane that provides the lowest optimization score.",
+    "technical_score": 0.010895855103713317,
+    "citation_score": 0.0032870291479259713
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-k-Set-Baseline: -Set Based Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "As k-sets separate the points into kandn\u2212k points, the optimal hyperplane must be one of the k-set separating hyperplanes such that k=\u03c4n. The enumeration of all k-sets can also be viewed as a walk along the k-level of an arrangement. Hence, the optimal hyperplane can be found along the vertices encountered during the walk on the k-level of the arrangement. TheQRproblem in 2 dimensions can utilize this property (the result of Theorem 2). The optimal hyperplaneH\u2217in primal space is represented by a point F(H\u2217)in dual space.",
+    "technical_score": 0.006491926919877689,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-k-Set-Baseline: -Set Based Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "This point is one of the vertices in the complete skeleton graph corresponding to the k-level arrangement in the dual space. One approach to solving this problem would be to enumerate the vertices corresponding to thek-level of the arrangement and, for each vertex, compute the value of the optimization function. We first present QR2D-k-Set-Baseline algorithm that makes use of the concept of k-sets without the use of aggregate entities to solve the problem. This approach has to compute the value 18(error) of the optimization function for a vertex that corresponds to a dual point pin thek-level arrangement. Computing the optimization function for each of these vertices involves aggregating the error contribution of each of the npoints in the primal space using the line F\u22121(p).",
+    "technical_score": 0.003924352176576981,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-k-Set-Baseline: -Set Based Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Note that each of the computations consumes O(n)time. For each of the vertices corresponding to the dual points in the k-level arrangement, the naive error computation is repeated, and the optimal line l\u2217 corresponds to that line F\u22121(p)with the least error. Time complexity : For a given vertex pin thek-level arrangement, a naive approach to compute the error without making use of UpdateNeighbor subroutine takes a total of O(n)time. The upper bound on the intersection points in k-level of an arrangement is bounded by O(nk1/3). Hence, the total time taken for the naive approach is O(n2k1/3)for a given \u03c4(k=\u03c4n).",
+    "technical_score": 0.0025113503692441577,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "QR2D-k-Set-Baseline: -Set Based Algorithm"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Ask=n/2when \u03c4= 1/2, the worst case time complexity is O(n7/3). C.3",
+    "technical_score": 0.0011300452992689628,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "Illustration of UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we illustrate how we can reduce the computational cost while moving from one vertex to a neighboring vertex of the complete skeleton of the arrangement by maintaining only a few aggregate values. For this illustration of UpdateNeighbor subroutine, we use our running example from Table 3 with \u03c4= 0.5. Figure 11: Update OperationAs explained in Section 2, a vertex in the com- plete skeleton graph (point in dual space) refers to aQRhyperplane in primal space. The optimal solution lies in one of these vertices in the com- plete skeleton graph. Let Sbe a complete skeleton graph constructed from Figure 4 and P(i,j)be any vertex constructed from the intersection of dual lineTiandTj.P(1,3)andP(1,4)are neighbors in the arrangement which will be used in our illustra- tion.",
+    "technical_score": 0.011999444016421721,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "Illustration of UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Figure 11 shows the primal representation ofP(1,3)andP(1,4)where each represents a line. From the definition of residual set in Section 2, I+={1,3,4,7}andI\u2212={2,5,6}forP(1,4). We calculate the sum along X-axis andY-axis for these two group of points and call these aggregate values atP(1,4). Given these aggregate values for P(1,4), we would like to answer the following ques- tions as steps of our demonstration: (i) How to calculate the objective values at P(1,4)? (ii) How to calculate the aggregate values at P(1,3)fromP(1,4)inO(1)?",
+    "technical_score": 0.006115758319630348,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "Illustration of UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "and (iii) If aggregate values are known forP(1,3), how to calculate the objective value at P(1,3)? As shown in Figure 11, P(1,4)passes through input points t1andt4in primal space and its parameter vector is \u03b2= [1.19,0.71]. For alli\u2208I+, let/summationtextxi,/summationtextyibe the sum along X and Y axis respectively. Similarly, for all j\u2208I\u2212, let/summationtextxj, and/summationtextyjbe the sum along X and Y axis respectively. Given the aggregate values for P(1,4), the objective cost LatP(1,4)can be calculated using following process.",
+    "technical_score": 0.0028652380875819803,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "Illustration of UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "19/summationdisplay ri= (/summationdisplay yi\u2212/summationdisplay xi\u00d7\u03b2[1]\u2212\u03b2[0]\u00d7|I+|) = 7.52 /summationdisplay rj= (/summationdisplay xj\u00d7\u03b2[1] +\u03b2[0]\u00d7|I\u2212|\u2212/summationdisplay yj) = 3.79 L= 0.5\u00d7/summationdisplay ri+ (1\u22120.5)\u00d7/summationdisplay rj= 5.65 Now, we will try to answer how we will update the aggregate values at P(1,3)fromP(1,4). As shown in Figure 11, only one input point t4changes its residual sign from positive to negative in P(1,4)toP(1,3)transition. For P(1,3),I+={1,3,7}andI\u2212={2,4,5,6}. If we want to calculate the aggregate values at P(1,3)fromP(1,4), the information of input point t4can be utilized in the following fashion./summationdisplay yi=/summationdisplay yi\u2212t4.y= 12.86,/summationdisplay yj =/summationdisplay yj+t4.y= 1.86 /summationdisplay xi=/summationdisplay xi\u2212t4.x= 2.47,/summationdisplay xj =/summationdisplay xj+t4.x= 1.27 Earlier, we have shown how to calculate objective cost from aggregate values at P(1,4). Similarly, the objective cost for P(1,3)can be calculated using the aggregate values.",
+    "technical_score": 0.002045712512983031,
+    "citation_score": 0.0014439165477258607
+  },
+  {
+    "section_path": [
+      "Details of k-set based two dimensional QR problem",
+      "Illustration of UpdateNeighbor subroutine"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "If the aggregate values at P(1,4)are known, the aggregate values and objective cost at P(1,3)can be calculated in O(1)time and space. Although our illustration is in 2-dimension, our UpdateNeighbor subroutine works in any dimension. D",
+    "technical_score": 0.003941599821583204,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Theorem3 .Given the aggregate values \u22001\u2264m\u2264d/summationtext i\u2208I+Xi[m],/summationtext i\u2208I+yi,/summationtext j\u2208I\u2212yj,\u22001\u2264m\u2264d/summationtext j\u2208I\u2212Xj[m] for a vertex in the complete skeleton graph, the aggregate values can be updated in O(d)time when we move to a neighboring vertex. Proof.Any vertex in the complete skeleton graph represents a hyperplane in the primal space which divides the set of points in Dinto two sets, I+andI\u2212. When we move from a vertex to its neighboring vertex, the sets I+andI\u2212change in one of three ways, \u2022A point in primal space moves from above the hyperplane to below the hyperplane i.e., a point moves from I+toI\u2212. \u2022A point in primal space moves from below the hyperplane to above the hyperplane i.e., a point moves from I\u2212toI+. \u2022The hyperplane moves such that a point from above is exchanged with a point from below.",
+    "technical_score": 0.019091796723491244,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In such a case, the number of points above the hyperplane remains the same, i.e., a point from I+is swapped with a point in I\u2212. Note that the kin this case may not be \u03c4(1\u2212n). For each of the three cases, we prove that the aggregate values can be updated in O(d)time. For the rest of this proof, let the new sets after the update be represented by U+andU\u2212. Let us consider the first case, where the hyperplane moves such that a point moves from the set I+toI\u2212, i.e., a point in primal space which was above the hyperplane (vertex) now lies below the 20neighboring hyperplane (neighbor vertex).",
+    "technical_score": 0.007126398917232998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Let Xtbe the point that is involved in the transition. As we know the details of point Xt, we can remove the contribution of XttowardsI+and add the contribution to aggregates entities of I\u2212. The formulae for the update are as below, /summationdisplay i\u2208U+yi=/summationdisplay i\u2208I+yi\u2212yt \u22001\u2264m\u2264d/summationdisplay i\u2208U+Xi[m] =/summationdisplay i\u2208I+Xi[m]\u2212Xt[m] /summationdisplay i\u2208U\u2212yi=/summationdisplay i\u2208I\u2212yi+yt \u22001\u2264m\u2264d/summationdisplay i\u2208U\u2212Xi[m] =/summationdisplay i\u2208I\u2212Xi[m] +Xt[m] As there are 2d+ 2equations, each of which takes O(1)time to update, the total time taken to update the aggregate values is O(d). The second case, where a point in primal space has moved from below the hyperplane (vertex) to above the neighboring hyperplane (neighbor vertex), can be updated similarly. Let Xtbe the point that is involved in the transition.",
+    "technical_score": 0.016344035340649855,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "The formulae for the update operation for the second case are, /summationdisplay i\u2208U+yi=/summationdisplay i\u2208I+yi+yt \u22001\u2264m\u2264d/summationdisplay i\u2208U+Xi[m] =/summationdisplay i\u2208I+Xi[m] +Xt[m] /summationdisplay i\u2208U\u2212yi=/summationdisplay i\u2208I\u2212yi\u2212yt \u22001\u2264m\u2264d/summationdisplay i\u2208U\u2212Xi[m] =/summationdisplay i\u2208I\u2212Xi[m]\u2212Xt[m] With 2d+ 2equations, each of which take O(1)the overall time complexity is O(d)time. Let us consider the third case, where the hyperplane moves such that a point from above is exchanged with a point from below. In this case, a point from I+is swapped with a point in I\u2212. Let Xsbe the point that is moved from I+toI\u2212, andXtbe the point moved from I\u2212toI+. As we know the details of points XsandXt, we can remove the contribution of XstowardsI+and add the contribution of Xtto it.",
+    "technical_score": 0.012777794371903014,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "We perform vice verse operation to I\u2212. The formulae for the update are as below, /summationdisplay i\u2208U+yi=/summationdisplay i\u2208I+yi+yt\u2212ys \u22001\u2264m\u2264d/summationdisplay i\u2208U+Xi[m] =/summationdisplay i\u2208I+Xi[m] +Xt[m]\u2212Xs[m] /summationdisplay i\u2208U\u2212yi=/summationdisplay i\u2208I\u2212yi\u2212yt+ys \u22001\u2264m\u2264d/summationdisplay i\u2208U\u2212Xi[m] =/summationdisplay i\u2208I\u2212Xi[m]\u2212Xt[m] +Xs[m] With a total of 2d+ 2equations, each of which take O(1), the overall time complexity is O(d)time. Hence, proved. 21Lemma 1 .QReg2D has a time complexity of O(n4 3log1+an), wherea>0is an arbitrarily small constant. Proof.For the first k-set obtained through the enumeration, the optimization function and aggregate values need to be calculated by a linear scan over the points which takes O(n)time.",
+    "technical_score": 0.010711461718546306,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Updating the optimization function value and aggregate values as we explore neighboring k-set takesO(1) time. The points in the k-level of the arrangement can be computed using a sweep Line algorithm [4,5,12] inO(nlogm+mlog1+an)wheremis the number of k-set anda>0is an arbitrarily small constant. The upper bound on total number of k-sets is given by Dey [ 9],O(nk1/3). This brings the overall time taken to O(nk1/3log1+an). Askis a percentage of n, the overall time complexity O(n4/3log1+an).",
+    "technical_score": 0.002346017764964733,
+    "citation_score": 0.0015640118433098223
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Hence, proved. Lemma 2 .QReg2D with randomized k-set enumeration [ 4] has an expected time complexity of O(n4 3). Proof.This proof follows along similar lines to the proof of Lemma 1. However, if we use a randomized incremental algorithm instead of the deterministic algorithm, the enumeration can be done inO(nlog (n)+nk1/3)expected time (Corollary 4.4 [ 4]). The points in the k-level of the arrangement can be computed using Randomized Incremental algorithm[ 4] inO(nlog (n)+nk1/3) time (Corollary 4.4).",
+    "technical_score": 0.004294340106728941,
+    "citation_score": 0.002415566310035029
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "This brings the overall time taken to O(n4/3). Lemma 3. ConstrainedSampling is an unbiased sampler for Sin. Proof.LetS(i) inbe the number of intersections in Sinthat involve \u2113i. The probability of selecting each line\u2113iis Pr(\u2113i) =|S(i) in| 2|Sin| After selecting a line \u2113i, the probability that a specific intersection Pjinvolving it is1 |S(i) in|.",
+    "technical_score": 0.007345989926743106,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Now, for an intersection Pj\u2208Sin, let\u2113iand\u2113kbe the dual lines that involve it. The probability of sampling Pjis Pr(Pj) =|S(i) in| 2|Sin|\u00d71 |S(i) in|+|S(k) in| 2|Sin|\u00d71 |S(k) in| =1 |Sin| Theorem 4 The expected time complexity of RandomizedQR in two dimensions is O(nlog2(n)). Proof. RandomizedQR algorithm relies on two important functions - Splitfunction and Con- strainedSampling . For this proof, we first analyze the running time of these two approaches and in a final step use these to prove the run time of RandomizedQR .",
+    "technical_score": 0.0071737347814456055,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Splitfunction time complexity : The Splitfunction for two dimensions has two main parts (i) Binary Search routine, (ii) Update R. The binary search routine starts from an array of intersections 22with length n. In each step, the optimization function value is computed for the mid-point, which consumes linear time ( O(n)). As binary search finds the answer in O(log (n))steps, the total time consumed by the binary search is O(nlog (n)). Once the optimum in the plane zi=vis computed, the intersections of the corresponding dual line with other n\u22121lines are obtained in linear time.",
+    "technical_score": 0.0054254316148406295,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Computing the optimization value for the neighboring intersections can be performed in ( O(n)) time. Thus the total time complexity of Split function isO(nlog (n)). Time complexity of ConstrainedSampling : The first step in the weighted sampling strategy is to determine the weights of the dual lines. Our approach internally uses the inversion counting problem to obtain the weights. The inversion counting problem is well known, and runs in time O(nlog (n)).",
+    "technical_score": 0.005686585032328277,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "These weights are then used to sample the first dual line. In linear time, the intersections of the sampled line with all the other n\u22121lines are obtained. One of these lines that satisfy Ris sampled. Thus, the time complexity is dominated by the inversion counting problem. The sum of the time complexities of the divide and conquer steps of our algorithm is O(nlog (n)).",
+    "technical_score": 0.0046454288119192845,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Let the time taken by this single divide-and-conquer step be denoted entity by T(n,2)(where 2 represents the number of dimensions). Our proof follows along similar lines as the Randomized Quick-Sort algorithm. Let the interval containN=n2vertices ofS. The recurrence for our problem is given below, E[F(n,2,N)] =1 NN/summationdisplay j=1E[max (F(n,2,N\u2212j),F(n,2,N\u2212(N\u2212j)))] + \u0398(T(n,2)) whereN\u2212jrepresents the removal of jvertices from the range. Assume that the E[F(n,2,R)] = O(T(n,2)log (n))(i.e.E[F(n,2,N)] =c0log (n)T(n,2)).",
+    "technical_score": 0.00466361336872003,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Note that one of the Nrecursive calls consumesO(T(n,2)time as it corresponds to the optimal hyperplane. c0log (n)T(n,2)?<c 1T(n,2) +1 NN\u22121/summationdisplay j=1c0log (n)T(n,2) c0log (n)T(n,2)?<c 1T(n,2) +N\u22121 Nc0log (n)T(n,2) By choosing the right value for constants c0andc1, the above inequality can be satisfied. Thus, the expected run-time of our RandomizedQR approach isO( log (n)T(n,2) )=O(nlog2(n)). Theorem 5 The expected time complexity of our RandomizedQR algorithm in higher dimen- sions (d\u22653) isO(dnd\u22121log2(n)). Proof.",
+    "technical_score": 0.0030422192976252054,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "RandomizedQR algorithm depends on Splitfunction and ConstrainedSampling . We explore the time complexity analysis of these two methods before the analyze the RandomizedQR functioninddimensions.Forthisprooflet F(n,d,N )denotethetimecomplexityof RandomizedQR function in ddimensions, where N=ndis the number of vertices in S. Note that all the terms used in this proof are in expected time. Splitfunction : The Splitfunction in ddimensions calls the d\u22121dimensional RandomizedQR function. Additionally, the dhyperplanes are used to obtain 2dneighboring intersections (vertices).",
+    "technical_score": 0.007631850926423063,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "Each of the/parenleftbigd d\u22121/parenrightbighyperplanes gives us a line in the ddimensional space. Each of these lines is 23then used to compute the n\u2212dintersections (vertices) with the remaining planes. The total time complexity to compute the intersections is 2nd+d2=O(nd). Additionally, the optimization value for each of the 2dneighboring vertices is computed. As each computation consumes ndtime, the total time taken for these computations is O(nd2).",
+    "technical_score": 0.00278499958920897,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Hence, the total time complexity of Split function is F(n,d\u22121,N) +nd2. ConstrainedSampling : The ConstrainedSampling function uses nrecursive lower dimensional ConstrainedSampling calls to obtain the weights of each hyperplane. Using these weights the first hyperplane is sampled. Then n\u22121recursive calls are made to d\u22122dimensional ConstrainedSam- plingcalls to obtain the weights of each hyperplane. The process of obtaining weights and sampling continues until dhyperplanes are sampled which intersect at a vertex inside R.",
+    "technical_score": 0.003990952267732673,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "LetSrepresent the time complexity of ConstrainedSampling inidimensions ( S(n,i)). The recursive calls made by ConstrainedSampling inddimensions can be captured with the equation/summationtextd\u22121 i=0(n\u2212i)S(n,d\u2212i). For two dimensions, the time complexity of ConstrainedSampling isS(n,2) =nlog (n). S(n,d) =d\u22121/summationdisplay i=0(n\u2212i)S(n,d\u2212i) S(n,d) =nS(n,d\u22121) +d\u22122/summationdisplay i=0(n\u22121\u2212i)S(n\u22121,d\u22121\u2212i)<nS (n,d) +d\u22122/summationdisplay i=0(n\u2212i)S(n,d\u22121\u2212i) S(n,d)<nS (n,d\u22121) +d\u22122/summationdisplay i=0(n\u2212i)S(n,d\u22121\u2212i) But we know that S(n,d\u22121) =d\u22122/summationdisplay i=0(n\u2212i)S(n,d\u22121\u2212i) Using the above expression we get, S(n,d)<nS (n,d\u22121) +S(n,d\u22121) = (n+ 1)S(n,d\u22121)\u2208O(n S(n,d\u22121)) For three dimensions, using the above equation we get S(n,3) =O(n2log (n)). Inddimensions, we getS(n,d) =O(nd\u22121log (n)).",
+    "technical_score": 0.004021825196288491,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "As the divide-and-conquer steps are performed in succession, let us consider a term which is the sum of the time complexities of these two functions. Let T(n,d) =F(n,d\u22121,N) +nd\u22121log (n) denote the term that corresponds to the sum of these two functions. Similar to the proof for two dimensions, we use N=ndbe the vertices in R. LetF(n,d,N )be the time complexity of RandomizedQR inddimensions. F(n,d,N ) =T(n,d) +N\u22121/summationdisplay i=11 NT(n,d) =T(n,d) +N\u22121 NT(n,d) Assume that each T(n,d)call consumes F(n,d,N ) log (N)time.",
+    "technical_score": 0.005214056466454209,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Proofs of Theorems and Lemmas"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "c0log (n)T(n,d)?<c 1T(n,d) +1 NN\u22121/summationdisplay j=1c0log (n)T(n,d) c0log (n)T(n,d)?<c 1T(n,d) +N\u22121 Nc0log (n)T(n,d) 24Note that the expectation of a product of random variables is the product of the expectation of the two random variables. Similar to the proof for two dimensions, by choosing right constants for c0 andc1we can satisfy the above inequality. The overall time complexity can be written in the form, F(n,d,N ) = log (N)T(n,d) =dlog (n)T(n,d) F(n,d,N ) =dlog (n)(F(n,d\u22121,N) +nd\u22121log (n)) F(n,d,N ) =dlog (n)F(n,d\u22121,N) +dnd\u22121log2(n) The equation for dimension 3gives usF(n,3,N) =dlog3(n)n+dn2log2(n)=O(dn2)log2(n). Similarly, for general d, the termdnd\u22121log2(n)grows at a faster rate compared to dlog (n)F(n,d\u2212 1,N). Hence the overall complexity is O(dnd\u22121log2(n)) E",
+    "technical_score": 0.0032114630694049487,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Pseudocodes"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Algorithm 1 QReg2D 1:Input:Data setD,\u03c4 2:Output: Parameters for optimal line H\u2217 3:k\u2190(1\u2212\u03c4)n 4:Yp=Ym =Xp=Xm = 0{Initialize aggregate sums to 0. Yp:/summationtextyi, Xp:/summationtextXifori\u2208I+Ym:/summationtextyj,Xm:/summationtextXjforj\u2208I\u2212} 5:OptValue\u2190\u221e;OptLine\u2190\u2205 6:Obtaink-level arrangement points P 7:Calculate the aggregate values Ym,Xm,Yp,Xp usinglfor the first point in P 8:forpinPdo 9:l\u2190F\u22121(p){y=mx+c=\u21d2l\u2190[m,c]} 10:Find outXsandXtthat swapped from I+andI\u2212respectively 11:UpdateYm,Xm,Yp,Xpusing UpdateNeighbor subroutine 12:Value\u2190\u03c4(Yp\u2212Xp\u00d7l[1]\u2212l[0]\u00d7k) + (1\u2212\u03c4)(Xm\u00d7l[1]\u2212l[0]\u00d7(n\u2212k)\u2212Ym) 13:ifValue<OptValue then 14:OptValue\u2190LineValue ;OptLine\u2190l 15:end if 16:end for 17:returnOptLine 25Algorithm 2 BinarySearch2D 1:Input:Point setD,\u03c4, intersections points 2:Output: Best score in plane zi=v, corresponding intersection point 3:low\u21900;high\u2190n;OptScore\u2190\u221e 4:whilelow\u0338=highdo 5:mid\u2190low+high 2 6:MidScore\u2190ComputeScore (D,\u03c4,\u03b2 =points [mid]) 7:NieghborScore\u2190ComputeScore (D,\u03c4,\u03b2 =points [mid+ 1]) 8:ifMidScore>NieghborScore then 9:high\u2190mid\u22121;OptScore\u2190NieghborScore 10:else 11:low\u2190mid;OptScore\u2190MidScore 12:end if 13:end while 14:returnOptScore , vertex inScorresponding to points [low] Algorithm 3 ComputeInterval 1:Input:Point setD,\u03c4, search interval R= (Rs,Re), attributeA\u2032, vertexOptLine inSwith the least scoreOptScore 2:Output: Updated search interval R 3:Compute intersections of OptLine with the other n\u22121dual lines 4:LetLeftLine andRightLine be the lines which intersect with OptLine immediately to the left and to the right of zi=v 5:score 1=ComputeScore (Intersect (OptLine,LeftLine )) 6:score 2=ComputeScore (Intersect (OptLine,RightLine )) 7:ifscore 1<OptScore then 8:R\u2190(Rs,v) 9:else ifscore 2<OptScore then 10:R\u2190(v,Re) 11:else 12:R\u2190[v,v] 13:end if 14:returnR 26Algorithm 4 RandomizedQR approach 1:Input:Point setD,\u03c4 2:Output: Parameters for optimal hyperplane H\u2217 3:Choose an arbitrary variable A\u2032and setR\u2190(\u2212\u221e,\u221e) 4:whiletruedo 5:Pj\u2190ConstrainedSampling (F(D),R,A\u2032) 6:result\u2190Split(D,\u03c4,Pj[A\u2032]) 7:ifPjis optimal then return Pj 8:else ifinterval (Rs,Pj[A\u2032])contains optimal thenR\u2190(Rs,Pj[A\u2032]) 9:elseR\u2190(Pj[A\u2032],Re) 10:end while Algorithm 5 Splitfunction for two dimensions 1:Input:Point setD,\u03c4, vertexPjinS, search interval R, variableA\u2032 2:Output: Updated search interval R 3:v\u2190Pj[A\u2032] 4:points\u2190Intersections (zi=v,F(D)) 5:OptScore, LineOpt \u2190BinarySearch2D (D,\u03c4,points) {LineOpt is the dual line with the least score in plane zi=v} 6:return ComputeInterval (D,\u03c4,R,A\u2032,OptLine,OptScore ) {Update the interval Rbased on the neighboring intersections to OptLine aroundzi=v} Algorithm 6 ConstrainedSampling for three and higher dimensions 1:Input:Point setD,\u03c4, search interval R, variableA\u2032, dimension d 2:Output: Sampled vertex P 3:Sampled\u2190[]{Empty list} 4:fori= 1toddo 5:Initialize sampling weights to0s 6:forj\u2208Ddo 7:Create datasetD\u2032fromDbased on the intersections with sampled hyperplanes 8:Updateweights based on ConstrainedSampling (D,\u03c4,R,A\u2032,d\u2212i) 9:end for 10:SampledPlane\u2190Sample fromDusingweights 11:D\u2190D\\SampledPlane 12:AppendSampledPlane intoSampled 13:end for 14:return Intersect (Sampled ) 27Algorithm 7 Splitfunction for three and higher dimensions 1:Input:Point setD,\u03c4, vertexPjinS, search interval R, variableA\u2032 2:Output: Updated search interval R 3:v\u2190Pj[A\u2032] 4:Create point setD\u2032fromDby intersection with hyperplane zi=v 5:OptPoint,OptValue \u2190RandomizedQR (D\u2032,\u03c4) 6:neighbors\u2190Compute neighbors of OptPoint 7:forneighbourinneighbors do 8:NeighborVal\u2190ComputeScore (D,\u03c4,neighbor ) 9:ifNeighborVal<OptVal then 10:returnInterval containing neighbor 11:end if 12:end for 13:return [v,v]",
+    "technical_score": 0.14327537153480105,
+    "citation_score": 0.011145697257189615
+  }
+]
