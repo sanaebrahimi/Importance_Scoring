@@ -1964,8 +1964,7 @@ def assign_importance_scores(
 
     for section_name, score in top_level_scores.items():
         section_scores[section_name] = {
-            "technical_score": 0.0,
-            "citation_score": 0.0,
+            "total_score": max(0.0, safe_float(score, 0.0)),
             "subsections": {},
         }
 
@@ -2145,12 +2144,15 @@ def assign_importance_scores(
 
                 citation_scores[citation]["citation_score"] += citation_value
 
-        leaf_t = sum(paragraph_technical.values())
-        leaf_c = sum(paragraph_citation.values())
-        leaf_total = combine_scores(leaf_t, leaf_c)
+        leaf_total = sum(
+            combine_scores(
+                paragraph_technical.get(paragraph_name, 0.0),
+                paragraph_citation.get(paragraph_name, 0.0),
+            )
+            for paragraph_name in paragraph_names
+        )
         assert_close(leaf_total, section_score, f"leaf section {' > '.join(section_path)}")
-        node_ref["technical_score"] = leaf_t
-        node_ref["citation_score"] = leaf_c
+        node_ref["total_score"] = max(0.0, safe_float(section_score, 0.0))
 
     def process_section(
         section_name: str,
@@ -2165,8 +2167,7 @@ def assign_importance_scores(
             current_ref = section_scores[section_name]
         else:
             parent_ref[section_name] = {
-                "technical_score": 0.0,
-                "citation_score": 0.0,
+                "total_score": max(0.0, safe_float(section_score, 0.0)),
                 "subsections": {},
             }
             current_ref = parent_ref[section_name]
@@ -2204,16 +2205,11 @@ def assign_importance_scores(
                     section_path=current_path + [subsection_name],
                 )
             child_total = sum(
-                combine_scores(child["technical_score"], child["citation_score"])
+                max(0.0, safe_float(child.get("total_score"), 0.0))
                 for child in current_ref["subsections"].values()
             )
             assert_close(child_total, section_score, f"internal section {' > '.join(current_path)}")
-            current_ref["technical_score"] = sum(
-                child["technical_score"] for child in current_ref["subsections"].values()
-            )
-            current_ref["citation_score"] = sum(
-                child["citation_score"] for child in current_ref["subsections"].values()
-            )
+            current_ref["total_score"] = max(0.0, safe_float(section_score, 0.0))
         else:
             assign_citation_scores(
                 section_name=section_name,
@@ -2237,7 +2233,7 @@ def assign_importance_scores(
         )
 
     top_level_total = sum(
-        combine_scores(payload["technical_score"], payload["citation_score"])
+        max(0.0, safe_float(payload.get("total_score"), 0.0))
         for payload in section_scores.values()
     )
     assert_close(top_level_total, 1.0, "top-level sections")
@@ -2247,13 +2243,8 @@ def assign_importance_scores(
 
 def print_section_hierarchy(section_scores: Dict[str, Any], indent: int = 0) -> None:
     for section_name, section_data in section_scores.items():
-        technical_score = max(0.0, safe_float(section_data.get("technical_score"), 0.0))
-        citation_score = max(0.0, safe_float(section_data.get("citation_score"), 0.0))
-        total_score = combine_scores(technical_score, citation_score)
-        print(
-            f"{'  ' * indent}{section_name}: "
-            f"total={total_score:.4f}, technical={technical_score:.4f}, citation={citation_score:.4f}"
-        )
+        total_score = max(0.0, safe_float(section_data.get("total_score"), 0.0))
+        print(f"{'  ' * indent}{section_name}: total={total_score:.4f}")
         subsections = section_data.get("subsections", {})
         if subsections:
             print_section_hierarchy(subsections, indent + 1)

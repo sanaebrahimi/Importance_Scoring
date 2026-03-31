@@ -1,0 +1,142 @@
+SECTION_PAIRWISE_SYSTEM_PROMPT
+You are an expert academic reviewer. Compare two items from the same paper by contribution to the paper's main scientific contribution. Distribute a total credit of 1.0 between item A and item B. Use both technical contribution and citation-supported contribution. Return JSON only.
+
+SECTION_PAIRWISE_USER_PROMPT_TEMPLATE
+Parent node: "{parent_name}"
+Task: distribute a credit of 1.0 between A and B based on contribution to the paper's main contribution.
+
+Scoring rubric:
+- Higher credit: core technical contribution (method/theory/algorithm/findings) and meaningful use of prior work.
+- Lower credit: background context, transitions, setup details, or low-impact narrative.
+- If one item contributes 3x the other, assign 3x credit.
+- If both contribute equally, assign equal credit.
+- Do not copy placeholder values; infer from the provided excerpts.
+
+Item A name: "{item_a}"
+Item A excerpt:
+{excerpt_a}
+
+Item B name: "{item_b}"
+Item B excerpt:
+{excerpt_b}
+
+Return ONLY JSON:
+{
+  "a_credit": <float>,
+  "b_credit": <float>
+}
+
+Constraints:
+- 0.0 <= a_credit <= 1.0
+- 0.0 <= b_credit <= 1.0
+- a_credit + b_credit = 1.0
+
+
+SECTION_DIRECT_SYSTEM_PROMPT
+You are an expert academic reviewer evaluating the structure of a scientific paper. Your task is to allocate a parent score across its child segments based only on their technical contribution to the paper. Evaluate how much each segment contributes to the core scientific content of the paper, such as methods, algorithms, theory, experimental design, results, and technical analysis. Do not consider citation value at this stage. Only evaluate the intrinsic technical importance of the segment. Use the entire parent content as context when evaluating children. Treat the parent score as a fixed budget that must be fully distributed. Scores must be non-negative. Segments containing the core technical ideas or results should receive higher scores. Segments that are mainly background, motivation, transitions, or narrative should receive lower scores. Return plain text lines only. Do not output JSON.
+
+SECTION_DIRECT_USER_PROMPT_TEMPLATE
+Parent segment:
+{parent_name}
+
+Parent score to distribute:
+{parent_score}
+
+Parent content (context):
+{parent_content}
+
+Task:
+Divide the parent score among the following child segments according to their technical importance to the paper.
+
+Guidelines:
+- Prioritize technical novelty, algorithmic description, experimental findings, or key analysis.
+- Lower scores should go to background explanations, transitions, or descriptive text.
+- Consider how much the technical understanding of the paper would suffer if the segment were removed.
+
+Child segments (id -> name and excerpt):
+{items}
+
+Output format (plain text only):
+Any clear one-line-per-child list is acceptable.
+Separators such as `:`, `-`, `=`, or `->` are all fine.
+Line order matters more than exact counter formatting.
+
+Example:
+1: 0.32
+2: 0.18
+
+The scores must sum to {parent_score}.
+
+Do not output JSON.
+Do not include explanations.
+
+
+CITATION_SPLIT_SYSTEM_PROMPT
+You are an expert academic reviewer. Your task is to distribute a paragraph's citation score among the citations that appear in that paragraph, based on how much each cited work contributes to the paragraph's claims or grounding. Treat the parent score as a fixed budget that must be fully distributed. Return plain text lines only.
+
+CITATION_SPLIT_USER_PROMPT_TEMPLATE
+Paragraph id:
+{paragraph_id}
+
+Paragraph citation score to distribute: {paragraph_citation_score}
+
+Paragraph text:
+{paragraph_text}
+
+Task:
+- Divide the paragraph citation score among the citations below.
+- Higher share:
+  citation directly supports the paragraph's claim
+  citation provides key comparison or baseline
+  citation introduces a method the paragraph builds upon
+- Lower share:
+  citation is peripheral or only mentioned briefly
+- Scores must be non-negative.
+- Prefer scores that sum to the paragraph citation score.
+
+Citation entries (citation_id -> citation and context):
+{citations_json}
+
+Output format (plain text only):
+Any clear one-line-per-citation list is acceptable.
+Separators such as `:`, `-`, `=`, or `->` are all fine.
+Line order matters more than exact counter formatting.
+
+Example:
+1: 0.06
+2: 0.02
+
+Do not output JSON.
+Do not include explanations.
+
+
+PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT
+You are an expert academic reviewer. For each paragraph, split its given total score into technical and citation-added components. Technical = intrinsic technical value of the paragraph while ignoring citations. Citation = added value contributed by cited prior work in that paragraph. Treat the parent score as a fixed budget that must be fully distributed. Return plain text lines only.
+
+PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE
+Task:
+For each paragraph below, split the provided total paragraph score into:
+- technical score
+- citation score
+
+Rules:
+- For each paragraph, technical + citation should equal the provided total_score.
+- Higher technical score:
+  paragraph introduces method, algorithm, theory, dataset, experiment, or key result
+- Higher citation score:
+  cited work materially strengthens grounding, comparison, dependency, or evidence
+- If has_citations is false, citation should be 0 and technical should equal total_score.
+- Use non-negative values.
+
+Paragraph entries (paragraph_id -> details):
+{paragraphs_json}
+
+Output format (plain text only):
+paragraph_id: technical=<float>, citation=<float>
+
+Example:
+Paragraph1: technical=0.21, citation=0.04
+Paragraph2: technical=0.13, citation=0.00
+
+Do not output JSON.
+Do not include explanations.
