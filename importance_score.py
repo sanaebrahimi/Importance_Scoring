@@ -827,15 +827,6 @@ def normalize_distribution(raw_scores: Dict[str, float], total: float) -> Dict[s
     return normalized
 
 
-def heuristic_allocate_scores(item_to_content: Dict[str, Any], total_score: float) -> Dict[str, float]:
-    weights: Dict[str, float] = {}
-    for idx, (item_name, content) in enumerate(item_to_content.items()):
-        text = flatten_content_to_text(content, limit=None)
-        token_count = len(re.findall(r"[A-Za-z0-9]+", text))
-        weights[item_name] = float(token_count if token_count > 0 else idx + 1)
-    return normalize_distribution(weights, total_score)
-
-
 def clamp_unit(value: float) -> float:
     return max(0.0, min(1.0, value))
 
@@ -1190,8 +1181,15 @@ def all_together_allocate_scores(
             )
 
     if not sample_distributions:
+        retry_snippet_limits: List[int] = []
         if snippet_limit <= 0:
-            retry_snippet_limit = 180
+            retry_snippet_limits = [180, 120, 80]
+        elif snippet_limit > 120:
+            retry_snippet_limits = [120, 80]
+        elif snippet_limit > 80:
+            retry_snippet_limits = [80]
+
+        for retry_snippet_limit in retry_snippet_limits:
             append_debug_log(
                 debug_log_path,
                 (
@@ -1214,16 +1212,68 @@ def all_together_allocate_scores(
                     log_tag=f"{log_tag}_compressed_retry",
                 )
             except ValueError:
-                pass
+                continue
 
-        append_debug_log(
-            debug_log_path,
-            (
-                f"[{log_tag}_heuristic_fallback] parent={parent_name} "
-                f"reason=no_complete_samples items={items}"
-            ),
+        if len(items) > 6:
+            chunk_size = 5
+            compressed_limit = max(80, snippet_limit if snippet_limit > 0 else 120)
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[{log_tag}_chunked_retry] parent={parent_name} "
+                    f"reason=no_complete_samples items={len(items)} chunk_size={chunk_size} "
+                    f"snippet_limit={compressed_limit}"
+                ),
+            )
+            chunk_item_names = [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
+            chunk_to_content: Dict[str, str] = {}
+            chunk_to_items: Dict[str, List[str]] = {}
+            for idx, chunk_names in enumerate(chunk_item_names, start=1):
+                chunk_key = f"Chunk {idx}"
+                chunk_to_items[chunk_key] = chunk_names
+                chunk_to_content[chunk_key] = " ".join(
+                    f"{item_name}: {flatten_content_to_text(item_to_content[item_name], limit=compressed_limit)}"
+                    for item_name in chunk_names
+                )
+
+            chunk_scores = all_together_allocate_scores(
+                client=client,
+                item_to_content=chunk_to_content,
+                total_score=total_score,
+                parent_name=f"{parent_name}::chunks",
+                model=model,
+                n_samples=n_samples,
+                temperature=temperature,
+                max_retries=max_retries,
+                debug_log_path=debug_log_path,
+                snippet_limit=compressed_limit,
+                log_tag=f"{log_tag}_chunks",
+            )
+
+            final_scores: Dict[str, float] = {}
+            for chunk_key, chunk_names in chunk_to_items.items():
+                nested_items = {item_name: item_to_content[item_name] for item_name in chunk_names}
+                nested_scores = all_together_allocate_scores(
+                    client=client,
+                    item_to_content=nested_items,
+                    total_score=chunk_scores[chunk_key],
+                    parent_name=f"{parent_name}::{chunk_key}",
+                    model=model,
+                    n_samples=n_samples,
+                    temperature=temperature,
+                    max_retries=max_retries,
+                    debug_log_path=debug_log_path,
+                    snippet_limit=compressed_limit,
+                    log_tag=f"{log_tag}_within_chunk",
+                )
+                final_scores.update(nested_scores)
+
+            return normalize_distribution(final_scores, total_score)
+
+        raise ValueError(
+            f"Model failed to produce any complete child-score sample for parent '{parent_name}' "
+            f"after compression retries."
         )
-        return heuristic_allocate_scores(item_to_content, total_score)
 
     averaged = {item: 0.0 for item in items}
     for dist in sample_distributions:
