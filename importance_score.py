@@ -257,12 +257,12 @@ def load_sections_from_file(assignments_path: str, variable_name: str) -> Dict[s
 
 
 def read_pdf_text(pdf_path: str) -> str:
-    text = ""
+    pages: List[str] = []
     with open(pdf_path, "rb") as file:
         reader = PyPDF2.PdfReader(file)
         for page in reader.pages:
-            text += page.extract_text() or ""
-    return text
+            pages.append(page.extract_text() or "")
+    return "\n\n".join(pages)
 
 
 def normalize_heading_text(text: str) -> str:
@@ -969,6 +969,135 @@ def normalize_for_match(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
 
 
+def is_page_artifact_line(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if re.fullmatch(r"\d+", stripped):
+        return True
+    if re.fullmatch(r"page\s+\d+(?:\s+of\s+\d+)?", stripped.lower()):
+        return True
+    return False
+
+
+def is_probable_heading_line(line: str) -> bool:
+    stripped = normalize_for_match(line)
+    if not stripped or len(stripped) > 120:
+        return False
+    if is_page_artifact_line(stripped):
+        return False
+    if stripped.endswith((".", "?", "!", ";")):
+        return False
+
+    heading_number = re.match(r"^(?:\d+(?:\.\d+)*|[A-Z])(?:[\.\)])?\s+(.+)$", stripped)
+    if heading_number:
+        remainder = heading_number.group(1).strip()
+        if remainder and len(remainder.split()) <= 14:
+            return True
+
+    words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'/-]*", stripped)
+    if not words or len(words) > 14:
+        return False
+
+    uppercase_like = sum(1 for word in words if word.isupper() and len(word) > 1)
+    title_like = sum(1 for word in words if word[:1].isupper())
+    connector_words = {"and", "or", "of", "the", "on", "in", "with", "for", "to", "a", "an", "vs"}
+
+    if uppercase_like >= max(1, len(words) - 2):
+        return True
+    if title_like >= max(1, len(words) - 2):
+        return True
+    if all(word.lower() in connector_words or word[:1].isupper() for word in words):
+        return True
+    return False
+
+
+def is_list_item_line(line: str) -> bool:
+    stripped = line.strip()
+    return bool(re.match(r"^(?:[-*•]|\(?\d+[\.\)]|[A-Za-z][\.\)])\s+", stripped))
+
+
+def median_line_length(lines: List[str]) -> int:
+    lengths = sorted(len(line.strip()) for line in lines if len(line.strip()) >= 20)
+    if not lengths:
+        return 80
+    mid = len(lengths) // 2
+    if len(lengths) % 2 == 1:
+        return lengths[mid]
+    return (lengths[mid - 1] + lengths[mid]) // 2
+
+
+def merge_paragraph_lines(lines: List[str]) -> str:
+    return normalize_for_match(" ".join(line.strip() for line in lines if line.strip()))
+
+
+def rebuild_paragraphs_from_lines(text: str) -> List[str]:
+    lines = [line.rstrip() for line in text.split("\n")]
+    content_lines = [line for line in lines if line.strip() and not is_page_artifact_line(line)]
+    if not content_lines:
+        return []
+
+    typical_length = median_line_length(content_lines)
+    paragraphs: List[str] = []
+    current: List[str] = []
+
+    def flush_current() -> None:
+        if not current:
+            return
+        paragraph = merge_paragraph_lines(current)
+        current.clear()
+        if paragraph:
+            paragraphs.append(paragraph)
+
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        if not stripped or is_page_artifact_line(stripped):
+            flush_current()
+            continue
+
+        if is_probable_heading_line(stripped):
+            flush_current()
+            continue
+
+        if not current:
+            current.append(stripped)
+            continue
+
+        previous = current[-1].strip()
+        previous_ends_sentence = previous.endswith((".", "?", "!", ":"))
+        previous_is_short = len(previous) <= max(48, int(0.65 * typical_length))
+        current_starts_fresh = bool(re.match(r'^[\(\["“]?[A-Z0-9]', stripped))
+        current_is_substantial = len(stripped) >= max(35, int(0.45 * typical_length))
+        break_before = False
+
+        if is_list_item_line(stripped):
+            break_before = True
+        elif previous_ends_sentence and previous_is_short and current_starts_fresh and current_is_substantial:
+            break_before = True
+        elif previous.endswith(":") and current_starts_fresh:
+            break_before = True
+
+        if break_before:
+            flush_current()
+
+        current.append(stripped)
+
+    flush_current()
+
+    merged: List[str] = []
+    for paragraph in paragraphs:
+        if (
+            merged
+            and len(paragraph) < 30
+            and not is_list_item_line(paragraph)
+            and not re.search(r"[.!?]\s*$", merged[-1])
+        ):
+            merged[-1] = normalize_for_match(f"{merged[-1]} {paragraph}")
+        else:
+            merged.append(paragraph)
+    return merged
+
+
 def split_text_into_paragraphs(text: str) -> List[str]:
     normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
     if not normalized:
@@ -978,7 +1107,11 @@ def split_text_into_paragraphs(text: str) -> List[str]:
     if len(paragraphs) > 1:
         return paragraphs
 
-    # PDF extraction often collapses paragraphs; use sentence chunks as a fallback.
+    rebuilt = rebuild_paragraphs_from_lines(normalized)
+    if rebuilt:
+        return rebuilt
+
+    # PDF extraction often collapses paragraphs; use sentence chunks as a last fallback.
     single = normalize_for_match(normalized)
     if not single:
         return []
@@ -1965,6 +2098,7 @@ def assign_importance_scores(
     for section_name, score in top_level_scores.items():
         section_scores[section_name] = {
             "total_score": max(0.0, safe_float(score, 0.0)),
+            "citation_score": 0.0,
             "subsections": {},
         }
 
@@ -2153,6 +2287,7 @@ def assign_importance_scores(
         )
         assert_close(leaf_total, section_score, f"leaf section {' > '.join(section_path)}")
         node_ref["total_score"] = max(0.0, safe_float(section_score, 0.0))
+        node_ref["citation_score"] = max(0.0, safe_float(leaf_c, 0.0))
 
     def process_section(
         section_name: str,
@@ -2168,6 +2303,7 @@ def assign_importance_scores(
         else:
             parent_ref[section_name] = {
                 "total_score": max(0.0, safe_float(section_score, 0.0)),
+                "citation_score": 0.0,
                 "subsections": {},
             }
             current_ref = parent_ref[section_name]
@@ -2210,6 +2346,10 @@ def assign_importance_scores(
             )
             assert_close(child_total, section_score, f"internal section {' > '.join(current_path)}")
             current_ref["total_score"] = max(0.0, safe_float(section_score, 0.0))
+            current_ref["citation_score"] = sum(
+                max(0.0, safe_float(child.get("citation_score"), 0.0))
+                for child in current_ref["subsections"].values()
+            )
         else:
             assign_citation_scores(
                 section_name=section_name,
@@ -2244,7 +2384,8 @@ def assign_importance_scores(
 def print_section_hierarchy(section_scores: Dict[str, Any], indent: int = 0) -> None:
     for section_name, section_data in section_scores.items():
         total_score = max(0.0, safe_float(section_data.get("total_score"), 0.0))
-        print(f"{'  ' * indent}{section_name}: total={total_score:.4f}")
+        citation_score = max(0.0, safe_float(section_data.get("citation_score"), 0.0))
+        print(f"{'  ' * indent}{section_name}: total={total_score:.4f}, citation={citation_score:.4f}")
         subsections = section_data.get("subsections", {})
         if subsections:
             print_section_hierarchy(subsections, indent + 1)
