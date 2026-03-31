@@ -1214,8 +1214,13 @@ def all_together_allocate_scores(
             except ValueError:
                 continue
 
-        if len(items) > 6:
-            chunk_size = 5
+        if len(items) > 2:
+            if len(items) <= 4:
+                chunk_size = 2
+            elif len(items) <= 8:
+                chunk_size = 3
+            else:
+                chunk_size = 5
             compressed_limit = max(80, snippet_limit if snippet_limit > 0 else 120)
             append_debug_log(
                 debug_log_path,
@@ -1269,6 +1274,23 @@ def all_together_allocate_scores(
                 final_scores.update(nested_scores)
 
             return normalize_distribution(final_scores, total_score)
+
+        if len(items) == 2:
+            append_debug_log(
+                debug_log_path,
+                f"[{log_tag}_pairwise_retry] parent={parent_name} reason=no_complete_samples",
+            )
+            return pairwise_allocate_scores(
+                client=client,
+                item_to_content=item_to_content,
+                total_score=total_score,
+                parent_name=parent_name,
+                model=model,
+                n_samples=n_samples,
+                temperature=temperature,
+                max_retries=max_retries,
+                debug_log_path=debug_log_path,
+            )
 
         raise ValueError(
             f"Model failed to produce any complete child-score sample for parent '{parent_name}' "
