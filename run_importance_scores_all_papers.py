@@ -64,9 +64,9 @@ def main() -> None:
     )
     parser.add_argument("--model", default="llama3.2", help="Ollama model name to pass through.")
     parser.add_argument("--host", default="localhost:11434", help="Ollama host to pass through.")
-    parser.add_argument("--n-samples", type=int, default=3, help="Number of LLM samples to average.")
+    parser.add_argument("--n-samples", type=int, default=5, help="Number of LLM samples to average.")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature.")
-    parser.add_argument("--max-retries", type=int, default=3, help="Retries per sample for parsing.")
+    parser.add_argument("--max-retries", type=int, default=5, help="Retries per sample for parsing.")
     parser.add_argument(
         "--paragraph-direct-max-tokens",
         type=int,

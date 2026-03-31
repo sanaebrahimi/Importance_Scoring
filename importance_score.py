@@ -265,6 +265,47 @@ def read_pdf_text(pdf_path: str) -> str:
     return text
 
 
+def normalize_heading_text(text: str) -> str:
+    normalized = (text or "").lower()
+    normalized = normalized.replace("𝜀", "epsilon").replace("ϵ", "epsilon").replace("ε", "epsilon")
+    normalized = normalized.replace("&", "and")
+    normalized = re.sub(r"[-‐‑–—]", " ", normalized)
+    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
+
+
+def heading_tokens_match(target: str, candidate: str) -> bool:
+    if not target or not candidate:
+        return False
+    if candidate == target:
+        return True
+    if len(candidate.split()) >= 4 and target.startswith(candidate):
+        return True
+    if len(target.split()) >= 4 and candidate.startswith(target):
+        return True
+
+    target_tokens = target.split()
+    candidate_tokens = candidate.split()
+    if not target_tokens or not candidate_tokens:
+        return False
+
+    j = 0
+    for token in candidate_tokens:
+        if j < len(target_tokens) and token == target_tokens[j]:
+            j += 1
+    return j == len(target_tokens)
+
+
+def trim_text_before_references(text: str) -> str:
+    lines = (text or "").splitlines()
+    for idx, line in enumerate(lines):
+        stripped = line.strip().lower()
+        if stripped == "references" or re.match(r"^references\d+$", stripped):
+            return "\n".join(lines[:idx])
+    return text
+
+
 def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Extract citation blocks with context and section content based on a nested section schema.
@@ -294,19 +335,75 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
 
         return citations_dict
 
-    def extract_section_content(full_text: str, section_name: str, next_section_name: str = None) -> str:
-        section_start = full_text.find(section_name)
+    trimmed_text = trim_text_before_references(text)
+
+    def find_heading_line_offsets(full_text: str, heading_name: str) -> Tuple[int, int]:
+        direct_idx = full_text.find(heading_name)
+        if direct_idx != -1:
+            return direct_idx, direct_idx + len(heading_name)
+
+        target = normalize_heading_text(heading_name)
+        if not target:
+            return -1, -1
+
+        lines = full_text.splitlines(keepends=True)
+        offsets: List[int] = []
+        running = 0
+        for line in lines:
+            offsets.append(running)
+            running += len(line)
+
+        for idx in range(len(lines)):
+            combined = ""
+            for width in range(1, 4):
+                end_idx = idx + width
+                if end_idx > len(lines):
+                    break
+                chunk = "".join(lines[idx:end_idx]).replace("\n", " ").replace("\r", " ")
+                normalized_line = normalize_heading_text(chunk)
+                normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
+                normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
+
+                combined = f"{combined} {normalized_line}".strip() if combined else normalized_line
+
+                if heading_tokens_match(target, normalized_line) or heading_tokens_match(target, combined):
+                    return offsets[idx], offsets[end_idx - 1] + len(lines[end_idx - 1])
+
+        return -1, -1
+
+    def extract_section_content(
+        full_text: str,
+        section_name: str,
+        next_section_name: Optional[str] = None,
+        child_section_names: Optional[List[str]] = None,
+    ) -> str:
+        section_start, content_start = find_heading_line_offsets(full_text, section_name)
+        used_child_anchor = False
+
+        if section_start == -1 and child_section_names:
+            for child_name in child_section_names:
+                child_start, child_content_start = find_heading_line_offsets(full_text, child_name)
+                if child_start != -1:
+                    section_start = child_start
+                    content_start = child_start
+                    used_child_anchor = True
+                    break
+
         if section_start == -1:
             return ""
 
         if next_section_name:
-            section_end = full_text.find(next_section_name, section_start + len(section_name))
-            if section_end == -1:
+            relative_next_start, _ = find_heading_line_offsets(full_text[content_start:], next_section_name)
+            if relative_next_start == -1:
                 section_end = len(full_text)
+            else:
+                section_end = content_start + relative_next_start
         else:
             section_end = len(full_text)
 
-        return full_text[section_start + len(section_name) : section_end]
+        if used_child_anchor:
+            return full_text[content_start:section_end]
+        return full_text[content_start:section_end]
 
     def process_sections(
         section_text: str, sections_dict: Dict[str, Any], section_names_list: List[str]
@@ -316,11 +413,12 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
 
         for i, section_name in enumerate(section_names_list):
             next_section = section_names_list[i + 1] if i + 1 < len(section_names_list) else None
-            content = extract_section_content(section_text, section_name, next_section)
+            subsections = sections_dict[section_name]
+            child_names = list(subsections.keys()) if isinstance(subsections, dict) and subsections else None
+            content = extract_section_content(section_text, section_name, next_section, child_names)
             if not content:
                 continue
 
-            subsections = sections_dict[section_name]
             if isinstance(subsections, dict) and subsections:
                 subsection_names = list(subsections.keys())
                 nested_citations, nested_content = process_sections(content, subsections, subsection_names)
@@ -335,7 +433,7 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
         return local_citations, local_content
 
     section_names = list(sections.keys())
-    citations, content = process_sections(text, sections, section_names)
+    citations, content = process_sections(trimmed_text, sections, section_names)
     return citations, content
 
 
@@ -2184,9 +2282,9 @@ def main() -> None:
     )
     parser.add_argument("--model", default="llama3.2", help="Ollama model name")
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
-    parser.add_argument("--n-samples", type=int, default=3, help="Number of LLM samples to average")
+    parser.add_argument("--n-samples", type=int, default=5, help="Number of LLM samples to average")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature")
-    parser.add_argument("--max-retries", type=int, default=3, help="Retries per sample for JSON parsing")
+    parser.add_argument("--max-retries", type=int, default=5, help="Retries per sample for JSON parsing")
     parser.add_argument(
         "--paragraph-direct-max-tokens",
         type=int,
