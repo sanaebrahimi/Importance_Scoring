@@ -5,8 +5,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Functional dependencies (FDs) state that some attribute(s) in a relational instance functionally determine the value of another at- tribute. They are useful for discovery of hidden patterns, data clean- ing [28\u201330,33], or predictive modeling [ 26]. However, in real-world databases, functional dependencies are often approximate. The no- tion of approximate functional dependencies (AFDs) is defined by Kivinen et al. [ 21] to overcome this and has found significant re- search interests [ 5,22,23].",
-    "technical_score": 0.023800949667616336,
-    "citation_score": 0.008290218423551756
+    "technical_score": 0.03871220121513502,
+    "citation_score": 0.025808134143423353
   },
   {
     "section_path": [
@@ -14,8 +14,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Given a set of attributes \ud835\udc4b(on the left hand side) and the \u201cright hand side \" attribute\ud835\udc4d, AFD measures the error of the given dependency ( \ud835\udc4b\u2192\ud835\udc4d). Kivinen et al. [ 21] propose three different error measures for error in AFDs - \ud835\udc541,\ud835\udc542and\ud835\udc543. We approach the problem of identifying AFDs in scenarios, where some limited distributional information about the data is available, but accessing actual data records incurs cost. This setting is common in data marketplaces[ 7,13], platforms like AWS Data Exchange, Datarade, and Data & Sons, etc.",
-    "technical_score": 0.014120113960113959,
-    "citation_score": 0.001925470085470085
+    "technical_score": 0.021006197450875858,
+    "citation_score": 0.011815986066117673
   },
   {
     "section_path": [
@@ -23,8 +23,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "In these marketplaces, individual attribute distributions are provided to help potential buyers assess the usefulness of datasets, but accessing more records from the database incurs incremental costs. Our work is also rele- vant for analytics over deep web databases [ 3,11,46], where vast repositories of data are accessible only through restricted web inter- faces. Examples include platforms like Kayak, Expedia, Hotels.com, or Amazon, which display attribute-level metadata\u2014such as distri- butions of flight prices, departure times, or number of stops\u2014but limit direct access to data by showing only the top-k results per query. Moreover, these interfaces often impose constraints on the number of allowable queries, further restricting full data access. In such constrained environments, where accessing full datasets is impractical or expensive, our work provides techniques to discover AFDs without requiring extensive data access.",
-    "technical_score": 0.0070600569800569795,
-    "citation_score": 0.0009627350427350425
+    "technical_score": 0.011815986066117674,
+    "citation_score": 0.006646492162191191
   },
   {
     "section_path": [
@@ -32,8 +32,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "We present a computational framework under the following settings: (a) frequency distributions of the individual attributes are known apriori to the framework; (b) access to the database is enabled through a getNext() [ 43] interface that returns the next data record, or the next small batch of data records when invoked, but how the actual data is stored and organized is unknown to the 2386KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das framework; and (c) more getNext() calls incur more cost and hence it is better to minimize those calls. Problems & Contributions. Anytime AFDs. We initiate the problem of designing anytime algorithms for computing AFDs in a relation considering three different error measures [ 21], where the actual records are read one by one, or in small batches. Anytime algorithms [ 2,47] are designed to progressively improve the quality of their results as more computation time becomes available, while still being capable of returning a valid (though possibly subopti- mal) solution if interrupted at any stage.",
-    "technical_score": 0.008520072520072518,
-    "citation_score": 0.004243460243460243
+    "technical_score": 0.030770797047181435,
+    "citation_score": 0.02051386469812096
   },
   {
     "section_path": [
@@ -41,7 +41,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Our proposed algorithms fall within a subclass of anytime algorithms that begin producing outputs after reading only a small portion of the data. A formal definition is provided in Section 2. We study two problem variants. \u2022[top-\ud835\udc58length\u2113-AFDs.] At any point during reading the records, retrieve the top- \ud835\udc58AFDs (i.e., the \ud835\udc58AFDs with the smallest errors), each with exactly \u2113attributes at the left-hand side, where \ud835\udc58and \u2113are application defined tunable input parameters. \u2022[Minimal\ud835\udf16-AFDs.] At any point during reading the records, determine all minimal AFDs (an AFD is minimal when no proper subset of it has error \u2264\ud835\udf16) where\ud835\udf16is an application defined threshold.",
-    "technical_score": 0.04202849002849003,
+    "technical_score": 1.0256932349060478e-08,
     "citation_score": 0.0
   },
   {
@@ -50,7 +50,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "Our proposed overarching solution framework designs a powerset lattice of all but the right hand size attribute \ud835\udc4d, where each attribute set\ud835\udc4bforms a candidate AFD, representing \ud835\udc4b\u2192\ud835\udc4d. To identify Minimal\ud835\udf16-AFDs, the search starts with the AFD candidates that are at the bottom of the lattice, gradually makes its way up level by level, and makes a decision whether to keep the candidate AFD or prune it. For top- \ud835\udc58length-\u2113AFDs, the algorithm identifies all size- \u2113 AFD\u2019s and makes decisions whether to prune a candidate AFD. Sub-problems and designed solutions. Recall that our goal is to design an anytime solution framework where we wish to return the top AFDs for the entire relation even when only a subset of records are read.",
-    "technical_score": 0.011122507122507123,
+    "technical_score": 1.0256932349060478e-08,
     "citation_score": 0.0
   },
   {
@@ -59,7 +59,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "This requires determining which AFDs are likely to be the solution and eliminating those that cannot be. This decision- making process is facilitated by calculating guaranteed upper and lower bounds for the error for the candidate AFDs, which is a central contribution of our work. We define two core sub-problems: Given \ud835\udc5bout of\ud835\udc41records have been read, the Maximum Error Estimate, which calculates the upper bound on the error of an AFD for a given error measure, and the Minimum Error Estimate, which calculates the lower bound. We explore various optimization techniques for both problems across three error measures ( \ud835\udc541,\ud835\udc542, and\ud835\udc543), using methods, like, mixed integer linear programming (MILP), linear programming, greedy algorithms, and quadratic programming. Additionally, we provide additive approximation guarantees for the \ud835\udc543error measure and discuss strategies to further improve scalability.",
-    "technical_score": 0.017686609686609688,
+    "technical_score": 1.0256932349060478e-08,
     "citation_score": 0.0
   },
   {
@@ -68,7 +68,7 @@
     ],
     "paragraph_index": 8,
     "paragraph": "We then present algorithms for our two main problems that make use of the upper and lower bounds. We propose an exact al- gorithm ESCA for the top- \ud835\udc58length\u2113-AFDs problem that generates a prefix\ud835\udc58\u2032(with\ud835\udc58\u2032\u2264\ud835\udc58) of AFDs, which grows as more records are processed. Additionally, we present an approximate solution based on estimations that consistently identifies \ud835\udc58AFDs, though they may not always be the true top- \ud835\udc58. This approach follows the unin- formed prior principle, assuming uniform error in unread records,but ensuring the final frequency distribution matches individual attribute distributions. We propose an exact algorithm EXEA for the Minimal \ud835\udf16-AFDs problem that explores the powerset lattice bottom-up, making deci- sions on whether to keep or prune candidate AFDs at each level.",
-    "technical_score": 0.025891737891737897,
+    "technical_score": 4.102772939624191e-08,
     "citation_score": 0.0
   },
   {
@@ -77,7 +77,7 @@
     ],
     "paragraph_index": 9,
     "paragraph": "Unlike classical minimal AFD algorithms that assume full knowl- edge of the relation, we establish monotonic relationships between the upper and lower bounds of candidate AFDs and their ancestors. This enables our algorithm to guarantee that at any point, a proper subset of\ud835\udf16-AFDs is returned, with the subset growing as more records are read. We also present a solution based on estimations, which may not always identify the true minimal \ud835\udf16-AFDs but works well in practice and are highly efficient, relying on the principle of uninformed prior. Experimental Evaluations. We conduct extensive experimental evaluations using 3 real world and multiple synthetic datasets.",
-    "technical_score": 0.016410256410256414,
+    "technical_score": 1.0256932349060478e-08,
     "citation_score": 0.0
   },
   {
@@ -86,8 +86,8 @@
     ],
     "paragraph_index": 10,
     "paragraph": "We note that there does not exist any related work [ 22,23] that study anytime AFDs. Nevertheless, we adapt the state-of-the-art (SOTA) solution Pyro [ 23] which is not guaranteed to produce exact so- lutions, and compare against ours, wherever applicable. We also adapt a classical solution TANE [ 18] to produce exact solutions. We implement a machine learning based solution based on iterative pro- portional fitting for comparison [ 40]. Our evaluations reveal three key findings: (a) We illustrate the applicability of each algorithm across different data organization strategies, comparing scenarios where data is indexed by key or key-like attributes versus cases where it is not.",
-    "technical_score": 0.019553882099751046,
-    "citation_score": 0.011534436988568042
+    "technical_score": 0.015882734607945495,
+    "citation_score": 0.01058848973863033
   },
   {
     "section_path": [
@@ -95,7 +95,7 @@
     ],
     "paragraph_index": 11,
     "paragraph": "Our findings indicate that our proposed solutions that estimate error based on both read and unread data outperform the others convincingly. (b) Our proposed algorithms are highly effective - after reading about 40% of the data, they achieve high pre- cision and NDCG score. (c) The efficiency opportunities discussed work well in practice and the bound computation becomes scalable. 2",
-    "technical_score": 0.04284900284900285,
+    "technical_score": 0.06452033556181042,
     "citation_score": 0.0
   },
   {
@@ -105,7 +105,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Database. Consider a database Dwith\ud835\udc41tuples and\ud835\udc51categorical attributes (A={\ud835\udc341,\ud835\udc342,\u00b7\u00b7\u00b7,\ud835\udc34\ud835\udc51}). We refer to the \ud835\udc56\ud835\udc61\u210etuple as\ud835\udc61\ud835\udc56 and value for the \ud835\udc57\ud835\udc61\u210eattribute for tuple \ud835\udc61\ud835\udc56as\ud835\udc61\ud835\udc56[\ud835\udc57]. getNext(). The access toDis performed by making getNext() calls that returns the next record from the database.",
-    "technical_score": 0.016705828571428567,
+    "technical_score": 0.01333835370356943,
     "citation_score": 0.0
   },
   {
@@ -115,7 +115,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "How data is stored inDis unknown, and getNext() calls are expensive. Domain of an attribute. \ud835\udc5a\ud835\udc34is the size of the domain of attribute \ud835\udc34which is the number of unique values \ud835\udc34can take. Domain size of \ud835\udc5aFirst Name =4. 2387Anytime Algorithms for Approximate Functional Dependencies KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Known Frequency/Marginal distributions.",
-    "technical_score": 0.009333028571428568,
+    "technical_score": 0.007942756825534159,
     "citation_score": 0.0
   },
   {
@@ -125,7 +125,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "The frequency/ mar- ginal distribution of each \ud835\udc34\u2208A is known to the framework. Let \ud835\udc5abe the domain size of an attribute \ud835\udc34, where\ud835\udc53\u2113represents the frequency of the \u2113-th value of the domain, such that \u03a3\ud835\udc5a \u2113=1\ud835\udc53\u2113=\ud835\udc41. Us- ing the running example, \ud835\udc5aof Gender is 2,\ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52=3,\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =3, \ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52+\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =6. Attribute set \ud835\udc4b, attribute \ud835\udc4d.\ud835\udc4bis a set of attributes \ud835\udc4b\u2282\ud835\udc34, but \ud835\udc4dis a single special attribute, \ud835\udc4d\u2282\ud835\udc34,\ud835\udc4b\u00d1\ud835\udc4d={},|\ud835\udc4d|=1.M\ud835\udc4b,\ud835\udc4d A represents the set of marginal distributions of attribute X and Z. Using the running example, marginal distribution of (First Name) is\ud835\udc53(\ud835\udc34\ud835\udc59\ud835\udc52\ud835\udc65)=2,\ud835\udc53(\ud835\udc3d\ud835\udc5c\u210e\ud835\udc5b)=2,\ud835\udc53(\ud835\udc3d\ud835\udc4e\ud835\udc5b\ud835\udc52)=1,\ud835\udc53(\ud835\udc47\ud835\udc56\ud835\udc4e)=1.",
-    "technical_score": 0.003913142857142856,
+    "technical_score": 0.00287582574717616,
     "citation_score": 0.0
   },
   {
@@ -135,7 +135,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Marginal distribution of Gender is\ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52=3,\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =3. However, the joint distribution of these two attributes are not known until the full database is read. Functional Dependency: Given a database D, set of attributes \ud835\udc4b\u2282A and\ud835\udc4d\u2208A, a functional dependency from \ud835\udc4bto\ud835\udc4dis written as\ud835\udc4b\u2192\ud835\udc4d. The dependency \ud835\udc4b\u2192\ud835\udc4d(read as\ud835\udc4bdetermines \ud835\udc4d) holds, if for all pair of tuples that agree on \ud835\udc4balso agree on \ud835\udc4d, i.e., when\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b], then\ud835\udc61\ud835\udc56[\ud835\udc4d]=\ud835\udc61\ud835\udc57[\ud835\udc4d]. Using Example 1, the only FDs that exist are Tuple Id\u2192any of the 4 other attributes .",
-    "technical_score": 0.003035428571428571,
+    "technical_score": 0.004053544862686397,
     "citation_score": 0.0
   },
   {
@@ -145,7 +145,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Clearly, FDs involving Tuple Id are not useful. Violation: For a given database D, set of attributes \ud835\udc4b\u2282A and \ud835\udc4d\u2208 A , two tuples \ud835\udc61\ud835\udc56and\ud835\udc61\ud835\udc57are considered a violating pair if \ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b]but\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]. A tuple\ud835\udc61\ud835\udc56is called violating if it is a part of some violating pair. Using Table 1, (\ud835\udc611,\ud835\udc615)is a violating pair: \ud835\udc611[\ud835\udc39\ud835\udc56\ud835\udc5f\ud835\udc60\ud835\udc61\ud835\udc41\ud835\udc4e\ud835\udc5a\ud835\udc52]=\ud835\udc615[\ud835\udc39\ud835\udc56\ud835\udc5f\ud835\udc60\ud835\udc61\ud835\udc41\ud835\udc4e\ud835\udc5a\ud835\udc52]but\ud835\udc611[\ud835\udc3a\ud835\udc52\ud835\udc5b\ud835\udc51\ud835\udc52\ud835\udc5f]\u2260\ud835\udc615[\ud835\udc3a\ud835\udc52\ud835\udc5b\ud835\udc51\ud835\udc52\ud835\udc5f]. Approximate Functional Dependency: Given a dataset D, a set of attributes \ud835\udc4b\u2282Aand the (\u201cright-hand side \") attribute \ud835\udc4d, AFD determines the error for the given dependency ( \ud835\udc4b\u2192\ud835\udc4d).",
-    "technical_score": 0.002779428571428571,
+    "technical_score": 0.005231263978196635,
     "citation_score": 0.0
   },
   {
@@ -155,8 +155,8 @@
     ],
     "paragraph_index": 6,
     "paragraph": "In this work, we look at three different error measures defined in Kivinen et. al. [ 21]. The definitions of the three errors \ud835\udc3a1,\ud835\udc3a2 and\ud835\udc3a3and their corresponding scaled measures ( \ud835\udc541,\ud835\udc542and\ud835\udc543) are defined below \u2022\ud835\udc3a1error: The number of violating pairs in D. \ud835\udc3a1(\ud835\udc4b\u2192\ud835\udc4d,D)=|{(\ud835\udc61\ud835\udc56,\ud835\udc61\ud835\udc57)|\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b],\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]}| \ud835\udc541(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a1(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc412 \u2022\ud835\udc3a2error: the number of violating tuples in D.",
-    "technical_score": 0.0014670360316358928,
-    "citation_score": 0.0016415353969355358
+    "technical_score": 0.003736325108147072,
+    "citation_score": 0.002672657985559799
   },
   {
     "section_path": [
@@ -165,8 +165,8 @@
     ],
     "paragraph_index": 7,
     "paragraph": "\ud835\udc3a2(\ud835\udc4b\u2192\ud835\udc4d,D)=|{\ud835\udc61\ud835\udc56|\u2203\ud835\udc61\ud835\udc57\u2208D,\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b],\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]}| \ud835\udc542(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a2(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc41 \u2022\ud835\udc3a3error: The number of tuples that have to be deleted to satisfy the functional dependency in D. \ud835\udc3a3(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc41\u2212\ud835\udc5a\ud835\udc4e\ud835\udc65{|\ud835\udc60||\ud835\udc60\u2208D, \ud835\udc60|=\ud835\udc4b\u2192\ud835\udc4d} \ud835\udc543(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a3(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc41 The|=operator refers to all \ud835\udc60for which the functional dependency \ud835\udc4b\u2192\ud835\udc4dholds. Note that the scaled errors \ud835\udc541,\ud835\udc542and,\ud835\udc543are in the range of[0,1]. Additionally, \ud835\udc541error has also been formulated [ 23] by normalizing with \ud835\udc41(\ud835\udc41\u22121). While we use the notion from Kivi- nen et al.",
-    "technical_score": 0.001326020513827524,
-    "citation_score": 0.0021116937718867615
+    "technical_score": 0.004056322893077676,
+    "citation_score": 0.003530379316139433
   },
   {
     "section_path": [
@@ -175,8 +175,8 @@
     ],
     "paragraph_index": 8,
     "paragraph": "[ 21], our proposed approaches work with both measures. The AFD First name \u2192Gender has one violating pair (Alex,m) and (Alex, f). As \ud835\udc541error counts the number of such pairs and there is only 1violating pair the \ud835\udc541error is 2/36.\ud835\udc542error counts the number of records which are in violation and hence is 2/6. For the FD to hold, deleting either (Alex,m) or (Alex, f) would suffice. Hence,\ud835\udc543error is 1/6.2.2",
-    "technical_score": 0.0017338392100065816,
-    "citation_score": 0.002033017932850558
+    "technical_score": 0.008413844471738255,
+    "citation_score": 0.0003505768529890939
   },
   {
     "section_path": [
@@ -185,7 +185,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We define two broad classes of problems. [top-\ud835\udc58length\u2113-AFDs.] Given\ud835\udc5bout of\ud835\udc41records of theDare read, a tunable parameter \u2113, marginal distributions MAofA, an error measure ( \ud835\udc541,\ud835\udc542or\ud835\udc543), an integer \ud835\udc58, retrieve as a ranked list the top-\ud835\udc58AFDs having the least errors (along with their respective error scores, if possible) from among all AFDs having exactly \u2113 attributes in the left hand side (LHS). Practical choice of \u2113: Note that as the attributes on the LHS grows, the error monotonically decreases. However, having more attributes on the LHS does not necessarily provide meaningful insights on data quality and correlation. For instance, when all but one attribute is on the LHS, a trivial full functional dependency exist.",
-    "technical_score": 0.011321333333333334,
+    "technical_score": 0.03220207475962892,
     "citation_score": 0.0
   },
   {
@@ -195,7 +195,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "That is why we introduce an input parameter \u2113, which constrains the maximum number of attributes allowed on the LHS. This parameter allows us to explore meaningful and compact dependencies while avoiding trivial cases. [Minimal\ud835\udf16-AFDs.] Given\ud835\udc5bout of\ud835\udc41records of theDare read, marginal distributions MAofA, an error measure ( \ud835\udc541,\ud835\udc542or\ud835\udc543), and an error threshold \ud835\udf16, retrieve all minimal AFDs which have an error score of at most \ud835\udf16along with their respective error scores. An AFD\ud835\udc4b\u2192\ud835\udc4dis a minimal \ud835\udf16-AFD if no proper subset of \ud835\udc4bis also an\ud835\udf16-AFD to determine \ud835\udc4d. 2.3",
-    "technical_score": 0.014598666666666664,
+    "technical_score": 0.01355876831984376,
     "citation_score": 0.0
   },
   {
@@ -205,7 +205,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Before proposing our solutions to the above problems, we would like to define the notion of Anytime Algorithms in the context of computing AFDs. Our definition hinges on a few observations. For each of the proposed problems, the output is a set of AFDs. LetAFD(D) represent the set of output AFDs that are identified after reading the entire database D. We refer to this as the optimal output.",
-    "technical_score": 0.023340067340067334,
+    "technical_score": 0.02081432074194327,
     "citation_score": 0.0
   },
   {
@@ -215,7 +215,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Consider an algorithm that has only read part of the data- base, sayD\u2032, yet is able to output a set of AFDs, say AFD(D\u2032)as the solution for the full database. Such an algorithm is called an Anytime Algorithm. For example, consider the scenario of reading the first three rows of the sample dataset from Table 1 and \ud835\udc543error be the error measure and\u2113=1. Let the set of AFDs being considered for the top- \ud835\udc58be First Name\u2192Gender, Zip\u2192Gender and Town\u2192Gender. Based on the first three rows and known MA, is it possible to get the top-1 AFD among the ones being considered?",
-    "technical_score": 0.01863973063973064,
+    "technical_score": 0.014617018196446771,
     "citation_score": 0.0
   },
   {
@@ -225,8 +225,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "If not, which one is themost likely top-1 AFD among the ones being considered? These are the type of decisions an anytime algorithm has to consider. Furthermore, an anytime algorithm is well behaved if the \u201csimi- larity\u201d of AFD(D\u2032)toAFD(D) progressively improves as it reads more data. Similarity can be measured by several standard measures such as precision, recall, NDCG measure [45], etc. In this paper we design several anytime algorithms for solving our proposed AFD problems.",
-    "technical_score": 0.003641750841750843,
-    "citation_score": 0.016843097643097646
+    "technical_score": 0.001512464458822173,
+    "citation_score": 0.003024928917644346
   },
   {
     "section_path": [
@@ -235,7 +235,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Our exact approaches designed in Section 4.1 are well-behaved anytime algorithms whenever the precision is always 1, while the recall monotonically increases as more data are read. We also propose \u201capproximate \" approaches in Section 4.2 where the precision and recall do not always exhibit monotone behavior, but the recall is often better than the Exact approaches (See Experiments Section 5). 2388KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das 3",
-    "technical_score": 0.009535353535353536,
+    "technical_score": 0.003239304568173699,
     "citation_score": 0.0
   },
   {
@@ -245,8 +245,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Our techniques rely on a lattice structure, which has been exten- sively used in Frequent Item-set Mining literature [ 25]. Our over- arching solution framework designs a powerset lattice of all but the right-hand size attribute \ud835\udc4d, where each attribute set \ud835\udc4bdirectly forms a candidate AFD, representing \ud835\udc4b\u2192\ud835\udc4d. The first level of the lattice consists of single LHS AFDs (of the form \ud835\udc4b\u2192\ud835\udc4d). The sec- ond level of the lattice consists of AFDs which have two attributes in the LHS. Each AFD \ud835\udc34\ud835\udc56\ud835\udc34\ud835\udc57\u2192\ud835\udc4din the second level is connected to the AFDs \ud835\udc34\ud835\udc56\u2192\ud835\udc4dand\ud835\udc34\ud835\udc57\u2192\ud835\udc4dwith two directed edges from the two level 1 nodes to the level 2 nodes.",
-    "technical_score": 0.0384,
-    "citation_score": 0.0
+    "technical_score": 0.034967340308747916,
+    "citation_score": 0.006861271467811514
   },
   {
     "section_path": [
@@ -255,7 +255,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "We refer to \ud835\udc34\ud835\udc56\u2192\ud835\udc4dand \ud835\udc34\ud835\udc57\u2192\ud835\udc4das descendants of \ud835\udc34\ud835\udc56\ud835\udc34\ud835\udc57\u2192\ud835\udc4d. The vice versa relation is termed as the ascendant relation. Based on our description, this lattice structure with \ud835\udc51\u22121level forms a Directed Acyclic Graph. At a high level, the algorithms developed for both problems (described in Section 4) traverse the lattice and make decisions about whether to retain or prune candidate AFDs based on their error. However, the key challenge in enabling anytime decision- making is as follows: how to compute the error of a candidate AFD, considering the data that has been read and the data that is yet to be read?",
-    "technical_score": 0.017066666666666667,
+    "technical_score": 0.018404589181686148,
     "citation_score": 0.0
   },
   {
@@ -265,7 +265,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "This requires estimating how the unread data might influence the error of a candidate AFD. For that, the framework utilizes error bounds, including both lower (minimum) and upper (maximum) bounds. These bounds are determined based on the data read thus far and the potential impact of the unread data, taking into account the global frequency distribution of the individual attributes. 3.2",
-    "technical_score": 0.008533333333333334,
+    "technical_score": 0.015058300239561395,
     "citation_score": 0.0
   },
   {
@@ -275,7 +275,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Since the AFD algorithms (Section 4) generate solutions even when the entire data is not read, they must rely on the lower and up- per bounds of errors for candidate AFDs and based on that make a decision. We formally define error bounds next. 3.2.1 Lower and Upper Bounds. Minimum/Maximum error estimate satisfying marginal dis- tribution constraints: Given \ud835\udc5btuples of the database Dare read, for a given AFD \ud835\udc4b\u2192\ud835\udc4d, and an error measure ( \ud835\udc541,\ud835\udc542or\ud835\udc543), pro- duce minimum or lower (respectively maximum or upper) bound of error, which is the smallest (respectively largest) possible error that\ud835\udc4b\u2192\ud835\udc4dcan have, while satisfying the marginal distribution constraintsM\ud835\udc4b,\ud835\udc4d A. Knowing these upper and lower bounds at any time offer pruning opportunities.",
-    "technical_score": 0.016789473684210524,
+    "technical_score": 0.019584384526663574,
     "citation_score": 0.0
   },
   {
@@ -285,7 +285,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "For instance, given two AFDs \ud835\udc4b\u2192\ud835\udc4dand\ud835\udc4c\u2192\ud835\udc4d, if the upper bound of error of \ud835\udc4b\u2192\ud835\udc4dis not larger than the lower bound of error of \ud835\udc4c\u2192\ud835\udc4d, then\ud835\udc4b\u2192\ud835\udc4dcould be selected as the winner between these two. As an example, assume the first three records in the Table 1 have been read. For the AFD First Name \u2192Gender, the current \ud835\udc543error is0, however, based on the marginal distributions of First Name and Gender - one possible assignment of the remaining three records satisfying the marginal constraints could be the following - John \u2192m, Alex\u2192f, Tia\u2192m. This is the best possible arrangement and gives a lower bound of \ud835\udc543error of 0. However, another possible assignment of the remaining three records satisfying the marginal constraints could be - John \u2192m, the Alex\u2192m, Tia\u2192f, giving rise to upper bound of \ud835\udc543error to be 1.",
-    "technical_score": 0.011052631578947368,
+    "technical_score": 0.00398920871164272,
     "citation_score": 0.0
   },
   {
@@ -295,7 +295,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "3.2.2 Bounds Computation Problem. Bound computation problems take \u201cjoint distribution frequency matrices \" as inputs, one for every AFD\ud835\udc4b\u2192\ud835\udc4dunder consideration based on the \ud835\udc5brecords it has read so far. A joint distribution frequency matrix of \ud835\udc4b\u2192\ud835\udc4dhas\ud835\udc5a\ud835\udc4d columns and \ud835\udc5a\ud835\udc4brows, where \ud835\udc5a\ud835\udc4d(similarly\ud835\udc5a\ud835\udc4b) is the domain size of attribute \ud835\udc4d(similarly\ud835\udc4b). Let a cell in the \ud835\udc5f\ud835\udc61\u210erow and\ud835\udc50\ud835\udc61\u210ecolumn of the matrix be denoted as\ud835\udc46[\ud835\udc5f][\ud835\udc50]. Given\ud835\udc5brecords are read so far, \ud835\udc46[\ud835\udc5f][\ud835\udc50]stores number of records out of \ud835\udc5b, where\ud835\udc4bhas\ud835\udc5f\ud835\udc61\u210eand\ud835\udc4dhas\ud835\udc50\ud835\udc61\u210evalue from their respective domains.",
-    "technical_score": 0.004596491228070175,
+    "technical_score": 0.002334344658186537,
     "citation_score": 0.0
   },
   {
@@ -305,8 +305,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "The designed lower and upper bound solutions need to consider marginal distributions M\ud835\udc4b,\ud835\udc4d Aas well and estimate the smallest and largest of the given error measure, since \ud835\udc41\u2212\ud835\udc5b records are yet to be read. Based on the error measures, the abstract problem is as follows: As the\ud835\udc41\u2212\ud835\udc5brecords are yet to be read, among all the unseen joint distribution frequency matrices which satisfy the marginal information M\ud835\udc4b,\ud835\udc4d A, find that which minimizes (maximizes respectively) the given error measure thus finding the lower (upper respectively) bound. The problem is computationally intractable under certain set- tings (refer to Appendix A). We develop a suite of techniques leveraging Mixed Integer Lin- ear Programming (MILP), Linear Programming (LP) relaxation, and Greedy strategies to derive the bounds. Our methods, includ- ing Greedy algorithms and MILP formulations implemented with solvers such as Gurobi [ 17], are designed to be both fast and prac- tical.",
-    "technical_score": 0.0019649122807017545,
-    "citation_score": 0.0
+    "technical_score": 0.001119428638916838,
+    "citation_score": 0.0005573541437241956
   },
   {
     "section_path": [
@@ -315,7 +315,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "In contrast, approaches based on Dynamic Programming (DP) [ 4] tend to incur significantly higher computational costs. We defer the development of efficient and approximate DP-based solutions to future work (see Section 7). 3.3",
-    "technical_score": 0.0015964912280701752,
+    "technical_score": 0.0019726856266365097,
     "citation_score": 0.0
   },
   {
@@ -325,8 +325,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "For limitation of space, from now on, we primarily focus on \ud835\udc543error and focus on minimization as long as its counterpart (maximization) could use the same technique. Mixed Integer linear programming (MILP) [ 44] can be used as a tool to formalize and solve the minimization/maximization problems. These problems are different from Integer Linear Pro- grams(ILP) [ 41] in a sense that MILP require only some of the variables to take integer values, whereas ILP problems require all variables to be integers. As part of the input, \ud835\udc5brows have been read into a joint distri- bution frequency matrix. The remaining \ud835\udc41\u2212\ud835\udc5brows which will be represented by an unseen joint distribution frequency matrix \ud835\udc48needs to satisfy the marginal information M\ud835\udc4b,\ud835\udc4d A.",
-    "technical_score": 0.022518518518518518,
-    "citation_score": 0.0071111111111111115
+    "technical_score": 0.02389869841719931,
+    "citation_score": 0.0075469573949050435
   },
   {
     "section_path": [
@@ -335,7 +335,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "The goal is to produce the unseen joint distribution frequency matrix. For AFD\ud835\udc4b\u2192\ud835\udc4d,\ud835\udc48is a matrix of size \ud835\udc5a\ud835\udc4b\u00d7\ud835\udc5a\ud835\udc4d.\ud835\udc48[\ud835\udc5f][\ud835\udc50]is a variable that is defined on \ud835\udc5f-th row and the \ud835\udc50-th column over \ud835\udc48 that takes non-negative integer values, \ud835\udc48[\ud835\udc5f][\ud835\udc50]\u2208W. 2389Anytime Algorithms for Approximate Functional Dependencies KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada \ud835\udc5a\ud835\udc4e\ud835\udc65\ud835\udc56\ud835\udc5a\ud835\udc56\ud835\udc67\ud835\udc52\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0\ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f] \ud835\udc60.\ud835\udc61.\u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121}\u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121}\ud835\udc48[\ud835\udc5f][\ud835\udc50]\u2208W \u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121}\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f]=\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc4e=0\ud835\udc46[\ud835\udc5f][\ud835\udc4e]+\ud835\udc48[\ud835\udc5f][\ud835\udc4e] \u2200\ud835\udc50\u2208{0,..\ud835\udc5a \ud835\udc4d\u22121}\ud835\udc50\ud835\udc5c\ud835\udc59[\ud835\udc50]=\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc4e=0\ud835\udc46[\ud835\udc4e][\ud835\udc50]+\ud835\udc48[\ud835\udc4e][\ud835\udc50] \u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121} \u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121} \ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f]\u2265\ud835\udc46[\ud835\udc5f][\ud835\udc50]+\ud835\udc48[\ud835\udc5f][\ud835\udc50] \ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f]\u2264\ud835\udc46[\ud835\udc5f][\ud835\udc50]+\ud835\udc48[\ud835\udc5f][\ud835\udc50]+( 1\u2212B[\ud835\udc5f][\ud835\udc50])\u2217\ud835\udc41 B[\ud835\udc5f][\ud835\udc50]\u2208{ 0,1} \u2200\ud835\udc5f\u2208{0,\u00b7\u00b7\u00b7,\ud835\udc5b\u22121}\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc50=0B[\ud835\udc5f][\ud835\udc50]=1 Figure 1: Mixed ILP for \ud835\udc543error As the sum of the matrices \ud835\udc48+\ud835\udc46must satisfy the marginal information, we add additional constraints to restrict the values in \ud835\udc48. The constraints that correspond to the marginal information on the attribute \ud835\udc4bare defined below. \u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a\ud835\udc4b\u22121} M\ud835\udc4b A[\ud835\udc5f]=\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc4e=0\ud835\udc46[\ud835\udc5f][\ud835\udc4e]+\ud835\udc48[\ud835\udc5f][\ud835\udc4e] Similar constraints for \ud835\udc4dcan be defined.",
-    "technical_score": 0.016666666666666666,
+    "technical_score": 0.017688181394308698,
     "citation_score": 0.0
   },
   {
@@ -345,8 +345,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "We introduce a variable for each row of \ud835\udc48+\ud835\udc46that counts of the records to be retained. In every row (which is a unique domain value) of\ud835\udc48+\ud835\udc46, the maximum value in the row represents the number of records that will be retained for that domain. Thus, we introduce\ud835\udc5a\ud835\udc4bvariables max[0],\u00b7\u00b7\u00b7,max[\ud835\udc5a\ud835\udc4b-1] which counts these records in every row. Based on max, the optimization function can thus be expressed as, \ud835\udc5a\ud835\udc56\ud835\udc5b\ud835\udc56\ud835\udc5a\ud835\udc56\ud835\udc67\ud835\udc52 \ud835\udc41\u2212\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0\ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f] This is equivalent to \ud835\udc5a\ud835\udc4e\ud835\udc65\ud835\udc56\ud835\udc5a\ud835\udc56\ud835\udc67\ud835\udc52\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0\ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f] We introduce constraints such that \ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f]is greater than all values in the row \ud835\udc5fof final joint distribution frequency matrix \ud835\udc46+\ud835\udc48. \u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a\ud835\udc4b\u22121}\u2200\ud835\udc50\u2208{0,..,\ud835\udc5a\ud835\udc4d\u22121}\ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f]\u2265\ud835\udc46[\ud835\udc5f][\ud835\udc50]+\ud835\udc48[\ud835\udc5f][\ud835\udc50] We need additional constraints to restrict max[\ud835\udc5f]to be equal to the maximum value in row \ud835\udc5f.",
-    "technical_score": 0.04074074074074075,
-    "citation_score": 0.005555555555555557
+    "technical_score": 0.0432377767416435,
+    "citation_score": 0.005896060464769568
   },
   {
     "section_path": [
@@ -355,7 +355,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "To add this restriction, we introduce \ud835\udc5a\ud835\udc4b\u00d7\ud835\udc5a\ud835\udc4dboolean variablesBthat indicate the location of the maximum value in each row \ud835\udc5fof\ud835\udc46+\ud835\udc48. As each row can only contain one maximum value, only one variable in each row can be true(1). The inequalities needed are listed below, \u2200\ud835\udc5f\u2208{0,...,\ud835\udc5a \ud835\udc4b\u22121}\u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121} \ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f]\u2264\ud835\udc46[\ud835\udc5f][\ud835\udc50]+\ud835\udc48[\ud835\udc5f][\ud835\udc50]+( 1\u2212B[\ud835\udc5f][\ud835\udc50])\u2217\ud835\udc41 \u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121} B[\ud835\udc5f][\ud835\udc50]\u2208{ 0,1} \u2200\ud835\udc5f\u2208{0,...,\ud835\udc5a \ud835\udc4b\u22121}\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc50=0B[\ud835\udc5f][\ud835\udc50]=1 The final MILP is presented in Figure 1. 3.3.1 Accuracy-Runtime Trade Offs. The MILP in Figure 1 produces the exact result, but Mixed Integer Linear Programs are known to be computationally expensive.",
-    "technical_score": 0.004629629629629629,
+    "technical_score": 0.010727554456733518,
     "citation_score": 0.0
   },
   {
@@ -365,7 +365,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "In this section, we discuss two efficiency opportunities that are likely to expedite the original optimization problem defined in Section 3.3 at the cost of producing \u201clooser\u201d bounds. The first one relaxes the MILP to a Linear Program (LP) and the second one relaxes some marginal distribution constraints. LP Relaxation: Note that the MILP for the lower bound of \ud835\udc543error in 3.3 consists of two matrices of Integer variables, B(Boolean ) and\ud835\udc48(non-negative integer). Hence, we relax the Boolean variables between 0and1. The non-negative integer variables are relaxed to take non-negative real values.",
-    "technical_score": 0.000925925925925926,
+    "technical_score": 0.003603148061803624,
     "citation_score": 0.0
   },
   {
@@ -375,7 +375,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "Based on these modifications, the relaxed LP is written in Figure 10 in Appendix. We prove that the LP relaxation for the upper bound of \ud835\udc543error has an additive error of at most O(\ud835\udc5a\ud835\udc4b). Theorem 3.1. The relaxed Linear Programming formulation finds the upper bound of \ud835\udc543error with an additive error of at most O(\ud835\udc5a\ud835\udc4b). The proof is moved to the Appendix B.",
-    "technical_score": 0.000925925925925926,
+    "technical_score": 0.004503935077254531,
     "citation_score": 0.0
   },
   {
@@ -385,7 +385,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "Further details about optimizations is presented in Appendix C.2.1. 4",
-    "technical_score": 0.000925925925925926,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -395,7 +395,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "The AFDs generated by the exact algorithms are always correct, meaning they belong to the actual top- \ud835\udc58or\ud835\udf16-AFDs. However, since these algorithms make decisions anytime without having access to the entire dataset, the results they identify may only represent a (\ud835\udc58\u2032\u2264\ud835\udc58) subset of the full outcomes, depending on the amount of data they have read at any given point in time. 4.1.1 Top-\ud835\udc58AFDs. The algorithm ESCA (Early Stop Criteria based Top-\ud835\udc58AFD Algo) starts at level \u2113of the lattice considering all nodes at that level. Since\u0000\ud835\udc51\u22121 \u2113\u0001is likely to be larger than \ud835\udc58, it just has to find the top- \ud835\udc58from there.",
-    "technical_score": 0.01928405253283302,
+    "technical_score": 0.019427737681373566,
     "citation_score": 0.0
   },
   {
@@ -405,8 +405,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Since only a subset of the data is read, ESCA needs to determine the correct top- \ud835\udc58ranked order. ESCA constructs a directed graph \ud835\udc3awith\u0000\ud835\udc51\u22121 \u2113\u0001no of nodes (could be represented using Hasse diagram [ 12]), and the edges represent the partial order between every pair of AFDs. The nodes of the graph are the AFDs and a directed edge from vertex (\ud835\udc4b\u2192\ud835\udc4d) to vertex(\ud835\udc4c\u2192\ud835\udc4d)indicates that \ud835\udc4b\u2192\ud835\udc4dhas lower error than \ud835\udc4c\u2192\ud835\udc4d. Initially, when no data is read, there are no edges in the graph. Edges are added as more data is read, and the order between AFDs could be established.",
-    "technical_score": 0.011404535834896808,
-    "citation_score": 0.0015551639774859286
+    "technical_score": 0.009067975256967058,
+    "citation_score": 0.0012365420804955078
   },
   {
     "section_path": [
@@ -415,7 +415,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "As a simple optimization, if any vertex (AFD) in the graph has more than \ud835\udc58incoming edges, it is already dominated by \ud835\udc58other AFDs and thus it is eliminated from \ud835\udc3aas it cannot be part of the solution. This ensures a precision of 1 as no false positives are added to the set of AFDs. However, the challenge is the following: When only a part of the data is read, ESCA will not be able to quantify the exact error of 2390KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das any node. Thus, it relies on the upper (largest) andlower (smallest) bounds of errors of AFDs for comparison and making decisions (formally defined and studied in Section 3.2). As an example, if the upper bounds of error of\ud835\udc4b\u2192\ud835\udc4dis smaller than the lower bound of error of\ud835\udc4c\u2192\ud835\udc4d, then\ud835\udc4b\u2192\ud835\udc4dis placed before \ud835\udc4c\u2192\ud835\udc4d.",
-    "technical_score": 0.008240670419011883,
+    "technical_score": 0.0036163957362469455,
     "citation_score": 0.0
   },
   {
@@ -425,7 +425,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "To find the next-best AFD, the algorithm does the following: (a) finds if there exists an AFD whose lower bound of error is not larger than the upper bound of errors of all other AFDs. (b) If the answer is yes, then that AFD is returned, and it is eliminated from the current graph. These steps are repeated until Top- \ud835\udc58AFDS are identified. (c) Steps (a) and (b) are repeated \ud835\udc58\u2032(\u2264\ud835\udc58) times to find top- \ud835\udc58\u2032AFDs in this fashion. If \ud835\udc58\u2032<\ud835\udc58, the algorithm continues to issue more getNext().",
-    "technical_score": 0.0069581888680425264,
+    "technical_score": 0.0011485814331014135,
     "citation_score": 0.0
   },
   {
@@ -435,7 +435,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Otherwise, the algorithm halts. The recall of the Exact anytime algorithm depends on the value of \ud835\udc58\u2032. If\ud835\udc58\u2032is near\ud835\udc58, the recall is large. But an important thing to note is that as more data is read,\ud835\udc58\u2032can only increase. Hence, our Exact Anytime algorithm has a precision of 1 and a monotone recall property.",
-    "technical_score": 0.005019497185741088,
+    "technical_score": 0.0005742907165507068,
     "citation_score": 0.0
   },
   {
@@ -445,7 +445,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "As our algorithm exhibits an increasing monotonic nature for the similarity between the set of AFDs it produces and the final set of AFDs, our Exact algorithm is well-behaved Anytime AFD Algorithm. 4.1.2\ud835\udf16-AFDs. For finding \ud835\udf16-AFDs, Algorithm EXEA (Early Stop Criteria based \ud835\udf16-AFD Algorithm) starts at the bottom of the lattice. First, it identifies all singleton AFDs and obtains their respective lower and upper bounds of errors. If the upper bound of error for an AFD is at most \ud835\udf16, then that AFD is identified as a minimal AFD and added to the set of results.",
-    "technical_score": 0.0031354396497811116,
+    "technical_score": 0.00025465084890932037,
     "citation_score": 0.0
   },
   {
@@ -455,7 +455,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "From then on, all of its super sets are eliminated from further consideration, since none of these latter AFDs will be minimal. On the other extreme, if the lower bound of error of an AFD exceeds \ud835\udf16, that AFD is eliminated without further consideration. The process goes level-by-level until the whole lattice is explored. The pseudocode is in the Appendix (Algorithm ??). Theorem 4.1.",
-    "technical_score": 0.0017032645403377098,
+    "technical_score": 0.00012732542445466019,
     "citation_score": 0.0
   },
   {
@@ -465,7 +465,7 @@
     ],
     "paragraph_index": 8,
     "paragraph": "Given\ud835\udc5brecords of the database are read, Algorithms ESCA and EXEA find AFDs such that these AFDS are a subset of \ud835\udc42\ud835\udc43\ud835\udc47\u2217, where\ud835\udc42\ud835\udc43\ud835\udc47\u2217is the optimal set of AFDs for the respective problem. Moreover, ESCA and EXEA are well-behaved Anytime Algorithms as the precision is always equal to 1 and recall is monotone, increasing. The proof is in the Appendix B. 4.2",
-    "technical_score": 0.0018991869918699182,
+    "technical_score": 0.0014072112015249424,
     "citation_score": 0.0
   },
   {
@@ -475,8 +475,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "At any point in time during the execution, approximate algorithms always return answers [ 2], (e.g.,\ud835\udc58answers for top- \ud835\udc58AFDs even if only a very small part of the data is read), which may be imprecise, meaning that the identified AFDs may not always represent the true top-\ud835\udc58AFDs or\ud835\udf16-AFDs. 4.2.1 Overall Idea. These algorithms are designed based on the idea of uninformed prior, which is defined below. Uninformed prior: The distribution of unread records is uniform (based on the principle of indifference) as long as they satisfy marginal constraints. Given\ud835\udc5bout of\ud835\udc41records are read, the approximate algorithms in- tend to do the following: design an efficient algorithm that outputs a small yet uniform sample of future distribution of joint distribution frequency matrices such that the marginal constraints are satisfied.",
-    "technical_score": 0.01832,
-    "citation_score": 0.011946666666666664
+    "technical_score": 0.017642581102293494,
+    "citation_score": 0.012649035525960688
   },
   {
     "section_path": [
@@ -485,8 +485,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "We note that this problem of uniformly sampling from the future distributions of joint-distribution frequency matrix under marginalconstraints is connected with seemingly unrelated problems that has been long studied by the theoretical computer science and com- putational geometry community, such as volume estimation and almost uniform lattice sampling of convex polytopes [ 16,20] under some weak assumptions. Unfortunately, the unseen joint distribution frequency matrix in our case is very high-dimensional, hence these sampling techniques are not practical in our scenarios. We instead design multiple so- lutions that are highly efficient, work well in practice, and are not affected by the curse of dimensionality. Our approaches are based on a different notion of uninformed prior, where we assume that the error distribution is uniformly distributed. I.e., we leverage the error bounds of each candidate AFD and assume its error value is uniformly distributed within its respective (\ud835\udc59\ud835\udc4f,\ud835\udc62\ud835\udc4f)interval of error.",
-    "technical_score": 0.013772357723577232,
-    "citation_score": 0.0030276422764227637
+    "technical_score": 0.008181492572835458,
+    "citation_score": 0.006129156324459248
   },
   {
     "section_path": [
@@ -495,7 +495,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "We refer to Section C.3 in the Appendix for further details. 4.2.2 Top-\ud835\udc58AFDs. The algorithms discussed in Section C.3 assigns an error to each AFD based on read and unread data. Now the approximate Top- \ud835\udc58AFD algorithm traverses the lattice like its ex- act counterpart EXCA, but at every node in the lattice it identifies top-\ud835\udc58as the one with the \ud835\udc58smallest expected errors, or the most fre- quently occurred Top- \ud835\udc58order (further details on both are discussed in Section C.3 in the Appendix). 4.2.3\ud835\udf16-AFDs.",
-    "technical_score": 0.010088888888888885,
+    "technical_score": 0.03524009991326987,
     "citation_score": 0.0
   },
   {
@@ -505,7 +505,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "The approximate algorithm for \ud835\udf16-AFDs traverses the lattice same as its exact counterpart EXEA and makes identical decision. However, like the approximate top- \ud835\udc58AFD algorithm, it takes into consideration the assigned error of each candidate AFD from the Algorithms in Section C.3. Based on those error estimates, it decides to either output that candidate AFD (if the assigned error is\u2264\ud835\udf16) or prunes it (otherwise) at that step. 5",
-    "technical_score": 0.00364444444444445,
+    "technical_score": 0.024597737189687194,
     "citation_score": 0.0
   },
   {
@@ -515,8 +515,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Datasets: We use three real-world and synthetically generated datasets. A brief description of our datasets are as follows: \u2022Student : Student dataset [ 19] contains many attributes like gender, race, parental education etc which has often been used to analyze student\u2019s performance. \u2022Letter : Letter dataset [ 24] consists of data from black-and-white rectangular pixel displays for the 26 capital letters in the English alphabet. \u2022DB Status : DB Status [ 32] represents internal RCSB records to keep track of data processing and status of the entry. \u2022Synthetic : The data generation process begins by setting the domain size and distribution (uniform or normal) of the target attribute\ud835\udc4d.",
-    "technical_score": 0.006808210754494159,
-    "citation_score": 0.004713376676188264
+    "technical_score": 0.004591849628044418,
+    "citation_score": 0.0005364424894520162
   },
   {
     "section_path": [
@@ -525,7 +525,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Then, for each determining attribute \ud835\udc4b(on the LHS of a AFD), its domain size is specified. Each \ud835\udc4bis assigned a 1-D distribution based on the strength of its functional dependency with\ud835\udc4d\u2014categorized as Very Strong, Strong, Weak, or Very Weak. 2391Anytime Algorithms for Approximate Functional Dependencies KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Dataset # Records # Attributes Student 1000 5 Letter 20,000 5 DB Status 10,000 7 Synthetic Dataset 100,000 10 Table 2: Statistics of datasets This method enables the generation of datasets with varying numbers of attributes and records, capturing different levels of dependency strength and noise in attribute relationships. The statistics of the datasets are presented in Table 2. Algorithms Implemented.",
-    "technical_score": 0.004465212034401344,
+    "technical_score": 0.002051316846998574,
     "citation_score": 0.0
   },
   {
@@ -535,7 +535,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "We implement and demonstrate re- sults on six different algorithms for the 3error measures that are studied in the paper. The first 3algorithms are based on the upper and lower bounds. AppxIPF is our machine-learning based baseline, whereas, Pyro++ and TANE are the non-ML based baselines. \u2022ExLP : exact algorithm using linear programming based lower and upper bound. \u2022ExDCS : exact algorithm which uses a relaxed version of ExLP.",
-    "technical_score": 0.005031093523345938,
+    "technical_score": 0.005470178258662866,
     "citation_score": 0.0
   },
   {
@@ -545,8 +545,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "\u2022AppxLP : approximate linear programming based uninformed prior algorithm. \u2022AppxIPF : Iterative proportional fitting (IPF) is an ML based ap- proximate algorithm that uses informed prior and adapts the RAS algorithm [ 40]. Informed prior assumes that the future data- distribution follows a similar pattern as the read data-distribution while the marginal constraints are satisfied. The approach itera- tively adjusts the weights of the initial probability distribution to satisfy marginal constraints using maximum-entropy-like mod- eling. We use the python library function in the ipfn package.",
-    "technical_score": 0.0005561042740472338,
-    "citation_score": 0.0014458711125228077
+    "technical_score": 0.0007084968547301378,
+    "citation_score": 0.000317161568769149
   },
   {
     "section_path": [
@@ -555,8 +555,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "\u2022Pyro++ [23]: SOTA solution that uses sampling to identify UCCs (unique column combinations) that are likely to satisfy an error threshold. Then, it uses a BFS based lattice traversal to find mini- mal and non-trivial AFDs. Since it uses sampling, it can miss out some AFDs - hence this is not an exact solution. \u2022TANE [18]: The original implementation produces all AFDs within an error threshold \ud835\udf16. We take the original solution and adaptively update\ud835\udf16such that only \ud835\udc58AFDs are produced as output.",
-    "technical_score": 0.00032124112401404697,
-    "citation_score": 0.0008196372796534876
+    "technical_score": 0.0025152025041474445,
+    "citation_score": 0.0005617727663504164
   },
   {
     "section_path": [
@@ -565,8 +565,8 @@
     ],
     "paragraph_index": 6,
     "paragraph": "Hardware and Software: Our experiments are run on a ma- chine with Intel Core i7-6850K CPU@3.60GHz processor and 64GB amount of RAM. The system uses Ubuntu version 22.04.3. All algo- rithms are implemented in python 3 . Our code and datasets used in the experiments can be accessed here . Measures: For quality, we present three measures, precision [ 9], Normalized Discounted Cumulative Gain (NDCG) [ 45], and Recall based on the actual top- \ud835\udc58AFDs.",
-    "technical_score": 0.0002064087908643591,
-    "citation_score": 0.0004224778995538832
+    "technical_score": 0.001246886699107296,
+    "citation_score": 0.00012065786555842003
   },
   {
     "section_path": [
@@ -575,7 +575,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "Runtime is measured in seconds. 5.2",
-    "technical_score": 0.0008103665309144761,
+    "technical_score": 0.000341886141166429,
     "citation_score": 0.0
   },
   {
@@ -585,7 +585,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We present quality analyses of the approximate algorithm\u2019s results on top-\ud835\udc58AFDs and\ud835\udf16-AFDs of length \ud835\udc59=3, considering different data organization strategies. We vary percentage of data read and measure precision and NDCG varying \ud835\udc58. When Pyro++ is used for comparison, we use \ud835\udc541as the error measure. The default error measure is otherwise \ud835\udc543. 5.2.1 Data Indexed by Key Like Attributes.",
-    "technical_score": 0.0074294052066422814,
+    "technical_score": 0.004515803787673987,
     "citation_score": 0.0
   },
   {
@@ -595,7 +595,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Here we organize data indexed by key like attributes, and measure effectiveness of the different algorithms. Figures 2a and 3a show precision and NDCG of the DB Status dataset for \ud835\udc58=5.AppxLP is easily able to outperform (a) Precision at \ud835\udc58=5, DB Status (b) Precision at \ud835\udc58=7for Letter Figure 2: Precision for top- \ud835\udc58AFDs with\ud835\udc59=3when data is indexed by key like attributes (a) NDCG at \ud835\udc58=5for DB Status (b) NDCG at \ud835\udc58=7for Letter Figure 3: NDCG for top- \ud835\udc58AFDs with\ud835\udc59=3when data is indexed by key like attributes all baselines. TANE is able to perform better after reading about half of the dataset. However, Pyro++ performs poorly, since it is not exact and hence misses out some top- \ud835\udc58AFDs. Thus the setting aids in revealing clear dependency patterns early in the top- \ud835\udc58AFD exploration, helping the algorithm to perform better.",
-    "technical_score": 0.002708267647231404,
+    "technical_score": 0.0018063215150695949,
     "citation_score": 0.0
   },
   {
@@ -605,7 +605,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "However, this setting might not aid informed prior approach to perform better and the algorithm might overfit to expected patterns instead of real patterns, resulting in a comparatively less efficient performance. Figures 2b and 3b show these results for the Letter dataset for \ud835\udc58=7. These results demonstrate that AppxLP is consistently able to maintain a precision of approximately 0.85.AppxIPF andTANE also maintain a comparatively lower precision of approximately 0.7 throughout. Pyro++ is only able to detect top- \ud835\udc58AFDs at 20%. 5.2.2 Data Indexed by Non Key Like Attributes.",
-    "technical_score": 0.0012921704774385356,
+    "technical_score": 0.0009031607575347974,
     "citation_score": 0.0
   },
   {
@@ -615,7 +615,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Here we organize data indexed by non-key like attributes, and measure effectiveness of the different algorithms. Figures 4a and 4c show these results for the Letter dataset for \ud835\udc58=7.AppxLP achieves a precision score of nearly 0.85after reading only a single record. AppxIPF andTANE initially perform as good as AppxLP but eventually drop to ap- proximately 0.7precision at 10%. Pyro++ has the least precision throughout. Figures 4b and 4d show these results for the Student dataset for\ud835\udc58=3.AppxLP again outperforms all baselines after reading only 10%of the data and achieving a precision and NDCG score of 1.",
-    "technical_score": 0.001035811215209185,
+    "technical_score": 0.0009031607575347974,
     "citation_score": 0.0
   },
   {
@@ -625,7 +625,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "All other algorithms have a high precision except for Pyro++, which does not perform as well in this setting. However, uninformed prior approach AppxLP did the best job because of its ability to explore patterns more freely in a disordered setting. These patterns might be missed by the informed prior approach as it favors expected dependencies. Table 3 reports the recall scores for the total number of \ud835\udf16-AFDs identified by our approximate methods at \ud835\udc52=0.01across seven datasets. AppxIPF achieved a perfect recall of 1.0 on five out of 2392KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das the seven datasets, while AppxLP attained high recall scores on majority of the datasets.",
-    "technical_score": 0.0007203661470455927,
+    "technical_score": 0.000781701207383566,
     "citation_score": 0.0
   },
   {
@@ -635,7 +635,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "5.2.3\ud835\udf16-AFDs. We evaluate our approximate algorithms to find all minimal AFDs with an error value below a given threshold, focusing on precision rather than ranked output. For the DB Status dataset, with a 0.01error threshold, AppxLP achieves a precision of1.0after reading only 10% of the data, while AppxIPF reaches it after 20% (Figure 5a ). TANE maintains a precision of 0.6, and Pyro++ fails to generate any valid AFDs. When the dataset is sorted by key-like attributes (Figure 5b), AppxLP maintains precision of 1.0 after reading only 10% of data, AppxIPF reaches precision of 1.0 after 50%, while TANE andPyro++ show lower and zero precision respectively.",
-    "technical_score": 0.001157461224010797,
+    "technical_score": 0.0006617988309522223,
     "citation_score": 0.0
   },
   {
@@ -645,7 +645,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "Figure 5c shows the results for the DB Status dataset sorted by non-key like attributes, where similar observation holds. These results demonstrate the effectiveness AppxLP throughout. 5.3",
-    "technical_score": 5.65180824222059e-05,
+    "technical_score": 0.0008128446817813177,
     "citation_score": 0.0
   },
   {
@@ -655,7 +655,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We evaluate our exact solution using the \ud835\udc543error measure to find top-\ud835\udc58AFDs of length \u2113=1on two synthetic datasets with control- lable data distributions. Results show that after reading 40% and 30% of the data, our solutions accurately identify the top- \ud835\udc58AFDs for\ud835\udc58=5and\ud835\udc58=7(Figures 7a and 7b respectively). Figures 8a and 8b show comparison of our Exact algorithms with approximate algorithms and baselines. AppxIPF and TANE have a precision of approximately 0.3until 30%data is read. ExLP andExDCS are able to outperform approximate approaches after reading 40%data with a precision of 1.0.Pyro++ achieves a precision of1.0at50%data read.",
-    "technical_score": 0.012555437977660198,
+    "technical_score": 0.011145204593349695,
     "citation_score": 0.0
   },
   {
@@ -665,7 +665,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "5.4",
-    "technical_score": 0.006377895355673134,
+    "technical_score": 0.0049007406649106385,
     "citation_score": 0.0
   },
   {
@@ -675,7 +675,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We measure the time for computing bounds and algorithm termi- nation in both exact and approximate algorithms. For exact, we use one of our synthetic datasets whereas for approximate, we use DB Status dataset. Results show that ExLP is approximately 39.75% slower than ExDCS. For exact algorithms, ExLP is 102.37% slower than ExDCS for\ud835\udc58= 3, significantly reducing to 13.14% for \ud835\udc58= 5 and 3.73% for\ud835\udc58= 7. For approximate algorithms, AppxLP is approxi- mately 8.05%faster than AppxIPF on average.",
-    "technical_score": 0.004833333333333335,
+    "technical_score": 0.005959636347481211,
     "citation_score": 0.0
   },
   {
@@ -685,7 +685,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "The results indicate that AppxLP is around 7.49%faster than AppxIPF for\ud835\udc58=3,5.75% for\ud835\udc58=5and10.74%for\ud835\udc58=7. Figure 6 contains these results. Table 4 summarizes an ablation study assessing the runtime of various components in the framework. For \ud835\udc543, lower bounds are estimated using Mixed LP and DCS, and upper bounds via Exact LP. For\ud835\udc541, QP is used for the upper bound, and QP with Ignore Row Sum for the lower bound.",
-    "technical_score": 0.0035,
+    "technical_score": 0.004557368971603279,
     "citation_score": 0.0
   },
   {
@@ -695,7 +695,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Depending on the strategy, the framework then computes either exact or approximate solutions. Runtime tests on a dataset of 10,000 rows demonstrate that DCS is the fastest for lower bounds, followed by Mixed LP and QP. For upper bounds, Exact LP is quicker than QP. 5.5",
-    "technical_score": 0.003666666666666667,
+    "technical_score": 0.004206802127633796,
     "citation_score": 0.0
   },
   {
@@ -705,7 +705,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "\u2022Our designed algorithms exhibit anytime property. We observe that our designed solutions are highly accurate most of the time after reading 40%of the data. As expected, the effectiveness of the approximate algorithms are not always monotonic, but, in the long run (as we read more data), the effectiveness improves considerably. Contrarily, the exact algorithm demonstrates mono- tonic improvement.Dataset # Records # Attributes Recall AppxLP Recall AppxIPF Student 1000 5 0.7142 1.0 Letter 20,000 5 0.7142 1.0 DB Status 10,000 7 0.7307 0.7307 Synthetic 1 100,000 10 0.9583 1.0 Synthetic 2 100,000 10 0.9504 1.0 Synthetic 3 160,000 8 0.9310 1.0 Synthetic 4 48,000 16 0.9737 0.9887 Table 3: Recall for\ud835\udc52=0.01after reading 60%data Algorithm Bound Type Error Runtime (sec) Exact LP Upper Bound \ud835\udc543 5.15\u221710\u22124 Mixed LP Lower Bound \ud835\udc543 6.62\u221710\u22124 DCS Lower Bound \ud835\udc543 9.8\u221710\u22126 QP Upper Bound \ud835\udc541 1.19\u221710\u22122 QP, Ignore Row Sum Lower Bound \ud835\udc541 2.6\u221710\u22123 Table 4: Ablation Study \u2022The uninformed prior based approximate algorithm tends to outperform all three baselines by a decent margin for different datasets with different data indexing. \u2022Applications that prioritize faster processing times but can tol- erate some level of inaccuracy, should opt for approximate algo- rithms that use informed priors.",
-    "technical_score": 0.006332275132275133,
+    "technical_score": 0.01587861587391188,
     "citation_score": 0.0
   },
   {
@@ -715,7 +715,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "On the other hand, applications that require high accuracy but can afford longer processing times, benefit from using exact algorithms based on uninformed priors. 6",
-    "technical_score": 0.002734391534391534,
+    "technical_score": 0.0051553947642571036,
     "citation_score": 0.0
   },
   {
@@ -724,8 +724,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "AFD and Applications. Functional Dependency (FD)[ 42] plays a crucial role in data preprocessing, cleaning, and integration[ 6, 31,38]. Flach [ 14] approached FD discovery as an induction task aimed at concept definitions that classify examples accurately and generalize well. To handle challenges in FD discovery, Kivinen et al.[21] and Parciak et al. [ 34] study different error measures of AFDs.",
-    "technical_score": 0.018854545454545454,
-    "citation_score": 0.02181212121212121
+    "technical_score": 0.018627254998426608,
+    "citation_score": 0.02144938388249729
   },
   {
     "section_path": [
@@ -733,8 +733,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Most existing approaches rely on full database access and focus on\ud835\udc541or\ud835\udc543error measures, often using sampling for efficiency. Kolahi et al.[ 22] defined optimal repairs as databases that satisfy all FDs while minimizing a correction-based distance (a variant of\ud835\udc543), and proved that verifying such repairs is NP-complete. We revisit the three error measures proposed by Kivinen et al.[ 21] \u2014 \ud835\udc541,\ud835\udc542, and\ud835\udc543\u2014 noting that \ud835\udc542remains the least utilized. These measures find application in various domains, including malicious account detection[ 8], data cleaning [ 38], and discovering FDs in incomplete data [ 7]. Le et al.[ 26] established a connection between \ud835\udc543error and classification accuracy upper bounds.",
-    "technical_score": 0.032460524285687686,
-    "citation_score": 0.012428364603201205
+    "technical_score": 0.011291549025637284,
+    "citation_score": 0.01701745609416098
   },
   {
     "section_path": [
@@ -742,8 +742,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Moreover, \ud835\udc541 has been adopted to assess approximate denial constraints in data cleaning[10, 27, 35\u201337]. Incremental and Online Algorithm. Incremental, anytime, and online algorithms are all designed to operate under constrained en- vironment, but each targets a different type of limitation. Incremen- tal algorithms[ 39] focus on efficiently updating their output as new data arrives, avoiding the need to recompute results from scratch. These algorithms are especially useful in dynamic or streaming en- vironments where data evolves over time.",
-    "technical_score": 0.043743299467708885,
-    "citation_score": 0.008701144976735556
+    "technical_score": 0.026862289963132575,
+    "citation_score": 0.005279136699916857
   },
   {
     "section_path": [
@@ -751,8 +751,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Online algorithms[ 1], on the other hand, process inputs sequentially and make irrevocable decisions at each step without knowledge of future inputs. In con- trast, we focus on a subclass of anytime algorithms that generates effective output even after reading only a small portion of the data, and progressively improve as more data is processed. 2393Anytime Algorithms for Approximate Functional Dependencies KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada (a) Precision at \ud835\udc58=7for Letter (b) Precision at \ud835\udc58=3for Student (c) NDCG at \ud835\udc58=7for Letter (d) NDCG at \ud835\udc58=3for Student Figure 4: Precision and NDCG for top- \ud835\udc58AFDs with\ud835\udc59=3when data indexed by non-key attributes (a) Indexed arbitrarily (b) Indexed by key attributes (c) Indexed by non-Key attributes Figure 5: Precision of \ud835\udf16=0.01for\ud835\udf16-AFDs with \ud835\udc59=3on DB Status (a) Bound computation, Exact (b) Running time for Exact (c) Bound computation, Approx (d) Running time for Approx Figure 6: Running time analysis (a)\ud835\udc58=5Synthetic Dataset 1 (b)\ud835\udc58=7Synthetic Dataset 2 Figure 7: Precision of exact algorithms for top- \ud835\udc58AFDs with\ud835\udc59=1 (a) Precision at \ud835\udc58=3 (b) NDCG at \ud835\udc58=3 Figure 8: Comparison of Exact, Approximate Algorithms with Base- lines on Synthetic Dataset7",
-    "technical_score": 0.014666666666666668,
-    "citation_score": 0.007333333333333334
+    "technical_score": 0.006765425637655632,
+    "citation_score": 0.005227828901824806
   },
   {
     "section_path": [
@@ -760,7 +760,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We present a computational framework designed to find AFDs in anytime fashion within a relation that generalizes to multiple error measures. We formalize two core sub-problems: maximum and min- imum error estimates, which calculate the upper and lower bounds of an AFD\u2019s error based on data that is read . We systematically analyze the bound estimation problems and propose a suite of algo- rithms. We present exact and approximate lattice based algorithms for finding anytime AFDs using these bounds. We are the first to design solutions with anytime behavior.",
-    "technical_score": 0.011768996960486323,
+    "technical_score": 0.00841915231130016,
     "citation_score": 0.0
   },
   {
@@ -769,7 +769,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "We conduct experiments to demonstrate the effectiveness of these algorithms under different data organization strategies and provide practical guidelines. An interesting area of future work could consider partial/full marginals which are known apriori, but could have errors in them. Another interesting direction could be to design approximate, but faster approaches based on Dynamic Programming or other tech- niques to estimate the lower/upper bounds of \ud835\udc541,\ud835\udc542and\ud835\udc543errors, which can be readily plugged into our framework. Acknowledgements The work of Senjuti Basu Roy was supported by : (1) NSF award number(s): 1942913, 2007935, 2) ONR award number(s): N000141812838, N000142112966, N000142412466. The work of Gautam Das was partly supported by NSF grants 2107296 and 2008602.",
-    "technical_score": 0.006620060790273556,
+    "technical_score": 0.01265913510571996,
     "citation_score": 0.0
   },
   {
@@ -778,8 +778,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "2394KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das References [1]Susanne Albers. 2003. Online algorithms: a survey. Mathematical Programming 97 (2003), 3\u201326. [2]Benjamin Arai, Gautam Das, Dimitrios Gunopulos, and Nick Koudas.",
-    "technical_score": 0.0013733130699088148,
-    "citation_score": 0.00043367781155015194
+    "technical_score": 0.0018981934430376834,
+    "citation_score": 0.0004973631857959315
   },
   {
     "section_path": [
@@ -787,8 +787,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "2009. Any- time measures for top-k algorithms on exact and fuzzy data sets. The VLDB Journal 18 (2009), 407\u2013427. [3]Abolfazl Asudeh, Saravanan Thirumuruganathan, Nan Zhang, and Gautam Das. 2016.",
-    "technical_score": 0.000342370820668693,
-    "citation_score": 4.6686930091185405e-05
+    "technical_score": 0.0017133651937912854,
+    "citation_score": 0.00028293199690339403
   },
   {
     "section_path": [
@@ -796,8 +796,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Discovering the skyline of web databases. Proc. VLDB Endow. (2016). [4]Richard Bellman.",
-    "technical_score": 9.361702127659576e-06,
-    "citation_score": 1.2765957446808512e-06
+    "technical_score": 0.0014185751211590381,
+    "citation_score": 0.0001784626313967053
   },
   {
     "section_path": [
@@ -805,8 +805,8 @@
     ],
     "paragraph_index": 6,
     "paragraph": "1966. Dynamic programming. science 153, 3731 (1966), 34\u201337. [5]George Beskales, Ihab F Ilyas, and Lukasz Golab. 2010.",
-    "technical_score": 3.74468085106383e-05,
-    "citation_score": 5.106382978723405e-06
+    "technical_score": 0.0010540449166867906,
+    "citation_score": 0.0001437333977300169
   },
   {
     "section_path": [
@@ -814,8 +814,8 @@
     ],
     "paragraph_index": 7,
     "paragraph": "Sampling the repairs of functional dependency violations under hard constraints. Proc. VLDB Endow. (2010). [6]Tobias Bleifu\u00df, Thorsten Papenbrock, Thomas Bl\u00e4sius, Martin Schirneck, and Felix Naumann.",
-    "technical_score": 4.680851063829787e-05,
-    "citation_score": 6.382978723404255e-06
+    "technical_score": 0.000878370763905659,
+    "citation_score": 0.00011977783144168078
   },
   {
     "section_path": [
@@ -823,8 +823,8 @@
     ],
     "paragraph_index": 8,
     "paragraph": "2024. Discovering Functional Dependencies through Hitting Set Enumeration. Proceedings of the ACM on Management of Data 2, 1 (2024), 1\u201324. [7]Bernardo Breve, Loredana Caruccio, Vincenzo Deufemia, Giuseppe Polese, et al . 2022.",
-    "technical_score": 5.6170212765957446e-05,
-    "citation_score": 7.659574468085105e-06
+    "technical_score": 0.0007026966111245272,
+    "citation_score": 9.58222651533446e-05
   },
   {
     "section_path": [
@@ -832,8 +832,8 @@
     ],
     "paragraph_index": 9,
     "paragraph": "RENUVER: A Missing Value Imputation Algorithm based on Relaxed Functional Dependencies.. In EDBT. 1\u201352. [8]Loredana Caruccio, Gaetano Cimino, Stefano Cirillo, Domenico Desiato, Giuseppe Polese, and Genoveffa Tortora. 2023.",
-    "technical_score": 6.553191489361702e-05,
-    "citation_score": 8.936170212765958e-06
+    "technical_score": 0.0005270224583433953,
+    "citation_score": 7.186669886500845e-05
   },
   {
     "section_path": [
@@ -841,8 +841,8 @@
     ],
     "paragraph_index": 10,
     "paragraph": "Malicious Account Identification in Social Network Platforms. ACM Transactions on Internet Technology 23, 4 (2023), 1\u201325. [9]Stefano Ceri, Alessandro Bozzon, Marco Brambilla, Emanuele Della Valle, Piero Fraternali, Silvia Quarteroni, Stefano Ceri, Alessandro Bozzon, Marco Brambilla, Emanuele Della Valle, et al .2013. An introduction to information retrieval. Web information retrieval (2013), 3\u201311.",
-    "technical_score": 7.48936170212766e-05,
-    "citation_score": 1.021276595744681e-05
+    "technical_score": 0.0003513483055622636,
+    "citation_score": 4.79111325766723e-05
   },
   {
     "section_path": [
@@ -850,8 +850,8 @@
     ],
     "paragraph_index": 11,
     "paragraph": "[10] Xu Chu, Ihab F Ilyas, and Paolo Papotti. 2013. Discovering denial constraints. Proceedings of the VLDB Endowment 6, 13 (2013), 1498\u20131509. [11] Arjun Dasgupta, Xin Jin, Bradley Jewell, Nan Zhang, and Gautam Das.",
-    "technical_score": 7.276595744680851e-05,
-    "citation_score": 2.297872340425532e-05
+    "technical_score": 0.00015171858649279564,
+    "citation_score": 4.7911132576672306e-05
   },
   {
     "section_path": [
@@ -859,8 +859,8 @@
     ],
     "paragraph_index": 12,
     "paragraph": "2010. Unbiased estimation of size and other aggregates over hidden web databases. In ACM SIGMOD. 855\u2013866. [12] Mateus de Oliveira Oliveira.",
-    "technical_score": 9.361702127659574e-05,
-    "citation_score": 1.276595744680851e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -868,8 +868,8 @@
     ],
     "paragraph_index": 13,
     "paragraph": "2010. Hasse diagram generators and Petri nets. Fundamenta Informaticae 105, 3 (2010), 263\u2013289. [13] Mark De Reuver, Hosea Ofe, Wirawan Agahari, Antragama Ewa Abbas, and Anneke Zuiderwijk. 2022.",
-    "technical_score": 0.00010297872340425532,
-    "citation_score": 1.4042553191489362e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -877,8 +877,8 @@
     ],
     "paragraph_index": 14,
     "paragraph": "The openness of data platforms: a research agenda. In Proceedings of the 1st International Workshop on Data Economy. 34\u201341. [14] Peter A Flach and Iztok Savnik. 1999.",
-    "technical_score": 0.00011234042553191489,
-    "citation_score": 1.531914893617021e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -886,8 +886,8 @@
     ],
     "paragraph_index": 15,
     "paragraph": "Database dependency discovery: a machine learning approach. AI communications 12, 3 (1999), 139\u2013160. [15] Michael R Garey and David S Johnson. 2002. Computers and intractability.",
-    "technical_score": 0.00012170212765957446,
-    "citation_score": 1.659574468085106e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -895,8 +895,8 @@
     ],
     "paragraph_index": 16,
     "paragraph": "Vol. 29. wh freeman New York. [16] Cunjing Ge. 2024.",
-    "technical_score": 0.00013106382978723404,
-    "citation_score": 1.7872340425531915e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -904,8 +904,8 @@
     ],
     "paragraph_index": 17,
     "paragraph": "Approximate Integer Solution Counts over Linear Arithmetic Constraints. In AAAI, Vol. 38. 8022\u20138029. [17] Gurobi Optimization, LLC.",
-    "technical_score": 0.0001404255319148936,
-    "citation_score": 1.9148936170212766e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -913,8 +913,8 @@
     ],
     "paragraph_index": 18,
     "paragraph": "2024. Gurobi Optimizer Reference Manual. https: //www.gurobi.com [18] Yka Huhtala, Juha K\u00e4rkk\u00e4inen, Pasi Porkka, and Hannu Toivonen. 1999. TANE: An efficient algorithm for discovering functional and approximate dependencies.",
-    "technical_score": 0.0001497872340425532,
-    "citation_score": 2.042553191489362e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -922,8 +922,8 @@
     ],
     "paragraph_index": 19,
     "paragraph": "The computer journal 42, 2 (1999), 100\u2013111. [19] Kaggle. 2024. Kaggle. https://www.kaggle.com/datasets/muhammadroshaanriaz/ students-performance-dataset-cleaned Accessed: 2024-11-29.",
-    "technical_score": 0.0001591489361702128,
-    "citation_score": 2.170212765957447e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -931,8 +931,8 @@
     ],
     "paragraph_index": 20,
     "paragraph": "[20] Ravi Kannan and Santosh Vempala. 1997. Sampling lattice points. In Proceedings of the twenty-ninth annual ACM symposium on Theory of computing. 696\u2013700.",
-    "technical_score": 0.00016851063829787235,
-    "citation_score": 2.297872340425532e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -940,8 +940,8 @@
     ],
     "paragraph_index": 21,
     "paragraph": "[21] Jyrki Kivinen and Heikki Mannila. 1995. Approximate inference of functional dependencies from relations. Theoretical Computer Science 149, 1 (1995), 129\u2013149. [22] Solmaz Kolahi and Laks VS Lakshmanan.",
-    "technical_score": 0.00015361702127659574,
-    "citation_score": 4.8510638297872336e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -949,8 +949,8 @@
     ],
     "paragraph_index": 22,
     "paragraph": "2009. On approximating optimum repairs for functional dependency violations. In ICDT. 53\u201362. [23] Sebastian Kruse and Felix Naumann.",
-    "technical_score": 0.00018723404255319148,
-    "citation_score": 2.553191489361702e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -958,8 +958,8 @@
     ],
     "paragraph_index": 23,
     "paragraph": "2018. Efficient discovery of approximate dependencies. Proceedings of the VLDB Endowment 11, 7 (2018), 759\u2013772. [24] Sebastian Kruse and Felix Naumann. 2018.",
-    "technical_score": 0.00019659574468085107,
-    "citation_score": 2.6808510638297873e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -967,8 +967,8 @@
     ],
     "paragraph_index": 24,
     "paragraph": "Efficient discovery of approximate dependencies. Proc. VLDB Endow, (2018). [25] Tuong Le and Bay Vo. 2016.",
-    "technical_score": 0.00020595744680851065,
-    "citation_score": 2.8085106382978723e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -976,8 +976,8 @@
     ],
     "paragraph_index": 25,
     "paragraph": "The lattice-based approaches for mining association rules: a review. WIREs DMKD 6, 4 (2016), 140\u2013151. [26] Marie Le Guilly, Jean-Marc Petit, and Vasile-Marian Scuturici. 2020. Evalu- ating classification feasibility using functional dependencies.",
-    "technical_score": 0.00021531914893617023,
-    "citation_score": 2.9361702127659577e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -985,8 +985,8 @@
     ],
     "paragraph_index": 26,
     "paragraph": "Transactions on Large-Scale Data-and Knowledge-Centered Systems XLIV: Special Issue on Data Management\u2013Principles, Technologies, and Applications (2020), 132\u2013159. [27] Ester Livshits, Alireza Heidari, Ihab F Ilyas, and Benny Kimelfeld. 2020. Approxi- mate denial constraints. arXiv preprint arXiv:2005.08540 (2020).",
-    "technical_score": 0.00022468085106382979,
-    "citation_score": 3.063829787234042e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -994,8 +994,8 @@
     ],
     "paragraph_index": 27,
     "paragraph": "[28] Panagiotis Mandros, Mario Boley, and Jilles Vreeken. 2017. Discovering reliable approximate functional dependencies. In Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. 355\u2013363.",
-    "technical_score": 0.0002340425531914894,
-    "citation_score": 3.191489361702128e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1003,8 +1003,8 @@
     ],
     "paragraph_index": 28,
     "paragraph": "[29] Ren\u00e9e J Miller, Mauricio A Hern\u00e1ndez, Laura M Haas, Lingling Yan, CT Howard Ho, Ronald Fagin, and Lucian Popa. 2001. The Clio project: manag- ing heterogeneity. ACM Sigmod Record 30, 1 (2001), 78\u201383. [30] Ullas Nambiar and Subbarao Kambhampati.",
-    "technical_score": 0.0002102127659574468,
-    "citation_score": 6.638297872340424e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1012,8 +1012,8 @@
     ],
     "paragraph_index": 29,
     "paragraph": "2004. Mining approximate functional dependencies and concept similarities to answer imprecise queries. In WebDB 2004.[31] Thorsten Papenbrock, Jens Ehrlich, Jannik Marten, Tommy Neubert, Jan-Peer Rudolph, Martin Sch\u00f6nberg, Jakob Zwiener, and Felix Naumann. 2015. Func- tional dependency discovery: An experimental evaluation of seven algorithms.",
-    "technical_score": 0.0002527659574468085,
-    "citation_score": 3.4468085106382976e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1021,8 +1021,8 @@
     ],
     "paragraph_index": 30,
     "paragraph": "Proceedings of the VLDB Endowment 8, 10 (2015), 1082\u20131093. [32] Thorsten Papenbrock and Felix Naumann. 2016. A hybrid approach to functional dependency discovery. In SIGMOD.",
-    "technical_score": 0.0002621276595744681,
-    "citation_score": 3.574468085106383e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1030,8 +1030,8 @@
     ],
     "paragraph_index": 31,
     "paragraph": "[33] Thorsten Papenbrock and Felix Naumann. 2017. Data-driven Schema Normaliza- tion.. In EDBT, Vol. 17.",
-    "technical_score": 0.00027148936170212764,
-    "citation_score": 3.702127659574468e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1039,8 +1039,8 @@
     ],
     "paragraph_index": 32,
     "paragraph": "342\u2013353. [34] Marcel Parciak, Sebastiaan Weytjens, Niel Hens, Frank Neven, Liesbet M Peeters, and Stijn Vansummeren. 2024. Measuring Approximate Functional Dependencies: a Comparative Study. In ICDE.",
-    "technical_score": 0.0002808510638297872,
-    "citation_score": 3.829787234042553e-05
+    "technical_score": 0.007977904142973193,
+    "citation_score": 0.0010878960194963445
   },
   {
     "section_path": [
@@ -1048,8 +1048,8 @@
     ],
     "paragraph_index": 33,
     "paragraph": "[35] Eduardo HM Pena and Eduardo Cunha de Almeida. 2018. BFASTDC: A bitwise algorithm for mining denial constraints. In DEXA 2018. Springer, 53\u201368.",
-    "technical_score": 0.0002902127659574468,
-    "citation_score": 3.957446808510638e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1057,8 +1057,8 @@
     ],
     "paragraph_index": 34,
     "paragraph": "[36] Eduardo HM Pena, Eduardo C De Almeida, and Felix Naumann. 2019. Discovery of approximate (and exact) denial constraints. Proc. VLDB Endow.",
-    "technical_score": 0.0002995744680851064,
-    "citation_score": 4.085106382978724e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1066,8 +1066,8 @@
     ],
     "paragraph_index": 35,
     "paragraph": "(2019). [37] Eduardo HM Pena, Fabio Porto, and Felix Naumann. 2022. Fast Algorithms for Denial Constraint Discovery. Proceedings of the VLDB Endowment (2022).",
-    "technical_score": 0.00030893617021276597,
-    "citation_score": 4.2127659574468086e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1075,8 +1075,8 @@
     ],
     "paragraph_index": 36,
     "paragraph": "[38] Abdulhakim Qahtan, Nan Tang, Mourad Ouzzani, Yang Cao, and Michael Stone- braker. 2020. Pattern functional dependencies for data cleaning. Proceedings of the VLDB Endowment (PVLDB) 13, 5 (2020), 684\u2013697. [39] Ganesan Ramalingam and Thomas Reps.",
-    "technical_score": 0.00027489361702127664,
-    "citation_score": 8.680851063829788e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1084,8 +1084,8 @@
     ],
     "paragraph_index": 37,
     "paragraph": "1996. An incremental algorithm for a generalization of the shortest-path problem. Journal of Algorithms (1996). [40] Ludger Ruschendorf. 1995.",
-    "technical_score": 0.00032765957446808514,
-    "citation_score": 4.4680851063829794e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1093,8 +1093,8 @@
     ],
     "paragraph_index": 38,
     "paragraph": "Convergence of the iterative proportional fitting procedure. The Annals of Statistics (1995), 1160\u20131174. [41] Alexander Schrijver. 1998. Theory of linear and integer programming.",
-    "technical_score": 0.0003370212765957447,
-    "citation_score": 4.595744680851064e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1102,8 +1102,8 @@
     ],
     "paragraph_index": 39,
     "paragraph": "John Wiley & Sons. [42] Avi Silberschatz, Henry F. Korth, and S. Sudarshan. 2020.",
-    "technical_score": 0.00034638297872340425,
-    "citation_score": 4.723404255319149e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1111,8 +1111,8 @@
     ],
     "paragraph_index": 40,
     "paragraph": "Database System Concepts, Seventh Edition. McGraw-Hill Book Company. [43] Yasin N Silva and Spencer Pearson. 2012. Exploiting database similarity joins for metric spaces.",
-    "technical_score": 0.0003557446808510638,
-    "citation_score": 4.8510638297872336e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1120,8 +1120,8 @@
     ],
     "paragraph_index": 41,
     "paragraph": "Proceedings of the VLDB Endowment 5, 12 (2012), 1922\u20131925. [44] Juan Pablo Vielma. 2015. Mixed integer linear programming formulation tech- niques. Siam Review 57, 1 (2015), 3\u201357.",
-    "technical_score": 0.0003651063829787234,
-    "citation_score": 4.978723404255319e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1129,8 +1129,8 @@
     ],
     "paragraph_index": 42,
     "paragraph": "[45] Yining Wang, Liwei Wang, Yuanzhi Li, Di He, and Tie-Yan Liu. 2013. A theoretical analysis of NDCG type ranking measures. In Conference on learning theory. PMLR.",
-    "technical_score": 0.00037446808510638297,
-    "citation_score": 5.106382978723404e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1138,8 +1138,8 @@
     ],
     "paragraph_index": 43,
     "paragraph": "[46] Nan Zhang and Gautam Das. 2011. Exploration of deep web repositories. Pro- ceedings of the VLDB Endowment 4, 12 (2011), 1506\u20131507. [47] Shlomo Zilberstein.",
-    "technical_score": 0.00033148936170212764,
-    "citation_score": 0.00010468085106382977
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1147,7 +1147,7 @@
     ],
     "paragraph_index": 44,
     "paragraph": "1996. Using anytime algorithms in intelligent systems. AI magazine 17, 3 (1996), 73\u201373. A Intractability Results under Certain Assumptions We consider a simplified setting with two attributes, \ud835\udc4band\ud835\udc4d, and availability of their marginal distributions without the database as inputs. Using this limited information, we analyze the compu- tational complexity of determining whether the AFD \ud835\udc4b\u2192\ud835\udc4dcan have a lower bound error of zero ( \ud835\udf16=0).",
-    "technical_score": 0.00044680851063829785,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1156,7 +1156,7 @@
     ],
     "paragraph_index": 45,
     "paragraph": "Theorem A.1. Consider two attributes \ud835\udc4b,\ud835\udc4d with domain sizes \ud835\udc5a\ud835\udc4b and\ud835\udc5a\ud835\udc4dgiven as inputs. Additionally, their frequency distributions M\ud835\udc4b AandM\ud835\udc4d Aare provided explicitly. The decision problem: Does there exist a database such that the given marginals M\ud835\udc4b AandM\ud835\udc4d A are satisfied, while the \ud835\udc543(or\ud835\udc541,\ud835\udc542) error of the AFD \ud835\udc4b\u2192\ud835\udc4dis zero - isNP-hard. Proof.",
-    "technical_score": 0.0004574468085106383,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1165,8 +1165,8 @@
     ],
     "paragraph_index": 46,
     "paragraph": "We prove theNP harness by a reduction from Subset Sum [ 15]. For this reduction, we transform Subset Sum to the deci- sion instance of \ud835\udc543error when 0records are read. The Subset Sum problem consists of a set of numbers Sand a target\ud835\udc47. In our instance of the \ud835\udc543problem, let the domain \ud835\udc5a\ud835\udc4bof\ud835\udc4b be set to|\ud835\udc46|and the domain of \ud835\udc4dset to 2(i.e.\ud835\udc5a\ud835\udc4d=2). The marginals for\ud835\udc4b,M\ud835\udc4b Abe set to\ud835\udc46, i.e.",
-    "technical_score": 0.0004119148936170213,
-    "citation_score": 5.6170212765957446e-05
+    "technical_score": 0.0,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1174,7 +1174,7 @@
     ],
     "paragraph_index": 47,
     "paragraph": "the first element of \ud835\udc46is the marginal for the first category of \ud835\udc4band so forth. For \ud835\udc4d, let the marginals, M\ud835\udc4d Abe set to\ud835\udc47, and(\u00cd|\ud835\udc46| \ud835\udc56=1\ud835\udc46[\ud835\udc56])\u2212\ud835\udc47respectively. The target for our\ud835\udc543error problem is set to 0. The idea behind this process is that if there exists a subset in \ud835\udc46that adds up to \ud835\udc47, there must exist an unseen joint distribution frequency matrix which has an error of 0, 2395Anytime Algorithms for Approximate Functional Dependencies KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada i.e. there must exist an unseen joint distribution frequency matrix which has no violations.",
-    "technical_score": 0.0004787234042553192,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1183,7 +1183,7 @@
     ],
     "paragraph_index": 48,
     "paragraph": "The proofs for error measures \ud835\udc541and\ud835\udc542are similar to the one presented above, with the only difference being the change in error- functions (\ud835\udc542and\ud835\udc543). \u25a1 The above proof relies solely on standard computational com- plexity theory. However, if we treat the database itself as part of the input, the aforementioned reduction from Subset Sum no longer applies, since the frequency values are bounded by the database size\ud835\udc41. In this case, Subset Sum can be solved in polynomial time using dynamic programming. B Proofs of theorems Proof of Theorem 3.1: Let\ud835\udc48\u2217\u2208R\ud835\udc5a\ud835\udc4b\u00d7\ud835\udc5a\ud835\udc4dbe the optimal solution to the LP with error \ud835\udc52\u2217.",
-    "technical_score": 0.0004893617021276596,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1192,7 +1192,7 @@
     ],
     "paragraph_index": 49,
     "paragraph": "Let\ud835\udc48\u2032=\u230a\ud835\udc48\u2217\u230b, be obtained by taking floor of each entry in \ud835\udc48\u2217. While\ud835\udc48\u2032may violate the marginal constraints by having lower row/column sums, it never exceeds them. We can add at most 1 to selected entries of \ud835\udc48\u2032so that each row and column sum matches the required marginals. Since there are \ud835\udc5a\ud835\udc4brows, at most \ud835\udc5a\ud835\udc4bsuch adjustments are needed. Each adjust- ment may increase the error (e.g., the maxterm) by at most 1.",
-    "technical_score": 0.0005,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1201,7 +1201,7 @@
     ],
     "paragraph_index": 50,
     "paragraph": "Hence, there exists an integer matrix with error at most \ud835\udc52\u2217+ O(\ud835\udc5a\ud835\udc4b), implying that the optimal integer solution has error at least\ud835\udc52\u2217\u2212O(\ud835\udc5a\ud835\udc4b). This proves the existence of an integer solution within additive error O(\ud835\udc5a\ud835\udc4b). \u25a1 Proof of Theorem 4.1: For any AFD \ud835\udc4b\u2192\ud835\udc4d, adding attributes to the LHS can only reduce error; thus, ascendants have lower or equal error. To find minimal\ud835\udf16-AFDs, we start from single-attribute AFDs. If one satis- fies the threshold, it is minimal; otherwise, Algorithm EXEA explore the lattice upward only if minimality is still possible.",
-    "technical_score": 0.0005106382978723404,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1210,7 +1210,7 @@
     ],
     "paragraph_index": 51,
     "paragraph": "If an AFD cannot be resolved due to limited data, we defer exploration and wait for more input via getNext() . This ensures the current set T\u2286\ud835\udc42\ud835\udc43\ud835\udc47\u2217, maintaining precision 1. As more data arrives, Tgrows monotonically, and if all AFDs are resolved, T=\ud835\udc42\ud835\udc43\ud835\udc47\u2217with preci- sion and recall both 1. The same reasoning applies to ESCA, with top-down lattice traversal. \u25a1 C Optimization Techniques C.1 Bound Computation for \ud835\udc541Error The error measure for \ud835\udc541is different compared to the other two error measures, as the computation of errors is based on violations between pairs of disagreeing data points.",
-    "technical_score": 0.0005212765957446809,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1219,7 +1219,7 @@
     ],
     "paragraph_index": 52,
     "paragraph": "Each record with \ud835\udc4b=\ud835\udc5fand\ud835\udc4d=\ud835\udc50is in violation with every other record with \ud835\udc4b=\ud835\udc5fand\ud835\udc4d\u2260\ud835\udc50. This could be represented as a sum of products, as below, \u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22122 \ud835\udc66=0\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc67=\ud835\udc66+1(\ud835\udc48[\ud835\udc5f][\ud835\udc66]+\ud835\udc46[\ud835\udc5f][\ud835\udc66])\u00d7(\ud835\udc48[\ud835\udc5f][\ud835\udc67]+\ud835\udc46[\ud835\udc5f][\ud835\udc67]) One approach would be to use the above summation as on opti- mization problem with the linear marginal constraints defined in Section 3.3.1. However, for |\ud835\udc4b|=1, further efficiency opportunity exists as we describe below.\ud835\udc5a\ud835\udc56\ud835\udc5b\ud835\udc56\ud835\udc5a\ud835\udc56\ud835\udc67\ud835\udc52\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc50=0(\ud835\udc48[\ud835\udc5f][\ud835\udc50]+\ud835\udc46[\ud835\udc5f][\ud835\udc50])2 \ud835\udc60.\ud835\udc61.\u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121}\u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121}\ud835\udc48[\ud835\udc5f][\ud835\udc50]\u22650 \u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121}\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f]=\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc4e=0\ud835\udc46[\ud835\udc5f][\ud835\udc4e]+\ud835\udc48[\ud835\udc5f][\ud835\udc4e] \u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121}\ud835\udc50\ud835\udc5c\ud835\udc59[\ud835\udc50]=\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc4e=0\ud835\udc46[\ud835\udc4e][\ud835\udc50]+\ud835\udc48[\ud835\udc4e][\ud835\udc50] Figure 9: Convex QP for UB of \ud835\udc541error \ud835\udc5a\ud835\udc4e\ud835\udc65\ud835\udc56\ud835\udc5a\ud835\udc56\ud835\udc67\ud835\udc52\u2211\ufe01\ud835\udc5b\u22121 \ud835\udc5f=0\ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f] \ud835\udc60.\ud835\udc61.\u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121}\u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121}\ud835\udc48[\ud835\udc5f][\ud835\udc50]\u22650 \u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121}\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f]=\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc4e=0\ud835\udc46[\ud835\udc5f][\ud835\udc4e]+\ud835\udc48[\ud835\udc5f][\ud835\udc4e] \u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121}\ud835\udc50\ud835\udc5c\ud835\udc59[\ud835\udc50]=\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc4e=0\ud835\udc46[\ud835\udc4e][\ud835\udc50]+\ud835\udc48[\ud835\udc4e][\ud835\udc50] \u2200\ud835\udc5f\u2208{0,..,\ud835\udc5a \ud835\udc4b\u22121} \u2200\ud835\udc50\u2208{0,..,\ud835\udc5a \ud835\udc4d\u22121} \ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f]\u2265\ud835\udc46[\ud835\udc5f][\ud835\udc50]+\ud835\udc48[\ud835\udc5f][\ud835\udc50] \ud835\udc5a\ud835\udc4e\ud835\udc65[\ud835\udc5f]\u2264\ud835\udc46[\ud835\udc5f][\ud835\udc50]+\ud835\udc48[\ud835\udc5f][\ud835\udc50]+( 1\u2212B[\ud835\udc5f][\ud835\udc50])\u2217\ud835\udc41 0\u2264B[\ud835\udc5f][\ud835\udc50]\u22641 \u2200\ud835\udc5f\u2208{0,\u00b7\u00b7\u00b7,\ud835\udc5b\u22121}\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc50=0B[\ud835\udc5f][\ud835\udc50]=1 Figure 10: LP relaxation for lower bound of \ud835\udc543error C.1.1 Reformulate \ud835\udc541Error. Before we consider the reformulation, let us simplify the terms. For our reformulation, any sum with same indices for\ud835\udc48and\ud835\udc46will be simplified with, \ud835\udc40\ud835\udc4e\ud835\udc61 i.e.\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc50]= \ud835\udc48[\ud835\udc5f][\ud835\udc50]+\ud835\udc46[\ud835\udc5f][\ud835\udc50].",
-    "technical_score": 0.0005319148936170213,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1228,7 +1228,7 @@
     ],
     "paragraph_index": 53,
     "paragraph": "Based on this simplification, let us consider the below reformulation using known terms, \ud835\udc5a\ud835\udc4d\u22121\u2211\ufe01 \ud835\udc66=0\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66]\u00d7\ud835\udc5a\ud835\udc4d\u22121\u2211\ufe01 \ud835\udc67=0\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc67]=\ud835\udc5a\ud835\udc4d\u22121\u2211\ufe01 \ud835\udc66=0\ud835\udc5a\ud835\udc4d\u22121\u2211\ufe01 \ud835\udc67=\ud835\udc66+1\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66]\u00d7\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc67] +\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66]\u00d7\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66] But we know that\u00cd\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66]=\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f]. Simplifying the above expression, we get, (\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f])2=\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc67=\ud835\udc66+1\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66]\u00d7\ud835\udc40[\ud835\udc5f][\ud835\udc67]+\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0(\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66])2 Rearranging the terms we get, \u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc67=\ud835\udc66+1\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66]\u00d7\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc67]=(\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f])2\u2212\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0(\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66])2 Hence, our\ud835\udc541error function can be written as below, \u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0(\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f])2\u2212\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0(\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66])2 As\u00cd\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0(\ud835\udc5f\ud835\udc5c\ud835\udc64[\ud835\udc5f])2is a constant, our error function that we will use is as below, \u2212\u2211\ufe01\ud835\udc5a\ud835\udc4b\u22121 \ud835\udc5f=0\u2211\ufe01\ud835\udc5a\ud835\udc4d\u22121 \ud835\udc66=0(\ud835\udc40\ud835\udc4e\ud835\udc61[\ud835\udc5f][\ud835\udc66])2(1) Based on lower or upper bounds, the above error function will be minimized or maximized. Note that as the above expression is a sum of squares with a negative sign, the function is concave. Hence, maximizing the error function can be done efficiently with any hill climbing technique. C.1.2 Convex Quadratic Program.",
-    "technical_score": 0.0005425531914893618,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1237,7 +1237,7 @@
     ],
     "paragraph_index": 54,
     "paragraph": ": Quadratic programming (QP) optimizes a quadratic objective under linear constraints. In the formulation, the constraints are derived from the marginal infor- mationM\ud835\udc4b,\ud835\udc4d A, similar to those in the LP formulation (Section 3.3), while the objective function is based on Equation 1. By converting the maximization to a minimization via a sign change, we ensure convexity. The complete QP formulation is shown in Figure 9. 2396KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das C.2 Lower Bound Computation Formulation C.2.1 Further opportunities for Optimization.",
-    "technical_score": 0.0005531914893617021,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1246,7 +1246,7 @@
     ],
     "paragraph_index": 55,
     "paragraph": "Relaxing Partial Marginal Constraints : We now study another potential relaxation based on \u201cdropping \" some marginal constraints. This is likely to make the solutions further efficient albeit more \u201cloose\u201d. This tech- nique utilizes the monotone nature of the error-measures to obtain lower bounds for the three error measures. Let us consider the lower bound for \ud835\udc543error. As mentioned in Section 3.3, information about the marginals are enforced using linear constraints.",
-    "technical_score": 0.0005638297872340426,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1255,7 +1255,7 @@
     ],
     "paragraph_index": 56,
     "paragraph": "For a given AFD \ud835\udc4b\u2192\ud835\udc4d, the idea here is to drop some of these linear constraints on \ud835\udc4d(\u201cright-hand side \") with the same optimization goal. This left us with an optimization sub- problem which can be efficiently and optimally solved greedily. For the sub-problem for lower bound on \ud835\udc543error, the maximum value in each row needs to be maximized while the constraints on\ud835\udc4bare maintained. As the joint distribution frequency matrix captures the read data, the maximum value in the row represents the current maximum value in the read data. The rest of the values represent the current \ud835\udc543error.",
-    "technical_score": 0.000574468085106383,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1264,7 +1264,7 @@
     ],
     "paragraph_index": 57,
     "paragraph": "As we ignore the marginals on the columns of the final joint distribution frequency matrix, i.e. drop the constraints on \ud835\udc4d, the current \ud835\udc543error is LB on the final error. Algorithm 1: ESCA-Early Stop Criteria based Top- \ud835\udc58AFD Algo Input: Graph\ud835\udc3awith\u0000\ud835\udc51\u22121 \u2113\u0001nodes Output: Top-\ud835\udc58\u2032AFDs 1T\u2190\u2205 ; update edges in \ud835\udc3a 2for\ud835\udc56=1to\ud835\udc58do 3\ud835\udc4f\ud835\udc52\ud835\udc60\ud835\udc61\u2190vertex in\ud835\udc3awith out-degree|\ud835\udc49|\u22121 4 if\ud835\udc4f\ud835\udc52\ud835\udc60\ud835\udc61 exists then 5 Remove\ud835\udc4f\ud835\udc52\ud835\udc60\ud835\udc61 from\ud835\udc3a; add its AFD toT 6 Add descendants of \ud835\udc4f\ud835\udc52\ud835\udc60\ud835\udc61 to\ud835\udc3aand update edges 7 else 8 Remove nodes with in-degree \u2265\ud835\udc58, store\ud835\udc3a 9 returnT 10returnT Algorithm 2: EXEA \u2014 Early Stop \ud835\udf16-AFD Algorithm Input: Attribute lattice Output: Minimal\ud835\udf16-AFDsT 1T\u2190\u2205 ;\ud835\udc36\u2190{\ud835\udc34\ud835\udc56\u2192\ud835\udc4d|\ud835\udc34\ud835\udc56\u2208A} 2while\ud835\udc36\u2260\u2205do 3 for\ud835\udc39\ud835\udc37\u2208\ud835\udc36do 4 lb,ub\u2190Orc(\ud835\udc39\ud835\udc37 ) 5 iflb>\ud835\udf16then 6 remove\ud835\udc39\ud835\udc37 7 else if ub\u2264\ud835\udf16then 8T\u2190T\u222a{ \ud835\udc39\ud835\udc37} 9 Add minimal ascendants of unresolved \ud835\udc39\ud835\udc37s to\ud835\udc36 10returnTC.3 Heuristic Approximate AFD Algorithms We present two efficient approaches based on the Uninformed prior assumption on the error distribution that work well in practice. Mean heuristic : Section 3 explains several ways of computing the lower/upper bound of error for a given AFD. For this discussion, consider the tight values for lower/upper bounds.",
-    "technical_score": 0.0005851063829787234,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1273,7 +1273,7 @@
     ],
     "paragraph_index": 58,
     "paragraph": "If the PDF of the error is given/computed, the expected value can be computed exactly. But, as we have seen before, computing the PDF is very expensive and is not practical. Instead of exact computation of the expected value, a quick but inexact estimate of the error can be computed by the mean of the (lower and upper) bounds, i.e.(\ud835\udc59+\ud835\udc62) 2. To summarize, mean heuristic is a simple and fast heuristic to estimate the error scores based on the mean of the lower and upper bounds. The efficacy and efficiency of the heuristic is illustrated in the experiments section.",
-    "technical_score": 0.0005957446808510638,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1282,7 +1282,7 @@
     ],
     "paragraph_index": 59,
     "paragraph": "Sampling based approach A different heuristic we design is based on the assumption that the error is uniformly distributed between \ud835\udc59and\ud835\udc62,i.e.error\u2208[\ud835\udc59,\ud835\udc62]. Based on this assumption, the probability of the error value being equal to any integer in the range [\ud835\udc59,\ud835\udc62]is 1/(\ud835\udc62\u2212\ud835\udc59+1)(normalized value). We leverage this by sampling error scores uniformly from each AFD\u2019s range[\ud835\udc59,\ud835\udc62]over all possible unread data distributions satis- fying the marginals. These sampled scores will determine the top- \ud835\udc58 AFDs for a potential future distribution. We repeat this process of sampling \ud835\udc60times and record the ordered top-\ud835\udc58AFDs for each sample.",
-    "technical_score": 0.0006063829787234042,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1291,7 +1291,7 @@
     ],
     "paragraph_index": 60,
     "paragraph": "As each of these samples/runs are of uniform weight (we use unit weights), the set of top- \ud835\udc58AFDs with the highest counts across \ud835\udc60runs is the one that has the highest probability of being the actual-ordered top- \ud835\udc58AFDs. We produce that ordered top- \ud835\udc58as the output. We analyze the running time of our Uninformed Prior Approach in the Lemma C.1 below. Lemma C.1. Our sampling based algorithm consumes O(|S|(\ud835\udc60+ log(|S|)+\ud835\udefc)time when\ud835\udc60is the number of samples, \ud835\udefcis the amount of total time needed to compute the lower and upper bounds.",
-    "technical_score": 0.0006170212765957446,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1300,7 +1300,7 @@
     ],
     "paragraph_index": 61,
     "paragraph": "Proof. Let the number of samples used be \ud835\udc60. In each iteration, we generate a top- \ud835\udc58AFD by simulating the error generated based on the uninformed prior assumption. For the simulation, we need the lower/upper bounds for the |S|AFDs, each of which consumes \ud835\udefctime. Additionally, finding the top- \ud835\udc58AFDs after the individual errors are generated takes O(|S|log(|S|))time.",
-    "technical_score": 0.000627659574468085,
+    "technical_score": 0.0,
     "citation_score": 0.0
   },
   {
@@ -1309,7 +1309,7 @@
     ],
     "paragraph_index": 62,
     "paragraph": "Thus, the total time needed is\ud835\udc60|S|+|S|log(|S|)+\ud835\udefc|S|for the|S|. Thus, the overall complexity isO(|S|(\ud835\udc60+log(|S|)+\ud835\udefc). \u25a1 2397",
-    "technical_score": 0.0006382978723404255,
+    "technical_score": 0.0,
     "citation_score": 0.0
   }
 ]
