@@ -1,11 +1,15 @@
 import argparse
+import ast
 import json
 import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import PyPDF2
+try:
+    import PyPDF2
+except ImportError:  # pragma: no cover - fallback for environments with pypdf only
+    import pypdf as PyPDF2
 from ollama import Client
 
 
@@ -216,6 +220,36 @@ PROMPT_CATALOG = {
     "paragraph_channel_split_system_prompt": PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT,
     "paragraph_channel_split_user_prompt_template": PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE,
 }
+
+
+def load_section_assignments(assignments_path: str) -> Dict[str, Dict[str, Any]]:
+    path = Path(assignments_path)
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    assignments: Dict[str, Dict[str, Any]] = {}
+
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        value = ast.literal_eval(node.value)
+        if isinstance(value, dict):
+            assignments[target.id] = value
+
+    return assignments
+
+
+def load_sections_from_file(assignments_path: str, variable_name: str) -> Dict[str, Any]:
+    assignments = load_section_assignments(assignments_path)
+    if variable_name not in assignments:
+        available = ", ".join(sorted(assignments))
+        raise KeyError(
+            f"Sections variable '{variable_name}' not found in {assignments_path}. "
+            f"Available variables: {available}"
+        )
+    return assignments[variable_name]
 
 
 def read_pdf_text(pdf_path: str) -> str:
@@ -2024,6 +2058,16 @@ def main() -> None:
     )
     parser.add_argument("--pdf", default=DEFAULT_PDF_PATH, help="Path to PDF file")
     parser.add_argument("--paper-id", default=DEFAULT_PAPER_ID, help="Paper identifier used in paragraph ids")
+    parser.add_argument(
+        "--sections-file",
+        default="",
+        help="Optional path to a text file containing section-tree assignments.",
+    )
+    parser.add_argument(
+        "--sections-var",
+        default="",
+        help="Assignment name inside --sections-file to use for this paper.",
+    )
     parser.add_argument("--model", default="llama3.2", help="Ollama model name")
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
     parser.add_argument("--n-samples", type=int, default=3, help="Number of LLM samples to average")
@@ -2055,10 +2099,15 @@ def main() -> None:
         help="Optional path to save the exact prompt strings as JSON.",
     )
     args = parser.parse_args()
+    if bool(args.sections_file) != bool(args.sections_var):
+        parser.error("--sections-file and --sections-var must be provided together.")
     append_run_separator(args.debug_log, args)
 
     text = read_pdf_text(args.pdf)
-    citations, content = extract_citations_by_section(text, DEFAULT_SECTIONS)
+    sections = DEFAULT_SECTIONS
+    if args.sections_file and args.sections_var:
+        sections = load_sections_from_file(args.sections_file, args.sections_var)
+    citations, content = extract_citations_by_section(text, sections)
     citation_importance, section_importance, paragraph_importance = assign_importance_scores(
         content_dict=content,
         citations_dict=citations,

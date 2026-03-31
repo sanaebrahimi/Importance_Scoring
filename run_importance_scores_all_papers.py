@@ -1,0 +1,198 @@
+import argparse
+import ast
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Dict
+
+
+DEFAULT_PAPERS_DIR = Path("papers")
+DEFAULT_SECTIONS_FILE = Path("papers_section_titles.txt")
+DEFAULT_RESULTS_ROOT = Path("paper_results")
+DEFAULT_VENDOR_DIR = Path(".vendor")
+
+
+def load_assignment_names(assignments_path: Path) -> Dict[str, dict]:
+    source = assignments_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(assignments_path))
+    assignments: Dict[str, dict] = {}
+
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        value = ast.literal_eval(node.value)
+        if isinstance(value, dict):
+            assignments[target.id] = value
+
+    return assignments
+
+
+def sections_var_name(pdf_path: Path) -> str:
+    base = re.sub(r"[^A-Za-z0-9]+", "_", pdf_path.stem).strip("_").upper()
+    return f"{base}_SECTIONS"
+
+
+def output_files_exist(prefix: Path) -> bool:
+    return all(
+        path.exists()
+        for path in (
+            Path(f"{prefix}_citation_scores.json"),
+            Path(f"{prefix}_section_scores.json"),
+            Path(f"{prefix}_paragraph_scores.json"),
+        )
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run importance_score.py for every paper/section mapping pair.")
+    parser.add_argument("--papers-dir", default=str(DEFAULT_PAPERS_DIR), help="Directory containing PDF papers.")
+    parser.add_argument(
+        "--sections-file",
+        default=str(DEFAULT_SECTIONS_FILE),
+        help="Text file containing section-tree assignments.",
+    )
+    parser.add_argument(
+        "--results-root",
+        default=str(DEFAULT_RESULTS_ROOT),
+        help="Root directory where per-paper result folders will be created.",
+    )
+    parser.add_argument("--model", default="llama3.2", help="Ollama model name to pass through.")
+    parser.add_argument("--host", default="localhost:11434", help="Ollama host to pass through.")
+    parser.add_argument("--n-samples", type=int, default=3, help="Number of LLM samples to average.")
+    parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature.")
+    parser.add_argument("--max-retries", type=int, default=3, help="Retries per sample for parsing.")
+    parser.add_argument(
+        "--paragraph-direct-max-tokens",
+        type=int,
+        default=0,
+        help="Token threshold for optional paragraph compression.",
+    )
+    parser.add_argument(
+        "--paragraph-compressed-snippet-limit",
+        type=int,
+        default=180,
+        help="Per-paragraph snippet length used during compressed scoring.",
+    )
+    parser.add_argument(
+        "--python",
+        default=sys.executable,
+        help="Python executable to use when invoking importance_score.py.",
+    )
+    parser.add_argument(
+        "--vendor-dir",
+        default=str(DEFAULT_VENDOR_DIR),
+        help="Optional local site-packages directory to prepend to PYTHONPATH if it exists.",
+    )
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip a paper if its three output JSON files already exist.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the commands that would run without executing them.",
+    )
+    args = parser.parse_args()
+
+    papers_dir = Path(args.papers_dir)
+    sections_file = Path(args.sections_file)
+    results_root = Path(args.results_root)
+    vendor_dir = Path(args.vendor_dir)
+    results_root.mkdir(parents=True, exist_ok=True)
+
+    assignments = load_assignment_names(sections_file)
+    manifest = []
+
+    for pdf_path in sorted(papers_dir.glob("*.pdf")):
+        section_var = sections_var_name(pdf_path)
+        if section_var not in assignments:
+            raise SystemExit(
+                f"Missing sections mapping for {pdf_path.name}. Expected variable '{section_var}' in {sections_file}."
+            )
+
+        paper_dir = results_root / pdf_path.stem
+        paper_dir.mkdir(parents=True, exist_ok=True)
+        prefix = paper_dir / pdf_path.stem
+        debug_log = paper_dir / "debug.log"
+        prompts_output = paper_dir / "prompts.json"
+
+        outputs_present = output_files_exist(prefix)
+        command = [
+            args.python,
+            "importance_score.py",
+            "--pdf",
+            str(pdf_path),
+            "--paper-id",
+            pdf_path.stem,
+            "--sections-file",
+            str(sections_file),
+            "--sections-var",
+            section_var,
+            "--output1",
+            str(prefix),
+            "--output2",
+            str(prefix),
+            "--output3",
+            str(prefix),
+            "--model",
+            args.model,
+            "--host",
+            args.host,
+            "--n-samples",
+            str(max(1, args.n_samples)),
+            "--temperature",
+            str(max(0.0, args.temperature)),
+            "--max-retries",
+            str(max(1, args.max_retries)),
+            "--paragraph-direct-max-tokens",
+            str(max(0, args.paragraph_direct_max_tokens)),
+            "--paragraph-compressed-snippet-limit",
+            str(max(60, args.paragraph_compressed_snippet_limit)),
+            "--debug-log",
+            str(debug_log),
+            "--prompts-output",
+            str(prompts_output),
+        ]
+
+        record = {
+            "paper": pdf_path.name,
+            "paper_dir": str(paper_dir),
+            "sections_var": section_var,
+            "command": command,
+            "skipped": False,
+        }
+
+        if args.skip_existing and outputs_present:
+            record["skipped"] = True
+            manifest.append(record)
+            print(f"[skip] {pdf_path.name}: outputs already exist in {paper_dir}")
+            continue
+
+        print(f"[run] {pdf_path.name} -> {paper_dir}")
+        if args.dry_run:
+            print(" ".join(command))
+        else:
+            env = os.environ.copy()
+            if vendor_dir.exists():
+                current_pythonpath = env.get("PYTHONPATH", "")
+                env["PYTHONPATH"] = (
+                    f"{vendor_dir}{os.pathsep}{current_pythonpath}" if current_pythonpath else str(vendor_dir)
+                )
+            subprocess.run(command, check=True, env=env)
+
+        manifest.append(record)
+
+    manifest_path = results_root / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    print(f"[done] Wrote manifest to {manifest_path}")
+
+
+if __name__ == "__main__":
+    main()
