@@ -4293,3 +4293,2197 @@ paragraph_id:technical=0.25,citation=0.03
 [run_end] time=2026-03-31T02:45:46
 =============================== RUN END ===============================
 ====================================================================================================
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-03-31T02:52:55 model=llama3.2 host=localhost:11434 paper_id=AFD n_samples=3 temperature=0.2 max_retries=3 paragraph_direct_max_tokens=0 paragraph_compressed_snippet_limit=180
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top] parent=Whole Paper sample=1 attempt=1/3
+Here is the reformatted version of the text:
+
+1. Lower Bound Computation Formulation
+   - Further opportunities for Optimization. Relaxing Partial Marginal Constraints
+     We now study another potential relaxation based on “dropping some marginal constraints. This is likely to make the solutions further efficient albeit more “loose”. This technique utilizes the monotone nature of the error-measures to obtain lower bounds for the three error measures.
+
+2. Algorithm 1: ESCA-Early Stop Criteria based Top- ∆AFD Algo
+   - Input: Graph with 0 ≤ n ≤ 3 nodes
+   - Output: Top- ∆AFDs
+
+3. Heuristic Approximate AFD Algorithms
+   - Mean heuristic: The efficacy and efficiency of the heuristic is illustrated in the experiments section.
+   - Sampling based approach: We leverage this by sampling error scores uniformly from each AFD’s range[∆59, ∆62] over all possible unread data distributions satisfying the marginals.
+
+4. Lemma C.1
+   - Our sampling based algorithm consumes O(|S|(∆60 + log(|S|) + ∆c)) time when ∆60 is the number of samples, ∆c is the amount of total time needed to compute the lower and upper bounds.
+[all_together_top] parent=Whole Paper sample=1 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.25
+4: 0.15
+5: 0.10
+6: 0.20
+7: 0.05
+[all_together_top] parent=Whole Paper sample=2 attempt=1/3
+Here is the reformatted text:
+
+1. Lower Bound Computation Formulation
+   - Further opportunities for Optimization. Relaxing Partial Marginal Constraints 
+     We now study another potential relaxation based on “dropping some marginal constraints. This is likely to make the solutions further efficient albeit more “loose”. This technique utilizes the monotone nature of the error-measures to obtain lower bounds for the three error measures.
+   - Let us consider the lower bound for ∆error. As mentioned in Section 3.3, information about the marginals are enforced using linear constraints. For a given AFD ∆β → ∆δ, the idea here is to drop some of these linear constraints on ∆δ (“right-hand side ”) with the same optimization goal.
+   - This left us with an optimization sub-problem which can be efficiently and optimally solved greedily.
+
+2. Heuristic Approximate AFD Algorithms
+   - Mean heuristic: 
+     - Section 3 explains several ways of computing the lower/upper bound of error for a given AFD. For this discussion, consider the tight values for lower/upper bounds.
+     - If the PDF of the error is given/computed, the expected value can be computed exactly. But, as we have seen before, computing the PDF is very expensive and is not practical.
+     - Instead of exact computation of the expected value, a quick but inexact estimate of the error can be computed by the mean of the (lower and upper) bounds, i.e., (∆59 + ∆62)/2.
+
+3. Sampling based approach
+   - A different heuristic we design is based on the assumption that the error is uniformly distributed between ∆59 and ∆62, i.e., ∆error ∈ [∆59, ∆62].
+   - Based on this assumption, the probability of the error value being equal to any integer in the range [∆59, ∆62] is 1/(∆62 – ∆59 + 1) (normalized value).
+   - We leverage this by sampling error scores uniformly from each AFD’s range[∆59, ∆62] over all possible unread data distributions satisfying the marginals.
+   - These sampled scores will determine the top- ∆58 AFDs for a potential future distribution.
+
+4. Running Time Analysis
+   - Our sampling based algorithm consumes O(|S|(∆60 + log(|S|) + ∆c)) time when ∆60 is the number of samples, ∆c is the amount of total time needed to compute the lower and upper bounds.
+   - Proof: 
+     - Let the number of samples used be ∆60. In each iteration,
+       we generate a top- ∆58 AFD by simulating the error generated based on the uninformed prior assumption.
+       For the simulation, we need the lower/upper bounds for the |S|AFDs, each of which consumes ∆c time.
+       Additionally, finding the top- ∆58 AFDs after the individual errors are generated takes O(|S|log(|S|)) time. Thus, the total time needed is ∆60|S| + |S|log(|S|) + ∆c|S| for the |S|. 
+       Thus, the overall complexity is O(|S|(∆60 + log(|S|) + ∆c).
+[all_together_top] parent=Whole Paper sample=2 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.20
+4: 0.30
+[all_together_top] parent=Whole Paper sample=2 attempt=3/3
+1: 0.32
+2: 0.18
+3: 0.20
+4: 0.15
+5: 0.10
+6: 0.05
+[all_together_top_error] parent=Whole Paper sample=2 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7']
+[all_together_top_sample_skip] parent=Whole Paper sample=2/3 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 3 retries.
+[all_together_top] parent=Whole Paper sample=3 attempt=1/3
+Here is the reformatted version of the text:
+
+1. Lower Bound Computation Formulation
+2. Further opportunities for Optimization. Relaxing Partial Marginal Constraints 
+3. Algorithm 1: ESCA-Early Stop Criteria based Top- \ud835\udc58AFD Algo
+4. Algorithm 2: EXEA \u2014 Early Stop \ud835\udf16-AFD Algorithm
+5. Heuristic Approximate AFD Algorithms
+6. Mean heuristic 
+7. Sampling based approach 
+8. Lemma C.1
+[all_together_top] parent=Whole Paper sample=3 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.30
+4: 0.20
+[all_together_top] parent=Whole Paper sample=3 attempt=3/3
+I can't fulfill this request.
+[all_together_top_error] parent=Whole Paper sample=3 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7']
+[all_together_top_sample_skip] parent=Whole Paper sample=3/3 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 3 retries.
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_full_parent estimated_tokens=4684 threshold=7000 paragraphs=11 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=1/3
+1: 0.16
+2: 0.08
+3: 0.04
+4: 0.08
+5: 0.32
+6: 0.08
+7: 0.08
+8: 0.08
+9: 0
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.20
+4: 0.10
+5: 0.15
+6: 0.12
+7: 0.08
+8: 0.05
+9: 0.03
+10: 0.02
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=3/3
+1: 0.32
+2: 0.18
+3: 0.22
+4: 0.04
+5: 0.10
+6: 0.06
+7: 0.08
+8: 0.12
+9: 0.20
+10: 0.16
+11: 0.14
+[all_together_paragraphs] parent=Introduction::paragraphs sample=2 attempt=1/3
+1 = 0.128
+2 = 0.064
+3 = 0.032
+4 = 0.032
+5 = 0.04
+6 = 0.016
+7 = 0.08
+8 = 0.16
+9 = 0.16
+[all_together_paragraphs] parent=Introduction::paragraphs sample=2 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.20
+4: 0.15
+5: 0.25
+6: 0.12
+7: 0.30
+8: 0.22
+9: 0.10
+10: 0.28
+[all_together_paragraphs] parent=Introduction::paragraphs sample=2 attempt=3/3
+10: 0.256
+[all_together_paragraphs] parent=Introduction::paragraphs sample=3 attempt=1/3
+Here is the list of child paragraphs with their corresponding scores:
+
+1: 0.16
+2: 0.12
+3: 0.08
+4: 0.10
+5: 0.04
+6: 0.06
+7: 0.08
+8: 0.04
+9: 0.02
+10: 0.05
+[all_together_paragraphs] parent=Introduction::paragraphs sample=3 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.20
+4: 0.10
+5: 0.15
+6: 0.05
+7: 0.25
+8: 0.12
+9: 0.22
+10: 0.08
+[all_together_paragraphs] parent=Introduction::paragraphs sample=3 attempt=3/3
+1: 0.32
+2: 0.18
+3: 0.20
+4: 0.10
+5: 0.15
+6: 0.12
+7: 0.08
+8: 0.25
+9: 0.22
+[all_together_paragraphs_error] parent=Introduction::paragraphs sample=3 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
+[all_together_paragraphs_sample_skip] parent=Introduction::paragraphs sample=3/3 reason=Model failed to produce complete child scores for parent 'Introduction::paragraphs' after 3 retries.
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: 
+technical=0.021, citation=0.011
+
+Paragraph 2:
+technical=0.013, citation=0.000
+
+Paragraph 3:
+technical=0.008, citation=0.000
+
+Paragraph 4:
+technical=0.012, citation=0.010
+
+Paragraph 5:
+technical=0.042, citation=0.000
+
+Paragraph 6:
+technical=0.011, citation=0.000
+
+Paragraph 7:
+technical=0.017, citation=0.000
+
+Paragraph 8:
+technical=0.025, citation=0.000
+
+Paragraph 9:
+technical=0.016, citation=0.000
+
+Paragraph 10: 
+technical=0.031, citation=0.011
+
+Paragraph 11:
+technical=0.042, citation=0.000
+[paragraph_channel_split] sample=1/3 attempt=2/3 temperature=0.2
+Paragraph 1: 
+technical=0.021, citation=0.011
+
+Paragraph 2:
+technical=0.013, citation=0.000
+
+Paragraph 3:
+technical=0.008, citation=0.000
+
+Paragraph 4:
+technical=0.012, citation=0.010
+
+Paragraph 5:
+technical=0.042, citation=0.000
+
+Paragraph 6:
+technical=0.011, citation=0.000
+
+Paragraph 7:
+technical=0.017, citation=0.000
+
+Paragraph 8:
+technical=0.025, citation=0.000
+
+Paragraph 9:
+technical=0.016, citation=0.000
+
+Paragraph 10:
+technical=0.031, citation=0.032
+
+Paragraph 11:
+technical=0.042, citation=0.000
+[paragraph_channel_split] sample=1/3 attempt=3/3 temperature=0.2
+Paragraph 1: 
+technical=0.02, citation=0.03
+
+Paragraph 2:
+technical=0.11, citation=0.01
+
+Paragraph 3:
+technical=0.04, citation=0.01
+
+Paragraph 4:
+technical=0.01, citation=0.02
+
+Paragraph 5:
+technical=0.00, citation=0.00
+
+Paragraph 6:
+technical=0.03, citation=0.02
+
+Paragraph 7:
+technical=0.01, citation=0.01
+
+Paragraph 8:
+technical=0.01, citation=0.01
+
+Paragraph 9:
+technical=0.01, citation=0.01
+
+Paragraph 10: 
+technical=0.03, citation=0.02
+
+Paragraph 11:
+technical=0.04, citation=0.00
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.021, citation=0.011
+Paragraph 2: technical=0.013, citation=0.000
+Paragraph 3: technical=0.008, citation=0.000
+Paragraph 4: technical=0.012, citation=0.010
+Paragraph 5: technical=0.042, citation=0.000
+Paragraph 6: technical=0.011, citation=0.000
+Paragraph 7: technical=0.017, citation=0.000
+Paragraph 8: technical=0.025, citation=0.000
+Paragraph 9: technical=0.016, citation=0.000
+Paragraph 10: technical=0.031, citation=0.032
+Paragraph 11: technical=0.042, citation=0.000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.031, citation=0.001
+Paragraph 2: technical=0.015, citation=0.000
+Paragraph 3: technical=0.008, citation=0.000
+Paragraph 4: technical=0.012, citation=0.002
+Paragraph 5: technical=0.042, citation=0.000
+Paragraph 6: technical=0.011, citation=0.000
+Paragraph 7: technical=0.017, citation=0.000
+Paragraph 8: technical=0.025, citation=0.000
+Paragraph 9: technical=0.016, citation=0.000
+Paragraph 10: technical=0.031, citation=0.008
+Paragraph 11: technical=0.042, citation=0.000
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/3
+1: 0.005
+2: 0.001
+3: 0.002
+4: 0.000
+5: 0.000
+6: 0.000
+7: 0.000
+[citation_split] paragraph_id=Introduction::p1 sample=2 attempt=1/3
+1: 0.005
+2: 0.001
+3: 0.002
+4: 0.0005
+5: 0.00015
+6: 0.00005
+7: 0.00005
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=1/3
+1: 0.004
+2: 0.001
+3: 0.002
+4: 0.001
+5: 0.000
+6: 0.000
+7: 0.000
+[citation_split] paragraph_id=Introduction::p2 sample=1 attempt=1/3
+1: 0.001925470085470085
+2: 0.0000025000002500005
+3: 0.000001500000150000
+[citation_split] paragraph_id=Introduction::p2 sample=2 attempt=1/3
+1: 0.001925470085470085
+2: 0.00000000000000000
+3: 0.00000000000000000
+[citation_split] paragraph_id=Introduction::p2 sample=3 attempt=1/3
+1: 0.001925470085470085
+2: 0.000005
+3: 0.00001
+[citation_split] paragraph_id=Introduction::p3 sample=1 attempt=1/3
+3: 0.31
+11: 0.23
+46: 0.46
+[citation_split] paragraph_id=Introduction::p3 sample=2 attempt=1/3
+3: 0.28
+11: 0.24
+46: 0.08
+[citation_split] paragraph_id=Introduction::p3 sample=3 attempt=1/3
+3: 0.24
+11: 0.22
+46: 0.14
+[citation_split] paragraph_id=Introduction::p4 sample=1 attempt=1/3
+1: 0.01
+2: 0.03
+3: 0.04
+4: 0.32
+[citation_split] paragraph_id=Introduction::p4 sample=2 attempt=1/3
+1: 0.001
+2: 0.002
+3: 0.0004
+4: 0.0008
+[citation_split] paragraph_id=Introduction::p4 sample=3 attempt=1/3
+1: 0.002
+2: 0.001
+3: 0.001
+[citation_split] paragraph_id=Introduction::p4 sample=3 attempt=2/3
+1: 0.001
+2: 0.002
+3: 0.0005
+4: 0.0006
+[citation_split] paragraph_id=Introduction::p10 sample=1 attempt=1/3
+1 -> 0.007
+2 -> 0.003
+3 -> 0.001
+4 -> 0
+[citation_split] paragraph_id=Introduction::p10 sample=2 attempt=1/3
+1: 0.008
+2: 0.003
+3: 0.0004
+4: 0
+[citation_split] paragraph_id=Introduction::p10 sample=3 attempt=1/3
+1: 0.003
+2: 0.005
+3: 0.002
+4: 0.001
+[all_together_subsections] parent=Data Model & Problem Definition sample=1 attempt=1/3
+1: 0.32
+2: 0.18
+3: 0.5
+[all_together_subsections] parent=Data Model & Problem Definition sample=2 attempt=1/3
+1: 0.32
+2: 0.18
+3: 0.5
+[all_together_subsections] parent=Data Model & Problem Definition sample=3 attempt=1/3
+1: 0.32
+2: 0.18
+3: 0.5
+[paragraph_scoring] parent=Data model::paragraphs method=channel_full_parent estimated_tokens=3149 threshold=7000 paragraphs=8 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Data model::paragraphs sample=1 attempt=1/3
+Here is the list of scores:
+
+1: 0.32
+2: 0.18
+3: 0.00
+4: 0.00
+5: 0.00
+6: 0.00
+7: 0.00
+8: 0.00
+[all_together_paragraphs] parent=Data model::paragraphs sample=2 attempt=1/3
+Here is the list of scores for each paragraph:
+
+1: 0.32
+2: 0.18
+3: 0.13
+4: 0.11
+5: 0.04
+6: 0.03
+7: 0.02
+8: 0.01
+[all_together_paragraphs] parent=Data model::paragraphs sample=3 attempt=1/3
+1: 0.02
+2: 0.01
+3: 0.03
+4: 0.02
+5: 0.04
+6: 0.05
+7: 0.06
+8: 0.07
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.0167, citation=0.0
+Paragraph 2: technical=0.0093, citation=0.0
+Paragraph 3: technical=0.0039, citation=0.0
+Paragraph 4: technical=0.0030, citation=0.0
+Paragraph 5: technical=0.0027, citation=0.0
+Paragraph 6: technical=0.0031, citation=0.016
+Paragraph 7: technical=0.0034, citation=0.017
+Paragraph 8: technical=0.0037, citation=0.018
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: 
+technical=0.016705828571428567, citation=0.000000000000000
+
+Paragraph 2:
+technical=0.009333028571428568, citation=0.000000000000000
+
+Paragraph 3:
+technical=0.003913142857142856, citation=0.000000000000000
+
+Paragraph 4: 
+technical=0.003035428571428571, citation=0.000000000000000
+
+Paragraph 5:
+technical=0.002779428571428571, citation=0.000000000000000
+
+Paragraph 6:
+technical=0.003108571428571428, citation=0.004192857142857143
+
+Paragraph 7: 
+technical=0.003437714285714285, citation=0.004192857142857143
+
+Paragraph 8: 
+technical=0.00376685714285714, citation=0.00571428571428571
+[paragraph_channel_split] sample=2/3 attempt=2/3 temperature=0.25
+Paragraph 1: 
+technical=0.016705828571428567, citation=0.000000000000000
+
+Paragraph 2:
+technical=0.009333028571428568, citation=0.000000000000000
+
+Paragraph 3:
+technical=0.003913142857142856, citation=0.000000000000000
+
+Paragraph 4:
+technical=0.003035428571428571, citation=0.000000000000000
+
+Paragraph 5:
+technical=0.002779428571428571, citation=0.000000000000000
+
+Paragraph 6: 
+technical=0.003108571428571428, citation=0.005428571428571428
+
+Paragraph 7: 
+technical=0.003437714285714285, citation=0.005428571428571428
+
+Paragraph 8:
+technical=0.00376685714285714, citation=0.000000000000000
+[paragraph_channel_split] sample=2/3 attempt=3/3 temperature=0.25
+Paragraph 1: 
+technical=0.016705828571428567, citation=0.00001909090909090901
+
+Paragraph 2:
+technical=0.009333028571428568, citation=0.00000000000000000
+
+Paragraph 3:
+technical=0.003913142857142856, citation=0.00000000000000000
+
+Paragraph 4:
+technical=0.003035428571428571, citation=0.00000000000000000
+
+Paragraph 5:
+technical=0.002779428571428571, citation=0.00000000000000000
+
+Paragraph 6: 
+technical=0.0031085714285714284, citation=0.000100000000000004
+
+Paragraph 7:
+technical=0.0034377142857142853, citation=0.000100000000000004
+
+Paragraph 8:
+technical=0.00376685714285714, citation=0.000050000000000002
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.016705828571428567, 
+citation=0.00002857142857142857
+
+Paragraph 2:
+technical=0.009333028571428568, 
+citation=0.00000000000000000
+
+Paragraph 3:
+technical=0.003913142857142856, 
+citation=0.00000000000000000
+
+Paragraph 4:
+technical=0.003035428571428571, 
+citation=0.00000000000000000
+
+Paragraph 5:
+technical=0.002779428571428571, 
+citation=0.00000000000000000
+
+Paragraph 6: 
+technical=0.0031085714285714284, 
+citation=0.001111111111111111
+
+Paragraph 7: 
+technical=0.0034377142857142853, 
+citation=0.001111111111111111
+
+Paragraph 8:
+technical=0.00376685714285714, 
+citation=0.000666666666666667
+[paragraph_channel_split] sample=3/3 attempt=2/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical = 0.016705828571428567
+citation = 0.00002857142857142857
+
+Paragraph 2:
+technical = 0.009333028571428568
+citation = 0.00000000000000000
+
+Paragraph 3:
+technical = 0.003913142857142856
+citation = 0.00000000000000000
+
+Paragraph 4:
+technical = 0.003035428571428571
+citation = 0.00000000000000000
+
+Paragraph 5:
+technical = 0.002779428571428571
+citation = 0.00000000000000000
+
+Paragraph 6: 
+technical = 0.0031085714285714284
+citation = 0.0014285714285714284
+
+Paragraph 7: 
+technical = 0.0034377142857142853
+citation = 0.0014285714285714284
+
+Paragraph 8:
+technical = 0.00376685714285714
+citation = 0.0014285714285714284
+[paragraph_channel_split] sample=3/3 attempt=3/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.0167, citation=0.0001
+Paragraph 2: technical=0.0093, citation=0.0000
+Paragraph 3: technical=0.0039, citation=0.0000
+Paragraph 4: technical=0.0030, citation=0.0000
+Paragraph 5: technical=0.0027, citation=0.0000
+Paragraph 6: technical=0.0031, citation=0.0052
+Paragraph 7: technical=0.0034, citation=0.0063
+Paragraph 8: technical=0.0037, citation=0.0075
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p7 sample=1 attempt=1/3
+1: 0.001
+2: 0.0004
+3: 0.0007
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p7 sample=2 attempt=1/3
+1: 0.001
+2: 0.0005
+3: 0.0008
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p7 sample=3 attempt=1/3
+1: 0.001
+2: 0.0004
+3: 0.0007
+[paragraph_scoring] parent=Problem Definitions::paragraphs method=channel_full_parent estimated_tokens=1182 threshold=7000 paragraphs=2 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=1 attempt=1/3
+1: 0.005
+2: 0.020
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=2 attempt=1/3
+1: 0.01439
+2: 0.01153
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=3 attempt=1/3
+1: 0.01439
+2: 0.01153
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.011321333333333334, citation=0.00000000000000001
+Paragraph 2: technical=0.014598666666666664, citation=0.00000000000000001
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.011321333333333334, citation=0.00000000000000001
+Paragraph 2: technical=0.013598666666666664, citation=0.0010000000000000004
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.011321333333333334, citation=0.000000000000000
+Paragraph 2: technical=0.013598666666666664, citation=0.00100000000000000
+[paragraph_scoring] parent=Definition of Anytime Algorithms for AFDs::paragraphs method=channel_full_parent estimated_tokens=1513 threshold=7000 paragraphs=4 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=1 attempt=1/3
+1: 0.036
+2: 0.024
+3: 0.012
+4: 0.00
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=2 attempt=1/3
+1: 0.025
+2: 0.035
+3: 0.045
+4: 0.057
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=3 attempt=1/3
+1: 0.035
+2: 0.025
+3: 0.045
+4: 0.005
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.02, citation=0.01
+Paragraph 2: technical=0.18, citation=0.00
+Paragraph 3: technical=0.02, citation=0.18
+Paragraph 4: technical=0.01, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.02, citation=0.01
+Paragraph 2: technical=0.18, citation=0.00
+Paragraph 3: technical=0.02, citation=0.18
+Paragraph 4: technical=0.01, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.02, citation=0.01
+Paragraph 2: technical=0.18, citation=0.00
+Paragraph 3: technical=0.02, citation=0.04
+Paragraph 4: technical=0.01, citation=0
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=1 attempt=1/3
+1: 0.32
+2: 0.18
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=1 attempt=2/3
+1: O(√n)
+2: O(n)
+3: O(log n)
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=1 attempt=3/3
+1: O(√n)
+2: O(n)
+3: O(log n)
+[all_together_subsections_error] parent=Solution Framework: Bound Computation sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3']
+[all_together_subsections_sample_skip] parent=Solution Framework: Bound Computation sample=1/3 reason=Model failed to produce complete child scores for parent 'Solution Framework: Bound Computation' after 3 retries.
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=2 attempt=1/3
+1: 0.32
+2: 0.18
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=2 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.50
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=3 attempt=1/3
+1: 0.32
+2: 0.18
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=3 attempt=2/3
+1: O(√n)
+2: O(n)
+3: O(log n)
+[all_together_subsections] parent=Solution Framework: Bound Computation sample=3 attempt=3/3
+1: O(√n)
+2: O(n)
+3: O(log n)
+[all_together_subsections_error] parent=Solution Framework: Bound Computation sample=3 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3']
+[all_together_subsections_sample_skip] parent=Solution Framework: Bound Computation sample=3/3 reason=Model failed to produce complete child scores for parent 'Solution Framework: Bound Computation' after 3 retries.
+[paragraph_scoring] parent=Lattice Based Solution::paragraphs method=channel_full_parent estimated_tokens=1386 threshold=7000 paragraphs=3 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Lattice Based Solution::paragraphs sample=1 attempt=1/3
+1: 0.036
+2: 0.016
+3: 0.008
+[all_together_paragraphs] parent=Lattice Based Solution::paragraphs sample=2 attempt=1/3
+1: 0.036
+2: 0.016
+3: 0.008
+[all_together_paragraphs] parent=Lattice Based Solution::paragraphs sample=3 attempt=1/3
+1: 0.036
+2: 0.016
+3: 0.008
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.0384, citation=0.0000
+Paragraph 2: technical=0.017066666666666667, citation=0.0000
+Paragraph 3: technical=0.008533333333333334, citation=0.0000
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.0384, citation=0.0000
+Paragraph 2: technical=0.017066666666666667, citation=0.0000
+Paragraph 3: technical=0.008533333333333334, citation=0.0000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.0384, citation=0.0000
+Paragraph 2: technical=0.017066666666666667, citation=0.0000
+Paragraph 3: technical=0.008533333333333334, citation=0.0000
+[paragraph_scoring] parent=Compute Bounds for Anytime Answer::paragraphs method=channel_full_parent estimated_tokens=2360 threshold=7000 paragraphs=5 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Compute Bounds for Anytime Answer::paragraphs sample=1 attempt=1/3
+1: 0.012
+2: 0.016
+3: 0.004
+4: 0.002
+5: 0.004
+[all_together_paragraphs] parent=Compute Bounds for Anytime Answer::paragraphs sample=2 attempt=1/3
+1: 0.015
+2: 0.012
+3: 0.006
+4: 0.002
+5: 0.001
+[all_together_paragraphs] parent=Compute Bounds for Anytime Answer::paragraphs sample=3 attempt=1/3
+1: 0.024
+2: 0.006
+3: 0.004
+4: 0.002
+5: 0
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.016789473684210524, citation=0.00000000000000000
+Paragraph 2: technical=0.011052631578947368, citation=0.00000000000000000
+Paragraph 3: technical=0.004596491228070175, citation=0.00000000000000000
+Paragraph 4: technical=0.0019649122807017545, citation=0.00000000000000000
+Paragraph 5: technical=0.0015964912280701752, citation=0.00000000000000000
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.016789473684210524, citation=0.000000000000000
+Paragraph 2: technical=0.011052631578947368, citation=0.000000000000000
+Paragraph 3: technical=0.004596491228070175, citation=0.000000000000000
+Paragraph 4: technical=0.0019649122807017545, citation=0.000000000000000
+Paragraph 5: technical=0.0015964912280701752, citation=0.000000000000000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.016789473684210524, citation=0.00000000000000000
+Paragraph 2: technical=0.011052631578947368, citation=0.00000000000000000
+Paragraph 3: technical=0.004596491228070175, citation=0.00000000000000000
+Paragraph 4: technical=0.0019649122807017545, citation=0.00000000000000000
+Paragraph 5: technical=0.0015964912280701752, citation=0.00000000000000000
+[paragraph_scoring] parent=Bound Computation Algorithms::paragraphs method=channel_full_parent estimated_tokens=3410 threshold=7000 paragraphs=7 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=1 attempt=1/3
+Here is the list of child paragraphs with their corresponding scores:
+
+1: 0.32
+2: 0.18
+3: 0.05
+4: 0.45
+5: 0.01
+6: 0.09
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=1 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.45
+4: 0.05
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=1 attempt=3/3
+1: 0.32
+2: 0.18
+3: 0.05
+4: 0.45
+[all_together_paragraphs_error] parent=Bound Computation Algorithms::paragraphs sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7']
+[all_together_paragraphs_sample_skip] parent=Bound Computation Algorithms::paragraphs sample=1/3 reason=Model failed to produce complete child scores for parent 'Bound Computation Algorithms::paragraphs' after 3 retries.
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=2 attempt=1/3
+Here is the list of scores:
+
+1: 0.32
+2: 0.18
+3: 0.5
+4: 0.05
+5: 0.01
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=2 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.5
+4: 0.05
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=2 attempt=3/3
+1: 0.32
+2: 0.18
+3: 0.5
+4: 0.05
+6: 0.01
+7: 0.01
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=3 attempt=1/3
+Here is the list of child items with their corresponding scores:
+
+1: 0.32
+2: 0.18
+3: 0.05
+4: 0.45
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=3 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.5
+4: 0.05
+5: 0.02
+[all_together_paragraphs] parent=Bound Computation Algorithms::paragraphs sample=3 attempt=3/3
+1: 0.32
+2: 0.18
+3: 0.45
+4: 0.05
+[all_together_paragraphs_error] parent=Bound Computation Algorithms::paragraphs sample=3 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7']
+[all_together_paragraphs_sample_skip] parent=Bound Computation Algorithms::paragraphs sample=3/3 reason=Model failed to produce complete child scores for parent 'Bound Computation Algorithms::paragraphs' after 3 retries.
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: 
+technical = 0.21, 
+citation = 0.04 
+
+Paragraph 2:
+technical = 0.13, 
+citation = 0.00 
+
+Paragraph 3:
+technical = 0.22, 
+citation = 0.02 
+
+Paragraph 4:
+technical = 0.01, 
+citation = 0.00 
+
+Paragraph 5:
+technical = 0.21, 
+citation = 0.00 
+
+Paragraph 6:
+technical = 0.20, 
+citation = 0.03 
+
+Paragraph 7:
+technical = 0.02, 
+citation = 0.00
+[paragraph_channel_split] sample=1/3 attempt=2/3 temperature=0.2
+Paragraph 1: 
+technical=0.21, citation=0.08
+
+Paragraph 2: 
+technical=0.13, citation=0.00
+
+Paragraph 3: 
+technical=0.23, citation=0.04
+
+Paragraph 4: 
+technical=0.03, citation=0.00
+
+Paragraph 5: 
+technical=0.02, citation=0.01
+
+Paragraph 6: 
+technical=0.02, citation=0.01
+
+Paragraph 7: 
+technical=0.00, citation=0.00
+[paragraph_channel_split] sample=1/3 attempt=3/3 temperature=0.2
+Paragraph 1:
+technical=0.21, citation=0.08
+
+Paragraph 2:
+technical=0.13, citation=0.00
+
+Paragraph 3:
+technical=0.23, citation=0.04
+
+Paragraph 4:
+technical=0.01, citation=0.00
+
+Paragraph 5:
+technical=0.02, citation=0.00
+
+Paragraph 6:
+technical=0.02, citation=0.00
+
+Paragraph 7:
+technical=0.00, citation=0.00
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: 
+technical=0.21, citation=0.08
+
+Paragraph 2: 
+technical=0.13, citation=0.00
+
+Paragraph 3: 
+technical=0.22, citation=0.04
+
+Paragraph 4: 
+technical=0.03, citation=0.00
+
+Paragraph 5: 
+technical=0.05, citation=0.00
+
+Paragraph 6: 
+technical=0.05, citation=0.00
+
+Paragraph 7: 
+technical=0.01, citation=0.00
+[paragraph_channel_split] sample=2/3 attempt=2/3 temperature=0.25
+Paragraph 1:
+technical=0.21, citation=0.08
+
+Paragraph 2:
+technical=0.13, citation=0.00
+
+Paragraph 3:
+technical=0.18, citation=0.15
+
+Paragraph 4:
+technical=0.03, citation=0.00
+
+Paragraph 5:
+technical=0.02, citation=0.01
+
+Paragraph 6:
+technical=0.02, citation=0.01
+
+Paragraph 7:
+technical=0.00, citation=0.00
+[paragraph_channel_split] sample=2/3 attempt=3/3 temperature=0.25
+Paragraph 1: 
+technical = 0.021, citation = 0.008
+
+Paragraph 2:
+technical = 0.013, citation = 0.000
+
+Paragraph 3:
+technical = 0.046, citation = 0.000
+
+Paragraph 4:
+technical = 0.004, citation = 0.000
+
+Paragraph 5:
+technical = 0.001, citation = 0.000
+
+Paragraph 6:
+technical = 0.001, citation = 0.000
+
+Paragraph 7:
+technical = 0.000, citation = 0.000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.02962962962962963, citation=0.000010010010010001
+
+Paragraph 2:
+technical=0.016666666666666666, citation=0.00000000000000000
+
+Paragraph 3:
+technical=0.04629629629629631, citation=0.00003003003003003003
+
+Paragraph 4:
+technical=0.004629629629629629, citation=0.00000000000000000
+
+Paragraph 5:
+technical=0.000925925925925926, citation=0.000005005005005005
+
+Paragraph 6:
+technical=0.000925925925925926, citation=0.00000000000000000
+
+Paragraph 7:
+technical=0.000925925925925926, citation=0.00000000000000000
+[paragraph_channel_split] sample=3/3 attempt=2/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.21, citation=0.08
+
+Paragraph 2: 
+technical=0.13, citation=0.00
+
+Paragraph 3: 
+technical=0.24, citation=0.04
+
+Paragraph 4: 
+technical=0.02, citation=0.00
+
+Paragraph 5: 
+technical=0.20, citation=0.05
+
+Paragraph 6: 
+technical=0.15, citation=0.01
+
+Paragraph 7: 
+technical=0.02, citation=0.00
+[paragraph_channel_split] sample=3/3 attempt=3/3 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.21, citation=0.08
+
+Paragraph 2:
+technical=0.13, citation=0.00
+
+Paragraph 3:
+technical=0.24, citation=0.04
+
+Paragraph 4:
+technical=0.02, citation=0.00
+
+Paragraph 5:
+technical=0.03, citation=0.01
+
+Paragraph 6:
+technical=0.03, citation=0.01
+
+Paragraph 7:
+technical=0.00, citation=0.00
+[citation_split] paragraph_id=Solution Framework: Bound Computation > Bound Computation Algorithms::p1 sample=1 attempt=1/3
+1 -> 0.005
+2 -> 0.002
+[citation_split] paragraph_id=Solution Framework: Bound Computation > Bound Computation Algorithms::p1 sample=2 attempt=1/3
+1 -> 0.005
+2 -> 0.002
+[citation_split] paragraph_id=Solution Framework: Bound Computation > Bound Computation Algorithms::p1 sample=3 attempt=1/3
+1 -> 0.005
+2 -> 0.002
+[all_together_subsections] parent=Anytime AFD Algorithms sample=1 attempt=1/3
+Here is the list of scores:
+
+1 = 0.42
+2 = 0.58
+[all_together_subsections] parent=Anytime AFD Algorithms sample=2 attempt=1/3
+Here is the list of scores:
+
+1 = 0.42
+2 = 0.58
+[all_together_subsections] parent=Anytime AFD Algorithms sample=3 attempt=1/3
+Here is the list of scores:
+
+1 = 0.64
+2 = 0.36
+[paragraph_scoring] parent=Exact Algorithms::paragraphs method=channel_full_parent estimated_tokens=2790 threshold=7000 paragraphs=8 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=1 attempt=1/3
+1: 0.025
+2: 0.015
+3: 0.012
+4: 0.006
+5: 0.004
+6: 0.002
+7: 0.001
+8: 0.000
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=2 attempt=1/3
+1: 0.0275
+2: 0.0215
+3: 0.0128
+4: 0.0156
+5: 0.0109
+6: 0.0087
+7: 0.0045
+8: 0.001
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=3 attempt=1/3
+1: 0.029999999999999996
+2: 0.019999999999999997
+3: 0.009999999999999998
+4: 0.010000000000000002
+5: 0.008000000000000001
+6: 0.003999999999999994
+7: 0.002499999999999995
+8: 0.007999999999999997
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2:
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3:
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4: 
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5: 
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6:
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7:
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8: 
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_channel_split] sample=1/3 attempt=2/3 temperature=0.2
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2: 
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3: 
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4: 
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5: 
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6: 
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7: 
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8: 
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_channel_split] sample=1/3 attempt=3/3 temperature=0.2
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2: 
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3: 
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4: 
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5: 
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6: 
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7: 
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8: 
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2: 
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3: 
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4: 
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5: 
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6: 
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7: 
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8: 
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_channel_split] sample=2/3 attempt=2/3 temperature=0.25
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2:
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3:
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4:
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5:
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6:
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7:
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8:
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_channel_split] sample=2/3 attempt=3/3 temperature=0.25
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2: 
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3: 
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4: 
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5: 
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6: 
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7: 
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8: 
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.00
+
+Paragraph 2: 
+technical=0.012959699812382737, citation=0.006
+
+Paragraph 3: 
+technical=0.008240670419011883, citation=0.00
+
+Paragraph 4: 
+technical=0.0069581888680425264, citation=0.00
+
+Paragraph 5: 
+technical=0.005019497185741088, citation=0.00
+
+Paragraph 6: 
+technical=0.0031354396497811116, citation=0.00
+
+Paragraph 7: 
+technical=0.0017032645403377098, citation=0.00
+
+Paragraph 8: 
+technical=0.0018991869918699182, citation=0.00
+[paragraph_channel_split] sample=3/3 attempt=2/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2:
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3:
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4:
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5:
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6:
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7:
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8:
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_channel_split] sample=3/3 attempt=3/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.01928405253283302, citation=0.0000000000000000
+
+Paragraph 2:
+technical=0.012959699812382737, citation=0.0000000000000000
+
+Paragraph 3:
+technical=0.008240670419011883, citation=0.0000000000000000
+
+Paragraph 4:
+technical=0.0069581888680425264, citation=0.0000000000000000
+
+Paragraph 5:
+technical=0.005019497185741088, citation=0.0000000000000000
+
+Paragraph 6:
+technical=0.0031354396497811116, citation=0.0000000000000000
+
+Paragraph 7:
+technical=0.0017032645403377098, citation=0.0000000000000000
+
+Paragraph 8:
+technical=0.0018991869918699182, citation=0.0000000000000000
+[paragraph_scoring] parent=Approximate Algorithms::paragraphs method=channel_full_parent estimated_tokens=1946 threshold=7000 paragraphs=4 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=1 attempt=1/3
+1: 0.025
+2: 0.015
+3: 0.010
+4: 0.010
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=2 attempt=1/3
+1: 0.030000000000000004
+2: 0.020000000000000003
+3: 0.010000000000000001
+4: 0.00080000000000002
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=3 attempt=1/3
+1: 0.035
+2: 0.015
+3: 0.010
+4: 0.000
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.021666666666666668, citation=0.0086
+Paragraph 2: technical=0.013, citation=0.0034
+Paragraph 3: technical=0.01, citation=0
+Paragraph 4: technical=0.002222222222222225, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.02, citation=0.03
+Paragraph 2: technical=0.11, citation=0.01
+Paragraph 3: technical=0.01, citation=0.00
+Paragraph 4: technical=0.003, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph1: technical=0.021, citation=0.009
+Paragraph2: technical=0.012, citation=0.004
+Paragraph3: technical=0.01, citation=0
+Paragraph4: technical=0.003, citation=0
+[citation_split] paragraph_id=Anytime AFD Algorithms > Approximate Algorithms::p2 sample=1 attempt=1/3
+16: 0.0025
+20: 0.0005
+[citation_split] paragraph_id=Anytime AFD Algorithms > Approximate Algorithms::p2 sample=2 attempt=1/3
+16: 0.002
+20: 0.001
+[citation_split] paragraph_id=Anytime AFD Algorithms > Approximate Algorithms::p2 sample=3 attempt=1/3
+16: 0.0024
+20: 0.0006
+[all_together_subsections] parent=Experiments sample=1 attempt=1/3
+Here is the list of child names with their corresponding scores:
+
+1. AppxLP: 0.85
+2. AppxIPF: 0.7
+3. TANE: 0.7
+4. Pyro++: 20%
+5. ExLP: 1.0
+6. ExDCS: 1.0
+[all_together_subsections] parent=Experiments sample=1 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.25
+4: 0.15
+5: 0.10
+[all_together_subsections] parent=Experiments sample=2 attempt=1/3
+Here is the list of child names with their corresponding scores:
+
+1. AppxLP: 0.85
+2. AppxIPF: 0.7
+3. TANE: 0.7
+4. Pyro++: 0.2
+5. ExLP: 1.0
+6. ExDCS: 1.0
+[all_together_subsections] parent=Experiments sample=2 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.22
+4: 0.15
+5: 0.13
+[all_together_subsections] parent=Experiments sample=3 attempt=1/3
+Here is the list of scores:
+
+1. AppxLP: 0.85
+2. AppxIPF: 0.7
+3. TANE: 0.7
+4. Pyro++: 20%
+5. ExLP: 1.0
+6. ExDCS: 1.0
+[all_together_subsections] parent=Experiments sample=3 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.24
+4: 0.15
+5: 0.11
+[paragraph_scoring] parent=Experimental setup::paragraphs method=channel_full_parent estimated_tokens=2315 threshold=7000 paragraphs=7 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Experimental setup::paragraphs sample=1 attempt=1/3
+1: 0.0128
+2: 0.0048
+3: 0.0064
+4: 0.0024
+5: 0.0012
+6: 0.0008
+7: 0.0008
+[all_together_paragraphs] parent=Experimental setup::paragraphs sample=2 attempt=1/3
+1: 0.0168
+2: 0.0048
+3: 0.0032
+4: 0.0016
+5: 0.0008
+6: 0.0004
+7: 0.002
+[all_together_paragraphs] parent=Experimental setup::paragraphs sample=3 attempt=1/3
+1: 0.0084
+2: 0.0048
+3: 0.0064
+4: 0.0024
+5: 0.0016
+6: 0.0008
+7: 0.0000
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.01, citation=0.01
+Paragraph 2: technical=0.02, citation=0.00
+Paragraph 3: technical=0.01, citation=0.00
+Paragraph 4: technical=0.00, citation=0.01
+Paragraph 5: technical=0.00, citation=0.01
+Paragraph 6: technical=0.00, citation=0.01
+Paragraph 7: technical=0.00, citation=0.00
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.008, citation=0.003
+Paragraph 2: technical=0.02, citation=0.00
+Paragraph 3: technical=0.01, citation=0.00
+Paragraph 4: technical=0.001, citation=0.002
+Paragraph 5: technical=0.0006, citation=0.004
+Paragraph 6: technical=0.0002, citation=0.006
+Paragraph 7: technical=0.0008, citation=0.00
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.006, citation=0.005
+
+Paragraph 2: 
+technical=0.004, citation=0.000
+
+Paragraph 3: 
+technical=0.003, citation=0.002
+
+Paragraph 4: 
+technical=0.001, citation=0.001
+
+Paragraph 5: 
+technical=0.001, citation=0.000
+
+Paragraph 6: 
+technical=0.000, citation=0.000
+
+Paragraph 7: 
+technical=0.000, citation=0.000
+[paragraph_channel_split] sample=3/3 attempt=2/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.006, citation=0.005
+Paragraph 2: technical=0.01, citation=0
+Paragraph 3: technical=0.02, citation=0
+Paragraph 4: technical=0.001, citation=0.001
+Paragraph 5: technical=0.002, citation=0.0008
+Paragraph 6: technical=0.004, citation=0.0002
+Paragraph 7: technical=0.005, citation=0
+[citation_split] paragraph_id=Experiments > Experimental setup::p1 sample=1 attempt=1/3
+1 -> 0.003
+2 -> 0.001
+3 -> 0.0004
+[citation_split] paragraph_id=Experiments > Experimental setup::p1 sample=2 attempt=1/3
+1 -> 0.003
+2 -> 0.004
+3 -> 0.001
+[citation_split] paragraph_id=Experiments > Experimental setup::p1 sample=3 attempt=1/3
+1: 0.002
+2: 0.001
+3: 0.001
+[citation_split] paragraph_id=Experiments > Experimental setup::p5 sample=1 attempt=1/3
+1 -> 0.07
+2 -> 0.12
+[citation_split] paragraph_id=Experiments > Experimental setup::p5 sample=2 attempt=1/3
+1: 0.42
+2: 0.36
+[citation_split] paragraph_id=Experiments > Experimental setup::p5 sample=3 attempt=1/3
+1 -> 0.08
+2 -> 0.11
+[citation_split] paragraph_id=Experiments > Experimental setup::p6 sample=1 attempt=1/3
+1: 0.12
+2: 0.10
+[citation_split] paragraph_id=Experiments > Experimental setup::p6 sample=2 attempt=1/3
+1: 0.12
+2: 0.10
+[citation_split] paragraph_id=Experiments > Experimental setup::p6 sample=3 attempt=1/3
+1: 0.15
+2: 0.07
+[paragraph_scoring] parent=Quality Analyses- Approximate Algorithms::paragraphs method=channel_full_parent estimated_tokens=2621 threshold=7000 paragraphs=7 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Quality Analyses- Approximate Algorithms::paragraphs sample=1 attempt=1/3
+1: 0.008800000000000001
+2: 0.0026000000000000004
+3: 0.0012000000000000006
+4: 0.0011000000000000005
+5: 0.0004000000000000004
+6: 0.0003000000000000003
+7: 0.0001000000000000001
+[all_together_paragraphs] parent=Quality Analyses- Approximate Algorithms::paragraphs sample=2 attempt=1/3
+1: 0.008800000000000001 
+2: 0.0036000000000000005 
+3: 0.0022000000000000004 
+4: 0.0014000000000000006 
+5: 0.0011000000000000007
+[all_together_paragraphs] parent=Quality Analyses- Approximate Algorithms::paragraphs sample=2 attempt=2/3
+1: 0.005000000000000001
+2: 0.004500000000000002
+3: 0.003200000000000001
+4: 0.001400000000000001
+5: 0.000800000000000001
+6: 0.000100000000000001
+7: 0
+[all_together_paragraphs] parent=Quality Analyses- Approximate Algorithms::paragraphs sample=3 attempt=1/3
+1: 0.008800000000000001 
+2: 0.0036000000000000005 
+3: 0.0012000000000000004 
+4: 0.0012000000000000004 
+5: 0.0012000000000000004 
+6: 0.004400000000000001 
+7: 0.00010000000000001
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: 
+technical=0.006429405206642281, citation=0.0000000000000004
+
+Paragraph 2:
+technical=0.001708267647231404, citation=0.0000000000000003
+
+Paragraph 3:
+technical=0.0009911704774385356, citation=0.0000000000000001
+
+Paragraph 4:
+technical=0.000961215209185, citation=0.0000000000000002
+
+Paragraph 5:
+technical=0.0007203661470455927, citation=0.0000000000000003
+
+Paragraph 6:
+technical=0.001157461224010797, citation=0.0000000000000004
+
+Paragraph 7:
+technical=0.000057080824220589, citation=0.0000000000000001
+[paragraph_channel_split] sample=1/3 attempt=2/3 temperature=0.2
+Paragraph 1: 
+technical=0.006429405206642281, citation=0.00000000000000001
+
+Paragraph 2: 
+technical=0.001708267647231404, citation=0.00000000000000000
+
+Paragraph 3: 
+technical=0.0009921704774385356, citation=0.00000000000000000
+
+Paragraph 4: 
+technical=0.000935811215209185, citation=0.00000000000000001
+
+Paragraph 5: 
+technical=0.0007203661470455927, citation=0.00000000000000000
+
+Paragraph 6: 
+technical=0.001157461224010797, citation=0.00000000000000000
+
+Paragraph 7: 
+technical=0.0000051088242205895, citation=0.00000000000000001
+[paragraph_channel_split] sample=1/3 attempt=3/3 temperature=0.2
+Paragraph 1:
+technical=0.006429405206642281, citation=0.00099999999999999
+
+Paragraph 2:
+technical=0.002708267647231404, citation=0.00000000000000001
+
+Paragraph 3:
+technical=0.0012921704774385356, citation=0.00000000000000001
+
+Paragraph 4:
+technical=0.001035811215209185, citation=0.00000000000000001
+
+Paragraph 5:
+technical=0.0007203661470455927, citation=0.00000000000000001
+
+Paragraph 6:
+technical=0.001157461224010797, citation=0.00000000000000001
+
+Paragraph 7:
+technical=0.00000000000000000, citation=0.00000000000000000
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: 
+technical=0.0064294052066422814,
+citation=0.0009999999999999999
+
+Paragraph 2: 
+technical=0.001708267647231404,
+citation=0.00000000000000000
+
+Paragraph 3: 
+technical=0.0009911704774385356,
+citation=0.00000000000000000
+
+Paragraph 4: 
+technical=0.000935811215209185,
+citation=0.00000000000000000
+
+Paragraph 5: 
+technical=0.0007203661470455927,
+citation=0.00000000000000000
+
+Paragraph 6: 
+technical=0.001157461224010797,
+citation=0.00000000000000000
+
+Paragraph 7: 
+technical=4.35580824222059e-05,
+citation=0.00000000000000000
+[paragraph_channel_split] sample=2/3 attempt=2/3 temperature=0.25
+Paragraph 1:
+technical=0.006429405206642281, citation=0.002429405206642281
+
+Paragraph 2:
+technical=0.001708267647231404, citation=0.000708267647231404
+
+Paragraph 3:
+technical=0.0009911704774385356, citation=0.0000111704774385356
+
+Paragraph 4:
+technical=0.000907811215209185, citation=0.000128811215209185
+
+Paragraph 5:
+technical=0.0007203661470455927, citation=0.0000003661470455927
+
+Paragraph 6:
+technical=0.001157461224010797, citation=0.000057461224010797
+
+Paragraph 7:
+technical=0.00000580824222059e-05, citation=0.00000580824222059e-05
+[paragraph_channel_split] sample=2/3 attempt=3/3 temperature=0.25
+Paragraph 1: 
+technical=0.006429405206642281, citation=0.00000000000000001
+
+Paragraph 2: 
+technical=0.001708267647231404, citation=0.00000000000000001
+
+Paragraph 3: 
+technical=0.0009921704774385356, citation=0.00000000000000001
+
+Paragraph 4: 
+technical=0.000935811215209185, citation=0.00000000000000001
+
+Paragraph 5: 
+technical=0.0007203661470455927, citation=0.00000000000000001
+
+Paragraph 6: 
+technical=0.001157461224010797, citation=0.00000000000000001
+
+Paragraph 7: 
+technical=0.00000000000000005, citation=0.00000000000000000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.006429405206642281, citation=0.002
+
+Paragraph 2:
+technical=0.001708267647231404, citation=0.000
+
+Paragraph 3:
+technical=0.0009921704774385356, citation=0.000
+
+Paragraph 4:
+technical=0.000981215209185, citation=0.000
+
+Paragraph 5:
+technical=0.0007203661470455927, citation=0.000
+
+Paragraph 6:
+technical=0.001157461224010797, citation=0.000
+
+Paragraph 7:
+technical=5.65180824222059e-05, citation=0
+[paragraph_channel_split] sample=3/3 attempt=2/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.006429405206642281, citation=0.0000000000000004
+
+Paragraph 2: 
+technical=0.002708267647231404, citation=0.0000000000000003
+
+Paragraph 3: 
+technical=0.0012921704774385356, citation=0.0000000000000001
+
+Paragraph 4: 
+technical=0.001035811215209185, citation=0.0000000000000002
+
+Paragraph 5: 
+technical=0.0007203661470455927, citation=0.0000000000000003
+
+Paragraph 6: 
+technical=0.001157461224010797, citation=0.0000000000000004
+
+Paragraph 7: 
+technical=0.0000000000000000, citation=0.0000000000000000
+[paragraph_channel_split] sample=3/3 attempt=3/3 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.006429405206642281, citation=0.0000000000000003
+
+Paragraph 2: 
+technical=0.001708267647231404, citation=0.0000000000000004
+
+Paragraph 3: 
+technical=0.0009921704774385356, citation=0.0000000000000005
+
+Paragraph 4: 
+technical=0.000103581215209185, citation=0.0000000000000005
+
+Paragraph 5: 
+technical=0.0007203661470455927, citation=0.0000000000000006
+
+Paragraph 6: 
+technical=0.001157461224010797, citation=0.0000000000000004
+
+Paragraph 7: 
+technical=0.0000571080822205915, citation=0.0000000000000003
+[paragraph_scoring] parent=Quality Analyses - Exact Algorithms::paragraphs method=channel_full_parent estimated_tokens=815 threshold=7000 paragraphs=2 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Quality Analyses - Exact Algorithms::paragraphs sample=1 attempt=1/3
+1: 0.008
+2: 0.004
+3: 0.006
+[all_together_paragraphs] parent=Quality Analyses - Exact Algorithms::paragraphs sample=2 attempt=1/3
+1: 0.0125
+2: 0.0064
+[all_together_paragraphs] parent=Quality Analyses - Exact Algorithms::paragraphs sample=3 attempt=1/3
+1: 0.0125
+2: 0.0064
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph1: technical=0.012555437977660198, citation=0.000000000000000
+Paragraph2: technical=0.006377895355673134, citation=0.000000000000000
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.008555437977660198, citation=0.004000000000000001
+Paragraph 2: technical=0.006377895355673134, citation=0.000000000000000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.008555437977660198, citation=0.004000000000000000
+Paragraph 2: technical=0.006377895355673134, citation=0.00000000000000000
+[paragraph_scoring] parent=Scalability Analyses::paragraphs method=channel_full_parent estimated_tokens=1099 threshold=7000 paragraphs=3 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Scalability Analyses::paragraphs sample=1 attempt=1/3
+1: 0.004
+2: 0.003
+3: 0.005
+[all_together_paragraphs] parent=Scalability Analyses::paragraphs sample=2 attempt=1/3
+1 -> 0.0045000000000000005
+2 -> 0.0035000000000000004
+3 -> 0.003999999999999998
+[all_together_paragraphs] parent=Scalability Analyses::paragraphs sample=3 attempt=1/3
+1: 0.006000000000000001 
+2: 0.0040000000000000005 
+3: 0.0020000000000000008
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.0048, citation=0.000333333333333335
+Paragraph 2: technical=0.0035, citation=0.000
+Paragraph 3: technical=0.0037, citation=0.000
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: 
+technical=0.004833333333333335, citation=0.000000000000000
+
+Paragraph 2:
+technical=0.0035, citation=0.000000000000000
+
+Paragraph 3:
+technical=0.003666666666666667, citation=0
+[paragraph_channel_split] sample=2/3 attempt=2/3 temperature=0.25
+Paragraph 1: technical=0.004833333333333335, citation=0.00000000000000001
+Paragraph 2: technical=0.0025, citation=0.00000000000000001
+Paragraph 3: technical=0.003666666666666667, citation=0.00000000000000001
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.004833333333333335, citation=0.00000000000000001
+Paragraph 2: technical=0.0025, citation=0.0005
+Paragraph 3: technical=0.003666666666666667, citation=0.00000000000000001
+[paragraph_scoring] parent=Summary::paragraphs method=channel_full_parent estimated_tokens=1231 threshold=7000 paragraphs=2 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Summary::paragraphs sample=1 attempt=1/3
+1: 0.005000000000000001
+2: 0.002500000000000001
+3: 0.001200000000000001
+4: 0.000400000000000001
+[all_together_paragraphs] parent=Summary::paragraphs sample=2 attempt=1/3
+1: 0.005
+2: 0.002
+3: 0.001
+4: 0.001
+[all_together_paragraphs] parent=Summary::paragraphs sample=3 attempt=1/3
+1: 0.005
+2: 0.002
+3: 0.0015
+4: 0.0015
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph 1: technical=0.006332275132275133, citation=0.000007848484484485
+Paragraph 2: technical=0.002734391534391534, citation=0.000000000000000
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.006332275132275133, citation=0.000007848484484485
+Paragraph 2: technical=0.002734391534391534, citation=0.000000000000000
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph 1: technical=0.006332275132275133, citation=0.000007848484484485
+Paragraph 2: technical=0.002734391534391534, citation=0.000000000000000
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_full_parent estimated_tokens=2001 threshold=7000 paragraphs=4 snippet_limit=0 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=1/3
+1: 0.06
+2: 0.04
+3: 0.08
+4: 0.06
+5: 0.12
+[all_together_paragraphs] parent=Related Work::paragraphs sample=2 attempt=1/3
+1: 0.05
+2: 0.06
+3: 0.04
+4: 0.01
+[all_together_paragraphs] parent=Related Work::paragraphs sample=3 attempt=1/3
+1: 0.04
+2: 0.06
+3: 0.08
+4: 0.02
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+Paragraph1: technical=0.021, citation=0.019
+Paragraph2: technical=0.044, citation=0.0008
+Paragraph3: technical=0.052, citation=0.0004
+Paragraph4: technical=0.022, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+Paragraph 1: technical=0.02, citation=0.038666666666666664
+Paragraph 2: technical=0.06, citation=0.03822222222222222
+Paragraph 3: technical=0.04, citation=0.00844444444444444
+Paragraph 4: technical=0.00, citation=0.022
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+Paragraph1: technical=0.021, citation=0.019
+Paragraph2: technical=0.083, citation=0.061
+Paragraph3: technical=0.104, citation=0.048
+Paragraph4: technical=0.022, citation=0
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=1/3
+1: 0.01
+2: 0.03
+3: 0.04
+4: 0.05
+5: 0.07
+6: 0.08
+7: 0.11
+[citation_split] paragraph_id=Related Work::p1 sample=2 attempt=1/3
+1: 0.01
+2: 0.03
+3: 0.04
+4: 0.02
+5: 0.05
+6: 0.01
+7: 0.04
+[citation_split] paragraph_id=Related Work::p1 sample=3 attempt=1/3
+1: 0.01
+2: 0.03
+3: 0.04
+4: 0.02
+5: 0.05
+6: 0.08
+7: 0.07
+[citation_split] paragraph_id=Related Work::p2 sample=1 attempt=1/3
+22: 0.007
+21: 0.003
+8: 0.002
+26: 0.001
+[citation_split] paragraph_id=Related Work::p2 sample=1 attempt=2/3
+1: 0.003
+2: 0.005
+3: 0.004
+4: 0.000
+5: 0.000
+[citation_split] paragraph_id=Related Work::p2 sample=2 attempt=1/3
+22: 0.008
+21: 0.002
+8: 0.0016
+26: 0.0004
+7: 0.0004
+[citation_split] paragraph_id=Related Work::p2 sample=2 attempt=2/3
+1: 0.005
+2: 0.003
+3: 0.002
+4: 0.001
+5: 0.001
+[citation_split] paragraph_id=Related Work::p2 sample=3 attempt=1/3
+22: 0.006
+21: 0.004
+8: 0.002
+26: 0.0005
+7: 0.00025
+38: 0.00025
+[citation_split] paragraph_id=Related Work::p3 sample=1 attempt=1/3
+10: 0.0075
+27: 0.0008
+35–37: 0.0004
+39: 0.0003
+[citation_split] paragraph_id=Related Work::p3 sample=2 attempt=1/3
+10: 0.005
+27: 0.001
+35–37: 0.002
+39: 0.0003
+[citation_split] paragraph_id=Related Work::p3 sample=3 attempt=1/3
+1: 0.005
+2: 0.001
+3: 0.002
+4: 0.000
+[paragraph_scoring] parent=Conclusion and Future Work::paragraphs method=channel_compressed estimated_tokens=13244 threshold=7000 paragraphs=62 snippet_limit=180 n_samples=3 max_retries=3
+[all_together_paragraphs] parent=Conclusion and Future Work::paragraphs sample=1 attempt=1/3
+Here is the list of scores in plain text format:
+
+1: 0.32
+2: 0.18
+[all_together_paragraphs] parent=Conclusion and Future Work::paragraphs sample=1 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.05
+4: 0.01
+5: 0.00
+6: 0.00
+7: 0.00
+8: 0.00
+9: 0.00
+10: 0.00
+11: 0.00
+12: 0.00
+13: 0.00
+14: 0.00
+15: 0.00
+16: 0.00
+17: 0.00
+18: 0.00
+19: 0.00
+20: 0.00
+21: 0.00
+22: 0.00
+23: 0.00
+24: 0.00
+25: 0.00
+26: 0.00
+27: 0.00
+28: 0.00
+29: 0.00
+30: 0.00
+31: 0.00
+32: 0.00
+33: 0.00
+34: 0.00
+35: 0.00
+36: 0.00
+37: 0.00
+38: 0.00
+39: 0.00
+40: 0.00
+41: 0.00
+42: 0.00
+43: 0.00
+44: 0.00
+45: 0.00
+46: 0.00
+47: 0.00
+48: 0.00
+49: 0.00
+50: 0.00
+51: 0.00
+52: 0.00
+53: 0.00
+54: 0.00
+55: 0.00
+56: 0.00
+57: 0.00
+58: 0.00
+59: 0.00
+60: 0.00
+61: 0.00
+62: 0.00
+[all_together_paragraphs] parent=Conclusion and Future Work::paragraphs sample=2 attempt=1/3
+Here is the list of scores in plain text format:
+
+1: 0.32
+2: 0.18
+[all_together_paragraphs] parent=Conclusion and Future Work::paragraphs sample=2 attempt=2/3
+Here is the list of scores for each child:
+
+3: 0.02
+4: 0.03
+5: 0.01
+6: 0.04
+7: 0.05
+8: 0.06
+9: 0.07
+10: 0.08
+11: 0.09
+12: 0.10
+13: 0.11
+14: 0.12
+15: 0.13
+16: 0.14
+17: 0.15
+18: 0.16
+19: 0.17
+20: 0.18
+21: 0.19
+22: 0.20
+23: 0.21
+24: 0.22
+25: 0.23
+26: 0.24
+27: 0.25
+28: 0.26
+29: 0.27
+30: 0.28
+31: 0.29
+32: 0.30
+33: 0.31
+34: 0.32
+35: 0.33
+36: 0.34
+37: 0.35
+38: 0.36
+39: 0.37
+40: 0.38
+41: 0.39
+42: 0.40
+43: 0.41
+44: 0.42
+45: 0.43
+46: 0.44
+47: 0.45
+48: 0.46
+49: 0.47
+50: 0.48
+51: 0.49
+52: 0.50
+53: 0.51
+54: 0.52
+55: 0.53
+56: 0.54
+57: 0.55
+58: 0.56
+59: 0.57
+60: 0.58
+61: 0.59
+62: 0.60
+[all_together_paragraphs] parent=Conclusion and Future Work::paragraphs sample=3 attempt=1/3
+Here is the list of scores in plain text format:
+
+1: 0.32
+2: 0.18
+[all_together_paragraphs] parent=Conclusion and Future Work::paragraphs sample=3 attempt=2/3
+1: 0.32
+2: 0.18
+3: 0.05
+4: 0.02
+5: 0.01
+6: 0.005
+7: 0.001
+8: 0.0005
+9: 0.0002
+10: 0.0001
+11: -0.0001
+12: -0.0002
+13: -0.00005
+14: -0.00001
+15: -0.000005
+16: -0.000001
+17: -0.0000005
+18: -0.0000002
+19: -0.0000001
+20: 0
+21: 0
+22: 0
+23: 0
+24: 0
+25: 0
+26: 0
+27: 0
+28: 0
+29: 0
+30: 0
+31: 0
+32: 0
+33: 0
+34: 0
+35: 0
+36: 0
+37: 0
+38: 0
+39: 0
+40: 0
+41: 0
+42: 0
+43: 0
+44: 0
+45: 0
+46: 0
+47: 0
+48: 0
+49: 0
+50: 0
+51: 0
+52: 0
+53: 0
+54: 0
+55: 0
+56: 0
+57: 0
+58: 0
+59: 0
+60: 0
+61: 0
+[all_together_paragraphs] parent=Conclusion and Future Work::paragraphs sample=3 attempt=3/3
+11: 0.01
+12: 0.02
+13: 0.03
+14: 0.04
+15: 0.05
+16: 0.06
+17: 0.07
+18: 0.08
+19: 0.09
+[all_together_paragraphs_error] parent=Conclusion and Future Work::paragraphs sample=3 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62']
+[all_together_paragraphs_sample_skip] parent=Conclusion and Future Work::paragraphs sample=3/3 reason=Model failed to produce complete child scores for parent 'Conclusion and Future Work::paragraphs' after 3 retries.
+[paragraph_channel_split] sample=1/3 attempt=1/3 temperature=0.2
+paragraph_id:technical=0.21,citation=0.04
+paragraph_id:technical=0.13,citation=0.00
+paragraph_id:technical=0.18,citation=0.03
+paragraph_id:technical=0.15,citation=0.01
+paragraph_id:technical=0.12,citation=0.02
+[paragraph_channel_split] sample=1/3 attempt=2/3 temperature=0.2
+paragraph_id:technical=0.21,citation=0.04
+paragraph_id:technical=0.13,citation=0.00
+paragraph_id:technical=0.17,citation=0.03
+paragraph_id:technical=0.23,citation=0.05
+paragraph_id:technical=0.19,citation=0.01
+[paragraph_channel_split] sample=1/3 attempt=3/3 temperature=0.2
+paragraph_id:technical=0.21,citation=0.04
+paragraph_id:technical=0.13,citation=0.00
+paragraph_id:technical=0.17,citation=0.03
+paragraph_id:technical=0.23,citation=0.05
+paragraph_id:technical=0.19,citation=0.01
+[paragraph_channel_split] sample=2/3 attempt=1/3 temperature=0.25
+paragraph_id:technical=0.21,citation=0.04
+paragraph_id:technical=0.13,citation=0.00
+paragraph_id:technical=0.18,citation=0.03
+paragraph_id:technical=0.15,citation=0.01
+paragraph_id:technical=0.12,citation=0.02
+[paragraph_channel_split] sample=2/3 attempt=2/3 temperature=0.25
+paragraph_id: technical=0.21, citation=0.04
+paragraph_id: technical=0.13, citation=0.00
+paragraph_id: technical=0.15, citation=0.02
+paragraph_id: technical=0.18, citation=0.01
+paragraph_id: technical=0.22, citation=0.03
+[paragraph_channel_split] sample=2/3 attempt=3/3 temperature=0.25
+paragraph_id:technical=0.21,citation=0.04
+paragraph_id:technical=0.13,citation=0.00
+paragraph_id:technical=0.19,citation=0.03
+paragraph_id:technical=0.11,citation=0.01
+paragraph_id:technical=0.15,citation=0.02
+[paragraph_channel_split] sample=3/3 attempt=1/3 temperature=0.30000000000000004
+paragraph_id:technical=0.21,citation=0.04
+paragraph_id:technical=0.13,citation=0.00
+paragraph_id:technical=0.12,citation=0.03
+paragraph_id:technical=0.10,citation=0.01
+paragraph_id:technical=0.09,citation=0.02
+[paragraph_channel_split] sample=3/3 attempt=2/3 temperature=0.30000000000000004
+paragraph_id:technical=0.21,citation=0.04
+paragraph_id:technical=0.13,citation=0.00
+paragraph_id:technical=0.29,citation=0.03
+paragraph_id:technical=0.17,citation=0.01
+paragraph_id:technical=0.25,citation=0.02
+[paragraph_channel_split] sample=3/3 attempt=3/3 temperature=0.30000000000000004
+paragraph_id: technical=0.21, citation=0.04
+paragraph_id: technical=0.13, citation=0.00
+paragraph_id: technical=0.17, citation=0.03
+paragraph_id: technical=0.23, citation=0.05
+paragraph_id: technical=0.19, citation=0.01
+[citation_split] paragraph_id=Conclusion and Future Work::p3 sample=1 attempt=1/3
+1: 0.03
+2: 0.04
+[citation_split] paragraph_id=Conclusion and Future Work::p3 sample=2 attempt=1/3
+1: 0.03
+2: 0.03
+[citation_split] paragraph_id=Conclusion and Future Work::p3 sample=3 attempt=1/3
+1: 0.07
+2: 0.03
+[citation_split] paragraph_id=Conclusion and Future Work::p11 sample=1 attempt=1/3
+1: 0.01
+2: 0.02
+[citation_split] paragraph_id=Conclusion and Future Work::p11 sample=2 attempt=1/3
+1: 0.01
+2: 0.02
+[citation_split] paragraph_id=Conclusion and Future Work::p11 sample=3 attempt=1/3
+1: 0.01
+2: 0.02
+[citation_split] paragraph_id=Conclusion and Future Work::p21 sample=1 attempt=1/3
+1: 0.03
+2: 0.01
+[citation_split] paragraph_id=Conclusion and Future Work::p21 sample=2 attempt=1/3
+1: 0.03
+2: 0.01
+[citation_split] paragraph_id=Conclusion and Future Work::p21 sample=3 attempt=1/3
+1: 0.000124
+2: 0.004627
+[citation_split] paragraph_id=Conclusion and Future Work::p28 sample=1 attempt=1/3
+1: 0.0006
+2: 0.0059
+[citation_split] paragraph_id=Conclusion and Future Work::p28 sample=2 attempt=1/3
+1: 0.03
+2: 0.01
+[citation_split] paragraph_id=Conclusion and Future Work::p28 sample=3 attempt=1/3
+1: 0.0006
+2: 0.0059
+[citation_split] paragraph_id=Conclusion and Future Work::p36 sample=1 attempt=1/3
+1: 0.000000000000000004
+2: 0.0808510638297879
+[citation_split] paragraph_id=Conclusion and Future Work::p36 sample=2 attempt=1/3
+1: 0.01
+2: 0.07
+[citation_split] paragraph_id=Conclusion and Future Work::p36 sample=3 attempt=1/3
+1: 0.000002
+2: 0.000006
+[citation_split] paragraph_id=Conclusion and Future Work::p43 sample=1 attempt=1/3
+1: 0.00
+2: 0.04
+[citation_split] paragraph_id=Conclusion and Future Work::p43 sample=2 attempt=1/3
+1: 0.03
+2: 0.01
+[citation_split] paragraph_id=Conclusion and Future Work::p43 sample=3 attempt=1/3
+1: 0.00
+2: 0.04
+====================================================================================================
+=============================== RUN END ===============================
+[run_end] time=2026-03-31T02:54:22
+=============================== RUN END ===============================
+====================================================================================================
