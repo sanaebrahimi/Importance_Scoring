@@ -126,6 +126,10 @@ PROMPT_CATALOG = {
     "split_user_prompt_template": SPLIT_USER_PROMPT_TEMPLATE,
 }
 
+AUTHOR_YEAR_CITATION_PATTERN = r"\([A-Z][^)]*\d{4}[a-z]?\)"
+NUMERIC_BRACKET_CITATION_PATTERN = r"\[(?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\]"
+CITATION_BLOCK_PATTERN = rf"{AUTHOR_YEAR_CITATION_PATTERN}|{NUMERIC_BRACKET_CITATION_PATTERN}"
+
 
 def read_pdf_text(pdf_path: str) -> str:
     text = ""
@@ -140,14 +144,12 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
     """
     Extract citation blocks with context and section content based on a nested section schema.
     """
-    citation_pattern = r"\([A-Z][^)]*\d{4}[a-z]?\)"
-
     def process_section_text(section_text: str) -> Dict[str, List[str]]:
         citations_dict: Dict[str, List[str]] = {}
         section_text = section_text.replace("\n", "")
         section_text = re.sub(r"\s+", " ", section_text)
 
-        for match in re.finditer(citation_pattern, section_text):
+        for match in re.finditer(CITATION_BLOCK_PATTERN, section_text):
             citation_block = match.group(0)
             citation_start = match.start()
             citation_end = match.end()
@@ -308,8 +310,6 @@ def split_citation_block(citation_block: str) -> List[str]:
     if ";" in inner:
         raw_parts = inner.split(";")
     elif left_delim == "[" and right_delim == "]" and "," in inner:
-        raw_parts = inner.split(",")
-    elif re.fullmatch(r"\s*\d+(?:\s*,\s*\d+)+\s*", inner):
         raw_parts = inner.split(",")
     else:
         raw_parts = [inner]
