@@ -827,6 +827,15 @@ def normalize_distribution(raw_scores: Dict[str, float], total: float) -> Dict[s
     return normalized
 
 
+def heuristic_allocate_scores(item_to_content: Dict[str, Any], total_score: float) -> Dict[str, float]:
+    weights: Dict[str, float] = {}
+    for idx, (item_name, content) in enumerate(item_to_content.items()):
+        text = flatten_content_to_text(content, limit=None)
+        token_count = len(re.findall(r"[A-Za-z0-9]+", text))
+        weights[item_name] = float(token_count if token_count > 0 else idx + 1)
+    return normalize_distribution(weights, total_score)
+
+
 def clamp_unit(value: float) -> float:
     return max(0.0, min(1.0, value))
 
@@ -1045,7 +1054,10 @@ def direct_allocate_scores(
         }
         for item_id in item_ids
     }
-    parent_content = flatten_content_to_text(item_to_content, limit=None)
+    parent_limit = None
+    if snippet_limit > 0:
+        parent_limit = max(1200, min(6000, len(items) * max(80, snippet_limit)))
+    parent_content = flatten_content_to_text(item_to_content, limit=parent_limit)
 
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     base_prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
@@ -1178,10 +1190,40 @@ def all_together_allocate_scores(
             )
 
     if not sample_distributions:
-        raise ValueError(
-            f"Model failed to produce any complete child-score sample for parent '{parent_name}' "
-            f"after {sample_count} sampled runs."
+        if snippet_limit <= 0:
+            retry_snippet_limit = 180
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[{log_tag}_compressed_retry] parent={parent_name} "
+                    f"reason=no_complete_samples retry_snippet_limit={retry_snippet_limit}"
+                ),
+            )
+            try:
+                return all_together_allocate_scores(
+                    client=client,
+                    item_to_content=item_to_content,
+                    total_score=total_score,
+                    parent_name=parent_name,
+                    model=model,
+                    n_samples=n_samples,
+                    temperature=temperature,
+                    max_retries=max_retries,
+                    debug_log_path=debug_log_path,
+                    snippet_limit=retry_snippet_limit,
+                    log_tag=f"{log_tag}_compressed_retry",
+                )
+            except ValueError:
+                pass
+
+        append_debug_log(
+            debug_log_path,
+            (
+                f"[{log_tag}_heuristic_fallback] parent={parent_name} "
+                f"reason=no_complete_samples items={items}"
+            ),
         )
+        return heuristic_allocate_scores(item_to_content, total_score)
 
     averaged = {item: 0.0 for item in items}
     for dist in sample_distributions:
@@ -1784,8 +1826,8 @@ def assign_importance_scores(
         }
         paragraph_parent_name = f"{section_name}::paragraphs"
         est_tokens = estimate_direct_allocation_tokens(paragraph_parent_name, paragraph_items, snippet_limit=0)
-        effective_threshold = paragraph_direct_max_tokens
-        use_compressed = paragraph_direct_max_tokens > 0 and est_tokens > effective_threshold
+        effective_threshold = paragraph_direct_max_tokens if paragraph_direct_max_tokens > 0 else 7000
+        use_compressed = est_tokens > effective_threshold
         snippet_limit = max(60, paragraph_compressed_snippet_limit) if use_compressed else 0
         method = "channel_compressed" if use_compressed else "channel_full_parent"
         append_debug_log(

@@ -99,6 +99,11 @@ def main() -> None:
         action="store_true",
         help="Print the commands that would run without executing them.",
     )
+    parser.add_argument(
+        "--continue-on-error",
+        action="store_true",
+        help="Continue running remaining papers if one paper fails.",
+    )
     args = parser.parse_args()
 
     papers_dir = Path(args.papers_dir)
@@ -167,16 +172,19 @@ def main() -> None:
             "sections_var": section_var,
             "command": command,
             "skipped": False,
+            "status": "pending",
         }
 
         if args.skip_existing and outputs_present:
             record["skipped"] = True
+            record["status"] = "skipped"
             manifest.append(record)
             print(f"[skip] {pdf_path.name}: outputs already exist in {paper_dir}")
             continue
 
         print(f"[run] {pdf_path.name} -> {paper_dir}")
         if args.dry_run:
+            record["status"] = "dry_run"
             print(" ".join(command))
         else:
             env = os.environ.copy()
@@ -185,7 +193,17 @@ def main() -> None:
                 env["PYTHONPATH"] = (
                     f"{vendor_dir}{os.pathsep}{current_pythonpath}" if current_pythonpath else str(vendor_dir)
                 )
-            subprocess.run(command, check=True, env=env)
+            try:
+                subprocess.run(command, check=True, env=env)
+                record["status"] = "completed"
+            except subprocess.CalledProcessError as exc:
+                record["status"] = "failed"
+                record["returncode"] = exc.returncode
+                print(f"[fail] {pdf_path.name}: command exited with status {exc.returncode}")
+                manifest.append(record)
+                if args.continue_on_error:
+                    continue
+                raise
 
         manifest.append(record)
 
