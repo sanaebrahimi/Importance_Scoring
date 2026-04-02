@@ -2278,6 +2278,10 @@ def assign_importance_scores(
 
                 citation_scores[citation]["citation_score"] += citation_value
 
+        leaf_c = sum(
+            max(0.0, safe_float(paragraph_citation.get(paragraph_name, 0.0), 0.0))
+            for paragraph_name in paragraph_names
+        )
         leaf_total = sum(
             combine_scores(
                 paragraph_technical.get(paragraph_name, 0.0),
