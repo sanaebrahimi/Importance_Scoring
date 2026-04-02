@@ -201,28 +201,37 @@ total_score for each paragraph."""
 PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE = """Task:
 For each paragraph, split the total_score into technical_score and citation_score.
 
-Ask yourself: "If I deleted all content describing, comparing, or bridging prior 
-work — what fraction of this paragraph's value survives?" That surviving fraction 
+Section context: these paragraphs are from the "{section_name}" section of the paper.
+Use this to calibrate your expectations - a paragraph in Related Work behaves
+very differently from one in Methods, even if the text looks similar.
+
+Ask yourself: "If I deleted all content describing, comparing, or bridging prior
+work - what fraction of this paragraph's value survives?" That surviving fraction
 is technical_score. The rest is citation_score.
 
 Calibration guidance:
-- A paragraph in Related Work that summarizes 3 prior methods: 
+- A paragraph in Related Work that summarizes prior methods:
   citation_score ≈ 0.80–0.95, technical_score ≈ 0.05–0.20
-- A paragraph in Related Work that draws a novel connection between prior works 
-  and the current paper's gap: 
+- A paragraph in Related Work that draws a novel connection between prior works
+  and the current paper's gap:
   citation_score ≈ 0.50–0.70, technical_score ≈ 0.30–0.50
-- A Background paragraph that defines a known concept from prior work: 
+- A Background paragraph that defines a known concept from prior work:
   citation_score ≈ 0.60–0.80
-- A Methods paragraph describing the authors' new algorithm: 
+- A Methods paragraph describing the authors' new algorithm:
   citation_score ≈ 0.00–0.15, technical_score ≈ 0.85–1.00
-- A paragraph comparing experiment results to a baseline from prior work: 
+- A paragraph comparing experiment results to a baseline from prior work:
   citation_score ≈ 0.20–0.40
+- A Conclusion paragraph summarizing the paper's own contributions:
+  citation_score ≈ 0.00–0.10, technical_score ≈ 0.90–1.00
 - If has_citations is false, citation_score = 0.0 and technical_score = total_score.
 
 Rules:
 - technical + citation = total_score for every paragraph
 - Both values must be non-negative
 - Do not assign citation_score > 0 if has_citations is false
+- A paragraph with has_citations is false but located in Related Work likely
+  bridges or references prior work implicitly - keep citation_score = 0 per
+  the rule above, but note this as a pipeline limitation.
 
 Paragraph entries (paragraph_id -> details):
 {paragraphs_json}
@@ -251,6 +260,23 @@ PROMPT_CATALOG = {
 AUTHOR_YEAR_CITATION_PATTERN = r"\([A-Z][^)]*\d{4}[a-z]?\)"
 NUMERIC_BRACKET_CITATION_PATTERN = r"\[(?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\]"
 CITATION_BLOCK_PATTERN = rf"{AUTHOR_YEAR_CITATION_PATTERN}|{NUMERIC_BRACKET_CITATION_PATTERN}"
+BACK_MATTER_HEADINGS = (
+    "acknowledgments",
+    "acknowledgements",
+    "acknowledgment",
+    "acknowledgement",
+    "appendix",
+    "appendices",
+    "supplementary material",
+    "supplementary materials",
+    "supplementary",
+    "broader impact",
+    "ethics statement",
+)
+MONTH_NAME_PATTERN = (
+    r"jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|"
+    r"aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?"
+)
 
 
 def load_section_assignments(assignments_path: str) -> Dict[str, Dict[str, Any]]:
@@ -333,6 +359,66 @@ def trim_text_before_references(text: str) -> str:
     return text
 
 
+def is_back_matter_heading(text: str) -> bool:
+    normalized = normalize_heading_text(text)
+    normalized = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized).strip()
+    return normalized in {normalize_heading_text(name) for name in BACK_MATTER_HEADINGS}
+
+
+def trim_text_before_back_matter(text: str) -> str:
+    lines = (text or "").splitlines()
+    for idx, line in enumerate(lines):
+        if is_back_matter_heading(line):
+            return "\n".join(lines[:idx])
+    return text
+
+
+def find_earliest_heading_start(full_text: str, heading_names: List[str]) -> int:
+    earliest = -1
+    for heading_name in heading_names:
+        heading_start, _ = find_heading_line_offsets_global(full_text, heading_name)
+        if heading_start == -1:
+            continue
+        if earliest == -1 or heading_start < earliest:
+            earliest = heading_start
+    return earliest
+
+
+def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple[int, int]:
+    direct_idx = full_text.find(heading_name)
+    if direct_idx != -1:
+        return direct_idx, direct_idx + len(heading_name)
+
+    target = normalize_heading_text(heading_name)
+    if not target:
+        return -1, -1
+
+    lines = full_text.splitlines(keepends=True)
+    offsets: List[int] = []
+    running = 0
+    for line in lines:
+        offsets.append(running)
+        running += len(line)
+
+    for idx in range(len(lines)):
+        combined = ""
+        for width in range(1, 4):
+            end_idx = idx + width
+            if end_idx > len(lines):
+                break
+            chunk = "".join(lines[idx:end_idx]).replace("\n", " ").replace("\r", " ")
+            normalized_line = normalize_heading_text(chunk)
+            normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
+            normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
+
+            combined = f"{combined} {normalized_line}".strip() if combined else normalized_line
+
+            if heading_tokens_match(target, normalized_line) or heading_tokens_match(target, combined):
+                return offsets[idx], offsets[end_idx - 1] + len(lines[end_idx - 1])
+
+    return -1, -1
+
+
 def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Extract citation blocks with context and section content based on a nested section schema.
@@ -364,52 +450,18 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
 
     trimmed_text = trim_text_before_references(text)
 
-    def find_heading_line_offsets(full_text: str, heading_name: str) -> Tuple[int, int]:
-        direct_idx = full_text.find(heading_name)
-        if direct_idx != -1:
-            return direct_idx, direct_idx + len(heading_name)
-
-        target = normalize_heading_text(heading_name)
-        if not target:
-            return -1, -1
-
-        lines = full_text.splitlines(keepends=True)
-        offsets: List[int] = []
-        running = 0
-        for line in lines:
-            offsets.append(running)
-            running += len(line)
-
-        for idx in range(len(lines)):
-            combined = ""
-            for width in range(1, 4):
-                end_idx = idx + width
-                if end_idx > len(lines):
-                    break
-                chunk = "".join(lines[idx:end_idx]).replace("\n", " ").replace("\r", " ")
-                normalized_line = normalize_heading_text(chunk)
-                normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
-                normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
-
-                combined = f"{combined} {normalized_line}".strip() if combined else normalized_line
-
-                if heading_tokens_match(target, normalized_line) or heading_tokens_match(target, combined):
-                    return offsets[idx], offsets[end_idx - 1] + len(lines[end_idx - 1])
-
-        return -1, -1
-
     def extract_section_content(
         full_text: str,
         section_name: str,
         next_section_name: Optional[str] = None,
         child_section_names: Optional[List[str]] = None,
     ) -> str:
-        section_start, content_start = find_heading_line_offsets(full_text, section_name)
+        section_start, content_start = find_heading_line_offsets_global(full_text, section_name)
         used_child_anchor = False
 
         if section_start == -1 and child_section_names:
             for child_name in child_section_names:
-                child_start, child_content_start = find_heading_line_offsets(full_text, child_name)
+                child_start, child_content_start = find_heading_line_offsets_global(full_text, child_name)
                 if child_start != -1:
                     section_start = child_start
                     content_start = child_start
@@ -420,13 +472,17 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
             return ""
 
         if next_section_name:
-            relative_next_start, _ = find_heading_line_offsets(full_text[content_start:], next_section_name)
+            relative_next_start, _ = find_heading_line_offsets_global(full_text[content_start:], next_section_name)
             if relative_next_start == -1:
                 section_end = len(full_text)
             else:
                 section_end = content_start + relative_next_start
         else:
             section_end = len(full_text)
+
+        back_matter_start = find_earliest_heading_start(full_text[content_start:section_end], list(BACK_MATTER_HEADINGS))
+        if back_matter_start != -1:
+            section_end = min(section_end, content_start + back_matter_start)
 
         if used_child_anchor:
             return full_text[content_start:section_end]
@@ -1004,6 +1060,17 @@ def is_page_artifact_line(line: str) -> bool:
         return True
     if re.fullmatch(r"page\s+\d+(?:\s+of\s+\d+)?", stripped.lower()):
         return True
+    if re.search(rf"\b(?:{MONTH_NAME_PATTERN})\b", stripped, flags=re.IGNORECASE) and re.search(r"\b(?:19|20)\d{2}\b", stripped):
+        if stripped.count(",") >= 2 or "proceedings" in stripped.lower() or "conference" in stripped.lower():
+            return True
+    if re.search(r"\b[A-Z]{2,}\s*[’']?\d{2}\b", stripped) and re.search(r"\b(?:19|20)\d{2}\b", stripped):
+        return True
+    if re.fullmatch(r"(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})(?:,\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})+(?:,\s+and\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})?", stripped):
+        return True
+    if re.search(r"\bFigure\s+\d+\s*:", stripped, flags=re.IGNORECASE):
+        return True
+    if re.search(r"\bTable\s+\d+\s*:", stripped, flags=re.IGNORECASE):
+        return True
     return False
 
 
@@ -1055,7 +1122,9 @@ def median_line_length(lines: List[str]) -> int:
 
 
 def merge_paragraph_lines(lines: List[str]) -> str:
-    return normalize_for_match(" ".join(line.strip() for line in lines if line.strip()))
+    merged = normalize_for_match(" ".join(line.strip() for line in lines if line.strip()))
+    merged = re.sub(r"\s+\d{1,4}\s*$", "", merged).strip()
+    return merged
 
 
 def rebuild_paragraphs_from_lines(text: str) -> List[str]:
@@ -1073,7 +1142,7 @@ def rebuild_paragraphs_from_lines(text: str) -> List[str]:
             return
         paragraph = merge_paragraph_lines(current)
         current.clear()
-        if paragraph:
+        if paragraph and not is_page_artifact_line(paragraph):
             paragraphs.append(paragraph)
 
     for raw_line in lines:
@@ -1127,6 +1196,7 @@ def rebuild_paragraphs_from_lines(text: str) -> List[str]:
 
 def split_text_into_paragraphs(text: str) -> List[str]:
     normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    normalized = trim_text_before_back_matter(normalized).strip()
     if not normalized:
         return []
 
@@ -1904,6 +1974,7 @@ def enforce_top_level_constraints(scores: Dict[str, float], total: float) -> Dic
 
 def split_paragraph_channel_scores(
     client: Client,
+    section_name: str,
     paragraph_items: Dict[str, str],
     paragraph_total_scores: Dict[str, float],
     mention_buckets: Dict[str, List[Tuple[str, str, str]]],
@@ -1949,6 +2020,7 @@ def split_paragraph_channel_scores(
         for paragraph_id in paragraph_ids
     }
     user_prompt = PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE.format(
+        section_name=section_name,
         paragraphs_json=json.dumps(payload, indent=2)
     )
 
@@ -2234,6 +2306,7 @@ def assign_importance_scores(
         paragraph_names = list(paragraph_items.keys())
         paragraph_technical, paragraph_citation = split_paragraph_channel_scores(
             client=client,
+            section_name=section_name,
             paragraph_items=paragraph_items,
             paragraph_total_scores=paragraph_total,
             mention_buckets=mention_buckets,
