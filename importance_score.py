@@ -1008,6 +1008,20 @@ def normalize_distribution(raw_scores: Dict[str, float], total: float) -> Dict[s
     return normalized
 
 
+def counterbalanced_item_order(items: List[str], sample_idx: int) -> List[str]:
+    if len(items) <= 1:
+        return list(items)
+
+    rotation = sample_idx % len(items)
+    ordered = list(items[rotation:]) + list(items[:rotation])
+
+    # Alternate direction so head/tail items do not consistently benefit
+    # from the same left-to-right exposure pattern across samples.
+    if sample_idx % 2 == 1:
+        ordered.reverse()
+    return ordered
+
+
 def clamp_unit(value: float) -> float:
     return max(0.0, min(1.0, value))
 
@@ -1483,11 +1497,17 @@ def all_together_allocate_scores(
     sample_count = max(1, n_samples)
     sample_distributions: List[Dict[str, float]] = []
     for s in range(sample_count):
+        sample_items = counterbalanced_item_order(items, s)
+        ordered_item_to_content = {item: item_to_content[item] for item in sample_items}
+        append_debug_log(
+            debug_log_path,
+            f"[{log_tag}_item_order] parent={parent_name} sample={s + 1}/{sample_count} order={sample_items}",
+        )
         try:
             sample_distributions.append(
                 direct_allocate_scores(
                     client=client,
-                    item_to_content=item_to_content,
+                    item_to_content=ordered_item_to_content,
                     total_score=total_score,
                     parent_name=parent_name,
                     model=model,
