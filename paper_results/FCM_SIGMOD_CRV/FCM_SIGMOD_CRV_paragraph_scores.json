@@ -5,26 +5,17 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Estimating element frequencies in data streams is a fundamental problem in computer science, where, given a universe of elements, the objective is to count the appearance of each within the stream. However, due to memory limitations and processing time in streaming settings, exact counting is often impractical. Consequently, approximating the counts using techniques such as the Count-Min (CM) sketch has become widely adopted [ 28]. The CM estimates the frequency of elements by randomly hashing the elements into a smaller set of buckets, while adding up the frequencies of all elements in each bucket. The frequency count of each bucket is then returned as an upper bound of the frequency of elements it contains. The CM sketches offer space-efficient frequency estimations with small error guarantees. Never- theless,the error guarantees are additive. Such errors may be negligible for popular elements with a high frequency in the data stream. However, as further elaborated in Example 1, the unpopular groups with low frequencies in the stream are disproportionately impacted under such guarantees. That is because even small additive errors can cause a significant relative increase in the count Authors\u2019 Contact Information: Nima Shahbazi, Department of Computer Science, University of Illinois Chicago, Chicago, Illinois, USA, nshahb3@uic.edu; Stavros Sintos, Department of Computer Science, University of Illinois Chicago, Chicago, Illinois, USA, stavros@uic.edu; Abolfazl Asudeh, Department of Computer Science, University of Illinois Chicago, Chicago, Illinois, USA, asudeh@uic.edu. This work is licensed under a Creative Commons Attribution 4.0 International License. \u00a92026 Copyright held by the owner/author(s). ACM 2836-6573/2026/6-ART179 https://doi.org/10.1145/3802056 Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.13208195203314924,
-    "citation_score": 0.0251584670539332
+    "technical_score": 0.190997915180361,
+    "citation_score": 0.043452050330629356
   },
   {
     "section_path": [
       "Introduction"
     ],
     "paragraph_index": 2,
-    "paragraph": "179:2 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh estimation of unpopular (low-frequency) elements. This imbalance gives rise to a fairness issue \u2013 an aspect overlooked in the existing work. Let us further illustrate the implications of this issue by presenting the following example: Example 1:Urban traffic sensors log vehicle IDs or license plate hashes as cars pass intersections. Buses, taxis, and delivery trucks show up hundreds of times per day, while private vehicles may only appear a few times. Suppose on average the public transportation cars pass the intersections 100 times, while this number is 5 for the private vehicles. In this setting, an additive error of 10 is tolerable for public transportation cars, but it increases the expected estimation for private vehicles by 200%. This distortion matters: traffic management systems could mistakenly flag private vehicles as suspicious, or misallocate toll discounts and congestion pricing.1 Cases similar to Example 1 can be found across a wide range of applications, from wild-life monitoring to recommendation and shingle-frequency estimation. Please refer to Appendix A for an extended discussion of the motivation examples. To address this issue, in this paper, we introduceFair-Count-Min(FCM), a frequency estimation sketch with the equal group-level approximation factor guarantee, ensuring that the relative count- estimation increase is equal for various groups, irrespective of their popularity in the data stream. To the best of our knowledge, FCM is the first frequency estimation sketch with provablemultiplicative errorguarantees in its estimation. Our key idea in the design of the FCM is the partitioning of the sketch buckets based on a group-aware, semi-uniform hashing scheme that prevents collisions between elements of different groups. Then, we prove that, carefully selecting the number of buckets allocated to each group, our FCM sketch guarantees an equal expected approximation factor across the groups, i.e., equal ratios of the true frequency to the estimated one. The FCM sketch applies to binary and non-binary groups of elements. Sinceour approach is restricted to the same memory capacity as CM,FCM does not introduce any additional memory overhead.Furthermore, FCM and CM have the same time complexities for update and query operations. In other words, the time taken to look up the frequency estimation of an element and the time to increase the frequency of an element in the data stream are the same in CM and FCM. In a general setting, where multiple hash functions are used in the FCM, identifying the proper number of buckets allocated to each group requires solving an equation, for which we propose efficient exact and approximation algorithms. Furthermore, we theoretically analyze the price of fairness (PoF) of FCM. In general, PoF denotes the accuracy loss incurred when fairness constraints are imposed. It arises because accuracy- maximizing outcomes often disproportionately benefit certain groups, and enforcing fairness necessitates deviations from this optimum. Interestingly, we show that in this case achieving fairness may even reduce the total additive error for a specific case when the CM sketch uses a single random hash function, while experimentally demonstrating that the PoF is small for the general settings. Beyond the theoretical analysis, we conduct extensive experiments on multiple real-world datasets, replicating our motivating examples to evaluate the practical performance of the proposed approach. In summary, our experiments verify (a) while CM is usually not fair, FCM achieves fairness in all experiments, (b) the PoF is generally small, and (c) FCM has the same memory and time efficiency as CM. 1Additional motivation examples are provided in Appendix A. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.1048512645909121,
+    "paragraph": "179:2 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh estimation of unpopular (low-frequency) elements. This imbalance gives rise to a fairness issue \u2013 an aspect overlooked in the existing work. Let us further illustrate the implications of this issue by presenting the following example: Example 1:Urban traffic sensors log vehicle IDs or license plate hashes as cars pass intersections. Buses, taxis, and delivery trucks show up hundreds of times per day, while private vehicles may only appear a few times. Suppose on average the public transportation cars pass the intersections 100 times, while this number is 5 for the private vehicles. In this setting, an additive error of 10 is tolerable for public transportation cars, but it increases the expected estimation for private vehicles by 200%. This distortion matters: traffic management systems could",
+    "technical_score": 0.12425788447089181,
     "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Introduction"
-    ],
-    "paragraph_index": 3,
-    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:3 Summary of contributions: \u2022We propose a novel notion ofgroup fairnessin the frequency estimation context, defined by the requirement that the approximation factor (themultiplicativeoverestimation error) remains equal across different groups. This contrasts with traditional approaches based onadditiveerror bounds, which tend to disproportionately impact unpopular groups. Using this notion of fairness, we introduceFair-Count-Min(FCM), the frequency estimation sketch that guarantees group fairness. \u2022We introduce acolumn-partitioningtechnique based on semi-uniform hash functions to develop FCM. This method assigns groups to disjoint sets of hash buckets, thereby eliminating inter-group collisions and promoting fairness in estimation. Our proposed method, FCM, is agnostic to both the grouping strategy and the underlying distribution of the data elements. Furthermore, FCM does not increase the memory and time requirements of CM. \u2022We theoretically prove that FCM is fair, i.e., it ensures an equal expected approximation factor across groups. Furthermore, we analyze theprice of fairnessand show that it is typically small\u2014and in some cases, can even be negative. \u2022We design both exact and approximate algorithms to efficiently compute the optimal allocation of buckets per group. \u2022We empirically evaluate FCM on several real-world datasets and compare it with representative state-of-the-art baselines for frequency estimation such as learning-based approach [ 50] and CM with conservative update [ 37]. The results show that FCM is the only approach that successfully achieves group fairness while incurring only a generally small additional additive error, all while preserving the time and space efficiency characteristics of CM. Interestingly, CM with conserva- tive update\u2013though effective in minimizing additive error\u2013exhibits the poorest performance with respect to multiplicative error. The learned approach is constrained by its capacity on identifying heavy hitters from the data sample and incurs construction and query times several orders of magnitude higher than non-learned methods. Remark:Before concluding this section, we would like to note that our paper explicitly targets applications where systematic overestimation of minority groups is harmful. Indeed, for applications without societal impact, and settings where additive overestimation is acceptable, fairness is irrelevant. Examples of such settings include detecting heavy-hitters in market data, or detecting traffic-network anomalies. Such applications are out of the scope of study, and using a standard CM sketch is entirely sufficient. Rather, we address a distinct and well-motivated scenario: in societal applications, where disproportionate inflation of errors for unpopular groups is harmful, FCM provide guarantees that avoid systematically disadvantaging them. 2",
-    "technical_score": 0.08364020450810462,
-    "citation_score": 0.016596282545432984
   },
   {
     "section_path": [
@@ -33,7 +24,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "LetDbe a data stream consisting of elements (or events), each belonging to a type from a finite universeU={\ud835\udc52 1,\ud835\udc522,...,\ud835\udc52\ud835\udc5b}of\ud835\udc5belement types. Each element type \ud835\udc52be associated with a group g\u2208G, whereG={ g1,g2,..., g\u2113}, and\ud835\udc5bgdenotes the number of element types belonging to group g. Let\ud835\udc41be the number of elements in the data stream D. We use the function \ud835\udc53:U\u2192[\ud835\udc41] to refer to the frequency of each element type in D. That is,\ud835\udc53(\ud835\udc52) is the number of times an element of type\ud835\udc52appears inD. Formally, \ud835\udc53(\ud835\udc52)=\u2211\ufe02 \ud835\udc65\u2208D1(\ud835\udc65=\ud835\udc52), where1(\ud835\udc65=\ud835\udc52)is the indicator function that equals 1 if\ud835\udc65is of type\ud835\udc52and 0 otherwise. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.009256740741524747,
+    "technical_score": 0.00895577021464376,
     "citation_score": 0.0
   },
   {
@@ -43,7 +34,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "179:4 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Notation Description Ddata stream UA universe of\ud835\udc5belement types \ud835\udc52an element type \ud835\udc53(.)true frequency of an element type \u02c6\ud835\udc53(.)estimated frequency of an element type GThe set of\u2113groups ga group with\ud835\udc5b gelement types \ud835\udc36\ud835\udc40count-min 2D array \ud835\udc64,\ud835\udc51width and depth of the sketch \ud835\udc64g,\ud835\udc51g # of columns and rows assigned to groupg \ud835\udc5b# of element types \ud835\udc5bg # of element types from groupg \ud835\udc41length of stream \ud835\udc41g frequency of groupg h(.)random hash function \ud835\udf00\ud835\udc34(.)additive error of an element type \ud835\udefc(.)approximation factor of an element type \ud835\udc36\ud835\udc56 total frequency in\ud835\udc56-th bucket \ud835\udc43\ud835\udc5c\ud835\udc39price of fairness L\ud835\udc39\ud835\udc36\ud835\udc40,L\ud835\udc36\ud835\udc40 total additive errors of FCM and CM Table 1.Table of notations 2.2",
-    "technical_score": 0.010933065256254593,
+    "technical_score": 0.0037556455738828663,
     "citation_score": 0.0
   },
   {
@@ -53,7 +44,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Frequency estimation is a fundamental problem in streaming data processing. Given a data stream D, the goal is to efficiently estimate the frequency \ud835\udc53(\ud835\udc52) of each element type \ud835\udc52. It is easy to see that finding an exact solution to the above problem requires \u0398(\ud835\udc5b) space, as it involves maintaining \ud835\udc5b counters for each element type. To overcome this limitation, frequency estimation data structures (a.k.a sketches) have been designed to provide approximate answers to such queries while using sub-linear space. In addition to being space-efficient, these sketches provide probabilistic error guarantees through tunable parameters and enable constant-time update and query operations. CM is among the most widely used sketches for frequency estimation. It represents the frequency estimates using a two-dimensional array \ud835\udc36\ud835\udc40of\ud835\udc51rows and\ud835\udc64columns. The sketch employs \ud835\udc51 independent hash functionsh 1,h2,..., h\ud835\udc51, where eachh \ud835\udc56:U\u2212 \u2192[\ud835\udc64] maps an element type to a column index (calledbucketorbinin the rest of the paper) in row \ud835\udc56. These hash functions distribute element types across different buckets to reduce the impact of hash collisions. When a new element of type\ud835\udc52arrives in the stream, the sketch updates its counts as follows: \ud835\udc36\ud835\udc40[\ud835\udc56,h\ud835\udc56(\ud835\udc52)]\u2190\ud835\udc36\ud835\udc40[\ud835\udc56,h \ud835\udc56(\ud835\udc52)]+1,\u2200\ud835\udc56\u2208[\ud835\udc51]. Each row records a count for \ud835\udc52, though potential overestimations may occur due to hash collisions. To estimate the frequency of an element type2\ud835\udc52, the sketch returns: \u02c6\ud835\udc53(\ud835\udc52)=\ud835\udc51 min \ud835\udc56=1\ud835\udc36\ud835\udc40[\ud835\udc56,h\ud835\udc56(\ud835\udc52)]. Taking the minimum across multiple rows mitigates over-counting errors. As previously mentioned, the estimation error in CM occurs due to hash collisions. For each element type \ud835\udc52the estimated frequency \u02c6\ud835\udc53(\ud835\udc52)is always an upper bound on the true frequency\ud835\udc53(\ud835\udc52): \u02c6\ud835\udc53(\ud835\udc52)=\ud835\udc53(\ud835\udc52)+\ud835\udf00 \ud835\udc34(\ud835\udc52),(1) 2In the rest of the paper, we use \u201celement\ud835\udc52\u201d and \u201celement type\ud835\udc52\u201d interchangeability to refer to elements of type\ud835\udc52. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.009712025841196823,
+    "technical_score": 0.004932030031315645,
     "citation_score": 0.0
   },
   {
@@ -63,8 +54,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:5 where the additive error \ud835\udf00\ud835\udc34(\ud835\udc52)corresponds to the combined frequency of all other elements that hash into the same bucket as \ud835\udc52. In expectation, the additive error \ud835\udf00\ud835\udc34(\ud835\udc52)is bounded by\ud835\udc41 \ud835\udc64. Formally: E[\u02c6\ud835\udc53(\ud835\udc52)]=\ud835\udc53(\ud835\udc52)+\u2211\ufe01 \u2200\ud835\udc52\u2032\u2260\ud835\udc52,h(\ud835\udc52\u2032)=h(\ud835\udc52)\ud835\udc53(\ud835\udc52\u2032) \ud835\udc64\u2264\ud835\udc53(\ud835\udc52)+\ud835\udc41 \ud835\udc64(2) Several variations of the CM exist, including the CM with conservative updates [ 37], the Count- Mean-Min sketch [ 31], and other related frequency estimation structures such as the Count sketch [ 22] and Spectral Bloom Filters [ 26]. While using CM as the foundation for the devel- opment of our sketch, and deriving our theoretical analysis,we compare our work against other baselines in experiments. 2.3",
-    "technical_score": 0.005752497528557803,
-    "citation_score": 1.0443770557556276e-05
+    "technical_score": 0.0016924741247482666,
+    "citation_score": 1.2176072839915589e-05
   },
   {
     "section_path": [
@@ -73,8 +64,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Existing CM sketches provide an additive upper-bound error \ud835\udf00\ud835\udc34on the frequency estimation of the elements. However, while \ud835\udf00\ud835\udc34may be a negligible error for the popular groups with frequent elements, it can be intolerable for the unpopular ones, with elements that appear infrequently in the sequence. In other words, the significance of the frequency estimation error is relative to the frequency value. To further clarify this, let us consider Example 2. Example 2:Continuing with Example 1, we consider the NYC Bus [ 82] dataset with a universe of element typesU={\ud835\udc52 1,\ud835\udc522,...,\ud835\udc52 61,906}, where each element type \ud835\udc52represents a bus route uniquely identified by the tuple(PublishedLineName, VehicleRef) . The element types {\ud835\udc521,...,\ud835\udc52 10,462}correspond to routes operated by theMTA Bus Company(MTABC), while the remaining element types {\ud835\udc5210,463,...,\ud835\udc52 61,906}correspond to routes operated byNew York City Transit(NYCT). Now consider a CM sketch with a hash function \u210ethat maps element types into \ud835\udc64= 10,000bins. Let \ud835\udc41= 26,520,716denote the total number of elements in the stream. The resulting additive error of the sketch is therefore bounded by \ud835\udf00\ud835\udc34\u22642,652. Assume that the expected frequencies of element types from theMTABCandNYCTgroups are11and513, respectively. Consequently, the expected frequency estimate for an element type fromNYCTis bounded by3 ,165, which corresponds to a relative error of approximately515%. In contrast, the relative error for an element type from theMTABCgroup can be as large as26,570%. From Example 2, it is clear that the additive error does not provide a strong guarantee independent of the element frequencies. Specifically, providing large estimation errors relative to small frequency values, it isunfairfor unpopular groups. This motivates us to instead promoteapproximation factor as a stronger frequency estimation guarantee. Definition 1 (Approximation Factor ).Let \u02c6\ud835\udc53(\ud835\udc52) be the frequency estimation of the element type \ud835\udc52by a count-min sketch CM. The approximation factor of CM for\ud835\udc52is \ud835\udefc(\ud835\udc52)=\ud835\udc53(\ud835\udc52) \u02c6\ud835\udc53(\ud835\udc52). Ideally, one would like the sketch to provide an equal approximation factor for all individual element types i.e. to be individually fair. This, however, may not be practical because providing such a guarantee would require knowing (at least approximately) the frequencies of all elements apriori and, in some settings, would require \ud835\udc42(\ud835\udc5b) cells, which is not reasonable. Therefore, following the bulk of the research on algorithmic fairness [ 15], we turn our objective to the middle-ground of group fairness. Using Definition 1, we define the notion ofgroup fairnessthat equalizes the expected approxima- tion factor across various groups. Specifically, a CM is called fair if it satisfies Definition 2. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.00624816541344175,
-    "citation_score": 0.001988587485634003
+    "technical_score": 0.004360322226243979,
+    "citation_score": 0.003963929296585436
   },
   {
     "section_path": [
@@ -83,8 +74,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "179:6 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Definition 2 (Group-Fair Count-Min (FCM)).A count-min sketch is group-fair iff: \u2200g\ud835\udc56,g\ud835\udc57\u2208G,E\ud835\udc52\u2208g\ud835\udc56[\ufe01 \ud835\udefc(\ud835\udc52)]\ufe01 =E\ud835\udc52\u2032\u2208g\ud835\udc57[\ufe01 \ud835\udefc(\ud835\udc52\u2032)]\ufe01 Following our motivation examples, Definition 2 ensures the sketch performs equally good across various groups, by guaranteeing an equal multiplicative error across them, which eliminates disproportionately large overestimation, particularly for the unpopular (low-frequency) groups. This aligns with the general definition ofperformance parityfairness [ 15]. Disproportionate overestimation for the unpopular group can disproportionately harm those groups and lead to discrimination. In our motivation examples, for instance, private vehicles can disproportionately get falsely flagged as suspicious, or additional monetary cost for small-businesses advertisement. An FCM sketch ensures such performance disparities and potential disproportionate harms do not happen. We note that, instead of considering all groups, one could define fairness over a subset of groups of interests for the users (i.e., the groups the users actually query). In such settings, it is enough to combine all other groups as one group of \u201cothers\u201d, and simply apply Definition 2 on the groups of interest. Without loss of generality and to ease the explanations, we use the binary groups g1and g2for explaining our sketches and drawing the analyses. Our results readily hold for non-binary and arbitrary groupingof element types, as we shall further discuss in Section 3.4. 2.4",
-    "technical_score": 0.009740456100745492,
-    "citation_score": 0.0016096516437672634
+    "technical_score": 0.006919011312447011,
+    "citation_score": 0.00079428597017474
   },
   {
     "section_path": [
@@ -93,7 +84,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "With the necessary terms and notations defined, we now formally define our problem of interest:",
-    "technical_score": 0.004347000660202505,
+    "technical_score": 0.0013041957094973417,
     "citation_score": 0.0
   },
   {
@@ -103,7 +94,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Definition 3.Given a data stream of elements Ddrawn from a universe of element types Uwhere each element type belongs to a group \ud835\udc54\u2208G , design a group-fair count-min sketch, whose overall additive error increase compared to CM (price of fairness) is small. 2.5",
-    "technical_score": 0.0036730470694734357,
+    "technical_score": 0.0026083914189946834,
     "citation_score": 0.0
   },
   {
@@ -113,7 +104,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "can collide with low-frequency ones, adding a major overestimation to their counts. Similarly, a sketch in our case might not be group-fair if elements ing 1collide with elements ing 2. One way to reduce the likelihood of such collisions is to substantially increase the number of bins\ud835\udc64and/or the number of independent hash functions \ud835\udc51used in the estimation, i.e., the number of rows in the sketch. However, this approach has a fundamental drawback: to ensure that an element\ud835\udc52\u2208g1is unlikely to collide with any element ing 2across at least one of the \ud835\udc51rows, the sketch size must scale linearly with \ud835\udc5b, the number of distinct element types\u2014defeating the purpose of sketching.",
-    "technical_score": 0.007657129107491475,
+    "technical_score": 0.0015881804266062657,
     "citation_score": 0.0
   },
   {
@@ -123,77 +114,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Instead, to design group-fair CM, our goal is tomake it impossible for elements in different groups to collide. Specifically, we ensure our goal by designing group-aware \u201csemi-uniform\u201d hash schemes that isolate elements ofg 1andg 2by strategically partitioning and assigning the columns of the sketch tog 1andg 2(Section 3). Proving that our sketch satisfies Definition 2, we study its price of fairness (Section 5).",
-    "technical_score": 0.003887466298269803,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
-      "Negative Result: Row Partitioning Baseline"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "FCM follows a column partitioning approach, using the group-aware semi-uniform hashing schemes. Alternatively, rows can be divided by allocating a specific number of exclusive rows to each group, where the allocation of rows to each group is determined by the number of element types within that group (Figure 3). Following Lemma 2, the expected size of the minimum-size bucket across the \ud835\udc51\u2032rows,\ud835\udc64\u2032columns, and a group with\ud835\udc5b\u2032elements can be computed as, E(\ud835\udc5b\u2032,\ud835\udc51\u2032,\ud835\udc64\u2032)=\ud835\udc5b\u2032\u2211\ufe02 \ud835\udc65=1[\ufe04\ud835\udc5b\u2032\u2211\ufe02 \ud835\udc56=\ud835\udc65(\ufe03\ud835\udc5b\u2032 \ud835\udc56)\ufe03 (\ufe031 \ud835\udc64\u2032)\ufe03\ud835\udc56(\ufe03\ud835\udc64\u2032\u22121 \ud835\udc64\u2032)\ufe03\ud835\udc5b\u2032\u2212\ud835\udc56]\ufe04\ud835\udc51\u2032 (6) Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.01324048356326445,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
-      "Negative Result: Row Partitioning Baseline"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "179:10 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Let\ud835\udc51g1and\ud835\udc51g2=\ud835\udc51\u2212\ud835\udc51 g1be the number of rows allocated to the groups g1and g2. Then, we can find the proper values of\ud835\udc51 g1and\ud835\udc51 g2that achieve fairness by solving the following equation: E(\ud835\udc5b g1,\ud835\udc51g1,\ud835\udc64)=E(\ud835\udc5b g2,\ud835\udc51g2,\ud835\udc64)(7) However, there is a major issue that makes this approach unlikely to work: unlike \ud835\udc64, which is a relatively large number, \ud835\udc51is a small constant (usually on the order of tens). As a result, there are only a small, constant number of choices for \ud835\udc51g1\u2208[\ud835\udc51] . In practice, this makes it unlikely that \ud835\udc51is divisible such that Equation 7 is satisfied. We shall verify this negative result in our experiments in Section 6. 3.4",
-    "technical_score": 0.02403435603331699,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
-      "Generalization to Multiple Arbitrary Groups"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "So far, we have explained our techniques for the binary grouping of the elements based on their frequencies.",
-    "technical_score": 0.016196569692008864,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
-      "Generalization to Multiple Arbitrary Groups"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "Our approach works for any (arbitrary) grouping of the elements since none of our definitions, results, and analyses are based on any assumption about how elements are grouped. This is also observed in our experiments in Section 6, where we, for example, use demographic groups to group the elements.",
-    "technical_score": 0.003631604765285307,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
-      "Generalization to Multiple Arbitrary Groups"
-    ],
-    "paragraph_index": 3,
-    "paragraph": "Extending our results to the non-binary grouping of the element types is straightforward. Let G={ g1,g2,\u00b7\u00b7\u00b7, g\u2113}be the non-binary set of groups. For every groupg \u2208G, transform the problem into the binary grouping by merging all other groups as the super-group \u201cothers\u201d. Then, for \ud835\udc51=1, following Theorem 1, \ud835\udc64g=\ud835\udc5bg \ud835\udc5b\ud835\udc64. Similarly, for \ud835\udc51> 1, the value of \ud835\udc64g,\u2200g\u2208G, can be computed by solving Equation 5. We propose an efficient algorithm for finding \ud835\udc64gvalues when \ud835\udc51> 1in Section 4. 3.5",
-    "technical_score": 0.00818554098226611,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
-      "Estimating Group Sizes"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "Our approach does not make any assumptions about the stream length \ud835\udc41or the frequencies, including the group frequencies \ud835\udc41g. We only assume a fixed universe model, where the universe of element typesUis known. We further know which group each element belongs to. While this is standard in many settings, including our motivation examples, in some streaming settings, the universe Umay not be known a priori. In such cases, sampling can be employed to estimate the number of elements in each group ( \ud835\udc5bg). Such approaches are standard in learned frequency-estimation sketches, such as [ 2,50,71,87,90], where a classifier is trained on a small sample to infer these parameters. To obtain the required estimates, we divide the process into a warm-up phase followed by a steady-state phase. Let \ud835\udc51\u00b7\ud835\udc64 denote the memory allocated to the CM sketch. During the warm-up phase, each memory cell is used to store theexactcount of a single element type. As long as the number of distinct element types observed in the stream remains below \ud835\udc51\u00b7\ud835\udc64 , we can maintain exact counts for all such elements. Consequently, at the end of the warm-up phase, we observe \ud835\udc51\u00b7\ud835\udc64 distinct samples of element types. These samples are used to estimate the group sizes, using Lemma 3, and to construct the FCM accordingly. Lemma 3.Consider a universe Uof\ud835\udc5belement types, where \ud835\udc5bgof them belong to a groupg. Let \ud835\udc5a be the total number of elements observed during the warm-up phase. That is \ud835\udc5a=\u2211\ufe01\ud835\udc51.\ud835\udc64 \ud835\udc56=1\ud835\udc36\ud835\udc56. Similarly, \ud835\udc65g=\ud835\udc5a=\u2211\ufe01 \ud835\udc52\ud835\udc46\ud835\udc57\u2208g\ud835\udc36\ud835\udc57be the number of element types of groupgobserved during the warm-up phase. Viewing the observed sequence as a random set of Uwith replacement, define \u02c6\ufe01\ud835\udc5bg=\ud835\udc65g\ud835\udc5b \ud835\udc51\ud835\udc64. Then, \u02c6\ufe01\ud835\udc5bgis Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.008015031082074036,
-    "citation_score": 0.004803713431691283
-  },
-  {
-    "section_path": [
-      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
-      "Estimating Group Sizes"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:11 an unbiased estimator of\ud835\udc5b g. Furthermore, for any\ud835\udf16>0,3 Pr(\ufe01|\u02c6\ufe01\ud835\udc5bg\u2212\ud835\udc5b g|\u2265\ud835\udc5b\ud835\udf16)\ufe01\u22642 exp(\u22122\ud835\udc5a\ud835\udf162). At the beginning of the steady-state phase, the sketch is initialized using the exact counts collected during the warm-up phase. Bounding the tail probability, Lemma 3 shows that, for a large enough value of \ud835\udc5a, the estimation of group sizes are close to the actual values. Still, as a consequences of estimating these values, the FCM sketch may introduce a small amount of unfairness. Nevertheless, while these estimates only approximate \ud835\udc5bg, our experimental evaluations show that the resulting impact on both unfairness and the price of fairness is generally small, although it remains dependent on the underlying stream distribution. Lastly, we note that group fairness guarantees are susceptible to compromise under adversarial conditions. This occurs primarily when the sampling process fails to accurately estimate the cardinality of element types, as seen in cases of extreme distributional drift. Section 8.3 details a mitigation strategy for these instances, which requires a larger memory footprint. 4",
-    "technical_score": 0.008474939658382603,
+    "technical_score": 0.0033528253450576724,
     "citation_score": 0.0
   },
   {
@@ -201,8 +122,8 @@
       "Computing The Column Widths"
     ],
     "paragraph_index": 1,
-    "paragraph": "Our algorithm is straightforward; we should compute the integer value of \ud835\udc64g1such that Equation (5) holds. We note that Equation (5)may not hold for an integer value of \ud835\udc64g1. In this case the goal is to compute the integer value of \ud835\udc64g1such that the left side of Equation (5)is as close as possible to the right side of Equation (5). A naive implementation is to try every value of \ud835\udc64g1and calculate the value of the left and right side of Equation (5)by simply evaluate every term in the sum. Such an implementation would take \u03a9(\ud835\udc5b3)time because we should try \ud835\udc42(\ud835\udc5b) values of\ud835\udc64g1, and for each such value the calculation of each side of Equation (5)takes\u03a9(\ud835\udc5b2)time to evaluate the summations. We first show an exact near-linear time algorithm to compute the value of \ud835\udc64g1that solves Equation 5 and then we briefly discuss an approximation algorithm that is used in our experiments to efficiently evaluate the sums of the binomial function. Efficient exact computation.We first assume that we have two groups, the unpopular elements g1and the popular elements g2. Then we extend our method to multiple groups G={ g1,..., g\u2113}. Similarly, to the previous section, let E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)be the function that represents the left side of Equation 5. Equivalently, the right side of Equation (5)is captured byE(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1). By definition, the function Ecomputes the expected error of group g1(resp. g2) elements. The values \ud835\udc5bg1,\ud835\udc5bg2, and\ud835\udc51are fixed, so the more bins allocated to group g1(respectively, g2) elements, the smaller the expected error. Hence, the function E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)is monotone decreasing with respect to\ud835\udc64g1, whileE(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1)is monotone increasing with respect to \ud835\udc64g1. We formally establish the monotonicity ofEin the following proposition. The proof is shown in Appendix B. Proposition 1.For fixed\ud835\udc5band\ud835\udc51, the functionE(\ud835\udc5b,\ud835\udc51,\ud835\udc64)is decreasing with respect to\ud835\udc64. This property leads to the observation that instead of trying all values of \ud835\udc64g1, we can run a binary search in the range [1,...,\ud835\udc5b] and compute the best value of \ud835\udc64g1. The overall idea of our algorithm is the following. For every value of \ud835\udc64g1in the binary search, we evaluate E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1) andE(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1). IfE(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)<E(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1)then we try larger values of \ud835\udc64g1in the binary search. Otherwise, we continue the binary search with smaller values. In the end, we return the value of \ud835\udc64g1found by the binary search such that |E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)\u2212E(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1)|is minimized. Even if someone naively applies binary search, the running time would be \u03a9(\ud835\udc5b2)to evaluate the sums. Given a value of \ud835\udc64g1we show how to compute E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)in near-linear time with 3Proofs are provided in Appendix B. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.03996919468490282,
+    "paragraph": "Our algorithm is straightforward; we should compute the integer value of \ud835\udc64g1such that Equation (5) holds. We note that Equation (5)may not hold for an integer value of \ud835\udc64g1. In this case the goal is to compute the integer value of \ud835\udc64g1such that the left side of Equation (5)is as close as possible to the right side of Equation (5). A naive implementation is to try every value of \ud835\udc64g1and calculate the value of the left and right side of Equation (5)by simply evaluate every term in the sum. Such an implementation would take \u03a9(\ud835\udc5b3)time because we should try \ud835\udc42(\ud835\udc5b) values of\ud835\udc64g1, and for each such value the calculation of each side of Equation (5)takes\u03a9(\ud835\udc5b2)time to evaluate the summations. We first show an exact near-linear time algorithm to compute the value of \ud835\udc64g1that solves Equation 5 and then we briefly discuss an approximation algorithm that is used in our experiments to efficiently evaluate the sums of the binomial function.",
+    "technical_score": 0.06551282254996704,
     "citation_score": 0.0
   },
   {
@@ -210,17 +131,8 @@
       "Computing The Column Widths"
     ],
     "paragraph_index": 2,
-    "paragraph": "179:12 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh respect to\ud835\udc5b. The computation of E(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1)is equivalent. First, for \ud835\udc65= 1we compute the sum\u2211\ufe01\ud835\udc5bg1 \ud835\udc56=1(\ufe01\ud835\udc5bg1 \ud835\udc56)\ufe01(\ufe02 1 \ud835\udc64g1)\ufe02\ud835\udc56(\ufe02\ud835\udc64g1\u22121 \ud835\udc64g1)\ufe02\ud835\udc5bg1\u2212\ud835\udc56as follows. For \ud835\udc56=1, we compute \ud835\udc4f1=(\ufe01\ud835\udc5bg1 1)\ufe01,\ud835\udc611=1 \ud835\udc64g1, and \ud835\udc601=(\ufe02\ud835\udc64g1\u22121 \ud835\udc64g1)\ufe02\ud835\udc5bg1\u22121 . We store\ud835\udefc1=\ud835\udc4f 1\u00b7\ud835\udc611\u00b7\ud835\udc601. Then for\ud835\udc56\u2208{ 2,...,\ud835\udc5b g1}, we observe that \ud835\udc4f\ud835\udc56=\ud835\udc4f\ud835\udc56\u22121\u00b7\ud835\udc5bg1+1\u2212\ud835\udc56 \ud835\udc56, \ud835\udc61\ud835\udc56=\ud835\udc61\ud835\udc56\u22121\u00b71 \ud835\udc64g1,\ud835\udc60\ud835\udc56=\ud835\udc60\ud835\udc56\u22121\u00b7\ud835\udc64g1 \ud835\udc64g1\u22121, and we set \ud835\udefc\ud835\udc56=\ud835\udc4f\ud835\udc56\u00b7\ud835\udc61\ud835\udc56\u00b7\ud835\udc60\ud835\udc56. Then, we set \ud835\udefd\ud835\udc5bg1=\ud835\udefc\ud835\udc5bg1and for every \ud835\udc56=\ud835\udc5b g1\u22121,..., 1, we compute \ud835\udefd\ud835\udc56=\ud835\udefc\ud835\udc56+\ud835\udefd\ud835\udc56+1. The main observation of our algorithm is that E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)=\u2211\ufe01\ud835\udc5bg1 \ud835\udc65=1\ud835\udefd\ud835\udc51 \ud835\udc65. In the Appendix B, we show the next lemma. Lemma 4.The time complexity of our algorithm for column-width computation for 2 groups is bounded by\ud835\udc42(\ud835\udc5blog2\ud835\udc5b). We can extend our method to multiple groups G={ g1,..., g\u2113}. For each groupg \ud835\udc57\u2208G, the functionE(\ud835\udc5b\ud835\udc57,\ud835\udc51,\ud835\udc64\ud835\udc57)represents the expected error of the elements in groupg \ud835\udc57as computed by Equation (??). The goal is to compute \ud835\udc64\ud835\udc57for everyg \ud835\udc57\u2208G, given that\u2211\ufe01 \ud835\udc57\u2208[\u2113]\ud835\udc64\ud835\udc57=\ud835\udc64. We solve this problem, by recursively execute our algorithm for two groups ( g1and g2)\u2113\u22121times. Intuitively, if we have\u2113groups, we construct an instance with two colors: one that consists of the elements in the first group, and one that consists of the elements from all groups excluding the first group. For a value \ud835\udc57\u2208{ 1,...,\u2113\u2212 1}, let\ud835\udc4a\ud835\udc57be the number of bins that should be assigned to groups g\ud835\udc57,g\ud835\udc57+1...,g\u2113. Initially, notice that \ud835\udc4a1=\ud835\udc64. We set\ud835\udc5b\u2032 \ud835\udc57=\u2211\ufe01\u2113 \ud835\udc4f=\ud835\udc57+1\ud835\udc5b\ud835\udc4f. We assume that there exist two groups, one with \ud835\udc5b\ud835\udc57elements and the other one with \ud835\udc5b\u2032 \ud835\udc57elements, while the total number of bins is \ud835\udc4a\ud835\udc57. We solve this instance using our efficient implementation for two groups. Let \ud835\udc64\ud835\udc57be the number we compute. We set \ud835\udc4a\ud835\udc57+1\u2190\ud835\udc4a\ud835\udc57\u2212\ud835\udc64\ud835\udc57and we continue recursively with \ud835\udc57\u2190\ud835\udc57+ 1. The overall time of our algorithm for groupsG={g 1,...,g\u2113}is\ud835\udc42(\u2113\u00b7\ud835\udc5b\u00b7log2\ud835\udc5b). Approximate practical implementation.While in theory our previous algorithm operates in the real-RAM model of computation, a direct numerical evaluation of the binomial probability mass function can be problematic in practice. Although the binomial coefficient(\ufe01\ud835\udc5b \ud835\udc56)\ufe01can be represented exactly using arbitrary-precision integers, its magnitude grows exponentially in \ud835\udc5b, and converting it to floating-point arithmetic\u2014as required when multiplying by probability terms\u2014quickly leads to numerical overflow. In our experiments, this overflow occurs for moderate values of \ud835\udc56once \ud835\udc5bis on the order of a few hundred, rendering a naive implementation numerically unstable. In practice, while we run the binary search on \ud835\udc64g1, instead of computing the binomial probability mass functions exactly, we use Stirling\u2019s approximation, i.e. for every positive integer \ud835\udc58,\ud835\udc58!\u2248(\ufe02 \ud835\udc58 e)\ufe02\ud835\udc58 \u00b7\u221a 2\ud835\udf0b\ud835\udc58, whereeis the Euler\u2019s number. It is known that the Gamma function \u0393(\ud835\udc67)=\u222b\u221e 0\ud835\udc61\ud835\udc67\u22121e\u2212\ud835\udc61\ud835\udc51\ud835\udc61satisfies \u0393(\ud835\udc58)=\ud835\udc58 !. Taking logarithms converts the products in the definition of the binomial coefficient into sums of logs which are easier to handle and avoid overflow. Then we approximate each log\u0393(\u00b7) term with Stirling\u2019s expansion, log\u0393(\ud835\udc67)\u2248\ud835\udc67log\ud835\udc67\u2212\ud835\udc67+1 2log(2\ud835\udf0b)+1 12\ud835\udc67+\ud835\udc42(\ud835\udc67\u22123). In our practical implementation, we use the logarithm of \u0393function to estimate the values of E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)and E(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1)for each value\ud835\udc64 g1in the binary search. As a final note, we would like to reiterate that computing the column widths is performed only onceduring the preprocessing step and is not part of the update path. That being said, the preprocessing time complexity, which is quasi-linear, is comparable to that of common operations such as sorting and is generally acceptable in preprocessing settings. We further evaluate the cost of solving this optimization problem under various parameter settings in Section 6, showing that this cost is generally negligible. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.017500756718336185,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Computing The Column Widths"
-    ],
-    "paragraph_index": 3,
-    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:13 5",
-    "technical_score": 0.016636038564095502,
+    "paragraph": "Efficient exact computation.We first assume that we have two groups, the unpopular elements g1and the popular elements g2. Then we extend our method to multiple groups G={ g1,..., g\u2113}. Similarly, to the previous section, let E(\ud835\udc5b g1,\ud835\udc51,\ud835\udc64 g1)be the function that represents the left side of Equation 5. Equivalently, the right side of Equation (5)is captured byE(\ud835\udc5b g2,\ud835\udc51,\ud835\udc64\u2212\ud835\udc64 g1). By definition, the function Ecomputes the expected error of group g1(resp. g2) elements. The values \ud835\udc5bg1,\ud835\udc5bg2, and\ud835\udc51are fixed, so the more bins allocated to group g1(respectively, g2) elements, the",
+    "technical_score": 0.01627002726472101,
     "citation_score": 0.0
   },
   {
@@ -229,68 +141,8 @@
       "Evaluation Plan"
     ],
     "paragraph_index": 1,
-    "paragraph": "We evaluate our proposed sketch based on three metrics 1) unfairness, 2) price of fairness and 3) efficiency. For each metric, we examine the impact of varying four parameters: the width of the sketch\ud835\udc64, the depth of the sketch \ud835\udc51, and the number of groups \u2113and the number of element types in the unpopular group \ud835\udc5bg1. Due to space constraints and the confirmed similarity of results across different datasets, for certain experiments, we present results for a single dataset per setting, with the full results available in Appendix E. Finally, we repeat each experiment five times and report the average values for each setting. 6.2",
-    "technical_score": 0.019981147105632226,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Datasets"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "For evaluation, we used five real-world datasets. To assess the scalability of our proposed sketch in large-scale scenarios, we selected five benchmark datasets (NYC Bus [ 82], DDoS [ 69], Reddit- Twitter [ 53], Census [ 59], and Google N-Grams [ 61]) that are sufficiently large to reflect real-world streaming environments. The dataset details are provided in Appendix D. 6.3",
-    "technical_score": 0.006407721262973603,
-    "citation_score": 0.004141134283337016
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Baselines"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "Although our theoretical analysis is based on comparisons with CM, we evaluate our method against four baseline approaches, includingrepresentative state-of-the-art methods from both traditional and learning-based frequency estimation, to comprehensively demonstrate its effectiveness:",
-    "technical_score": 0.003787907735313412,
-    "citation_score": 0.00020517342966711372
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Baselines"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "CM [ 28]:The first baseline is the standard CM sketch described in Section 2.2, which we use across all of our experiments.",
-    "technical_score": 0.0020050081731329233,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Baselines"
-    ],
-    "paragraph_index": 3,
-    "paragraph": "Row-Partitioning:The second baseline is the row-partitioning approach discussed in Section 3.3, which, as expected, does not consistently achieve equal group-wise approximation factors in practice. We use this baseline in a subset of our experiments to illustrate the negative result of row-partitioning.",
-    "technical_score": 0.0022773600466467225,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Baselines"
-    ],
-    "paragraph_index": 4,
-    "paragraph": "Learned-CM [ 50]:The third baseline, learned-CM, enhance traditional CM by integrating ML to predict element frequencies. This allows more accurate estimates for rare or critical elements while preserving efficiency for common ones, reducing overall error in high-speed data streams. A random sample comprising 30% of the stream is utilized to train a neural network designed to identify heavy hitters. We use this baseline across all of our experiments. CM-CU [ 37]:The fourth baseline is a CM sketch with conservative update. It estimates element frequencies in a data stream by incrementing only the minimum counter for each element, which reduces overestimation caused by hash collisions. CM-CU has been shown to bethe most accurate among traditional frequency estimation sketches [ 43] w.r.t. mean relative error. We use this baseline across all of our experiments.",
-    "technical_score": 0.0014822088144804703,
-    "citation_score": 0.0007711477218754547
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Baselines"
-    ],
-    "paragraph_index": 5,
-    "paragraph": "We extend existing baseline implementations from the original papers or libraries and adapt them for our experiments. 6.4",
-    "technical_score": 0.0005180354664130477,
+    "paragraph": "We evaluate our proposed sketch based on three metrics 1) unfairness, 2) price of fairness and 3) efficiency. For each metric, we examine the impact of varying four parameters: the width of the sketch\ud835\udc64, the depth of the sketch \ud835\udc51, and the number of groups \u2113and the number of element types",
+    "technical_score": 0.04351914189914871,
     "citation_score": 0.0
   },
   {
@@ -299,8 +151,8 @@
       "Experiments Settings"
     ],
     "paragraph_index": 1,
-    "paragraph": "6.4.1 Setup.The experiments were conducted on an Apple M2 Pro processor, 16 GB memory, running macOS. The algorithms were implemented in Python 3.12. 6.4.2 Parameter Settings.In all experiments, the default sketch depth was fixed at \ud835\udc51= 5. For experiments examining the impact of \ud835\udc51, we vary its value from 2 to 10. The default sketch width \ud835\udc64 was selected on a per-dataset basis: \ud835\udc64= 64for the Census and DDoS datasets, \ud835\udc64= 512for the NYC Bus and Reddit\u2013Twitter datasets, and \ud835\udc64= 65,536for the Google Ngram dataset. For experiments Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.002707507647054598,
+    "paragraph": "validate the fairness as well as the efficiency of our proposed sketch. Consistent with the theoretical guarantees established in previous sections, the experimental results confirm the effectiveness and efficiency of our sketch in practical scenarios. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
+    "technical_score": 0.017243303725032768,
     "citation_score": 0.0
   },
   {
@@ -309,48 +161,8 @@
       "Experiments Settings"
     ],
     "paragraph_index": 2,
-    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:15 investigating the impact of \ud835\udc64, we vary its value from 8 to 256 for the NYC Bus dataset, from 8 to 2,048 for the DDoS and Reddit\u2013Twitter datasets, and from 1,024 to 1,048,576 for the Google Ngram dataset. The default number of groups is set to 2 across all experiments. In experiments examining the effect of the number of groups, this parameter is varied from 2 to 10. For ones evaluating the impact of the unpopular group size, the number of element types is increased from 310 K to 1.2 M. Summary of results:In summary, FCM is the only approach observed to maintain near-zero unfairness\u2013measured as the mean approximation-factor difference between groups\u2013regardless of the sketch parameters or the underlying frequency distribution. This parity is typically achieved at a price that is generally small, though not universally so. All baseline methods generally exhibit some degree of bias in favor of the popular group. Moreover, FCM matches or exceeds state-of-the-art approaches in terms of construction and query times. 6.5",
-    "technical_score": 0.0029901084134297193,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validation: Unfairness Evaluation"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "In this experiment, we measure the impact of varying certain parameters on the unfairness of the sketch. Unfairness is measured as the difference between the expected approximation factor of the unpopular and popular groups, i.e., E[\ud835\udefc g1]\u2212E[\ud835\udefc g2]. In the multi-group setting, unfairness is measured as the difference between the maximum and minimum mean approximation factors across all groups, i.e., min\u2200g\ud835\udc56\u2208G(E[\ud835\udefc g\ud835\udc56])\u2212max\u2200g\ud835\udc57\u2208G(E[\ud835\udefc g\ud835\udc57]). A sketch is considered group-fair if the unfairness value is zero. Varying the number of columns \ud835\udc64:We begin with the experiment that examines the impact of varying the sketch width \ud835\udc64on unfairness. Looking at Figures 4, 5 and 6, we first observe that FCM achieves the smallest approximation-factor difference between the two groups, maintaining a value close to zero as \ud835\udc64increases. Because \ud835\udc5bg1is relatively large across all datasets, the approximation factors for all groups and methods start out close to zero when \ud835\udc64is small. For the standard CM baseline, as \ud835\udc64increases, the approximation factor for the popular group gradually approaches 1, while remaining comparatively low for the unpopular group. Once \ud835\udc64surpasses a certain threshold, it becomes large enough for the unpopular group\u2019s mean approximation factor to also approach 1. All the other baselines exhibit a trend similar to that of CM. Another key observation concerns the performance of Learned-CM: when the model successfully captures the heavy hitters, it outperforms the other baselines achieving better approximation factor difference. Interestingly, CM-CU\u2014despite being shown to achieve the lowest mean relative error among traditional frequency-estimation methods\u2014performs among the worst in terms of equalizing the approximation factor between the two groups across all datasets, indicating a bias toward the popular group. For the Row-Partitioning baseline, increasing \ud835\udc64makes it harder to find suitable integral \ud835\udc51g1values for allocating rows to the unpopular group, causing the approximation-factor difference to grow more rapidly than in the other baselines. Varying the number of rows \ud835\udc51:Next, we evaluate the impact of increasing the sketch depth \ud835\udc51on unfairness. The results are presented in Figures 7 and 8. For the standard CM baseline, the sketch initially provides more accurate estimates (approximation factors closer to 1) for the popular group. As\ud835\udc51increases, the accuracy improves for both groups, but at a slightly faster rate for the popular group. As in the previous experiment, Learned-CM achieves the best performance among the baselines in equalizing the approximation factor across groups, whereas CM-CU performs poorly, showing a steeper rate of decline as \ud835\udc51increases. As before, FCM maintains near-zero unfairness regardless of the sketch depth. For the Row-Partitioning approach, we note some interesting observations. As shown in Figure 8, depending on the value of \ud835\udc51and its divisibility, the unfairness fluctuates between nearly zero and a significant value as \ud835\udc51increases. In this experiment, \ud835\udc5bg1and Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.003165173257790726,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validation: Unfairness Evaluation"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "179:16 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Fig. 4.effect of varying \ud835\udc64on un- fairness,nyc bus,\ud835\udc51=5. Fig. 5.effect of varying \ud835\udc64on un- fairness,reddit-twitter,\ud835\udc51=5. Fig. 6.effect of varying \ud835\udc64on un- fairness,google ngram,\ud835\udc51=5. Fig. 7.effect of varying \ud835\udc51on un- fairness,nyc bus,\ud835\udc64=512. Fig. 8.effect of varying \ud835\udc51on un- fairness,census,\ud835\udc64=64. Fig. 9.effect of varying \u2113on un- fairness,census,\ud835\udc64=64,\ud835\udc51=5. Fig. 10.effect of varying # \u2113on unfairness,google ngram, \ud835\udc64= 65536,\ud835\udc51=5. Fig. 11.effect of varying \ud835\udc5bg1on unfairness,google ngram, \ud835\udc64= 65536,\ud835\udc51=5. Fig. 12.effect of varying \ud835\udc64on price of fairness,nyc bus,\ud835\udc51=5. Fig. 13.effect of varying \ud835\udc64on price of fairness,ddos,\ud835\udc51=5. Fig. 14.effect of varying \ud835\udc51on price of fairness,nyc bus, \ud835\udc64= 512. Fig. 15.effect of varying \ud835\udc51on price of fairness,census,\ud835\udc64=64. Fig. 16.effect of varying # of groups\u2113on price of fairness,cen- sus,\ud835\udc64=64,\ud835\udc51=5. Fig. 17.effect of varying \u2113on price of fairness,google ngram, \ud835\udc64=65536,\ud835\udc51=5. Fig. 18.effect of varying \ud835\udc5bg1on price of fairness,google ngram, \ud835\udc64=65536,\ud835\udc51=5. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.0010163213241667008,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validation: Unfairness Evaluation"
-    ],
-    "paragraph_index": 3,
-    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:17 \ud835\udc5bg2are very close, so as long as the sketch can assign equal \ud835\udc51g1and\ud835\udc51g2values to each group, it performs well w.r.t keeping unfairness at zero. This occurs only when\ud835\udc51takes even values. Varying the number of groups \u2113:In our next experiment on unfairness, we investigate the impact of increasing the number of groups. The results are shown in Figures 9 and 10. Having demonstrated that the Row-Partitioning baseline performs inconsistently and is highly sensitive to the value of \ud835\udc51, we henceforth compare our approach only with the other baselines. As expected, FCM maintains zero unfairness, independent of the number of groups or the grouping strategy used. However, for the standard CM, an increase in the number of groups generally leads to higher unfairness. This is particularly noticeable in the case of equi-width frequency-based grouping, where the sketch is more accurate for smaller groups with high-frequency elements and less accurate for those larger groups with low-frequency elements (Figure 10). In the case of arbitrary grouping, unfairness is entirely dependent on the size of each group. As shown in Figure 9, the number of groups is determined based on a different attribute with specific cardinality at each iteration. While the general trend is an increase in unfairness as the number of groups grows, in some iterations (e.g., 5 and 10), the unfairness values are closer, indicating that the groups are more evenly sized. In contrast, for iteration 9, one group is significantly larger or smaller than the others, resulting in higher unfairness. Learned-CM and CM-CU baselines follow a trend similar to the standard CM and are generally consistent with the results observed in previous experiments. Varying unpopular group size \ud835\udc5bg1:Next, we examine a specific scenario in which groups are divided into low-frequency ( g1) and high-frequency ( g2) elements based on the frequency of unique elements in the stream. Our goal is to evaluate the impact of varying the number of element types\ud835\udc5bg1in the unpopular group on unfairness. To do so, we vary the cutoff threshold on the frequency of each element: elements with frequencies below the threshold are assigned to group g1, while those above it are assigned to group g2. As the threshold increases, \ud835\udc5bg1grows while \ud835\udc5bg2 decreases, keeping the total number of elements \ud835\udc5bconstant. Let us now focus on Figure 11. As \ud835\udc5bg1 increases, the standard CM sketch exhibits greater unfairness because the expected approximation factor for group g1decreases as the group grows larger, while group g2becomes smaller. This is due to the standard CM sketch favoring more accurate estimates for the smaller group g2, which contains high-frequency elements, over the larger group g1, which consists of numerous low- frequency elements. For the Row-Partitioning baseline, the optimal integral values of \ud835\udc51g1and\ud835\udc51g2 selected by the algorithm gradually deviate from the optimal fractional values determined by the equality 7. Specifically, with \ud835\udc51= 5, the sketch would ideally assign a value4 <\ud835\udc51 g1<5(closer to 5) to group g1, which is not feasible. As a result, we observe a significant disparity between the approximation factors of the groups for larger values of \ud835\udc5bg1. On the other hand, the FCM maintains the approximation factor difference near zero, regardless of the value of \ud835\udc5bg1. For the other baselines, Learned-CM starts out comparable to CM when \ud835\udc5bg1is small but diverges more sharply as\ud835\udc5bg1increases. As before, CM-CU delivers the poorest performance among traditional methods in equalizing the mean approximation factor. Varying sample size for estimating \ud835\udc5bg1:Finally, we evaluate the effect of increasing the sample size used to estimate the unpopular group size \ud835\udc5bg1on the resulting unfairness. Our first observation is that, for the ddos dataset shown in Figure 32, the unfairness remains essentially unchanged as the sample size grows. This behavior arises because the estimate obtained from the sample extrapolates accurately to the full data stream. However, this is not universally the case. As illustrated in Figures 33, increasing the sample size leads to a more accurate estimation of \ud835\udc5bg1, which in turn reduces the overall unfairness. Although the magnitude of this improvement is dataset dependent, Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.0009001120388760755,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validation: Unfairness Evaluation"
-    ],
-    "paragraph_index": 4,
-    "paragraph": "179:18 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh it is generally modest. These results suggest that, for a reasonable error tolerance, estimates derived from relatively small samples are typically sufficient for constructing the FCM. Fig. 19.Theoretical and empirical comparison of CM and FCM across different \ud835\udc5bg1values ingoogle ngram for\ud835\udc51=1. 6.6",
-    "technical_score": 0.00046196423825759127,
+    "paragraph": "179:14 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh 6.1 Evaluation Plan We evaluate our proposed sketch based on three metrics 1) unfairness, 2) price of fairness and 3) efficiency. For each metric, we examine the impact of varying four parameters: the width of the sketch\ud835\udc64, the depth of the sketch \ud835\udc51, and the number of groups \u2113and the number of element types",
+    "technical_score": 0.023555891805419154,
     "citation_score": 0.0
   },
   {
@@ -359,88 +171,8 @@
       "Price of Fairness Evaluation"
     ],
     "paragraph_index": 1,
-    "paragraph": "Thus far, we have established that FCM guarantees group-fairness regardless of the parameters involved. In the next set of experiments, we evaluate the cost of enforcing this constraint relative to the standard CM and other baselines. Following the discussion in Section 5 and Equation 9, we measure the price of fairness in terms of the total additive error required to achieve fairness. First, let us empirically validate the interesting result that PoF is negative for \ud835\udc51=1, proven in Section 5. To do so, we use agoogle ngramdataset where we vary the unpopular group size \ud835\udc5b\ud835\udc59from 310K to 1.2M. The price of fairness is computed as the difference in total additive error between FCM and standard CM sketches ( PoF=L FCM\u2212L CM). The results, along with the empirical and theoretical additive errors shown in Figure 19, emphasize the superiority of FCM over standard CM in terms of additive error when \ud835\udc51=1. To further evaluate the price of fairness for \ud835\udc51>1across various settings, similar to the previous section, we varied (a) number of columns (Figure 13 and 12), (b) number of rows (Figures 14 and 15), and (c) the number of groups (Figures 16 and 17) and (d) group size (Figure 18), and measured the total additive error for CM versus FCM. As expected, FCM and all other baselines exhibit a decrease in the total additive error as the sketch width or depth increases. Moreover, depending on the grouping and the number of element types within each group, FCM may experience an increase in total additive error as the number of groups grows, since some groups may be relatively small or highly skewed, making it more difficult to enforce the equality constraints on the mean approximation factor (Figure 16). However, in cases where the groups are not strongly skewed, the additive error appears to be largely independent of the number of groups (Figure 17). Next, as the group size \ud835\udc5bg1increases, FCM exhibits a trend of slight initial increase followed by a decrease in the price of fairness ( 18). Overall, across all settings, the results were consistent, indicating that FCM achieves group fairness with costs that are generally small but can vary depending on the setting. Finally, we examine how the price of fairness varies with the sample size used to estimate \ud835\udc5bg1. The results are presented in Figures 34 and 35. For the ddos dataset, since the level of unfairness remains unchanged as the sample size increases, the price of fairness exhibits a similar stable trend. In contrast, for the nyc bus dataset, increasing the sample size leads to a higher price of fairness. This occurs because, as the sample size increases, the estimation accuracy of \ud835\udc5bg1for the unpopular group typically improves, resulting in bucket assignments that are closer to the exact solution. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.002174481616491984,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Price of Fairness Evaluation"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:19 Fig. 20.effect of varying \ud835\udc64on construction time,nyc bus,\ud835\udc51=5. Fig. 21.effect of varying \ud835\udc64on construction time,ddos,\ud835\udc51=5. Fig. 22.effect of varying \ud835\udc51on con- struction time,nyc bus,\ud835\udc64=512. Fig. 23.effect of varying \ud835\udc51on con- struction time,ddos,\ud835\udc64=64. Fig. 24.effect of varying \u2113on con- struction time,google ngram, \ud835\udc64= 65536,\ud835\udc51=5. Fig. 25.effect of varying \ud835\udc5bg1on construction time,google ngram, \ud835\udc64=65536,\ud835\udc51=5. Fig. 26.effect of varying \ud835\udc64on query time,nyc bus,\ud835\udc51=5. Fig. 27.effect of varying \ud835\udc64on query time,ddos,\ud835\udc51=5. Fig. 28.effect of varying \ud835\udc51on query time,nyc bus,\ud835\udc64=512. Fig. 29.effect of varying \ud835\udc51on query time,ddos,\ud835\udc64=64. Fig. 30.effect of varying \u2113on query time,google ngram, \ud835\udc64= 65536,\ud835\udc51=5. Fig. 31.effect of varying \ud835\udc5bg1on query time,google ngram, \ud835\udc64= 65536,\ud835\udc51=5. Consequently, unfairness decreases, but this reduction comes at the expense of an increased price of fairness. Due to the space limitations, extensive results are moved to the Appendix E. We confirm that we observed similar results across all settings and all other datasets. 6.7",
-    "technical_score": 0.0007418777015233965,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Efficiency Evaluation"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "Having established the efficacy of the FCM sketch, we now turn our attention to its efficiency. A frequency-estimation sketch involves two main stages: (1) construction and (2) query time. In the following, we evaluate the impact of varying key parameters on the time required for each stage and provide a comparison with the standard CM sketch: Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.003159769212392577,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Efficiency Evaluation"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "179:20 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Fig. 32.effect of varying sample size for estimating \ud835\udc5bg1on unfair- ness,ddos,\ud835\udc64=64,\ud835\udc51=1. Fig. 33.effect of varying sample size for estimating \ud835\udc5bg1on unfair- ness,nyc bus,\ud835\udc64=512,\ud835\udc51=5. Fig. 34.effect of varying sample size for estimating \ud835\udc5bg1on price of fairness, ddos,\ud835\udc64=64,\ud835\udc51=1. Fig. 35.effect of varying sample size for estimating \ud835\udc5bg1on price of fairness, nyc bus,\ud835\udc64=512,\ud835\udc51=5. Fig. 36.effect of varying \ud835\udc64on op- timization time,ddos,\ud835\udc51=5. Fig. 37.effect of varying \ud835\udc51on op- timization time,census,\ud835\udc64=64. Fig. 38.effect of varying \ud835\udc5bg1on optimization time,google ngram, \ud835\udc64=65536,\ud835\udc51=5. Fig. 39.effect of varying \u2113on opti- mization time,census, \ud835\udc64= 64,\ud835\udc51= 5. Fig. 40.Monte Carlo-based esti- mate of\ud835\udc64g1vs. theory; depends on \ud835\udc5bg1and independent of distribution of group frequencies. 6.7.1 Construction Time.We define the construction time as the duration required to initialize the sketch and insert the entire stream into it. In summary, the construction time of FCM is comparable to that of CM and slightly faster than CM-CU. Learned-CM is considerably slower due to the additional time required for model training and inference. For all sketches, the construction time is independent of the sketch width \ud835\udc64(Figures 20 and 21), the number of groups \u2113(Figure 24), and the unpopular group size \ud835\udc5bg1(Figure 25); varying these parameters has no impact on construction time. The construction time for both sketches grows linearly with the sketch depth \ud835\udc51, as expected, since it corresponds to the number of times each element is inserted into the sketch. This result is presented in Figures 22 and 23. Optimization Time:Finally, as part of the preprocessing analysis, we examine the impact of varying key parameters on the optimization time, defined as the time required to solve Equation 5 to compute the column widths following the procedure described in Section 4. We first observe that the optimization times are generally negligible and are dominated by other preprocessing steps, such as populating the sketch. Second, the optimization time increases with the value of \ud835\udc64, due to the expansion of the binary search range. The optimization time is largely independent of the value of\ud835\udc51. Furthermore, the optimization time remains consistently unchanged as the value of \ud835\udc5bg1is increased. Finally, we observe that the optimization time scales linearly with the number of groups\u2113. Representative results for each setting are shown in Figures 36, 37, 38, and 39. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.0018239043815996157,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Efficiency Evaluation"
-    ],
-    "paragraph_index": 3,
-    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:21 6.7.2 Query Time.Query time is defined as the time required for the sketch to perform an estimate operation for a given element. The query time results exhibit similar patterns to the construction times, with FCM, CM and CM-CU showing comparable values and trends. Learned-CM can be orders of magnitude slower due to the additional model-inference time required during querying. The query times are independent of the sketch width \ud835\udc64(Figures 26 and 27), the number of groups \u2113 (Figure 30), and the unpopular group size \ud835\udc5bg1(Figure 31). Similarly, the query time for both sketches also increases linearly with the depth\ud835\udc51, as shown in Figures 28 and 29. 6.8",
-    "technical_score": 0.0015013814611352524,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validating Group Columns Allocation"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "In our final experiment, we experimentally validate our mathematical analysis in Section 3.2, using a Monte Carlo method for estimating the value of \ud835\udc64g1\u2013 the number of columns allocated to the groupg 1.",
-    "technical_score": 0.0027636844530715414,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validating Group Columns Allocation"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "We note that instead of the mathematical derivation, one could develop the following Monte Carlo method based on repeated sampling to estimate the value of\ud835\udc64 g1:",
-    "technical_score": 0.0006865046413322057,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validating Group Columns Allocation"
-    ],
-    "paragraph_index": 3,
-    "paragraph": "Consider\ud835\udc5bg1,\ud835\udc5bg2,\ud835\udc64,\ud835\udc51, and the parameters of arbitrary distributions from which the frequencies of groups g1and g2are drawn. For each groupg \u2208{g 1,g2}, we draw\ud835\udc5bgsamples from the corresponding distribution to serve as the frequencies of the elements. As a result, we obtain a list of \ud835\udc5btuples of the form (frequency, group) . Next, we perform a binary search over the range of \ud835\udc64to find the optimal value of \ud835\udc64g1that minimize the empirical difference in approximation factors between the two groups, where the empirical difference is evaluated by inserting the sampled frequencies into a FCM sketch with 1 row and measuring the approximation factors for each group. This procedure is repeated\ud835\udc51times (once for each sketch row), and we compute the average of the resulting \ud835\udc64g1 values. Finally, we repeat the entire process over multiple iterations and report the overall average of\ud835\udc64 g1.",
-    "technical_score": 0.0005837994241614161,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Experiments",
-      "Validating Group Columns Allocation"
-    ],
-    "paragraph_index": 4,
-    "paragraph": "We use this Monte Carlo method to estimate \ud835\udc64g1under a range of synthetic distributions. We note from our analysis that the value of \ud835\udc64g1does not depend on the distribution of data. Hence, we expect to observe similar results from different runs of the Monte Carlo estimation. We then compare the number of columns assigned to each group by this method to the theoretical values derived from the analysis in Section 3.2. The results are shown in Figure 40. The values of \ud835\udc64g1were identical across different frequency distributions and, as expected, depended solely on the values of \ud835\udc5bg1and\ud835\udc5b g2.",
-    "technical_score": 0.00015659737020018837,
+    "paragraph": "sketch\ud835\udc64, the depth of the sketch \ud835\udc51, and the number of groups \u2113and the number of element types",
+    "technical_score": 0.0013599731843483977,
     "citation_score": 0.0
   },
   {
@@ -449,8 +181,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Count-Min sketch.The CM sketch was first described by Cormode and Muthukrishnan [ 27,28]. It uses hash functions to map events to frequencies, but unlike a hash table uses only sub-linear space, at the expense of overcounting some events due to collisions. Count\u2013min sketch is an alternative to count sketch [ 22] and AMS sketch [ 5] and can be considered an implementation of a counting Bloom filter [ 38,45] or multistage-filter [ 27]. Over the years multiple variations of min-count sketches have been proposed in the literature [ 41,58,68,72,85] improving the estimation or the performance under different settings. While CM sketches have been thoroughly studied there is still room for improvement. For example, the random hashing procedure may induce substantial uncertainty in the estimation, especially for low-frequency tokens. Furthermore, it is often the case that there exists an a priori knowledge on the data, and therefore it may be desirable to incorporate such a knowledge into the estimates Recently, machine learning is used to resolve these issues. More specifically, machine learning techniques [ 1,19,32,33,50,65,91] are used to learn either the hash functions or a partition of the elements into two groups (based on their frequency) to improve the estimations or the performance compared to the traditional CM sketch. Interestingly, partitioned-learned CM sketches [ 50,65] learn Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.021599688884222326,
-    "citation_score": 0.007631890072425222
+    "technical_score": 0.01686045363840998,
+    "citation_score": 0.023837193074993414
   },
   {
     "section_path": [
@@ -458,8 +190,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "179:22 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh a partition of the elements into low frequency and high frequency elements. While this partition is the same as the one we used in our analysis, our objective is orthogonal to their problem. They do not necessarily aim to achieve the same estimation error between low and high frequency elements. Instead, they process light and heavy elements separately trying to improve the overall estimation error. To the best of our knowledge, none of these traditional and learned schemes can handle fair count-min estimations with theoretical guarantees. Finally, learning has been used to obtain other data structures as well, such as\ud835\udc35-trees [54] or bloom filters [54, 62, 86]. Fairness.Fairness in data-driven systems has been studied by various research communities but mostly in machine learning (ML) [ 14,60,67]. Most of the existing work is on training a ML model that satisfies some fairness constraints. Some pioneering fair-ML efforts include [ 20,21,36,39,46,52,88]. Biases in data has also been studied extensively [ 9,10,66,73,77,83] to ensure data has been prepared responsibly [ 64,74,75,79]. Recent studies of fair algorithm design include fair clustering [ 3,16,18, 24,25,49,57,76], fairness in resource allocation and facility location problem [ 17,34,42,47,51,93], min cut [ 55], max cover [ 7], set cover [ 30], game theoretic approaches [ 4,35,92], hiring [ 6,70], ranking [8, 80, 81, 89], recommendation [23, 56, 84], representation learning [48], etc. Fairness in data structures is significantly under-studied, with the existing work being limited to [11\u201313,78]. Aumuller et al. [ 11\u201313] study individual fairness in near-neighbor search, while to the best of our knowledge, Shahbazi et al. [ 78] is the only work that studies group fairness in data structure design, and more specifically in hashing. Both in nearest-neighbor search and fair hashing, the objective is fundamentally different, so these techniques cannot be used for our FCM sketch. 8",
-    "technical_score": 0.025458379179331848,
-    "citation_score": 0.002036670334346547
+    "technical_score": 0.01891785185543416,
+    "citation_score": 0.02316953706244434
   },
   {
     "section_path": [
@@ -468,8 +200,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "CM sketches have a wide range of range of applications including heavy hitters detection to detecting rare words (infrequent items that are not stop-word) in NLP settings [44], to AQP [28]. Still, identifying heavy hitters is known as one of the traditional applications of CM sketches. For heavy hitters detection, FCM performs equally to the standard CM. A heavy hitter in the standard sketch remains a heavy hitter in FCM. This is because CM sketches, including FCM, alwaysoverestimate the frequencies. As a result, FCMnever missesa heavy hitter due to its fairness mechanism.",
-    "technical_score": 0.021934287172708834,
-    "citation_score": 4.032108274850655e-05
+    "technical_score": 0.010683460399874337,
+    "citation_score": 0.0032989198156954127
   },
   {
     "section_path": [
@@ -478,7 +210,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Compared to the standard CM sketches, FCM focuses on stronger multiplicative error guaran- tees. In a standard CM sketch, the frequencies of a rare group (e.g., average frequency 10) could significantly get overestimated (e.g., 10,000) due to the collision with heavy hitters. FCM strictly equalizes this relative error across different groups. It is important to note that, while providing a stronger guarantee,FCM does not degrade the total error.Specifically, the total additive error (sum of all additive errors) and average additive errorsremain the sameacross the standard CM and FCM. Moreover, in cases where the groups are not correlated with frequencies, the average additive errors of groups (including their heavy hitters) do not change. 8.2",
-    "technical_score": 0.012735416444693377,
+    "technical_score": 0.018196248225741455,
     "citation_score": 0.0
   },
   {
@@ -488,7 +220,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In cases where groups overlap \u2013for example, race and gender\u2013 groups are defined at the intersection level (e.g., Black\u2013female, Black\u2013male ). Handling the intersections in this way allows our method to cover overlapping group structures. While doing so increases the number of groups and therefore increases the price of fairness, satisfying fairness at the intersection level automatically satisfies fairness at the higher-level group definitions. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.013085525852770358,
+    "technical_score": 0.009724457359207088,
     "citation_score": 0.0
   },
   {
@@ -498,7 +230,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:23 8.3",
-    "technical_score": 0.009003182949482165,
+    "technical_score": 0.00550127901286233,
     "citation_score": 0.0
   },
   {
@@ -508,7 +240,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "a) Dynamic frequency patterns:The design of the FCM sketch does not depend on the frequency distributions (within or across groups). As a result, a drift in the frequency distributions will not require any update in the sketch. That is,FCM can be readily adapted for popular dynamic settings, where frequency patterns change.This was also confirmed in our experiments (Figure 40), where different frequency distributions do not affect the sketch configuration. Even if the frequency distributions drift \u2013 either in total or within individual groups \u2013 the setting of the sketch does not change.",
-    "technical_score": 0.008210171901023055,
+    "technical_score": 0.013036491809910579,
     "citation_score": 0.0
   },
   {
@@ -518,7 +250,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "b) Dynamic universe of element types:As stated in Section 3.5, our approach assumes a fixed universe model, where the universe of element types Uis known. This is a limitation of our results that require further study in future work.",
-    "technical_score": 0.002086271483372388,
+    "technical_score": 0.0034662275781550053,
     "citation_score": 0.0
   },
   {
@@ -528,7 +260,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Still, in the following, we discuss an extension of our approach for a dynamic universe case, based on abookkeepingapproach that comes at anextra memory costand a small amount of unfairness. Specifically, we note that in real-world scenarios, often small amounts of unfairness is tolerable. That is, given a threshold \ud835\udf16>0, a sketch needs to guarantee its unfairness is at most \ud835\udf16. Recall from Section 6.5, that unfairness is measured as the difference between the expected approximation factor of the groups. Hence, the fairness requirement can be formulated as min \u2200g\ud835\udc56\u2208G(E[\ud835\udefc g\ud835\udc56])\u2212max \u2200g\ud835\udc57\u2208G(E[\ud835\udefc g\ud835\udc57])\u2264\ud835\udf16.",
-    "technical_score": 0.001193506269210686,
+    "technical_score": 0.005629928396364425,
     "citation_score": 0.0
   },
   {
@@ -538,7 +270,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Following this observation, every time the universe of the element types get updated, we evaluate its unfairness guarantees, based on Lemmas 1 and 2, while using theupdated valuesof \ud835\udc5band \ud835\udc5bg,\u2200g\u2208G. In particular, based on Lemma 1, for \ud835\udc51=1, so long as the fractions\ud835\udc5bg \ud835\udc5bdo not change, the unfairness remains zero, and it increases based onmax|\ud835\udc5b\ud835\udc5c\ud835\udc59\ud835\udc51 g \ud835\udc5b\ud835\udc5c\ud835\udc59\ud835\udc51\u2212\ud835\udc5b\ud835\udc5b\ud835\udc52\ud835\udc64 g \ud835\udc5b\ud835\udc5b\ud835\udc52\ud835\udc64|.",
-    "technical_score": 0.0006996955288455202,
+    "technical_score": 0.0035954654898295883,
     "citation_score": 0.0
   },
   {
@@ -548,7 +280,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Once the unfairness of the sketch surpasses the threshold \ud835\udf16, we introduce a new FCM sketch based on the new element type counts. However, we cannot remove the old sketch, since we no longer have access to the exact element frequencies. Therefore, to address this issue, we need to keepthe previous sketches.",
-    "technical_score": 0.0006520740455760228,
+    "technical_score": 0.0030562647865282717,
     "citation_score": 0.0
   },
   {
@@ -558,7 +290,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "Every time a new element in observed in the stream, we only update its corresponding counts in the latest sketch. However, the frequency of an element type \ud835\udc52should be calculated as the sum of its frequencies across all sketches. Specifically, let {\ud835\udc39\ud835\udc36\ud835\udc40 1,\u00b7\u00b7\u00b7,\ud835\udc39\ud835\udc36\ud835\udc40 \ud835\udc58}be the set of populated sketches so far. The estimated frequency of an element type\ud835\udc52\u2208Uis: \u02c6\ud835\udc53(\ud835\udc52)=\u2211\ufe01\ud835\udc58 \ud835\udc56=1\ud835\udc39\ud835\udc36\ud835\udc40\ud835\udc56[\ud835\udc52].",
-    "technical_score": 0.000813646505180919,
+    "technical_score": 0.014313838857947948,
     "citation_score": 0.0
   },
   {
@@ -566,17 +298,8 @@
       "Conclusion"
     ],
     "paragraph_index": 1,
-    "paragraph": "In this paper we introduced FCM, a new frequency estimation framework that ensures equal expected approximation factors across different groups, addressing a key fairness limitation of traditional CM sketches. By proposing a fairness-preserving design\u2014column partitioning with group-aware hashing, our work offers strong theoretical guarantees and validates its effectiveness through extensive experiments. Future research directions include extending FCM integrating learned hash functions for further efficiency gains, and exploring fairness notions beyond group- wise guarantees, such as individual fairness in streaming data sketches. Acknowledgments This paper is based upon work supported in part by the National Science Foundation under Award No. 2348919. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026.",
-    "technical_score": 0.07545190399200428,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "Conclusion"
-    ],
-    "paragraph_index": 2,
-    "paragraph": "179:24 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh",
-    "technical_score": 0.07149164757339603,
+    "paragraph": "In this paper we introduced FCM, a new frequency estimation framework that ensures equal expected approximation factors across different groups, addressing a key fairness limitation of traditional CM sketches. By proposing a fairness-preserving design\u2014column partitioning with group-aware hashing, our work offers strong theoretical guarantees and validates its effectiveness through extensive experiments. Future research directions include extending FCM integrating",
+    "technical_score": 0.07567820787973563,
     "citation_score": 0.0
   }
 ]
