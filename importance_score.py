@@ -82,16 +82,18 @@ Constraints:
 
 SECTION_DIRECT_SYSTEM_PROMPT = (
     "You are an expert academic reviewer evaluating the structure of a scientific paper. "
-    "Your task is to allocate a parent score across its child segments based only on their technical contribution "
-    "to the paper. "
-    "Evaluate how much each segment contributes to the core scientific content of the paper, such as methods, "
-    "algorithms, theory, experimental design, results, and technical analysis. "
-    "Do not consider citation value at this stage. Only evaluate the intrinsic technical importance of the segment. "
+    "Your task is to allocate a parent score across its child segments based on how much "
+    "original scientific value each segment creates. "
+    "Ask for each segment: does it produce new knowledge — through new methods, algorithms, "
+    "theory, proofs, experimental findings, or novel analysis — or does it consume and "
+    "repackage knowledge that was created elsewhere in the paper or in cited works? "
+    "Segments that produce new knowledge should receive higher scores. "
+    "Segments that summarize, motivate, contextualize, or restate — even if important to "
+    "read — should receive lower scores, because their value was already created elsewhere. "
+    "Do not consider citation value at this stage. "
     "Use the entire parent content as context when evaluating children. "
     "Treat the parent score as a fixed budget that must be fully distributed. "
-    "Scores must be non-negative. "
-    "Segments containing the core technical ideas or results should receive higher scores. "
-    "Segments that are mainly background, motivation, transitions, or narrative should receive lower scores. "
+    "Scores must be non-negative."
     "Return plain text lines only. Do not output JSON."
 )
 
@@ -105,27 +107,34 @@ Parent content (context):
 {parent_content}
 
 Task:
-Divide the parent score among the following child segments according to their technical importance to the paper.
+Divide the parent score among the following child segments according to how much 
+original scientific value each one creates.
 
 Guidelines:
-- Prioritize technical novelty, algorithmic description, experimental findings, or key analysis.
-- Lower scores should go to background explanations, transitions, or descriptive text.
-- Consider how much the technical understanding of the paper would suffer if the segment were removed.
+- Ask for each segment: "Does this segment produce new knowledge, or does it 
+  consume and repackage knowledge created elsewhere?"
+- Higher scores: segments that introduce new methods, algorithms, definitions, 
+  proofs, experimental designs, or findings that did not exist before this paper.
+- Lower scores: segments that summarize prior work, motivate the problem, 
+  restate results from other sections, or serve as transitions — even if 
+  they are important for the reader to understand the paper.
+- A segment that merely synthesizes or repackages contributions made in other 
+  sections creates no new value of its own and should score accordingly.
+- Consider how much original knowledge would be lost if the segment were removed, 
+  not how much the paper would be harder to understand.
 
 Child segments (id -> name and excerpt):
 {items}
 
 Output format (plain text only):
-Any clear one-line-per-child list is acceptable.
-Separators such as `:`, `-`, `=`, or `->` are all fine.
-Line order matters more than exact counter formatting.
+One line per child. Use the format:
+<id>: <score>
 
 Example:
 1: 0.32
 2: 0.18
 
 The scores must sum to {parent_score}.
-
 Do not output JSON.
 Do not include explanations.
 """
@@ -174,27 +183,46 @@ Do not include explanations.
 """
 
 PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT = (
-    "You are an expert academic reviewer. "
-    "For each paragraph, split its given total score into technical and citation-added components. "
-    "Technical = intrinsic technical value of the paragraph while ignoring citations. "
-    "Citation = added value contributed by cited prior work in that paragraph. "
-    "Treat the parent score as a fixed budget that must be fully distributed. "
-    "Return plain text lines only."
+"""You are an expert academic reviewer. For each paragraph, split its total score into two components:
+
+- technical_score: the value this paragraph contributes through the authors' own 
+  original ideas — new definitions, algorithms, proofs, experimental design, 
+  results, or analysis that would survive even if all cited works were removed.
+
+- citation_score: the value this paragraph derives from cited prior work — 
+  including summarizing, comparing, contextualizing, or building upon existing 
+  work. If the paragraph's main purpose is to describe what others have done, 
+  most of its value is citation-derived.
+
+Treat the total score as a fixed budget. technical + citation must equal 
+total_score for each paragraph."""
 )
 
 PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE = """Task:
-For each paragraph below, split the provided total paragraph score into:
-- technical score
-- citation score
+For each paragraph, split the total_score into technical_score and citation_score.
+
+Ask yourself: "If I deleted all content describing, comparing, or bridging prior 
+work — what fraction of this paragraph's value survives?" That surviving fraction 
+is technical_score. The rest is citation_score.
+
+Calibration guidance:
+- A paragraph in Related Work that summarizes 3 prior methods: 
+  citation_score ≈ 0.80–0.95, technical_score ≈ 0.05–0.20
+- A paragraph in Related Work that draws a novel connection between prior works 
+  and the current paper's gap: 
+  citation_score ≈ 0.50–0.70, technical_score ≈ 0.30–0.50
+- A Background paragraph that defines a known concept from prior work: 
+  citation_score ≈ 0.60–0.80
+- A Methods paragraph describing the authors' new algorithm: 
+  citation_score ≈ 0.00–0.15, technical_score ≈ 0.85–1.00
+- A paragraph comparing experiment results to a baseline from prior work: 
+  citation_score ≈ 0.20–0.40
+- If has_citations is false, citation_score = 0.0 and technical_score = total_score.
 
 Rules:
-- For each paragraph, technical + citation should equal the provided total_score.
-- Higher technical score:
-  paragraph introduces method, algorithm, theory, dataset, experiment, or key result
-- Higher citation score:
-  cited work materially strengthens grounding, comparison, dependency, or evidence
-- If has_citations is false, citation should be 0 and technical should equal total_score.
-- Use non-negative values.
+- technical + citation = total_score for every paragraph
+- Both values must be non-negative
+- Do not assign citation_score > 0 if has_citations is false
 
 Paragraph entries (paragraph_id -> details):
 {paragraphs_json}
@@ -206,8 +234,7 @@ Example:
 Paragraph1: technical=0.21, citation=0.04
 Paragraph2: technical=0.13, citation=0.00
 
-Do not output JSON.
-Do not include explanations.
+Do not output JSON. Do not include explanations.
 """
 
 PROMPT_CATALOG = {
