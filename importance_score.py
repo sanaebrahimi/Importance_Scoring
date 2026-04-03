@@ -53,6 +53,9 @@ SECTION_PAIRWISE_SYSTEM_PROMPT = (
 SECTION_PAIRWISE_USER_PROMPT_TEMPLATE = """Parent node: "{parent_name}"
 Task: distribute a credit of 1.0 between A and B based on contribution to the paper's main contribution.
 
+Parent context: these items are section/subsection children of "{parent_name}".
+Treat their names as meaningful context, not just labels.
+
 Scoring rubric:
 - Higher credit: core technical contribution (method/theory/algorithm/findings) and meaningful use of prior work.
 - Lower credit: background context, transitions, setup details, or low-impact narrative.
@@ -102,6 +105,9 @@ SECTION_DIRECT_USER_PROMPT_TEMPLATE = """Parent segment:
 
 Parent score to distribute:
 {parent_score}
+
+Parent context: these items are section/subsection children of "{parent_name}".
+Treat their names as meaningful context, not just labels.
 
 Parent content (context):
 {parent_content}
@@ -1096,6 +1102,40 @@ def flatten_content_to_text(content: Any, limit: Optional[int] = 700) -> str:
     return ""
 
 
+def flatten_content_with_names(content: Any, limit: Optional[int] = 700) -> str:
+    if isinstance(content, str):
+        if limit is None or limit <= 0:
+            return content
+        return content[:limit]
+
+    if isinstance(content, dict):
+        chunks: List[str] = []
+        remaining = None if limit is None or limit <= 0 else limit
+        for name, value in content.items():
+            child_limit = remaining if remaining is not None else None
+            child_text = flatten_content_with_names(value, limit=child_limit)
+            labeled_chunk = f"{name}\n{child_text}".strip() if child_text else str(name)
+            chunks.append(labeled_chunk)
+            if remaining is not None:
+                remaining -= len(labeled_chunk)
+            if remaining is not None and remaining <= 0:
+                break
+
+        merged = "\n\n".join(chunks)
+        if limit is None or limit <= 0:
+            return merged
+        return merged[:limit]
+
+    return ""
+
+
+def format_scored_segment_excerpt(segment_name: str, segment_content: Any, limit: Optional[int] = 700) -> str:
+    body = flatten_content_with_names(segment_content, limit=limit)
+    if body:
+        return f"Section/subsection name: {segment_name}\nContent:\n{body}"
+    return f"Section/subsection name: {segment_name}"
+
+
 def normalize_for_match(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
 
@@ -1280,8 +1320,11 @@ def estimate_direct_allocation_tokens(
 ) -> int:
     items = list(item_to_content.keys())
     use_limit = None if snippet_limit is None or snippet_limit <= 0 else snippet_limit
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=use_limit) for name in items}
-    parent_content = flatten_content_to_text(item_to_content, limit=None)
+    snippets = {
+        name: format_scored_segment_excerpt(name, item_to_content[name], limit=use_limit)
+        for name in items
+    }
+    parent_content = flatten_content_with_names(item_to_content, limit=None)
     item_payload = {str(idx + 1): {"name": item_name, "excerpt": snippets[item_name]} for idx, item_name in enumerate(items)}
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
@@ -1406,7 +1449,10 @@ def direct_allocate_scores(
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
     use_limit = None if snippet_limit <= 0 else snippet_limit
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=use_limit) for name in items}
+    snippets = {
+        name: format_scored_segment_excerpt(name, item_to_content[name], limit=use_limit)
+        for name in items
+    }
     if not items:
         return {}
     if len(items) == 1:
@@ -1424,7 +1470,7 @@ def direct_allocate_scores(
     parent_limit = None
     if snippet_limit > 0:
         parent_limit = max(1200, min(6000, len(items) * max(80, snippet_limit)))
-    parent_content = flatten_content_to_text(item_to_content, limit=parent_limit)
+    parent_content = flatten_content_with_names(item_to_content, limit=parent_limit)
 
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     base_prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
@@ -1903,7 +1949,10 @@ def pairwise_allocate_scores(
     if len(items) == 1:
         return {items[0]: total_score}
 
-    snippets = {name: flatten_content_to_text(item_to_content[name], limit=None) for name in items}
+    snippets = {
+        name: format_scored_segment_excerpt(name, item_to_content[name], limit=None)
+        for name in items
+    }
     pairs: List[Tuple[str, str]] = []
     for i in range(len(items)):
         for j in range(i + 1, len(items)):
