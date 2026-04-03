@@ -385,6 +385,27 @@ def find_earliest_heading_start(full_text: str, heading_names: List[str]) -> int
 
 
 def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple[int, int]:
+    def is_heading_scan_noise_line(line: str) -> bool:
+        stripped = line.strip()
+        if not stripped:
+            return True
+        if re.fullmatch(r"\d+", stripped):
+            return True
+        if re.fullmatch(r"page\s+\d+(?:\s+of\s+\d+)?", stripped.lower()):
+            return True
+        if re.search(rf"\b(?:{MONTH_NAME_PATTERN})\b", stripped, flags=re.IGNORECASE) and re.search(
+            r"\b(?:19|20)\d{2}\b", stripped
+        ):
+            if stripped.count(",") >= 2 or "conference" in stripped.lower():
+                return True
+        if re.search(r"\b[A-Z]{2,}\s*[’']?\d{2}\b", stripped) and re.search(r"\b(?:19|20)\d{2}\b", stripped):
+            return True
+        if re.search(r"\bFigure\s+\d+\s*:", stripped, flags=re.IGNORECASE):
+            return True
+        if re.search(r"\bTable\s+\d+\s*:", stripped, flags=re.IGNORECASE):
+            return True
+        return False
+
     direct_idx = full_text.find(heading_name)
     if direct_idx != -1:
         return direct_idx, direct_idx + len(heading_name)
@@ -401,12 +422,23 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
         running += len(line)
 
     for idx in range(len(lines)):
+        if is_heading_scan_noise_line(lines[idx]):
+            continue
         combined = ""
-        for width in range(1, 4):
-            end_idx = idx + width
-            if end_idx > len(lines):
+        consumed = 0
+        end_idx = idx
+        while end_idx < len(lines) and consumed < 6:
+            if is_heading_scan_noise_line(lines[end_idx]):
+                end_idx += 1
+                continue
+
+            consumed += 1
+            chunk_lines = [line for line in lines[idx : end_idx + 1] if not is_heading_scan_noise_line(line)]
+            if not chunk_lines:
+                end_idx += 1
                 break
-            chunk = "".join(lines[idx:end_idx]).replace("\n", " ").replace("\r", " ")
+
+            chunk = "".join(chunk_lines).replace("\n", " ").replace("\r", " ")
             normalized_line = normalize_heading_text(chunk)
             normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
             normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
@@ -414,7 +446,9 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
             combined = f"{combined} {normalized_line}".strip() if combined else normalized_line
 
             if heading_tokens_match(target, normalized_line) or heading_tokens_match(target, combined):
-                return offsets[idx], offsets[end_idx - 1] + len(lines[end_idx - 1])
+                return offsets[idx], offsets[end_idx] + len(lines[end_idx])
+
+            end_idx += 1
 
     return -1, -1
 
