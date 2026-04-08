@@ -235,6 +235,10 @@ Rules:
 - technical + citation = total_score for every paragraph
 - Both values must be non-negative
 - Do not assign citation_score > 0 if has_citations is false
+- Use `citation_focus_text` as the only evidence for citation-derived value.
+  Text outside `citation_focus_text` should not increase citation_score.
+- If `citation_focus_text` is empty or minimal, citation_score should stay low
+  even if the paragraph has citation markers elsewhere.
 - A paragraph with has_citations is false but located in Related Work likely
   bridges or references prior work implicitly - keep citation_score = 0 per
   the rule above, but note this as a pipeline limitation.
@@ -1199,6 +1203,106 @@ def is_list_item_line(line: str) -> bool:
     return bool(re.match(r"^(?:[-*•]|\(?\d+[\.\)]|[A-Za-z][\.\)])\s+", stripped))
 
 
+def is_plot_or_caption_line(line: str) -> bool:
+    stripped = normalize_for_match(line)
+    if not stripped:
+        return False
+
+    figure_refs = len(re.findall(r"\b(?:Figure|Table)\s+\d+\s*:", stripped, flags=re.IGNORECASE))
+    panel_refs = len(re.findall(r"\([a-z]\)", stripped, flags=re.IGNORECASE))
+    chart_terms = len(
+        re.findall(
+            r"\b(?:precision|recall|ndcg|runtime|running time|scalability|baseline|synthetic dataset|indexed|exact|approx(?:imate)?)\b",
+            stripped,
+            flags=re.IGNORECASE,
+        )
+    )
+    numeric_tokens = len(re.findall(r"\b\d+(?:\.\d+)?\b", stripped))
+
+    if figure_refs >= 1:
+        return True
+    if panel_refs >= 2 and (chart_terms >= 1 or numeric_tokens >= 2):
+        return True
+    if panel_refs >= 3:
+        return True
+    if chart_terms >= 3 and numeric_tokens >= 2 and len(stripped.split()) <= 40:
+        return True
+    return False
+
+
+def is_non_prose_artifact_paragraph(text: str) -> bool:
+    normalized = normalize_for_match(text)
+    if not normalized:
+        return False
+
+    figure_refs = len(re.findall(r"\b(?:Figure|Table)\s+\d+\s*:", normalized, flags=re.IGNORECASE))
+    panel_refs = len(re.findall(r"\([a-z]\)", normalized, flags=re.IGNORECASE))
+    title_like = bool(
+        re.search(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){3,}\b", normalized)
+        and re.search(r"\b(?:19|20)\d{2}\b", normalized)
+    )
+    if figure_refs >= 1 and (panel_refs >= 1 or title_like):
+        return True
+    if figure_refs >= 2:
+        return True
+    if panel_refs >= 4:
+        return True
+    return False
+
+
+def is_inline_subheading_sentence(sentence: str) -> bool:
+    stripped = normalize_for_match(sentence)
+    if not stripped or len(stripped) > 90:
+        return False
+    if not stripped.endswith((".", ":")):
+        return False
+    core = stripped[:-1].strip()
+    words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'/-]*", core)
+    if not words or len(words) > 10:
+        return False
+    if any(word.isdigit() for word in words):
+        return False
+
+    title_like = sum(1 for word in words if word[:1].isupper() or word.lower() in {"and", "or", "of", "the", "for", "in"})
+    return title_like >= max(1, len(words) - 1)
+
+
+def split_paragraph_on_inline_subheadings(paragraph: str) -> List[str]:
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", normalize_for_match(paragraph)) if s.strip()]
+    if len(sentences) <= 1:
+        return [normalize_for_match(paragraph)] if normalize_for_match(paragraph) else []
+
+    chunks: List[str] = []
+    current: List[str] = []
+    for idx, sentence in enumerate(sentences):
+        if current and idx < len(sentences) - 1 and is_inline_subheading_sentence(sentence):
+            merged_current = normalize_for_match(" ".join(current))
+            if merged_current:
+                chunks.append(merged_current)
+            current = [sentence]
+            continue
+        current.append(sentence)
+
+    merged_current = normalize_for_match(" ".join(current))
+    if merged_current:
+        chunks.append(merged_current)
+    return chunks
+
+
+def clean_text_for_paragraph_split(text: str) -> str:
+    cleaned_lines: List[str] = []
+    for raw_line in text.split("\n"):
+        stripped = raw_line.strip()
+        if not stripped:
+            cleaned_lines.append("")
+            continue
+        if is_page_artifact_line(stripped) or is_plot_or_caption_line(stripped):
+            cleaned_lines.append("")
+            continue
+        cleaned_lines.append(raw_line.rstrip())
+    return "\n".join(cleaned_lines)
+
+
 def median_line_length(lines: List[str]) -> int:
     lengths = sorted(len(line.strip()) for line in lines if len(line.strip()) >= 20)
     if not lengths:
@@ -1217,7 +1321,9 @@ def merge_paragraph_lines(lines: List[str]) -> str:
 
 def rebuild_paragraphs_from_lines(text: str) -> List[str]:
     lines = [line.rstrip() for line in text.split("\n")]
-    content_lines = [line for line in lines if line.strip() and not is_page_artifact_line(line)]
+    content_lines = [
+        line for line in lines if line.strip() and not is_page_artifact_line(line) and not is_plot_or_caption_line(line)
+    ]
     if not content_lines:
         return []
 
@@ -1235,7 +1341,7 @@ def rebuild_paragraphs_from_lines(text: str) -> List[str]:
 
     for raw_line in lines:
         stripped = raw_line.strip()
-        if not stripped or is_page_artifact_line(stripped):
+        if not stripped or is_page_artifact_line(stripped) or is_plot_or_caption_line(stripped):
             flush_current()
             continue
 
@@ -1270,6 +1376,8 @@ def rebuild_paragraphs_from_lines(text: str) -> List[str]:
 
     merged: List[str] = []
     for paragraph in paragraphs:
+        if is_non_prose_artifact_paragraph(paragraph):
+            continue
         if (
             merged
             and len(paragraph) < 30
@@ -1285,16 +1393,27 @@ def rebuild_paragraphs_from_lines(text: str) -> List[str]:
 def split_text_into_paragraphs(text: str) -> List[str]:
     normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
     normalized = trim_text_before_back_matter(normalized).strip()
+    normalized = clean_text_for_paragraph_split(normalized).strip()
     if not normalized:
         return []
 
-    paragraphs = [normalize_for_match(p) for p in re.split(r"\n\s*\n+", normalized) if normalize_for_match(p)]
+    paragraphs = [
+        normalize_for_match(p)
+        for p in re.split(r"\n\s*\n+", normalized)
+        if normalize_for_match(p) and not is_non_prose_artifact_paragraph(normalize_for_match(p))
+    ]
     if len(paragraphs) > 1:
-        return paragraphs
+        refined: List[str] = []
+        for paragraph in paragraphs:
+            refined.extend(split_paragraph_on_inline_subheadings(paragraph))
+        return [p for p in refined if p and not is_non_prose_artifact_paragraph(p)]
 
     rebuilt = rebuild_paragraphs_from_lines(normalized)
     if rebuilt:
-        return rebuilt
+        refined = []
+        for paragraph in rebuilt:
+            refined.extend(split_paragraph_on_inline_subheadings(paragraph))
+        return [p for p in refined if p and not is_non_prose_artifact_paragraph(p)]
 
     # PDF extraction often collapses paragraphs; use sentence chunks as a last fallback.
     single = normalize_for_match(normalized)
@@ -1305,7 +1424,27 @@ def split_text_into_paragraphs(text: str) -> List[str]:
         return [single]
 
     chunk_size = 5
-    return [" ".join(sentences[i : i + chunk_size]).strip() for i in range(0, len(sentences), chunk_size)]
+    chunks = [" ".join(sentences[i : i + chunk_size]).strip() for i in range(0, len(sentences), chunk_size)]
+    refined = []
+    for chunk in chunks:
+        refined.extend(split_paragraph_on_inline_subheadings(chunk))
+    return [p for p in refined if p and not is_non_prose_artifact_paragraph(p)]
+
+
+def build_citation_focus_text(mentions: List[Tuple[str, str, str]], limit: int = 900) -> str:
+    if not mentions:
+        return ""
+
+    contexts: List[str] = []
+    for citation, _, context in mentions:
+        normalized_context = normalize_for_match(str(context))
+        if not normalized_context:
+            continue
+        contexts.append(f"{citation}: {normalized_context}")
+
+    unique_contexts = [ctx for ctx in dict.fromkeys(contexts) if ctx]
+    focus = " ".join(unique_contexts)
+    return focus[:limit]
 
 
 def estimate_tokens_approx(text: str) -> int:
@@ -2119,6 +2258,7 @@ def split_paragraph_channel_scores(
             "total_score": cleaned_totals[paragraph_id],
             "has_citations": bool(mention_buckets.get(paragraph_id)),
             "text": snippets[paragraph_id],
+            "citation_focus_text": build_citation_focus_text(mention_buckets.get(paragraph_id, [])),
         }
         for paragraph_id in paragraph_ids
     }
