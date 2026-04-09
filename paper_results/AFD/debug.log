@@ -71037,3 +71037,1290 @@ Paragraph 1: technical=0.11, citation=0.01
 [run_end] time=2026-04-09T13:36:56
 =============================== RUN END ===============================
 ====================================================================================================
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-04-09T16:38:02 model=llama3.2 host=localhost:11434 paper_id=AFD n_samples=5 temperature=0.2 max_retries=5 paragraph_direct_max_tokens=0 paragraph_compressed_snippet_limit=180
+============================== RUN START ==============================
+====================================================================================================
+[subsection_title_recovery] parent=Solution Framework: Bound Computation attempt=1/5
+Here is the Python code to solve this problem:
+
+```python
+import re
+
+def recover_subsections(parent_text, expected_child_names):
+    """
+    Recover subsection headings from noisy PDF text.
+
+    Args:
+        parent_text (str): Parent section's extracted text.
+        expected_child_names (list): List of expected child subsection names.
+
+    Returns:
+        list: Best matching heading title for each expected child subsection name.
+    """
+
+    # Split the parent text into lines
+    lines = parent_text.splitlines()
+
+    # Initialize an empty dictionary to store the matches
+    matches = {}
+
+    # Iterate over each line in the parent text
+    for line in lines:
+        # Use regular expression to match headings (assuming they start with a number followed by a colon)
+        match = re.match(r'^(\d+)\. (.+):', line)
+
+        # If a heading is found, add it to the matches dictionary
+        if match:
+            matches[match.group(2)] = match.group(1) + '. '
+
+    # Initialize an empty list to store the results
+    results = []
+
+    # Iterate over each expected child subsection name
+    for child_name in expected_child_names:
+        # If a credible match exists, append it to the results list
+        if child_name in matches:
+            results.append(matches[child_name])
+        else:
+            results.append('none')
+
+    return results
+
+# Example usage:
+parent_text = """
+Solution Framework: Bound Computation
+
+Task:
+- For each expected child subsection name, return the best matching heading title that appears in the parent text.
+- Prefer the heading text as it appears in the document, without numbering.
+- If no credible match exists, write none for that child.
+- Only recover titles. Do not extract subsection bodies.
+
+"""
+
+expected_child_names = [
+    "Lattice Based Solution",
+    "Compute Bounds for Anytime Answer",
+    "Bound Computation Algorithms"
+]
+
+results = recover_subsections(parent_text, expected_child_names)
+
+for result in results:
+    print(result)
+```
+
+This code defines a function `recover_subsections` that takes the parent text and expected child subsection names as input. It splits the parent text into lines, uses regular expressions to match headings, and stores the matches in a dictionary. Then it iterates over each expected child subsection name and appends the corresponding match (or 'none' if no credible match exists) to the results list.
+
+The example usage demonstrates how to use this function with the provided parent text and expected child subsection names. The output will be one line per expected child, showing the best matching heading title for each child.
+[subsection_title_recovery_match] parent=Solution Framework: Bound Computation recovered={"Lattice Based Solution": "Here is the Python code to solve this problem:", "Compute Bounds for Anytime Answer": "```python", "Bound Computation Algorithms": "import re"}
+[subsection_title_recovery] parent=Experiments attempt=1/5
+Here is the Python code to solve this problem:
+
+```python
+import re
+
+def recover_subsections(parent_text, expected_child_names):
+    # Split parent text into lines and remove numbers
+    lines = [line.strip() for line in parent_text.split('\n') if not line.isdigit()]
+    
+    # Create a dictionary to store the best match for each child subsection name
+    matches = {}
+    
+    # Iterate over each expected child subsection name
+    for child_name in expected_child_names:
+        # Use regular expression to find the best match in the lines
+        match = re.search(r'\b' + re.escape(child_name) + r'\b', ' '.join(lines))
+        
+        # If a match is found, add it to the dictionary
+        if match:
+            matches[child_name] = match.group()
+    
+    # Return the matches as plain text
+    return '\n'.join(f"{key}: {value}" for key, value in matches.items() if value)
+
+# Example usage
+parent_text = """
+2388
+
+KDD ’25, August 3–7, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das
+
+
+Task:
+- For each expected child subsection name, return the best matching heading title that appears in the parent text.
+- Prefer the heading text as it appears in the document, without numbering.
+- If no credible match exists, write none for that child.
+- Only recover titles. Do not extract subsection bodies.
+
+Output format (plain text only):
+One line per expected child.
+Use any readable separator such as `:`, `=`, `->`, or `-.
+
+
+Experimental setup: Experimental setup
+Quality Analyses- Approximate Algorithms: Quality Analyses - Approximate Algorithms
+Quality Analyses - Exact Algorithms: Quality Analyses - Exact Algorithms
+Scalability Analyses: Scalability Analyses
+Summary: Summary
+"""
+
+expected_child_names = [
+  "Experimental setup",
+  "Quality Analyses- Approximate Algorithms",
+  "Quality Analyses - Exact Algorithms",
+  "Scalability Analyses",
+  "Summary"
+]
+
+print(recover_subsections(parent_text, expected_child_names))
+```
+
+This code works by first splitting the parent text into lines and removing any numbers. It then uses regular expressions to find the best match for each child subsection name in the lines. The matches are stored in a dictionary and finally returned as plain text.
+
+Note that this code assumes that the parent text is well-formatted and that the expected child subsection names are exact matches with the actual heading titles. If the parent text can be messy or if the expected child subsection names have typos, you may need to adjust the regular expression pattern accordingly.
+[subsection_title_recovery_match] parent=Experiments recovered={"Experimental setup": "Experimental setup", "Scalability Analyses": "Scalability Analyses", "Summary": "Summary"}
+[all_together_top_item_order] parent=Whole Paper sample=1/5 order=['Introduction', 'Data Model & Problem Definition', 'Solution Framework: Bound Computation', 'Anytime AFD Algorithms', 'Experiments', 'Related Work', 'Conclusion and Future Work']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 0.32
+2: 0.18
+3: 0.22
+4: 0.28
+5: 0.10
+6: 0.85
+7: 0.95
+[all_together_top_item_order] parent=Whole Paper sample=2/5 order=['Introduction', 'Conclusion and Future Work', 'Related Work', 'Experiments', 'Anytime AFD Algorithms', 'Solution Framework: Bound Computation', 'Data Model & Problem Definition']
+[all_together_top] parent=Whole Paper sample=2 attempt=1/5
+1: 0.32
+2: 0.18
+3: 0.50
+[all_together_top] parent=Whole Paper sample=2 attempt=2/5
+4: 0.32
+5: 0.18
+6: 0.45
+7: 0.15
+[all_together_top_item_order] parent=Whole Paper sample=3/5 order=['Solution Framework: Bound Computation', 'Anytime AFD Algorithms', 'Experiments', 'Related Work', 'Conclusion and Future Work', 'Introduction', 'Data Model & Problem Definition']
+[all_together_top] parent=Whole Paper sample=3 attempt=1/5
+1: 0.32
+2: 0.18
+3: 0.50
+[all_together_top] parent=Whole Paper sample=3 attempt=2/5
+Here is the corrected output:
+
+4: 0.05
+5: 0.12
+6: 0.21
+7: 0.62
+[all_together_top_item_order] parent=Whole Paper sample=4/5 order=['Solution Framework: Bound Computation', 'Data Model & Problem Definition', 'Introduction', 'Conclusion and Future Work', 'Related Work', 'Experiments', 'Anytime AFD Algorithms']
+[all_together_top] parent=Whole Paper sample=4 attempt=1/5
+Here are the results in the requested format:
+
+1: 0.16
+2: 0.24
+3: 0.20
+4: 0.30
+5: 0.10
+6: 0.40
+7: 0.06
+8: 0.58
+9: 0.42
+[all_together_top_item_order] parent=Whole Paper sample=5/5 order=['Experiments', 'Related Work', 'Conclusion and Future Work', 'Introduction', 'Data Model & Problem Definition', 'Solution Framework: Bound Computation', 'Anytime AFD Algorithms']
+[all_together_top] parent=Whole Paper sample=5 attempt=1/5
+1: 0.8
+2: 0.15
+3: 0.05
+[all_together_top] parent=Whole Paper sample=5 attempt=2/5
+4: 0.45
+5: 0.23
+6: 0.17
+7: 0.15
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_full_parent estimated_tokens=4821 threshold=7000 paragraphs=8 snippet_limit=0 n_samples=5 max_retries=5
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=1/5 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 8']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=1/5
+1: 0.23
+2: 0.15
+3: 0.13
+4: 0.16
+5: 0.24
+6: 0.19
+7: 0.21
+8: 0.12
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=2/5 order=['Paragraph 1', 'Paragraph 8', 'Paragraph 7', 'Paragraph 6', 'Paragraph 5', 'Paragraph 4', 'Paragraph 3', 'Paragraph 2']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=2 attempt=1/5
+1: 0.32
+2: 0.18
+3: 0.22
+4: 0.15
+5: 0.13
+6: 0.16
+7: 0.12
+8: 0.11
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=3/5 order=['Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 8', 'Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=3 attempt=1/5
+1: 0.24
+2: 0.21
+3: 0.22
+4: 0.25
+5: 0.23
+6: 0.29
+7: 0.26
+8: 0.19
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=4/5 order=['Paragraph 3', 'Paragraph 2', 'Paragraph 1', 'Paragraph 8', 'Paragraph 7', 'Paragraph 6', 'Paragraph 5', 'Paragraph 4']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=4 attempt=1/5
+1: 0.04
+2: 0.02
+3: 0.03
+4: 0.01
+5: 0.08
+6: 0.05
+7: 0.07
+8: 0.09
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=5/5 order=['Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 8', 'Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=5 attempt=1/5
+1: 0.15
+2: 0.23
+3: 0.24
+4: 0.12
+5: 0.14
+6: 0.05
+7: 0.18
+8: 0.11
+9: 0.06
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1: technical=0.01, citation=0.02
+Paragraph 2: technical=0.11, citation=0.00
+Paragraph 3: technical=0.00, citation=0.00
+Paragraph 4: technical=0.22, citation=0.04
+Paragraph 5: technical=0.20, citation=0.00
+Paragraph 6: technical=0.15, citation=0.01
+Paragraph 7: technical=0.25, citation=0.00
+Paragraph 8: technical=0.10, citation=0.06
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1: technical=0.01, citation=0.02
+Paragraph 2: technical=0.11, citation=0.00
+Paragraph 3: technical=0.00, citation=0.00
+Paragraph 4: technical=0.18, citation=0.06
+Paragraph 5: technical=0.19, citation=0.01
+Paragraph 6: technical=0.16, citation=0.02
+Paragraph 7: technical=0.20, citation=0.04
+Paragraph 8: technical=0.10, citation=0.08
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1: technical=0.02, citation=0.19
+Paragraph 2: technical=0.13, citation=0.00
+Paragraph 3: technical=0.00, citation=0.00
+Paragraph 4: technical=0.15, citation=0.04
+Paragraph 5: technical=0.20, citation=0.00
+Paragraph 6: technical=0.10, citation=0.01
+Paragraph 7: technical=0.30, citation=0.00
+Paragraph 8: technical=0.12, citation=0.02
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.02, citation=0.19
+Paragraph 2: technical=0.01, citation=0.00
+Paragraph 3: technical=0.16, citation=0.00
+Paragraph 4: technical=0.08, citation=0.11
+Paragraph 5: technical=0.04, citation=0.00
+Paragraph 6: technical=0.02, citation=0.18
+Paragraph 7: technical=0.10, citation=0.14
+Paragraph 8: technical=0.03, citation=0.11
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.01, citation=0.02
+Paragraph 2: technical=0.13, citation=0.00
+Paragraph 3: technical=0.85, citation=0.00
+Paragraph 4: technical=0.81, citation=0.19
+Paragraph 5: technical=0.93, citation=0.07
+Paragraph 6: technical=0.89, citation=0.05
+Paragraph 7: technical=0.95, citation=0.04
+Paragraph 8: technical=0.82, citation=0.22
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/5
+1: 0.008
+2: 0.004
+3: 0.002
+4: 0.001
+5: 0.0008
+6: 0.0007
+7: 0.0005
+8: 0.0004
+9: 0.0001
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=2/5
+1: 0.00
+2: 0.02
+3: 0.04
+4: 0.06
+5: 0.08
+6: 0.07
+7: 0.05
+8: 0.10
+9: 0.03
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=3/5
+1: 0.01
+2: 0.02
+3: 0.03
+4: 0.04
+5: 0.05
+6: 0.06
+7: 0.07
+8: 0.08
+9: 0.09
+10: 0.01
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=4/5
+10: 0.001
+11: 0.001
+12: 0.014
+[citation_split] paragraph_id=Introduction::p1 sample=2 attempt=1/5
+1: 0.0074
+2: 0.0028
+3: 0.0019
+4: 0.0045
+5: 0.0027
+6: 0.0009
+7: 0.0009
+8: 0.0034
+9: 0.0011
+10: 0.0002
+11: 0.0002
+12: 0.0002
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=1/5
+1: 0.008
+2: 0.004
+3: 0.002
+4: 0.001
+5: 0.0008
+6: 0.0007
+7: 0.0007
+8: 0.003
+9: 0.002
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=2/5
+1: 0.01
+2: 0.02
+3: 0.03
+4: 0.05
+5: 0.06
+6: 0.07
+7: 0.08
+8: 0.04
+9: 0.09
+10: 0.01
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=3/5
+10: 0.0005
+11: 0.0005
+12: 0.0005
+[citation_split] paragraph_id=Introduction::p1 sample=4 attempt=1/5
+1: 0.008
+2: 0.004
+3: 0.003
+4: 0.001
+5: 0.001
+6: 0.001
+7: 0.001
+8: 0.002
+9: 0.000
+[citation_split] paragraph_id=Introduction::p1 sample=4 attempt=2/5
+1: 0.01
+2: 0.02
+3: 0.03
+4: 0.04
+5: 0.05
+6: 0.06
+7: 0.07
+8: 0.08
+9: 0.09
+[citation_split] paragraph_id=Introduction::p1 sample=4 attempt=3/5
+4: 0.013
+5: 0.015
+6: 0.014
+7: 0.016
+8: 0.012
+9: 0.010
+10: 0.008
+11: 0.004
+12: 0.002
+[citation_split] paragraph_id=Introduction::p1 sample=5 attempt=1/5
+1: 0.01
+2: 0.03
+3: 0.01
+4: 0.01
+5: 0.04
+6: 0.01
+7: 0.01
+8: 0.02
+9: 0.02
+10: 0
+[citation_split] paragraph_id=Introduction::p1 sample=5 attempt=2/5
+1: 0.0002
+2: 0.0004
+3: 0.0008
+4: 0.0016
+5: 0.0024
+6: 0.0048
+7: 0.008
+8: 0.012
+9: 0.016
+[citation_split] paragraph_id=Introduction::p1 sample=5 attempt=3/5
+10: 0.001
+11: 0.001
+12: 0.014
+[citation_split] paragraph_id=Introduction::p4 sample=1 attempt=1/5
+21: 0.002
+2: 0.001
+47: 0.002
+[citation_split] paragraph_id=Introduction::p4 sample=2 attempt=1/5
+21: 0.002
+2: 0.001
+47: 0.002
+[citation_split] paragraph_id=Introduction::p4 sample=3 attempt=1/5
+21: 0.004
+2: 0.001
+47: 0.000
+[citation_split] paragraph_id=Introduction::p4 sample=4 attempt=1/5
+21: 0.001
+2: 0.002
+47: 0.002
+[citation_split] paragraph_id=Introduction::p4 sample=5 attempt=1/5
+21: 0.002
+2: 0.001
+47: 0.002
+[citation_split] paragraph_id=Introduction::p8 sample=1 attempt=1/5
+22: 0.002
+23: 0.003
+18: 0.0005
+40: 0.00005
+[citation_split] paragraph_id=Introduction::p8 sample=2 attempt=1/5
+22: 0.001
+23: 0.002
+18: 0.001
+40: 0
+[citation_split] paragraph_id=Introduction::p8 sample=3 attempt=1/5
+22: 0.03
+23: 0.04
+18: 0.01
+40: 0
+[citation_split] paragraph_id=Introduction::p8 sample=4 attempt=1/5
+1: 0.003
+2: 0.001
+3: 0.0008
+4: 0.00012
+[citation_split] paragraph_id=Introduction::p8 sample=5 attempt=1/5
+1 -> 0.004
+2 -> 0.0008
+3 -> 0.0004
+4 -> 0.0002
+[all_together_subsections_item_order] parent=Data Model & Problem Definition sample=1/5 order=['Data model', 'Problem Definitions', 'Definition of Anytime Algorithms for AFDs']
+[all_together_subsections] parent=Data Model & Problem Definition sample=1 attempt=1/5
+1: 0.32
+2: 0.18
+3: 0.14457621971792967
+[all_together_subsections_item_order] parent=Data Model & Problem Definition sample=2/5 order=['Data model', 'Definition of Anytime Algorithms for AFDs', 'Problem Definitions']
+[all_together_subsections] parent=Data Model & Problem Definition sample=2 attempt=1/5
+1: 0.32
+2: 0.18
+[all_together_subsections] parent=Data Model & Problem Definition sample=2 attempt=2/5
+1: 0.32
+2: 0.18
+3: 0.50
+[all_together_subsections_item_order] parent=Data Model & Problem Definition sample=3/5 order=['Definition of Anytime Algorithms for AFDs', 'Data model', 'Problem Definitions']
+[all_together_subsections] parent=Data Model & Problem Definition sample=3 attempt=1/5
+Here is the output in the requested format:
+
+3: 0.18
+4: 0.32
+[all_together_subsections] parent=Data Model & Problem Definition sample=3 attempt=2/5
+1: 0.32
+2: 0.18
+[all_together_subsections_item_order] parent=Data Model & Problem Definition sample=4/5 order=['Definition of Anytime Algorithms for AFDs', 'Problem Definitions', 'Data model']
+[all_together_subsections] parent=Data Model & Problem Definition sample=4 attempt=1/5
+Here is the output in the requested format:
+
+1: 0.32
+2: 0.18
+[all_together_subsections] parent=Data Model & Problem Definition sample=4 attempt=2/5
+1: 0.32
+2: 0.18
+3: 0.50
+[all_together_subsections_item_order] parent=Data Model & Problem Definition sample=5/5 order=['Problem Definitions', 'Definition of Anytime Algorithms for AFDs', 'Data model']
+[all_together_subsections] parent=Data Model & Problem Definition sample=5 attempt=1/5
+Here is the output in the requested format:
+
+1: 0.18
+2: 0.18
+3: 0.08
+4: 0.04
+[paragraph_scoring] parent=Data model::paragraphs method=channel_full_parent estimated_tokens=3173 threshold=7000 paragraphs=2 snippet_limit=0 n_samples=5 max_retries=5
+[all_together_paragraphs_item_order] parent=Data model::paragraphs sample=1/5 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Data model::paragraphs sample=1 attempt=1/5
+1: 0.05
+2: 0.05
+[all_together_paragraphs_item_order] parent=Data model::paragraphs sample=2/5 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Data model::paragraphs sample=2 attempt=1/5
+Here is the output:
+
+1: 0.055556
+2: 0.055556
+[all_together_paragraphs_item_order] parent=Data model::paragraphs sample=3/5 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Data model::paragraphs sample=3 attempt=1/5
+1: 0.05
+2: 0.05
+[all_together_paragraphs_item_order] parent=Data model::paragraphs sample=4/5 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Data model::paragraphs sample=4 attempt=1/5
+1: 0.05
+2: 0.05
+[all_together_paragraphs_item_order] parent=Data model::paragraphs sample=5/5 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Data model::paragraphs sample=5 attempt=1/5
+1: 0.08
+2: 0.05
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1: technical=0.01, citation=0.02
+Paragraph 2: technical=0.11, citation=0.03
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1:
+technical=0.01, citation=0.02
+
+Paragraph 2:
+technical=0.11, citation=0.00
+[paragraph_channel_split] sample=2/5 attempt=2/5 temperature=0.25
+Paragraph 1: technical=0.01, citation=0.02
+Paragraph 2: technical=0.12, citation=0.03
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.16, citation=0.10
+
+Paragraph 2:
+technical=0.17, citation=0.07
+[paragraph_channel_split] sample=3/5 attempt=2/5 temperature=0.30000000000000004
+Paragraph 1: 
+technical = 0.01
+citation = 0.02566480402280845
+
+Paragraph 2:
+technical = 0.02
+citation = 0.021312027197266526
+[paragraph_channel_split] sample=3/5 attempt=3/5 temperature=0.30000000000000004
+Paragraph 1: technical=0.02, citation=0.24
+Paragraph 2: technical=0.11, citation=0.13
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.22, citation=0.04
+Paragraph 2: technical=0.10, citation=0.14
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.05, citation=0.21
+Paragraph 2: technical=0.16, citation=0.08
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p2 sample=1 attempt=1/5
+1: 0.004
+2: 0.002
+3: 0.001
+4: 0.002
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p2 sample=2 attempt=1/5
+1: 0.005
+2: 0.002
+3: 0.001
+4: 0.001
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p2 sample=3 attempt=1/5
+1: 0.004
+2: 0.002
+3: 0.003
+4: 0.000
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p2 sample=4 attempt=1/5
+1: 0.005
+2: 0.002
+3: 0.001
+4: 0.001
+[citation_split] paragraph_id=Data Model & Problem Definition > Data model::p2 sample=5 attempt=1/5
+1: 0.005
+2: 0.002
+3: 0.001
+4: 0.001
+[paragraph_scoring] parent=Problem Definitions::paragraphs method=channel_full_parent estimated_tokens=1396 threshold=7000 paragraphs=3 snippet_limit=0 n_samples=5 max_retries=5
+[all_together_paragraphs_item_order] parent=Problem Definitions::paragraphs sample=1/5 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=1 attempt=1/5
+1: 0.02
+2: 0.03
+3: 0.01
+[all_together_paragraphs_item_order] parent=Problem Definitions::paragraphs sample=2/5 order=['Paragraph 1', 'Paragraph 3', 'Paragraph 2']
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=2 attempt=1/5
+1: 0.035
+2: 0.005
+3: 0.007
+[all_together_paragraphs_item_order] parent=Problem Definitions::paragraphs sample=3/5 order=['Paragraph 3', 'Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=3 attempt=1/5
+1: 0.035
+2: 0.012
+3: 0.0004
+[all_together_paragraphs_item_order] parent=Problem Definitions::paragraphs sample=4/5 order=['Paragraph 3', 'Paragraph 2', 'Paragraph 1']
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=4 attempt=1/5
+1: 0.04
+2: 0.03
+3: 0.00
+[all_together_paragraphs_item_order] parent=Problem Definitions::paragraphs sample=5/5 order=['Paragraph 2', 'Paragraph 3', 'Paragraph 1']
+[all_together_paragraphs] parent=Problem Definitions::paragraphs sample=5 attempt=1/5
+1: 0.035
+2: 0.015
+3: 0.017
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1: technical=0.01, citation=0.00
+Paragraph 2: technical=0.11, citation=0.00
+Paragraph 3: technical=0.03, citation=0.00
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1: technical=0.01, citation=0.00
+Paragraph 2: technical=0.02, citation=0.00
+Paragraph 3: technical=0.00, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1: technical=0.01, citation=0.013
+Paragraph 2: technical=0.11, citation=0.004
+Paragraph 3: technical=0.02, citation=0.015
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.01, citation=0.00
+Paragraph 2: technical=0.08, citation=0.07
+Paragraph 3: technical=0.03, citation=0.02
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.01, citation=0.00
+Paragraph 2: technical=0.11, citation=0.02
+Paragraph 3: technical=0.03, citation=0.00
+[paragraph_scoring] parent=Definition of Anytime Algorithms for AFDs::paragraphs method=channel_full_parent estimated_tokens=1609 threshold=7000 paragraphs=3 snippet_limit=0 n_samples=5 max_retries=5
+[all_together_paragraphs_item_order] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=1/5 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=1 attempt=1/5
+1: 0.04
+2: 0.02
+3: 0.00
+[all_together_paragraphs_item_order] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=2/5 order=['Paragraph 1', 'Paragraph 3', 'Paragraph 2']
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=2 attempt=1/5
+1: 0.04
+2: 0.03
+3: 0.03
+[all_together_paragraphs_item_order] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=3/5 order=['Paragraph 3', 'Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=3 attempt=1/5
+1: 0.02
+2: 0.22
+3: 0.12
+[all_together_paragraphs_item_order] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=4/5 order=['Paragraph 3', 'Paragraph 2', 'Paragraph 1']
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=4 attempt=1/5
+1: 0.04
+2: 0.02
+3: 0.00
+[all_together_paragraphs_item_order] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=5/5 order=['Paragraph 2', 'Paragraph 3', 'Paragraph 1']
+[all_together_paragraphs] parent=Definition of Anytime Algorithms for AFDs::paragraphs sample=5 attempt=1/5
+1: 0.04
+2: 0.02
+3: 0.004
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1: technical=0.01, citation=0.015
+Paragraph 2: technical=0.12, citation=0.05
+Paragraph 3: technical=0.83, citation=0.17
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1: technical=0.01, citation=0.015
+Paragraph 2: technical=0.11, citation=0.00
+Paragraph 3: technical=0.83, citation=0.17
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1: technical=0.01, citation=0.015
+Paragraph 2: technical=0.11, citation=0.00
+Paragraph 3: technical=0.43, citation=0.59
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.01, citation=0.015
+Paragraph 2: technical=0.11, citation=0.00
+Paragraph 3: technical=0.38, citation=0.62
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.01, citation=0.015
+Paragraph 2: technical=0.11, citation=0.00
+Paragraph 3: technical=0.38, citation=0.62
+[all_together_subsections_item_order] parent=Anytime AFD Algorithms sample=1/5 order=['Exact Algorithms', 'Approximate Algorithms']
+[all_together_subsections] parent=Anytime AFD Algorithms sample=1 attempt=1/5
+Here is the output:
+
+1: 0.32
+2: 0.18
+[all_together_subsections_item_order] parent=Anytime AFD Algorithms sample=2/5 order=['Exact Algorithms', 'Approximate Algorithms']
+[all_together_subsections] parent=Anytime AFD Algorithms sample=2 attempt=1/5
+Here is the output:
+
+1: 0.32
+2: 0.18
+[all_together_subsections_item_order] parent=Anytime AFD Algorithms sample=3/5 order=['Exact Algorithms', 'Approximate Algorithms']
+[all_together_subsections] parent=Anytime AFD Algorithms sample=3 attempt=1/5
+Here is the output:
+
+1: 0.32
+2: 0.18
+[all_together_subsections_item_order] parent=Anytime AFD Algorithms sample=4/5 order=['Exact Algorithms', 'Approximate Algorithms']
+[all_together_subsections] parent=Anytime AFD Algorithms sample=4 attempt=1/5
+Here is the output in plain text format:
+
+1: 0.32
+2: 0.18
+[all_together_subsections_item_order] parent=Anytime AFD Algorithms sample=5/5 order=['Exact Algorithms', 'Approximate Algorithms']
+[all_together_subsections] parent=Anytime AFD Algorithms sample=5 attempt=1/5
+Here is the output in plain text format:
+
+1: 0.32
+2: 0.18
+[paragraph_scoring] parent=Exact Algorithms::paragraphs method=channel_full_parent estimated_tokens=1938 threshold=7000 paragraphs=5 snippet_limit=0 n_samples=5 max_retries=5
+[all_together_paragraphs_item_order] parent=Exact Algorithms::paragraphs sample=1/5 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=1 attempt=1/5
+1: 0.04
+2: 0.02
+3: 0.01
+4: 0.01
+5: 0.21
+[all_together_paragraphs_item_order] parent=Exact Algorithms::paragraphs sample=2/5 order=['Paragraph 1', 'Paragraph 5', 'Paragraph 4', 'Paragraph 3', 'Paragraph 2']
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=2 attempt=1/5
+1: 0.024
+2: 0.018
+3: 0.007
+4: 0.000
+5: 0.020
+[all_together_paragraphs_item_order] parent=Exact Algorithms::paragraphs sample=3/5 order=['Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=3 attempt=1/5
+1: 0.05
+2: 0.02
+3: 0.04
+4: 0.01
+5: 0.28
+[all_together_paragraphs_item_order] parent=Exact Algorithms::paragraphs sample=4/5 order=['Paragraph 3', 'Paragraph 2', 'Paragraph 1', 'Paragraph 5', 'Paragraph 4']
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=4 attempt=1/5
+1: 0.035
+2: 0.032
+3: 0.016
+4: 0.011
+5: 0.005
+[all_together_paragraphs_item_order] parent=Exact Algorithms::paragraphs sample=5/5 order=['Paragraph 5', 'Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Exact Algorithms::paragraphs sample=5 attempt=1/5
+1: 0.01
+2: 0.02
+3: 0.03
+4: 0.04
+5: 0.20
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1: technical=0.00, citation=0.007347582956658686
+
+Paragraph 2: technical=0.13, citation=0.00
+
+Paragraph 3: technical=0.00, citation=0.006426067855567479
+
+Paragraph 4: technical=0.00, citation=0.008978715876691235
+
+Paragraph 5: technical=0.00, citation=0.012223290674459429
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1: technical=0.01, citation=0.006
+Paragraph 2: technical=0.05, citation=0.09
+Paragraph 3: technical=0.01, citation=0.005
+Paragraph 4: technical=0.02, citation=0.006
+Paragraph 5: technical=0.03, citation=0.009
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1: technical=0.01, citation=0.006
+Paragraph 2: technical=0.05, citation=0.09
+Paragraph 3: technical=0.01, citation=0.005
+Paragraph 4: technical=0.02, citation=0.006
+Paragraph 5: technical=0.07, citation=0.005
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.01, citation=0.006
+Paragraph 2: technical=0.08, citation=0.06
+Paragraph 3: technical=0.01, citation=0.000
+Paragraph 4: technical=0.02, citation=0.006
+Paragraph 5: technical=0.07, citation=0.005
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.00, citation=0.007347582956658686
+
+Paragraph 2: technical=0.13, citation=0.00
+
+Paragraph 3: technical=0.06, citation=0.000426067855567479
+
+Paragraph 4: technical=0.08, citation=0.000978715876691235
+
+Paragraph 5: technical=0.04, citation=0.007943290674459429
+[paragraph_scoring] parent=Approximate Algorithms::paragraphs method=channel_full_parent estimated_tokens=2331 threshold=7000 paragraphs=7 snippet_limit=0 n_samples=5 max_retries=5
+[all_together_paragraphs_item_order] parent=Approximate Algorithms::paragraphs sample=1/5 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=1 attempt=1/5
+1: 0.02
+2: 0.01
+3: 0.04
+4: 0.03
+5: 0.00
+6: 0.00
+7: 0.19
+[all_together_paragraphs_item_order] parent=Approximate Algorithms::paragraphs sample=2/5 order=['Paragraph 1', 'Paragraph 7', 'Paragraph 6', 'Paragraph 5', 'Paragraph 4', 'Paragraph 3', 'Paragraph 2']
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=2 attempt=1/5
+1: 0.005
+2: 0.003
+3: 0.007
+4: 0.001
+5: 0.002
+6: 0.004
+7: 0.006
+[all_together_paragraphs_item_order] parent=Approximate Algorithms::paragraphs sample=3/5 order=['Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=3 attempt=1/5
+1: 0.02
+2: 0.01
+3: 0.00
+4: 0.00
+5: 0.04
+6: 0.12
+7: 0.10
+[all_together_paragraphs_item_order] parent=Approximate Algorithms::paragraphs sample=4/5 order=['Paragraph 3', 'Paragraph 2', 'Paragraph 1', 'Paragraph 7', 'Paragraph 6', 'Paragraph 5', 'Paragraph 4']
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=4 attempt=1/5
+1: 0.016
+2: 0.004
+3: 0.011
+4: 0.012
+5: 0.005
+6: 0.001
+7: 0.000
+[all_together_paragraphs_item_order] parent=Approximate Algorithms::paragraphs sample=5/5 order=['Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Approximate Algorithms::paragraphs sample=5 attempt=1/5
+1: 0.02
+2: 0.01
+3: 0.04
+4: 0.03
+5: 0.05
+6: 0.01
+7: 0.06
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1: technical=0.23, citation=0.03
+Paragraph 2: technical=0.12, citation=0.00
+Paragraph 3: technical=0.17, citation=0.01
+Paragraph 4: technical=0.19, citation=0.08
+Paragraph 5: technical=0.11, citation=0.00
+Paragraph 6: technical=0.18, citation=0.04
+Paragraph 7: technical=0.29, citation=0.02
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1: technical=0.22, citation=0.03
+Paragraph 2: technical=0.16, citation=0.00
+Paragraph 3: technical=0.25, citation=0.01
+Paragraph 4: technical=0.24, citation=0.72
+Paragraph 5: technical=0.04, citation=0.00
+Paragraph 6: technical=0.23, citation=0.02
+Paragraph 7: technical=0.85, citation=0.35
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1: technical=0.22, citation=0.03
+Paragraph 2: technical=0.14, citation=0.00
+Paragraph 3: technical=0.16, citation=0.02
+Paragraph 4: technical=0.24, citation=0.72
+Paragraph 5: technical=0.11, citation=0.01
+Paragraph 6: technical=0.20, citation=0.02
+Paragraph 7: technical=0.93, citation=0.00
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.84, citation=0.16
+Paragraph 2: technical=0.92, citation=0.08
+Paragraph 3: technical=0.87, citation=0.13
+Paragraph 4: technical=0.63, citation=0.33
+Paragraph 5: technical=0.99, citation=0.01
+Paragraph 6: technical=0.95, citation=0.05
+Paragraph 7: technical=0.93, citation=0.07
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.24, citation=0.02
+Paragraph 2: technical=0.13, citation=0.00
+Paragraph 3: technical=0.21, citation=0.01
+Paragraph 4: technical=0.19, citation=0.43
+Paragraph 5: technical=0.11, citation=0.00
+Paragraph 6: technical=0.23, citation=0.02
+Paragraph 7: technical=0.83, citation=0.03
+[paragraph_scoring] parent=Experiments::paragraphs method=channel_full_parent estimated_tokens=693 threshold=7000 paragraphs=1 snippet_limit=0 n_samples=5 max_retries=5
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=1/5 attempt=2/5 temperature=0.2
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=1/5 attempt=3/5 temperature=0.2
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=1/5 attempt=4/5 temperature=0.2
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=1/5 attempt=5/5 temperature=0.2
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=2/5 attempt=2/5 temperature=0.25
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=2/5 attempt=3/5 temperature=0.25
+Paragraph 1:
+technical=0.19, citation=0.03
+[paragraph_channel_split] sample=2/5 attempt=4/5 temperature=0.25
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=2/5 attempt=5/5 temperature=0.25
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=2/5 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=3/5 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=4/5 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.22, citation=0.00
+
+Explanation:
+has_citations is false, so citation_score = 0.0. The paragraph's value comes entirely from technical_score, which is the total score.
+
+Paragraph 2:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=5/5 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1:
+technical=0.10, citation=0.11
+[paragraph_channel_split] sample=4/5 attempt=2/5 temperature=0.35000000000000003
+Paragraph 1:
+technical=0.17, citation=0.05
+[paragraph_channel_split] sample=4/5 attempt=3/5 temperature=0.35000000000000003
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=4/5 attempt=4/5 temperature=0.35000000000000003
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=4/5 attempt=5/5 temperature=0.35000000000000003
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=5/5 attempt=2/5 temperature=0.4
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=5/5 attempt=3/5 temperature=0.4
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=5/5 attempt=4/5 temperature=0.4
+Paragraph 1:
+technical=0.22, citation=0.00
+[paragraph_channel_split] sample=5/5 attempt=5/5 temperature=0.4
+Paragraph 1: 
+technical=0.22, citation=0.00
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_full_parent estimated_tokens=1874 threshold=7000 paragraphs=5 snippet_limit=0 n_samples=5 max_retries=5
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=1/5 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=1/5
+1: 0.05
+2: 0.03
+3: 0.02
+4: 0.01
+5: 0
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=2/5 order=['Paragraph 1', 'Paragraph 5', 'Paragraph 4', 'Paragraph 3', 'Paragraph 2']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=2 attempt=1/5
+1: 0.035
+2: 0.013
+3: 0.021
+4: 0.016
+5: 0.074
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=3/5 order=['Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=3 attempt=1/5
+1: 0.02
+2: 0.01
+3: 0.05
+4: 0.08
+5: 0.04
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=4/5 order=['Paragraph 3', 'Paragraph 2', 'Paragraph 1', 'Paragraph 5', 'Paragraph 4']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=4 attempt=1/5
+1: 0.01
+2: 0.04
+3: 0.06
+4: 0.03
+5: 0.26
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=5/5 order=['Paragraph 5', 'Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=5 attempt=1/5
+1: 0.05
+2: 0.03
+3: 0.01
+4: 0.00
+5: 0.91
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1: technical=0.01, citation=0.34
+Paragraph 2: technical=0.11, citation=0.18
+Paragraph 3: technical=1.00, citation=0.00
+Paragraph 4: technical=0.51, citation=0.50
+Paragraph 5: technical=0.03, citation=0.09
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1: technical=0.01, citation=0.34
+Paragraph 2: technical=0.11, citation=0.18
+Paragraph 3: technical=1.00, citation=0.00
+Paragraph 4: technical=0.51, citation=0.49
+Paragraph 5: technical=0.03, citation=0.09
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1: technical=0.01, citation=0.34
+Paragraph 2: technical=0.11, citation=0.18
+Paragraph 3: technical=0.00, citation=0.00
+Paragraph 4: technical=0.00, citation=0.00
+Paragraph 5: technical=0.00, citation=0.00
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.01, citation=0.34
+Paragraph 2: technical=0.11, citation=0.18
+Paragraph 3: technical=1.00, citation=0.00
+Paragraph 4: technical=0.51, citation=0.50
+Paragraph 5: technical=0.02, citation=0.10
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.03, citation=0.32
+Paragraph 2: technical=0.11, citation=0.18
+Paragraph 3: technical=0.00, citation=0.00
+Paragraph 4: technical=0.00, citation=0.51
+Paragraph 5: technical=0.00, citation=0.12
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=1/5
+1: 0.0337
+2: 0.0014
+3: 0.0014
+4: 0.0025
+5: 0.0009
+6: 0.0008
+7: 0.0002
+8: 0.0002
+9: 0.0001
+10: 0.0001
+11: 0.0001
+12: 0.0001
+13: 0.0001
+14: 0
+[citation_split] paragraph_id=Related Work::p1 sample=2 attempt=1/5
+42: 0.024
+6: 0.006
+31: 0.002
+38: 0.001
+14: 0.0004
+21: 0.0003
+7: 0.0002
+8: 0.0001
+10: 0.0001
+26: 0
+[citation_split] paragraph_id=Related Work::p1 sample=2 attempt=2/5
+1: 0.01
+2: 0.02
+3: 0.03
+4: 0.04
+5: 0.05
+6: 0.06
+7: 0.07
+8: 0.08
+9: 0.09
+10: 0.01
+11: 0.01
+12: 0.02
+13: 0.01
+[citation_split] paragraph_id=Related Work::p1 sample=3 attempt=1/5
+1: 0.023
+2: 0.006
+3: 0.004
+4: 0.002
+5: 0.001
+6: 0.001
+7: 0.0009
+8: 0.0008
+9: 0.0007
+10: 0.0006
+11: 0.0003
+12: 0.0002
+13: 0.0001
+14: 0
+[citation_split] paragraph_id=Related Work::p1 sample=4 attempt=1/5
+1: 0.0337
+2: 0.0029
+3: 0.0014
+4: 0.0008
+5: 0.0006
+6: 0.0002
+7: 0.0002
+8: 0.0002
+9: 0.0001
+10: 0.0001
+11: 0.0001
+12: 0.0001
+13: 0.0001
+14: 0
+[citation_split] paragraph_id=Related Work::p1 sample=5 attempt=1/5
+1: 0.033710715852020526 
+2: 0.0025 
+3: 0.00125 
+4: 0.00125 
+5: 0.00075 
+6: 0.00075 
+7: 0.00025 
+8: 0.00025 
+9: 0.000125 
+10: 0.000125 
+11: 0.0000625 
+12: 0.0000625 
+13: 0.00003125 
+14: 0
+[citation_split] paragraph_id=Related Work::p2 sample=1 attempt=1/5
+39: 0.008
+1: 0.010
+[citation_split] paragraph_id=Related Work::p2 sample=2 attempt=1/5
+39: 0.008
+1: 0.010
+[citation_split] paragraph_id=Related Work::p2 sample=3 attempt=1/5
+39: 0.014
+1: 0.004
+[citation_split] paragraph_id=Related Work::p2 sample=4 attempt=1/5
+39: 0.0075
+1: 0.0107
+[citation_split] paragraph_id=Related Work::p2 sample=5 attempt=1/5
+39: 0.012207862950580193
+1: 0.00600000000099999
+[paragraph_scoring] parent=Conclusion and Future Work::paragraphs method=channel_full_parent estimated_tokens=1025 threshold=7000 paragraphs=1 snippet_limit=0 n_samples=5 max_retries=5
+[paragraph_channel_split] sample=1/5 attempt=1/5 temperature=0.2
+Paragraph 1:
+technical=0.10, citation=0.03
+
+Paragraph 2:
+technical=0.15, citation=0.02
+
+Paragraph 3:
+technical=0.20, citation=0.05
+
+Paragraph 4:
+technical=0.90, citation=0.00
+[paragraph_channel_split] sample=1/5 attempt=2/5 temperature=0.2
+Paragraph 1: 
+technical=0.11, citation=0.03 
+
+Paragraph 2: 
+technical=0.10, citation=0.02 
+
+Paragraph 3: 
+technical=0.13, citation=0.00
+[paragraph_channel_split] sample=1/5 attempt=3/5 temperature=0.2
+Paragraph 1: 
+technical=0.10, citation=0.03
+[paragraph_channel_split] sample=1/5 attempt=4/5 temperature=0.2
+Paragraph 1:
+technical=0.10, citation=0.03
+
+Paragraph 2:
+technical=0.15, citation=0.02
+
+Paragraph 3:
+technical=0.30, citation=0.05
+
+Paragraph 4:
+technical=0.95, citation=0.00
+
+Paragraph 5:
+technical=0.20, citation=0.10
+[paragraph_channel_split] sample=1/5 attempt=5/5 temperature=0.2
+Paragraph 1: 
+technical=0.11, citation=0.03 
+
+Paragraph 2:
+technical=0.10, citation=0.02 
+
+Paragraph 3:
+technical=0.05, citation=0.01
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.25
+Paragraph 1: 
+technical=0.07, citation=0.03 
+
+Paragraph 2: 
+technical=0.10, citation=0.01 
+
+Paragraph 3: 
+technical=0.80, citation=0.00 
+
+Paragraph 4: 
+technical=0.95, citation=0.05
+[paragraph_channel_split] sample=2/5 attempt=2/5 temperature=0.25
+Paragraph 1: 
+technical=0.11, citation=0.03 
+
+Paragraph 2: 
+technical=0.10, citation=0.02 
+
+Paragraph 3: 
+technical=0.13, citation=0.00 
+
+Paragraph 4: 
+technical=0.12, citation=0.05
+[paragraph_channel_split] sample=2/5 attempt=3/5 temperature=0.25
+Paragraph 1: 
+technical=0.11, citation=0.03 
+
+Paragraph 2: 
+technical=0.10, citation=0.02 
+
+Paragraph 3: 
+technical=0.08, citation=0.04 
+
+Paragraph 4: 
+technical=0.07, citation=0.01
+[paragraph_channel_split] sample=2/5 attempt=4/5 temperature=0.25
+Paragraph 1:
+technical=0.10, citation=0.03
+
+Paragraph 2:
+technical=0.15, citation=0.02
+
+Paragraph 3:
+technical=0.90, citation=0.01
+[paragraph_channel_split] sample=2/5 attempt=5/5 temperature=0.25
+Paragraph 1: technical=0.14, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=1/5 temperature=0.30000000000000004
+Paragraph 1:
+technical=0.11, citation=0.03
+
+Paragraph 2:
+technical=0.12, citation=0.01
+
+Paragraph 3:
+technical=0.10, citation=0.02
+
+Paragraph 4:
+technical=0.15, citation=0.00
+[paragraph_channel_split] sample=3/5 attempt=2/5 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.09, citation=0.03
+
+Paragraph 2: 
+technical=0.14, citation=0.01
+[paragraph_channel_split] sample=3/5 attempt=3/5 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.15, citation=0.25
+
+Paragraph 2: 
+technical=0.10, citation=0.30
+[paragraph_channel_split] sample=3/5 attempt=4/5 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.10, citation=0.03
+[paragraph_channel_split] sample=3/5 attempt=5/5 temperature=0.30000000000000004
+Paragraph 1: 
+technical=0.14, citation=0.00 
+
+Paragraph 2:
+technical=0.00, citation=0.00
+[paragraph_channel_split] sample=4/5 attempt=1/5 temperature=0.35000000000000003
+Paragraph 1:
+technical=0.11, citation=0.03
+
+Paragraph 2:
+technical=0.10, citation=0.01
+
+Paragraph 3:
+technical=0.12, citation=0.02
+[paragraph_channel_split] sample=4/5 attempt=2/5 temperature=0.35000000000000003
+Paragraph 1: 
+technical=0.10, citation=0.03
+[paragraph_channel_split] sample=4/5 attempt=3/5 temperature=0.35000000000000003
+Paragraph 1: 
+technical = 0.11, citation = 0.03 
+
+Paragraph 2:
+technical = 0.12, citation = 0.02
+[paragraph_channel_split] sample=4/5 attempt=4/5 temperature=0.35000000000000003
+Paragraph 1: 
+technical=0.12, citation=0.28 
+
+Paragraph 2: 
+technical=0.14, citation=0.26
+[paragraph_channel_split] sample=4/5 attempt=5/5 temperature=0.35000000000000003
+Paragraph 1: technical=0.85, citation=0.15
+Paragraph 2: technical=0.95, citation=0.05
+Paragraph 3: technical=0.90, citation=0.10
+Paragraph 4: technical=0.20, citation=0.20
+[paragraph_channel_split] sample=5/5 attempt=1/5 temperature=0.4
+Paragraph 1: technical=0.07, citation=0.03
+====================================================================================================
+=============================== RUN END ===============================
+[run_end] time=2026-04-09T16:38:55
+=============================== RUN END ===============================
+====================================================================================================
