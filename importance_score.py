@@ -1,5 +1,6 @@
 import argparse
 import ast
+import difflib
 import json
 import re
 from datetime import datetime
@@ -256,6 +257,39 @@ Paragraph2: technical=0.13, citation=0.00
 Do not output JSON. Do not include explanations.
 """
 
+SUBSECTION_TITLE_RECOVERY_SYSTEM_PROMPT = (
+    "You are helping recover subsection headings from noisy PDF text. "
+    "Given a parent section's extracted text and a list of expected child subsection names, "
+    "identify the best matching heading title that actually appears in the text for each expected child. "
+    "Do not invent headings that are not supported by the text. "
+    "Return plain text only."
+)
+
+SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE = """Parent section:
+{parent_name}
+
+Expected child subsection names:
+{expected_children_json}
+
+Parent section text:
+{parent_text}
+
+Task:
+- For each expected child subsection name, return the best matching heading title that appears in the parent text.
+- Prefer the heading text as it appears in the document, without numbering.
+- If no credible match exists, write none for that child.
+- Only recover titles. Do not extract subsection bodies.
+
+Output format (plain text only):
+One line per expected child.
+Use any readable separator such as `:`, `=`, `->`, or `-`.
+
+Example:
+Lattice Based Solution: Lattice Based Solution
+Compute Bounds for Anytime Answer -> Compute Bounds for Anytime Answer
+Bound Computation Algorithms: none
+"""
+
 PROMPT_CATALOG = {
     "section_pairwise_system_prompt": SECTION_PAIRWISE_SYSTEM_PROMPT,
     "section_pairwise_user_prompt_template": SECTION_PAIRWISE_USER_PROMPT_TEMPLATE,
@@ -265,6 +299,8 @@ PROMPT_CATALOG = {
     "citation_split_user_prompt_template": CITATION_SPLIT_USER_PROMPT_TEMPLATE,
     "paragraph_channel_split_system_prompt": PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT,
     "paragraph_channel_split_user_prompt_template": PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE,
+    "subsection_title_recovery_system_prompt": SUBSECTION_TITLE_RECOVERY_SYSTEM_PROMPT,
+    "subsection_title_recovery_user_prompt_template": SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE,
 }
 
 AUTHOR_YEAR_CITATION_PATTERN = r"\([A-Z][^)]*\d{4}[a-z]?\)"
@@ -336,6 +372,16 @@ def normalize_heading_text(text: str) -> str:
     normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
     normalized = re.sub(r"\s+", " ", normalized).strip()
     return normalized
+
+
+def heading_similarity_score(target: str, candidate: str) -> float:
+    target_norm = normalize_heading_text(target)
+    candidate_norm = normalize_heading_text(candidate)
+    if not target_norm or not candidate_norm:
+        return 0.0
+    if heading_tokens_match(target_norm, candidate_norm) or heading_tokens_match(candidate_norm, target_norm):
+        return 1.0
+    return difflib.SequenceMatcher(None, target_norm, candidate_norm).ratio()
 
 
 def heading_tokens_match(target: str, candidate: str) -> bool:
@@ -416,13 +462,22 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
             return True
         return False
 
-    direct_idx = full_text.find(heading_name)
-    if direct_idx != -1:
-        return direct_idx, direct_idx + len(heading_name)
-
     target = normalize_heading_text(heading_name)
     if not target:
         return -1, -1
+
+    direct_idx = full_text.find(heading_name)
+    if direct_idx != -1:
+        line_start = full_text.rfind("\n", 0, direct_idx) + 1
+        line_end = full_text.find("\n", direct_idx)
+        if line_end == -1:
+            line_end = len(full_text)
+        line_text = full_text[line_start:line_end]
+        normalized_line = normalize_heading_text(line_text)
+        normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
+        normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
+        if heading_tokens_match(target, normalized_line):
+            return line_start, line_end
 
     lines = full_text.splitlines(keepends=True)
     offsets: List[int] = []
@@ -463,7 +518,15 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
     return -1, -1
 
 
-def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def extract_citations_by_section(
+    text: str,
+    sections: Dict[str, Any],
+    client: Optional[Client] = None,
+    model: str = "llama3.2",
+    temperature: float = 0.2,
+    max_retries: int = 3,
+    debug_log_path: str = "",
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Extract citation blocks with context and section content based on a nested section schema.
     """
@@ -532,6 +595,125 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
             return full_text[content_start:section_end]
         return full_text[content_start:section_end]
 
+    def recover_child_titles_with_llm(
+        parent_name: str,
+        section_text: str,
+        missing_children: List[str],
+    ) -> Dict[str, str]:
+        if client is None or not missing_children:
+            return {}
+
+        prompt = SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE.format(
+            parent_name=parent_name,
+            expected_children_json=json.dumps(missing_children, indent=2),
+            parent_text=section_text[:14000],
+        )
+        recovered: Dict[str, str] = {}
+
+        for attempt in range(max(1, max_retries)):
+            response = client.chat(
+                model=model,
+                messages=[
+                    {"role": "system", "content": SUBSECTION_TITLE_RECOVERY_SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                options={"temperature": min(1.0, temperature + (0.03 * attempt))},
+            )
+            raw_response = response.message.content if getattr(response, "message", None) else ""
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[subsection_title_recovery] parent={parent_name} "
+                    f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
+                ),
+            )
+            parsed = parse_title_map_from_response(raw_response, missing_children)
+            recovered.update(parsed)
+
+            if recovered:
+                break
+
+            prompt = (
+                f"{SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE.format(parent_name=parent_name, expected_children_json=json.dumps(missing_children, indent=2), parent_text=section_text[:14000])}\n\n"
+                "Your previous answer was hard to parse. Please answer with short plain-text lines, one per expected child."
+            )
+
+        return recovered
+
+    def recover_declared_children_from_titles(
+        parent_name: str,
+        section_text: str,
+        subsections_dict: Dict[str, Any],
+        title_hints: Optional[Dict[str, str]] = None,
+    ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        recovered_citations: Dict[str, Any] = {}
+        recovered_content: Dict[str, Any] = {}
+        found_children: List[Tuple[str, int, int]] = []
+
+        for child_name in subsections_dict:
+            candidate_titles: List[str] = [child_name]
+            hinted_title = (title_hints or {}).get(child_name)
+            if hinted_title and normalize_heading_text(hinted_title) != normalize_heading_text(child_name):
+                candidate_titles.insert(0, hinted_title)
+
+            best_match: Optional[Tuple[int, int, int, float]] = None
+            for candidate_title in candidate_titles:
+                child_start, child_content_start = find_heading_line_offsets_global(section_text, candidate_title)
+                if child_start == -1:
+                    continue
+                score = heading_similarity_score(child_name, candidate_title)
+                if best_match is None or score > best_match[3]:
+                    best_match = (child_start, child_content_start, len(candidate_title), score)
+
+            if best_match is None:
+                continue
+
+            found_children.append((child_name, best_match[0], best_match[1]))
+
+        found_children.sort(key=lambda item: item[1])
+
+        for idx, (child_name, _, child_content_start) in enumerate(found_children):
+            next_child_start = found_children[idx + 1][1] if idx + 1 < len(found_children) else len(section_text)
+            child_end = next_child_start
+            back_matter_start = find_earliest_heading_start(
+                section_text[child_content_start:child_end],
+                list(BACK_MATTER_HEADINGS),
+            )
+            if back_matter_start != -1:
+                child_end = min(child_end, child_content_start + back_matter_start)
+
+            child_text = section_text[child_content_start:child_end].strip()
+            if not child_text:
+                continue
+
+            child_schema = subsections_dict.get(child_name)
+            if isinstance(child_schema, dict) and child_schema:
+                nested_citations, nested_content = process_sections(
+                    child_text,
+                    child_schema,
+                    list(child_schema.keys()),
+                )
+                if nested_content:
+                    recovered_citations[child_name] = nested_citations
+                    recovered_content[child_name] = nested_content
+                    continue
+
+            recovered_citations[child_name] = process_section_text(child_text)
+            recovered_content[child_name] = re.sub(r"[ \t]+", " ", child_text).strip()
+
+        return recovered_citations, recovered_content
+
+    def recover_declared_children(
+        section_text: str,
+        subsections_dict: Dict[str, Any],
+    ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        return recover_declared_children_from_titles(
+            parent_name="",
+            section_text=section_text,
+            subsections_dict=subsections_dict,
+            title_hints=None,
+        )
+
     def process_sections(
         section_text: str, sections_dict: Dict[str, Any], section_names_list: List[str]
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -549,8 +731,43 @@ def extract_citations_by_section(text: str, sections: Dict[str, Any]) -> Tuple[D
             if isinstance(subsections, dict) and subsections:
                 subsection_names = list(subsections.keys())
                 nested_citations, nested_content = process_sections(content, subsections, subsection_names)
-                local_citations[section_name] = nested_citations
-                local_content[section_name] = nested_content
+                if len(nested_content) < len(subsection_names):
+                    recovered_citations, recovered_content = recover_declared_children(content, subsections)
+                    for child_name, child_content in recovered_content.items():
+                        if child_name in nested_content:
+                            continue
+                        nested_content[child_name] = child_content
+                        nested_citations[child_name] = recovered_citations.get(child_name, {})
+
+                if len(nested_content) < len(subsection_names):
+                    missing_children = [name for name in subsection_names if name not in nested_content]
+                    llm_titles = recover_child_titles_with_llm(section_name, content, missing_children)
+                    if llm_titles:
+                        append_debug_log(
+                            debug_log_path,
+                            f"[subsection_title_recovery_match] parent={section_name} recovered={json.dumps(llm_titles, ensure_ascii=False)}",
+                        )
+                        recovered_citations, recovered_content = recover_declared_children_from_titles(
+                            parent_name=section_name,
+                            section_text=content,
+                            subsections_dict={name: subsections[name] for name in missing_children},
+                            title_hints=llm_titles,
+                        )
+                        for child_name, child_content in recovered_content.items():
+                            if child_name in nested_content:
+                                continue
+                            nested_content[child_name] = child_content
+                            nested_citations[child_name] = recovered_citations.get(child_name, {})
+
+                if nested_content:
+                    local_citations[section_name] = nested_citations
+                    local_content[section_name] = nested_content
+                else:
+                    # Preserve parent text if child extraction fails instead of
+                    # collapsing the section into an empty subtree.
+                    local_citations[section_name] = process_section_text(content)
+                    normalized_content = re.sub(r"[ \t]+", " ", content).strip()
+                    local_content[section_name] = normalized_content
             else:
                 local_citations[section_name] = process_section_text(content)
                 # Keep line breaks so we can score paragraph-level importance later.
@@ -635,6 +852,25 @@ def parse_plaintext_score_lines(response_text: str) -> List[Tuple[str, float]]:
         key = match.group(1).strip()
         value = safe_float(match.group(2), -1.0)
         if value < 0.0:
+            continue
+        pairs.append((key, value))
+    return pairs
+
+
+def parse_plaintext_title_lines(response_text: str) -> List[Tuple[str, str]]:
+    text = strip_code_fences(response_text)
+    pairs: List[Tuple[str, str]] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip().strip(",")
+        if not line:
+            continue
+        line = re.sub(r"^[-*•]\s*", "", line)
+        match = re.match(r'^"?(.{1,200}?)"?\s*(?::|=|->|=>|-|–)\s*(.+?)\s*$', line)
+        if not match:
+            continue
+        key = match.group(1).strip().strip('"').strip("'")
+        value = match.group(2).strip().strip('"').strip("'")
+        if not key or not value:
             continue
         pairs.append((key, value))
     return pairs
@@ -830,6 +1066,66 @@ def parse_score_map_from_response(
                 break
 
     return parsed_scores
+
+
+def parse_title_map_from_response(
+    response_text: str,
+    expected_children: List[str],
+) -> Dict[str, str]:
+    if not expected_children:
+        return {}
+
+    expected_set = set(expected_children)
+    norm_to_child = {normalized_key(child_name): child_name for child_name in expected_children}
+    recovered: Dict[str, str] = {}
+    null_tokens = {"none", "null", "n/a", "na", "not found", "missing", "unknown"}
+
+    def coerce_title(value: Any) -> Optional[str]:
+        if value is None:
+            return None
+        text = str(value).strip().strip('"').strip("'")
+        if not text:
+            return None
+        if normalized_key(text) in {normalized_key(token) for token in null_tokens}:
+            return None
+        return text
+
+    json_payload = parse_json_loose(response_text)
+    if isinstance(json_payload, dict):
+        for key, value in json_payload.items():
+            child_name = key if key in expected_set else norm_to_child.get(normalized_key(str(key)))
+            if not child_name:
+                continue
+            title = coerce_title(value)
+            if title is not None:
+                recovered[child_name] = title
+        if recovered:
+            return recovered
+
+    for key, value in parse_plaintext_title_lines(response_text):
+        child_name = key if key in expected_set else norm_to_child.get(normalized_key(key))
+        if not child_name:
+            continue
+        title = coerce_title(value)
+        if title is not None:
+            recovered[child_name] = title
+    if recovered:
+        return recovered
+
+    ordered_values: List[str] = []
+    text = strip_code_fences(response_text)
+    for raw_line in text.splitlines():
+        line = raw_line.strip().strip(",")
+        if not line:
+            continue
+        line = re.sub(r"^[-*•]\s*", "", line)
+        title = coerce_title(line)
+        if title is not None:
+            ordered_values.append(title)
+
+    for child_name, title in zip(expected_children, ordered_values):
+        recovered[child_name] = title
+    return recovered
 
 
 def parse_paragraph_channel_split_response(
@@ -2006,19 +2302,33 @@ def allocate_citation_scores_for_paragraph(
     sample_count = max(1, n_samples)
     sample_distributions: List[Dict[str, float]] = []
     for s in range(sample_count):
-        sample_distributions.append(
-            direct_allocate_citation_scores(
-                client=client,
-                paragraph_id=paragraph_id,
-                paragraph_text=paragraph_text,
-                citation_to_context=citation_to_context,
-                total_score=total_score,
-                model=model,
-                temperature=min(1.0, temperature + (0.05 * s)),
-                max_retries=max(1, max_retries),
-                debug_log_path=debug_log_path,
-                sample_idx=s + 1,
+        try:
+            sample_distributions.append(
+                direct_allocate_citation_scores(
+                    client=client,
+                    paragraph_id=paragraph_id,
+                    paragraph_text=paragraph_text,
+                    citation_to_context=citation_to_context,
+                    total_score=total_score,
+                    model=model,
+                    temperature=min(1.0, temperature + (0.05 * s)),
+                    max_retries=max(1, max_retries),
+                    debug_log_path=debug_log_path,
+                    sample_idx=s + 1,
+                )
             )
+        except ValueError as exc:
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[citation_split_sample_skip] paragraph_id={paragraph_id} "
+                    f"sample={s + 1}/{sample_count} reason={exc}"
+                ),
+            )
+
+    if not sample_distributions:
+        raise ValueError(
+            f"Model failed to produce any complete citation-score sample for paragraph '{paragraph_id}'."
         )
 
     averaged = {citation: 0.0 for citation in citations}
@@ -2600,18 +2910,28 @@ def assign_importance_scores(
                 context_blob = " ".join(unique_contexts)[:700]
                 citation_to_context[citation] = context_blob if context_blob else meta["text"][:700]
 
-            citation_split = allocate_citation_scores_for_paragraph(
-                client=client,
-                paragraph_id=f"{' > '.join(section_path)}::p{meta['paragraph_index']}",
-                paragraph_text=meta["text"],
-                citation_to_context=citation_to_context,
-                total_score=paragraph_c,
-                model=model,
-                n_samples=max(1, n_samples),
-                temperature=temperature,
-                max_retries=max(1, max_retries),
-                debug_log_path=debug_log_path,
-            )
+            try:
+                citation_split = allocate_citation_scores_for_paragraph(
+                    client=client,
+                    paragraph_id=f"{' > '.join(section_path)}::p{meta['paragraph_index']}",
+                    paragraph_text=meta["text"],
+                    citation_to_context=citation_to_context,
+                    total_score=paragraph_c,
+                    model=model,
+                    n_samples=max(1, n_samples),
+                    temperature=temperature,
+                    max_retries=max(1, max_retries),
+                    debug_log_path=debug_log_path,
+                )
+            except ValueError as exc:
+                append_debug_log(
+                    debug_log_path,
+                    (
+                        f"[citation_split_unresolved] paragraph_id={internal_paragraph_id} "
+                        f"reason={exc}"
+                    ),
+                )
+                continue
             split_total = sum(citation_split.values())
             assert_close(split_total, paragraph_c, f"citation split for {internal_paragraph_id}")
 
@@ -2798,7 +3118,16 @@ def main() -> None:
     sections = DEFAULT_SECTIONS
     if args.sections_file and args.sections_var:
         sections = load_sections_from_file(args.sections_file, args.sections_var)
-    citations, content = extract_citations_by_section(text, sections)
+    extraction_client = Client(host=args.host)
+    citations, content = extract_citations_by_section(
+        text,
+        sections,
+        client=extraction_client,
+        model=args.model,
+        temperature=max(0.0, args.temperature),
+        max_retries=max(1, args.max_retries),
+        debug_log_path=args.debug_log,
+    )
     citation_importance, section_importance, paragraph_importance = assign_importance_scores(
         content_dict=content,
         citations_dict=citations,
