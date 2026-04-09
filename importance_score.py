@@ -271,12 +271,15 @@ SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE = """Parent section:
 Expected child subsection names:
 {expected_children_json}
 
+Candidate heading titles found in the parent text:
+{candidate_titles_json}
+
 Parent section text:
 {parent_text}
 
 Task:
-- For each expected child subsection name, return the best matching heading title that appears in the parent text.
-- Prefer the heading text as it appears in the document, without numbering.
+- For each expected child subsection name, choose the best matching heading title from the candidate list above.
+- Prefer exact or near-exact matches in meaning.
 - If no credible match exists, write none for that child.
 - Only recover titles. Do not extract subsection bodies.
 
@@ -382,6 +385,60 @@ def heading_similarity_score(target: str, candidate: str) -> float:
     if heading_tokens_match(target_norm, candidate_norm) or heading_tokens_match(candidate_norm, target_norm):
         return 1.0
     return difflib.SequenceMatcher(None, target_norm, candidate_norm).ratio()
+
+
+def strip_heading_prefix(text: str) -> str:
+    stripped = normalize_for_match(text)
+    stripped = re.sub(r"^(?:\d+(?:\.\d+)*|[A-Z])(?:[\.\)])?\s+", "", stripped)
+    return stripped.strip()
+
+
+def collect_heading_candidates(section_text: str) -> List[str]:
+    lines = section_text.splitlines()
+    candidates: List[str] = []
+    seen: set[str] = set()
+
+    def add_candidate(raw_text: str) -> None:
+        candidate = strip_heading_prefix(raw_text)
+        if not candidate:
+            return
+        if is_page_artifact_line(candidate) or is_back_matter_heading(candidate):
+            return
+        normalized = normalize_heading_text(candidate)
+        if not normalized or normalized in seen:
+            return
+        if len(normalized.split()) > 18:
+            return
+        seen.add(normalized)
+        candidates.append(candidate)
+
+    for idx, line in enumerate(lines):
+        stripped = normalize_for_match(line)
+        if not stripped or is_page_artifact_line(stripped):
+            continue
+
+        if is_probable_heading_line(stripped):
+            add_candidate(stripped)
+
+        combined_parts = [stripped]
+        lookahead = idx + 1
+        while lookahead < len(lines) and len(combined_parts) < 3:
+            next_line = normalize_for_match(lines[lookahead])
+            lookahead += 1
+            if not next_line or is_page_artifact_line(next_line):
+                continue
+            if len(next_line) > 90:
+                break
+            if next_line.endswith((".", "?", "!", ";", ":")):
+                break
+            if not is_probable_heading_line(next_line):
+                break
+            combined_parts.append(next_line)
+            combined_text = " ".join(combined_parts)
+            if is_probable_heading_line(combined_text):
+                add_candidate(combined_text)
+
+    return candidates
 
 
 def heading_tokens_match(target: str, candidate: str) -> bool:
@@ -603,9 +660,14 @@ def extract_citations_by_section(
         if client is None or not missing_children:
             return {}
 
+        candidate_titles = collect_heading_candidates(section_text)
+        if not candidate_titles:
+            return {}
+
         prompt = SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE.format(
             parent_name=parent_name,
             expected_children_json=json.dumps(missing_children, indent=2),
+            candidate_titles_json=json.dumps(candidate_titles, indent=2, ensure_ascii=False),
             parent_text=section_text[:14000],
         )
         recovered: Dict[str, str] = {}
@@ -628,13 +690,34 @@ def extract_citations_by_section(
                 ),
             )
             parsed = parse_title_map_from_response(raw_response, missing_children)
-            recovered.update(parsed)
+            for child_name, raw_title in parsed.items():
+                best_candidate = None
+                best_score = 0.0
+                for candidate_title in candidate_titles:
+                    score = heading_similarity_score(raw_title, candidate_title)
+                    if score > best_score:
+                        best_score = score
+                        best_candidate = candidate_title
+
+                if best_candidate is None:
+                    continue
+                if best_score < 0.55:
+                    append_debug_log(
+                        debug_log_path,
+                        (
+                            f"[subsection_title_recovery_reject] parent={parent_name} "
+                            f"child={child_name} raw_title={raw_title!r} best_candidate={best_candidate!r} "
+                            f"score={best_score:.3f}"
+                        ),
+                    )
+                    continue
+                recovered[child_name] = best_candidate
 
             if recovered:
                 break
 
             prompt = (
-                f"{SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE.format(parent_name=parent_name, expected_children_json=json.dumps(missing_children, indent=2), parent_text=section_text[:14000])}\n\n"
+                f"{SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE.format(parent_name=parent_name, expected_children_json=json.dumps(missing_children, indent=2), candidate_titles_json=json.dumps(candidate_titles, indent=2, ensure_ascii=False), parent_text=section_text[:14000])}\n\n"
                 "Your previous answer was hard to parse. Please answer with short plain-text lines, one per expected child."
             )
 
