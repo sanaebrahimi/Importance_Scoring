@@ -5,17 +5,17 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Random access to data is a foundational operation in computer science, enabling efficient algorithms for search, selection, and exploration. However, this operation largely breaks down in mod- ern data systems where access is governed by ranking functions rather than static keys. In such systems, data items are ordered by a query-specific ,user-specific , ormachine-generated scoring function,1 often dynamically defined over high-dimensional feature spaces. Yet, accessing the items at arbitrary rank positions or within a rank window typically requires fully materializing or sequentially scanning the ranked list, using operations such as get-next . This limitation arises across a wide range of data-driven applica- tions, including database systems, interactive data exploration and analytics tools, information retrieval and recommendation systems, and machine learning pipelines [ 13,19,21,33,42,84]. Common scenarios include database queries on derived attributes[ 64,68], 1Also known as ranking functions.analytical exploration for business decisions [ 68], paged naviga- tion of search results [ 33], browsing ranked product lists in e- commerce [ 78], and scrolling through personalized feeds on social platforms [65]. A concrete example arises in web application APIs, which im- plement this through paged or offset-based navigation: Example 1. In web and e-commerce applications, APIs commonly useoffset-based pagination . For instance, a request such as [GET /items?offset=400&limit=5] retrieves items ranked 401\u2013405. More generally, this pattern requires efficient retrieval of results at deeper ranks without scanning all earlier entries [78, 90]. Similar scenarios also arise in data science and visual analyt- ics tooling, where analysts frequently interact with large, ranked datasets. Tools such as spreadsheets, notebooks, and visual analyt- ics platforms provide intuitive interfaces for exploration [ 30,82, 86,100], but the explosive growth of data volumes driven by big data and AI has placed heavy demands on their efficiency and re- sponsiveness [ 17]. For example, while using data science workflows such as Jupyter notebooks [ 62], analysts may need random access to particular ranks or quantiles (e.g., 10th, 20th, etc.) in a sorted dataframe, effectively skipping earlier-ranked items. Beyond ranked retrieval, closely related challenges arise in simi- larity search, where items are ordered by their distance or similarity to a query object. Example 2. In similarity search applications, such as nearest- neighbor queries over high-dimensional embeddings, items are ranked by their similarity to a query point. While existing systems efficiently retrieve the top- \ud835\udc58most similar items, users and downstream applica- tions may need to access items at arbitrary similarity ranks or within specific distance bands. For example, an analyst may wish to exam- ine the points whose similarity lies within a narrow range around a decision boundary. Traditionally, research on ranked retrieval has focused on top-\ud835\udc58 query processing, where the goal is to identify the highest-ranked tuples [ 34,44,53,54]. In this setting, results are retrieved sequen- tially from the top of the ranking up to position \ud835\udc58, where\ud835\udc58is typically a small constant relative to the dataset size. Similarly, in the context of similarity search, \ud835\udc58-nearest neighbor (kNN) search aims to retrieve the \ud835\udc58most similar points to a query [ 70,79,97]. These approaches are designed for small values of \ud835\udc58and, as shown in our evaluations, become ineffective for random-access queries that seek to retrieve a tuple at an arbitrary rank position \ud835\udc56, where\ud835\udc56 may be as large as \ud835\udc42(\ud835\udc5b).",
-    "technical_score": 0.05726025764044245,
-    "citation_score": 0.033725913456462635
+    "technical_score": 0.025010328694754103,
+    "citation_score": 0.014320430139738237
   },
   {
     "section_path": [
       "Introduction"
     ],
     "paragraph_index": 2,
-    "paragraph": "Conference\u201917, July 2017, Washington, DC, USA Mohsen Dehghankar, Abolfazl Asudeh, Raghav Mittal, Suraj Shetiya, and Gautam Das Direct access to conjunctive queries in database systems has been studied to directly access a specific position in the join re- sult, without fully materializing the join [ 14,23,42,93]. However, these works assume a prespecified ordering of the tuples (e.g., lex- icographic order on an attribute) and focus on skipping the join operation. As a result, such approaches are not suitable for settings where the ranking function is part of the input query.2 Contributions . In this paper, we formalize and study the Random- Access Ranked Retrieval (RAR ) problem and the Random-Access Similarity Search problem ( RAS) (Section 3). We show a reduction from RAS toRAR problem. Next, we propose an algorithm for RAR that uses computational geometric concepts of duality, arrange- ments, and levels of arrangements. However, this algorithm suffers from the curse of dimensionality, and its space complexity increases exponentially with dimension (Appendix E). Consequently, we propose several algorithms with linear space complexity even for a large number of attributes, based on the con- cept of\ud835\udf00-samples (Section 6). We start from the two-dimensional case and extend our algorithm to higher dimensions by combining it with the stripe range searching problem. This approach offers an efficient solution for finding a conformal set for an arbitrary rank position. Efficiently finding the tuples within a narrow stripe range is fundamental in the development of our solution. We formulate this as the stripe range retrieval (SRR) problem, focusing on devel- oping efficient algorithms for the challenging narrow ranges that contain only a few tuples. Inspired by the Hierarchical Navigable Small World graphs for approximate nearest neighbor search [ 37,70], our practical and scalable algorithm constructs a hierarchical sampling structure for answering SRR, maintaining the neighborhood regions of points in the hierarchy using smallest enclosing balls (Section 6.3). Theoretically, we show that our algorithms achieve near-optimal efficiency up to a logarithmic factor (Appendix L). In addition, we conduct extensive experiments on real-world and synthetic datasets to evaluate the performance of our algorithms in practice and com- pare them with existing baselines (Section 7). Our experiments confirm the efficiency and scalability of our proposed algorithms. In particular, the \ud835\udf00-sampling algorithm, when combined with the hierarchical structure, achieves the best scalability with respect to both dimension and dataset size in terms of query time and index size, whereas the baseline methods are mostly affected by the curse of dimensionality. Due to space limitations, we defer extended discussions on appli- cations, related work, more general settings (including dynamic and non-linear scoring functions), additional experiments, and omitted proofs and pseudocode to the",
-    "technical_score": 0.08468479628362299,
-    "citation_score": 0.0019030291299690556
+    "paragraph": "Direct access to conjunctive queries in database systems has been studied to directly access a specific position in the join re- sult, without fully materializing the join [ 14,23,42,93]. However, these works assume a prespecified ordering of the tuples (e.g., lex- icographic order on an attribute) and focus on skipping the join operation. As a result, such approaches are not suitable for settings where the ranking function is part of the input query.2 Contributions . In this paper, we formalize and study the Random- Access Ranked Retrieval (RAR ) problem and the Random-Access Similarity Search problem ( RAS) (Section 3). We show a reduction from RAS toRAR problem. Next, we propose an algorithm for RAR that uses computational geometric concepts of duality, arrange- ments, and levels of arrangements. However, this algorithm suffers from the curse of dimensionality, and its space complexity increases exponentially with dimension (Appendix E). Consequently, we propose several algorithms with linear space complexity even for a large number of attributes, based on the con- cept of\ud835\udf00-samples (Section 6). We start from the two-dimensional case and extend our algorithm to higher dimensions by combining it with the stripe range searching problem. This approach offers an efficient solution for finding a conformal set for an arbitrary rank position. Efficiently finding the tuples within a narrow stripe range is fundamental in the development of our solution. We formulate this as the stripe range retrieval (SRR) problem, focusing on devel- oping efficient algorithms for the challenging narrow ranges that contain only a few tuples. Inspired by the Hierarchical Navigable Small World graphs for approximate nearest neighbor search [ 37,70], our practical and scalable algorithm constructs a hierarchical sampling structure for answering SRR, maintaining the neighborhood regions of points in the hierarchy using smallest enclosing balls (Section 6.3). Theoretically, we show that our algorithms achieve near-optimal efficiency up to a logarithmic factor (Appendix L). In addition, we conduct extensive experiments on real-world and synthetic datasets to evaluate the performance of our algorithms in practice and com- pare them with existing baselines (Section 7). Our experiments confirm the efficiency and scalability of our proposed algorithms. In particular, the \ud835\udf00-sampling algorithm, when combined with the hierarchical structure, achieves the best scalability with respect to both dimension and dataset size in terms of query time and index size, whereas the baseline methods are mostly affected by the curse of dimensionality. Due to space limitations, we defer extended discussions on appli- cations, related work, more general settings (including dynamic and non-linear scoring functions), additional experiments, and omitted proofs and pseudocode to the",
+    "technical_score": 0.02101233551801861,
+    "citation_score": 0.0013006951876748866
   },
   {
     "section_path": [
@@ -23,7 +23,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Random-access ranked retrieval ( RAR ) arises naturally across a broad range of modern data systems that rely on query-dependent",
-    "technical_score": 0.08782343068673373,
+    "technical_score": 0.16842854176233332,
     "citation_score": 0.0
   },
   {
@@ -32,7 +32,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In this section, we summarize the key concepts and definitions used in this paper. We assume to be given a range space (D,R), where Dis the dataset, andRis a collection of geometric ranges defined overD, such as all possible balls, half-spaces, or other ranges.",
-    "technical_score": 0.0047912826934733066,
+    "technical_score": 0.001119200405164204,
     "citation_score": 0.0
   },
   {
@@ -40,36 +40,45 @@
       "Background"
     ],
     "paragraph_index": 2,
-    "paragraph": "for a range space is the size of the largest subset \ud835\udc36\u2286 D such that every subset of \ud835\udc36can be realized as the intersection of \ud835\udc36with some range inR. A low VC-dimension implies a limited expressive power, which in turn allows for efficient sampling-based approxi- mations [50]. \ud835\udf00-Samples . An\ud835\udf00-sample of a range space (D,R)is a subsetN\u2286D such that, for every range \ud835\udc45\u2208R, the proportion of points in \ud835\udc45is approximately preserved in N. More formally,Nis an\ud835\udf00-sample if |N||\ufe01|\ufe01|\ufe01|\ufe01\u2264\ud835\udf00.",
-    "technical_score": 0.016227811201786676,
-    "citation_score": 0.011325523907924332
+    "paragraph": "for a range space is the size of the largest subset \ud835\udc36\u2286 D such that every subset of \ud835\udc36can be realized as the intersection of \ud835\udc36with some range inR. A low VC-dimension implies a limited expressive power, which in turn allows for efficient sampling-based approxi- mations [50].",
+    "technical_score": 0.0008601885483266082,
+    "citation_score": 0.001858177248363797
   },
   {
     "section_path": [
       "Background"
     ],
     "paragraph_index": 3,
-    "paragraph": "For more details on \ud835\udf00-sampling, we refer the reader to [ 50]. We use the following foundational theorem on \ud835\udf00-samples as a key tool in deriving our theoretical guarantees:",
-    "technical_score": 0.004448989749963011,
-    "citation_score": 0.004988261234807013
-  },
-  {
-    "section_path": [
-      "Background"
-    ],
-    "paragraph_index": 4,
-    "paragraph": "Theorem 3 ( \ud835\udf00-sample theorem [ 95]).Let(D,R)be a range space of VC-dimension \ud835\udeff. Then for any \ud835\udf00,\ud835\udf11\u2208(0,1), a random sample",
-    "technical_score": 0.01789117127408768,
+    "paragraph": "\ud835\udf00-Samples . An\ud835\udf00-sample of a range space (D,R)is a subsetN\u2286D such that, for every range \ud835\udc45\u2208R, the proportion of points in \ud835\udc45is approximately preserved in N. More formally,Nis an\ud835\udf00-sample if |N||\ufe01|\ufe01|\ufe01|\ufe01\u2264\ud835\udf00.",
+    "technical_score": 0.007195782757073327,
     "citation_score": 0.0
   },
   {
     "section_path": [
       "Background"
     ],
+    "paragraph_index": 4,
+    "paragraph": "For more details on \ud835\udf00-sampling, we refer the reader to [ 50]. We use the following foundational theorem on \ud835\udf00-samples as a key tool in deriving our theoretical guarantees:",
+    "technical_score": 0.0006956426576407484,
+    "citation_score": 0.0020276971351690077
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
     "paragraph_index": 5,
+    "paragraph": "Theorem 3 ( \ud835\udf00-sample theorem [ 95]).Let(D,R)be a range space of VC-dimension \ud835\udeff. Then for any \ud835\udf00,\ud835\udf11\u2208(0,1), a random sample",
+    "technical_score": 0.009981784645324787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 6,
     "paragraph": "\ud835\udeff \ud835\udf002log\ud835\udeff \ud835\udf00+\ud835\udeff \ud835\udf002log\ud835\udeff \ud835\udf11)\ufe02 is an\ud835\udf00-sample of(D,R)with probability at least 1\u2212\ud835\udf11. \u25a1 In addition to random sampling, which provides a probabilistic method for constructing \ud835\udf00-samples, there also exist deterministic construction algorithms based on discrepancy theory [27, 50].5",
-    "technical_score": 0.014166500764111105,
-    "citation_score": 0.007496273371217893
+    "technical_score": 0.0009239907578336637,
+    "citation_score": 0.0019355955059978675
   },
   {
     "section_path": [
@@ -77,8 +86,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In this section, we provide a high-level overview of our proposed algorithms and summarize their theoretical guarantees. The baseline approach for answering the RAR queries uses the extension of the classic divide and conquer (D&C) median find- ing algorithm, which, instead of the median, finds the element at position\ud835\udc56[18,31]. To do so, it first makes a linear pass over D, and for each point \ud835\udc5d, computes score\ud835\udc53(\ud835\udc5d). Then, using the D&C algorithm, it finds rank\u22121",
-    "technical_score": 0.04123475686737581,
-    "citation_score": 0.014664473392975197
+    "technical_score": 0.025476271189621116,
+    "citation_score": 0.012940328223299614
   },
   {
     "section_path": [
@@ -86,7 +95,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "also provides a randomized version of this baseline. Instead, our algorithms, summarized in Table 1, provide more efficient solutions by preprocessing the data and constructing proper data structures:",
-    "technical_score": 0.05133613023730227,
+    "technical_score": 0.0650254986217904,
     "citation_score": 0.0
   },
   {
@@ -95,7 +104,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "KthLevel . Our first algorithm for solving the RAR problem uses",
-    "technical_score": 0.04377614274037007,
+    "technical_score": 0.06797960837566147,
     "citation_score": 0.0
   },
   {
@@ -105,7 +114,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "tings. Our implementation is available at this anonymous repository .",
-    "technical_score": 0.06255998414548136,
+    "technical_score": 0.020239555096091953,
     "citation_score": 0.0
   },
   {
@@ -115,7 +124,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "tings. Our implementation is available at this anonymous repository .",
-    "technical_score": 0.11267450192955256,
+    "technical_score": 0.08631969193300143,
     "citation_score": 0.0
   },
   {
@@ -124,7 +133,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We studied the problem of Random-Access Ranked Retrieval ( RAR) and Random-Access Similarity Search ( RAS). We showed that RAS can be reduced to RAR . For solving the general RAR problem, we first proposed an algorithm based on geometric arrangements with logarithmic query time but an exponential space complexity. Next, we proposed our space-efficient algorithms based on \ud835\udf00-samples. By providing a hierarchical sampling-based data structure for efficient stripe-range retrieval, we developed a practical algorithm for the relaxed\ud835\udf05-RAR problem that scales to hundreds of dimensions.",
-    "technical_score": 0.11425768107180113,
+    "technical_score": 0.09701914892994716,
     "citation_score": 0.0
   }
 ]

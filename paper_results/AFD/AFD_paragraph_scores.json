@@ -4,18 +4,72 @@
       "Introduction"
     ],
     "paragraph_index": 1,
-    "paragraph": "Functional dependencies (FDs) state that some attribute(s) in a relational instance functionally determine the value of another at- tribute. They are useful for discovery of hidden patterns, data clean- ing [28\u201330,33], or predictive modeling [ 26]. However, in real-world databases, functional dependencies are often approximate. The no- tion of approximate functional dependencies (AFDs) is defined by Kivinen et al. [ 21] to overcome this and has found significant re- search interests [ 5,22,23]. Given a set of attributes \ud835\udc4b(on the left hand side) and the \u201cright hand side \" attribute\ud835\udc4d, AFD measures the error of the given dependency ( \ud835\udc4b\u2192\ud835\udc4d). Kivinen et al. [ 21] propose three different error measures for error in AFDs - \ud835\udc541,\ud835\udc542and\ud835\udc543. We approach the problem of identifying AFDs in scenarios, where some limited distributional information about the data is available, but accessing actual data records incurs cost. This setting is common in data marketplaces[ 7,13], platforms like AWS Data Exchange, Datarade, and Data & Sons, etc. In these marketplaces, individual attribute distributions are provided to help potential buyers assess the usefulness of datasets, but accessing more records from the database incurs incremental costs. Our work is also rele- vant for analytics over deep web databases [ 3,11,46], where vast repositories of data are accessible only through restricted web inter- faces. Examples include platforms like Kayak, Expedia, Hotels.com, or Amazon, which display attribute-level metadata\u2014such as distri- butions of flight prices, departure times, or number of stops\u2014but limit direct access to data by showing only the top-k results per query. Moreover, these interfaces often impose constraints on the number of allowable queries, further restricting full data access. In such constrained environments, where accessing full datasets is impractical or expensive, our work provides techniques to discover AFDs without requiring extensive data access. We present a computational framework under the following settings: (a) frequency distributions of the individual attributes are known apriori to the framework; (b) access to the database is enabled through a getNext() [ 43] interface that returns the next data record, or the next small batch of data records when invoked, but how the actual data is stored and organized is unknown to the 2386",
-    "technical_score": 0.04520700066298352,
-    "citation_score": 0.03252261156609108
+    "paragraph": "Functional dependencies (FDs) state that some attribute(s) in a relational instance functionally determine the value of another at- tribute. They are useful for discovery of hidden patterns, data clean- ing [28\u201330,33], or predictive modeling [ 26]. However, in real-world databases, functional dependencies are often approximate. The no- tion of approximate functional dependencies (AFDs) is defined by Kivinen et al. [ 21] to overcome this and has found significant re- search interests [ 5,22,23]. Given a set of attributes \ud835\udc4b(on the left hand side) and the \u201cright hand side \" attribute\ud835\udc4d, AFD measures the error of the given dependency ( \ud835\udc4b\u2192\ud835\udc4d). Kivinen et al. [ 21] propose three different error measures for error in AFDs - \ud835\udc541,\ud835\udc542and\ud835\udc543. We approach the problem of identifying AFDs in scenarios, where some limited distributional information about the data is available, but accessing actual data records incurs cost. This setting is common in data marketplaces[ 7,13], platforms like AWS Data Exchange, Datarade, and Data & Sons, etc. In these marketplaces, individual attribute distributions are provided to help potential buyers assess the usefulness of datasets, but accessing more records from the database incurs incremental costs. Our work is also rele- vant for analytics over deep web databases [ 3,11,46], where vast repositories of data are accessible only through restricted web inter- faces. Examples include platforms like Kayak, Expedia, Hotels.com, or Amazon, which display attribute-level metadata\u2014such as distri- butions of flight prices, departure times, or number of stops\u2014but limit direct access to data by showing only the top-k results per query. Moreover, these interfaces often impose constraints on the number of allowable queries, further restricting full data access. In such constrained environments, where accessing full datasets is impractical or expensive, our work provides techniques to discover AFDs without requiring extensive data access.",
+    "technical_score": 0.004989076578041171,
+    "citation_score": 0.015798742497130373
   },
   {
     "section_path": [
       "Introduction"
     ],
     "paragraph_index": 2,
-    "paragraph": "KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das framework; and (c) more getNext() calls incur more cost and hence it is better to minimize those calls. Problems & Contributions. Anytime AFDs. We initiate the problem of designing anytime algorithms for computing AFDs in a relation considering three different error measures [ 21], where the actual records are read one by one, or in small batches. Anytime algorithms [ 2,47] are designed to progressively improve the quality of their results as more computation time becomes available, while still being capable of returning a valid (though possibly subopti- mal) solution if interrupted at any stage. Our proposed algorithms fall within a subclass of anytime algorithms that begin producing outputs after reading only a small portion of the data. A formal definition is provided in Section 2. We study two problem variants. \u2022[top-\ud835\udc58length\u2113-AFDs.] At any point during reading the records, retrieve the top- \ud835\udc58AFDs (i.e., the \ud835\udc58AFDs with the smallest errors), each with exactly \u2113attributes at the left-hand side, where \ud835\udc58and \u2113are application defined tunable input parameters. \u2022[Minimal\ud835\udf16-AFDs.] At any point during reading the records, determine all minimal AFDs (an AFD is minimal when no proper subset of it has error \u2264\ud835\udf16) where\ud835\udf16is an application defined threshold. Our proposed overarching solution framework designs a powerset lattice of all but the right hand size attribute \ud835\udc4d, where each attribute set\ud835\udc4bforms a candidate AFD, representing \ud835\udc4b\u2192\ud835\udc4d. To identify Minimal\ud835\udf16-AFDs, the search starts with the AFD candidates that are at the bottom of the lattice, gradually makes its way up level by level, and makes a decision whether to keep the candidate AFD or prune it. For top- \ud835\udc58length-\u2113AFDs, the algorithm identifies all size- \u2113 AFD\u2019s and makes decisions whether to prune a candidate AFD. Sub-problems and designed solutions. Recall that our goal is to design an anytime solution framework where we wish to return the top AFDs for the entire relation even when only a subset of records are read. This requires determining which AFDs are likely to be the solution and eliminating those that cannot be. This decision- making process is facilitated by calculating guaranteed upper and lower bounds for the error for the candidate AFDs, which is a central contribution of our work. We define two core sub-problems: Given \ud835\udc5bout of\ud835\udc41records have been read, the Maximum Error Estimate, which calculates the upper bound on the error of an AFD for a given error measure, and the Minimum Error Estimate, which calculates the lower bound. We explore various optimization techniques for both problems across three error measures ( \ud835\udc541,\ud835\udc542, and\ud835\udc543), using methods, like, mixed integer linear programming (MILP), linear programming, greedy algorithms, and quadratic programming. Additionally, we provide additive approximation guarantees for the \ud835\udc543error measure and discuss strategies to further improve scalability. We then present algorithms for our two main problems that make use of the upper and lower bounds. We propose an exact al- gorithm ESCA for the top- \ud835\udc58length\u2113-AFDs problem that generates a prefix\ud835\udc58\u2032(with\ud835\udc58\u2032\u2264\ud835\udc58) of AFDs, which grows as more records are processed. Additionally, we present an approximate solution based on estimations that consistently identifies \ud835\udc58AFDs, though they may not always be the true top- \ud835\udc58. This approach follows the unin- formed prior principle, assuming uniform error in unread records,but ensuring the final frequency distribution matches individual attribute distributions. We propose an exact algorithm EXEA for the Minimal \ud835\udf16-AFDs problem that explores the powerset lattice bottom-up, making deci- sions on whether to keep or prune candidate AFDs at each level. Unlike classical minimal AFD algorithms that assume full knowl- edge of the relation, we establish monotonic relationships between the upper and lower bounds of candidate AFDs and their ancestors. This enables our algorithm to guarantee that at any point, a proper subset of\ud835\udf16-AFDs is returned, with the subset growing as more records are read. We also present a solution based on estimations, which may not always identify the true minimal \ud835\udf16-AFDs but works well in practice and are highly efficient, relying on the principle of uninformed prior. Experimental Evaluations. We conduct extensive experimental evaluations using 3 real world and multiple synthetic datasets. We note that there does not exist any related work [ 22,23] that study anytime AFDs. Nevertheless, we adapt the state-of-the-art (SOTA) solution Pyro [ 23] which is not guaranteed to produce exact so- lutions, and compare against ours, wherever applicable. We also adapt a classical solution TANE [ 18] to produce exact solutions. We implement a machine learning based solution based on iterative pro- portional fitting for comparison [ 40]. Our evaluations reveal three key findings: (a) We illustrate the applicability of each algorithm across different data organization strategies, comparing scenarios where data is indexed by key or key-like attributes versus cases where it is not. Our findings indicate that our proposed solutions that estimate error based on both read and unread data outperform the others convincingly. (b) Our proposed algorithms are highly effective - after reading about 40% of the data, they achieve high pre- cision and NDCG score. (c) The efficiency opportunities discussed work well in practice and the bound computation becomes scalable. 2",
-    "technical_score": 0.026067885018411903,
-    "citation_score": 0.007878825594249877
+    "paragraph": "We present a computational framework under the following settings: (a) frequency distributions of the individual attributes are known apriori to the framework; (b) access to the database is enabled through a getNext() [ 43] interface that returns the next data record, or the next small batch of data records when invoked, but how the actual data is stored and organized is unknown to the",
+    "technical_score": 0.013075206187325614,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "framework; and (c) more getNext() calls incur more cost and hence it is better to minimize those calls.",
+    "technical_score": 0.013731902471941936,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "problem of designing anytime algorithms for computing AFDs in a relation considering three different error measures [ 21], where the actual records are read one by one, or in small batches. Anytime algorithms [ 2,47] are designed to progressively improve the quality of their results as more computation time becomes available, while still being capable of returning a valid (though possibly subopti- mal) solution if interrupted at any stage. Our proposed algorithms fall within a subclass of anytime algorithms that begin producing outputs after reading only a small portion of the data. A formal definition is provided in Section 2. We study two problem variants. \u2022[top-\ud835\udc58length\u2113-AFDs.] At any point during reading the records, retrieve the top- \ud835\udc58AFDs (i.e., the \ud835\udc58AFDs with the smallest errors), each with exactly \u2113attributes at the left-hand side, where \ud835\udc58and \u2113are application defined tunable input parameters. \u2022[Minimal\ud835\udf16-AFDs.] At any point during reading the records, determine all minimal AFDs (an AFD is minimal when no proper subset of it has error \u2264\ud835\udf16) where\ud835\udf16is an application defined threshold.",
+    "technical_score": 0.00885281703995342,
+    "citation_score": 0.006626984520797085
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Our proposed overarching solution framework designs a powerset lattice of all but the right hand size attribute \ud835\udc4d, where each attribute set\ud835\udc4bforms a candidate AFD, representing \ud835\udc4b\u2192\ud835\udc4d. To identify Minimal\ud835\udf16-AFDs, the search starts with the AFD candidates that are at the bottom of the lattice, gradually makes its way up level by level, and makes a decision whether to keep the candidate AFD or prune it. For top- \ud835\udc58length-\u2113AFDs, the algorithm identifies all size- \u2113 AFD\u2019s and makes decisions whether to prune a candidate AFD. Sub-problems and designed solutions. Recall that our goal is to design an anytime solution framework where we wish to return the top AFDs for the entire relation even when only a subset of records are read. This requires determining which AFDs are likely to be the solution and eliminating those that cannot be. This decision- making process is facilitated by calculating guaranteed upper and lower bounds for the error for the candidate AFDs, which is a central contribution of our work.",
+    "technical_score": 0.027932632007440505,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "We define two core sub-problems: Given \ud835\udc5bout of\ud835\udc41records have been read, the Maximum Error Estimate, which calculates the upper bound on the error of an AFD for a given error measure, and the Minimum Error Estimate, which calculates the lower bound. We explore various optimization techniques for both problems across three error measures ( \ud835\udc541,\ud835\udc542, and\ud835\udc543), using methods, like, mixed integer linear programming (MILP), linear programming, greedy algorithms, and quadratic programming. Additionally, we provide additive approximation guarantees for the \ud835\udc543error measure and discuss strategies to further improve scalability. We then present algorithms for our two main problems that make use of the upper and lower bounds. We propose an exact al- gorithm ESCA for the top- \ud835\udc58length\u2113-AFDs problem that generates a prefix\ud835\udc58\u2032(with\ud835\udc58\u2032\u2264\ud835\udc58) of AFDs, which grows as more records are processed. Additionally, we present an approximate solution based on estimations that consistently identifies \ud835\udc58AFDs, though they may not always be the true top- \ud835\udc58. This approach follows the unin- formed prior principle, assuming uniform error in unread records,but ensuring the final frequency distribution matches individual attribute distributions.",
+    "technical_score": 0.021103549976199378,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "We propose an exact algorithm EXEA for the Minimal \ud835\udf16-AFDs problem that explores the powerset lattice bottom-up, making deci- sions on whether to keep or prune candidate AFDs at each level. Unlike classical minimal AFD algorithms that assume full knowl- edge of the relation, we establish monotonic relationships between the upper and lower bounds of candidate AFDs and their ancestors. This enables our algorithm to guarantee that at any point, a proper subset of\ud835\udf16-AFDs is returned, with the subset growing as more records are read. We also present a solution based on estimations, which may not always identify the true minimal \ud835\udf16-AFDs but works well in practice and are highly efficient, relying on the principle of uninformed prior.",
+    "technical_score": 0.01929503118274784,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Experimental Evaluations. We conduct extensive experimental evaluations using 3 real world and multiple synthetic datasets. We note that there does not exist any related work [ 22,23] that study anytime AFDs. Nevertheless, we adapt the state-of-the-art (SOTA) solution Pyro [ 23] which is not guaranteed to produce exact so- lutions, and compare against ours, wherever applicable. We also adapt a classical solution TANE [ 18] to produce exact solutions. We implement a machine learning based solution based on iterative pro- portional fitting for comparison [ 40]. Our evaluations reveal three key findings: (a) We illustrate the applicability of each algorithm across different data organization strategies, comparing scenarios where data is indexed by key or key-like attributes versus cases where it is not. Our findings indicate that our proposed solutions that estimate error based on both read and unread data outperform the others convincingly. (b) Our proposed algorithms are highly effective - after reading about 40% of the data, they achieve high pre- cision and NDCG score. (c) The efficiency opportunities discussed work well in practice and the bound computation becomes scalable.",
+    "technical_score": 0.008164213788034079,
+    "citation_score": 0.01066793898848387
   },
   {
     "section_path": [
@@ -23,8 +77,8 @@
       "Data model"
     ],
     "paragraph_index": 1,
-    "paragraph": "Database. Consider a database Dwith\ud835\udc41tuples and\ud835\udc51categorical attributes (A={\ud835\udc341,\ud835\udc342,\u00b7\u00b7\u00b7,\ud835\udc34\ud835\udc51}). We refer to the \ud835\udc56\ud835\udc61\u210etuple as\ud835\udc61\ud835\udc56 and value for the \ud835\udc57\ud835\udc61\u210eattribute for tuple \ud835\udc61\ud835\udc56as\ud835\udc61\ud835\udc56[\ud835\udc57]. getNext(). The access toDis performed by making getNext() calls that returns the next record from the database. How data is stored inDis unknown, and getNext() calls are expensive. Domain of an attribute. \ud835\udc5a\ud835\udc34is the size of the domain of attribute \ud835\udc34which is the number of unique values \ud835\udc34can take. Domain size of \ud835\udc5aFirst Name =4. 2387",
-    "technical_score": 0.014619712156021874,
+    "paragraph": "Database. Consider a database Dwith\ud835\udc41tuples and\ud835\udc51categorical attributes (A={\ud835\udc341,\ud835\udc342,\u00b7\u00b7\u00b7,\ud835\udc34\ud835\udc51}). We refer to the \ud835\udc56\ud835\udc61\u210etuple as\ud835\udc61\ud835\udc56 and value for the \ud835\udc57\ud835\udc61\u210eattribute for tuple \ud835\udc61\ud835\udc56as\ud835\udc61\ud835\udc56[\ud835\udc57]. getNext(). The access toDis performed by making getNext() calls that returns the next record from the database. How data is stored inDis unknown, and getNext() calls are expensive. Domain of an attribute. \ud835\udc5a\ud835\udc34is the size of the domain of attribute \ud835\udc34which is the number of unique values \ud835\udc34can take. Domain size of \ud835\udc5aFirst Name =4.",
+    "technical_score": 0.02557448916876523,
     "citation_score": 0.0
   },
   {
@@ -33,9 +87,9 @@
       "Data model"
     ],
     "paragraph_index": 2,
-    "paragraph": "Anytime Algorithms for Approximate Functional Dependencies KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Known Frequency/Marginal distributions. The frequency/ mar- ginal distribution of each \ud835\udc34\u2208A is known to the framework. Let \ud835\udc5abe the domain size of an attribute \ud835\udc34, where\ud835\udc53\u2113represents the frequency of the \u2113-th value of the domain, such that \u03a3\ud835\udc5a \u2113=1\ud835\udc53\u2113=\ud835\udc41. Us- ing the running example, \ud835\udc5aof Gender is 2,\ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52=3,\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =3, \ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52+\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =6. Attribute set \ud835\udc4b, attribute \ud835\udc4d.\ud835\udc4bis a set of attributes \ud835\udc4b\u2282\ud835\udc34, but \ud835\udc4dis a single special attribute, \ud835\udc4d\u2282\ud835\udc34,\ud835\udc4b\u00d1\ud835\udc4d={},|\ud835\udc4d|=1.M\ud835\udc4b,\ud835\udc4d A represents the set of marginal distributions of attribute X and Z. Using the running example, marginal distribution of (First Name) is\ud835\udc53(\ud835\udc34\ud835\udc59\ud835\udc52\ud835\udc65)=2,\ud835\udc53(\ud835\udc3d\ud835\udc5c\u210e\ud835\udc5b)=2,\ud835\udc53(\ud835\udc3d\ud835\udc4e\ud835\udc5b\ud835\udc52)=1,\ud835\udc53(\ud835\udc47\ud835\udc56\ud835\udc4e)=1. Marginal distribution of Gender is\ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52=3,\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =3. However, the joint distribution of these two attributes are not known until the full database is read. Functional Dependency: Given a database D, set of attributes \ud835\udc4b\u2282A and\ud835\udc4d\u2208A, a functional dependency from \ud835\udc4bto\ud835\udc4dis written as\ud835\udc4b\u2192\ud835\udc4d. The dependency \ud835\udc4b\u2192\ud835\udc4d(read as\ud835\udc4bdetermines \ud835\udc4d) holds, if for all pair of tuples that agree on \ud835\udc4balso agree on \ud835\udc4d, i.e., when\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b], then\ud835\udc61\ud835\udc56[\ud835\udc4d]=\ud835\udc61\ud835\udc57[\ud835\udc4d]. Using Example 1, the only FDs that exist are Tuple Id\u2192any of the 4 other attributes . Clearly, FDs involving Tuple Id are not useful. Violation: For a given database D, set of attributes \ud835\udc4b\u2282A and \ud835\udc4d\u2208 A , two tuples \ud835\udc61\ud835\udc56and\ud835\udc61\ud835\udc57are considered a violating pair if \ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b]but\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]. A tuple\ud835\udc61\ud835\udc56is called violating if it is a part of some violating pair. Using Table 1, (\ud835\udc611,\ud835\udc615)is a violating pair: \ud835\udc611[\ud835\udc39\ud835\udc56\ud835\udc5f\ud835\udc60\ud835\udc61\ud835\udc41\ud835\udc4e\ud835\udc5a\ud835\udc52]=\ud835\udc615[\ud835\udc39\ud835\udc56\ud835\udc5f\ud835\udc60\ud835\udc61\ud835\udc41\ud835\udc4e\ud835\udc5a\ud835\udc52]but\ud835\udc611[\ud835\udc3a\ud835\udc52\ud835\udc5b\ud835\udc51\ud835\udc52\ud835\udc5f]\u2260\ud835\udc615[\ud835\udc3a\ud835\udc52\ud835\udc5b\ud835\udc51\ud835\udc52\ud835\udc5f]. Approximate Functional Dependency: Given a dataset D, a set of attributes \ud835\udc4b\u2282Aand the (\u201cright-hand side \") attribute \ud835\udc4d, AFD determines the error for the given dependency ( \ud835\udc4b\u2192\ud835\udc4d). In this work, we look at three different error measures defined in Kivinen et. al. [ 21]. The definitions of the three errors \ud835\udc3a1,\ud835\udc3a2 and\ud835\udc3a3and their corresponding scaled measures ( \ud835\udc541,\ud835\udc542and\ud835\udc543) are defined below \u2022\ud835\udc3a1error: The number of violating pairs in D. \ud835\udc3a1(\ud835\udc4b\u2192\ud835\udc4d,D)=|{(\ud835\udc61\ud835\udc56,\ud835\udc61\ud835\udc57)|\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b],\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]}| \ud835\udc541(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a1(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc412 \u2022\ud835\udc3a2error: the number of violating tuples in D. \ud835\udc3a2(\ud835\udc4b\u2192\ud835\udc4d,D)=|{\ud835\udc61\ud835\udc56|\u2203\ud835\udc61\ud835\udc57\u2208D,\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b],\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]}| \ud835\udc542(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a2(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc41 \u2022\ud835\udc3a3error: The number of tuples that have to be deleted to satisfy the functional dependency in D. \ud835\udc3a3(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc41\u2212\ud835\udc5a\ud835\udc4e\ud835\udc65{|\ud835\udc60||\ud835\udc60\u2208D, \ud835\udc60|=\ud835\udc4b\u2192\ud835\udc4d} \ud835\udc543(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a3(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc41 The|=operator refers to all \ud835\udc60for which the functional dependency \ud835\udc4b\u2192\ud835\udc4dholds. Note that the scaled errors \ud835\udc541,\ud835\udc542and,\ud835\udc543are in the range of[0,1]. Additionally, \ud835\udc541error has also been formulated [ 23] by normalizing with \ud835\udc41(\ud835\udc41\u22121). While we use the notion from Kivi- nen et al. [ 21], our proposed approaches work with both measures. The AFD First name \u2192Gender has one violating pair (Alex,m) and (Alex, f). As \ud835\udc541error counts the number of such pairs and there is only 1violating pair the \ud835\udc541error is 2/36.\ud835\udc542error counts the number of records which are in violation and hence is 2/6. For the FD to hold, deleting either (Alex,m) or (Alex, f) would suffice. Hence,\ud835\udc543error is 1/6.2.2",
-    "technical_score": 0.0066037844104322166,
-    "citation_score": 0.00414656230422488
+    "paragraph": "Known Frequency/Marginal distributions. The frequency/ mar- ginal distribution of each \ud835\udc34\u2208A is known to the framework. Let \ud835\udc5abe the domain size of an attribute \ud835\udc34, where\ud835\udc53\u2113represents the frequency of the \u2113-th value of the domain, such that \u03a3\ud835\udc5a \u2113=1\ud835\udc53\u2113=\ud835\udc41. Us- ing the running example, \ud835\udc5aof Gender is 2,\ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52=3,\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =3, \ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52+\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =6. Attribute set \ud835\udc4b, attribute \ud835\udc4d.\ud835\udc4bis a set of attributes \ud835\udc4b\u2282\ud835\udc34, but \ud835\udc4dis a single special attribute, \ud835\udc4d\u2282\ud835\udc34,\ud835\udc4b\u00d1\ud835\udc4d={},|\ud835\udc4d|=1.M\ud835\udc4b,\ud835\udc4d A represents the set of marginal distributions of attribute X and Z. Using the running example, marginal distribution of (First Name) is\ud835\udc53(\ud835\udc34\ud835\udc59\ud835\udc52\ud835\udc65)=2,\ud835\udc53(\ud835\udc3d\ud835\udc5c\u210e\ud835\udc5b)=2,\ud835\udc53(\ud835\udc3d\ud835\udc4e\ud835\udc5b\ud835\udc52)=1,\ud835\udc53(\ud835\udc47\ud835\udc56\ud835\udc4e)=1. Marginal distribution of Gender is\ud835\udc53\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52=3,\ud835\udc53\ud835\udc53\ud835\udc52\ud835\udc5a\ud835\udc4e\ud835\udc59\ud835\udc52 =3. However, the joint distribution of these two attributes are not known until the full database is read. Functional Dependency: Given a database D, set of attributes \ud835\udc4b\u2282A and\ud835\udc4d\u2208A, a functional dependency from \ud835\udc4bto\ud835\udc4dis written as\ud835\udc4b\u2192\ud835\udc4d. The dependency \ud835\udc4b\u2192\ud835\udc4d(read as\ud835\udc4bdetermines \ud835\udc4d) holds, if for all pair of tuples that agree on \ud835\udc4balso agree on \ud835\udc4d, i.e., when\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b], then\ud835\udc61\ud835\udc56[\ud835\udc4d]=\ud835\udc61\ud835\udc57[\ud835\udc4d]. Using Example 1, the only FDs that exist are Tuple Id\u2192any of the 4 other attributes . Clearly, FDs involving Tuple Id are not useful. Violation: For a given database D, set of attributes \ud835\udc4b\u2282A and \ud835\udc4d\u2208 A , two tuples \ud835\udc61\ud835\udc56and\ud835\udc61\ud835\udc57are considered a violating pair if \ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b]but\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]. A tuple\ud835\udc61\ud835\udc56is called violating if it is a part of some violating pair. Using Table 1, (\ud835\udc611,\ud835\udc615)is a violating pair: \ud835\udc611[\ud835\udc39\ud835\udc56\ud835\udc5f\ud835\udc60\ud835\udc61\ud835\udc41\ud835\udc4e\ud835\udc5a\ud835\udc52]=\ud835\udc615[\ud835\udc39\ud835\udc56\ud835\udc5f\ud835\udc60\ud835\udc61\ud835\udc41\ud835\udc4e\ud835\udc5a\ud835\udc52]but\ud835\udc611[\ud835\udc3a\ud835\udc52\ud835\udc5b\ud835\udc51\ud835\udc52\ud835\udc5f]\u2260\ud835\udc615[\ud835\udc3a\ud835\udc52\ud835\udc5b\ud835\udc51\ud835\udc52\ud835\udc5f]. Approximate Functional Dependency: Given a dataset D, a set of attributes \ud835\udc4b\u2282Aand the (\u201cright-hand side \") attribute \ud835\udc4d, AFD determines the error for the given dependency ( \ud835\udc4b\u2192\ud835\udc4d). In this work, we look at three different error measures defined in Kivinen et. al. [ 21]. The definitions of the three errors \ud835\udc3a1,\ud835\udc3a2 and\ud835\udc3a3and their corresponding scaled measures ( \ud835\udc541,\ud835\udc542and\ud835\udc543) are defined below \u2022\ud835\udc3a1error: The number of violating pairs in D. \ud835\udc3a1(\ud835\udc4b\u2192\ud835\udc4d,D)=|{(\ud835\udc61\ud835\udc56,\ud835\udc61\ud835\udc57)|\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b],\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]}| \ud835\udc541(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a1(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc412 \u2022\ud835\udc3a2error: the number of violating tuples in D. \ud835\udc3a2(\ud835\udc4b\u2192\ud835\udc4d,D)=|{\ud835\udc61\ud835\udc56|\u2203\ud835\udc61\ud835\udc57\u2208D,\ud835\udc61\ud835\udc56[\ud835\udc4b]=\ud835\udc61\ud835\udc57[\ud835\udc4b],\ud835\udc61\ud835\udc56[\ud835\udc4d]\u2260\ud835\udc61\ud835\udc57[\ud835\udc4d]}| \ud835\udc542(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a2(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc41 \u2022\ud835\udc3a3error: The number of tuples that have to be deleted to satisfy the functional dependency in D. \ud835\udc3a3(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc41\u2212\ud835\udc5a\ud835\udc4e\ud835\udc65{|\ud835\udc60||\ud835\udc60\u2208D, \ud835\udc60|=\ud835\udc4b\u2192\ud835\udc4d} \ud835\udc543(\ud835\udc4b\u2192\ud835\udc4d,D)=\ud835\udc3a3(\ud835\udc4b\u2192\ud835\udc4d,D)/\ud835\udc41 The|=operator refers to all \ud835\udc60for which the functional dependency \ud835\udc4b\u2192\ud835\udc4dholds. Note that the scaled errors \ud835\udc541,\ud835\udc542and,\ud835\udc543are in the range of[0,1]. Additionally, \ud835\udc541error has also been formulated [ 23] by normalizing with \ud835\udc41(\ud835\udc41\u22121). While we use the notion from Kivi- nen et al. [ 21], our proposed approaches work with both measures. The AFD First name \u2192Gender has one violating pair (Alex,m) and (Alex, f). As \ud835\udc541error counts the number of such pairs and there is only 1violating pair the \ud835\udc541error is 2/36.\ud835\udc542error counts the number of records which are in violation and hence is 2/6. For the FD to hold, deleting either (Alex,m) or (Alex, f) would suffice. Hence,\ud835\udc543error is 1/6.2.2",
+    "technical_score": 0.01287773968462797,
+    "citation_score": 0.013198680237515895
   },
   {
     "section_path": [
@@ -44,7 +98,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We define two broad classes of problems. [top-\ud835\udc58length\u2113-AFDs.] Given\ud835\udc5bout of\ud835\udc41records of theDare read, a tunable parameter \u2113, marginal distributions MAofA, an error measure ( \ud835\udc541,\ud835\udc542or\ud835\udc543), an integer \ud835\udc58, retrieve as a ranked list the top-\ud835\udc58AFDs having the least errors (along with their respective error scores, if possible) from among all AFDs having exactly \u2113 attributes in the left hand side (LHS).",
-    "technical_score": 0.007726444498267503,
+    "technical_score": 0.01031961303816227,
     "citation_score": 0.0
   },
   {
@@ -54,7 +108,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Practical choice of \u2113: Note that as the attributes on the LHS grows, the error monotonically decreases. However, having more attributes on the LHS does not necessarily provide meaningful insights on data quality and correlation. For instance, when all but one attribute is on the LHS, a trivial full functional dependency exist. That is why we introduce an input parameter \u2113, which constrains the maximum number of attributes allowed on the LHS. This parameter allows us to explore meaningful and compact dependencies while avoiding trivial cases.",
-    "technical_score": 0.012617224583487976,
+    "technical_score": 0.01436814353329433,
     "citation_score": 0.0
   },
   {
@@ -64,7 +118,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "[Minimal\ud835\udf16-AFDs.] Given\ud835\udc5bout of\ud835\udc41records of theDare read, marginal distributions MAofA, an error measure ( \ud835\udc541,\ud835\udc542or\ud835\udc543), and an error threshold \ud835\udf16, retrieve all minimal AFDs which have an error score of at most \ud835\udf16along with their respective error scores. An AFD\ud835\udc4b\u2192\ud835\udc4dis a minimal \ud835\udf16-AFD if no proper subset of \ud835\udc4bis also an\ud835\udf16-AFD to determine \ud835\udc4d. 2.3",
-    "technical_score": 0.006629724115521092,
+    "technical_score": 0.008673022649322622,
     "citation_score": 0.0
   },
   {
@@ -73,9 +127,9 @@
       "Definition of Anytime Algorithms for AFDs"
     ],
     "paragraph_index": 1,
-    "paragraph": "Before proposing our solutions to the above problems, we would like to define the notion of Anytime Algorithms in the context of computing AFDs. Our definition hinges on a few observations. For each of the proposed problems, the output is a set of AFDs. LetAFD(D) represent the set of output AFDs that are identified after reading the entire database D. We refer to this as the optimal output. Consider an algorithm that has only read part of the data- base, sayD\u2032, yet is able to output a set of AFDs, say AFD(D\u2032)as the solution for the full database. Such an algorithm is called an Anytime Algorithm. For example, consider the scenario of reading the first three rows of the sample dataset from Table 1 and \ud835\udc543error be the error measure and\u2113=1. Let the set of AFDs being considered for the top- \ud835\udc58be First Name\u2192Gender, Zip\u2192Gender and Town\u2192Gender. Based on the first three rows and known MA, is it possible to get the top-1 AFD among the ones being considered? If not, which one is themost likely top-1 AFD among the ones being considered? These are the type of decisions an anytime algorithm has to consider. Furthermore, an anytime algorithm is well behaved if the \u201csimi- larity\u201d of AFD(D\u2032)toAFD(D) progressively improves as it reads more data. Similarity can be measured by several standard measures such as precision, recall, NDCG measure [45], etc. In this paper we design several anytime algorithms for solving our proposed AFD problems. Our exact approaches designed in Section 4.1 are well-behaved anytime algorithms whenever the precision is always 1, while the recall monotonically increases as more data are read. We also propose \u201capproximate \" approaches in Section 4.2 where the precision and recall do not always exhibit monotone behavior, but the recall is often better than the Exact approaches (See Experiments Section 5). 2388",
-    "technical_score": 0.025438547707494676,
-    "citation_score": 0.005471475544471396
+    "paragraph": "Before proposing our solutions to the above problems, we would like to define the notion of Anytime Algorithms in the context of computing AFDs. Our definition hinges on a few observations. For each of the proposed problems, the output is a set of AFDs. LetAFD(D) represent the set of output AFDs that are identified after reading the entire database D. We refer to this as the optimal output. Consider an algorithm that has only read part of the data- base, sayD\u2032, yet is able to output a set of AFDs, say AFD(D\u2032)as the solution for the full database. Such an algorithm is called an Anytime Algorithm.",
+    "technical_score": 0.00574150015371923,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -83,9 +137,19 @@
       "Definition of Anytime Algorithms for AFDs"
     ],
     "paragraph_index": 2,
-    "paragraph": "KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das 3",
-    "technical_score": 0.007930165600561421,
+    "paragraph": "For example, consider the scenario of reading the first three rows of the sample dataset from Table 1 and \ud835\udc543error be the error measure and\u2113=1. Let the set of AFDs being considered for the top- \ud835\udc58be",
+    "technical_score": 0.007659976390221423,
     "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Data Model & Problem Definition",
+      "Definition of Anytime Algorithms for AFDs"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "on the first three rows and known MA, is it possible to get the top-1 AFD among the ones being considered? If not, which one is themost likely top-1 AFD among the ones being considered? These are the type of decisions an anytime algorithm has to consider. Furthermore, an anytime algorithm is well behaved if the \u201csimi- larity\u201d of AFD(D\u2032)toAFD(D) progressively improves as it reads more data. Similarity can be measured by several standard measures such as precision, recall, NDCG measure [45], etc. In this paper we design several anytime algorithms for solving our proposed AFD problems. Our exact approaches designed in Section 4.1 are well-behaved anytime algorithms whenever the precision is always 1, while the recall monotonically increases as more data are read. We also propose \u201capproximate \" approaches in Section 4.2 where the precision and recall do not always exhibit monotone behavior, but the recall is often better than the Exact approaches (See Experiments Section 5).",
+    "technical_score": 0.008386428780772084,
+    "citation_score": 0.008057549220741806
   },
   {
     "section_path": [
@@ -93,9 +157,9 @@
       "Exact Algorithms"
     ],
     "paragraph_index": 1,
-    "paragraph": "The AFDs generated by the exact algorithms are always correct, meaning they belong to the actual top- \ud835\udc58or\ud835\udf16-AFDs. However, since these algorithms make decisions anytime without having access to the entire dataset, the results they identify may only represent a (\ud835\udc58\u2032\u2264\ud835\udc58) subset of the full outcomes, depending on the amount of data they have read at any given point in time. 4.1.1 Top-\ud835\udc58AFDs. The algorithm ESCA (Early Stop Criteria based Top-\ud835\udc58AFD Algo) starts at level \u2113of the lattice considering all nodes at that level. Since\u0000\ud835\udc51\u22121 \u2113\u0001is likely to be larger than \ud835\udc58, it just has to find the top- \ud835\udc58from there. Since only a subset of the data is read, ESCA needs to determine the correct top- \ud835\udc58ranked order. ESCA constructs a directed graph \ud835\udc3awith\u0000\ud835\udc51\u22121 \u2113\u0001no of nodes (could be represented using Hasse diagram [ 12]), and the edges represent the partial order between every pair of AFDs. The nodes of the graph are the AFDs and a directed edge from vertex (\ud835\udc4b\u2192\ud835\udc4d) to vertex(\ud835\udc4c\u2192\ud835\udc4d)indicates that \ud835\udc4b\u2192\ud835\udc4dhas lower error than \ud835\udc4c\u2192\ud835\udc4d. Initially, when no data is read, there are no edges in the graph. Edges are added as more data is read, and the order between AFDs could be established. As a simple optimization, if any vertex (AFD) in the graph has more than \ud835\udc58incoming edges, it is already dominated by \ud835\udc58other AFDs and thus it is eliminated from \ud835\udc3aas it cannot be part of the solution. This ensures a precision of 1 as no false positives are added to the set of AFDs. However, the challenge is the following: When only a part of the data is read, ESCA will not be able to quantify the exact error of 2390",
-    "technical_score": 0.022854308363833915,
-    "citation_score": 0.009794703584500247
+    "paragraph": "The AFDs generated by the exact algorithms are always correct, meaning they belong to the actual top- \ud835\udc58or\ud835\udf16-AFDs. However, since these algorithms make decisions anytime without having access to the entire dataset, the results they identify may only represent a (\ud835\udc58\u2032\u2264\ud835\udc58) subset of the full outcomes, depending on the amount of data they have read at any given point in time.",
+    "technical_score": 0.003095565918627988,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -103,8 +167,38 @@
       "Exact Algorithms"
     ],
     "paragraph_index": 2,
-    "paragraph": "KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das any node. Thus, it relies on the upper (largest) andlower (smallest) bounds of errors of AFDs for comparison and making decisions (formally defined and studied in Section 3.2). As an example, if the upper bounds of error of\ud835\udc4b\u2192\ud835\udc4dis smaller than the lower bound of error of\ud835\udc4c\u2192\ud835\udc4d, then\ud835\udc4b\u2192\ud835\udc4dis placed before \ud835\udc4c\u2192\ud835\udc4d. To find the next-best AFD, the algorithm does the following: (a) finds if there exists an AFD whose lower bound of error is not larger than the upper bound of errors of all other AFDs. (b) If the answer is yes, then that AFD is returned, and it is eliminated from the current graph. These steps are repeated until Top- \ud835\udc58AFDS are identified. (c) Steps (a) and (b) are repeated \ud835\udc58\u2032(\u2264\ud835\udc58) times to find top- \ud835\udc58\u2032AFDs in this fashion. If \ud835\udc58\u2032<\ud835\udc58, the algorithm continues to issue more getNext(). Otherwise, the algorithm halts. The recall of the Exact anytime algorithm depends on the value of \ud835\udc58\u2032. If\ud835\udc58\u2032is near\ud835\udc58, the recall is large. But an important thing to note is that as more data is read,\ud835\udc58\u2032can only increase. Hence, our Exact Anytime algorithm has a precision of 1 and a monotone recall property. As our algorithm exhibits an increasing monotonic nature for the similarity between the set of AFDs it produces and the final set of AFDs, our Exact algorithm is well-behaved Anytime AFD Algorithm. 4.1.2\ud835\udf16-AFDs. For finding \ud835\udf16-AFDs, Algorithm EXEA (Early Stop Criteria based \ud835\udf16-AFD Algorithm) starts at the bottom of the lattice. First, it identifies all singleton AFDs and obtains their respective lower and upper bounds of errors. If the upper bound of error for an AFD is at most \ud835\udf16, then that AFD is identified as a minimal AFD",
-    "technical_score": 0.02587416178686967,
+    "paragraph": "Top-\ud835\udc58AFD Algo) starts at level \u2113of the lattice considering all nodes at that level. Since\u0000\ud835\udc51\u22121 \u2113\u0001is likely to be larger than \ud835\udc58, it just has to find the top- \ud835\udc58from there. Since only a subset of the data is read, ESCA needs to determine the correct top- \ud835\udc58ranked order. ESCA constructs a directed graph \ud835\udc3awith\u0000\ud835\udc51\u22121 \u2113\u0001no of nodes (could be represented using Hasse diagram [ 12]), and the edges represent the partial order between every pair of AFDs. The nodes of the graph are the AFDs and a directed edge from vertex (\ud835\udc4b\u2192\ud835\udc4d) to vertex(\ud835\udc4c\u2192\ud835\udc4d)indicates that \ud835\udc4b\u2192\ud835\udc4dhas lower error than \ud835\udc4c\u2192\ud835\udc4d. Initially, when no data is read, there are no edges in the graph. Edges are added as more data is read, and the order between AFDs could be established. As a simple optimization, if any vertex (AFD) in the graph has more than \ud835\udc58incoming edges, it is already dominated by \ud835\udc58other AFDs and thus it is eliminated from \ud835\udc3aas it cannot be part of the solution. This ensures a precision of 1 as no false positives are added to the set of AFDs.",
+    "technical_score": 0.006249651182874172,
+    "citation_score": 0.012499302365748342
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Exact Algorithms"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "However, the challenge is the following: When only a part of the data is read, ESCA will not be able to quantify the exact error of",
+    "technical_score": 0.0027450360153256706,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Exact Algorithms"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "any node. Thus, it relies on the upper (largest) andlower (smallest) bounds of errors of AFDs for comparison and making decisions (formally defined and studied in Section 3.2). As an example, if the upper bounds of error of\ud835\udc4b\u2192\ud835\udc4dis smaller than the lower bound of error of\ud835\udc4c\u2192\ud835\udc4d, then\ud835\udc4b\u2192\ud835\udc4dis placed before \ud835\udc4c\u2192\ud835\udc4d.",
+    "technical_score": 0.008641617223134465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Exact Algorithms"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "4.1.2\ud835\udf16-AFDs. For finding \ud835\udf16-AFDs, Algorithm EXEA (Early Stop Criteria based \ud835\udf16-AFD Algorithm) starts at the bottom of the lattice. First, it identifies all singleton AFDs and obtains their respective lower and upper bounds of errors. If the upper bound of error for an AFD is at most \ud835\udf16, then that AFD is identified as a minimal AFD",
+    "technical_score": 0.012665970151432221,
     "citation_score": 0.0
   },
   {
@@ -113,9 +207,9 @@
       "Approximate Algorithms"
     ],
     "paragraph_index": 1,
-    "paragraph": "top-\ud835\udc58, based on uniform error assumptions for unread records. For the Minimal \ud835\udf16-AFDs problem, we introduce an exact algo- rithm that explores the powerset lattice bottom-up, using upper and lower bounds to prune candidate AFDs. This approach en- sures that a proper subset of \ud835\udf16-AFDs is returned as records are read. Additionally, we present an approximate algorithm, based on uninformed prior, which works well in practice though it may not always identify the true minimal \ud835\udf16-AFDs. For simplicity, we use \"top- \ud835\udc58\" for finding top- \ud835\udc58AFDs with \u2113at- tributes on the left side, and \" \ud835\udf16-AFDs\" for the minimal \ud835\udf16-AFDs. 4.1 Exact Algorithms The AFDs generated by the exact algorithms are always correct, meaning they belong to the actual top- \ud835\udc58or\ud835\udf16-AFDs. However, since these algorithms make decisions anytime without having access to the entire dataset, the results they identify may only represent a (\ud835\udc58\u2032\u2264\ud835\udc58) subset of the full outcomes, depending on the amount of data they have read at any given point in time. 4.1.1 Top-\ud835\udc58AFDs. The algorithm ESCA (Early Stop Criteria based Top-\ud835\udc58AFD Algo) starts at level \u2113of the lattice considering all nodes at that level. Since\u0000\ud835\udc51\u22121 \u2113\u0001is likely to be larger than \ud835\udc58, it just has to find the top- \ud835\udc58from there. Since only a subset of the data is read, ESCA needs to determine the correct top- \ud835\udc58ranked order. ESCA constructs a directed graph \ud835\udc3awith\u0000\ud835\udc51\u22121 \u2113\u0001no of nodes (could be represented using Hasse diagram [ 12]), and the edges represent the partial order between every pair of AFDs. The nodes of the graph are the AFDs and a directed edge from vertex (\ud835\udc4b\u2192\ud835\udc4d) to vertex(\ud835\udc4c\u2192\ud835\udc4d)indicates that \ud835\udc4b\u2192\ud835\udc4dhas lower error than \ud835\udc4c\u2192\ud835\udc4d. Initially, when no data is read, there are no edges in the graph. Edges are added as more data is read, and the order between AFDs could be established. As a simple optimization, if any vertex (AFD) in the graph has more than \ud835\udc58incoming edges, it is already dominated by \ud835\udc58other AFDs and thus it is eliminated from \ud835\udc3aas it cannot be part of the solution. This ensures a precision of 1 as no false positives are added to the set of AFDs. However, the challenge is the following: When only a part of the data is read, ESCA will not be able to quantify the exact error of 2390",
-    "technical_score": 0.009478096655076125,
-    "citation_score": 0.004089730867527735
+    "paragraph": "top-\ud835\udc58, based on uniform error assumptions for unread records. For the Minimal \ud835\udf16-AFDs problem, we introduce an exact algo- rithm that explores the powerset lattice bottom-up, using upper and lower bounds to prune candidate AFDs. This approach en- sures that a proper subset of \ud835\udf16-AFDs is returned as records are read. Additionally, we present an approximate algorithm, based on uninformed prior, which works well in practice though it may not always identify the true minimal \ud835\udf16-AFDs.",
+    "technical_score": 0.0025325387755102046,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -123,8 +217,58 @@
       "Approximate Algorithms"
     ],
     "paragraph_index": 2,
-    "paragraph": "KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das any node. Thus, it relies on the upper (largest) andlower (smallest) bounds of errors of AFDs for comparison and making decisions (formally defined and studied in Section 3.2). As an example, if the upper bounds of error of\ud835\udc4b\u2192\ud835\udc4dis smaller than the lower bound of error of\ud835\udc4c\u2192\ud835\udc4d, then\ud835\udc4b\u2192\ud835\udc4dis placed before \ud835\udc4c\u2192\ud835\udc4d. To find the next-best AFD, the algorithm does the following: (a) finds if there exists an AFD whose lower bound of error is not larger than the upper bound of errors of all other AFDs. (b) If the answer is yes, then that AFD is returned, and it is eliminated from the current graph. These steps are repeated until Top- \ud835\udc58AFDS are identified. (c) Steps (a) and (b) are repeated \ud835\udc58\u2032(\u2264\ud835\udc58) times to find top- \ud835\udc58\u2032AFDs in this fashion. If \ud835\udc58\u2032<\ud835\udc58, the algorithm continues to issue more getNext(). Otherwise, the algorithm halts. The recall of the Exact anytime algorithm depends on the value of \ud835\udc58\u2032. If\ud835\udc58\u2032is near\ud835\udc58, the recall is large. But an important thing to note is that as more data is read,\ud835\udc58\u2032can only increase. Hence, our Exact Anytime algorithm has a precision of 1 and a monotone recall property. As our algorithm exhibits an increasing monotonic nature for the similarity between the set of AFDs it produces and the final set of AFDs, our Exact algorithm is well-behaved Anytime AFD Algorithm. 4.1.2\ud835\udf16-AFDs. For finding \ud835\udf16-AFDs, Algorithm EXEA (Early Stop Criteria based \ud835\udf16-AFD Algorithm) starts at the bottom of the lattice. First, it identifies all singleton AFDs and obtains their respective lower and upper bounds of errors. If the upper bound of error for an AFD is at most \ud835\udf16, then that AFD is identified as a minimal AFD",
-    "technical_score": 0.019351457703448278,
+    "paragraph": "For simplicity, we use \"top- \ud835\udc58\" for finding top- \ud835\udc58AFDs with \u2113at- tributes on the left side, and \" \ud835\udf16-AFDs\" for the minimal \ud835\udf16-AFDs.",
+    "technical_score": 0.003036587755102041,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Approximate Algorithms"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The AFDs generated by the exact algorithms are always correct, meaning they belong to the actual top- \ud835\udc58or\ud835\udf16-AFDs. However, since these algorithms make decisions anytime without having access to the entire dataset, the results they identify may only represent a (\ud835\udc58\u2032\u2264\ud835\udc58) subset of the full outcomes, depending on the amount of data they have read at any given point in time.",
+    "technical_score": 0.0029136489795918374,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Approximate Algorithms"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Top-\ud835\udc58AFD Algo) starts at level \u2113of the lattice considering all nodes at that level. Since\u0000\ud835\udc51\u22121 \u2113\u0001is likely to be larger than \ud835\udc58, it just has to find the top- \ud835\udc58from there. Since only a subset of the data is read, ESCA needs to determine the correct top- \ud835\udc58ranked order. ESCA constructs a directed graph \ud835\udc3awith\u0000\ud835\udc51\u22121 \u2113\u0001no of nodes (could be represented using Hasse diagram [ 12]), and the edges represent the partial order between every pair of AFDs. The nodes of the graph are the AFDs and a directed edge from vertex (\ud835\udc4b\u2192\ud835\udc4d) to vertex(\ud835\udc4c\u2192\ud835\udc4d)indicates that \ud835\udc4b\u2192\ud835\udc4dhas lower error than \ud835\udc4c\u2192\ud835\udc4d. Initially, when no data is read, there are no edges in the graph. Edges are added as more data is read, and the order between AFDs could be established. As a simple optimization, if any vertex (AFD) in the graph has more than \ud835\udc58incoming edges, it is already dominated by \ud835\udc58other AFDs and thus it is eliminated from \ud835\udc3aas it cannot be part of the solution. This ensures a precision of 1 as no false positives are added to the set of AFDs.",
+    "technical_score": 0.004576264443039434,
+    "citation_score": 0.002849237597776893
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Approximate Algorithms"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "However, the challenge is the following: When only a part of the data is read, ESCA will not be able to quantify the exact error of",
+    "technical_score": 0.002040783673469388,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Approximate Algorithms"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "any node. Thus, it relies on the upper (largest) andlower (smallest) bounds of errors of AFDs for comparison and making decisions (formally defined and studied in Section 3.2). As an example, if the upper bounds of error of\ud835\udc4b\u2192\ud835\udc4dis smaller than the lower bound of error of\ud835\udc4c\u2192\ud835\udc4d, then\ud835\udc4b\u2192\ud835\udc4dis placed before \ud835\udc4c\u2192\ud835\udc4d.",
+    "technical_score": 0.002913648979591837,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Approximate Algorithms"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "4.1.2\ud835\udf16-AFDs. For finding \ud835\udf16-AFDs, Algorithm EXEA (Early Stop Criteria based \ud835\udf16-AFD Algorithm) starts at the bottom of the lattice. First, it identifies all singleton AFDs and obtains their respective lower and upper bounds of errors. If the upper bound of error for an AFD is at most \ud835\udf16, then that AFD is identified as a minimal AFD",
+    "technical_score": 0.004954432653061225,
     "citation_score": 0.0
   },
   {
@@ -132,17 +276,53 @@
       "Related Work"
     ],
     "paragraph_index": 1,
-    "paragraph": "AFD and Applications. Functional Dependency (FD)[ 42] plays a crucial role in data preprocessing, cleaning, and integration[ 6, 31,38]. Flach [ 14] approached FD discovery as an induction task aimed at concept definitions that classify examples accurately and generalize well. To handle challenges in FD discovery, Kivinen et al.[21] and Parciak et al. [ 34] study different error measures of AFDs. Most existing approaches rely on full database access and focus on\ud835\udc541or\ud835\udc543error measures, often using sampling for efficiency. Kolahi et al.[ 22] defined optimal repairs as databases that satisfy all FDs while minimizing a correction-based distance (a variant of\ud835\udc543), and proved that verifying such repairs is NP-complete. We revisit the three error measures proposed by Kivinen et al.[ 21] \u2014 \ud835\udc541,\ud835\udc542, and\ud835\udc543\u2014 noting that \ud835\udc542remains the least utilized. These measures find application in various domains, including malicious account detection[ 8], data cleaning [ 38], and discovering FDs in incomplete data [ 7]. Le et al.[ 26] established a connection between \ud835\udc543error and classification accuracy upper bounds. Moreover, \ud835\udc541 has been adopted to assess approximate denial constraints in data cleaning[10, 27, 35\u201337]. Incremental and Online Algorithm. Incremental, anytime, and online algorithms are all designed to operate under constrained en- vironment, but each targets a different type of limitation. Incremen- tal algorithms[ 39] focus on efficiently updating their output as new data arrives, avoiding the need to recompute results from scratch. These algorithms are especially useful in dynamic or streaming en- vironments where data evolves over time. Online algorithms[ 1], on the other hand, process inputs sequentially and make irrevocable decisions at each step without knowledge of future inputs. In con- trast, we focus on a subclass of anytime algorithms that generates effective output even after reading only a small portion of the data, and progressively improve as more data is processed. 2393",
-    "technical_score": 0.07804163297872059,
-    "citation_score": 0.03023234430707194
+    "paragraph": "AFD and Applications. Functional Dependency (FD)[ 42] plays a crucial role in data preprocessing, cleaning, and integration[ 6, 31,38]. Flach [ 14] approached FD discovery as an induction task aimed at concept definitions that classify examples accurately and generalize well. To handle challenges in FD discovery, Kivinen et al.[21] and Parciak et al. [ 34] study different error measures of AFDs. Most existing approaches rely on full database access and focus on\ud835\udc541or\ud835\udc543error measures, often using sampling for efficiency. Kolahi et al.[ 22] defined optimal repairs as databases that satisfy all FDs while minimizing a correction-based distance (a variant of\ud835\udc543), and proved that verifying such repairs is NP-complete. We revisit the three error measures proposed by Kivinen et al.[ 21] \u2014 \ud835\udc541,\ud835\udc542, and\ud835\udc543\u2014 noting that \ud835\udc542remains the least utilized. These measures find application in various domains, including malicious account detection[ 8], data cleaning [ 38], and discovering FDs in incomplete data [ 7]. Le et al.[ 26] established a connection between \ud835\udc543error and classification accuracy upper bounds. Moreover, \ud835\udc541 has been adopted to assess approximate denial constraints in data cleaning[10, 27, 35\u201337].",
+    "technical_score": 0.016678003444671585,
+    "citation_score": 0.031547548684499264
   },
   {
     "section_path": [
       "Related Work"
     ],
     "paragraph_index": 2,
-    "paragraph": "Anytime Algorithms for Approximate Functional Dependencies KDD \u201925, August 3\u20137, 2025, Toronto, ON,Canada (a) Precision at \ud835\udc58=7for Letter (b) Precision at \ud835\udc58=3for Student (c) NDCG at \ud835\udc58=7for Letter (d) NDCG at \ud835\udc58=3for Student Figure 4: Precision and NDCG for top- \ud835\udc58AFDs with\ud835\udc59=3when data indexed by non-key attributes (a) Indexed arbitrarily (b) Indexed by key attributes (c) Indexed by non-Key attributes Figure 5: Precision of \ud835\udf16=0.01for\ud835\udf16-AFDs with \ud835\udc59=3on DB Status (a) Bound computation, Exact (b) Running time for Exact (c) Bound computation, Approx (d) Running time for Approx Figure 6: Running time analysis (a)\ud835\udc58=5Synthetic Dataset 1 (b)\ud835\udc58=7Synthetic Dataset 2 Figure 7: Precision of exact algorithms for top- \ud835\udc58AFDs with\ud835\udc59=1 (a) Precision at \ud835\udc58=3 (b) NDCG at \ud835\udc58=3 Figure 8: Comparison of Exact, Approximate Algorithms with Base- lines on Synthetic Dataset7",
-    "technical_score": 0.051134012385355025,
+    "paragraph": "Incremental and Online Algorithm. Incremental, anytime, and online algorithms are all designed to operate under constrained en- vironment, but each targets a different type of limitation. Incremen- tal algorithms[ 39] focus on efficiently updating their output as new data arrives, avoiding the need to recompute results from scratch. These algorithms are especially useful in dynamic or streaming en- vironments where data evolves over time. Online algorithms[ 1], on the other hand, process inputs sequentially and make irrevocable decisions at each step without knowledge of future inputs. In con- trast, we focus on a subclass of anytime algorithms that generates effective output even after reading only a small portion of the data, and progressively improve as more data is processed.",
+    "technical_score": 0.0427814144037253,
+    "citation_score": 0.005199770997052631
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "(a) Indexed arbitrarily (b) Indexed by key attributes (c) Indexed by non-Key attributes",
+    "technical_score": 0.015133522618630553,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "(a)\ud835\udc58=5Synthetic Dataset 1 (b)\ud835\udc58=7Synthetic Dataset 2",
+    "technical_score": 0.015603234738151058,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "(a) Precision at \ud835\udc58=3 (b) NDCG at \ud835\udc58=3",
+    "technical_score": 0.028292284012642974,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "lines on Synthetic Dataset7",
+    "technical_score": 0.004859459195864728,
     "citation_score": 0.0
   },
   {
@@ -151,7 +331,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We present a computational framework designed to find AFDs in anytime fashion within a relation that generalizes to multiple error measures. We formalize two core sub-problems: maximum and min- imum error estimates, which calculate the upper and lower bounds of an AFD\u2019s error based on data that is read . We systematically analyze the bound estimation problems and propose a suite of algo- rithms. We present exact and approximate lattice based algorithms for finding anytime AFDs using these bounds. We are the first to design solutions with anytime behavior. We conduct experiments to demonstrate the effectiveness of these algorithms under different data organization strategies and provide practical guidelines. An interesting area of future work could consider partial/full",
-    "technical_score": 0.1539471514283544,
+    "technical_score": 0.12114285714285714,
     "citation_score": 0.0
   }
 ]
