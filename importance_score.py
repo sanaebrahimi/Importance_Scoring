@@ -1839,6 +1839,15 @@ def is_non_prose_artifact_paragraph(text: str) -> bool:
 
     figure_refs = len(re.findall(r"\b(?:Figure|Table)\s+\d+\s*:", normalized, flags=re.IGNORECASE))
     panel_refs = len(re.findall(r"\([a-z]\)", normalized, flags=re.IGNORECASE))
+    chart_terms = len(
+        re.findall(
+            r"\b(?:precision|recall|ndcg|runtime|running time|scalability|baseline|synthetic dataset|indexed|exact|approx(?:imate)?|dataset)\b",
+            normalized,
+            flags=re.IGNORECASE,
+        )
+    )
+    numeric_tokens = len(re.findall(r"\b\d+(?:\.\d+)?\b", normalized))
+    words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'/-]*", normalized)
     title_like = bool(
         re.search(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){3,}\b", normalized)
         and re.search(r"\b(?:19|20)\d{2}\b", normalized)
@@ -1848,6 +1857,14 @@ def is_non_prose_artifact_paragraph(text: str) -> bool:
     if figure_refs >= 2:
         return True
     if panel_refs >= 4:
+        return True
+    if normalized.lower().startswith("(a)") and panel_refs >= 2:
+        return True
+    if panel_refs >= 2 and len(words) <= 24:
+        return True
+    if chart_terms >= 2 and len(words) <= 18 and numeric_tokens <= 4:
+        return True
+    if re.fullmatch(r"lines on .*dataset", normalized, flags=re.IGNORECASE):
         return True
     return False
 
