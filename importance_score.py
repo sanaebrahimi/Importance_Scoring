@@ -244,6 +244,9 @@ Rules:
   Text outside `citation_focus_text` should not increase citation_percentage.
 - If `citation_focus_text` is empty or minimal, citation_percentage should stay low
   even if the paragraph has citation markers elsewhere.
+- In citation-heavy sections such as Related Work, if most of the paragraph's
+  citation-focused sentences are in `citation_focus_text`, citation_percentage
+  should usually be the majority share.
 - A paragraph with has_citations is false but located in Related Work likely
   bridges or references prior work implicitly - keep citation_percentage = 0 per
   the rule above, but note this as a pipeline limitation.
@@ -1975,20 +1978,95 @@ def split_text_into_paragraphs(text: str) -> List[str]:
     return [p for p in refined if p and not is_non_prose_artifact_paragraph(p)]
 
 
-def build_citation_focus_text(mentions: List[Tuple[str, str, str]], limit: int = 900) -> str:
-    if not mentions:
-        return ""
+def split_into_sentences(text: str) -> List[str]:
+    normalized = normalize_for_match(text)
+    if not normalized:
+        return []
+    return [s.strip() for s in re.split(r"(?<=[.!?])\s+", normalized) if s.strip()]
 
-    contexts: List[str] = []
-    for citation, _, context in mentions:
-        normalized_context = normalize_for_match(str(context))
-        if not normalized_context:
+
+def is_citation_heavy_section_name(section_name: str) -> bool:
+    norm = normalized_key(section_name)
+    return any(
+        token in norm
+        for token in (
+            "relatedwork",
+            "priorwork",
+            "literaturereview",
+            "background",
+            "survey",
+        )
+    )
+
+
+def extract_citation_focus_sentences(
+    paragraph_text: str,
+    mentions: List[Tuple[str, str, str]],
+) -> List[str]:
+    if not paragraph_text or not mentions:
+        return []
+
+    sentences = split_into_sentences(paragraph_text)
+    if not sentences:
+        return []
+
+    context_texts = [normalize_for_match(str(context)) for _, _, context in mentions if normalize_for_match(str(context))]
+    context_token_sets = [set(re.findall(r"[a-z0-9]+", ctx.lower())) for ctx in context_texts if ctx]
+    prior_work_pattern = re.compile(
+        r"\b(prior work|previous work|related work|baseline|compare|comparison|compared|method|methods|algorithm|algorithms|study|studies|approach|approaches)\b",
+        flags=re.IGNORECASE,
+    )
+
+    selected: List[str] = []
+    for sentence in sentences:
+        sentence_norm = normalize_for_match(sentence)
+        if not sentence_norm:
             continue
-        contexts.append(f"{citation}: {normalized_context}")
 
-    unique_contexts = [ctx for ctx in dict.fromkeys(contexts) if ctx]
-    focus = " ".join(unique_contexts)
+        contains_citation_marker = bool(re.search(CITATION_BLOCK_PATTERN, sentence_norm))
+        sentence_tokens = set(re.findall(r"[a-z0-9]+", sentence_norm.lower()))
+        overlaps_context = False
+        if sentence_tokens:
+            for context_tokens in context_token_sets:
+                if not context_tokens:
+                    continue
+                overlap = len(sentence_tokens & context_tokens)
+                if overlap >= 4 or overlap >= max(2, int(0.4 * min(len(sentence_tokens), len(context_tokens)))):
+                    overlaps_context = True
+                    break
+
+        if contains_citation_marker or overlaps_context:
+            selected.append(sentence_norm)
+            continue
+
+        if prior_work_pattern.search(sentence_norm) and any(
+            sentence_norm in ctx or ctx in sentence_norm for ctx in context_texts
+        ):
+            selected.append(sentence_norm)
+
+    return [sentence for sentence in dict.fromkeys(selected) if sentence]
+
+
+def build_citation_focus_text(
+    paragraph_text: str,
+    mentions: List[Tuple[str, str, str]],
+    limit: int = 900,
+) -> str:
+    focus_sentences = extract_citation_focus_sentences(paragraph_text, mentions)
+    if not focus_sentences:
+        return ""
+    focus = " ".join(focus_sentences)
     return focus[:limit]
+
+
+def citation_focus_ratio(paragraph_text: str, mentions: List[Tuple[str, str, str]]) -> float:
+    sentences = split_into_sentences(paragraph_text)
+    if not sentences:
+        return 0.0
+    focus_sentences = extract_citation_focus_sentences(paragraph_text, mentions)
+    if not focus_sentences:
+        return 0.0
+    return min(1.0, len(focus_sentences) / max(1, len(sentences)))
 
 
 def estimate_tokens_approx(text: str) -> int:
@@ -2784,7 +2862,10 @@ def split_paragraph_channel_scores(
             "total_score": cleaned_totals[paragraph_id],
             "has_citations": bool(mention_buckets.get(paragraph_id)),
             "text": snippets[paragraph_id],
-            "citation_focus_text": build_citation_focus_text(mention_buckets.get(paragraph_id, [])),
+            "citation_focus_text": build_citation_focus_text(
+                paragraph_items[paragraph_id],
+                mention_buckets.get(paragraph_id, []),
+            ),
         }
         for paragraph_id in paragraph_ids
     }
@@ -2836,6 +2917,7 @@ def split_paragraph_channel_scores(
             total_val = cleaned_totals.get(paragraph_id, 0.0)
             mentions = mention_buckets.get(paragraph_id, [])
             has_citations = bool(mentions)
+            focus_ratio = citation_focus_ratio(paragraph_items[paragraph_id], mentions)
 
             if paragraph_id in parsed_pairs:
                 t_raw, c_raw = parsed_pairs[paragraph_id]
@@ -2862,6 +2944,21 @@ def split_paragraph_channel_scores(
                     t_val = total_val * (t_raw / channel_sum)
                     c_val = total_val * (c_raw / channel_sum)
 
+                if is_citation_heavy_section_name(section_name):
+                    min_citation_ratio = 0.0
+                    if focus_ratio >= 0.60:
+                        min_citation_ratio = 0.60
+                    elif focus_ratio >= 0.40:
+                        min_citation_ratio = 0.50
+                    elif focus_ratio >= 0.25:
+                        min_citation_ratio = 0.35
+
+                    if min_citation_ratio > 0.0:
+                        min_citation_value = total_val * min_citation_ratio
+                        if c_val < min_citation_value:
+                            c_val = min_citation_value
+                            t_val = max(0.0, total_val - c_val)
+
             sample_technical[paragraph_id] = t_val
             sample_citation[paragraph_id] = c_val
 
@@ -2875,7 +2972,9 @@ def split_paragraph_channel_scores(
         avg_t = sum(sample[paragraph_id] for sample in technical_samples) / effective_samples
         avg_c = sum(sample[paragraph_id] for sample in citation_samples) / effective_samples
         total_val = cleaned_totals.get(paragraph_id, 0.0)
-        has_citations = bool(mention_buckets.get(paragraph_id))
+        mentions = mention_buckets.get(paragraph_id, [])
+        has_citations = bool(mentions)
+        focus_ratio = citation_focus_ratio(paragraph_items[paragraph_id], mentions)
 
         if not has_citations:
             avg_t = total_val
@@ -2888,6 +2987,21 @@ def split_paragraph_channel_scores(
             else:
                 avg_t = total_val * max(0.0, avg_t) / channel_sum
                 avg_c = total_val * max(0.0, avg_c) / channel_sum
+
+            if is_citation_heavy_section_name(section_name):
+                min_citation_ratio = 0.0
+                if focus_ratio >= 0.60:
+                    min_citation_ratio = 0.60
+                elif focus_ratio >= 0.40:
+                    min_citation_ratio = 0.50
+                elif focus_ratio >= 0.25:
+                    min_citation_ratio = 0.35
+
+                if min_citation_ratio > 0.0:
+                    min_citation_value = total_val * min_citation_ratio
+                    if avg_c < min_citation_value:
+                        avg_c = min_citation_value
+                        avg_t = max(0.0, total_val - avg_c)
 
         paragraph_technical[paragraph_id] = max(0.0, avg_t)
         paragraph_citation[paragraph_id] = max(0.0, avg_c)
@@ -2918,6 +3032,36 @@ def split_citation_block(citation_block: str) -> List[str]:
     parts = [re.sub(r"\s+", " ", p).strip() for p in raw_parts if p.strip()]
     if not parts:
         return [block]
+
+    if left_delim == "[" and right_delim == "]":
+        normalized_parts: List[str] = []
+        for part in parts:
+            cleaned = part.strip()
+            if not cleaned:
+                continue
+
+            single_match = re.fullmatch(r"(\d+)", cleaned)
+            if single_match:
+                if int(single_match.group(1)) <= 0:
+                    continue
+                normalized_parts.append(f"[{int(single_match.group(1))}]")
+                continue
+
+            range_match = re.fullmatch(r"(\d+)\s*[-–]\s*(\d+)", cleaned)
+            if range_match:
+                start_num = int(range_match.group(1))
+                end_num = int(range_match.group(2))
+                if start_num <= 0 or end_num <= 0:
+                    continue
+                normalized_parts.append(f"[{start_num}\u2013{end_num}]")
+                continue
+
+            # If the numeric bracket part does not look like a positive citation id or range,
+            # drop it instead of letting OCR/PDF debris become a fake citation such as [0].
+            continue
+
+        return normalized_parts
+
     if left_delim and right_delim:
         return [f"{left_delim}{p}{right_delim}" for p in parts]
     return parts
