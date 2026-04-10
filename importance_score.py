@@ -1595,6 +1595,7 @@ def assert_close(actual: float, expected: float, context: str, tol: float = 1e-8
 def validate_allocation_distribution(
     parsed_scores: Dict[str, float],
     item_ids: List[str],
+    mode: str = "strict",
 ) -> Optional[str]:
     if set(parsed_scores.keys()) != set(item_ids):
         return "incomplete_keys"
@@ -1608,6 +1609,9 @@ def validate_allocation_distribution(
         return "non_positive_sum"
     if not (0.85 <= score_sum <= 1.15):
         return "sum_not_close_to_100_percent"
+
+    if mode == "relaxed":
+        return None
 
     normalized = [value / score_sum for value in values]
     positive_count = sum(1 for value in normalized if value > 1e-9)
@@ -2258,6 +2262,7 @@ def direct_allocate_scores(
     sample_idx: int,
     snippet_limit: int = 0,
     log_tag: str = "all_together",
+    validation_mode: str = "strict",
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
     use_limit = None if snippet_limit <= 0 else snippet_limit
@@ -2321,7 +2326,11 @@ def direct_allocate_scores(
             for item_id, value in parsed_full.items()
         }
 
-        rejection_reason = validate_allocation_distribution(parsed_scores, item_ids)
+        rejection_reason = validate_allocation_distribution(
+            parsed_scores,
+            item_ids,
+            mode=validation_mode,
+        )
         if rejection_reason is None:
             parsed_scores = {
                 item_id_to_name[item_id]: parsed_scores[item_id]
@@ -2404,6 +2413,7 @@ def all_together_allocate_scores(
                     sample_idx=s + 1,
                     snippet_limit=snippet_limit,
                     log_tag=log_tag,
+                    validation_mode="relaxed" if log_tag == "all_together_paragraphs" else "strict",
                 )
             )
         except ValueError as exc:
