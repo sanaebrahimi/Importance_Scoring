@@ -581,11 +581,14 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
         if line_end == -1:
             line_end = len(full_text)
         line_text = full_text[line_start:line_end]
-        normalized_line = normalize_heading_text(line_text)
-        normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
-        normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
-        if heading_tokens_match(target, normalized_line):
-            return line_start, line_end
+        if not is_probable_heading_line(line_text):
+            direct_idx = -1
+        else:
+            normalized_line = normalize_heading_text(line_text)
+            normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
+            normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
+            if heading_tokens_match(target, normalized_line):
+                return line_start, line_end
 
     lines = full_text.splitlines(keepends=True)
     offsets: List[int] = []
