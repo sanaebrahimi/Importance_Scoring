@@ -1606,6 +1606,8 @@ def validate_allocation_distribution(
     score_sum = sum(values)
     if score_sum <= 0.0:
         return "non_positive_sum"
+    if not (0.85 <= score_sum <= 1.15):
+        return "sum_not_close_to_100_percent"
 
     normalized = [value / score_sum for value in values]
     positive_count = sum(1 for value in normalized if value > 1e-9)
@@ -1614,6 +1616,8 @@ def validate_allocation_distribution(
     sorted_shares = sorted(normalized, reverse=True)
     second_share = sorted_shares[1] if len(sorted_shares) > 1 else 0.0
 
+    if len(item_ids) > 1 and zero_count > 0:
+        return "zero_child_not_allowed"
     if len(item_ids) >= 4 and positive_count < max(3, len(item_ids) // 2):
         return "too_many_zero_children"
     if len(item_ids) >= 4 and max_share >= 0.75 and zero_count >= 2:
@@ -2504,7 +2508,7 @@ def all_together_allocate_scores(
                 )
                 final_scores.update(nested_scores)
 
-            return normalize_distribution(final_scores, total_score)
+            return apply_minimum_positive_floor(final_scores, total_score, min_fraction=0.005)
 
         if len(items) == 2:
             append_debug_log(
@@ -2533,7 +2537,7 @@ def all_together_allocate_scores(
         for item, value in dist.items():
             averaged[item] += value
     averaged = {item: value / len(sample_distributions) for item, value in averaged.items()}
-    return normalize_distribution(averaged, total_score)
+    return apply_minimum_positive_floor(averaged, total_score, min_fraction=0.005)
 
 
 def direct_allocate_citation_scores(
@@ -2850,14 +2854,16 @@ def pairwise_allocate_scores(
                 )
             )
         else:
-            sample_distributions.append(normalize_distribution(raw_scores, total_score))
+            sample_distributions.append(
+                apply_minimum_positive_floor(raw_scores, total_score, min_fraction=0.005)
+            )
 
     averaged = {item: 0.0 for item in items}
     for dist in sample_distributions:
         for item, value in dist.items():
             averaged[item] += value
     averaged = {item: value / sample_count for item, value in averaged.items()}
-    return normalize_distribution(averaged, total_score)
+    return apply_minimum_positive_floor(averaged, total_score, min_fraction=0.005)
 
 
 def enforce_top_level_constraints(scores: Dict[str, float], total: float) -> Dict[str, float]:
