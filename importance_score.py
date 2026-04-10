@@ -804,11 +804,102 @@ def extract_citations_by_section(
             title_hints=None,
         )
 
+    def match_declared_sections_in_order(
+        section_text: str,
+        expected_names: List[str],
+    ) -> List[Tuple[str, Dict[str, Any], float]]:
+        candidate_entries = collect_heading_candidates_with_offsets(section_text)
+        if not candidate_entries or not expected_names:
+            return []
+
+        numbered_levels = sorted({entry["level"] for entry in candidate_entries if entry["level"] > 0})
+        if numbered_levels:
+            candidate_pool = [entry for entry in candidate_entries if entry["level"] == numbered_levels[0]]
+            if candidate_pool:
+                candidate_entries = candidate_pool
+
+        matches: List[Tuple[str, Dict[str, Any], float]] = []
+        next_candidate_idx = 0
+        remaining_expected = len(expected_names)
+
+        for expected_name in expected_names:
+            if next_candidate_idx >= len(candidate_entries):
+                break
+
+            max_start_idx = len(candidate_entries) - remaining_expected
+            if max_start_idx < next_candidate_idx:
+                max_start_idx = len(candidate_entries) - 1
+
+            best_match: Optional[Tuple[int, Dict[str, Any], float]] = None
+            for idx in range(next_candidate_idx, max_start_idx + 1):
+                candidate_entry = candidate_entries[idx]
+                score = heading_similarity_score(expected_name, candidate_entry["title"])
+                if best_match is None or score > best_match[2]:
+                    best_match = (idx, candidate_entry, score)
+
+            remaining_expected -= 1
+            if best_match is None or best_match[2] < 0.55:
+                continue
+
+            next_candidate_idx = best_match[0] + 1
+            matches.append((expected_name, best_match[1], best_match[2]))
+
+        return matches
+
     def process_sections(
         section_text: str, sections_dict: Dict[str, Any], section_names_list: List[str]
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         local_citations: Dict[str, Any] = {}
         local_content: Dict[str, Any] = {}
+
+        matched_sections = match_declared_sections_in_order(section_text, section_names_list)
+        if matched_sections:
+            for idx, (section_name, match_entry, _) in enumerate(matched_sections):
+                subsections = sections_dict[section_name]
+                section_start = match_entry["start"]
+                content_start = match_entry["content_start"]
+                next_start = (
+                    matched_sections[idx + 1][1]["start"]
+                    if idx + 1 < len(matched_sections)
+                    else len(section_text)
+                )
+                section_end = next_start
+                back_matter_start = find_earliest_heading_start(
+                    section_text[content_start:section_end],
+                    list(BACK_MATTER_HEADINGS),
+                )
+                if back_matter_start != -1:
+                    section_end = min(section_end, content_start + back_matter_start)
+
+                content = section_text[content_start:section_end].strip()
+                if not content:
+                    continue
+
+                if isinstance(subsections, dict) and subsections:
+                    subsection_names = list(subsections.keys())
+                    nested_citations, nested_content = process_sections(content, subsections, subsection_names)
+                    if len(nested_content) < len(subsection_names):
+                        recovered_citations, recovered_content = recover_declared_children(content, subsections)
+                        for child_name, child_content in recovered_content.items():
+                            if child_name in nested_content:
+                                continue
+                            nested_content[child_name] = child_content
+                            nested_citations[child_name] = recovered_citations.get(child_name, {})
+
+                    if nested_content:
+                        local_citations[section_name] = nested_citations
+                        local_content[section_name] = nested_content
+                    else:
+                        local_citations[section_name] = process_section_text(content)
+                        normalized_content = re.sub(r"[ \t]+", " ", content).strip()
+                        local_content[section_name] = normalized_content
+                else:
+                    local_citations[section_name] = process_section_text(content)
+                    normalized_content = re.sub(r"[ \t]+", " ", content).strip()
+                    local_content[section_name] = normalized_content
+
+            if local_content:
+                return local_citations, local_content
 
         for i, section_name in enumerate(section_names_list):
             next_section = section_names_list[i + 1] if i + 1 < len(section_names_list) else None
