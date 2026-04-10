@@ -136,8 +136,10 @@ Child segments (id -> name and excerpt):
 {items}
 
 Output format (plain text only):
-One line per child. Use the format:
-<id>: <percentage>
+One line per child.
+You may write either:
+- <id>: <percentage>
+or just one percentage line per child in the same order as the child list above.
 
 Example:
 1: 60
@@ -2368,9 +2370,9 @@ def direct_allocate_scores(
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
             "You must provide exactly one percentage for every child.\n"
-            f"Required counters: {', '.join(item_ids)}\n"
             "Any readable one-line-per-item list is fine.\n"
             "Separators such as :, -, =, or -> are all acceptable.\n"
+            "If you do not want to use ids, just output one line per child in the same order as the child list.\n"
             "Percentages must sum to 100.\n"
             "Do not omit any child. Do not add extra lines."
         )
@@ -2633,6 +2635,45 @@ def direct_only_allocate_scores(
             averaged[item] += value
     averaged = {item: value / len(sample_distributions) for item, value in averaged.items()}
     return apply_minimum_positive_floor(averaged, total_score, min_fraction=0.005)
+
+
+def heuristic_top_level_scores(
+    content_dict: Dict[str, Any],
+    total_score: float,
+) -> Dict[str, float]:
+    if not content_dict:
+        return {}
+
+    raw_scores: Dict[str, float] = {}
+    for section_name, section_content in content_dict.items():
+        name_norm = normalized_key(section_name)
+        base = 1.0
+
+        if "introduction" in name_norm:
+            base = 0.75
+        elif any(token in name_norm for token in ("relatedwork", "priorwork", "background", "survey")):
+            base = 0.80
+        elif any(token in name_norm for token in ("conclusion", "futurework", "discussion")):
+            base = 0.85
+        elif any(token in name_norm for token in ("experiment", "results", "evaluation", "analysis")):
+            base = 1.30
+        elif any(token in name_norm for token in ("framework", "method", "algorithm", "solution")):
+            base = 1.40
+        elif any(token in name_norm for token in ("model", "problem", "definition", "preliminar")):
+            base = 1.15
+
+        structure_bonus = 1.0
+        if isinstance(section_content, dict) and section_content:
+            structure_bonus += min(0.35, 0.08 * len(section_content))
+
+        text_blob = flatten_content_to_text(section_content, limit=4000)
+        length_bonus = min(0.25, len(text_blob) / 12000.0) if text_blob else 0.0
+        raw_scores[section_name] = base * (structure_bonus + length_bonus)
+
+    return enforce_top_level_constraints(
+        apply_minimum_positive_floor(raw_scores, total_score, min_fraction=0.01),
+        total=total_score,
+    )
 
 
 def direct_allocate_citation_scores(
@@ -3319,21 +3360,31 @@ def assign_importance_scores(
             log_tag="all_together_top",
             validation_mode="strict",
         )
-    except ValueError:
-        top_level_scores = direct_only_allocate_scores(
-            client=client,
-            item_to_content=content_dict,
-            total_score=1.0,
-            parent_name="Whole Paper",
-            model=model,
-            n_samples=n_samples,
-            temperature=temperature,
-            max_retries=max_retries,
-            debug_log_path=debug_log_path,
-            snippet_limit=0,
-            log_tag="all_together_top_relaxed",
-            validation_mode="relaxed",
-        )
+    except ValueError as strict_exc:
+        try:
+            top_level_scores = direct_only_allocate_scores(
+                client=client,
+                item_to_content=content_dict,
+                total_score=1.0,
+                parent_name="Whole Paper",
+                model=model,
+                n_samples=n_samples,
+                temperature=temperature,
+                max_retries=max_retries,
+                debug_log_path=debug_log_path,
+                snippet_limit=0,
+                log_tag="all_together_top_relaxed",
+                validation_mode="relaxed",
+            )
+        except ValueError as relaxed_exc:
+            append_debug_log(
+                debug_log_path,
+                (
+                    "[all_together_top_heuristic_fallback] parent=Whole Paper "
+                    f"strict_reason={strict_exc} relaxed_reason={relaxed_exc}"
+                ),
+            )
+            top_level_scores = heuristic_top_level_scores(content_dict, total_score=1.0)
     top_level_scores = enforce_top_level_constraints(top_level_scores, total=1.0)
 
     for section_name, score in top_level_scores.items():
