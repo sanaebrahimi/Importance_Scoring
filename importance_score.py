@@ -574,6 +574,11 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
     if not target:
         return -1, -1
 
+    numbered_heading_pattern = re.compile(
+        rf"(?<!\d)(\d+(?:\.\d+)*)\s+{re.escape(heading_name)}\b",
+        flags=re.IGNORECASE,
+    )
+
     direct_idx = full_text.find(heading_name)
     if direct_idx != -1:
         line_start = full_text.rfind("\n", 0, direct_idx) + 1
@@ -600,6 +605,9 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
     for idx in range(len(lines)):
         if is_heading_scan_noise_line(lines[idx]):
             continue
+        embedded_match = numbered_heading_pattern.search(lines[idx])
+        if embedded_match:
+            return offsets[idx] + embedded_match.start(1), offsets[idx] + len(lines[idx])
         if not is_probable_heading_line(lines[idx]):
             continue
         combined = ""
