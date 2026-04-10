@@ -86,7 +86,7 @@ Constraints:
 
 SECTION_DIRECT_SYSTEM_PROMPT = (
     "You are an expert academic reviewer evaluating the structure of a scientific paper. "
-    "Your task is to allocate a parent score across its child segments based on how much "
+    "Your task is to allocate percentage importance across child segments based on how much "
     "original scientific value each segment creates. "
     "Ask for each segment: does it produce new knowledge — through new methods, algorithms, "
     "theory, proofs, experimental findings, or novel analysis — or does it consume and "
@@ -96,8 +96,8 @@ SECTION_DIRECT_SYSTEM_PROMPT = (
     "read — should receive lower scores, because their value was already created elsewhere. "
     "Do not consider citation value at this stage. "
     "Use the entire parent content as context when evaluating children. "
-    "Treat the parent score as a fixed budget that must be fully distributed. "
-    "Scores must be non-negative."
+    "Return percentages, not copied numbers from the excerpts. "
+    "Percentages must be non-negative and sum to 100. "
     "Return plain text lines only. Do not output JSON."
 )
 
@@ -114,8 +114,9 @@ Parent content (context):
 {parent_content}
 
 Task:
-Divide the parent score among the following child segments according to how much 
-original scientific value each one creates.
+Assign percentage importance to the following child segments according to how much 
+original scientific value each one creates. The percentages will be rescaled in code to the
+parent score.
 
 Guidelines:
 - Ask for each segment: "Does this segment produce new knowledge, or does it 
@@ -129,19 +130,20 @@ Guidelines:
   sections creates no new value of its own and should score accordingly.
 - Consider how much original knowledge would be lost if the segment were removed, 
   not how much the paper would be harder to understand.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
 
 Child segments (id -> name and excerpt):
 {items}
 
 Output format (plain text only):
 One line per child. Use the format:
-<id>: <score>
+<id>: <percentage>
 
 Example:
-1: 0.32
-2: 0.18
+1: 60
+2: 40
 
-The scores must sum to {parent_score}.
+The percentages must sum to 100.
 Do not output JSON.
 Do not include explanations.
 """
@@ -1621,8 +1623,38 @@ def flatten_content_with_names(content: Any, limit: Optional[int] = 700) -> str:
     return ""
 
 
+def sanitize_section_scoring_text(text: str) -> str:
+    if not text:
+        return ""
+
+    kept_lines: List[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if kept_lines and kept_lines[-1]:
+                kept_lines.append("")
+            continue
+        if is_page_artifact_line(line):
+            continue
+
+        numeric_tokens = len(re.findall(r"\b\d+(?:\.\d+)?(?:e[-+]?\d+)?%?\b", line))
+        alpha_tokens = len(re.findall(r"[A-Za-z]+", line))
+
+        # Drop short table-like or metric-heavy lines that tend to leak numbers into score outputs.
+        if numeric_tokens >= 4 and (alpha_tokens <= numeric_tokens or len(line) <= 140):
+            continue
+        if numeric_tokens >= 3 and alpha_tokens <= 2:
+            continue
+
+        kept_lines.append(line)
+
+    cleaned = "\n".join(kept_lines)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+    return cleaned
+
+
 def format_scored_segment_excerpt(segment_name: str, segment_content: Any, limit: Optional[int] = 700) -> str:
-    body = flatten_content_with_names(segment_content, limit=limit)
+    body = sanitize_section_scoring_text(flatten_content_with_names(segment_content, limit=limit))
     if body:
         return f"Section/subsection name: {segment_name}\nContent:\n{body}"
     return f"Section/subsection name: {segment_name}"
@@ -1973,7 +2005,7 @@ def estimate_direct_allocation_tokens(
         name: format_scored_segment_excerpt(name, item_to_content[name], limit=use_limit)
         for name in items
     }
-    parent_content = flatten_content_with_names(item_to_content, limit=None)
+    parent_content = sanitize_section_scoring_text(flatten_content_with_names(item_to_content, limit=None))
     item_payload = {str(idx + 1): {"name": item_name, "excerpt": snippets[item_name]} for idx, item_name in enumerate(items)}
     prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
         parent_name=parent_name,
@@ -2119,7 +2151,9 @@ def direct_allocate_scores(
     parent_limit = None
     if snippet_limit > 0:
         parent_limit = max(1200, min(6000, len(items) * max(80, snippet_limit)))
-    parent_content = flatten_content_with_names(item_to_content, limit=parent_limit)
+    parent_content = sanitize_section_scoring_text(
+        flatten_content_with_names(item_to_content, limit=parent_limit)
+    )
 
     system_prompt = SECTION_DIRECT_SYSTEM_PROMPT
     base_prompt = SECTION_DIRECT_USER_PROMPT_TEMPLATE.format(
@@ -2148,7 +2182,7 @@ def direct_allocate_scores(
         parsed_full = parse_score_map_from_response(
             raw_response,
             item_ids,
-            allow_percentage=False,
+            allow_percentage=True,
             alias_to_id=alias_to_id,
         )
         parsed_scores = {
@@ -2166,10 +2200,11 @@ def direct_allocate_scores(
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
-            "You must provide exactly one score for every child.\n"
+            "You must provide exactly one percentage for every child.\n"
             f"Required counters: {', '.join(item_ids)}\n"
             "Any readable one-line-per-item list is fine.\n"
             "Separators such as :, -, =, or -> are all acceptable.\n"
+            "Percentages must sum to 100.\n"
             "Do not omit any child. Do not add extra lines."
         )
 
