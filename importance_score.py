@@ -597,6 +597,8 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
     for idx in range(len(lines)):
         if is_heading_scan_noise_line(lines[idx]):
             continue
+        if not is_probable_heading_line(lines[idx]):
+            continue
         combined = ""
         consumed = 0
         end_idx = idx
@@ -604,6 +606,8 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
             if is_heading_scan_noise_line(lines[end_idx]):
                 end_idx += 1
                 continue
+            if end_idx > idx and not is_probable_heading_line(lines[end_idx]):
+                break
 
             consumed += 1
             chunk_lines = [line for line in lines[idx : end_idx + 1] if not is_heading_scan_noise_line(line)]
@@ -853,7 +857,7 @@ def extract_citations_by_section(
         local_content: Dict[str, Any] = {}
 
         matched_sections = match_declared_sections_in_order(section_text, section_names_list)
-        if matched_sections:
+        if len(matched_sections) == len(section_names_list):
             for idx, (section_name, match_entry, _) in enumerate(matched_sections):
                 subsections = sections_dict[section_name]
                 section_start = match_entry["start"]
@@ -1631,6 +1635,10 @@ def is_probable_heading_line(line: str) -> bool:
         return False
     if stripped.endswith((".", "?", "!", ";")):
         return False
+    if "@" in stripped:
+        return False
+    if stripped.count(",") >= 2:
+        return False
 
     heading_number = re.match(r"^(?:\d+(?:\.\d+)*|[A-Z])(?:[\.\)])?\s+(.+)$", stripped)
     if heading_number:
@@ -1641,6 +1649,24 @@ def is_probable_heading_line(line: str) -> bool:
     words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'/-]*", stripped)
     if not words or len(words) > 14:
         return False
+
+    if len(words) >= 6 and all(word[:1].isupper() for word in words[: min(len(words), 6)]):
+        lowered = stripped.lower()
+        if any(
+            marker in lowered
+            for marker in (
+                "university",
+                "institute",
+                "department",
+                "arlington",
+                "newark",
+                "mumbai",
+                "united states",
+                "open access",
+                "support provided by",
+            )
+        ):
+            return False
 
     uppercase_like = sum(1 for word in words if word.isupper() and len(word) > 1)
     title_like = sum(1 for word in words if word[:1].isupper())
