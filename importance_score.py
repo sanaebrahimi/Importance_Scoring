@@ -150,30 +150,32 @@ Do not include explanations.
 
 CITATION_SPLIT_SYSTEM_PROMPT = (
     "You are an expert academic reviewer. "
-    "Your task is to distribute a paragraph's citation score among the citations that appear in that paragraph, "
+    "Your task is to distribute percentage importance among the citations that appear in a paragraph, "
     "based on how much each cited work contributes to the paragraph's claims or grounding. "
-    "Treat the parent score as a fixed budget that must be fully distributed. "
+    "Return percentages, not copied numbers from the paragraph or contexts. "
+    "Percentages must be non-negative and sum to 100. "
     "Return plain text lines only."
 )
 
 CITATION_SPLIT_USER_PROMPT_TEMPLATE = """Paragraph id:
 {paragraph_id}
 
-Paragraph citation score to distribute: {paragraph_citation_score}
+Paragraph citation score to distribute later in code: {paragraph_citation_score}
 
 Paragraph text:
 {paragraph_text}
 
 Task:
-- Divide the paragraph citation score among the citations below.
+- Divide percentage importance among the citations below.
 - Higher share:
   citation directly supports the paragraph's claim
   citation provides key comparison or baseline
   citation introduces a method the paragraph builds upon
 - Lower share:
   citation is peripheral or only mentioned briefly
-- Scores must be non-negative.
-- Prefer scores that sum to the paragraph citation score.
+- Percentages must be non-negative.
+- Percentages must sum to 100.
+- Do not copy decimal values from the paragraph or citation contexts.
 
 Citation entries (citation_id -> citation and context):
 {citations_json}
@@ -184,8 +186,8 @@ Separators such as `:`, `-`, `=`, or `->` are all fine.
 Line order matters more than exact counter formatting.
 
 Example:
-1: 0.06
-2: 0.02
+1: 60
+2: 40
 
 Do not output JSON.
 Do not include explanations.
@@ -194,21 +196,21 @@ Do not include explanations.
 PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT = (
 """You are an expert academic reviewer. For each paragraph, split its total score into two components:
 
-- technical_score: the value this paragraph contributes through the authors' own 
+- technical_percentage: the percentage of value this paragraph contributes through the authors' own 
   original ideas — new definitions, algorithms, proofs, experimental design, 
   results, or analysis that would survive even if all cited works were removed.
 
-- citation_score: the value this paragraph derives from cited prior work — 
+- citation_percentage: the percentage of value this paragraph derives from cited prior work — 
   including summarizing, comparing, contextualizing, or building upon existing 
   work. If the paragraph's main purpose is to describe what others have done, 
   most of its value is citation-derived.
 
-Treat the total score as a fixed budget. technical + citation must equal 
-total_score for each paragraph."""
+Return percentages, not copied numbers from the paragraph text. technical + citation must equal 
+100 for each paragraph."""
 )
 
 PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE = """Task:
-For each paragraph, split the total_score into technical_score and citation_score.
+For each paragraph, split the value into technical_percentage and citation_percentage.
 
 Section context: these paragraphs are from the "{section_name}" section of the paper.
 Use this to calibrate your expectations - a paragraph in Related Work behaves
@@ -216,34 +218,34 @@ very differently from one in Methods, even if the text looks similar.
 
 Ask yourself: "If I deleted all content describing, comparing, or bridging prior
 work - what fraction of this paragraph's value survives?" That surviving fraction
-is technical_score. The rest is citation_score.
+is technical_percentage. The rest is citation_percentage.
 
 Calibration guidance:
 - A paragraph in Related Work that summarizes prior methods:
-  citation_score ≈ 0.80–0.95, technical_score ≈ 0.05–0.20
+  citation_percentage ≈ 80–95, technical_percentage ≈ 5–20
 - A paragraph in Related Work that draws a novel connection between prior works
   and the current paper's gap:
-  citation_score ≈ 0.50–0.70, technical_score ≈ 0.30–0.50
+  citation_percentage ≈ 50–70, technical_percentage ≈ 30–50
 - A Background paragraph that defines a known concept from prior work:
-  citation_score ≈ 0.60–0.80
+  citation_percentage ≈ 60–80
 - A Methods paragraph describing the authors' new algorithm:
-  citation_score ≈ 0.00–0.15, technical_score ≈ 0.85–1.00
+  citation_percentage ≈ 0–15, technical_percentage ≈ 85–100
 - A paragraph comparing experiment results to a baseline from prior work:
-  citation_score ≈ 0.20–0.40
+  citation_percentage ≈ 20–40
 - A Conclusion paragraph summarizing the paper's own contributions:
-  citation_score ≈ 0.00–0.10, technical_score ≈ 0.90–1.00
-- If has_citations is false, citation_score = 0.0 and technical_score = total_score.
+  citation_percentage ≈ 0–10, technical_percentage ≈ 90–100
+- If has_citations is false, citation_percentage = 0 and technical_percentage = 100.
 
 Rules:
-- technical + citation = total_score for every paragraph
+- technical + citation = 100 for every paragraph
 - Both values must be non-negative
-- Do not assign citation_score > 0 if has_citations is false
+- Do not assign citation_percentage > 0 if has_citations is false
 - Use `citation_focus_text` as the only evidence for citation-derived value.
-  Text outside `citation_focus_text` should not increase citation_score.
-- If `citation_focus_text` is empty or minimal, citation_score should stay low
+  Text outside `citation_focus_text` should not increase citation_percentage.
+- If `citation_focus_text` is empty or minimal, citation_percentage should stay low
   even if the paragraph has citation markers elsewhere.
 - A paragraph with has_citations is false but located in Related Work likely
-  bridges or references prior work implicitly - keep citation_score = 0 per
+  bridges or references prior work implicitly - keep citation_percentage = 0 per
   the rule above, but note this as a pipeline limitation.
 
 Paragraph entries (paragraph_id -> details):
@@ -253,8 +255,8 @@ Output format (plain text only):
 paragraph_id: technical=<float>, citation=<float>
 
 Example:
-Paragraph1: technical=0.21, citation=0.04
-Paragraph2: technical=0.13, citation=0.00
+Paragraph1: technical=80, citation=20
+Paragraph2: technical=100, citation=0
 
 Do not output JSON. Do not include explanations.
 """
@@ -2434,7 +2436,6 @@ def direct_allocate_citation_scores(
         citations_json=json.dumps(citation_payload, indent=2),
     )
     prompt = base_prompt
-    accumulated_scores: Dict[str, float] = {}
     alias_to_id = {citation_id_to_name[citation_id]: citation_id for citation_id in citation_ids}
 
     for attempt in range(max(1, max_retries)):
@@ -2454,49 +2455,33 @@ def direct_allocate_citation_scores(
                 f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
             ),
         )
-        remaining_citation_ids = [citation_id for citation_id in citation_ids if citation_id not in accumulated_scores]
-        remaining_aliases = {
-            citation_id_to_name[citation_id]: citation_id for citation_id in remaining_citation_ids
-        }
         parsed_full = parse_score_map_from_response(
             raw_response,
             citation_ids,
-            allow_percentage=False,
+            allow_percentage=True,
             alias_to_id=alias_to_id,
         )
-        parsed_remaining = parse_score_map_from_response(
-            raw_response,
-            remaining_citation_ids,
-            allow_percentage=False,
-            alias_to_id=remaining_aliases,
-        )
-        parsed_update = {
-            citation_id: value
+        parsed_scores = {
+            citation_id: max(0.0, safe_float(value, 0.0))
             for citation_id, value in parsed_full.items()
-            if citation_id in remaining_citation_ids
         }
-        parsed_update.update(parsed_remaining)
 
-        for citation_id, value in parsed_update.items():
-            accumulated_scores[citation_id] = max(0.0, safe_float(value, 0.0))
-
-        if len(accumulated_scores) == len(citation_ids) and any(v > 0.0 for v in accumulated_scores.values()):
+        if set(parsed_scores.keys()) == set(citation_ids) and any(v > 0.0 for v in parsed_scores.values()):
             parsed_scores = {
-                citation_id_to_name[citation_id]: accumulated_scores[citation_id]
+                citation_id_to_name[citation_id]: parsed_scores[citation_id]
                 for citation_id in citation_ids
             }
             return normalize_distribution(parsed_scores, total_score)
 
-        missing_citation_ids = [citation_id for citation_id in citation_ids if citation_id not in accumulated_scores]
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
-            f"You must provide one score for every missing citation.\n"
-            f"Missing counters: {', '.join(missing_citation_ids) if missing_citation_ids else ', '.join(citation_ids)}\n"
+            "You must provide exactly one percentage for every citation.\n"
+            f"Required counters: {', '.join(citation_ids)}\n"
             "Any readable one-line-per-item list is fine.\n"
             "Separators such as :, -, =, or -> are all acceptable.\n"
-            "If the numbering drifts, line order will be used.\n"
-            "You may answer with only the missing items."
+            "Percentages must sum to 100.\n"
+            "Do not omit any citation. Do not add extra lines."
         )
 
     append_debug_log(
