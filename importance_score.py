@@ -2323,7 +2323,7 @@ def all_together_allocate_scores(
     sample_count = max(1, n_samples)
     sample_distributions: List[Dict[str, float]] = []
     for s in range(sample_count):
-        sample_items = counterbalanced_item_order(items, s)
+        sample_items = list(items)
         ordered_item_to_content = {item: item_to_content[item] for item in sample_items}
         append_debug_log(
             debug_log_path,
