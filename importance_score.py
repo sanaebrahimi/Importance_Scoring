@@ -2756,6 +2756,7 @@ def pairwise_allocate_scores(
     temperature: float,
     max_retries: int = 3,
     debug_log_path: str = "",
+    allow_direct_fallback: bool = True,
 ) -> Dict[str, float]:
     items = list(item_to_content.keys())
     if not items:
@@ -2842,27 +2843,32 @@ def pairwise_allocate_scores(
             if fallback_pairs == len(pairs):
                 print(
                     f"[WARN] All pairwise calls failed for '{parent_name}' (sample {s + 1}). "
-                    "Using direct allocation fallback."
+                    + ("Using direct allocation fallback." if allow_direct_fallback else "Keeping pairwise fallback.")
                 )
             else:
                 print(
                     f"[WARN] Pairwise outputs lacked variation for '{parent_name}' (sample {s + 1}). "
-                    "Using direct allocation fallback."
+                    + ("Using direct allocation fallback." if allow_direct_fallback else "Keeping pairwise fallback.")
                 )
-            sample_distributions.append(
-                direct_allocate_scores(
-                    client=client,
-                    item_to_content=item_to_content,
-                    total_score=total_score,
-                    parent_name=parent_name,
-                    model=model,
-                    temperature=min(1.0, temperature + (0.05 * s)),
-                    max_retries=retry_count,
-                    debug_log_path=debug_log_path,
-                    sample_idx=s + 1,
-                    log_tag="fallback",
+            if allow_direct_fallback:
+                sample_distributions.append(
+                    direct_allocate_scores(
+                        client=client,
+                        item_to_content=item_to_content,
+                        total_score=total_score,
+                        parent_name=parent_name,
+                        model=model,
+                        temperature=min(1.0, temperature + (0.05 * s)),
+                        max_retries=retry_count,
+                        debug_log_path=debug_log_path,
+                        sample_idx=s + 1,
+                        log_tag="fallback",
+                    )
                 )
-            )
+            else:
+                sample_distributions.append(
+                    apply_minimum_positive_floor(raw_scores, total_score, min_fraction=0.005)
+                )
         else:
             sample_distributions.append(
                 apply_minimum_positive_floor(raw_scores, total_score, min_fraction=0.005)
@@ -3165,7 +3171,7 @@ def assign_importance_scores(
     section_scores: Dict[str, Any] = {}
     paragraph_scores: List[Dict[str, Any]] = []
 
-    top_level_scores = all_together_allocate_scores(
+    top_level_scores = pairwise_allocate_scores(
         client=client,
         item_to_content=content_dict,
         total_score=1.0,
@@ -3175,8 +3181,7 @@ def assign_importance_scores(
         temperature=temperature,
         max_retries=max_retries,
         debug_log_path=debug_log_path,
-        snippet_limit=0,
-        log_tag="all_together_top",
+        allow_direct_fallback=False,
     )
     top_level_scores = enforce_top_level_constraints(top_level_scores, total=1.0)
 
