@@ -1096,9 +1096,12 @@ def parse_score_map_from_response(
                 norm_to_id[normalized_key(alias)] = target_id
     parsed_scores: Dict[str, float] = {}
 
-    def assign_from_pair(key: Any, value: Any) -> None:
+    def resolve_target_id(key: Any) -> Optional[str]:
         key_str = str(key)
-        target_id = key_str if key_str in expected_set else norm_to_id.get(normalized_key(key_str))
+        return key_str if key_str in expected_set else norm_to_id.get(normalized_key(key_str))
+
+    def assign_from_pair(key: Any, value: Any) -> None:
+        target_id = resolve_target_id(key)
         if target_id is None:
             return
 
@@ -1128,8 +1131,25 @@ def parse_score_map_from_response(
             for idx in range(len(expected_ids))
         }
 
+    resolved_plaintext_pairs: List[Tuple[str, float]] = []
+    unresolved_plaintext = 0
     for key, value in plaintext_pairs:
-        assign_from_pair(key, value)
+        target_id = resolve_target_id(key)
+        if target_id is None:
+            unresolved_plaintext += 1
+            continue
+        resolved_plaintext_pairs.append((target_id, value))
+
+    if resolved_plaintext_pairs and unresolved_plaintext == 0:
+        resolved_ids = [target_id for target_id, _ in resolved_plaintext_pairs]
+        if len(resolved_plaintext_pairs) == len(expected_ids) and len(set(resolved_ids)) == len(expected_ids):
+            return {
+                target_id: value
+                for target_id, value in resolved_plaintext_pairs
+            }
+    elif resolved_plaintext_pairs:
+        for target_id, value in resolved_plaintext_pairs:
+            parsed_scores[target_id] = value
 
     json_payload = parse_json_loose(response_text)
     if isinstance(json_payload, dict):
@@ -1141,12 +1161,10 @@ def parse_score_map_from_response(
             seq = json_payload.get(seq_key)
             if not isinstance(seq, list):
                 continue
-            if not seq:
+            if not seq or len(seq) != len(expected_ids):
                 continue
             if all(not isinstance(entry, dict) for entry in seq):
                 for idx, entry in enumerate(seq):
-                    if idx >= len(expected_ids):
-                        break
                     score_val = coerce_non_negative_number(entry, allow_percentage=allow_percentage)
                     if score_val is not None:
                         parsed_scores[expected_ids[idx]] = score_val
@@ -1182,10 +1200,8 @@ def parse_score_map_from_response(
                 assign_from_pair(key_candidate, value_candidate)
 
     elif isinstance(json_payload, list):
-        if json_payload and all(not isinstance(entry, dict) for entry in json_payload):
+        if json_payload and len(json_payload) == len(expected_ids) and all(not isinstance(entry, dict) for entry in json_payload):
             for idx, entry in enumerate(json_payload):
-                if idx >= len(expected_ids):
-                    break
                 score_val = coerce_non_negative_number(entry, allow_percentage=allow_percentage)
                 if score_val is not None:
                     parsed_scores[expected_ids[idx]] = score_val
