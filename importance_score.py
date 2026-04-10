@@ -2567,6 +2567,74 @@ def all_together_allocate_scores(
     return apply_minimum_positive_floor(averaged, total_score, min_fraction=0.005)
 
 
+def direct_only_allocate_scores(
+    client: Client,
+    item_to_content: Dict[str, Any],
+    total_score: float,
+    parent_name: str,
+    model: str,
+    n_samples: int,
+    temperature: float,
+    max_retries: int,
+    debug_log_path: str,
+    snippet_limit: int = 0,
+    log_tag: str = "all_together",
+    validation_mode: str = "strict",
+) -> Dict[str, float]:
+    items = list(item_to_content.keys())
+    if not items:
+        return {}
+    if len(items) == 1:
+        return {items[0]: total_score}
+
+    sample_count = max(1, n_samples)
+    sample_distributions: List[Dict[str, float]] = []
+    for s in range(sample_count):
+        sample_items = list(items)
+        ordered_item_to_content = {item: item_to_content[item] for item in sample_items}
+        append_debug_log(
+            debug_log_path,
+            f"[{log_tag}_item_order] parent={parent_name} sample={s + 1}/{sample_count} order={sample_items}",
+        )
+        try:
+            sample_distributions.append(
+                direct_allocate_scores(
+                    client=client,
+                    item_to_content=ordered_item_to_content,
+                    total_score=total_score,
+                    parent_name=parent_name,
+                    model=model,
+                    temperature=min(1.0, temperature + (0.05 * s)),
+                    max_retries=max(1, max_retries),
+                    debug_log_path=debug_log_path,
+                    sample_idx=s + 1,
+                    snippet_limit=snippet_limit,
+                    log_tag=log_tag,
+                    validation_mode=validation_mode,
+                )
+            )
+        except ValueError as exc:
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[{log_tag}_sample_skip] parent={parent_name} sample={s + 1}/{sample_count} "
+                    f"reason={exc}"
+                ),
+            )
+
+    if not sample_distributions:
+        raise ValueError(
+            f"Model failed to produce any complete direct-allocation sample for parent '{parent_name}'."
+        )
+
+    averaged = {item: 0.0 for item in items}
+    for dist in sample_distributions:
+        for item, value in dist.items():
+            averaged[item] += value
+    averaged = {item: value / len(sample_distributions) for item, value in averaged.items()}
+    return apply_minimum_positive_floor(averaged, total_score, min_fraction=0.005)
+
+
 def direct_allocate_citation_scores(
     client: Client,
     paragraph_id: str,
@@ -2901,17 +2969,65 @@ def pairwise_allocate_scores(
 
 def enforce_top_level_constraints(scores: Dict[str, float], total: float) -> Dict[str, float]:
     constrained = dict(scores)
+    if not constrained:
+        return {}
 
-    # Domain preference from user: Introduction should not exceed Experiment Results.
-    if "Introduction" in constrained and "Experiment Results" in constrained:
-        intro = constrained["Introduction"]
-        exp = constrained["Experiment Results"]
-        if intro > exp:
-            transfer = (intro - exp) / 2.0
-            constrained["Introduction"] -= transfer
-            constrained["Experiment Results"] += transfer
+    def norm(name: str) -> str:
+        return normalized_key(name)
 
-    return normalize_distribution(constrained, total)
+    support_sections: List[str] = []
+    core_sections: List[str] = []
+    preferred_core_sections: List[str] = []
+
+    for section_name in constrained:
+        name_norm = norm(section_name)
+        is_support = any(
+            token in name_norm
+            for token in ("introduction", "relatedwork", "priorwork", "conclusion", "futurework", "background")
+        )
+        if is_support:
+            support_sections.append(section_name)
+        else:
+            core_sections.append(section_name)
+        if any(
+            token in name_norm
+            for token in ("framework", "algorithm", "experiment", "results", "method", "solution")
+        ):
+            preferred_core_sections.append(section_name)
+
+    anchor_sections = preferred_core_sections or core_sections
+    if not anchor_sections:
+        return apply_minimum_positive_floor(constrained, total, min_fraction=0.005)
+
+    core_anchor = max(constrained[name] for name in anchor_sections)
+    caps: Dict[str, float] = {}
+    for section_name in support_sections:
+        name_norm = norm(section_name)
+        if "introduction" in name_norm:
+            caps[section_name] = max(0.12, 0.85 * core_anchor)
+        elif "relatedwork" in name_norm or "priorwork" in name_norm or "background" in name_norm:
+            caps[section_name] = max(0.10, 0.75 * core_anchor)
+        elif "conclusion" in name_norm or "futurework" in name_norm:
+            caps[section_name] = max(0.08, 0.60 * core_anchor)
+
+    excess = 0.0
+    for section_name, cap in caps.items():
+        current = constrained.get(section_name, 0.0)
+        if current > cap:
+            excess += current - cap
+            constrained[section_name] = cap
+
+    recipients = preferred_core_sections or core_sections
+    if excess > 0.0 and recipients:
+        recipient_weights = {
+            name: max(1e-9, constrained.get(name, 0.0))
+            for name in recipients
+        }
+        redistributed = normalize_distribution(recipient_weights, excess)
+        for name, value in redistributed.items():
+            constrained[name] = constrained.get(name, 0.0) + value
+
+    return apply_minimum_positive_floor(constrained, total, min_fraction=0.005)
 
 
 def split_paragraph_channel_scores(
@@ -3188,18 +3304,36 @@ def assign_importance_scores(
     section_scores: Dict[str, Any] = {}
     paragraph_scores: List[Dict[str, Any]] = []
 
-    top_level_scores = pairwise_allocate_scores(
-        client=client,
-        item_to_content=content_dict,
-        total_score=1.0,
-        parent_name="Whole Paper",
-        model=model,
-        n_samples=n_samples,
-        temperature=temperature,
-        max_retries=max_retries,
-        debug_log_path=debug_log_path,
-        allow_direct_fallback=False,
-    )
+    try:
+        top_level_scores = direct_only_allocate_scores(
+            client=client,
+            item_to_content=content_dict,
+            total_score=1.0,
+            parent_name="Whole Paper",
+            model=model,
+            n_samples=n_samples,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+            snippet_limit=0,
+            log_tag="all_together_top",
+            validation_mode="strict",
+        )
+    except ValueError:
+        top_level_scores = direct_only_allocate_scores(
+            client=client,
+            item_to_content=content_dict,
+            total_score=1.0,
+            parent_name="Whole Paper",
+            model=model,
+            n_samples=n_samples,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+            snippet_limit=0,
+            log_tag="all_together_top_relaxed",
+            validation_mode="relaxed",
+        )
     top_level_scores = enforce_top_level_constraints(top_level_scores, total=1.0)
 
     for section_name, score in top_level_scores.items():
