@@ -2129,7 +2129,6 @@ def direct_allocate_scores(
         items=json.dumps(item_payload, indent=2),
     )
     prompt = base_prompt
-    accumulated_scores: Dict[str, float] = {}
     alias_to_id = {item_id_to_name[item_id]: item_id for item_id in item_ids}
 
     for attempt in range(max(1, max_retries)):
@@ -2146,49 +2145,32 @@ def direct_allocate_scores(
                 f"attempt={attempt + 1}/{max(1, max_retries)}\n{raw_response}\n"
             ),
         )
-        remaining_item_ids = [item_id for item_id in item_ids if item_id not in accumulated_scores]
-        remaining_aliases = {
-            item_id_to_name[item_id]: item_id for item_id in remaining_item_ids
-        }
         parsed_full = parse_score_map_from_response(
             raw_response,
             item_ids,
             allow_percentage=False,
             alias_to_id=alias_to_id,
         )
-        parsed_remaining = parse_score_map_from_response(
-            raw_response,
-            remaining_item_ids,
-            allow_percentage=False,
-            alias_to_id=remaining_aliases,
-        )
-        parsed_update = {
-            item_id: value
+        parsed_scores = {
+            item_id: max(0.0, safe_float(value, 0.0))
             for item_id, value in parsed_full.items()
-            if item_id in remaining_item_ids
         }
-        parsed_update.update(parsed_remaining)
 
-        for item_id, value in parsed_update.items():
-            accumulated_scores[item_id] = max(0.0, safe_float(value, 0.0))
-
-        if len(accumulated_scores) == len(item_ids) and any(v > 0.0 for v in accumulated_scores.values()):
+        if set(parsed_scores.keys()) == set(item_ids) and any(v > 0.0 for v in parsed_scores.values()):
             parsed_scores = {
-                item_id_to_name[item_id]: accumulated_scores[item_id]
+                item_id_to_name[item_id]: parsed_scores[item_id]
                 for item_id in item_ids
             }
             return normalize_distribution(parsed_scores, total_score)
 
-        missing_item_ids = [item_id for item_id in item_ids if item_id not in accumulated_scores]
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
-            f"You must provide one score for every missing child.\n"
-            f"Missing counters: {', '.join(missing_item_ids) if missing_item_ids else ', '.join(item_ids)}\n"
+            "You must provide exactly one score for every child.\n"
+            f"Required counters: {', '.join(item_ids)}\n"
             "Any readable one-line-per-item list is fine.\n"
             "Separators such as :, -, =, or -> are all acceptable.\n"
-            "If the numbering drifts, line order will be used.\n"
-            "You may answer with only the missing items."
+            "Do not omit any child. Do not add extra lines."
         )
 
     append_debug_log(
