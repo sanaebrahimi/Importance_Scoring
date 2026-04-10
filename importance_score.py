@@ -336,6 +336,9 @@ MONTH_NAME_PATTERN = (
     r"aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?"
 )
 
+CITATION_STYLE_NUMERIC = "numeric"
+CITATION_STYLE_AUTHOR_YEAR = "author_year"
+
 
 def load_section_assignments(assignments_path: str) -> Dict[str, Dict[str, Any]]:
     path = Path(assignments_path)
@@ -532,6 +535,73 @@ def trim_text_before_references(text: str) -> str:
     return text
 
 
+def extract_numeric_citation_numbers(citation_block: str) -> List[int]:
+    return [int(value) for value in re.findall(r"\d+", citation_block)]
+
+
+def is_math_like_numeric_citation(
+    citation_block: str,
+    prefix_text: str = "",
+    suffix_text: str = "",
+) -> bool:
+    numbers = extract_numeric_citation_numbers(citation_block)
+    if not numbers:
+        return True
+    if any(number <= 0 for number in numbers):
+        return True
+
+    prefix = normalize_for_match(prefix_text)
+    suffix = normalize_for_match(suffix_text)
+    math_prefix_pattern = re.compile(r"(?:∈|=|≤|≥|<|>|\\in|\\subseteq|\\subset)\s*$")
+    if math_prefix_pattern.search(prefix_text):
+        return True
+    if re.search(r"[A-Za-z0-9_]\s*(?:∈|=|≤|≥|<|>)\s*$", prefix_text):
+        return True
+
+    joined = f"{prefix} {normalize_for_match(citation_block)} {suffix}".strip().lower()
+    if any(token in joined for token in ("probability", "reward", "score", "interval", "range")) and len(numbers) <= 2:
+        return True
+
+    return False
+
+
+def classify_citation_block(
+    citation_block: str,
+    prefix_text: str = "",
+    suffix_text: str = "",
+) -> Optional[str]:
+    if re.fullmatch(AUTHOR_YEAR_CITATION_PATTERN, citation_block):
+        return CITATION_STYLE_AUTHOR_YEAR
+    if re.fullmatch(NUMERIC_BRACKET_CITATION_PATTERN, citation_block):
+        if is_math_like_numeric_citation(citation_block, prefix_text=prefix_text, suffix_text=suffix_text):
+            return None
+        return CITATION_STYLE_NUMERIC
+    return None
+
+
+def detect_dominant_citation_style(text: str) -> str:
+    numeric_count = 0
+    author_year_count = 0
+
+    for match in re.finditer(CITATION_BLOCK_PATTERN, text or ""):
+        citation_block = match.group(0)
+        prefix_text = (text or "")[max(0, match.start() - 24) : match.start()]
+        suffix_text = (text or "")[match.end() : min(len(text or ""), match.end() + 24)]
+        citation_style = classify_citation_block(
+            citation_block,
+            prefix_text=prefix_text,
+            suffix_text=suffix_text,
+        )
+        if citation_style == CITATION_STYLE_NUMERIC:
+            numeric_count += 1
+        elif citation_style == CITATION_STYLE_AUTHOR_YEAR:
+            author_year_count += 1
+
+    if author_year_count > numeric_count:
+        return CITATION_STYLE_AUTHOR_YEAR
+    return CITATION_STYLE_NUMERIC
+
+
 def is_back_matter_heading(text: str) -> bool:
     normalized = normalize_heading_text(text)
     normalized = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized).strip()
@@ -657,6 +727,8 @@ def extract_citations_by_section(
     """
     Extract citation blocks with context and section content based on a nested section schema.
     """
+    dominant_citation_style = detect_dominant_citation_style(text)
+
     def process_section_text(section_text: str) -> Dict[str, List[str]]:
         citations_dict: Dict[str, List[str]] = {}
         section_text = section_text.replace("\n", "")
@@ -664,6 +736,15 @@ def extract_citations_by_section(
 
         for match in re.finditer(CITATION_BLOCK_PATTERN, section_text):
             citation_block = match.group(0)
+            prefix_text = section_text[max(0, match.start() - 24) : match.start()]
+            suffix_text = section_text[match.end() : min(len(section_text), match.end() + 24)]
+            citation_style = classify_citation_block(
+                citation_block,
+                prefix_text=prefix_text,
+                suffix_text=suffix_text,
+            )
+            if citation_style is None or citation_style != dominant_citation_style:
+                continue
             citation_start = match.start()
             citation_end = match.end()
 
