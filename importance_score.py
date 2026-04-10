@@ -1547,6 +1547,21 @@ def normalize_distribution(raw_scores: Dict[str, float], total: float) -> Dict[s
     return normalized
 
 
+def apply_minimum_positive_floor(
+    scores: Dict[str, float],
+    total: float,
+    min_fraction: float = 0.005,
+) -> Dict[str, float]:
+    if not scores:
+        return {}
+    if len(scores) == 1:
+        return dict(scores)
+
+    floor_value = max(1e-12, total * max(0.0, min_fraction))
+    adjusted = {key: max(floor_value, safe_float(value, 0.0)) for key, value in scores.items()}
+    return normalize_distribution(adjusted, total)
+
+
 def counterbalanced_item_order(items: List[str], sample_idx: int) -> List[str]:
     if len(items) <= 1:
         return list(items)
@@ -1575,6 +1590,38 @@ def assert_close(actual: float, expected: float, context: str, tol: float = 1e-8
             f"[WARN] Score conservation drift at {context}: expected {expected:.12f}, "
             f"got {actual:.12f}, diff={abs(actual - expected):.12f}"
         )
+
+
+def validate_allocation_distribution(
+    parsed_scores: Dict[str, float],
+    item_ids: List[str],
+) -> Optional[str]:
+    if set(parsed_scores.keys()) != set(item_ids):
+        return "incomplete_keys"
+
+    values = [max(0.0, safe_float(parsed_scores[item_id], 0.0)) for item_id in item_ids]
+    if not any(value > 0.0 for value in values):
+        return "all_zero"
+
+    score_sum = sum(values)
+    if score_sum <= 0.0:
+        return "non_positive_sum"
+
+    normalized = [value / score_sum for value in values]
+    positive_count = sum(1 for value in normalized if value > 1e-9)
+    zero_count = len(normalized) - positive_count
+    max_share = max(normalized)
+    sorted_shares = sorted(normalized, reverse=True)
+    second_share = sorted_shares[1] if len(sorted_shares) > 1 else 0.0
+
+    if len(item_ids) >= 4 and positive_count < max(3, len(item_ids) // 2):
+        return "too_many_zero_children"
+    if len(item_ids) >= 4 and max_share >= 0.75 and zero_count >= 2:
+        return "pathological_concentration"
+    if len(item_ids) >= 5 and max_share >= 0.65 and second_share <= 0.20 and zero_count >= 1:
+        return "dominant_head_with_sparse_tail"
+
+    return None
 
 
 def flatten_content_to_text(content: Any, limit: Optional[int] = 700) -> str:
@@ -2270,12 +2317,22 @@ def direct_allocate_scores(
             for item_id, value in parsed_full.items()
         }
 
-        if set(parsed_scores.keys()) == set(item_ids) and any(v > 0.0 for v in parsed_scores.values()):
+        rejection_reason = validate_allocation_distribution(parsed_scores, item_ids)
+        if rejection_reason is None:
             parsed_scores = {
                 item_id_to_name[item_id]: parsed_scores[item_id]
                 for item_id in item_ids
             }
             return normalize_distribution(parsed_scores, total_score)
+
+        if set(parsed_scores.keys()) == set(item_ids):
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[{log_tag}_reject] parent={parent_name} sample={sample_idx} "
+                    f"attempt={attempt + 1}/{max(1, max_retries)} reason={rejection_reason}"
+                ),
+            )
 
         prompt = (
             f"{base_prompt}\n\n"
@@ -3169,6 +3226,7 @@ def assign_importance_scores(
             log_tag="all_together_paragraphs",
         )
         paragraph_total = normalize_distribution(paragraph_total_scores, section_score)
+        paragraph_total = apply_minimum_positive_floor(paragraph_total, section_score, min_fraction=0.005)
 
         paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
         paragraph_tokens = {
