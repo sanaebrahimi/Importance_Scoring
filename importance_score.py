@@ -3413,7 +3413,7 @@ def assign_importance_scores(
     paragraph_compressed_snippet_limit: int = 180,
     debug_log_path: str = "",
     paper_id: str = DEFAULT_PAPER_ID,
-) -> Tuple[Dict[str, Any], Dict[str, Any], List[Dict[str, Any]]]:
+) -> Tuple[Dict[str, Any], Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Assign hierarchical section, paragraph, and citation scores with:
     - level-wise all-children-together scoring (parent sees all child nodes in one prompt),
@@ -3425,6 +3425,7 @@ def assign_importance_scores(
     citation_scores: Dict[str, Any] = {}
     section_scores: Dict[str, Any] = {}
     paragraph_scores: List[Dict[str, Any]] = []
+    paragraph_citation_scores: List[Dict[str, Any]] = []
 
     try:
         top_level_scores = direct_only_allocate_scores(
@@ -3658,6 +3659,16 @@ def assign_importance_scores(
             assert_close(split_total, paragraph_c, f"citation split for {internal_paragraph_id}")
 
             for citation, citation_value in citation_split.items():
+                paragraph_citation_scores.append(
+                    {
+                        "section_path": list(section_path),
+                        "paragraph_index": meta["paragraph_index"],
+                        "paragraph": meta["text"],
+                        "citation": citation,
+                        "citation_score": citation_value,
+                    }
+                )
+
                 if citation not in citation_scores:
                     citation_scores[citation] = {"citation_score": 0.0}
 
@@ -3767,7 +3778,7 @@ def assign_importance_scores(
     )
     assert_close(top_level_total, 1.0, "top-level sections")
 
-    return citation_scores, section_scores, paragraph_scores
+    return citation_scores, section_scores, paragraph_scores, paragraph_citation_scores
 
 
 def print_section_hierarchy(section_scores: Dict[str, Any], indent: int = 0) -> None:
@@ -3841,7 +3852,12 @@ def main() -> None:
     if args.sections_file and args.sections_var:
         sections = load_sections_from_file(args.sections_file, args.sections_var)
     citations, content = extract_citations_by_section(text, sections)
-    citation_importance, section_importance, paragraph_importance = assign_importance_scores(
+    (
+        citation_importance,
+        section_importance,
+        paragraph_importance,
+        paragraph_citation_importance,
+    ) = assign_importance_scores(
         content_dict=content,
         citations_dict=citations,
         model=args.model,
@@ -3859,6 +3875,7 @@ def main() -> None:
     section_path = f"{args.output2}_section_scores.json"
     paragraph_prefix = args.output3 if args.output3 else args.output2
     paragraph_path = f"{paragraph_prefix}_paragraph_scores.json"
+    paragraph_citation_path = f"{paragraph_prefix}_paragraph_citation_scores.json"
 
     with open(citation_path, "w", encoding="utf-8") as f:
         json.dump(citation_importance, f, indent=2)
@@ -3868,6 +3885,9 @@ def main() -> None:
 
     with open(paragraph_path, "w", encoding="utf-8") as f:
         json.dump(paragraph_importance, f, indent=2)
+
+    with open(paragraph_citation_path, "w", encoding="utf-8") as f:
+        json.dump(paragraph_citation_importance, f, indent=2)
 
     if args.prompts_output:
         with open(args.prompts_output, "w", encoding="utf-8") as f:

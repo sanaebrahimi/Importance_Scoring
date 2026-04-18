@@ -5,6 +5,7 @@ Implements all definitions from the framework paper, consuming the JSON outputs
 produced by importance_scoring.py:
   - *_section_scores.json   → hierarchical section importance tree
   - *_paragraph_scores.json → per-paragraph technical/citation scores
+  - *_paragraph_citation_scores.json → per-paragraph per-citation allocations
   - *_citation_scores.json  → per-citation aggregated importance scores
 
 Quick start
@@ -137,6 +138,20 @@ class ParagraphScore:
 
 
 @dataclass
+class ParagraphCitationScore:
+    """Single citation allocation within a paragraph."""
+
+    section_path: List[str]
+    paragraph_index: int
+    paragraph: str
+    citation: str
+    citation_score: float
+
+    def top_level_section(self) -> Optional[str]:
+        return self.section_path[0] if self.section_path else None
+
+
+@dataclass
 class SectionScore:
     """Node in the hierarchical importance tree T_p = (V_p, E_p)."""
 
@@ -183,6 +198,8 @@ class Paper:
         self.pub_date = pub_date          # publication year for temporal analysis
         self._section_scores: Optional[Dict[str, SectionScore]] = None
         self._paragraph_scores: Optional[List[ParagraphScore]] = None
+        self._paragraph_citation_scores: Optional[List[ParagraphCitationScore]] = None
+        self._has_paragraph_citation_scores_file = False
         self._citation_scores: Optional[Dict[str, float]] = None
 
     # --- loading ---
@@ -192,6 +209,7 @@ class Paper:
         name = self.results_dir.name
         self._load_sections(self.results_dir / f"{name}_section_scores.json")
         self._load_paragraphs(self.results_dir / f"{name}_paragraph_scores.json")
+        self._load_paragraph_citations(self.results_dir / f"{name}_paragraph_citation_scores.json")
         self._load_citations(self.results_dir / f"{name}_citation_scores.json")
         return self
 
@@ -212,6 +230,23 @@ class Paper:
                     paragraph_index=p["paragraph_index"],
                     paragraph=p["paragraph"],
                     technical_score=p["technical_score"],
+                    citation_score=p["citation_score"],
+                )
+                for p in raw
+            ]
+
+    def _load_paragraph_citations(self, path: Path) -> None:
+        self._paragraph_citation_scores = []
+        self._has_paragraph_citation_scores_file = path.exists()
+        if path.exists():
+            with open(path) as f:
+                raw = json.load(f)
+            self._paragraph_citation_scores = [
+                ParagraphCitationScore(
+                    section_path=p["section_path"],
+                    paragraph_index=p["paragraph_index"],
+                    paragraph=p.get("paragraph", ""),
+                    citation=p["citation"],
                     citation_score=p["citation_score"],
                 )
                 for p in raw
@@ -239,6 +274,16 @@ class Paper:
         return self._paragraph_scores
 
     @property
+    def paragraph_citation_scores(self) -> List[ParagraphCitationScore]:
+        if self._paragraph_citation_scores is None:
+            raise ValueError(f"{self.paper_id}: call load() first")
+        return self._paragraph_citation_scores
+
+    @property
+    def has_paragraph_citation_scores(self) -> bool:
+        return self._has_paragraph_citation_scores_file
+
+    @property
     def citation_scores(self) -> Dict[str, float]:
         if self._citation_scores is None:
             raise ValueError(f"{self.paper_id}: call load() first")
@@ -258,13 +303,20 @@ class Paper:
         """
         W_s(p, q): importance-weight of citation q in section s.  (Definition 4.1)
 
-        Approximated by distributing each paragraph's citation_score
-        proportionally across citations present in that paragraph, then
-        summing over paragraphs that belong to the requested section.
-        Whitespace-normalised matching handles spacing differences between
-        the raw citation key and what the regex extracts from text.
+        Uses the exact per-paragraph per-citation allocations emitted by
+        importance_score.py when available. For backward compatibility with
+        older results directories, falls back to distributing each paragraph's
+        citation_score proportionally across citations present in that paragraph.
         """
         norm_key = _norm_cit(citation_key)
+        if self.has_paragraph_citation_scores:
+            return sum(
+                alloc.citation_score
+                for alloc in self.paragraph_citation_scores
+                if alloc.top_level_section() == section_name
+                and _norm_cit(alloc.citation) == norm_key
+            )
+
         total = 0.0
         for para in self.paragraph_scores:
             if para.top_level_section() != section_name:
@@ -961,6 +1013,19 @@ class ConceptCitationGraph:
     def build(self) -> "ConceptCitationGraph":
         self._weights.clear()
         for paper in self.graph.papers.values():
+            if paper.has_paragraph_citation_scores:
+                paragraph_concepts: Dict[Tuple[Tuple[str, ...], int], Set[str]] = {}
+                for alloc in paper.paragraph_citation_scores:
+                    key = (tuple(alloc.section_path), alloc.paragraph_index)
+                    if key not in paragraph_concepts:
+                        paragraph_concepts[key] = set(self.concept_extractor(alloc.paragraph))
+                    concepts = paragraph_concepts[key]
+                    if not concepts:
+                        continue
+                    for concept in concepts:
+                        self._weights[(concept, alloc.citation)] += alloc.citation_score
+                continue
+
             for para in paper.paragraph_scores:
                 concepts = self.concept_extractor(para.paragraph)
                 citations = para.citations_in_paragraph()
