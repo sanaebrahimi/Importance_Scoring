@@ -327,6 +327,59 @@ def _find_pub_year_match(text: str) -> Optional[re.Match]:
     return all_matches[0]
 
 
+def _split_authors_title_year_at_end(text: str, year_pos: int) -> tuple[str, str]:
+    """
+    Split a reference whose year appears at the end into (authors_raw, title).
+
+    Handles three sub-formats in priority order:
+    1. "et al." present  → author block ends right after "et al."
+    2. Period-boundary   → first ". " not preceded by an uppercase initial
+    3. IEEE quoted title → Authors, "Title," venue, Year.
+                          All initials are uppercase so (2) finds nothing;
+                          split on the opening quotation mark instead.
+    """
+    # 1. et al. boundary
+    et_al_m = re.search(r"\bet\s+al\.\s*", text[:year_pos])
+    if et_al_m:
+        authors_raw = text[: et_al_m.end()].strip().rstrip(". ")
+        rest = re.sub(r"-\s+", "", text[et_al_m.end():].strip())
+        tm = re.match(r"([^.]+\.)", rest)
+        title = tm.group(1).strip() if tm else rest[:150].strip()
+        return authors_raw, title
+
+    # 2. IEEE quoted-title format: Authors, "Title," venue, Year.
+    #    Must be checked BEFORE period boundary because venue abbreviations like
+    #    "no. " and "vol. " (preceded by lowercase) would falsely trigger the
+    #    period boundary.  A quote before year_pos is a reliable IEEE signal.
+    #    Only open/close DOUBLE quotes are used for IEEE titles; U+2019 (') is an
+    #    apostrophe inside words like "It's" and must not be treated as a close-quote.
+    quote_m = re.search(r'["\u201c\u201d]', text[:year_pos])
+    if quote_m:
+        authors_raw = text[: quote_m.start()].strip().rstrip(", ")
+        after_q = re.sub(r"-\s+", "", text[quote_m.start() + 1:])
+        close_m = re.search(r'["\u201d]', after_q)
+        if close_m:
+            title = after_q[: close_m.start()].strip().rstrip(",")
+        else:
+            tm = re.match(r"([^,]+),", after_q)
+            title = tm.group(1).strip() if tm else after_q[:150].strip()
+        return authors_raw, title
+
+    # 3. Period boundary (not preceded by uppercase initial or "al")
+    boundary = re.search(r"(?<![A-Z])(?<!al)\.\s+", text)
+    if boundary and boundary.start() < year_pos:
+        authors_raw = text[: boundary.start()].strip()
+        rest = re.sub(r"-\s+", "", text[boundary.end():].strip())
+        tm = re.match(r"([^.]+\.)", rest)
+        title = tm.group(1).strip() if tm else rest[:150].strip()
+        return authors_raw, title
+
+    # Fallback: no split found
+    rest = re.sub(r"-\s+", "", text)
+    tm = re.match(r"([^.]+\.)", rest)
+    return "", tm.group(1).strip() if tm else rest[:150].strip()
+
+
 def _parse_entry(
     raw: str,
     numeric_key: Optional[str] = None,
@@ -369,29 +422,19 @@ def _parse_entry(
     pre_year = text[max(0, year_pos - 3): year_pos]
     # "year at end": explicitly preceded by ", " OR year sits in the last 20% of the text
     # (catches "Authors. Title. 2012." where nothing follows the year)
+    # Also treat as year-at-end when there is a quoted title before the year:
+    # IEEE entries like 'Authors, "Title," venue, DD Mon YEAR, pp. N.' have the year
+    # embedded in a conference date (e.g. "Feb 2018"), not preceded by ", ", yet the
+    # authors and title split must use the quote-based logic.
+    has_ieee_quote = bool(re.search(r'["\u201c\u201d]', text[:year_pos]))
     year_at_end = (
         bool(re.search(r",\s*$", pre_year))
         or year_pos > len(text) * 0.80
+        or has_ieee_quote
     )
 
     if year_at_end:
-        # Prefer "et al." as the explicit author-block end
-        et_al_m = re.search(r"\bet\s+al\.\s*", text[:year_pos])
-        if et_al_m:
-            authors_raw = text[: et_al_m.end()].strip().rstrip(". ")
-            rest = text[et_al_m.end():].strip()
-        else:
-            # First ". " not preceded by an uppercase initial ("J.") or "et al."
-            boundary = re.search(r"(?<![A-Z])(?<!al)\.\s+", text)
-            if boundary and boundary.start() < year_pos:
-                authors_raw = text[: boundary.start()].strip()
-                rest = text[boundary.end():].strip()
-            else:
-                authors_raw = ""
-                rest = text
-        rest = re.sub(r"-\s+", "", rest)
-        title_match = re.match(r"([^.]+\.)", rest)
-        title = title_match.group(1).strip() if title_match else rest[:150].strip()
+        authors_raw, title = _split_authors_title_year_at_end(text, year_pos)
     else:
         # Everything before the year ≈ authors
         authors_raw = text[:year_pos].strip().rstrip(",. ")

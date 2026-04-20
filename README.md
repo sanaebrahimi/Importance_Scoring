@@ -88,30 +88,7 @@ python3 -m json.tool paper_results/your_paper/your_paper_citation_scores.json
 5. Run the citation resolver and knowledge-discovery framework:
 
 ```bash
-python3 - <<'PY'
-from citation_resolver import CitationResolver
-from citation_graph_framework import KnowledgeDiscoveryFramework
-
-resolver = CitationResolver()
-resolver.parse_all("paper_results/", "papers/")
-resolver.save("citation_mappings.json")
-
-pub_dates = {
-    "adv_res_paper": 2024,
-    "Fair_Epsilon_Net": 2025,
-}
-
-fw = KnowledgeDiscoveryFramework.from_results_dir(
-    "paper_results/",
-    citation_mappings=resolver.build_citation_mappings(),
-    pub_dates=pub_dates,
-)
-
-print(fw)
-print("Top PageRank:", fw.pagerank.top_k(10))
-print("Originality:", fw.originality.rank_by_originality())
-print("Seminal works:", fw.influence.seminal_works(top_k=5))
-PY
+python3 run_knowledge_graph.py --save-mappings citation_mappings.json
 ```
 
 ## Knowledge Discovery Layer
@@ -127,9 +104,12 @@ Purpose: turn raw citation strings into structured, cross-paper identities.
 What it does:
 
 - Reads each paper's PDF and finds the `References` section.
-- For numeric citation style (`[1]`, `[2]`, ...), splits reference entries on `[N] ... [N+1]` boundaries.
+- For numeric citation style (`[1]`, `[2]`, ...), splits reference entries on `[N] ... [N+1]` boundaries. Resolution is **scoped per paper** so that `[2]` in paper A and `[2]` in paper B are resolved independently and never cross-contaminate.
 - For author-year style (`(Hong et al., 2023)`), searches for the expected last name, anchors on the year, verifies that the matched name is the first author rather than a co-author in the middle of the entry, and checks that the first year in the extracted window matches the expected year.
-- Parses each reference entry into authors, title, and year.
+- Parses each reference entry into authors, title, and year. Three reference formats are handled:
+  - **NeurIPS / ACL style** — `Authors. Year. Title. Venue.` — year appears immediately after the author block.
+  - **ACM style** — `Authors. Title. Venue, Year.` — year appears at the end, preceded by `,`.
+  - **IEEE style** — `Authors, "Title," Venue, Year.` — title is enclosed in double quotation marks. The year may be embedded in a conference date (e.g. `23–24 Feb 2018`) rather than preceded by `,`; the resolver detects this via the quoted title and switches to quote-based splitting, avoiding false splits on venue abbreviations such as `no.` or `vol.`.
 - Assigns a canonical identifier such as `hong_2023`, so two papers that cite the same resolved work share the same identifier.
 
 ### Layer 2 — CitationGraph + Analyzers (`citation_graph_framework.py`)
@@ -168,7 +148,6 @@ Each analyzer reads from the graph and computes one quantity from the framework:
 | `SectionCitationAnalyzer` | `W_s(p,q)` and `\rho(p,q)` — technical vs rhetorical citation role | Paragraph text and section tree |
 | `FoundationalWorkAnalyzer` | `Found(q)` vs `Periph(q)` — cited in methods/results or only in support sections | Section classification |
 | `ResearchGapDetector` | `Gap(C,t)` — original work not yet adopted by others | Originality plus adoption weights |
-| `ConceptCitationGraph` | `W_K(k,q)` — which concepts co-occur with which citations | Paragraph text |
 
 ## How to Interpret the Results
 
