@@ -30,7 +30,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 
 # ---------------------------------------------------------------------------
@@ -983,83 +983,6 @@ class ResearchGapDetector:
         return orig_sum - adoption_sum
 
 
-# ---------------------------------------------------------------------------
-# Concept-Level Citation Graph  (Definition 5.1)
-# ---------------------------------------------------------------------------
-
-ConceptExtractor = Callable[[str], List[str]]
-
-
-class ConceptCitationGraph:
-    """
-    G_K = (K ∪ P, E_K, W_K)
-
-    W_K(k, q) = Σ_{p∈P} Σ_{p_i: k∈p_i, q∈C(p_i)} S_i(q)
-
-    Provide a ConceptExtractor to map paragraph text → [concept, ...].
-    The default extractor uses simple heuristics (capitalised phrases and
-    hyphenated terms); replace with an NLP pipeline for better results.
-    """
-
-    def __init__(
-        self,
-        graph: CitationGraph,
-        concept_extractor: Optional[ConceptExtractor] = None,
-    ) -> None:
-        self.graph = graph
-        self.concept_extractor = concept_extractor or _default_concept_extractor
-        self._weights: Dict[Tuple[str, str], float] = defaultdict(float)
-
-    def build(self) -> "ConceptCitationGraph":
-        self._weights.clear()
-        for paper in self.graph.papers.values():
-            if paper.has_paragraph_citation_scores:
-                paragraph_concepts: Dict[Tuple[Tuple[str, ...], int], Set[str]] = {}
-                for alloc in paper.paragraph_citation_scores:
-                    key = (tuple(alloc.section_path), alloc.paragraph_index)
-                    if key not in paragraph_concepts:
-                        paragraph_concepts[key] = set(self.concept_extractor(alloc.paragraph))
-                    concepts = paragraph_concepts[key]
-                    if not concepts:
-                        continue
-                    for concept in concepts:
-                        self._weights[(concept, alloc.citation)] += alloc.citation_score
-                continue
-
-            for para in paper.paragraph_scores:
-                concepts = self.concept_extractor(para.paragraph)
-                citations = para.citations_in_paragraph()
-                if not concepts or not citations:
-                    continue
-                score_per_cit = para.citation_score / len(citations)
-                for cit in citations:
-                    for concept in set(concepts):
-                        self._weights[(concept, cit)] += score_per_cit
-        return self
-
-    def weight(self, concept: str, citation: str) -> float:
-        return self._weights.get((concept, citation), 0.0)
-
-    def citations_for_concept(self, concept: str) -> Dict[str, float]:
-        result = {c: w for (k, c), w in self._weights.items() if k == concept}
-        return dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
-
-    def concepts_for_citation(self, citation: str) -> Dict[str, float]:
-        result = {k: w for (k, c), w in self._weights.items() if c == citation}
-        return dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
-
-    def top_concepts(self, k: int = 20) -> List[Tuple[str, float]]:
-        totals: Dict[str, float] = defaultdict(float)
-        for (concept, _), w in self._weights.items():
-            totals[concept] += w
-        return sorted(totals.items(), key=lambda x: x[1], reverse=True)[:k]
-
-
-def _default_concept_extractor(text: str) -> List[str]:
-    caps = re.findall(r"\b[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)+", text)
-    hyphenated = re.findall(r"\b[a-z]+(?:-[a-z]+)+\b", text)
-    return caps + hyphenated
-
 
 # ---------------------------------------------------------------------------
 # Main Framework
@@ -1078,7 +1001,6 @@ class KnowledgeDiscoveryFramework:
       .originality      → OriginalityAnalyzer      (§4.3)
       .foundational     → FoundationalWorkAnalyzer (§5.2)
       .research_gaps    → ResearchGapDetector      (§5.3)
-      .concept_graph    → ConceptCitationGraph      (§5.1, after build_concept_graph())
     """
 
     def __init__(self, graph: CitationGraph) -> None:
@@ -1091,7 +1013,6 @@ class KnowledgeDiscoveryFramework:
         self.originality = OriginalityAnalyzer(graph)
         self.foundational = FoundationalWorkAnalyzer(graph)
         self.research_gaps = ResearchGapDetector(graph)
-        self._concept_graph: Optional[ConceptCitationGraph] = None
 
     @classmethod
     def from_results_dir(
@@ -1103,21 +1024,6 @@ class KnowledgeDiscoveryFramework:
         """Build the framework from a directory of importance-scoring results."""
         graph = CitationGraph.from_results_dir(results_dir, citation_mappings, pub_dates)
         return cls(graph)
-
-    def build_concept_graph(
-        self,
-        concept_extractor: Optional[ConceptExtractor] = None,
-    ) -> "KnowledgeDiscoveryFramework":
-        """Construct the concept-level citation graph (§5.1)."""
-        self._concept_graph = ConceptCitationGraph(self.graph, concept_extractor)
-        self._concept_graph.build()
-        return self
-
-    @property
-    def concept_graph(self) -> ConceptCitationGraph:
-        if self._concept_graph is None:
-            raise ValueError("Call build_concept_graph() first.")
-        return self._concept_graph
 
     def summary(self) -> Dict:
         """High-level corpus and graph statistics."""

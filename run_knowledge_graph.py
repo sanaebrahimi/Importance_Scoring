@@ -233,17 +233,6 @@ def main() -> None:
         o  = fw.originality.originality(pid)
         print(f"  {pid:<35} {g:>10.4f}  {o:>11.4f}")
 
-    # ------------------------------------------------------------------ #
-    # Step 11 – Concept graph                                             #
-    # ------------------------------------------------------------------ #
-    header("STEP 11 — Concept-Level Citation Graph  (top concepts)")
-
-    fw.build_concept_graph()
-    print(f"\n  Top concepts co-occurring with citations (by total weight):\n")
-    for concept, weight in fw.concept_graph.top_concepts(15):
-        bar = "█" * int(weight * 200)
-        print(f"  {concept:<35} {weight:.4f}  {bar}")
-
     header("DONE")
     print(f"\n  All analyses complete.\n")
 
