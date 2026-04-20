@@ -12,7 +12,8 @@ The code reads a PDF, matches its content to a predefined section tree, and then
 
 - [importance_score.py](importance_score.py): runs the scoring pipeline for one paper and writes JSON outputs for sections, paragraphs, and citations.
 - [run_importance_scores_all_papers.py](run_importance_scores_all_papers.py): runs `importance_score.py` for every PDF in `papers/`, creates one results folder per paper, and saves logs plus prompt snapshots.
-- [extract_paper_sections.py](extract_paper_sections.py): extracts section/subsection titles from each PDF and writes them into `papers_section_titles.txt`.
+- [extract_sections.py](extract_sections.py): extracts the section/subsection tree from a **single** PDF without an LLM and appends the result to `papers_section_titles.txt`. Uses font-size analysis via pymupdf.
+- [extract_paper_sections.py](extract_paper_sections.py): batch version — extracts section titles from every PDF in `papers/` and rewrites `papers_section_titles.txt`.
 - [papers_section_titles.txt](papers_section_titles.txt): per-paper section trees used by the scorer.
 
 ## Expected Inputs
@@ -37,13 +38,27 @@ These three JSON files are also the inputs to the citation-graph and knowledge-d
 
 ## Typical Workflow
 
-1. Generate or refresh section trees:
+1. Extract the section tree for each new paper (run once per paper, appends to `papers_section_titles.txt`):
+
+```bash
+python3 extract_sections.py papers/your_paper.pdf --append papers_section_titles.txt
+```
+
+The script detects sections automatically from the PDF — no LLM needed. It tries three strategies in order: embedded PDF bookmarks, font-size analysis, and numbered-heading patterns.
+
+To preview the output without writing it:
+
+```bash
+python3 extract_sections.py papers/your_paper.pdf
+```
+
+2. (Optional) Regenerate all section trees at once using the older batch extractor:
 
 ```bash
 python3 extract_paper_sections.py
 ```
 
-2. Score all papers:
+3. Score all papers:
 
 ```bash
 python3 run_importance_scores_all_papers.py --continue-on-error
