@@ -8,6 +8,17 @@ This project scores the content of research papers at three levels:
 
 The code reads a PDF, matches its content to a predefined section tree, and then uses an Ollama-hosted language model to distribute importance scores across the paper. Scores are normalized so the full paper totals `1.0`.
 
+## Example
+
+```bash
+python3 visualize_graph.py \
+  --load-mappings citation_mappings.json \
+  --top-k 40 \
+  --min-weight 0.005 \
+  --output graph_focused.html
+```
+`--top-k 40` pulls in more external cited works so you see the shared foundation across papers. `--min-weight 0.005` cuts the noise — only citations that carry real importance weight survive, so the edges you see are genuine dependencies rather than passing mentions. Using `--load-mappings` skips re-parsing the PDFs so it runs in a few seconds.
+
 ## Main Files
 
 - [importance_score.py](importance_score.py): runs the scoring pipeline for one paper and writes JSON outputs for sections, paragraphs, and citations.
