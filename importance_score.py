@@ -405,6 +405,43 @@ def strip_heading_prefix(text: str) -> str:
     return stripped.strip()
 
 
+def strip_heading_label_prefix(text: str) -> str:
+    stripped = normalize_for_match(text)
+    stripped = re.sub(
+        r"^(?:\d+(?:\.\d+)*|[IVXLCDM]+|[A-Z])(?:[\.\)])?\s+",
+        "",
+        stripped,
+        flags=re.IGNORECASE,
+    )
+    return normalize_heading_text(stripped)
+
+
+def heading_matches_expected_title(expected_title: str, candidate_title: str) -> bool:
+    expected_tokens = normalize_heading_text(expected_title).split()
+    candidate_tokens = strip_heading_label_prefix(candidate_title).split()
+    if not expected_tokens or not candidate_tokens:
+        return False
+
+    exp_idx = 0
+    cand_idx = 0
+    while exp_idx < len(expected_tokens) and cand_idx < len(candidate_tokens):
+        if candidate_tokens[cand_idx] == expected_tokens[exp_idx]:
+            exp_idx += 1
+            cand_idx += 1
+            continue
+
+        if cand_idx + 1 < len(candidate_tokens):
+            merged_token = candidate_tokens[cand_idx] + candidate_tokens[cand_idx + 1]
+            if merged_token == expected_tokens[exp_idx]:
+                exp_idx += 1
+                cand_idx += 2
+                continue
+
+        return False
+
+    return exp_idx == len(expected_tokens) and cand_idx == len(candidate_tokens)
+
+
 def parse_heading_label_and_title(text: str) -> Tuple[str, str]:
     stripped = normalize_for_match(text)
     match = re.match(r"^((?:\d+(?:\.\d+)*|[A-Z])(?:[\.\)])?)\s+(.+)$", stripped)
@@ -654,7 +691,7 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
         return -1, -1
 
     numbered_heading_pattern = re.compile(
-        rf"(?<!\d)(\d+(?:\.\d+)*)\s+{re.escape(heading_name)}\b",
+        rf"(?<!\w)((?:\d+(?:\.\d+)*|[IVXLCDM]+))[\.\)]?\s+{re.escape(heading_name)}\b",
         flags=re.IGNORECASE,
     )
 
@@ -668,10 +705,7 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
         if not is_probable_heading_line(line_text):
             direct_idx = -1
         else:
-            normalized_line = normalize_heading_text(line_text)
-            normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
-            normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
-            if heading_tokens_match(target, normalized_line):
+            if heading_matches_expected_title(heading_name, line_text):
                 return line_start, line_end
 
     lines = full_text.splitlines(keepends=True)
@@ -706,13 +740,12 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
                 break
 
             chunk = "".join(chunk_lines).replace("\n", " ").replace("\r", " ")
-            normalized_line = normalize_heading_text(chunk)
-            normalized_line = re.sub(r"^\d+(?:\.\d+)*\s*", "", normalized_line)
-            normalized_line = re.sub(r"^[a-z]\s+", "", normalized_line)
-
+            normalized_line = strip_heading_label_prefix(chunk)
             combined = f"{combined} {normalized_line}".strip() if combined else normalized_line
 
-            if heading_tokens_match(target, normalized_line) or heading_tokens_match(target, combined):
+            if heading_matches_expected_title(heading_name, chunk) or heading_matches_expected_title(
+                heading_name, combined
+            ):
                 return offsets[idx], offsets[end_idx] + len(lines[end_idx])
 
             end_idx += 1
