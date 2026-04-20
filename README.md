@@ -160,7 +160,7 @@ Each analyzer reads from the graph and computes one quantity from the framework:
 - **Research gap score.** Computed as:
 
   
-$Gap(C) = sum_{p in C} Orig(p)  −  sum_{q outside C, p in C} W_tech(q -> p)$
+$Gap(C) = \sum_{p \in C} Orig(p)  −  \sum_{q \notin C, p \in C} W_{tech}(q \rightarrow p)$
 
 
   The first term is the total originality of the cluster — how much new technical content the papers contribute. The second term is the total weight with which papers *outside* the cluster cite papers *inside* the cluster from **technical sections** (methods, experiments), measuring how much those ideas have already been adopted as real dependencies.
