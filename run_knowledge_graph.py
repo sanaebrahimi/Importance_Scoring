@@ -59,6 +59,8 @@ def main() -> None:
         resolver = CitationResolver()
         resolver.parse_all(args.results, args.papers)
 
+    resolver.register_corpus_papers(args.results, args.papers)
+
     if args.save_mappings:
         resolver.save(args.save_mappings)
 

@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -78,6 +79,75 @@ def _pdf_full_text(pdf_path: str | Path) -> str:
         for page in PyPDF2.PdfReader(f).pages:
             text += (page.extract_text() or "") + "\n"
     return text
+
+
+def _normalize_title_key(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (text or "").lower())
+
+
+def _extract_pdf_title(pdf_path: str | Path) -> Optional[str]:
+    reader = PyPDF2.PdfReader(str(pdf_path))
+    metadata = reader.metadata or {}
+    meta_title = getattr(metadata, "title", None) if hasattr(metadata, "title") else metadata.get("/Title")
+    meta_title = _normalize_ws(str(meta_title or ""))
+    if meta_title and meta_title.lower() not in {"untitled", "unknown"}:
+        return meta_title
+
+    if not reader.pages:
+        return None
+
+    first_page_text = reader.pages[0].extract_text() or ""
+    raw_lines = [_normalize_ws(line) for line in first_page_text.splitlines()]
+    lines = [line for line in raw_lines if line]
+    if not lines:
+        return None
+
+    pre_abstract: List[str] = []
+    for line in lines:
+        if line.strip().lower() == "abstract":
+            break
+        pre_abstract.append(line)
+
+    def is_front_matter_noise(line: str) -> bool:
+        lower = line.lower()
+        if any(token in lower for token in ("@", "university", "department", "school", "institute", "laboratory")):
+            return False
+        if "pages" in lower or "association for computational linguistics" in lower:
+            return True
+        if "proceedings" in lower or "findings of the association for computational linguistics" in lower:
+            return True
+        if "copyright" in lower or "©" in line:
+            return True
+        if re.search(r"\b(?:19|20)\d{2}\b", line) and re.search(
+            r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|june)\b", lower
+        ):
+            return True
+        return False
+
+    def is_author_or_affiliation_line(line: str) -> bool:
+        lower = line.lower()
+        if any(token in lower for token in ("@", "university", "department", "school", "institute", "laboratory")):
+            return True
+        words = re.findall(r"[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’.\-]*", line)
+        if not 2 <= len(words) <= 5:
+            return False
+        if re.search(r"\b(?:19|20)\d{2}\b", line):
+            return False
+        if any(token in lower for token in ("abstract", "pages", "association", "proceedings", "findings")):
+            return False
+        return all(word[:1].isupper() for word in words)
+
+    filtered = [line for line in pre_abstract if not is_front_matter_noise(line)]
+    if not filtered:
+        return None
+
+    stop_idx = next((idx for idx, line in enumerate(filtered) if is_author_or_affiliation_line(line)), len(filtered))
+    candidate_lines = filtered[:stop_idx] if stop_idx > 0 else []
+    if not candidate_lines:
+        candidate_lines = filtered[: min(3, len(filtered))]
+
+    title = _normalize_ws(" ".join(candidate_lines).rstrip("*"))
+    return title or None
 
 
 def _extract_refs_text(pdf_path: str | Path) -> str:
@@ -403,6 +473,39 @@ class CitationResolver:
         self._canonical_map: Dict[str, ReferenceEntry] = {}
         # track disambiguation suffixes: canonical_id_base → count
         self._id_counts: Dict[str, int] = {}
+        # corpus paper_id → extracted paper title
+        self._corpus_titles: Dict[str, str] = {}
+        # normalized extracted title → [paper_id, ...]
+        self._title_to_paper_ids: Dict[str, List[str]] = defaultdict(list)
+
+    def register_corpus_papers(
+        self,
+        results_dir: str | Path,
+        papers_dir: str | Path,
+        pdf_ext: str = ".pdf",
+    ) -> "CitationResolver":
+        """Index corpus paper titles so resolved citations can collapse onto corpus nodes."""
+        results_path = Path(results_dir)
+        papers_path = Path(papers_dir)
+
+        for paper_dir in sorted(results_path.iterdir()):
+            if not paper_dir.is_dir() or paper_dir.name.startswith("."):
+                continue
+            paper_id = paper_dir.name
+            if paper_id in self._corpus_titles:
+                continue
+            pdf_path = papers_path / f"{paper_id}{pdf_ext}"
+            if not pdf_path.exists():
+                continue
+            title = _extract_pdf_title(pdf_path)
+            if not title:
+                continue
+            self._corpus_titles[paper_id] = title
+            normalized = _normalize_title_key(title)
+            if normalized and paper_id not in self._title_to_paper_ids[normalized]:
+                self._title_to_paper_ids[normalized].append(paper_id)
+
+        return self
 
     # --- building ---
 
@@ -500,6 +603,7 @@ class CitationResolver:
         """
         results_path = Path(results_dir)
         papers_path  = Path(papers_dir)
+        self.register_corpus_papers(results_dir, papers_dir, pdf_ext=pdf_ext)
 
         for paper_dir in sorted(results_path.iterdir()):
             if not paper_dir.is_dir() or paper_dir.name.startswith("."):
@@ -551,6 +655,15 @@ class CitationResolver:
             return self._canonical_map[citation_str]
         return None
 
+    def _canonical_target(self, entry: ReferenceEntry) -> str:
+        """Return the graph target id for a resolved citation."""
+        normalized_title = _normalize_title_key(entry.title)
+        if normalized_title:
+            matched_papers = self._title_to_paper_ids.get(normalized_title, [])
+            if len(matched_papers) == 1:
+                return matched_papers[0]
+        return entry.canonical_id
+
     def build_citation_mappings(self) -> Dict[str, Dict[str, str]]:
         """
         Return {paper_id: {citation_str: canonical_id}}.
@@ -561,7 +674,7 @@ class CitationResolver:
         """
         result: Dict[str, Dict[str, str]] = {}
         for (paper_id, cit_str), entry in self._raw_map.items():
-            result.setdefault(paper_id, {})[cit_str] = entry.canonical_id
+            result.setdefault(paper_id, {})[cit_str] = self._canonical_target(entry)
         return result
 
     def all_resolved(self) -> Dict[Tuple[str, str], ReferenceEntry]:
@@ -583,7 +696,7 @@ class CitationResolver:
         raw: Dict[str, str] = {}
         for (paper_id, cit_str), entry in self._raw_map.items():
             raw[f"{paper_id}|||{cit_str}"] = entry.canonical_id
-        return {"entries": entries, "raw_map": raw}
+        return {"entries": entries, "raw_map": raw, "corpus_titles": dict(self._corpus_titles)}
 
     def save(self, path: str | Path) -> None:
         """Save all resolved entries to a JSON file."""
@@ -615,6 +728,11 @@ class CitationResolver:
                 paper_id, cit_str = key.split("|||", 1)
                 entry = resolver._canonical_map[cid]
                 resolver._raw_map[(paper_id, cit_str)] = entry
+            for paper_id, title in data.get("corpus_titles", {}).items():
+                resolver._corpus_titles[paper_id] = title
+                normalized = _normalize_title_key(title)
+                if normalized and paper_id not in resolver._title_to_paper_ids[normalized]:
+                    resolver._title_to_paper_ids[normalized].append(paper_id)
         else:
             # Old flat format: {citation_str: entry_dict} — no paper scope
             for key, d in data.items():

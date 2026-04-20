@@ -317,7 +317,12 @@ PROMPT_CATALOG = {
 
 AUTHOR_YEAR_CITATION_PATTERN = r"\([A-Z][^)]*\d{4}[a-z]?\)"
 NUMERIC_BRACKET_CITATION_PATTERN = r"\[(?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\]"
-CITATION_BLOCK_PATTERN = rf"{AUTHOR_YEAR_CITATION_PATTERN}|{NUMERIC_BRACKET_CITATION_PATTERN}"
+NUMERIC_PAREN_CITATION_PATTERN = r"\((?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\)"
+CITATION_BLOCK_PATTERN = (
+    rf"{AUTHOR_YEAR_CITATION_PATTERN}|"
+    rf"{NUMERIC_BRACKET_CITATION_PATTERN}|"
+    rf"{NUMERIC_PAREN_CITATION_PATTERN}"
+)
 BACK_MATTER_HEADINGS = (
     "acknowledgments",
     "acknowledgements",
@@ -609,7 +614,9 @@ def classify_citation_block(
 ) -> Optional[str]:
     if re.fullmatch(AUTHOR_YEAR_CITATION_PATTERN, citation_block):
         return CITATION_STYLE_AUTHOR_YEAR
-    if re.fullmatch(NUMERIC_BRACKET_CITATION_PATTERN, citation_block):
+    if re.fullmatch(NUMERIC_BRACKET_CITATION_PATTERN, citation_block) or re.fullmatch(
+        NUMERIC_PAREN_CITATION_PATTERN, citation_block
+    ):
         if is_math_like_numeric_citation(citation_block, prefix_text=prefix_text, suffix_text=suffix_text):
             return None
         return CITATION_STYLE_NUMERIC
@@ -3389,7 +3396,16 @@ def split_citation_block(citation_block: str) -> List[str]:
     else:
         inner = block
 
-    if ";" in inner:
+    numeric_inner_pattern = r"\s*\d+\s*(?:[-,;–]\s*\d+\s*)*"
+    is_numeric_container = bool(
+        left_delim
+        and right_delim
+        and re.fullmatch(numeric_inner_pattern, inner)
+    )
+
+    if is_numeric_container:
+        raw_parts = re.split(r"\s*[;,]\s*", inner)
+    elif ";" in inner:
         raw_parts = inner.split(";")
     elif left_delim == "[" and right_delim == "]" and "," in inner:
         raw_parts = inner.split(",")
@@ -3400,7 +3416,7 @@ def split_citation_block(citation_block: str) -> List[str]:
     if not parts:
         return [block]
 
-    if left_delim == "[" and right_delim == "]":
+    if is_numeric_container:
         normalized_parts: List[str] = []
         for part in parts:
             cleaned = part.strip()
@@ -3411,7 +3427,7 @@ def split_citation_block(citation_block: str) -> List[str]:
             if single_match:
                 if int(single_match.group(1)) <= 0:
                     continue
-                normalized_parts.append(f"[{int(single_match.group(1))}]")
+                normalized_parts.append(f"{left_delim}{int(single_match.group(1))}{right_delim}")
                 continue
 
             range_match = re.fullmatch(r"(\d+)\s*[-–]\s*(\d+)", cleaned)
@@ -3420,11 +3436,16 @@ def split_citation_block(citation_block: str) -> List[str]:
                 end_num = int(range_match.group(2))
                 if start_num <= 0 or end_num <= 0:
                     continue
-                normalized_parts.append(f"[{start_num}\u2013{end_num}]")
+                if start_num > end_num:
+                    start_num, end_num = end_num, start_num
+                normalized_parts.extend(
+                    f"{left_delim}{value}{right_delim}"
+                    for value in range(start_num, end_num + 1)
+                )
                 continue
 
-            # If the numeric bracket part does not look like a positive citation id or range,
-            # drop it instead of letting OCR/PDF debris become a fake citation such as [0].
+            # If the numeric citation part does not look like a positive citation id or range,
+            # drop it instead of letting OCR/PDF debris become a fake citation such as [0] or (0).
             continue
 
         return normalized_parts
