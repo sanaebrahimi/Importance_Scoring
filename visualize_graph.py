@@ -20,6 +20,7 @@ Requirements:
 """
 
 import argparse
+import re
 from pathlib import Path
 
 try:
@@ -98,31 +99,27 @@ def build(
             community = partition.get(node_id, 0)
             colour    = _COMMUNITY_COLOURS[community % len(_COMMUNITY_COLOURS)]
             label     = node_id
-            tooltip   = (
-                f"<b>{node_id}</b><br>"
-                f"<i>corpus paper</i><br><br>"
-                f"PageRank&nbsp;&nbsp;&nbsp;: {pr:.5f}<br>"
-                f"Originality : {orig:.4f}<br>"
-                f"Community&nbsp; : {community}<br>"
-                f"Cites (unique): {len(paper.citation_scores)}"
-            )
+            tooltip   = "\n".join([
+                node_id,
+                f"Year: —",
+                "corpus paper",
+            ])
         else:
             entry  = resolver.resolve(node_id)
             colour = _EXTERNAL_COLOUR
+            label  = node_id
             if entry:
-                label   = f"{entry.first_author_last} ({entry.year})"
                 authors = ", ".join(entry.authors[:3])
                 if len(entry.authors) > 3:
                     authors += " et al."
-                tooltip = (
-                    f"<b>{entry.title[:90]}</b><br>"
-                    f"{authors}<br>"
-                    f"Year: {entry.year}<br><br>"
-                    f"PageRank: {pr:.5f}"
-                )
+                title = re.sub(r"<[^>]+>", "", entry.title)
+                tooltip = "\n".join([
+                    title,
+                    f"Year: {entry.year}",
+                    authors,
+                ])
             else:
-                label   = node_id[:35]
-                tooltip = f"<b>{node_id}</b><br>PageRank: {pr:.5f}"
+                tooltip = node_id
 
         net.add_node(
             node_id,
@@ -220,7 +217,7 @@ def _inject_legend(html_path: Path, corpus_ids: set, partition: dict) -> None:
         'font-size:12px;z-index:9999">'
         + "".join(items)
         + "<br><span style='opacity:0.6;font-size:11px'>"
-        "Node size = PageRank &nbsp;|&nbsp; Edge width = citation importance weight"
+        "Node size = Normalized Reference Score &nbsp;|&nbsp; Edge width = citation importance weight"
         "</span></div>"
     )
     text = html_path.read_text(encoding="utf-8")

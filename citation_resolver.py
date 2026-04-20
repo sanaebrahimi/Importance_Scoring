@@ -40,7 +40,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import PyPDF2  # type: ignore[import-untyped]
 
@@ -216,8 +216,45 @@ def _find_authoryear_entry(refs_text: str, key: str) -> Optional[str]:
 # Entry parsing (text → structured fields)
 # ---------------------------------------------------------------------------
 
-_YEAR_RE = re.compile(r"\b(1[89]\d{2}|20\d{2})\b")
+# Matches a year (optionally followed by a letter suffix like "2023a") that is
+# not immediately followed by another digit (avoids matching "20231" etc.).
+_YEAR_RE = re.compile(r"\b(1[89]\d{2}|20\d{2})(?=[^0-9]|$)")
 _NUMERIC_KEY_RE = re.compile(r"^\[(\d+)\]\s*")
+
+
+def _find_pub_year_match(text: str) -> Optional[re.Match]:
+    """
+    Return the regex match for the publication year in a reference entry.
+
+    Preference order:
+    1. Year preceded by ', ' — ACM/IEEE end-of-entry style: '…, pp. X–Y, YEAR.'
+    2. Year preceded by '. ' — NeurIPS/ACL style: 'Authors. YEAR. Title.'
+    3. First year not inside parentheses (venue names like '(ICALP 2019)' skipped).
+    4. Any year.
+    """
+    all_matches = list(_YEAR_RE.finditer(text))
+    if not all_matches:
+        return None
+
+    def _in_parens(m: re.Match) -> bool:
+        before = text[: m.start()]
+        return before.count('(') > before.count(')')
+
+    # 1. Year preceded by ", " and NOT inside parentheses (e.g. in-text cite "(Smith, 2023)")
+    for m in reversed(all_matches):
+        pre = text[max(0, m.start() - 3): m.start()]
+        if re.search(r',\s*$', pre) and not _in_parens(m):
+            return m
+    # 2. Year preceded by ". " and not inside parens (NeurIPS/ACL: "Authors. YEAR. Title.")
+    for m in all_matches:
+        pre = text[max(0, m.start() - 3): m.start()]
+        if re.search(r'\.\s+$', pre) and not _in_parens(m):
+            return m
+    # 3. First year not inside parentheses
+    for m in all_matches:
+        if not _in_parens(m):
+            return m
+    return all_matches[0]
 
 
 def _parse_entry(
@@ -244,21 +281,56 @@ def _parse_entry(
     # Strip any leading [N] prefix (numeric style already extracted but key kept)
     text = _NUMERIC_KEY_RE.sub("", raw).strip()
 
-    year_match = _YEAR_RE.search(text)
+    year_match = _find_pub_year_match(text)
     if not year_match:
         return None
 
     year = int(year_match.group(1))
     year_pos = year_match.start()
 
-    # Everything before the year ≈ authors
-    authors_raw = text[:year_pos].strip().rstrip(",. ")
-    # Everything after "YYYY." ≈ title (first complete sentence)
-    after_year = text[year_match.end():].lstrip(". ").strip()
-    # Un-hyphenate line-break artefacts: "collabo-\nrative" → "collaborative"
-    after_year = re.sub(r"-\s+", "", after_year)
-    title_match = re.match(r"([^.]+\.)", after_year)
-    title = title_match.group(1).strip() if title_match else after_year[:150].strip()
+    # Skip optional year-suffix letter immediately after the digits (e.g. "2023a" → skip "a")
+    year_end = year_match.end()
+    if year_end < len(text) and text[year_end].isalpha() and text[year_end].islower():
+        year_end += 1
+
+    # Detect format:
+    #   "early year"  → Authors. Year. Title. Venue.   (NeurIPS/ACL style)
+    #   "year at end" → Authors. Title. Venue, Year.   (ACM/IEEE style)
+    pre_year = text[max(0, year_pos - 3): year_pos]
+    # "year at end": explicitly preceded by ", " OR year sits in the last 20% of the text
+    # (catches "Authors. Title. 2012." where nothing follows the year)
+    year_at_end = (
+        bool(re.search(r",\s*$", pre_year))
+        or year_pos > len(text) * 0.80
+    )
+
+    if year_at_end:
+        # Prefer "et al." as the explicit author-block end
+        et_al_m = re.search(r"\bet\s+al\.\s*", text[:year_pos])
+        if et_al_m:
+            authors_raw = text[: et_al_m.end()].strip().rstrip(". ")
+            rest = text[et_al_m.end():].strip()
+        else:
+            # First ". " not preceded by an uppercase initial ("J.") or "et al."
+            boundary = re.search(r"(?<![A-Z])(?<!al)\.\s+", text)
+            if boundary and boundary.start() < year_pos:
+                authors_raw = text[: boundary.start()].strip()
+                rest = text[boundary.end():].strip()
+            else:
+                authors_raw = ""
+                rest = text
+        rest = re.sub(r"-\s+", "", rest)
+        title_match = re.match(r"([^.]+\.)", rest)
+        title = title_match.group(1).strip() if title_match else rest[:150].strip()
+    else:
+        # Everything before the year ≈ authors
+        authors_raw = text[:year_pos].strip().rstrip(",. ")
+        # Everything after "YYYY[a]." ≈ title (first complete sentence)
+        after_year = text[year_end:].lstrip(". ").strip()
+        after_year = re.sub(r"-\s+", "", after_year)
+        title_match = re.match(r"([^.]+\.)", after_year)
+        title = title_match.group(1).strip() if title_match else after_year[:150].strip()
+
     title = re.sub(r"\s+", " ", title).strip()
 
     authors   = _parse_authors(authors_raw)
@@ -324,9 +396,10 @@ class CitationResolver:
     """
 
     def __init__(self) -> None:
-        # raw citation key → ReferenceEntry (can be from any paper)
-        self._raw_map: Dict[str, ReferenceEntry] = {}
-        # canonical_id → ReferenceEntry (first entry that established this canonical id)
+        # (paper_id, citation_str) → ReferenceEntry  — scoped per paper so that
+        # [2] in paper A and [2] in paper B are resolved independently.
+        self._raw_map: Dict[Tuple[str, str], ReferenceEntry] = {}
+        # canonical_id → ReferenceEntry (first entry that established this id)
         self._canonical_map: Dict[str, ReferenceEntry] = {}
         # track disambiguation suffixes: canonical_id_base → count
         self._id_counts: Dict[str, int] = {}
@@ -356,7 +429,9 @@ class CitationResolver:
 
         for key in citation_keys:
             norm_key = re.sub(r"\s+", " ", key).strip()
-            if norm_key in self._raw_map:
+            # Do NOT skip if norm_key was seen in another paper —
+            # [2] in paper A and [2] in paper B are different works.
+            if (paper_id, norm_key) in self._raw_map:
                 resolved += 1
                 continue
 
@@ -392,7 +467,7 @@ class CitationResolver:
                 existing = self._canonical_map[base_id]
                 # Same paper referenced again under a different key — reuse entry
                 if _normalize_ws(existing.title).lower()[:60] == _normalize_ws(entry.title).lower()[:60]:
-                    self._raw_map[norm_key] = existing
+                    self._raw_map[(paper_id, norm_key)] = existing
                     resolved += 1
                     continue
                 # Different paper with same author+year — add suffix
@@ -402,7 +477,7 @@ class CitationResolver:
 
             entry.canonical_id = entry.canonical_id  # (may have been updated above)
             self._canonical_map[entry.canonical_id] = entry
-            self._raw_map[norm_key] = entry
+            self._raw_map[(paper_id, norm_key)] = entry
             resolved += 1
 
         print(f"[CitationResolver] {paper_id}: resolved {resolved}/{len(citation_keys)} citations")
@@ -449,45 +524,66 @@ class CitationResolver:
 
     # --- querying ---
 
-    def resolve(self, citation_str: str) -> Optional[ReferenceEntry]:
-        """Look up a citation string (tolerant of minor whitespace differences)."""
-        norm = re.sub(r"\s+", " ", citation_str).strip()
-        if norm in self._raw_map:
-            return self._raw_map[norm]
-        # Whitespace-collapsed fallback
-        flat = re.sub(r"\s+", "", citation_str)
-        for key, entry in self._raw_map.items():
-            if re.sub(r"\s+", "", key) == flat:
+    def resolve(self, citation_str: str, paper_id: str = "") -> Optional[ReferenceEntry]:
+        """
+        Look up a citation string.
+
+        If paper_id is given, the lookup is scoped to that paper (correct for
+        numeric citations like [2] which differ across papers).
+
+        If paper_id is omitted, citation_str is treated as a canonical_id
+        (e.g. "hong_2023") and looked up in the canonical map — useful for
+        display in analysis steps where only the canonical id is known.
+        """
+        if paper_id:
+            norm = re.sub(r"\s+", " ", citation_str).strip()
+            entry = self._raw_map.get((paper_id, norm))
+            if entry:
                 return entry
+            flat = re.sub(r"\s+", "", citation_str)
+            for (pid, k), v in self._raw_map.items():
+                if pid == paper_id and re.sub(r"\s+", "", k) == flat:
+                    return v
+            return None
+
+        # No paper_id: treat as canonical_id lookup (used by analysis display code)
+        if citation_str in self._canonical_map:
+            return self._canonical_map[citation_str]
         return None
 
-    def build_citation_mappings(self) -> Dict[str, str]:
+    def build_citation_mappings(self) -> Dict[str, Dict[str, str]]:
         """
-        Return {citation_str: canonical_id} ready for
-        CitationGraph.add_citation_mappings().
+        Return {paper_id: {citation_str: canonical_id}}.
 
-        All citation strings that refer to the same paper share one
-        canonical_id, enabling cross-paper edges in the citation graph.
+        The CitationGraph uses this to resolve each paper's citations
+        independently, so [2] in paper A and [2] in paper B map to
+        their respective canonical ids.
         """
-        return {k: v.canonical_id for k, v in self._raw_map.items()}
+        result: Dict[str, Dict[str, str]] = {}
+        for (paper_id, cit_str), entry in self._raw_map.items():
+            result.setdefault(paper_id, {})[cit_str] = entry.canonical_id
+        return result
 
-    def all_resolved(self) -> Dict[str, ReferenceEntry]:
-        """Return all (citation_str → ReferenceEntry) mappings."""
+    def all_resolved(self) -> Dict[Tuple[str, str], ReferenceEntry]:
+        """Return all (paper_id, citation_str) → ReferenceEntry mappings."""
         return dict(self._raw_map)
 
-    def as_dict(self) -> Dict[str, Dict]:
+    def as_dict(self) -> Dict:
         """Export all resolved entries as plain dicts (JSON-serialisable)."""
-        return {
-            k: {
-                "title": v.title,
-                "authors": v.authors,
-                "year": v.year,
-                "canonical_id": v.canonical_id,
-                "numeric_key": v.numeric_key,
-                "raw_text": v.raw_text,
+        entries: Dict[str, Dict] = {}
+        for cid, entry in self._canonical_map.items():
+            entries[cid] = {
+                "title": entry.title,
+                "authors": entry.authors,
+                "year": entry.year,
+                "canonical_id": entry.canonical_id,
+                "numeric_key": entry.numeric_key,
+                "raw_text": entry.raw_text,
             }
-            for k, v in self._raw_map.items()
-        }
+        raw: Dict[str, str] = {}
+        for (paper_id, cit_str), entry in self._raw_map.items():
+            raw[f"{paper_id}|||{cit_str}"] = entry.canonical_id
+        return {"entries": entries, "raw_map": raw}
 
     def save(self, path: str | Path) -> None:
         """Save all resolved entries to a JSON file."""
@@ -501,27 +597,45 @@ class CitationResolver:
         resolver = cls()
         with open(path) as f:
             data = json.load(f)
-        for key, d in data.items():
-            first_last = _first_author_last(d["authors"][0] if d["authors"] else "")
-            entry = ReferenceEntry(
-                raw_text=d["raw_text"],
-                numeric_key=d.get("numeric_key"),
-                authors=d["authors"],
-                first_author_last=first_last,
-                year=d.get("year"),
-                title=d["title"],
-                canonical_id=d["canonical_id"],
-            )
-            resolver._raw_map[key] = entry
-            resolver._canonical_map.setdefault(entry.canonical_id, entry)
+        # Support both old flat format and new nested format
+        if "entries" in data and "raw_map" in data:
+            for cid, d in data["entries"].items():
+                first_last = _first_author_last(d["authors"][0] if d["authors"] else "")
+                entry = ReferenceEntry(
+                    raw_text=d["raw_text"],
+                    numeric_key=d.get("numeric_key"),
+                    authors=d["authors"],
+                    first_author_last=first_last,
+                    year=d.get("year"),
+                    title=d["title"],
+                    canonical_id=d["canonical_id"],
+                )
+                resolver._canonical_map[cid] = entry
+            for key, cid in data["raw_map"].items():
+                paper_id, cit_str = key.split("|||", 1)
+                entry = resolver._canonical_map[cid]
+                resolver._raw_map[(paper_id, cit_str)] = entry
+        else:
+            # Old flat format: {citation_str: entry_dict} — no paper scope
+            for key, d in data.items():
+                first_last = _first_author_last(d["authors"][0] if d["authors"] else "")
+                entry = ReferenceEntry(
+                    raw_text=d["raw_text"],
+                    numeric_key=d.get("numeric_key"),
+                    authors=d["authors"],
+                    first_author_last=first_last,
+                    year=d.get("year"),
+                    title=d["title"],
+                    canonical_id=d["canonical_id"],
+                )
+                resolver._canonical_map.setdefault(entry.canonical_id, entry)
         return resolver
 
     def __len__(self) -> int:
         return len(self._raw_map)
 
     def __repr__(self) -> str:
-        n_canonical = len(self._canonical_map)
         return (
             f"CitationResolver(resolved={len(self._raw_map)}, "
-            f"canonical_ids={n_canonical})"
+            f"canonical_ids={len(self._canonical_map)})"
         )

@@ -371,7 +371,9 @@ class CitationGraph:
 
     def __init__(self) -> None:
         self.papers: Dict[str, Paper] = {}
-        self._citation_map: Dict[str, str] = {}          # citation_str → paper_id
+        # Per-paper mapping: {paper_id: {citation_str: canonical_id}}
+        # Kept scoped so that [2] in paper A and [2] in paper B resolve independently.
+        self._citation_map: Dict[str, Dict[str, str]] = {}
         self._weights: Dict[Tuple[str, str], float] = defaultdict(float)
         self._out_weights: Dict[str, float] = defaultdict(float)
         self._in_weights: Dict[str, float] = defaultdict(float)
@@ -382,20 +384,20 @@ class CitationGraph:
         self.papers[paper.paper_id] = paper
         return self
 
-    def add_citation_mapping(self, citation_str: str, paper_id: str) -> "CitationGraph":
-        """Resolve a raw citation string to a corpus paper_id."""
-        self._citation_map[citation_str] = paper_id
-        return self
-
-    def add_citation_mappings(self, mappings: Dict[str, str]) -> "CitationGraph":
-        self._citation_map.update(mappings)
+    def add_citation_mappings(self, mappings: Dict[str, Dict[str, str]]) -> "CitationGraph":
+        """
+        mappings: {paper_id: {citation_str: canonical_id}}
+        Produced by CitationResolver.build_citation_mappings().
+        """
+        for paper_id, paper_map in mappings.items():
+            self._citation_map.setdefault(paper_id, {}).update(paper_map)
         return self
 
     @classmethod
     def from_results_dir(
         cls,
         results_dir: str | Path,
-        citation_mappings: Optional[Dict[str, str]] = None,
+        citation_mappings: Optional[Dict[str, Dict[str, str]]] = None,
         pub_dates: Optional[Dict[str, int]] = None,
     ) -> "CitationGraph":
         """
@@ -430,8 +432,11 @@ class CitationGraph:
         self._out_weights.clear()
         self._in_weights.clear()
         for paper_id, paper in self.papers.items():
+            paper_map = self._citation_map.get(paper_id, {})
             for cit_str, score in paper.citation_scores.items():
-                target = self._citation_map.get(cit_str, cit_str)
+                # Resolve using this paper's own mapping so [2] in paper A
+                # and [2] in paper B map to their respective works.
+                target = paper_map.get(cit_str, cit_str)
                 self._weights[(paper_id, target)] += score
                 self._out_weights[paper_id] += score
                 self._in_weights[target] += score
@@ -1018,7 +1023,7 @@ class KnowledgeDiscoveryFramework:
     def from_results_dir(
         cls,
         results_dir: str | Path,
-        citation_mappings: Optional[Dict[str, str]] = None,
+        citation_mappings: Optional[Dict[str, Dict[str, str]]] = None,
         pub_dates: Optional[Dict[str, int]] = None,
     ) -> "KnowledgeDiscoveryFramework":
         """Build the framework from a directory of importance-scoring results."""

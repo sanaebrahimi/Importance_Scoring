@@ -67,8 +67,8 @@ def main() -> None:
 
     # show a sample of resolved entries
     subheader("Sample resolved citations")
-    for cit, entry in list(resolver.all_resolved().items())[:8]:
-        print(f"  {cit!r:35s} → [{entry.canonical_id}]  {entry.title[:55]}")
+    for (pid, cit), entry in list(resolver.all_resolved().items())[:8]:
+        print(f"  [{pid}] {cit!r:30s} → [{entry.canonical_id}]  {entry.title[:45]}")
 
     # ------------------------------------------------------------------ #
     # Step 2 – Build framework                                            #
