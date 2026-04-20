@@ -2009,6 +2009,20 @@ def is_inline_subheading_sentence(sentence: str) -> bool:
     return title_like >= max(1, len(words) - 1)
 
 
+def starts_with_inline_subheading_label(sentence: str) -> bool:
+    stripped = normalize_for_match(sentence)
+    if not stripped:
+        return False
+
+    return bool(
+        re.match(
+            r"^(?:[a-z]|[ivxlcdm]+|\d+)[\.\)]\s+[A-Z][^:]{0,80}:",
+            stripped,
+            flags=re.IGNORECASE,
+        )
+    )
+
+
 def split_paragraph_on_inline_subheadings(paragraph: str) -> List[str]:
     sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", normalize_for_match(paragraph)) if s.strip()]
     if len(sentences) <= 1:
@@ -2017,7 +2031,10 @@ def split_paragraph_on_inline_subheadings(paragraph: str) -> List[str]:
     chunks: List[str] = []
     current: List[str] = []
     for idx, sentence in enumerate(sentences):
-        if current and idx < len(sentences) - 1 and is_inline_subheading_sentence(sentence):
+        if current and (
+            is_inline_subheading_sentence(sentence)
+            or starts_with_inline_subheading_label(sentence)
+        ):
             merged_current = normalize_for_match(" ".join(current))
             if merged_current:
                 chunks.append(merged_current)
@@ -2029,6 +2046,25 @@ def split_paragraph_on_inline_subheadings(paragraph: str) -> List[str]:
     if merged_current:
         chunks.append(merged_current)
     return chunks
+
+
+def merge_lowercase_continuation_paragraphs(paragraphs: List[str]) -> List[str]:
+    merged: List[str] = []
+    for paragraph in paragraphs:
+        normalized = normalize_for_match(paragraph)
+        if not normalized:
+            continue
+
+        if (
+            merged
+            and re.match(r'^[\(\["“]?[a-z]', normalized)
+            and not starts_with_inline_subheading_label(normalized)
+        ):
+            merged[-1] = normalize_for_match(f"{merged[-1]} {normalized}")
+            continue
+
+        merged.append(normalized)
+    return merged
 
 
 def clean_text_for_paragraph_split(text: str) -> str:
@@ -2148,6 +2184,7 @@ def split_text_into_paragraphs(text: str) -> List[str]:
         refined: List[str] = []
         for paragraph in paragraphs:
             refined.extend(split_paragraph_on_inline_subheadings(paragraph))
+        refined = merge_lowercase_continuation_paragraphs(refined)
         return [p for p in refined if p and not is_non_prose_artifact_paragraph(p)]
 
     rebuilt = rebuild_paragraphs_from_lines(normalized)
@@ -2155,6 +2192,7 @@ def split_text_into_paragraphs(text: str) -> List[str]:
         refined = []
         for paragraph in rebuilt:
             refined.extend(split_paragraph_on_inline_subheadings(paragraph))
+        refined = merge_lowercase_continuation_paragraphs(refined)
         return [p for p in refined if p and not is_non_prose_artifact_paragraph(p)]
 
     # PDF extraction often collapses paragraphs; use sentence chunks as a last fallback.
@@ -2170,6 +2208,7 @@ def split_text_into_paragraphs(text: str) -> List[str]:
     refined = []
     for chunk in chunks:
         refined.extend(split_paragraph_on_inline_subheadings(chunk))
+    refined = merge_lowercase_continuation_paragraphs(refined)
     return [p for p in refined if p and not is_non_prose_artifact_paragraph(p)]
 
 

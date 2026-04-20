@@ -166,7 +166,7 @@ def _extract_refs_text(pdf_path: str | Path) -> str:
 
 def _detect_style(citation_keys: List[str]) -> str:
     """Return 'numeric', 'author_year', or 'mixed'."""
-    numeric = sum(1 for k in citation_keys if re.match(r"^\s*\[\d", k))
+    numeric = sum(1 for k in citation_keys if re.match(r"^\s*(?:\[\d|\(\d)", k))
     author  = sum(1 for k in citation_keys if re.match(r"^\s*\([A-Z]", k))
     if numeric > author:
         return "numeric"
@@ -185,11 +185,11 @@ def _normalize_ws(text: str) -> str:
 
 
 def _find_numeric_entry(refs_text: str, key: str) -> Optional[str]:
-    """Return the raw text for numeric reference [N]."""
-    m = re.match(r"\[\s*(\d+)\s*\]", key.strip())
+    """Return the raw text for numeric reference [N] or (N)."""
+    m = re.match(r"(?:\[\s*(\d+)\s*\]|\(\s*(\d+)\s*\))", key.strip())
     if not m:
         return None
-    n = int(m.group(1))
+    n = int(m.group(1) or m.group(2))
     # Match from [n] to [n+1] (or end of text)
     pattern = rf"\[{n}\](.*?)(?=\[{n + 1}\]|\Z)"
     match = re.search(pattern, refs_text, re.DOTALL)
@@ -539,7 +539,7 @@ class CitationResolver:
                 continue
 
             raw: Optional[str] = None
-            is_numeric = bool(re.match(r"\[\d", norm_key))
+            is_numeric = bool(re.match(r"^(?:\[\d|\(\d)", norm_key))
 
             if style in ("numeric", "mixed") and is_numeric:
                 raw = _find_numeric_entry(refs_text, norm_key)

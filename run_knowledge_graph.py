@@ -55,6 +55,7 @@ def main() -> None:
     if args.load_mappings and Path(args.load_mappings).exists():
         print(f"Loading pre-saved mappings from {args.load_mappings}")
         resolver = CitationResolver.load(args.load_mappings)
+        resolver.parse_all(args.results, args.papers)
     else:
         resolver = CitationResolver()
         resolver.parse_all(args.results, args.papers)

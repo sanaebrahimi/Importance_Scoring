@@ -251,6 +251,7 @@ def main() -> None:
     if args.load_mappings and Path(args.load_mappings).exists():
         print(f"Loading mappings from {args.load_mappings} ...")
         resolver = CitationResolver.load(args.load_mappings)
+        resolver.parse_all(args.results, args.papers)
     else:
         print("Parsing PDFs to resolve citations ...")
         resolver = CitationResolver()
