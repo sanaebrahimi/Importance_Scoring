@@ -9,7 +9,6 @@ Usage:
 """
 
 import argparse
-import json
 from pathlib import Path
 
 from citation_resolver import CitationResolver
@@ -42,7 +41,8 @@ def main() -> None:
     parser.add_argument("--load-mappings", default="",
                         help="Load pre-saved mappings instead of re-parsing PDFs")
     parser.add_argument("--top-k",    type=int, default=10,     help="Top-K for ranked lists")
-    parser.add_argument("--pagerank-damping", type=float, default=0.85)
+    parser.add_argument("--pagerank-damping", type=float, default=0.85,
+                        help="Deprecated — no longer used")
     parser.add_argument("--influence-depth",  type=int,   default=3)
     parser.add_argument("--influence-decay",  type=float, default=0.5)
     args = parser.parse_args()
@@ -120,9 +120,8 @@ def main() -> None:
     # ------------------------------------------------------------------ #
     header("STEP 5 — Importance-Weighted PageRank")
 
-    print(f"\n  Top-{args.top_k} cited works by weighted PageRank "
-          f"(damping={args.pagerank_damping}):\n")
-    ipr = fw.pagerank.compute(damping=args.pagerank_damping)
+    print(f"\n  Top-{args.top_k} cited works by Normalized Reference Score:\n")
+    ipr = fw.pagerank.compute()
     top_pr = sorted(ipr.items(), key=lambda x: x[1], reverse=True)[: args.top_k]
     for rank, (node, score) in enumerate(top_pr, 1):
         entry = resolver.resolve(node)

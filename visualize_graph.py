@@ -73,7 +73,7 @@ def build(
     )
 
     # ── analytics ─────────────────────────────────────────────────────────
-    pagerank   = fw.pagerank.compute(damping=0.85)
+    pagerank   = fw.pagerank.compute()
     corpus_ids = set(fw.graph.papers.keys())
     partition  = fw.communities.detect(restrict_to_corpus=True)   # {pid: community_id}
 
@@ -94,8 +94,6 @@ def build(
         size = _scale(pr, pr_min, pr_max, 14, 60)
 
         if node_id in corpus_ids:
-            paper     = fw.graph.papers[node_id]
-            orig      = paper.originality_score()
             community = partition.get(node_id, 0)
             colour    = _COMMUNITY_COLOURS[community % len(_COMMUNITY_COLOURS)]
             label     = node_id

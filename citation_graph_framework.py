@@ -506,60 +506,31 @@ class CitationGraph:
 
 
 # ---------------------------------------------------------------------------
-# PageRank  (Definition 3.1)
+# Normalized Reference Score  (Definition 3.1)
 # ---------------------------------------------------------------------------
 
 class PageRankAnalyzer:
     """
-    Importance-Weighted PageRank.
+    Normalized Reference Score.
 
-    IPR(q) = (1-d)/|P| + d · Σ_{p:(p,q)∈E} [W(p,q)/W_out(p)] · IPR(p)
+    IPR(q) = Σ_{p:(p,q)∈E} W(p,q)
+
+    Total importance weight flowing into q across all citing papers.
+    Papers with no incoming edges naturally score 0.
     """
 
     def __init__(self, graph: CitationGraph) -> None:
         self.graph = graph
 
-    def compute(
-        self,
-        damping: float = 0.85,
-        max_iter: int = 100,
-        tol: float = 1e-8,
-    ) -> Dict[str, float]:
-        """Return {node_id: IPR_score} after power iteration."""
-        nodes = sorted(self.graph.all_nodes())
-        n = len(nodes)
-        if n == 0:
-            return {}
+    def compute(self) -> Dict[str, float]:
+        """Return {node_id: IPR_score} as total incoming citation weight."""
+        scores: Dict[str, float] = {}
+        for (_, tgt), w in self.graph.edges().items():
+            scores[tgt] = scores.get(tgt, 0.0) + w
+        return scores
 
-        ipr = {nd: 1.0 / n for nd in nodes}
-        teleport = (1.0 - damping) / n
-
-        for _ in range(max_iter):
-            new_ipr: Dict[str, float] = {nd: teleport for nd in nodes}
-
-            for (src, tgt), w in self.graph.edges().items():
-                w_out = self.graph.out_weight(src)
-                if w_out > 0:
-                    new_ipr.setdefault(tgt, teleport)
-                    new_ipr[tgt] += damping * (w / w_out) * ipr[src]
-
-            # dangling-node redistribution
-            dangling = sum(ipr[nd] for nd in nodes if self.graph.out_weight(nd) == 0.0)
-            if dangling > 0:
-                share = damping * dangling / n
-                for nd in nodes:
-                    new_ipr[nd] += share
-
-            diff = sum(abs(new_ipr.get(nd, 0.0) - ipr[nd]) for nd in nodes)
-            ipr = new_ipr
-            if diff < tol:
-                break
-
-        total = sum(ipr.values()) or 1.0
-        return {k: v / total for k, v in ipr.items()}
-
-    def top_k(self, k: int = 10, **kwargs) -> List[Tuple[str, float]]:
-        scores = self.compute(**kwargs)
+    def top_k(self, k: int = 10) -> List[Tuple[str, float]]:
+        scores = self.compute()
         return sorted(scores.items(), key=lambda x: x[1], reverse=True)[:k]
 
 
