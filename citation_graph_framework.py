@@ -166,7 +166,11 @@ class SectionScore:
 
     @property
     def section_type(self) -> str:
-        return classify_section(self.name)
+        if self.citation_score > 0:
+            return "technical" if self.technical_score / self.citation_score > 1 else "rhetorical"
+        if self.technical_score > 0:
+            return "technical"
+        return "neutral"
 
     def all_flat(self) -> List["SectionScore"]:
         """Return this node and all descendants."""
