@@ -953,9 +953,10 @@ class ResearchGapDetector:
         if paper is None:
             return 0.0
         total = 0.0
+        paper_map = self.graph._citation_map.get(citing_id, {})
         for cit_str in paper.citation_scores:
-            resolved = self.graph._citation_map.get(cit_str, cit_str)
-            if resolved not in cluster_set:
+            resolved = paper_map.get(cit_str)
+            if resolved is None or resolved not in cluster_set:
                 continue
             for sec_name, sec in paper.section_scores.items():
                 if sec.section_type == "technical":
