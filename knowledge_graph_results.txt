@@ -3,53 +3,60 @@
   STEP 1 — Citation Resolver
 ============================================================
 [CitationResolver] AFD: resolved 39/41 citations
-[CitationResolver] Dynamic_Necklace_Splitting: resolved 16/18 citations
+[CitationResolver] Dynamic_Necklace_Splitting: resolved 0/17 citations
 [CitationResolver] FCM_SIGMOD_CRV: resolved 86/88 citations
-[CitationResolver] Fair_Epsilon_Net: resolved 104/104 citations
-[CitationResolver] HENN_ICLR_26-1: resolved 62/62 citations
+[CitationResolver] Fair_Epsilon_Net: resolved 103/103 citations
+[CitationResolver] HENN_ICLR_26-1: resolved 60/62 citations
 [CitationResolver] QR: resolved 26/26 citations
-[CitationResolver] Random_access_Retrieval-5: resolved 58/58 citations
-[CitationResolver] adv_res_paper: resolved 18/29 citations
+[CitationResolver] Random_access_Retrieval-5: resolved 54/54 citations
+[CitationResolver] adv_res_paper: resolved 21/29 citations
+[CitationResolver] axolotl: resolved 46/46 citations
+[CitationResolver] mm-mlp: resolved 63/63 citations
+[CitationResolver] requal: resolved 21/23 citations
+[CitationResolver] Saved 519 entries to citation_mappings.json
 
-CitationResolver(resolved=122, canonical_ids=118)
+CitationResolver(resolved=519, canonical_ids=483)
 
 --- Sample resolved citations ---
-  '[33]'                              → [naumann_2017]  Data-driven Schema Normalization.
-  '[26]'                              → [guilly_2020]  Evaluating classification feasibility using functional 
-  '[21]'                              → [mannila_1995]  Approximate inference of functional dependencies from r
-  '[5]'                               → [beskales_2010]  Sampling the repairs of functional dependency violation
-  '[22]'                              → [lakshmanan_2009]  On approximating optimum repairs for functional depende
-  '[23]'                              → [naumann_2018]  Efficient discovery of approximate dependencies.
-  '[7]'                               → [breve_2022]  RENUVER: A Missing Value Imputation Algorithm based on 
-  '[13]'                              → [reuver_2022]  The openness of data platforms: a research agenda.
+  [AFD] '[33]'                         → [naumann_2017]  Data-driven Schema Normalization.
+  [AFD] '[26]'                         → [guilly_2020]  Evaluating classification feasibility using f
+  [AFD] '[21]'                         → [mannila_1995]  Approximate inference of functional dependenc
+  [AFD] '[5]'                          → [beskales_2010]  Sampling the repairs of functional dependency
+  [AFD] '[22]'                         → [lakshmanan_2009]  On approximating optimum repairs for function
+  [AFD] '[23]'                         → [naumann_2018]  Efficient discovery of approximate dependenci
+  [AFD] '[7]'                          → [breve_2022]  RENUVER: A Missing Value Imputation Algorithm
+  [AFD] '[13]'                         → [reuver_2022]  The openness of data platforms: a research ag
 
 ============================================================
   STEP 2 — Build Citation Graph
 ============================================================
 
-CitationGraph(corpus=8, nodes=141, edges=417)
+CitationGraph(corpus=11, nodes=492, edges=509)
 
 ============================================================
   STEP 3 — Corpus Summary
 ============================================================
 
-  Corpus papers   : 8
-  Total nodes     : 141
-  Total edges     : 417
-  Total weight    : 0.9527
-  Avg originality : 0.8809
+  Corpus papers   : 11
+  Total nodes     : 492
+  Total edges     : 509
+  Total weight    : 1.3246
+  Avg originality : 0.8738
 
 --- Per-paper breakdown ---
   Paper                               Originality  Cit. Import.  # Citations
   ----------------------------------- -----------  ------------  -----------
-  AFD                                      0.8183        0.1817           41
-  Dynamic_Necklace_Splitting               0.9624        0.0376           18
-  FCM_SIGMOD_CRV                           0.9185        0.0815           88
-  Fair_Epsilon_Net                         0.8281        0.1719          104
-  HENN_ICLR_26-1                           0.8900        0.1100           62
-  QR                                       0.8751        0.1249           26
-  Random_access_Retrieval-5                0.8306        0.1694           58
-  adv_res_paper                            0.9243        0.0757           29
+  AFD                                      0.8538        0.1462           41
+  Dynamic_Necklace_Splitting               0.9713        0.0287           17
+  FCM_SIGMOD_CRV                           0.9171        0.0829           88
+  Fair_Epsilon_Net                         0.8190        0.1810          103
+  HENN_ICLR_26-1                           0.8931        0.1069           62
+  QR                                       0.8817        0.1183           26
+  Random_access_Retrieval-5                0.8516        0.1484           54
+  adv_res_paper                            0.9244        0.0756           29
+  axolotl                                  0.7792        0.2208           46
+  mm-mlp                                   0.8439        0.1561           63
+  requal                                   0.8764        0.1236           23
 
 ============================================================
   STEP 4 — Originality Ranking  (Orig(p) = Σ S_tech)
@@ -57,31 +64,34 @@ CitationGraph(corpus=8, nodes=141, edges=417)
 
   Papers ranked by original technical content (higher = more original):
 
-  1. Dynamic_Necklace_Splitting          0.9624  ████████████████████████████
-  2. adv_res_paper                       0.9243  ███████████████████████████
-  3. FCM_SIGMOD_CRV                      0.9185  ███████████████████████████
-  4. HENN_ICLR_26-1                      0.8900  ██████████████████████████
-  5. QR                                  0.8751  ██████████████████████████
-  6. Random_access_Retrieval-5           0.8306  ████████████████████████
-  7. Fair_Epsilon_Net                    0.8281  ████████████████████████
-  8. AFD                                 0.8183  ████████████████████████
+  1. Dynamic_Necklace_Splitting          0.9713  █████████████████████████████
+  2. adv_res_paper                       0.9244  ███████████████████████████
+  3. FCM_SIGMOD_CRV                      0.9171  ███████████████████████████
+  4. HENN_ICLR_26-1                      0.8931  ██████████████████████████
+  5. QR                                  0.8817  ██████████████████████████
+  6. requal                              0.8764  ██████████████████████████
+  7. AFD                                 0.8538  █████████████████████████
+  8. Random_access_Retrieval-5           0.8516  █████████████████████████
+  9. mm-mlp                              0.8439  █████████████████████████
+  10. Fair_Epsilon_Net                    0.8190  ████████████████████████
+  11. axolotl                             0.7792  ███████████████████████
 
 ============================================================
   STEP 5 — Importance-Weighted PageRank
 ============================================================
 
-  Top-10 cited works by weighted PageRank (damping=0.85):
+  Top-10 cited works by Normalized Reference Score:
 
-   1. 0.009732  kaggle_2024
-   2. 0.008473  albers_2003
-   3. 0.008416  vo_2016
-   4. 0.008305  naumann_2018
-   5. 0.008260  arai_2009
-   6. 0.008165  ceri_2013
-   7. 0.007944  jiang_2021
-   8. 0.007918  hsu_2019
-   9. 0.007896  muthukrishnan_2005
-  10. 0.007836  naumann_2016
+   1. 0.041511  bolukbasi (2016)  Man is to computer programmer as woman i
+   2. 0.041028  su (2023)  One embedder, any task: Instruction-ﬁnet
+   3. 0.036793  harpeled (2011)  Geometric approximation algorithms .
+   4. 0.031642  dehghankar (2025)  On Fair Epsilon Net and Geometric Hittin
+   5. 0.028965  adelman (2021)  Faster Neural Network Training with Appr
+   6. 0.026048  roberts (1973)  An improved algorithm for discrete l1lin
+   7. 0.023251  stephenportnoyandrogerkoenker (1997)  Thegaussianhareandthelaplaciantortoise:c
+   8. 0.022454  webster (2020)  Measuring and reducing gendered correlat
+   9. 0.017658  vo (2016)  The lattice-based approaches for mining 
+  10. 0.017418  shrivastava (2017)  Scalable and Sustainable Deep Learning v
 
 ============================================================
   STEP 6 — Seminal Works  (Influence Propagation)
@@ -89,16 +99,16 @@ CitationGraph(corpus=8, nodes=141, edges=417)
 
   Top cited works by total downstream influence (depth=3, decay=0.5):
 
-   1. 0.046091  vo_2016
-   2. 0.036862  albers_2003
-   3. 0.036664  naumann_2018
-   4. 0.030675  wang_2013
-   5. 0.030261  naumann_2016
-   6. 0.026174  hsu_2019
-   7. 0.025875  arai_2009
-   8. 0.025593  kaggle_2024
-   9. 0.025239  huhtala_1999
-  10. 0.023612  ceri_2013
+   1. 0.041511  bolukbasi (2016)  Man is to computer programmer as woman i
+   2. 0.041028  su (2023)  One embedder, any task: Instruction-ﬁnet
+   3. 0.036793  harpeled (2011)  Geometric approximation algorithms .
+   4. 0.031642  dehghankar (2025)  On Fair Epsilon Net and Geometric Hittin
+   5. 0.028965  adelman (2021)  Faster Neural Network Training with Appr
+   6. 0.026048  roberts (1973)  An improved algorithm for discrete l1lin
+   7. 0.023251  stephenportnoyandrogerkoenker (1997)  Thegaussianhareandthelaplaciantortoise:c
+   8. 0.022531  webster (2020)  Measuring and reducing gendered correlat
+   9. 0.017658  vo (2016)  The lattice-based approaches for mining 
+  10. 0.017418  shrivastava (2017)  Scalable and Sustainable Deep Learning v
 
 ============================================================
   STEP 7 — Citation Roles  (Technical vs Rhetorical)
@@ -107,44 +117,59 @@ CitationGraph(corpus=8, nodes=141, edges=417)
   For each corpus paper: top citations and their role.
 
   AFD
-    wang (2013)                   w=0.0288  ρ=∞       [technical]
-    vo (2016)                     w=0.0279  ρ=∞       [technical]
-    reps (1996)                   w=0.0199  ρ=0.00    [rhetorical]
+    [25]                          w=0.0177  ρ=∞       [technical]
+    [39]                          w=0.0153  ρ=0.00    [rhetorical]
+    [45]                          w=0.0124  ρ=∞       [technical]
 
   Dynamic_Necklace_Splitting
-    kaggle (2024)                 w=0.0165  ρ=3.62    [technical]
-    arai (2009)                   w=0.0043  ρ=6.09    [technical]
-    oliveira (2010)               w=0.0036  ρ=0.00    [rhetorical]
+    [19]                          w=0.0124  ρ=∞       [technical]
+    [12]                          w=0.0041  ρ=∞       [technical]
+    [8]                           w=0.0032  ρ=∞       [technical]
 
   FCM_SIGMOD_CRV
-    muthukrishnan (2005)          w=0.0123  ρ=0.00    [rhetorical]
-    hsu (2019)                    w=0.0072  ρ=0.07    [rhetorical]
-    barocas (2023)                w=0.0049  ρ=0.00    [unclassified]
+    [28]                          w=0.0134  ρ=4.50    [technical]
+    [50]                          w=0.0059  ρ=3.27    [technical]
+    [1]                           w=0.0046  ρ=0.00    [rhetorical]
 
   Fair_Epsilon_Net
-    naumann (2016)                w=0.0252  ρ=0.45    [rhetorical]
-    vo (2016)                     w=0.0098  ρ=0.00    [rhetorical]
-    li (2023)                     w=0.0084  ρ=102.58  [technical]
+    [32]                          w=0.0316  ρ=∞       [technical]
+    [25]                          w=0.0075  ρ=∞       [technical]
+    [70]                          w=0.0064  ρ=∞       [technical]
 
   HENN_ICLR_26-1
-    jiang (2021)                  w=0.0202  ρ=0.00    [unclassified]
-    ceri (2013)                   w=0.0108  ρ=0.00    [rhetorical]
-    das (2011)                    w=0.0087  ρ=0.00    [rhetorical]
+    [51]                          w=0.0146  ρ=∞       [technical]
+    [9]                           w=0.0131  ρ=∞       [technical]
+    [46]                          w=0.0096  ρ=∞       [technical]
 
   QR
-    albers (2003)                 w=0.0232  ρ=0.00    [rhetorical]
-    naumann (2018)                w=0.0189  ρ=0.00    [rhetorical]
-    bellman (1966)                w=0.0158  ρ=0.00    [unclassified]
+    [1]                           w=0.0260  ρ=∞       [technical]
+    [24]                          w=0.0233  ρ=∞       [technical]
+    [4]                           w=0.0147  ρ=∞       [technical]
 
   Random_access_Retrieval-5
-    huhtala (1999)                w=0.0208  ρ=0.00    [rhetorical]
-    asudeh (2025)                 w=0.0202  ρ=0.00    [rhetorical]
-    hsu (2019)                    w=0.0172  ρ=0.00    [rhetorical]
+    [50]                          w=0.0340  ρ=∞       [technical]
+    [18]                          w=0.0152  ρ=∞       [technical]
+    [8]                           w=0.0085  ρ=∞       [technical]
 
   adv_res_paper
-    ebrahimi (2024)               w=0.0089  ρ=∞       [technical]
-    wu (2023)                     w=0.0075  ρ=0.00    [rhetorical]
-    liang (2023)                  w=0.0064  ρ=0.00    [unclassified]
+    (Amayuelas et al., 2024)      w=0.0088  ρ=∞       [technical]
+    (Wu et al.,2023)              w=0.0061  ρ=∞       [technical]
+    (Shapley, 1951)               w=0.0061  ρ=∞       [technical]
+
+  axolotl
+    (22)                          w=0.0410  ρ=∞       [technical]
+    (19)                          w=0.0362  ρ=∞       [technical]
+    (25)                          w=0.0158  ρ=∞       [technical]
+
+  mm-mlp
+    [1]                           w=0.0290  ρ=3.01    [technical]
+    [50]                          w=0.0174  ρ=2.61    [technical]
+    [45]                          w=0.0097  ρ=∞       [technical]
+
+  requal
+    (Webster et al., 2020)        w=0.0155  ρ=0.00    [rhetorical]
+    (Su et al., 2023)             w=0.0139  ρ=∞       [technical]
+    (Suet al., 2023)              w=0.0132  ρ=∞       [technical]
 
 
 ============================================================
@@ -155,74 +180,56 @@ CitationGraph(corpus=8, nodes=141, edges=417)
 
   Work                               Found   Periph  Class         
   -------------------------------- -------  -------  --------------
-  wang_2013                         0.0300   0.0016  foundational
-  vo_2016                           0.0279   0.0061  foundational
-  arai_2009                         0.0162   0.0054  foundational
-  kaggle_2024                       0.0112   0.0070  balanced
-  ge_2024                           0.0088   0.0032  foundational
-  vempala_1997                      0.0084   0.0019  foundational
-  ebrahimi_2024                     0.0081   0.0000  foundational
-  naumann_2016                      0.0061   0.0189  peripheral
-  oliveira_2010                     0.0046   0.0042  balanced
-  dasgupta_2010                     0.0045   0.0083  balanced
+  [1]                               0.0528   0.0200  foundational
+  [50]                              0.0511   0.0075  foundational
+  (22)                              0.0410   0.0000  foundational
+  [32]                              0.0379   0.0010  foundational
+  (19)                              0.0362   0.0000  foundational
+  [25]                              0.0312   0.0025  foundational
+  (Su et al., 2023)                 0.0270   0.0000  foundational
+  (Suet al., 2023)                  0.0270   0.0000  foundational
+  [24]                              0.0248   0.0012  foundational
+  [45]                              0.0248   0.0007  foundational
 
 ============================================================
   STEP 9 — Community Detection
 ============================================================
 
-  Weighted modularity Q = 0.0000
-  8 communities detected:
+  Weighted modularity Q = 0.0034
+  9 communities detected:
 
-  Community 0: Dynamic_Necklace_Splitting
-  Community 1: HENN_ICLR_26-1
-  Community 2: Random_access_Retrieval-5
-  Community 3: adv_res_paper
-  Community 4: FCM_SIGMOD_CRV
-  Community 5: AFD
-  Community 6: Fair_Epsilon_Net
-  Community 7: QR
+  Community 0: QR
+  Community 1: mm-mlp
+  Community 2: FCM_SIGMOD_CRV
+  Community 3: adv_res_paper, requal, axolotl
+  Community 4: Fair_Epsilon_Net
+  Community 5: Random_access_Retrieval-5
+  Community 6: AFD
+  Community 7: HENN_ICLR_26-1
+  Community 8: Dynamic_Necklace_Splitting
 
 ============================================================
   STEP 10 — Research Gap Score  (Gap(C, t))
 ============================================================
 
-  Full-corpus gap score: 7.0473
+  Full-corpus gap score: 9.6114
   (positive = technically original work not yet adopted as a dependency by other papers in the corpus)
 
   Per-paper gap score (cluster = single paper):
 
   Paper                                Gap score  Originality
   ----------------------------------- ----------  -----------
-  AFD                                     0.8183       0.8183
-  Dynamic_Necklace_Splitting              0.9624       0.9624
-  FCM_SIGMOD_CRV                          0.9185       0.9185
-  Fair_Epsilon_Net                        0.8281       0.8281
-  HENN_ICLR_26-1                          0.8900       0.8900
-  QR                                      0.8751       0.8751
-  Random_access_Retrieval-5               0.8306       0.8306
-  adv_res_paper                           0.9243       0.9243
-
-============================================================
-  STEP 11 — Concept-Level Citation Graph  (top concepts)
-============================================================
-
-  Top concepts co-occurring with citations (by total weight):
-
-  data-driven                         0.0741  ██████████████
-  high-dimensional                    0.0689  █████████████
-  multi-agent                         0.0542  ██████████
-  count-min                           0.0514  ██████████
-  well-known                          0.0466  █████████
-  Functional Dependency               0.0425  ████████
-  correction-based                    0.0425  ████████
-  Stavros Sintos                      0.0388  ███████
-  Nima Shahbazi                       0.0377  ███████
-  decision-making                     0.0373  ███████
-  fairness-aware                      0.0372  ███████
-  Abolfazl Asudeh                     0.0364  ███████
-  half-spaces                         0.0359  ███████
-  The CM                              0.0324  ██████
-  k-set                               0.0322  ██████
+  AFD                                     0.8538       0.8538
+  Dynamic_Necklace_Splitting              0.9713       0.9713
+  FCM_SIGMOD_CRV                          0.9171       0.9171
+  Fair_Epsilon_Net                        0.8190       0.8190
+  HENN_ICLR_26-1                          0.8931       0.8931
+  QR                                      0.8817       0.8817
+  Random_access_Retrieval-5               0.8516       0.8516
+  adv_res_paper                           0.9244       0.9244
+  axolotl                                 0.7792       0.7792
+  mm-mlp                                  0.8439       0.8439
+  requal                                  0.8605       0.8764
 
 ============================================================
   DONE
