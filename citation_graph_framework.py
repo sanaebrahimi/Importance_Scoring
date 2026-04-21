@@ -436,7 +436,10 @@ class CitationGraph:
             for cit_str, score in paper.citation_scores.items():
                 # Resolve using this paper's own mapping so [2] in paper A
                 # and [2] in paper B map to their respective works.
-                target = paper_map.get(cit_str, cit_str)
+                # Skip unresolved citations — don't create raw-key nodes like "[8]".
+                target = paper_map.get(cit_str)
+                if target is None:
+                    continue
                 self._weights[(paper_id, target)] += score
                 self._out_weights[paper_id] += score
                 self._in_weights[target] += score
