@@ -1,0 +1,292 @@
+HUMAN ANNOTATION INSTRUCTIONS
+Section-Level Importance Scoring + Top 4 Foundational Papers
+
+Purpose
+You are an author of the paper being annotated. Your job is to provide a human judgment of:
+
+1. Section-level importance within your own paper
+2. The top 4 cited papers that are most foundational to your work
+
+These instructions are designed to stay as close as possible to the section-level scoring setup used in our LLM pipeline, so that human and LLM annotations are comparable.
+
+
+==================================================
+PART 1: SECTION-LEVEL IMPORTANCE SCORING
+==================================================
+
+What to score
+Score only sections and subsections.
+Do NOT score paragraphs.
+Do NOT separately score citations inside sections.
+
+General principle
+Treat the paper as a hierarchy.
+At each parent node, distribute a fixed budget across its immediate child sections.
+
+You should judge how much ORIGINAL SCIENTIFIC VALUE each child section creates for the paper.
+
+Ask yourself:
+"If this section were removed, how much of the paper's scientific contribution would be lost?"
+
+Focus on:
+- new methods
+- new algorithms
+- new theory or proofs
+- new formulations
+- new experimental design
+- new findings or results
+- new technical analysis
+
+Give lower scores to sections that mainly:
+- motivate the problem
+- provide background
+- summarize related work
+- restate results from other sections
+- provide transitions or narrative framing
+
+Important
+For section scoring, do NOT give extra credit just because a section cites many papers.
+This stage is about the section's intrinsic contribution to the paper's scientific content.
+
+
+--------------------------------------------------
+How to score
+--------------------------------------------------
+
+Step 1: Top-level sections
+Start with the whole paper budget = 100 points.
+Distribute those 100 points across the top-level sections of the paper.
+
+Example:
+Introduction: 12
+Methodology: 36
+Experiments: 34
+Related Work: 8
+Conclusion: 5
+Limitations: 5
+
+The top-level section scores must sum to exactly 100.
+
+
+Step 2: Subsections
+If a top-level section has subsections, then use the score of that parent section as the new fixed budget.
+Distribute that parent score across its immediate children.
+
+Example:
+If "Experiments" received 34 points overall, and it has 3 subsections, then distribute exactly 34 points across those 3 subsections.
+
+Example:
+Experiments total = 34
+Datasets: 6
+Baselines: 8
+Main Results: 20
+
+These subsection scores must sum to exactly the parent score, here 34.
+
+
+Step 3: Continue recursively if needed
+If a subsection itself has child subsections, repeat the same process.
+Always distribute only across immediate children.
+Always make the children sum exactly to the parent.
+
+
+--------------------------------------------------
+What counts as high importance
+--------------------------------------------------
+
+Higher scores:
+- the core technical method of the paper
+- the main model, algorithm, or framework
+- the main theorem/proof/formulation
+- the experiments that establish the paper's core claims
+- the analysis that is essential to the contribution
+
+Lower scores:
+- background or setup
+- narrative overview
+- broad motivation
+- literature review / related work summary
+- discussion that mainly repeats earlier claims
+- conclusion text that summarizes rather than adds new scientific value
+
+
+--------------------------------------------------
+Calibration guidance
+--------------------------------------------------
+
+Use these as rough anchors, not hard rules.
+
+Introduction:
+- Usually lower than the main technical and results sections
+- Can be moderate if it defines the exact problem framing in a novel way
+
+Related Work / Background:
+- Usually low
+- Only score higher if it makes a genuinely important analytical distinction that is central to the paper's contribution
+
+Methods / Approach / Framework:
+- Usually high
+- Often among the most important sections
+
+Experiments / Results / Evaluation:
+- Usually high when they provide the evidence for the paper's main claims
+
+Conclusion:
+- Usually low to moderate
+- It often summarizes rather than creates new value
+
+Limitations:
+- Usually low
+- Important for transparency, but usually not a primary source of the paper's original scientific value
+
+
+--------------------------------------------------
+What not to do
+--------------------------------------------------
+
+Do not score based on:
+- writing quality
+- how polished the section is
+- how long the section is
+- how many citations it contains
+- how useful it is for helping the reader follow the story
+
+Do score based on:
+- how much that section contributes to the paper's actual scientific contribution
+
+
+--------------------------------------------------
+Output format for section scoring
+--------------------------------------------------
+
+For each parent section group, write one line per child.
+Use section names exactly as provided in the annotation form.
+
+Format:
+<section name>: <score>
+
+Example:
+Introduction: 12
+Methodology: 36
+Experiments: 34
+Related Work: 8
+Conclusion: 5
+Limitations: 5
+
+If subsections are provided, annotate them under their parent budget in the same way.
+
+
+--------------------------------------------------
+Quality checks before submission
+--------------------------------------------------
+
+Before you submit, verify:
+
+1. At the top level, all section scores sum to exactly 100.
+2. For every parent with child sections, the child scores sum exactly to the parent score.
+3. You scored scientific contribution, not readability or citation count.
+4. You did not score paragraphs or individual citations.
+
+
+==================================================
+PART 2: TOP 4 FOUNDATIONAL PAPERS
+==================================================
+
+Goal
+Choose the 4 cited papers that are most foundational to your work.
+
+Definition of "foundational"
+A foundational paper is one that directly supports the core technical contribution of your paper.
+
+Examples of foundational use:
+- a method your work builds on
+- a baseline that is central to your evaluation
+- a theory or formulation your work depends on
+- a prior framework that strongly shaped your design
+- a key paper without which your contribution would be substantially different
+
+Examples of non-foundational use:
+- broad background references
+- generic motivation references
+- citations included mainly for completeness
+- peripheral comparisons
+- papers mentioned only in passing
+
+
+--------------------------------------------------
+How to choose the 4 papers
+--------------------------------------------------
+
+Pick exactly 4 cited papers.
+Rank them from 1 to 4, where:
+- Rank 1 = most foundational
+- Rank 4 = still foundational, but less central than 1-3
+
+Please use the citation identifiers exactly as given in the annotation form.
+If full titles are provided, include the title too.
+
+
+--------------------------------------------------
+Output format for foundational papers
+--------------------------------------------------
+
+Format:
+1. <citation id or citation string> — <short reason>
+2. <citation id or citation string> — <short reason>
+3. <citation id or citation string> — <short reason>
+4. <citation id or citation string> — <short reason>
+
+Reason length:
+1 short sentence per paper is enough.
+
+Example:
+1. (Smith et al., 2021) — This is the main technical method we build on.
+2. (Lee and Chen, 2020) — This baseline is central to our empirical evaluation.
+3. (Wang et al., 2019) — Our formulation directly follows this setup.
+4. (Garcia et al., 2022) — This paper shaped the framework we extend.
+
+
+==================================================
+SUBMISSION TEMPLATE
+==================================================
+
+Paper ID / Title:
+
+Section-level scores
+
+Top-level sections (must sum to 100):
+
+<section 1>: 
+<section 2>: 
+<section 3>: 
+...
+
+Subsections
+If applicable, repeat for each parent section that has children:
+
+Parent section: <name>  Parent score: <score>
+<child 1>: 
+<child 2>: 
+<child 3>: 
+...
+
+Top 4 foundational papers
+
+1. 
+2. 
+3. 
+4. 
+
+
+==================================================
+FINAL REMINDER
+==================================================
+
+For section scoring:
+- score intrinsic scientific contribution only
+- keep every sibling group on a fixed budget
+- make the scores sum exactly
+
+For foundational papers:
+- choose the 4 cited works that are most central to the paper's core contribution
+- do not choose papers that are only background or context unless they are truly foundational
