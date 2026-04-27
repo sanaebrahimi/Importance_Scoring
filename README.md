@@ -31,6 +31,10 @@ Rebuild the published site with:
 
 This writes the graph to `docs/index.html`, copies the local JS/CSS assets into `docs/lib`, and refreshes `docs/.nojekyll`.
 
+The published page is not a fixed snapshot anymore. It includes input boxes for
+`top-k` and `min-weight`, so you can change those graph filters directly in the
+browser without regenerating the site.
+
 To publish it on `github.io`:
 
 1. Commit and push the `docs/` folder plus any graph updates you want online.
