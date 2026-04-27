@@ -19,6 +19,26 @@ python3 visualize_graph.py \
 ```
 `--top-k 40` pulls in more external cited works so you see the shared foundation across papers. `--min-weight 0.005` cuts the noise — only citations that carry real importance weight survive, so the edges you see are genuine dependencies rather than passing mentions. Using `--load-mappings` skips re-parsing the PDFs so it runs in a few seconds.
 
+## GitHub Pages
+
+The repo is set up so the interactive graph can be published as a static site from `docs/`.
+
+Rebuild the published site with:
+
+```bash
+./build_github_pages_site.sh
+```
+
+This writes the graph to `docs/index.html`, copies the local JS/CSS assets into `docs/lib`, and refreshes `docs/.nojekyll`.
+
+To publish it on `github.io`:
+
+1. Commit and push the `docs/` folder plus any graph updates you want online.
+2. In GitHub, open `Settings` -> `Pages`.
+3. Set `Source` to `Deploy from a branch`.
+4. Choose branch `main` and folder `/docs`.
+5. Save. GitHub will publish the site at `https://<your-username>.github.io/<repo-name>/`.
+
 ## Main Files
 
 - [importance_score.py](importance_score.py): runs the scoring pipeline for one paper and writes JSON outputs for sections, paragraphs, and citations.
