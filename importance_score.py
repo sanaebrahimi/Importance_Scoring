@@ -43,6 +43,11 @@ DEFAULT_SECTIONS = {
     "Limitations": None,
 }
 
+
+def sanitize_model_tag(model: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9]+", "_", model).strip("_").lower()
+    return cleaned or "model"
+
 SECTION_PAIRWISE_SYSTEM_PROMPT = (
     "You are an expert academic reviewer. "
     "Compare two items from the same paper by contribution to the paper's main scientific contribution. "
@@ -3906,6 +3911,11 @@ def main() -> None:
         help="Assignment name inside --sections-file to use for this paper.",
     )
     parser.add_argument("--model", default="llama3.2", help="Ollama model name")
+    parser.add_argument(
+        "--model-tag",
+        default="",
+        help="Optional suffix to append to output/debug/prompt filenames so runs are distinguishable by model.",
+    )
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
     parser.add_argument("--n-samples", type=int, default=5, help="Number of LLM samples to average")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature")
@@ -3938,7 +3948,19 @@ def main() -> None:
     args = parser.parse_args()
     if bool(args.sections_file) != bool(args.sections_var):
         parser.error("--sections-file and --sections-var must be provided together.")
-    append_run_separator(args.debug_log, args)
+    model_tag = args.model_tag.strip() or sanitize_model_tag(args.model)
+
+    debug_log_path = Path(args.debug_log)
+    if model_tag:
+        debug_log_path = debug_log_path.with_name(f"{debug_log_path.stem}_{model_tag}{debug_log_path.suffix}")
+
+    prompts_output_path = Path(args.prompts_output) if args.prompts_output else None
+    if prompts_output_path and model_tag:
+        prompts_output_path = prompts_output_path.with_name(
+            f"{prompts_output_path.stem}_{model_tag}{prompts_output_path.suffix}"
+        )
+
+    append_run_separator(str(debug_log_path), args)
 
     text = read_pdf_text(args.pdf)
     sections = DEFAULT_SECTIONS
@@ -3960,13 +3982,17 @@ def main() -> None:
         max_retries=max(1, args.max_retries),
         paragraph_direct_max_tokens=max(0, args.paragraph_direct_max_tokens),
         paragraph_compressed_snippet_limit=max(60, args.paragraph_compressed_snippet_limit),
-        debug_log_path=args.debug_log,
+        debug_log_path=str(debug_log_path),
         paper_id=args.paper_id,
     )
 
-    citation_path = f"{args.output1}_citation_scores.json"
-    section_path = f"{args.output2}_section_scores.json"
-    paragraph_prefix = args.output3 if args.output3 else args.output2
+    output1_prefix = f"{args.output1}_{model_tag}" if model_tag else args.output1
+    output2_prefix = f"{args.output2}_{model_tag}" if model_tag else args.output2
+    paragraph_prefix_base = args.output3 if args.output3 else args.output2
+    paragraph_prefix = f"{paragraph_prefix_base}_{model_tag}" if model_tag else paragraph_prefix_base
+
+    citation_path = f"{output1_prefix}_citation_scores.json"
+    section_path = f"{output2_prefix}_section_scores.json"
     paragraph_path = f"{paragraph_prefix}_paragraph_scores.json"
     paragraph_citation_path = f"{paragraph_prefix}_paragraph_citation_scores.json"
 
@@ -3982,8 +4008,8 @@ def main() -> None:
     with open(paragraph_citation_path, "w", encoding="utf-8") as f:
         json.dump(paragraph_citation_importance, f, indent=2)
 
-    if args.prompts_output:
-        with open(args.prompts_output, "w", encoding="utf-8") as f:
+    if prompts_output_path:
+        with open(prompts_output_path, "w", encoding="utf-8") as f:
             json.dump(PROMPT_CATALOG, f, indent=2)
 
     print("\n" + "=" * 50)

@@ -15,6 +15,11 @@ DEFAULT_RESULTS_ROOT = Path("paper_results")
 DEFAULT_VENDOR_DIR = Path(".vendor")
 
 
+def sanitize_model_tag(model: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9]+", "_", model).strip("_").lower()
+    return cleaned or "model"
+
+
 def load_assignment_names(assignments_path: Path) -> Dict[str, dict]:
     source = assignments_path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(assignments_path))
@@ -38,13 +43,14 @@ def sections_var_name(pdf_path: Path) -> str:
     return f"{base}_SECTIONS"
 
 
-def output_files_exist(prefix: Path) -> bool:
+def output_files_exist(prefix: Path, model_tag: str = "") -> bool:
+    tagged_prefix = Path(f"{prefix}_{model_tag}") if model_tag else prefix
     return all(
         path.exists()
         for path in (
-            Path(f"{prefix}_citation_scores.json"),
-            Path(f"{prefix}_section_scores.json"),
-            Path(f"{prefix}_paragraph_scores.json"),
+            Path(f"{tagged_prefix}_citation_scores.json"),
+            Path(f"{tagged_prefix}_section_scores.json"),
+            Path(f"{tagged_prefix}_paragraph_scores.json"),
         )
     )
 
@@ -63,6 +69,11 @@ def main() -> None:
         help="Root directory where per-paper result folders will be created.",
     )
     parser.add_argument("--model", default="llama3.2", help="Ollama model name to pass through.")
+    parser.add_argument(
+        "--model-tag",
+        default="",
+        help="Optional suffix for output/debug/prompt filenames. Defaults to a sanitized version of --model.",
+    )
     parser.add_argument("--host", default="localhost:11434", help="Ollama host to pass through.")
     parser.add_argument("--n-samples", type=int, default=5, help="Number of LLM samples to average.")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature.")
@@ -111,6 +122,7 @@ def main() -> None:
     results_root = Path(args.results_root)
     vendor_dir = Path(args.vendor_dir)
     results_root.mkdir(parents=True, exist_ok=True)
+    model_tag = args.model_tag.strip() or sanitize_model_tag(args.model)
 
     assignments = load_assignment_names(sections_file)
     manifest = []
@@ -128,7 +140,7 @@ def main() -> None:
         debug_log = paper_dir / "debug.log"
         prompts_output = paper_dir / "prompts.json"
 
-        outputs_present = output_files_exist(prefix)
+        outputs_present = output_files_exist(prefix, model_tag=model_tag)
         command = [
             args.python,
             "importance_score.py",
@@ -148,6 +160,8 @@ def main() -> None:
             str(prefix),
             "--model",
             args.model,
+            "--model-tag",
+            model_tag,
             "--host",
             args.host,
             "--n-samples",
@@ -169,6 +183,7 @@ def main() -> None:
         record = {
             "paper": pdf_path.name,
             "paper_dir": str(paper_dir),
+            "model_tag": model_tag,
             "sections_var": section_var,
             "command": command,
             "skipped": False,
@@ -207,7 +222,8 @@ def main() -> None:
 
         manifest.append(record)
 
-    manifest_path = results_root / "manifest.json"
+    manifest_name = f"manifest_{model_tag}.json" if model_tag else "manifest.json"
+    manifest_path = results_root / manifest_name
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(f"[done] Wrote manifest to {manifest_path}")
 
