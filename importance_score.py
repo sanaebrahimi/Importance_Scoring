@@ -1115,6 +1115,13 @@ def strip_code_fences(response_text: str) -> str:
     return text
 
 
+def strip_reasoning_blocks(response_text: str) -> str:
+    text = strip_code_fences(response_text)
+    # Prefer the final answer block over reflective preambles emitted by some models.
+    text = re.sub(r"<think>.*?</think>\s*", "", text, flags=re.IGNORECASE | re.DOTALL)
+    return text.strip()
+
+
 def parse_json_loose(response_text: str) -> Any:
     text = strip_code_fences(response_text)
     try:
@@ -1146,12 +1153,19 @@ def coerce_non_negative_number(value: Any, allow_percentage: bool = False) -> Op
     return float(number)
 
 
-def parse_plaintext_score_lines(response_text: str) -> List[Tuple[str, float]]:
-    text = strip_code_fences(response_text)
-    pairs: List[Tuple[str, float]] = []
+def parse_plaintext_score_lines(
+    response_text: str,
+    allow_percentage: bool = False,
+) -> List[Tuple[str, float]]:
+    text = strip_reasoning_blocks(response_text)
+    blocks: List[List[Tuple[str, float]]] = []
+    current_block: List[Tuple[str, float]] = []
     for raw_line in text.splitlines():
         line = raw_line.strip().strip(",")
         if not line:
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
             continue
         line = re.sub(r"^[-*•]\s*", "", line)
         match = re.match(
@@ -1159,13 +1173,29 @@ def parse_plaintext_score_lines(response_text: str) -> List[Tuple[str, float]]:
             line,
         )
         if not match:
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
             continue
         key = match.group(1).strip()
-        value = safe_float(match.group(2), -1.0)
-        if value < 0.0:
+        value = coerce_non_negative_number(match.group(2), allow_percentage=allow_percentage)
+        if value is None:
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
             continue
-        pairs.append((key, value))
-    return pairs
+        current_block.append((key, value))
+    if current_block:
+        blocks.append(current_block)
+
+    if not blocks:
+        return []
+
+    best_block = max(
+        enumerate(blocks),
+        key=lambda item: (len(item[1]), item[0]),
+    )[1]
+    return best_block
 
 
 def parse_plaintext_title_lines(response_text: str) -> List[Tuple[str, str]]:
@@ -1188,11 +1218,15 @@ def parse_plaintext_title_lines(response_text: str) -> List[Tuple[str, str]]:
 
 
 def parse_ordered_score_values(response_text: str, allow_percentage: bool = False) -> List[float]:
-    text = strip_code_fences(response_text)
-    values: List[float] = []
+    text = strip_reasoning_blocks(response_text)
+    blocks: List[List[float]] = []
+    current_block: List[float] = []
     for raw_line in text.splitlines():
         line = raw_line.strip().strip(",")
         if not line:
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
             continue
         line = re.sub(r"^[-*•]\s*", "", line)
 
@@ -1209,9 +1243,22 @@ def parse_ordered_score_values(response_text: str, allow_percentage: bool = Fals
                 break
 
         if score_val is None:
+            if current_block:
+                blocks.append(current_block)
+                current_block = []
             continue
-        values.append(score_val)
-    return values
+        current_block.append(score_val)
+    if current_block:
+        blocks.append(current_block)
+
+    if not blocks:
+        return []
+
+    best_block = max(
+        enumerate(blocks),
+        key=lambda item: (len(item[1]), item[0]),
+    )[1]
+    return best_block
 
 
 def parse_score_map_from_response(
@@ -1252,7 +1299,10 @@ def parse_score_map_from_response(
             parsed_scores[target_id] = score_val
 
     # Prefer explicit plain-text score lines like "I1: 0.2" / "Paragraph 3: 0.4".
-    plaintext_pairs = parse_plaintext_score_lines(response_text)
+    plaintext_pairs = parse_plaintext_score_lines(
+        response_text,
+        allow_percentage=allow_percentage,
+    )
     ordered_plaintext_values = [value for _, value in plaintext_pairs]
     ordered_score_values = parse_ordered_score_values(response_text, allow_percentage=allow_percentage)
     if len(ordered_plaintext_values) == len(expected_ids):
@@ -1735,8 +1785,6 @@ def validate_allocation_distribution(
     score_sum = sum(values)
     if score_sum <= 0.0:
         return "non_positive_sum"
-    if not (0.85 <= score_sum <= 1.15):
-        return "sum_not_close_to_100_percent"
 
     if mode == "relaxed":
         return None
