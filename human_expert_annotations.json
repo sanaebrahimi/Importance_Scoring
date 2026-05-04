@@ -1,0 +1,247 @@
+{
+  "description": "Human expert annotations for section-level importance evaluation. Scores are stored as provided by annotators and are renormalized during evaluation. The top_level_scores_for_evaluation block uses model-side top-level section names so evaluation can align cleanly.",
+  "papers": {
+    "AFD": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 10.0,
+        "Data Model & Problem Definition": 12.0,
+        "Solution Framework: Bound Computation": 26.0,
+        "Anytime AFD Algorithms": 24.0,
+        "Experiments": 17.0,
+        "Related Work": 7.0,
+        "Conclusion and Future Work": 4.0
+      },
+      "subsection_scores": [
+        {"parent": "Data model and problem definition", "name": "Data model", "score": 4.0},
+        {"parent": "Data model and problem definition", "name": "Problem definitions", "score": 5.0},
+        {"parent": "Data model and problem definition", "name": "Definition of Anytime Algorithms for AFDs", "score": 3.0},
+        {"parent": "Solution Framework: Bound Computation", "name": "Lattice Based Solution", "score": 6.0},
+        {"parent": "Solution Framework: Bound Computation", "name": "Compute Bounds for Anytime Answer", "score": 10.0},
+        {"parent": "Compute Bounds for Anytime Answer", "name": "Lower and upper bounds", "score": 5.0},
+        {"parent": "Compute Bounds for Anytime Answer", "name": "Bounds Computation Problem", "score": 5.0},
+        {"parent": "Solution Framework: Bound Computation", "name": "Bound Computation Algorithms", "score": 10.0},
+        {"parent": "Bound Computation Algorithms", "name": "Accuracy-Runtime Trade Offs", "score": 4.0},
+        {"parent": "Anytime AFD Algorithms", "name": "Exact Algorithms", "score": 14.0},
+        {"parent": "Exact Algorithms", "name": "Topk AFDs", "score": 8.0},
+        {"parent": "Exact Algorithms", "name": "epsilon-AFDs", "score": 6.0},
+        {"parent": "Anytime AFD Algorithms", "name": "Approximate algorithms", "score": 10.0},
+        {"parent": "Approximate algorithms", "name": "Overall Idea", "score": 5.0},
+        {"parent": "Approximate algorithms", "name": "Topk AFDs", "score": 3.0},
+        {"parent": "Approximate algorithms", "name": "epsilon-AFDs", "score": 2.0},
+        {"parent": "Experiments", "name": "Experimental setup", "score": 3.0},
+        {"parent": "Experiments", "name": "Quality Analyses- Approximate Algorithms", "score": 6.0},
+        {"parent": "Quality Analyses- Approximate Algorithms", "name": "Data Indexed by Key Like Attributes.", "score": 2.0},
+        {"parent": "Quality Analyses- Approximate Algorithms", "name": "Data Indexed by Non Key Like Attributes.", "score": 2.0},
+        {"parent": "Quality Analyses- Approximate Algorithms", "name": "epsilon-AFDs", "score": 2.0},
+        {"parent": "Experiments", "name": "Quality Analyses - Exact Algorithms", "score": 2.0},
+        {"parent": "Experiments", "name": "Scalability Analyses", "score": 4.0},
+        {"parent": "Experiments", "name": "Summary", "score": 2.0}
+      ],
+      "important_papers": [
+        {"rank": 1, "citation": "[21] Kivinen et al", "note": "Basis of the AFD framework"},
+        {"rank": 2, "citation": "[23] Sebastian Kruse et al", "note": "important baselines"},
+        {"rank": 3, "citation": "[16] Cunjing Ge", "note": "motivates our uninformed prior framework"},
+        {"rank": 4, "citation": "[20] Ravi Kannan", "note": "motivates our uninformed prior framework"}
+      ]
+    },
+    "QR": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 10.0,
+        "Preliminaries": 10.0,
+        "Efficiently Updating Neighbors, and the Use of k-Sets": 30.0,
+        "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression": 48.0,
+        "Final remarks": 2.0
+      },
+      "subsection_scores": [
+        {"parent": "Introduction", "name": "Prior work", "score": 5.0},
+        {"parent": "Introduction", "name": "Our Technical Contributions", "score": 5.0},
+        {"parent": "Preliminaries", "name": "Running example", "score": 2.0},
+        {"parent": "Preliminaries", "name": "Quantile Regression Problem Definition", "score": 4.0},
+        {"parent": "Preliminaries", "name": "Other Useful Notations", "score": 4.0},
+        {"parent": "Efficiently Updating Neighbors, and the Use of k-Sets", "name": "UpdateNeighbor subroutine", "score": 8.0},
+        {"parent": "Efficiently Updating Neighbors, and the Use of k-Sets", "name": "Improving the Naive Baseline Using UpdateNeighbor subroutine", "score": 10.0},
+        {"parent": "Efficiently Updating Neighbors, and the Use of k-Sets", "name": "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem", "score": 12.0},
+        {"parent": "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression", "name": "RandomizedQR Based on a Randomized Divide-and-Conquer Approach", "score": 12.0},
+        {"parent": "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression", "name": "RandomizedQR in two dimensions", "score": 17.0},
+        {"parent": "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression", "name": "Beyond two dimensions", "score": 19.0}
+      ],
+      "important_papers": [
+        {"rank": 1, "citation": "[4] Timoth Chan", "note": "our algorithm design is based on this paper"},
+        {"rank": 2, "citation": "[9] Tamal K Dey", "note": "helps in bounds"},
+        {"rank": 3, "citation": "[12] Emo Welzl et al", "note": "helps in the design of our algorithm"},
+        {"rank": 4, "citation": "[27] Vaidya", "note": "LP bounds which are used in baselines"}
+      ],
+      "notes": [
+        "Human annotation does not include the additional top-level back-matter sections present in the extracted model tree.",
+        "Evaluation should therefore align on the annotated top-level overlap only."
+      ]
+    },
+    "FCM_SIGMOD_CRV": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 4.17,
+        "Preliminary": 25.0,
+        "Fair-Count-Min using Group-Aware Semi-Uniform Hashing": 33.33,
+        "Computing The Column Widths": 4.17,
+        "Price of Fairness Analysis": 16.67,
+        "Experiments": 12.5,
+        "Related Work": 1.67,
+        "Discussions": 2.5
+      },
+      "important_papers": [
+        {
+          "rank": 1,
+          "citation": "Graham Cormode and Shan Muthukrishnan. 2005. An improved data stream summary: the count-min sketch and its applications.",
+          "note": "top-2 cited paper"
+        },
+        {
+          "rank": 2,
+          "citation": "Solon Barocas, Moritz Hardt, and Arvind Narayanan. 2023. Fairness and machine learning: Limitations and opportunities.",
+          "note": "top-2 cited paper"
+        },
+        {
+          "rank": 3,
+          "citation": "Chen-Yu Hsu, Piotr Indyk, Dina Katabi, and Ali Vakilian. 2019. Learning-based frequency estimation algorithms.",
+          "note": "less important than top-2"
+        },
+        {
+          "rank": 4,
+          "citation": "Cristian Estan and George Varghese. 2002. New directions in traffic measurement and accounting.",
+          "note": "less important than top-2"
+        }
+      ],
+      "notes": [
+        "Scores were normalized by the annotator to sum to 100.",
+        "Human annotation does not assign a separate top-level score to Conclusion."
+      ]
+    },
+    "Fair_Epsilon_Net": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 2.13,
+        "Preliminaries": 14.18,
+        "Background": 2.13,
+        "Fair -nets": 49.65,
+        "Fair Geometric Hitting Set": 17.73,
+        "Related Work": 1.42,
+        "Application to Database Systems": 2.13,
+        "Experiments": 10.64
+      },
+      "important_papers": [
+        {"rank": 1, "citation": "[44] Sariel Har-Peled. Geometric approximation algorithms."},
+        {"rank": 2, "citation": "[25] B. Chazelle. The Discrepancy Method: Randomness and Complexity."},
+        {"rank": 3, "citation": "[47] David Haussler and Emo Welzl. Epsilon-nets and simplex range queries."},
+        {"rank": 4, "citation": "[31] Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh. Fair Set Cover."}
+      ],
+      "notes": [
+        "Scores were normalized by the annotator to sum to 100.",
+        "Human annotation does not assign a separate top-level score to Conclusion."
+      ]
+    },
+    "Dynamic_Necklace_Splitting": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 4.5,
+        "Offline Algorithm": 4.5,
+        "Relocation with Two Colors": 31.53,
+        "Batch Relocation with Two Colors": 31.53,
+        "Relocation with Multiple Colors and High Cut Density": 14.41,
+        "Insertion and Deletion": 7.21,
+        "Approximate Necklace Splitting": 6.31
+      },
+      "important_papers": [
+        {"rank": 1, "citation": "[2] Noga Alon and Andrei Graur. Efficient splitting of necklaces.", "note": "by far the most important citation"},
+        {"rank": 2, "citation": "[1] Noga Alon. Splitting necklaces."},
+        {"rank": 3, "citation": "[6] Sandeep N. Bhatt and Charles E. Leiserson. How to assemble tree machines."},
+        {"rank": 4, "citation": "[19] Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh. FairHash."}
+      ],
+      "notes": [
+        "Scores were normalized by the annotator to sum to 100."
+      ]
+    },
+    "HENN_ICLR_26-1": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 2.46,
+        "Background and Definitions": 4.92,
+        "Hierarchical -net Navigation Graph (HENN)": 24.59,
+        "Theoretical Analysis": 24.59,
+        "HNSW is a HENN Graph": 12.3,
+        "HENN Construction": 12.3,
+        "Experiments": 8.2,
+        "Discussion and Future Work": 8.2,
+        "Related Work": 2.46
+      },
+      "important_papers": [
+        {"rank": 1, "citation": "[25] Sariel Har-Peled. Geometric Approximation Algorithms."},
+        {"rank": 2, "citation": "[28] David Haussler and Emo Welzl. Epsilon-nets and simplex range queries."},
+        {"rank": 3, "citation": "[46] Yu A. Malkov and Dmitry A. Yashunin. Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs."},
+        {"rank": 4, "citation": "[47] Yury Malkov, Alexander Ponomarenko, Andrey Logvinov, and Vladimir Krylov. Approximate nearest neighbor algorithm based on navigable small world graphs."}
+      ],
+      "notes": [
+        "Scores were normalized by the annotator to sum to 100.",
+        "Human annotation does not assign a separate top-level score to Conclusion."
+      ]
+    },
+    "axolotl": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 14.29,
+        "Methodology": 42.86,
+        "Experiments": 28.57,
+        "Related Work": 10.71,
+        "Conclusion": 0.0,
+        "Limitations": 3.57
+      },
+      "important_papers": [
+        {"rank": 1, "citation": "6"},
+        {"rank": 2, "citation": "19"},
+        {"rank": 3, "citation": "20"},
+        {"rank": 4, "citation": "21"}
+      ]
+    },
+    "requal": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 8.54,
+        "Preliminaries": 24.39,
+        "Technical Details": 36.59,
+        "Experiments": 18.29,
+        "Related Work": 3.66,
+        "Benefits": 6.1,
+        "Conclusion": 0.0,
+        "Limitations": 2.44
+      },
+      "important_papers": [
+        {"rank": 1, "citation": "Hammersley, 2013"},
+        {"rank": 2, "citation": "Durrett, 2010"},
+        {"rank": 3, "citation": "Su et al., 2023"},
+        {"rank": 4, "citation": "Gao et al., 2023"}
+      ]
+    },
+    "Random_access_Retrieval-5": {
+      "annotator_type": "author_expert",
+      "top_level_scores_for_evaluation": {
+        "Introduction": 3.91,
+        "Applications Overview": 2.34,
+        "Formal Definitions": 19.53,
+        "Background": 3.91,
+        "Solution Overview": 19.53,
+        "-sampling Approach": 31.25,
+        "Experiments": 19.53
+      },
+      "important_papers": [
+        {"rank": 1, "citation": "[50]"},
+        {"rank": 2, "citation": "[95]"},
+        {"rank": 3, "citation": "[29]"},
+        {"rank": 4, "citation": "[71]"}
+      ],
+      "notes": [
+        "Annotator noted that additional citations were also important, but these four were selected as a representative subset.",
+        "Human annotation does not assign a separate top-level score to Conclusion."
+      ]
+    }
+  }
+}
