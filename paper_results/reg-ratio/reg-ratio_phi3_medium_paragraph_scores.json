@@ -1,0 +1,573 @@
+[
+  {
+    "section_path": [
+      "INTRODUCTION",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we make several fundamental theoretical as well as practical advances for the RRMS problem, in both two-dimensional and high-dimensional databases.",
+    "technical_score": 0.0315,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "INTRODUCTION",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In the case of two-dimensional databases, we develop an inno- vative dynamic programming algorithm to \ufb01nd the optimal set by leveraging the total order property of the tuples that occur in the skyline of the database. Our two-dimensional exact polynomial time algorithm (2D-RRMS) runs in O(rslogslogc)time, where sandcare the number of skyline and convex hull tuples in the database respectively. This is a huge improvement over the O(n2r) algorithm proposed by [6], which is based on the notions of geo- metric duality and line arrangements.",
+    "technical_score": 0.034425000000000004,
+    "citation_score": 0.006075000000000001
+  },
+  {
+    "section_path": [
+      "INTRODUCTION",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Next, as perhaps one of the major results of this paper, we de- velop an approximation algorithm (HD-RRMS) that guarantees a regret ratio that is within a small user-controllable distance from the optimal regret ratio. This algorithm is based on several inno- vative ideas. First, we model the problem conceptually as an in- \ufb01nitely large matrix min-max problem [24], where the rows are the tuples and the (in\ufb01nitely many) columns correspond to each pos- sible ranking function. Given an user controlled discretization pa- rameter, we discretize the ranking functions space into a bounded number of functions (based on the control parameter) in the polar system. We then take the advantage of the linear-size discretized problem space in order to \ufb01nd the optimal value for the discretized matrix min-max problem in O(nlogn)time, which is an approx- imate solution for the original problem. To do so, we convert the problem into linear number of \ufb01xed-size instances of the set-cover problem [12]. Thus, our eventual algorithm is able to guarantee a regret ratio that is within a user-controllable distance from the optimal regret ratio. The HD-RRMS algorithm is a theoretical al- gorithm, because although it runs in linearithmic time (assuming that the dimensions of the space and the user controlled parameter are both constants), the proportionality constant in the running time is large (exponentially dependent on the number of dimensions), mainly due to the large size of the set cover instances. Therefore, we make an important practical adaptation to HD-RRMS, by re- placing subroutine calls to an exact set-cover algorithm with calls to the well-known greedy approximate set-cover algorithm [7]. Beside the theoretical analysis, we also provide extensive experi- mental results over three publicly available real-world datasets, i.e., an Airline dataset, Department of Transportation (DOT), and Bas- ketball dataset (NBA), with sizes up to several million records. We also used synthetic datasets to evaluate the performance of the pro- posed algorithms in the presence of different correlation models, i.e., correlated, independent, and anti-correlated. All experimental results con\ufb01rm that our algorithms not only are more ef\ufb01cient thanthe existing solutions, and are scalable, but also produce represen- tative sets with smaller regret ratios.",
+    "technical_score": 0.0126,
+    "citation_score": 0.0054
+  },
+  {
+    "section_path": [
+      "INTRODUCTION",
+      "Summary of Contributions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In summary, we make the following main contributions: \u000fFor the two-dimensional scenario we propose a linearithmic time dynamic programming algorithm 2D-RRMS which is much faster than the existing quadratic time algorithm. \u000fWe develop HD-RRMS, an algorithm for higher dimensions that can approximate the regret ratio to within a user controlled pa- rameter. This algorithm discretizes the ranking function space and models the problem as a discrete matrix min-max problem. Although the HD-RRMS algorithm is linearithmic in theory, it may become inef\ufb01cient in practice. We propose how to make the algorithm practical. \u000fWe perform a comprehensive set of experiments on synthetic (with different correlation models) and real datasets of size up to several million records that demonstrate the ef\ufb01ciency, scala- bility, and effectiveness of our algorithms.",
+    "technical_score": 0.03,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "2 3 4 5 6 Number of Attributes (m)02468Convex hull size#104Figure 1: Impact of the number of attributes inC line tuplesft1;t2;\u0001\u0001\u0001t6gand two dummy tuples t0andt7. ft2;\u0001\u0001\u0001;t5g linear ranking functions where the convex hull tuples are the max- ima. In other words the ith element of lshows all ranking functions F2[\u0012i\u00001;\u0012i]where the ith convex hull tuple is the maximum. In Theorem 2, we prove that for two-dimensional databases, the functionFthat causes the maximum regret-ratio for removing the tuples between two skyline tuples tiandtjis speci\ufb01ed by the line between tuples tiandtj. Intuitively, when we keep tiand tjwhile removing all skyline tuples in between, and start tallying the loss from removing ti+1, ...,tj\u00001in order, then the loss (max over all ranking functions) must \ufb01rst increase and then decrease. Having identi\ufb01ed the max-loss function, we now take the advan- tage of the sorted angle list (`) and apply binary search on`to \ufb01nd the convex hull tuple between tiandtjwhich is the maximum for the ranking function represented by the line passing through ti andtj. Algorithm 1 shows the pseudocode of the function Com- puteEdgeWeight for the two tuples tiandtj. Note that if it can not \ufb01nd a convex hull tuple between tiandtjthe edge weight is zero (line 4-5). Clearly since we use binary search on the sorted list l, we are able to \ufb01nd weight of each edge in O(logc), wherecis the size of the convex hull. Algorithm 1 ComputeEdgeWeight 1:Input: Tuplestiandtj, Sorted listl= [0;\u00121;\u0001\u0001\u0001;\u0019=2] 2:Output: Edge weight w(ti;tj) 3:ifi = 0 then return t1[A2]\u0000tj[A2] 4:ifj = s+1 then return ts[A1]\u0000ti[A1] 5: compute , wheretiandtjare the maxima of all linear ranking functionsF2[0; ] . 6: k = Use binary search on lto \ufb01nd the location of 7:ifi\u0014k\u0014jthen w(ti;tj) =min(F (tk)\u0000F (ti);F (tk)\u0000F (tj)) F (tk) 8:elsew(ti;tj)= 0 9:returnw(ti;tj) THEOREM 2.In 2D, after removing the tuples between two sky- line tuplestiandtj, the maximum regret-ratio occurs for the func- tion,F, corresponding to the line between tuples tiandtj.",
+    "technical_score": 0.024699302842258488,
+    "citation_score": 0.013893357848770398
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "PROOF . Please refer to Appendix B. For example, let us consider the edge between t1andt5(rep- resenting the removal of ft2;\u0001\u0001\u0001;t4g). As shown in Figure 4, t1 andt5will be the representative of all linear ranking functions F2 [0; ]. Using binary search on l, it turns out that 2(\u00121;\u00122), i.e., t3is the tuple which is removed and has the maximum loss. There- fore,w(t1;t5) =min(F (t3)\u0000F (t1);F (t3)\u0000F (t5)) F (t3)=F (t3)\u0000F (t1) F (t3) (line 4 in Algorithm 1). As another example let us consider w(t1;t2). Since there are no convex hull tuples between these two tuples, w(t1;t2) = 0. Nevertheless, t3is the maximum for the function represented by the line passing through t1andt2, which is not re- moved by considering the edge t1tot2. Next, we discuss a baseline solution for RRMS problem in 2D, based on the proposed graph modeling.",
+    "technical_score": 0.024258243862932446,
+    "citation_score": 0.003307942344945333
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "3.2 Baseline Solution Given the graph model and weight de\ufb01nition, a baseline solution is to compute all weights of the graph and then enumerate all paths fromt0tots+1with at most rintermediate tuples. Among those paths the one whose maximum edge weight is the minimum is the solution. Clearly this is inef\ufb01cient because it takes time quadratic in the number of skyline tuples (O (r2)) to calculate all edge weights in the graph. Moreover, it has to enumerate allPr l=0\u0000n\u00002 l\u0001 paths fromt0tots+1with at most rintermediate tuples, which can take exponential time. Next, we leverage the locality property of the skyline tuples in order to propose a polynomial time algorithm 2D- RRMS using a dynamic programming approach. 3.3 Dynamic Programming Algorithm LetDP(ti;r0)be the optimal solution, i.e., a path from tito ts+1with at most r0\u0014rintermediate nodes which minimizes the error. Thus, DP(t0;r)would be the solution to our problem. The recursive formula for the dynamic programming is given by Equa- tion 5: DP(ti;0) = max( w(t0;ti);w(ti;ts+1)) DP(ti;r0) = min 8j>i\u0000 max\u0000 w(ti;tj);DP (tj;r0\u00001)\u0001\u0001 (5) Since skyline tuples are ordered, they provide two important properties which are helpful to ef\ufb01ciently solve the recursive Equa- tion 5: 1.w(ti;tj)\u0014w(ti;tj+1) 2.DP(tj;r0)\u0014DP(tj\u00001;r0). Figure 5 shows the construction of the dynamic programming algorithm for DP. It containst0andts+1at its \ufb01rst and last tuples. Every cell (i;j)in the middle matrix represents DP(ti;r\u0000j). As shown in the \ufb01gure, the weights increase from top to bottom, while DP increases from bottom to top. In order to \ufb01nd the min value in Equation 5, Algorithm 2 divides the space between tiandts+1into two halves and picks the one in the middle as tm. Note that the weight computation will be done online as needed. If the edge weight w(ti;tm)is not previously calculated it will call the function ComputeEdgeWeight in Algo- rithm 1 (lines 6-16). Then if w(ti;tm)\u0015DP(tm;r0\u00001), we can ignore the nodes between tmandts+1because, based on property (1),w(ti;tm)is the smallest among them and those branches will not \ufb01nd a better result (line 14). In this case, Algorithm 2 continues by dividing the tuples between ti+1andtm\u00001. On the other hand, ifw(ti;tm)<DP (tm;r0\u00001)(line 15), we can ignore the nodes betweentiandtmbecause, based on property (2), DP(tm;r0\u00001) is the smallest among them. In this case, Algorithm 2 continues to divide the tuples between tm+1 andts. THEOREM 3.Time complexity of the algorithm 2 (2D-RRMS) is inO(rslogslogc).",
+    "technical_score": 0.009923827034836,
+    "citation_score": 0.006615884689890666
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "PROOF . Please refer to Appendix C.",
+    "technical_score": 0.011026474483151113,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Algorithm 2 2D-RRMS 1:Input: Integerr\u00151, Skyline tuplesS=ft0;t2;\u0001\u0001\u0001;ts+1g, Sorted listl= [0;\u0012 1;\u0001\u0001\u0001;\u0019=2] 2:Output: The optimal regret-ratio DP(t0;r) 3:fori from 1 tosdoDP(ti;0) = max(w(t0;ti);w(ti;ts+1)) 4:forr0from 1 tordo 5: forifrom 1 tosdo 6:low=i+ 1,high =s 7: while True do 8: iflow=high then 9: DP(ti;r0) = max(w(ti;tlow);DP (tlow;r0\u00001)) 10: break 11: end if 12: Let tmbe the middle tuple in ftlow;\u0001\u0001\u0001;thighg 13: ifw(ti;tm)is unknown then w(ti;tm) =ComputeEdgeWeight(t i;tm;l) 14: ifw(ti;tm)\u0015DP(tm;r0\u00001)thenhigh =m 15: elselow=m+ 1 16: end while 17: end for 18:end for 19:returnDP(t0;r) 4. HD REGRET-RATIO MINIMIZING SET It is well known that the size of convex hull grows exponentially with the data dimensionality (i.e., the number of attributes) [27] (also shown in Figure 1). The need for designing a compact rep- resentation of high dimensional databases thus becomes even more pronounced. We address the discovery of regret-ratio minimizing sets over high-dimensional databases in this section. Speci\ufb01cally, we start with discussing the de\ufb01ciency of the exist- ing heuristic solution. Then, we introduce a conceptual model of the problem as an in\ufb01nitely large matrix min-max problem [24]. We \u201coperationalize\u201d such a conceptual model with a matrix discretiza- tion approach that provides a user-controllable discretization pa- rameter. After discretizing the problem space to a manageable size, we then construct a reduction to set-cover [12] which solves the min-max problem deterministically in (theoretically) O(nlogn) time, while guaranteeing a regret ratio within any arbitrarily small user-controllable distance from the optimal regret ratio. We make this algorithm more practical by incorporating an existing approxi- mation algorithm for set-cover. Our \ufb01nal algorithm outperforms ex- isting solutions by an order of magnitude over real-world datasets, as we shall show in the experimental evaluations. 4.1 Problem with Existing Heuristic Solution Findingrtuples that minimize the regret-ratio over a high-D database has been proven to be NP-hard [6]. The existing solu- tions limit to a greedy heuristic (named as GREEDY) and a simple space discretization approach that produces a regret ratio within a \ufb01xed distance from the optimal, both proposed by Nanongkai et. al. [22]. The basic idea of GREEDY is to start by selecting the point that has the highest value on the \ufb01rst attribute, and then itera- tively selecting the point with the maximum error from the selected points and adding it to the set. This algorithm is not designed to provide any approximate-ratio guarantee. In addition, as we shall show below, it performs quite badly in some cases. Speci\ufb01cally, for anyarbitrarily large valuev, we can always \ufb01nd a case in which the regret-ratio of the solution provided by GREEDY is no better thanvtimes the optimal solution. Givenv > 0, let\u000f= 1=(2 +v). Consider a 3-dimensional databaseDwhich contains four tuples t0(1;0;0),t1(0;1;0),t2(0;0;1), andt3(1\u0000\u000f;1\u0000\u000f;1\u0000\u000f), along with an arbitrary number of other tu-",
+    "technical_score": 0.004631119282923467,
+    "citation_score": 0.0030874128552823114
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "M. partitioning example: m= 3 ,",
+    "technical_score": 0.00882117958652089,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "= 3. ples that are distributed in the region [0;1\u0000\u000f)\u0002[0;1\u0000\u000f)\u0002[0;1\u0000\u000f). One can see that, when we run GREEDY with output-size require- mentr= 3, GREEDY will pick t0,t1, andt2, while the optimal solution ist3together with two of t0,t1, andt2. To see how bad the regret ratio for GREEDY\u2019s solution is, note that its regret ratio is equal to the distance between point t2and the line passing through points t0andt1, which is equal to 1\u00002\u000f. Meanwhile, the regret ratio for the optimal solution is \u000f. Thus, the approximate-ratio is (1\u00002\u000f)=\u000f\u0015v. 4.2 Conceptual Model An intuitive illustration of our conceptual model is shown in Fig- ure 6. Speci\ufb01cally, consider a matrix Mthat has thentuples as its rows, while its columns consist of all possible linear ranking func- tions (F ). Each cellM[ti;f]of the matrix is the regret-ratio of ti with regard to the ranking function f- i.e., the regret ratio for fif we only have tiin the minimizing set. Thus for each tuple ti2C and the set of ranking functions f2Fti(the set for which tiis the maximum),M[ti;f]is zero, while this value is greater than zero for other tuples. If we keep rrows of the matrix, the regret-ratio for each function, is the minimum value (among the selected rows) on its corresponding column, and the regret-ratio of these rtuples is the maximum assigned regret-ratio of all columns. We can see the problem cleanly transforms to a min-max problem over the matrix. This conceptual model, unfortunately, has an important issue which makes it impractical: Fis continuous and therefore requires an in\ufb01nite number of columns to capture! This issue inspires us to develop a matrix discretization approach which eventually leads to a linearithmic approximate solution that offers a guaranteed ap- proximation ratio adjustable by a user-controlled parameter. 4.3 Matrix Discretization In order to resolve the aforementioned issues with the concep- tual model, we \ufb01rst discretize Fby only considering a subset of all possible linear ranking functions F\u001aF as the columns of the matrixM. We take the help of Polar coordinate system for se- lectingF. Note that, with help of the polar system, each point is denoted by one magnitude and m\u00001angles. For example, tu- plet(1;1)is transformed to thp 2;\u0019=4i in polar and t0(1;0;1)to t0hp 2;0;\u0019=4i. Speci\ufb01cally, we introduce a user-controllable parameter which determines the size of F, by dividing each angle into equal-size partitions. Thus, for a given value each angle partition is: =\u0019",
+    "technical_score": 0.005954296220901599,
+    "citation_score": 0.0039695308139344
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "(6) Applying this discretization policy, the total number of selected functions (jFj) is: jFj= ( + 1)m\u00001(7) Algorithm 3 shows the pseudo-code of the DISCRETIZE algo- rithm, that partitions the ranking function space based on and se- lectsF. For example, when m= 3 and = 3, we have =\u0019=6 according to (6). Figure 7 shows the three-dimensional function space discretization based on . Algorithm 3 DISCRETIZE 1:Input: Control Parameter , Number of attributes m 2:Output: Discretized functions F 3:F=fg, =\u0019",
+    "technical_score": 0.004609066333957165,
+    "citation_score": 0.0014554946317759465
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "4:forifrom 1 tom\u00001do\u0012[i] = 0 5:forifrom 1 to m\u00001do 6:r= 1 {transforming the function from polar system to scalar} 7: forjfrommdownto 2 do 8:v[j] =rcos(\u0012 [j\u00001] ) 9:r=rsin(\u0012 [j\u00001] ) 10: end for 11:v[1] =r 12:F=F[fvg {\ufb01nding the next function} 13: forjfrom 1 until\u0012[j]< do\u0012[j] = 0 14:\u0012[j] =\u0012[j] + 1 15:end for 16:returnF THEOREM 4.If a setTof tuples guarantee a regret-ratio thresh- old of\u000ffor all the ranking functions in f2F\u0012F , constructed based on the angle partitioning ( ) in Equation 6, the maximum regret-ratio of those points for any ranking function f02F is: \u000f0\u0014c\u000f+ (1\u0000c) (8) wherec=cos( 0=2) cos(\u0019=4) cos(\u0019=4\u0000 0=2)and 0= 2 arcsin(q 1\u0000cosm\u00001 2).",
+    "technical_score": 0.004609066333957165,
+    "citation_score": 0.0014554946317759465
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "PROOF . Please refer to Appendix D. Considering the guarantee provided in Theorem 4, we discuss our approximate algorithm over the discretized function space in the next section. 4.4 HD-RRMS Algorithm In this section, we \ufb01rst model the problem as the discretized min-max problem. We then take the advantage of the linear-size discretized problem space in order to \ufb01nd the optimal value for the discretized matrix min-max problem. 4.4.1 DMM: Discretized min-max Problem Given the (above described) discretized matrix M, and the value r, \ufb01nd a set of rrows that minimizes the maximum of the minimum values of all columns among the selected rrows. Formally, \ufb01nd: min 8R\u0012Ss.t.jRj=rmax 8f2Fmin 8i2R(M[i;f]) (9) If we assume that the number attributes, m, is bounded by a constant, and the user controlled parameter is a constant, then the total number of discrete functions jFjbecomes bounded by a (albeit large) constant. Recall that Mis a matrix with nrows and jFjcolumns, where each cell shows the regret-ratio. Given any set ofrrows, the solution to the discretized min-max problem is one of the cell values . The total number of such values is, at most, n:jFj, which sincejFjis bounded by a constant, is in O(n). We consider each distinct value in cells of the matrix Mas a possible \u000fthreshold of the following problem. MRST: Minimum Rows Satisfying the given Threshold prob- lem: Given the discretized matrix Mand the threshold value \u000f, \ufb01nd the minimum number of rows in matrix Msuch that for eachcolumn of matrix M, the minimum value of each column among the selected rows is less than or equal to \u000f. Formally: minimizejRj,8R\u0012S where max 8f2Fmin 8i2R(M[i;f])\u0014\u000f(10) Consider an oracle that solves the MRST problem. HD-RRMS sorts all the distinct values in matrix M, and applying the binary search strategy, passes the cell-values to the oracle to \ufb01nd the set of rows that satisfy the threshold. Based on the fact that the size of returned set is either less than ror not, it continues the search in lower/upper half. Algorithm 4 shows the pseudo-code of the HD-RRMS algorithm in the presence of the MRST oracle. Algorithm 4 HD-RRMS 1:Input: The discretized matrix Mand the value r 2:Output: selected tuples (T A) 3:v= sorted list of distinct values in M 4:TA=fg,\u000fmin=1 5:low= 0,high =jvj 6:whilelow<high do 7:mid=low+high",
+    "technical_score": 0.0033520482428779376,
+    "citation_score": 0.0010585415503825066
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "8:R=MRST(M ,v[mid] ) 9: ifjRj\u0014rthen 10:TA=R,\u000fmin=v[mid] 11:high =mid\u00001 12: else 13:low=mid+ 1 14: end if 15:end while 16:returnTA SupposeTOis the optimal set with the minimum regret-ratio. Note that since the output of the HD-RRMS algorithm is the opti- mal solution for a subset of ranking functions, \u000fminis less than or equal to the regret-ratio of TO: \u000fmin\u0014EDnTO(11) That is because, if there is no subset of tuples with size of at most rthat satisfy the regret-ratio of less than \u000fmin forF(which is a subset ofF), no set will have the regret-ratio of less than \u000fmin for its super-set (F ). Moreover, based on Theorem 4 we know EDnTA\u0014c\u000fmin+ (1\u0000c). From Equation 11 c\u000fmin+ (1\u0000c)\u0014 cEDnTO+ (1\u0000c). Thus: EDnTA\u0014cEDnTO+ (1\u0000c) (12) Sincec\u00141, based on Equation 12, the regret-ratio of the set dis- covered by HD-RRMS is within (1\u0000c)distance from the regret- ratio of the optimal solution. MRST Oracle: The only missing part of the algorithm is the MRST oracle. We model the MRST problem with the set-cover prob- lem [12] by constructing the matrix M0as following: 8i;f :M0[i;f] =( 0;ifM[i;f]>\u000f 1; otherwise(13) M0contains constant number of columns and srows. Since the number of columns is bounded by a constant, there exists at most a constant number (more precisely, the power-set of jFj) of distinct combinations for the row values of M0. In the next step, the algo- rithm (giving a distinct id to each value-combination of columns) parsesM0and removes the duplicate rows. As a result, M0be- comes a matrix whose number of rows and columns are bound by constants! Next we transform the MRST problem to the set-cover problem as follows: \u000fEach column finM0is an item in the set-cover problem.",
+    "technical_score": 0.0019847654069672003,
+    "citation_score": 0.0013231769379781334
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "\u000fEach rowiinM0is a set Siin the set-cover problem such that 8 columnf,f2SiiffM0[i;f] = 1. Now the problem is converted to a set-cover instance with a con- stant number of items and constant number of sets. Thus, even though the set-cover problem is NP-complete in general, an optimal solution for this instance is, theoretically, possible in constant-time order. MRST uses the set-cover solver to \ufb01nd the minimum num- ber of sets that cover all the columns and returns its corresponding rows as the optimal solution for the MRST problem. Algorithm 5 shows the pseudo-code of MRST oracle. 4.4.2 Time Complexity of the HD-RRMS Algorithm Since the size of the discretized matrix MisnjFj, the binary search over the possible values of \u000ftakes log(njFj)steps. At each step, a set-cover with jFjitems and min(2jFj;n)sets is con- structed. Converting Mto the set-cover instance takes njFjtime, while solving it takes, at most, 2min(2jFj;n)jFjtime. Since,jFj= m, the total time to solve HD-RRMS is: log(n m):(n m+ (2min(2 m;n): m)) (14) Assuming that andmare constants, the running-time of HD- RRMS is, theoretically, in O(nlog(n)). Algorithm 5 MRST Oracle 1:Input: The discretized matrix Mand the threshold \u000f 2:Output: The set of tuples satisfying the threshold on M {constructing the matrix M0} 3:forifrom 1 tosdo 4: forfin columns of Mdo 5:M0[i;f] = 1 if(M[i;f]\u0014\u000f)else0 6: end for 7:end for {removing the duplicate rows} 8: seen =fg 9:foriin rows ofM0do 10: ifid(M0[i])2seen) then 11:M0.remove(i) 12: else 13: seen = seen [fig 14: end if 15:end for {constructing the set-cover problem} 16: items=fg, sets=fg 17:forfin columns of M0doitems = items[ffg 18:foriin rows ofM0do 19: set=fg 20: forfin columns of M0do 21: ifM0[i;f] == 1 then set = set[ffg 22: end for 23: sets = sets[fsetg 24:end for 25:return set-cover(items, sets) 4.4.3 Practical HD-RRMS Algorithm Although HD-RRMS is linearithmic in theory, it can be inef\ufb01- cient in practice. Even with the existence of an ef\ufb01cient set-cover solver (such as [23]), depending on the values of andm, solving this problem may become infeasible. To make the HD-RRMS Algorithm practical, we solve the set- cover instances approximately using the well-known greedy ap- proximate algorithm for set-cover [7]. Since this algorithm guar- antees a logfactor in the approximate-ratio, applying it adds an- other level of approximation and increases the set size to up torlog(jFj) =rmlog( )(rather thanr) tuples, while maintaining the distance from the optimal regret ratio in the bound provided in Theorem 4. Alternatively, one can \ufb01nd a new value (r0) for set- cover size such that r0=r mlog( ). In this way, we can make sure that the set size will not be more than r. However, the distance from the optimal solution may become larger than what provided in Theorem 4. Applying the greedy approximate set-cover reduces the running time to: log(n m):(n m+ (min(2 m;n): m)) \u00142n mlog(n m) (15) Given the importance of the choice of in Equation 15, we eval- uate the impact of the discretization control parameter ( ) in \u00a7 6.3 (Figures 24, 25, and 26). On examining the experiment results, it turns out even though increasing the value increases the running time signi\ufb01cantly, the improvement on the quality of results drops quickly. In our experiments, choosing between 4 and 6 seemed to be appropriate. 5. DISCUSSION 5.1 Top-k Extension For enabling ef\ufb01cient computation of Top-k queries (instead of only Top-1 queries) requires us to extend the compact set for higher values ofk>1, while minimizing the dissatisfaction of the kthtop tuple of the compact set versus the kthtuple of the actual database, An easy way of adopting the existing algorithms is an iterative ap- proach with kiterations. At each iteration we discover the max- ima set over the remaining tuples. Then we remove the tuples in the maxima set, as well as the tuples falling outside of the convex shape formed by the set, and start the next iteration over the re- maining tuples in the database. One can see that this method will constructkcompact layers around the data and can serve for dis- covering the Top-k . However, studying the theoretical guarantees of such adaptation requires further investigation in a future work. 5.2 Alternative Matrix Discretization As an alternative for matrix discretization proposed in \u00a7 4.3, we can change the algorithm to let the user specify the size of func- tion space as the control parameter (rather than the value ) which makesjFjindependent from the value of m. Now the discretiza- tion problem is reduced to the problem of evenly distributing jFj points on the surface of a quarter hyper-sphere (the vector from the origin to a point on surface represents a function f2F). One way for doing so, is to adopt the force-directed drawing al- gorithms [18], such as the Barycentric algorithm [25], for evenly distributing the points. Suppose each point (bound to exist on the surface of the hyper-sphere) is a particle with a \ufb01xed positive charge. The idea is that if we throw jFjparticles on the hyper-sphere, they start moving (based on the average of forces between them) until they form an even distributed in which the superposition of forces is zero. The algorithm thus is as following: until the superposi- tion of forces on all the points has not converged to zero, compute the force on each point and move it on the hyper-sphere based on the direction and the magnitude of it. Another alternative is relax- ing the notion of an even distribution of the points to the randomly at uniform distribution. Thus, we can uniformly (at random) se- lect each functions, in the polar space, by specifying the value of each angle uniformly at random between 0and\u0005=2. Now, we can compute the expected angle distance between the two neighboring functions which speci\ufb01es a expected bound based on Theorem 4.",
+    "technical_score": 0.0013231769379781334,
+    "citation_score": 0.0008821179586520888
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Kessler et. al. [17] extended the k-regret minimizing notion to nonlinear functions. The focus of this paper is designing ef\ufb01cient algorithms for the regret-ratio minimizing problem proposed in [22]. In two- dimensional case, compared to quadratic existing Sweeping-Line, we propose the linearithmic dynamic programming algorithm 2D- RRMS, while for the high-dimensional case we provide the lin- earithmic HD-RRMS that guarantees a user controllable distance from the optimal solution. 8. CONCLUSION In this paper, we made several fundamental theoretical as well as practical advances in developing a compact maxima representative. We have studied both two-dimensional as well as high-dimensional databases to \ufb01nd a set limited to only rtuples that minimizes the maximum regret-ratio. In the case of two-dimensional databases, we have developed an innovative dynamic programming algorithm to build the optimal index that runs in linearithmic time. We have developed an innovative linearithmic algorithm that guarantees a regret ratio that is within a user-controllable distance from the op- timal regret ratio. Our comprehensive set of experiments on syn- thetic (with different correlation models) and real datasets of size up to several million records con\ufb01rm the ef\ufb01ciency, scalability, and effectiveness of our algorithms.",
+    "technical_score": 0.07056943669216713,
+    "citation_score": 0.03969530813934401
+  },
+  {
+    "section_path": [
+      "Convex hull size",
+      "Problem De\ufb01nition"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we consider the problem of Regret-ratio Minimiz- ing Set, i.e., given a database Dand an integer r\u00151, our objective is to \ufb01nd a set of at most rtuples such that the regret-ratio is mini- mum. This problem is formally de\ufb01ned as follows:",
+    "technical_score": 0.03469298245614034,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Convex hull size",
+      "Problem De\ufb01nition"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "2We use the notation E(T;D )to showrrD(DnT;L)in [22].REGRET -RATIO MINIMIZING SETPROBLEM (RRMS):",
+    "technical_score": 0.007414385964912282,
+    "citation_score": 0.01439263157894737
+  },
+  {
+    "section_path": [
+      "Convex hull size",
+      "Problem De\ufb01nition"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Given a database Dand an integer r\u00151, \ufb01nd a subset ^C\u0012Dsuch that (1)j^Cj\u0014rand (2)E(Dn^C;D)is mini- mum.",
+    "technical_score": 0.021093333333333335,
+    "citation_score": 0.006661052631578949
+  },
+  {
+    "section_path": [
+      "Convex hull size",
+      "Problem De\ufb01nition"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "In the following, we propose our ef\ufb01cient algorithms to solve the Regret-ratio Minimizing Set problem in both two-dimensional and high-dimensional databases.",
+    "technical_score": 0.014868421052631581,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "2D REGRET-RATIO MINIMIZING SET",
+      "Graph Modeling",
+      "Reduction to Path Search in Graph"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We model the two-dimensional Regret-ratio Minimizing Set prob- lem as a weighted complete graph G= (V;E ), whereVis the set of skyline tuples,ft1;t2;\u0001\u0001\u0001;tsg, and two dummy tuples, t0and ts+1. Edge weight w(ti;tj)represents the regret-ratio of remov- ing all skyline tuples between tiandtj. Note that as we proved in the Theorem 1, the optimal solution is a subset of skyline tuples. Using this graph model, our goal is to \ufb01nd a path from t0tots+1 with at most rintermediate tuples such that tuples follow an in- creasing order of the subscript in the path and the maximum of the edge weights are minimized. Next, we discuss how to ef\ufb01ciently compute the edge weight w(ti;tj). Using the graph model we \ufb01rst discuss the baseline solution for the problem, and then we describe the detail of the dynamic programming approach.",
+    "technical_score": 0.046099624060150377,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "2D REGRET-RATIO MINIMIZING SET",
+      "Graph Modeling",
+      "Edge weight computation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Each convex hull tuple is the maximum for a set of ranking func- tions. For example in Figure 4, t1is the maximum for all linear ranking functions from F2[0;\u0012 1], whilet3is the representa- tive of all linear ranking functions from F2[\u00121;\u00122]. Similarly, t4, andt5are the representatives of all linear ranking functions ofF2[\u00122;\u00123]andF2[\u00123;\u0019=2] respectively. One may note that moving from the top-left to the bottom-right, the contours of the all ranking functions where the convex hull tuples are maxima form a sorted range of the angles from 0to\u0019=2. For example, in Figure 4, the sorted list `= [0;\u00121;\u00122;\u00123;\u0019=2] shows all possible line tuplesft1;t2;\u0001\u0001\u0001t6gand two dummy tuples t0andt7. ft2;\u0001\u0001\u0001;t5g linear ranking functions where the convex hull tuples are the max- ima. In other words the ith element of lshows all ranking functions F2[\u0012i\u00001;\u0012i]where the ith convex hull tuple is the maximum. In Theorem 2, we prove that for two-dimensional databases, the functionFthat causes the maximum regret-ratio for removing the tuples between two skyline tuples tiandtjis speci\ufb01ed by the line between tuples tiandtj. Intuitively, when we keep tiand tjwhile removing all skyline tuples in between, and start tallying the loss from removing ti+1, ...,tj\u00001in order, then the loss (max over all ranking functions) must \ufb01rst increase and then decrease. Having identi\ufb01ed the max-loss function, we now take the advan- tage of the sorted angle list (`) and apply binary search on`to \ufb01nd the convex hull tuple between tiandtjwhich is the maximum for the ranking function represented by the line passing through ti andtj. Algorithm 1 shows the pseudocode of the function Com- puteEdgeWeight for the two tuples tiandtj. Note that if it can not \ufb01nd a convex hull tuple between tiandtjthe edge weight is zero (line 4-5). Clearly since we use binary search on the sorted list l, we are able to \ufb01nd weight of each edge in O(logc), wherecis the size of the convex hull. Algorithm 1 ComputeEdgeWeight 1:Input: Tuplestiandtj, Sorted listl= [0;\u00121;\u0001\u0001\u0001;\u0019=2] 2:Output: Edge weight w(ti;tj) 3:ifi = 0 then return t1[A2]\u0000tj[A2] 4:ifj = s+1 then return ts[A1]\u0000ti[A1] 5: compute , wheretiandtjare the maxima of all linear ranking functionsF2[0; ] . 6: k = Use binary search on lto \ufb01nd the location of 7:ifi\u0014k\u0014jthen w(ti;tj) =min(F (tk)\u0000F (ti);F (tk)\u0000F (tj)) F (tk) 8:elsew(ti;tj)= 0 9:returnw(ti;tj) THEOREM 2.In 2D, after removing the tuples between two sky- line tuplestiandtj, the maximum regret-ratio occurs for the func- tion,F, corresponding to the line between tuples tiandtj.",
+    "technical_score": 0.011524906015037594,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "2D REGRET-RATIO MINIMIZING SET",
+      "Graph Modeling",
+      "Edge weight computation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "PROOF . Please refer to Appendix B. For example, let us consider the edge between t1andt5(rep- resenting the removal of ft2;\u0001\u0001\u0001;t4g). As shown in Figure 4, t1 andt5will be the representative of all linear ranking functions F2 [0; ]. Using binary search on l, it turns out that 2(\u00121;\u00122), i.e., t3is the tuple which is removed and has the maximum loss. There- fore,w(t1;t5) =min(F (t3)\u0000F (t1);F (t3)\u0000F (t5)) F (t3)=F (t3)\u0000F (t1) F (t3) (line 4 in Algorithm 1). As another example let us consider w(t1;t2). Since there are no convex hull tuples between these two tuples, w(t1;t2) = 0. Nevertheless, t3is the maximum for the function represented by the line passing through t1andt2, which is not re- moved by considering the edge t1tot2. Next, we discuss a baseline solution for RRMS problem in 2D, based on the proposed graph modeling.",
+    "technical_score": 0.0038416353383458647,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "2D REGRET-RATIO MINIMIZING SET",
+      "Baseline Solution"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Given the graph model and weight de\ufb01nition, a baseline solution is to compute all weights of the graph and then enumerate all paths fromt0tots+1with at most rintermediate tuples. Among those paths the one whose maximum edge weight is the minimum is the solution. Clearly this is inef\ufb01cient because it takes time quadratic in the number of skyline tuples (O (r2)) to calculate all edge weights in the graph. Moreover, it has to enumerate allPr l=0\u0000n\u00002 l\u0001 paths fromt0tots+1with at most rintermediate tuples, which can take exponential time. Next, we leverage the locality property of the skyline tuples in order to propose a polynomial time algorithm 2D- RRMS using a dynamic programming approach.",
+    "technical_score": 0.016390977443609022,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "2D REGRET-RATIO MINIMIZING SET",
+      "Dynamic Programming Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "LetDP(ti;r0)be the optimal solution, i.e., a path from tito ts+1with at most r0\u0014rintermediate nodes which minimizes the error. Thus, DP(t0;r)would be the solution to our problem. The recursive formula for the dynamic programming is given by Equa- tion 5: DP(ti;0) = max( w(t0;ti);w(ti;ts+1)) DP(ti;r0) = min 8j>i\u0000 max\u0000 w(ti;tj);DP (tj;r0\u00001)\u0001\u0001 (5) Since skyline tuples are ordered, they provide two important properties which are helpful to ef\ufb01ciently solve the recursive Equa- tion 5: 1.w(ti;tj)\u0014w(ti;tj+1) 2.DP(tj;r0)\u0014DP(tj\u00001;r0). Figure 5 shows the construction of the dynamic programming algorithm for DP. It containst0andts+1at its \ufb01rst and last tuples. Every cell (i;j)in the middle matrix represents DP(ti;r\u0000j). As shown in the \ufb01gure, the weights increase from top to bottom, while DP increases from bottom to top. In order to \ufb01nd the min value in Equation 5, Algorithm 2 divides the space between tiandts+1into two halves and picks the one in the middle as tm. Note that the weight computation will be done online as needed. If the edge weight w(ti;tm)is not previously calculated it will call the function ComputeEdgeWeight in Algo- rithm 1 (lines 6-16). Then if w(ti;tm)\u0015DP(tm;r0\u00001), we can ignore the nodes between tmandts+1because, based on property (1),w(ti;tm)is the smallest among them and those branches will not \ufb01nd a better result (line 14). In this case, Algorithm 2 continues by dividing the tuples between ti+1andtm\u00001. On the other hand, ifw(ti;tm)<DP (tm;r0\u00001)(line 15), we can ignore the nodes betweentiandtmbecause, based on property (2), DP(tm;r0\u00001) is the smallest among them. In this case, Algorithm 2 continues to divide the tuples between tm+1 andts. THEOREM 3.Time complexity of the algorithm 2 (2D-RRMS) is inO(rslogslogc).",
+    "technical_score": 0.002427913533834586,
+    "citation_score": 0.0006453947368421052
+  },
+  {
+    "section_path": [
+      "2D REGRET-RATIO MINIMIZING SET",
+      "Dynamic Programming Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "PROOF . Please refer to Appendix C.",
+    "technical_score": 0.0004097744360902256,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "2D REGRET-RATIO MINIMIZING SET",
+      "Dynamic Programming Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Algorithm 2 2D-RRMS 1:Input: Integerr\u00151, Skyline tuplesS=ft0;t2;\u0001\u0001\u0001;ts+1g, Sorted listl= [0;\u0012 1;\u0001\u0001\u0001;\u0019=2] 2:Output: The optimal regret-ratio DP(t0;r) 3:fori from 1 tosdoDP(ti;0) = max(w(t0;ti);w(ti;ts+1)) 4:forr0from 1 tordo 5: forifrom 1 tosdo 6:low=i+ 1,high =s 7: while True do 8: iflow=high then 9: DP(ti;r0) = max(w(ti;tlow);DP (tlow;r0\u00001)) 10: break 11: end if 12: Let tmbe the middle tuple in ftlow;\u0001\u0001\u0001;thighg 13: ifw(ti;tm)is unknown then w(ti;tm) =ComputeEdgeWeight(t i;tm;l) 14: ifw(ti;tm)\u0015DP(tm;r0\u00001)thenhigh =m 15: elselow=m+ 1 16: end while 17: end for 18:end for 19:returnDP(t0;r)",
+    "technical_score": 0.0006146616541353383,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Problem with Existing Heuristic Solution"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Findingrtuples that minimize the regret-ratio over a high-D database has been proven to be NP-hard [6]. The existing solu- tions limit to a greedy heuristic (named as GREEDY) and a simple space discretization approach that produces a regret ratio within a \ufb01xed distance from the optimal, both proposed by Nanongkai et. al. [22]. The basic idea of GREEDY is to start by selecting the point that has the highest value on the \ufb01rst attribute, and then itera- tively selecting the point with the maximum error from the selected points and adding it to the set. This algorithm is not designed to provide any approximate-ratio guarantee. In addition, as we shall show below, it performs quite badly in some cases. Speci\ufb01cally, for anyarbitrarily large valuev, we can always \ufb01nd a case in which the regret-ratio of the solution provided by GREEDY is no better thanvtimes the optimal solution. Givenv > 0, let\u000f= 1=(2 +v). Consider a 3-dimensional databaseDwhich contains four tuples t0(1;0;0),t1(0;1;0),t2(0;0;1), andt3(1\u0000\u000f;1\u0000\u000f;1\u0000\u000f), along with an arbitrary number of other tu-",
+    "technical_score": 0.0038991228070175436,
+    "citation_score": 0.00724122807017544
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Problem with Existing Heuristic Solution"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "M. partitioning example: m= 3 ,",
+    "technical_score": 0.00668421052631579,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Problem with Existing Heuristic Solution"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "= 3. ples that are distributed in the region [0;1\u0000\u000f)\u0002[0;1\u0000\u000f)\u0002[0;1\u0000\u000f). One can see that, when we run GREEDY with output-size require- mentr= 3, GREEDY will pick t0,t1, andt2, while the optimal solution ist3together with two of t0,t1, andt2. To see how bad the regret ratio for GREEDY\u2019s solution is, note that its regret ratio is equal to the distance between point t2and the line passing through points t0andt1, which is equal to 1\u00002\u000f. Meanwhile, the regret ratio for the optimal solution is \u000f. Thus, the approximate-ratio is (1\u00002\u000f)=\u000f\u0015v.",
+    "technical_score": 0.0044561403508771935,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Conceptual Model"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "An intuitive illustration of our conceptual model is shown in Fig- ure 6. Speci\ufb01cally, consider a matrix Mthat has thentuples as its rows, while its columns consist of all possible linear ranking func- tions (F ). Each cellM[ti;f]of the matrix is the regret-ratio of ti with regard to the ranking function f- i.e., the regret ratio for fif we only have tiin the minimizing set. Thus for each tuple ti2C and the set of ranking functions f2Fti(the set for which tiis the maximum),M[ti;f]is zero, while this value is greater than zero for other tuples. If we keep rrows of the matrix, the regret-ratio for each function, is the minimum value (among the selected rows) on its corresponding column, and the regret-ratio of these rtuples is the maximum assigned regret-ratio of all columns. We can see the problem cleanly transforms to a min-max problem over the matrix. This conceptual model, unfortunately, has an important issue which makes it impractical: Fis continuous and therefore requires an in\ufb01nite number of columns to capture! This issue inspires us to develop a matrix discretization approach which eventually leads to a linearithmic approximate solution that offers a guaranteed ap- proximation ratio adjustable by a user-controlled parameter.",
+    "technical_score": 0.01018546365914787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Matrix Discretization"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to resolve the aforementioned issues with the concep- tual model, we \ufb01rst discretize Fby only considering a subset of all possible linear ranking functions F\u001aF as the columns of the matrixM. We take the help of Polar coordinate system for se- lectingF. Note that, with help of the polar system, each point is denoted by one magnitude and m\u00001angles. For example, tu- plet(1;1)is transformed to thp 2;\u0019=4i in polar and t0(1;0;1)to t0hp 2;0;\u0019=4i. Speci\ufb01cally, we introduce a user-controllable parameter which determines the size of F, by dividing each angle into equal-size partitions. Thus, for a given value each angle partition is: =\u0019",
+    "technical_score": 0.004522982456140351,
+    "citation_score": 0.0019384210526315786
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Matrix Discretization"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(6) Applying this discretization policy, the total number of selected functions (jFj) is: jFj= ( + 1)m\u00001(7) Algorithm 3 shows the pseudo-code of the DISCRETIZE algo- rithm, that partitions the ranking function space based on and se- lectsF. For example, when m= 3 and = 3, we have =\u0019=6 according to (6). Figure 7 shows the three-dimensional function space discretization based on . Algorithm 3 DISCRETIZE 1:Input: Control Parameter , Number of attributes m 2:Output: Discretized functions F 3:F=fg, =\u0019",
+    "technical_score": 0.004153759398496241,
+    "citation_score": 0.0004615288220551379
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Matrix Discretization"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "4:forifrom 1 tom\u00001do\u0012[i] = 0 5:forifrom 1 to m\u00001do 6:r= 1 {transforming the function from polar system to scalar} 7: forjfrommdownto 2 do 8:v[j] =rcos(\u0012 [j\u00001] ) 9:r=rsin(\u0012 [j\u00001] ) 10: end for 11:v[1] =r 12:F=F[fvg {\ufb01nding the next function} 13: forjfrom 1 until\u0012[j]< do\u0012[j] = 0 14:\u0012[j] =\u0012[j] + 1 15:end for 16:returnF THEOREM 4.If a setTof tuples guarantee a regret-ratio thresh- old of\u000ffor all the ranking functions in f2F\u0012F , constructed based on the angle partitioning ( ) in Equation 6, the maximum regret-ratio of those points for any ranking function f02F is: \u000f0\u0014c\u000f+ (1\u0000c) (8) wherec=cos( 0=2) cos(\u0019=4) cos(\u0019=4\u0000 0=2)and 0= 2 arcsin(q 1\u0000cosm\u00001 2).",
+    "technical_score": 0.004541443609022556,
+    "citation_score": 0.0009969022556390978
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "Matrix Discretization"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "PROOF . Please refer to Appendix D. Considering the guarantee provided in Theorem 4, we discuss our approximate algorithm over the discretized function space in the next section.",
+    "technical_score": 0.0018461152882205515,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "HD-RRMS Algorithm",
+      "DMM"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Given the (above described) discretized matrix M, and the value r, \ufb01nd a set of rrows that minimizes the maximum of the minimum values of all columns among the selected rrows. Formally, \ufb01nd: min 8R\u0012Ss.t.jRj=rmax 8f2Fmin 8i2R(M[i;f]) (9) If we assume that the number attributes, m, is bounded by a constant, and the user controlled parameter is a constant, then the total number of discrete functions jFjbecomes bounded by a (albeit large) constant. Recall that Mis a matrix with nrows and jFjcolumns, where each cell shows the regret-ratio. Given any set ofrrows, the solution to the discretized min-max problem is one of the cell values . The total number of such values is, at most, n:jFj, which sincejFjis bounded by a constant, is in O(n). We consider each distinct value in cells of the matrix Mas a possible \u000fthreshold of the following problem. MRST: Minimum Rows Satisfying the given Threshold prob- lem: Given the discretized matrix Mand the threshold value \u000f, \ufb01nd the minimum number of rows in matrix Msuch that for eachcolumn of matrix M, the minimum value of each column among the selected rows is less than or equal to \u000f. Formally: minimizejRj,8R\u0012S where max 8f2Fmin 8i2R(M[i;f])\u0014\u000f(10) Consider an oracle that solves the MRST problem. HD-RRMS sorts all the distinct values in matrix M, and applying the binary search strategy, passes the cell-values to the oracle to \ufb01nd the set of rows that satisfy the threshold. Based on the fact that the size of returned set is either less than ror not, it continues the search in lower/upper half. Algorithm 4 shows the pseudo-code of the HD-RRMS algorithm in the presence of the MRST oracle. Algorithm 4 HD-RRMS 1:Input: The discretized matrix Mand the value r 2:Output: selected tuples (T A) 3:v= sorted list of distinct values in M 4:TA=fg,\u000fmin=1 5:low= 0,high =jvj 6:whilelow<high do 7:mid=low+high",
+    "technical_score": 0.00107277452891488,
+    "citation_score": 0.0019922955536990634
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "HD-RRMS Algorithm",
+      "DMM"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "8:R=MRST(M ,v[mid] ) 9: ifjRj\u0014rthen 10:TA=R,\u000fmin=v[mid] 11:high =mid\u00001 12: else 13:low=mid+ 1 14: end if 15:end while 16:returnTA SupposeTOis the optimal set with the minimum regret-ratio. Note that since the output of the HD-RRMS algorithm is the opti- mal solution for a subset of ranking functions, \u000fminis less than or equal to the regret-ratio of TO: \u000fmin\u0014EDnTO(11) That is because, if there is no subset of tuples with size of at most rthat satisfy the regret-ratio of less than \u000fmin forF(which is a subset ofF), no set will have the regret-ratio of less than \u000fmin for its super-set (F ). Moreover, based on Theorem 4 we know EDnTA\u0014c\u000fmin+ (1\u0000c). From Equation 11 c\u000fmin+ (1\u0000c)\u0014 cEDnTO+ (1\u0000c). Thus: EDnTA\u0014cEDnTO+ (1\u0000c) (12) Sincec\u00141, based on Equation 12, the regret-ratio of the set dis- covered by HD-RRMS is within (1\u0000c)distance from the regret- ratio of the optimal solution. MRST Oracle: The only missing part of the algorithm is the MRST oracle. We model the MRST problem with the set-cover prob- lem [12] by constructing the matrix M0as following: 8i;f :M0[i;f] =( 0;ifM[i;f]>\u000f 1; otherwise(13) M0contains constant number of columns and srows. Since the number of columns is bounded by a constant, there exists at most a constant number (more precisely, the power-set of jFj) of distinct combinations for the row values of M0. In the next step, the algo- rithm (giving a distinct id to each value-combination of columns) parsesM0and removes the duplicate rows. As a result, M0be- comes a matrix whose number of rows and columns are bound by constants! Next we transform the MRST problem to the set-cover problem as follows: \u000fEach column finM0is an item in the set-cover problem.",
+    "technical_score": 0.0016551378446115297,
+    "citation_score": 0.00018390420495683664
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "HD-RRMS Algorithm",
+      "DMM"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "\u000fEach rowiinM0is a set Siin the set-cover problem such that 8 columnf,f2SiiffM0[i;f] = 1. Now the problem is converted to a set-cover instance with a con- stant number of items and constant number of sets. Thus, even though the set-cover problem is NP-complete in general, an optimal solution for this instance is, theoretically, possible in constant-time order. MRST uses the set-cover solver to \ufb01nd the minimum num- ber of sets that cover all the columns and returns its corresponding rows as the optimal solution for the MRST problem. Algorithm 5 shows the pseudo-code of MRST oracle.",
+    "technical_score": 0.0012260280330455774,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "HD-RRMS Algorithm",
+      "Time Complexity of the HD-RRMS Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Since the size of the discretized matrix MisnjFj, the binary search over the possible values of \u000ftakes log(njFj)steps. At each step, a set-cover with jFjitems and min(2jFj;n)sets is con- structed. Converting Mto the set-cover instance takes njFjtime, while solving it takes, at most, 2min(2jFj;n)jFjtime. m, the total time to solve HD-RRMS is: log(n m):(n m+ (2min(2 m;n): m)) (14) andmare constants, the running-time of HD- RRMS is, theoretically, in O(nlog(n)).",
+    "technical_score": 0.0011387914230019491,
+    "citation_score": 0.0021148983570036203
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "HD-RRMS Algorithm",
+      "Time Complexity of the HD-RRMS Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1:Input: The discretized matrix Mand the threshold \u000f 2:Output: The set of tuples satisfying the threshold on M {constructing the matrix M0} 3:forifrom 1 tosdo 4: forfin columns of Mdo 5:M0[i;f] = 1 if(M[i;f]\u0014\u000f)else0 6: end for 7:end for {removing the duplicate rows} 8: seen =fg 9:foriin rows ofM0do 10: ifid(M0[i])2seen) then 11:M0.remove(i) 12: else 13: seen = seen [fig 14: end if 15:end for {constructing the set-cover problem} 16: items=fg, sets=fg 17:forfin columns of M0doitems = items[ffg 18:foriin rows ofM0do 19: set=fg 20: forfin columns of M0do 21: ifM0[i;f] == 1 then set = set[ffg 22: end for 23: sets = sets[fsetg 24:end for 25:return set-cover(items, sets)",
+    "technical_score": 0.0010845632600018562,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "HD-RRMS Algorithm",
+      "Practical HD-RRMS Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Although HD-RRMS is linearithmic in theory, it can be inef\ufb01- cient in practice. Even with the existence of an ef\ufb01cient set-cover solver (such as [23]), depending on the values of andm, solving this problem may become infeasible.",
+    "technical_score": 0.0002931150097465887,
+    "citation_score": 0.0004990877192982457
+  },
+  {
+    "section_path": [
+      "HD REGRET-RATIO MINIMIZING SET",
+      "HD-RRMS Algorithm",
+      "Practical HD-RRMS Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "To make the HD-RRMS Algorithm practical, we solve the set- cover instances approximately using the well-known greedy ap- proximate algorithm for set-cover [7]. Since this algorithm guar- antees a logfactor in the approximate-ratio, applying it adds an- other level of approximation and increases the set size to up torlog(jFj) =rmlog( )(rather thanr) tuples, while maintaining the distance from the optimal regret ratio in the bound provided in Theorem 4. Alternatively, one can \ufb01nd a new value (r0) for set- cover size such that r0=r mlog( ). In this way, we can make sure that the set size will not be more than r. However, the distance from the optimal solution may become larger than what provided in Theorem 4. Applying the greedy approximate set-cover reduces the running time to: log(n m):(n m+ (min(2 m;n): m)) \u00142n mlog(n m) (15) Given the importance of the choice of in Equation 15, we eval- uate the impact of the discretization control parameter ( ) in \u00a7 6.3 (Figures 24, 25, and 26). On examining the experiment results, it turns out even though increasing the value increases the running time signi\ufb01cantly, the improvement on the quality of results drops quickly. In our experiments, choosing between 4 and 6 seemed to be appropriate.",
+    "technical_score": 0.001353534948482317,
+    "citation_score": 0.00011769869117237539
+  },
+  {
+    "section_path": [
+      "DISCUSSION",
+      "Top-k Extension"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For enabling ef\ufb01cient computation of Top-k queries (instead of only Top-1 queries) requires us to extend the compact set for higher values ofk>1, while minimizing the dissatisfaction of the kthtop tuple of the compact set versus the kthtuple of the actual database, An easy way of adopting the existing algorithms is an iterative ap- proach with kiterations. At each iteration we discover the max- ima set over the remaining tuples. Then we remove the tuples in the maxima set, as well as the tuples falling outside of the convex shape formed by the set, and start the next iteration over the re- maining tuples in the database. One can see that this method will constructkcompact layers around the data and can serve for dis- covering the Top-k . However, studying the theoretical guarantees of such adaptation requires further investigation in a future work.",
+    "technical_score": 0.0426641604010025,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "DISCUSSION",
+      "Alternative Matrix Discretization"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "As an alternative for matrix discretization proposed in \u00a7 4.3, we can change the algorithm to let the user specify the size of func- tion space as the control parameter (rather than the value ) which makesjFjindependent from the value of m. Now the discretiza- tion problem is reduced to the problem of evenly distributing jFj points on the surface of a quarter hyper-sphere (the vector from the origin to a point on surface represents a function f2F). One way for doing so, is to adopt the force-directed drawing al- gorithms [18], such as the Barycentric algorithm [25], for evenly distributing the points. Suppose each point (bound to exist on the surface of the hyper-sphere) is a particle with a \ufb01xed positive charge. The idea is that if we throw jFjparticles on the hyper-sphere, they start moving (based on the average of forces between them) until they form an even distributed in which the superposition of forces is zero. The algorithm thus is as following: until the superposi- tion of forces on all the points has not converged to zero, compute the force on each point and move it on the hyper-sphere based on the direction and the magnitude of it. Another alternative is relax- ing the notion of an even distribution of the points to the randomly at uniform distribution. Thus, we can uniformly (at random) se- lect each functions, in the polar space, by specifying the value of each angle uniformly at random between 0and\u0005=2. Now, we can compute the expected angle distance between the two neighboring functions which speci\ufb01es a expected bound based on Theorem 4.",
+    "technical_score": 0.012666842105263157,
+    "citation_score": 0.018227894736842106
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Hardware and Platform: All our experiments were performed on a Core-I7 machine running Ubuntu 14.04 with 8 GB of RAM. The algorithms were implemented in Python.",
+    "technical_score": 0.01776140350877193,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We also evaluated the performance of the high-dimensional al- gorithm discussed in \u00a7 4, namely GREEDY [22] and HD-RRMS (Algorithm 4). In the practical implementation of HD-RRMS al- gorithm, we applied the greedy approximate solution to solve the set-cover problem [12]. Nonetheless, to be fair in comparing the algorithms\u2019 performance, we only accept the set-cover result if its size is at most r. Note that our HD-RRMS algorithm features two main ideas: One is the conceptual model (of matrix min-max prob- lem) along with its practical discretization, and the other is the reduction to set-cover and the corresponding approximation algo- rithm. To test the effectiveness of these two ideas separately, we devised another greedy algorithm called HD-GREEDY , which sim- ply applies an iterative greedy approach over the discretized matrix generated by the \ufb01rst idea (i.e., as explained in \u00a7 4.3). Speci\ufb01- cally, HD-GREEDY iteratively picks a tuple that minimizes the 3http://kt.ijs.si/elena_ikonomovska/datasets/airline/2008_14col.data.bz2 4http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236&DB_",
+    "technical_score": 0.02078084210526316,
+    "citation_score": 0.002055248120300752
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "5http://www.databasebasketball.com/max of the min value of the columns for the selected set of tu- ples. The complexity of HD-GREEDY is O(rn), because each iteration requires passing through the matrix once, while comput- ing the reduction in the matrix max column value only takes O(1). As one can see, HD-GREEDY uses only the (discretized version of the) conceptual model, but not our second idea of reduction to set- cover. As we shall show latter in the section, the performance of HD-GREEDY almost always falls in between GREEDY and HD- RRMS, thus demonstrating the effectiveness of both of our ideas. As mentioned in \u00a7 1, the previous studies on approximating high- dimensional convex hulls [1] and relaxing skyline de\ufb01nitions [4] differ in objective from our paper (which aims to minimize the user dissatisfaction on maxima queries). Nonetheless, in order to pro- vide a broader context for the ef\ufb01cacy of our algorithms, we still implemented both [1] and [4], and studied the possibility of apply- ing them for regret minimization.",
+    "technical_score": 0.00527767418546366,
+    "citation_score": 0.001319418546365915
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Performance Measures: For the two-dimensional case, since our 2D-RRMS algorithm always guarantees optimality in terms of re- gret ratio, we focus our evaluations on the execution time. Specif- ically, to be fair to the sweeping-line algorithm, we considered the execution time of our 2D-RRMS algorithm to be the SUM of the execution time of both the skyline computation process (we used the skyline computation algorithm in [2]) and the actual execu- tion of 2D-RRMS. For the high-dimensional case, we used both the regret-ratio and the overall execution time of an algorithm mea- sure its performance - naturally, the shorter the execution time and the smaller the regret ratio, the better.",
+    "technical_score": 0.002628687719298246,
+    "citation_score": 0.0009235929824561404
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Two-dimensional Experimental Result"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Kessler et. al. [17] extended the k-regret minimizing notion to nonlinear functions. The focus of this paper is designing ef\ufb01cient algorithms for the regret-ratio minimizing problem proposed in [22]. In two- dimensional case, compared to quadratic existing Sweeping-Line, we propose the linearithmic dynamic programming algorithm 2D- RRMS, while for the high-dimensional case we provide the lin- earithmic HD-RRMS that guarantees a user controllable distance from the optimal solution. 8. CONCLUSION In this paper, we made several fundamental theoretical as well as practical advances in developing a compact maxima representative. We have studied both two-dimensional as well as high-dimensional databases to \ufb01nd a set limited to only rtuples that minimizes the maximum regret-ratio. In the case of two-dimensional databases, we have developed an innovative dynamic programming algorithm to build the optimal index that runs in linearithmic time. We have developed an innovative linearithmic algorithm that guarantees a regret ratio that is within a user-controllable distance from the op- timal regret ratio. Our comprehensive set of experiments on syn- thetic (with different correlation models) and real datasets of size up to several million records con\ufb01rm the ef\ufb01ciency, scalability, and effectiveness of our algorithms.",
+    "technical_score": 0.031209323308270677,
+    "citation_score": 0.04491097744360902
+  },
+  {
+    "section_path": [
+      "Time (Sec) 2DRRMS Sweeping-Line",
+      "High-dimensional Experimental Result"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The performance of the HD algorithms (\u00a7 4) is studied under three correlation models, i.e., correlated, independent, and anti- correlated, on synthetic datasets created based on [2]. The default values for the dataset size, number of attributes, output size, and the control parameter to n= 10K,m= 4,r= 5, and = 4 respectively. We studied the impact of each parameter individually as well. Note that in all HD Figures 13 to 28 the left (blue) y-axis shows the execution time of the algorithms while the right (orange) y-axis shows the regret-ratio (E ). The triangle, rectangle, and circle line markers represent GREEDY , HD-GREEDY , and HD-RRMS algorithms respectively, while blue solid lines shows the execution time and dashed orange lines represent the regret-ratio.Impact of the dataset size (n): In these set of experiments, we varied the size of the dataset (n) from 5K to 10M and evaluated the performance of the three aforementioned algorithms on the syn- thetic datasets. Figures 13, 14, and 15 show the results for cor- related, independent, and anti-correlated datasets respectively. We have compared both the execution time and the regret-ratio of the algorithms to evaluate their performance. As explained in \u00a7 4, the GREEDY algorithm suffers from run- ningnLP optimizations before picking a single tuple, which lead to high execution time. As shown in these \ufb01gures (13, 14, and 15) the GREEDY algorithm did not scale in any of the experiments, e.g., it required several thousands of seconds for n= 20K. On the other hand, the other two algorithms, namely HD-GREEDY and HD-RRMS scaled perfectly in all the experiments as their perfor- mances were less dependent on the dataset size. Yet among the two algorithms, HD-RRMS algorithm performs better than HD- GREEDY algorithm, both in time and regret-ratio. The \ufb02uctuation in the regret-ratio of the output of the GREEDY algorithm in Figure 14 con\ufb01rms the fact that it cannot guarantee the output quality. Since HD-GREEDY algorithm deals with the discretized subset of function F2 F and runs the greedy ap- proach on top of it (while GREEDY applies the greedy manner on the whole set of function, F) one expect that the output quality of the GREEDY algorithm should be better than the HD-GREEDY algorithm. However, in Figure 14 and part of the Figure 13, the regret-ratio of the output of the HD-GREEDY algorithm is better than that of the GREEDY algorithm. This is due to the starting point selected by the GREEDY algorithm, where it does not select the \ufb01rst point greedily and simply picks the maximum on the \ufb01rst dimension. Since the latter points are selected based on the initial point, a bad selection of it may highly propagate to the \ufb01nal quality of the output. On the other hand, this problem cannot easily get \ufb01xed in the GREEDY algorithm; because in order to construct the LPs, the GREEDY algorithm needs a non-empty set of so far se- lected points \u2013 i.e. it cannot start the greedy optimization without pre-selecting at least one point! One way to resolve this, is to run the algorithm with all possible choices of initial point, which multi- plies the algorithm complexity with n. Applying the set-cover idea, the output of the HD-RRMS algorithm had less regret-ratio than the outputs of the both GREEDY and HD-GREEDY algorithms. cision making. Regret-ratio and Regret-ratio minimizing problem were \ufb01rst introduced in [22] in order to minimize the maximum user dissatisfaction of a Top-k query. They proposed the so called CUBE algorithm to provide an upper-bound guarantee for the regret- ratio of the optimal solution and more importantly they showed it is independent of the input size (n). They also provided the GREEDY heuristic for the problem that runs O(nr)linear pro- grams and picks the points greedily. Chester et.al. [6] extended the regret-ratio notion to k-regret ratio which measures how far from a kth\u201cbest\u201d tuple is the \u201cbest\u201d tuple in a subset. They pro- pose k-regret minimizing sets problem and proved that it is NP-hard in a high-dimensional database. They also proposed the quadratic Sweeping-Line algorithm for the two-dimensional scenario.",
+    "technical_score": 0.020037593984962403,
+    "citation_score": 0.028834586466165414
+  },
+  {
+    "section_path": [
+      "Time (Sec) 2DRRMS Sweeping-Line",
+      "High-dimensional Experimental Result"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Kessler et. al. [17] extended the k-regret minimizing notion to nonlinear functions. The focus of this paper is designing ef\ufb01cient algorithms for the regret-ratio minimizing problem proposed in [22]. In two- dimensional case, compared to quadratic existing Sweeping-Line, we propose the linearithmic dynamic programming algorithm 2D- RRMS, while for the high-dimensional case we provide the lin- earithmic HD-RRMS that guarantees a user controllable distance from the optimal solution. 8. CONCLUSION In this paper, we made several fundamental theoretical as well as practical advances in developing a compact maxima representative. We have studied both two-dimensional as well as high-dimensional databases to \ufb01nd a set limited to only rtuples that minimizes the maximum regret-ratio. In the case of two-dimensional databases, we have developed an innovative dynamic programming algorithm to build the optimal index that runs in linearithmic time. We have developed an innovative linearithmic algorithm that guarantees a regret ratio that is within a user-controllable distance from the op- timal regret ratio. Our comprehensive set of experiments on syn- thetic (with different correlation models) and real datasets of size up to several million records con\ufb01rm the ef\ufb01ciency, scalability, and effectiveness of our algorithms.",
+    "technical_score": 0.014987468671679195,
+    "citation_score": 0.0013032581453634084
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Top-k discovery algorithms: These algorithms can be divided into on-demand query processing and index construction. On-demand Top-k algorithms focus on the data access methods. For exam- ple,NRA [11] considers the existence of one sorted list of tuples for each attribute, and \ufb01nds the Top-k only by exploring the lists, while TA[10] applies both random and sorted access. CA[10], Up- per/Pick [3], and [20] are the more advanced algorithms in this cat- egory. Focusing on client-server databases, [21] views the existing query engine as the only data access method and designs ef\ufb01cient Top-k discovery algorithms for them. Besides, methods like PRE- FER [15] and LPTA [9], employ the materialized views to increase the ef\ufb01ciency of Top-k discovery process. While the \ufb01rst class of Top-k algorithms focuses on ef\ufb01ciently answering the queries on demand, the other set of works aims toward indexing the data be- forehand, such that they can answer future queries fast. For exam- ple,ONION [5] constructs klayers of convex hull that can serve as the representative for linear ranking functions. [29] adds the no- tion of robustness as the set that performs the best in the worst case scenario. The recent work in this category includes [14,19,28], etc. Approximate convex hull and skyline reduction algorithms: Given the complexity of convex hull discovery algorithms, espe- cially in high-dimensions, designing effective approximate algo- rithms, with tight approximate-ratios, for \ufb01nding the convex hull has attracted many researchers.",
+    "technical_score": 0.007657894736842104,
+    "citation_score": 0.013614035087719297
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "For example, J.",
+    "technical_score": 0.006077694235588973,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "L.",
+    "technical_score": 0.006077694235588973,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Bently et. al. [1] propose a FPTAS \u000f-approximate convex hull algorithm for the two- dimensional algorithms and extend it to high-dimensions. Simi- larly, [16] partitions the space of skyline tuples into several sub- regions and \ufb01nds the convex hull in each sub-region, which will result in \ufb01nding a super-set of convex hull. The objective here is to approximately \ufb01nd a set which is as similar to the original convex hull, not reducing the size of it. On the other hand, a set of work, such as [4, 26], aim toward reducing the skyline size. For example, Chan et. al. [4] relax the notion of domination to \u201ck \u0000domination\u201d in order to increase the chance domination and reduce the skyline size. However, their objective in ranking the skyline tuples is not minimizing the user dissatisfaction on maxima queries. Regret-ratio minimizing problem: The authors in [6,22] focused on regret minimization of a database to support multi-criteria de- cision making. Regret-ratio and Regret-ratio minimizing problem were \ufb01rst introduced in [22] in order to minimize the maximum user dissatisfaction of a Top-k query. They proposed the so called CUBE algorithm to provide an upper-bound guarantee for the regret- ratio of the optimal solution and more importantly they showed it is independent of the input size (n). They also provided the GREEDY heuristic for the problem that runs O(nr)linear pro- grams and picks the points greedily. Chester et.al. [6] extended the regret-ratio notion to k-regret ratio which measures how far from a kth\u201cbest\u201d tuple is the \u201cbest\u201d tuple in a subset. They pro- pose k-regret minimizing sets problem and proved that it is NP-hard in a high-dimensional database. They also proposed the quadratic Sweeping-Line algorithm for the two-dimensional scenario.",
+    "technical_score": 0.006077694235588972,
+    "citation_score": 0.009116541353383458
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Kessler et. al. [17] extended the k-regret minimizing notion to nonlinear functions. The focus of this paper is designing ef\ufb01cient algorithms for the regret-ratio minimizing problem proposed in [22]. In two- dimensional case, compared to quadratic existing Sweeping-Line, we propose the linearithmic dynamic programming algorithm 2D- RRMS, while for the high-dimensional case we provide the lin- earithmic HD-RRMS that guarantees a user controllable distance from the optimal solution.",
+    "technical_score": 0.006077694235588973,
+    "citation_score": 0.006077694235588973
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we made several fundamental theoretical as well as practical advances in developing a compact maxima representative. We have studied both two-dimensional as well as high-dimensional databases to \ufb01nd a set limited to only rtuples that minimizes the maximum regret-ratio. In the case of two-dimensional databases, we have developed an innovative dynamic programming algorithm to build the optimal index that runs in linearithmic time. We have developed an innovative linearithmic algorithm that guarantees a regret ratio that is within a user-controllable distance from the op- timal regret ratio. Our comprehensive set of experiments on syn- thetic (with different correlation models) and real datasets of size up to several million records con\ufb01rm the ef\ufb01ciency, scalability, and effectiveness of our algorithms.",
+    "technical_score": 0.05639097744360902,
+    "citation_score": 0.0
+  }
+]
