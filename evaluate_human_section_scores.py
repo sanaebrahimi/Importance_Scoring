@@ -2,8 +2,11 @@ import argparse
 import json
 import math
 import random
+import re
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
+
+from citation_resolver import CitationResolver
 
 
 def load_json(path: Path) -> dict:
@@ -158,6 +161,274 @@ def uniform_vector(n: int) -> List[float]:
     return [1.0 / n] * n
 
 
+def normalize_text_key(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (text or "").lower())
+
+
+def extract_local_citation_numbers(text: str) -> List[int]:
+    value = (text or "").strip()
+    if not value:
+        return []
+
+    if re.fullmatch(r"\d+", value):
+        number = int(value)
+        return [number] if number > 0 else []
+
+    numbers: List[int] = []
+    for match in re.finditer(r"[\[(]\s*(\d+)(?:\s*[-–]\s*(\d+))?\s*[\])]", value):
+        start = int(match.group(1))
+        end = int(match.group(2)) if match.group(2) else start
+        if start <= 0 or end <= 0:
+            continue
+        if start > end:
+            start, end = end, start
+        numbers.extend(range(start, end + 1))
+
+    return numbers
+
+
+def get_top_k_model_citations(
+    citation_json: dict,
+    k: int,
+    paper_id: Optional[str] = None,
+    resolver: Optional[CitationResolver] = None,
+) -> List[Tuple[str, float]]:
+    if resolver is None or paper_id is None:
+        ranked: List[Tuple[str, float]] = []
+        for citation, payload in citation_json.items():
+            if isinstance(payload, dict):
+                score = float(payload.get("citation_score", 0.0))
+            else:
+                score = float(payload)
+            ranked.append((citation, score))
+        ranked.sort(key=lambda item: (-item[1], item[0]))
+        return ranked[: max(0, k)]
+
+    grouped: Dict[str, Dict[str, object]] = {}
+    for citation, payload in citation_json.items():
+        if isinstance(payload, dict):
+            score = float(payload.get("citation_score", 0.0))
+        else:
+            score = float(payload)
+
+        entry = resolver.resolve(citation, paper_id=paper_id)
+        if entry is not None:
+            group_key = entry.canonical_id or normalize_text_key(entry.title) or citation
+        else:
+            group_key = normalize_text_key(citation) or citation
+
+        bucket = grouped.setdefault(
+            group_key,
+            {
+                "score": 0.0,
+                "display_key": citation,
+                "best_single_score": float("-inf"),
+            },
+        )
+        bucket["score"] = float(bucket["score"]) + score
+        if score > float(bucket["best_single_score"]):
+            bucket["best_single_score"] = score
+            bucket["display_key"] = citation
+
+    ranked = [
+        (str(payload["display_key"]), float(payload["score"]))
+        for payload in grouped.values()
+    ]
+    ranked.sort(key=lambda item: (-item[1], item[0]))
+    return ranked[: max(0, k)]
+
+
+def model_citation_aliases(
+    paper_id: str,
+    citation_key: str,
+    resolver: Optional[CitationResolver],
+) -> Dict[str, List[str]]:
+    aliases = {
+        "numeric": [],
+        "text": [],
+    }
+
+    raw_numeric = extract_local_citation_numbers(citation_key)
+    if raw_numeric:
+        aliases["numeric"].extend(str(num) for num in raw_numeric)
+
+    raw_norm = normalize_text_key(citation_key)
+    if raw_norm:
+        aliases["text"].append(raw_norm)
+
+    if resolver is None:
+        return aliases
+
+    entry = resolver.resolve(citation_key, paper_id=paper_id)
+    if entry is None:
+        return aliases
+
+    if entry.numeric_key:
+        aliases["numeric"].extend(str(num) for num in extract_local_citation_numbers(entry.numeric_key))
+        num_norm = normalize_text_key(entry.numeric_key)
+        if num_norm:
+            aliases["text"].append(num_norm)
+
+    title_norm = normalize_text_key(entry.title)
+    if title_norm:
+        aliases["text"].append(title_norm)
+
+    if entry.first_author_last and entry.year:
+        aliases["text"].append(normalize_text_key(f"{entry.first_author_last} {entry.year}"))
+        aliases["text"].append(normalize_text_key(f"{entry.first_author_last}, {entry.year}"))
+
+    raw_text_norm = normalize_text_key(entry.raw_text)
+    if raw_text_norm:
+        aliases["text"].append(raw_text_norm)
+
+    return aliases
+
+
+def human_citation_aliases(citation_text: str) -> Dict[str, List[str]]:
+    aliases = {
+        "numeric": [],
+        "text": [],
+    }
+    aliases["numeric"].extend(str(num) for num in extract_local_citation_numbers(citation_text))
+    norm = normalize_text_key(citation_text)
+    if norm:
+        aliases["text"].append(norm)
+    return aliases
+
+
+def citation_match_score(
+    human_aliases: Dict[str, List[str]],
+    model_aliases: Dict[str, List[str]],
+) -> int:
+    human_numeric = set(human_aliases["numeric"])
+    model_numeric = set(model_aliases["numeric"])
+    if human_numeric and model_numeric and human_numeric.intersection(model_numeric):
+        return 3
+
+    human_text = [text for text in human_aliases["text"] if text]
+    model_text = [text for text in model_aliases["text"] if text]
+    if not human_text or not model_text:
+        return 0
+
+    for h in human_text:
+        for m in model_text:
+            if h == m:
+                return 3
+            if len(h) >= 12 and h in m:
+                return 2
+            if len(m) >= 12 and m in h:
+                return 2
+    return 0
+
+
+def resolve_human_top_k_citations(
+    paper_id: str,
+    human_items: List[dict],
+    model_ranked_full: List[Tuple[str, float]],
+    resolver: Optional[CitationResolver],
+) -> List[Optional[str]]:
+    resolved: List[Optional[str]] = []
+    used_model_keys = set()
+
+    for item in sorted(human_items, key=lambda entry: entry.get("rank", 10**9)):
+        citation_text = str(item.get("citation", "")).strip()
+        human_alias = human_citation_aliases(citation_text)
+        best_key: Optional[str] = None
+        best_score = 0
+
+        for model_key, _ in model_ranked_full:
+            if model_key in used_model_keys:
+                continue
+            model_alias = model_citation_aliases(paper_id, model_key, resolver)
+            score = citation_match_score(human_alias, model_alias)
+            if score > best_score:
+                best_score = score
+                best_key = model_key
+                if score == 3:
+                    break
+
+        if best_key is not None and best_score > 0:
+            used_model_keys.add(best_key)
+        else:
+            best_key = None
+        resolved.append(best_key)
+
+    return resolved
+
+
+def reciprocal_rank(target: Optional[str], ranked_keys: Sequence[str]) -> float:
+    if target is None:
+        return 0.0
+    for idx, key in enumerate(ranked_keys, start=1):
+        if key == target:
+            return 1.0 / idx
+    return 0.0
+
+
+def citation_top_k_report(
+    paper_id: str,
+    important_papers: List[dict],
+    citation_json: dict,
+    resolver: Optional[CitationResolver],
+    k: int,
+) -> dict:
+    ranked_full = get_top_k_model_citations(
+        citation_json,
+        max(k, len(citation_json)),
+        paper_id=paper_id,
+        resolver=resolver,
+    )
+    ranked_top_k = ranked_full[:k]
+    ranked_top_k_keys = [key for key, _ in ranked_top_k]
+
+    human_ranked = sorted(important_papers, key=lambda item: item.get("rank", 10**9))[:k]
+    resolved_human_keys = resolve_human_top_k_citations(
+        paper_id=paper_id,
+        human_items=human_ranked,
+        model_ranked_full=ranked_full,
+        resolver=resolver,
+    )
+    resolved_human_set = {key for key in resolved_human_keys if key is not None}
+    top_k_set = set(ranked_top_k_keys)
+    overlap_count = len(resolved_human_set.intersection(top_k_set))
+    denom = max(1, len(human_ranked))
+    precision_at_k = overlap_count / max(1, k)
+    recall_at_k = overlap_count / denom
+    hit_at_k = 1.0 if overlap_count > 0 else 0.0
+    mrr_rank1 = reciprocal_rank(resolved_human_keys[0] if resolved_human_keys else None, ranked_top_k_keys)
+
+    model_picked_citations = []
+    for key, score in ranked_top_k:
+        entry = resolver.resolve(key, paper_id=paper_id) if resolver is not None else None
+        model_picked_citations.append(
+            {
+                "title": entry.title if entry is not None and entry.title else key,
+                "citation_score": score,
+            }
+        )
+
+    return {
+        "k": k,
+        "human_top_k": human_ranked,
+        "human_top_k_resolved_model_keys": resolved_human_keys,
+        "model_picked_citations": model_picked_citations,
+        "model_top_k": [
+            {
+                "citation": key,
+                "citation_score": score,
+            }
+            for key, score in ranked_top_k
+        ],
+        "metrics": {
+            "overlap_at_k": overlap_count,
+            "precision_at_k": precision_at_k,
+            "recall_at_k": recall_at_k,
+            "hit_at_k": hit_at_k,
+            "mrr_human_rank1_in_model_top_k": mrr_rank1,
+        },
+    }
+
+
 def aggregate_metric_report(per_paper: List[Dict[str, Dict[str, Optional[float]]]], n_bootstrap: int, seed: int) -> dict:
     model_spearman = [paper["model"]["spearman"] for paper in per_paper]
     model_kendall = [paper["model"]["kendall_tau_b"] for paper in per_paper]
@@ -184,6 +455,27 @@ def aggregate_metric_report(per_paper: List[Dict[str, Dict[str, Optional[float]]
             "bootstrap_ci_kendall_tau_b": bootstrap_ci(uniform_kendall, n_bootstrap, seed + 4),
             "bootstrap_ci_l1": bootstrap_ci(uniform_l1, n_bootstrap, seed + 5),
         },
+    }
+
+
+def aggregate_citation_report(per_paper: List[dict], n_bootstrap: int, seed: int) -> dict:
+    overlap_values = [paper["metrics"]["overlap_at_k"] for paper in per_paper]
+    precision_values = [paper["metrics"]["precision_at_k"] for paper in per_paper]
+    recall_values = [paper["metrics"]["recall_at_k"] for paper in per_paper]
+    hit_values = [paper["metrics"]["hit_at_k"] for paper in per_paper]
+    mrr_values = [paper["metrics"]["mrr_human_rank1_in_model_top_k"] for paper in per_paper]
+
+    return {
+        "mean_overlap_at_k": mean_or_none(overlap_values),
+        "mean_precision_at_k": mean_or_none(precision_values),
+        "mean_recall_at_k": mean_or_none(recall_values),
+        "mean_hit_at_k": mean_or_none(hit_values),
+        "mean_mrr_human_rank1_in_model_top_k": mean_or_none(mrr_values),
+        "bootstrap_ci_overlap_at_k": bootstrap_ci(overlap_values, n_bootstrap, seed),
+        "bootstrap_ci_precision_at_k": bootstrap_ci(precision_values, n_bootstrap, seed + 1),
+        "bootstrap_ci_recall_at_k": bootstrap_ci(recall_values, n_bootstrap, seed + 2),
+        "bootstrap_ci_hit_at_k": bootstrap_ci(hit_values, n_bootstrap, seed + 3),
+        "bootstrap_ci_mrr_human_rank1_in_model_top_k": bootstrap_ci(mrr_values, n_bootstrap, seed + 4),
     }
 
 
@@ -221,12 +513,33 @@ def main() -> None:
         default="",
         help="Optional path to save the full evaluation report as JSON.",
     )
+    parser.add_argument(
+        "--papers-dir",
+        default="papers",
+        help="Directory containing source PDFs, used for citation resolution.",
+    )
+    parser.add_argument(
+        "--citation-top-k",
+        type=int,
+        default=4,
+        help="Top-k citations to compare against the human top-k citation annotation.",
+    )
+    parser.add_argument(
+        "--enable-citation-eval",
+        action="store_true",
+        help="Also evaluate top-k citation agreement using the human important_papers lists.",
+    )
     args = parser.parse_args()
 
     annotations = load_json(Path(args.annotations_file))
     results_root = Path(args.results_root)
+    citation_resolver: Optional[CitationResolver] = None
+    if args.enable_citation_eval:
+        citation_resolver = CitationResolver()
+        citation_resolver.parse_all(results_root, Path(args.papers_dir))
 
     per_paper_reports = []
+    per_paper_citation_reports = []
     skipped = []
 
     for paper_id, payload in annotations["papers"].items():
@@ -275,11 +588,37 @@ def main() -> None:
         }
         per_paper_reports.append(report)
 
+        if args.enable_citation_eval:
+            suffix = f"_{args.model_tag}" if args.model_tag else ""
+            citation_path = results_root / paper_id / f"{paper_id}{suffix}_citation_scores.json"
+            if citation_path.exists() and payload.get("important_papers"):
+                citation_json = load_json(citation_path)
+                per_paper_citation_reports.append(
+                    {
+                        "paper_id": paper_id,
+                        "citation_file": str(citation_path),
+                        **citation_top_k_report(
+                            paper_id=paper_id,
+                            important_papers=payload["important_papers"],
+                            citation_json=citation_json,
+                            resolver=citation_resolver,
+                            k=max(1, args.citation_top_k),
+                        ),
+                    }
+                )
+
     aggregate = aggregate_metric_report(
         [paper["metrics"] for paper in per_paper_reports],
         n_bootstrap=max(100, args.bootstrap_samples),
         seed=args.seed,
     )
+    citation_aggregate = None
+    if per_paper_citation_reports:
+        citation_aggregate = aggregate_citation_report(
+            per_paper_citation_reports,
+            n_bootstrap=max(100, args.bootstrap_samples),
+            seed=args.seed + 100,
+        )
 
     summary = {
         "model_tag": args.model_tag,
@@ -287,6 +626,14 @@ def main() -> None:
         "paper_ids": [paper["paper_id"] for paper in per_paper_reports],
         "aggregate": aggregate,
         "per_paper": per_paper_reports,
+        "citation_top_k": {
+            "enabled": args.enable_citation_eval,
+            "k": args.citation_top_k,
+            "papers_evaluated": len(per_paper_citation_reports),
+            "paper_ids": [paper["paper_id"] for paper in per_paper_citation_reports],
+            "aggregate": citation_aggregate,
+            "per_paper": per_paper_citation_reports,
+        },
         "skipped": skipped,
         "notes": [
             "Human and model scores are aligned on the annotated top-level section overlap only.",
@@ -311,6 +658,19 @@ def main() -> None:
     print(f"  Mean Kendall tau-b: {aggregate['uniform']['mean_kendall_tau_b']}")
     print(f"  Mean L1: {aggregate['uniform']['mean_l1']}")
     print(f"  Bootstrap CI L1: {aggregate['uniform']['bootstrap_ci_l1']}")
+
+    if citation_aggregate is not None:
+        print()
+        print(f"Citation Top-{args.citation_top_k} metrics")
+        print(f"  Papers evaluated: {len(per_paper_citation_reports)}")
+        print(f"  Mean Overlap@{args.citation_top_k}: {citation_aggregate['mean_overlap_at_k']}")
+        print(f"  Mean Precision@{args.citation_top_k}: {citation_aggregate['mean_precision_at_k']}")
+        print(f"  Mean Recall@{args.citation_top_k}: {citation_aggregate['mean_recall_at_k']}")
+        print(f"  Mean Hit@{args.citation_top_k}: {citation_aggregate['mean_hit_at_k']}")
+        print(
+            "  Mean MRR (human rank-1 in model top-k): "
+            f"{citation_aggregate['mean_mrr_human_rank1_in_model_top_k']}"
+        )
 
     if skipped:
         print()
