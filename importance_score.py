@@ -48,6 +48,17 @@ def sanitize_model_tag(model: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9]+", "_", model).strip("_").lower()
     return cleaned or "model"
 
+
+SAMPLE_TEMPERATURE_STEP = 0.05
+SAMPLE_TEMPERATURE_MAX_DELTA = 0.025
+
+
+def sample_temperature(base_temperature: float, sample_idx: int) -> float:
+    # Keep multi-sample runs close to the requested base temperature.
+    base = max(0.0, base_temperature)
+    offset = min(SAMPLE_TEMPERATURE_MAX_DELTA, SAMPLE_TEMPERATURE_STEP * max(0, sample_idx))
+    return min(1.0, base + offset)
+
 SECTION_PAIRWISE_SYSTEM_PROMPT = (
     "You are an expert academic reviewer. "
     "Compare two items from the same paper by contribution to the paper's main scientific contribution. "
@@ -2639,7 +2650,7 @@ def all_together_allocate_scores(
                     total_score=total_score,
                     parent_name=parent_name,
                     model=model,
-                    temperature=min(1.0, temperature + (0.05 * s)),
+                    temperature=sample_temperature(temperature, s),
                     max_retries=max(1, max_retries),
                     debug_log_path=debug_log_path,
                     sample_idx=s + 1,
@@ -2819,7 +2830,7 @@ def direct_only_allocate_scores(
                     total_score=total_score,
                     parent_name=parent_name,
                     model=model,
-                    temperature=min(1.0, temperature + (0.05 * s)),
+                    temperature=sample_temperature(temperature, s),
                     max_retries=max(1, max_retries),
                     debug_log_path=debug_log_path,
                     sample_idx=s + 1,
@@ -3015,7 +3026,7 @@ def allocate_citation_scores_for_paragraph(
                     citation_to_context=citation_to_context,
                     total_score=total_score,
                     model=model,
-                    temperature=min(1.0, temperature + (0.05 * s)),
+                    temperature=sample_temperature(temperature, s),
                     max_retries=max(1, max_retries),
                     debug_log_path=debug_log_path,
                     sample_idx=s + 1,
@@ -3126,7 +3137,7 @@ def pairwise_allocate_scores(
                 client=client,
                 parent_name=parent_name,
                 model=model,
-                temperature=min(1.0, temperature + (0.05 * s)),
+                temperature=sample_temperature(temperature, s),
                 item_a=a,
                 item_b=b,
                 excerpt_a=snippets[a],
@@ -3140,7 +3151,7 @@ def pairwise_allocate_scores(
                 client=client,
                 parent_name=parent_name,
                 model=model,
-                temperature=min(1.0, temperature + (0.05 * s)),
+                temperature=sample_temperature(temperature, s),
                 item_a=b,
                 item_b=a,
                 excerpt_a=snippets[b],
@@ -3197,7 +3208,7 @@ def pairwise_allocate_scores(
                         total_score=total_score,
                         parent_name=parent_name,
                         model=model,
-                        temperature=min(1.0, temperature + (0.05 * s)),
+                        temperature=sample_temperature(temperature, s),
                         max_retries=retry_count,
                         debug_log_path=debug_log_path,
                         sample_idx=s + 1,
@@ -3344,7 +3355,7 @@ def split_paragraph_channel_scores(
     citation_samples: List[Dict[str, float]] = []
 
     for sample_idx in range(sample_count):
-        current_temp = min(1.0, max(0.0, temperature) + (0.05 * sample_idx))
+        current_temp = sample_temperature(temperature, sample_idx)
         parsed_pairs: Dict[str, Tuple[float, float]] = {}
 
         for attempt in range(max(1, max_retries)):
