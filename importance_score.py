@@ -2,6 +2,7 @@ import argparse
 import ast
 import difflib
 import json
+import random
 import re
 from datetime import datetime
 from pathlib import Path
@@ -49,14 +50,13 @@ def sanitize_model_tag(model: str) -> str:
     return cleaned or "model"
 
 
-SAMPLE_TEMPERATURE_STEP = 0.05
-SAMPLE_TEMPERATURE_MAX_DELTA = 0.025
+SAMPLE_TEMPERATURE_MAX_DELTA = 0.03
 
 
-def sample_temperature(base_temperature: float, sample_idx: int) -> float:
-    # Keep multi-sample runs close to the requested base temperature.
+def sample_temperature(base_temperature: float, _sample_idx: int) -> float:
+    # Give each sample a small independent temperature jitter.
     base = max(0.0, base_temperature)
-    offset = min(SAMPLE_TEMPERATURE_MAX_DELTA, SAMPLE_TEMPERATURE_STEP * max(0, sample_idx))
+    offset = random.uniform(0.0, SAMPLE_TEMPERATURE_MAX_DELTA)
     return min(1.0, base + offset)
 
 SECTION_PAIRWISE_SYSTEM_PROMPT = (
