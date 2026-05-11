@@ -20,6 +20,17 @@ def sanitize_model_tag(model: str) -> str:
     return cleaned or "model"
 
 
+def sanitize_tag_component(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9]+", "_", value).strip("_").lower()
+    return cleaned
+
+
+def compose_model_tag(model: str, explicit_tag: str, run_suffix: str) -> str:
+    base_tag = explicit_tag.strip() or sanitize_model_tag(model)
+    suffix = sanitize_tag_component(run_suffix)
+    return f"{base_tag}_{suffix}" if suffix else base_tag
+
+
 def load_assignment_names(assignments_path: Path) -> Dict[str, dict]:
     source = assignments_path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(assignments_path))
@@ -74,6 +85,14 @@ def main() -> None:
         default="",
         help="Optional suffix for output/debug/prompt filenames. Defaults to a sanitized version of --model.",
     )
+    parser.add_argument(
+        "--run-suffix",
+        default="",
+        help=(
+            "Optional extra suffix appended to the effective model tag so reruns write to new files "
+            "(for example: --model-tag gemma2_2b --run-suffix run2 -> gemma2_2b_run2)."
+        ),
+    )
     parser.add_argument("--host", default="localhost:11434", help="Ollama host to pass through.")
     parser.add_argument("--n-samples", type=int, default=5, help="Number of LLM samples to average.")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature.")
@@ -122,7 +141,7 @@ def main() -> None:
     results_root = Path(args.results_root)
     vendor_dir = Path(args.vendor_dir)
     results_root.mkdir(parents=True, exist_ok=True)
-    model_tag = args.model_tag.strip() or sanitize_model_tag(args.model)
+    model_tag = compose_model_tag(args.model, args.model_tag, args.run_suffix)
 
     assignments = load_assignment_names(sections_file)
     manifest = []
