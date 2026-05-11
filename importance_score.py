@@ -4,6 +4,7 @@ import difflib
 import json
 import random
 import re
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -344,6 +345,8 @@ BACK_MATTER_HEADINGS = (
     "acknowledgements",
     "acknowledgment",
     "acknowledgement",
+    "references",
+    "bibliography",
     "appendix",
     "appendices",
     "supplementary material",
@@ -352,6 +355,7 @@ BACK_MATTER_HEADINGS = (
     "broader impact",
     "ethics statement",
 )
+SECTION_LEAD_IN_NODE = "[Section Lead-in]"
 MONTH_NAME_PATTERN = (
     r"jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|"
     r"aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?"
@@ -401,8 +405,8 @@ def read_pdf_text(pdf_path: str) -> str:
 
 
 def normalize_heading_text(text: str) -> str:
-    normalized = (text or "").lower()
-    normalized = normalized.replace("𝜀", "epsilon").replace("ϵ", "epsilon").replace("ε", "epsilon")
+    normalized = normalize_for_match(text).lower()
+    normalized = re.sub(r"[εϵ]", " epsilon ", normalized)
     normalized = normalized.replace("&", "and")
     normalized = re.sub(r"[-‐‑–—]", " ", normalized)
     normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
@@ -437,8 +441,14 @@ def strip_heading_label_prefix(text: str) -> str:
     return normalize_heading_text(stripped)
 
 
+def heading_core_key(text: str) -> str:
+    tokens = strip_heading_label_prefix(text).split()
+    tokens = [token for token in tokens if token != "epsilon"]
+    return " ".join(tokens)
+
+
 def heading_matches_expected_title(expected_title: str, candidate_title: str) -> bool:
-    expected_tokens = normalize_heading_text(expected_title).split()
+    expected_tokens = strip_heading_label_prefix(expected_title).split()
     candidate_tokens = strip_heading_label_prefix(candidate_title).split()
     if not expected_tokens or not candidate_tokens:
         return False
@@ -451,6 +461,13 @@ def heading_matches_expected_title(expected_title: str, candidate_title: str) ->
             cand_idx += 1
             continue
 
+        if candidate_tokens[cand_idx] == "epsilon":
+            cand_idx += 1
+            continue
+        if expected_tokens[exp_idx] == "epsilon":
+            exp_idx += 1
+            continue
+
         if cand_idx + 1 < len(candidate_tokens):
             merged_token = candidate_tokens[cand_idx] + candidate_tokens[cand_idx + 1]
             if merged_token == expected_tokens[exp_idx]:
@@ -459,6 +476,11 @@ def heading_matches_expected_title(expected_title: str, candidate_title: str) ->
                 continue
 
         return False
+
+    while exp_idx < len(expected_tokens) and expected_tokens[exp_idx] == "epsilon":
+        exp_idx += 1
+    while cand_idx < len(candidate_tokens) and candidate_tokens[cand_idx] == "epsilon":
+        cand_idx += 1
 
     return exp_idx == len(expected_tokens) and cand_idx == len(candidate_tokens)
 
@@ -548,8 +570,6 @@ def collect_heading_candidates_with_offsets(section_text: str) -> List[Dict[str,
                     break
                 if not base_label:
                     break
-            if base_label and not next_label and re.match(r"^\d+(?:\.\d+)*$", base_label):
-                break
             combined_parts.append(next_line)
             combined_text = " ".join(combined_parts)
             if is_probable_heading_line(combined_text):
@@ -713,6 +733,31 @@ def find_heading_line_offsets_global(full_text: str, heading_name: str) -> Tuple
     if not target:
         return -1, -1
 
+    target_core_key = heading_core_key(heading_name)
+    candidate_entries = collect_heading_candidates_with_offsets(full_text)
+    best_match: Optional[Dict[str, Any]] = None
+    best_rank: Optional[Tuple[int, float, int, int]] = None
+    for candidate_entry in candidate_entries:
+        score = heading_similarity_score(heading_name, candidate_entry["title"])
+        core_equal = heading_core_key(candidate_entry["title"]) == target_core_key
+        if not core_equal and score < 0.75:
+            continue
+
+        candidate_core_tokens = heading_core_key(candidate_entry["title"]).split()
+        target_core_tokens = target_core_key.split()
+        rank = (
+            1 if core_equal else 0,
+            score,
+            -abs(len(candidate_core_tokens) - len(target_core_tokens)),
+            candidate_entry["start"],
+        )
+        if best_rank is None or rank > best_rank:
+            best_rank = rank
+            best_match = candidate_entry
+
+    if best_match is not None:
+        return best_match["start"], best_match["content_start"]
+
     numbered_heading_pattern = re.compile(
         rf"(?<!\w)((?:\d+(?:\.\d+)*|[IVXLCDM]+))[\.\)]?\s+{re.escape(heading_name)}\b",
         flags=re.IGNORECASE,
@@ -819,7 +864,8 @@ def extract_citations_by_section(
 
         return citations_dict
 
-    trimmed_text = trim_text_before_references(text)
+    # Preserve appendix sections that may appear after the references.
+    trimmed_text = text
 
     def extract_section_content(
         full_text: str,
@@ -955,15 +1001,71 @@ def extract_citations_by_section(
         return recovered_citations, recovered_content
 
     def recover_declared_children(
+        parent_name: str,
         section_text: str,
         subsections_dict: Dict[str, Any],
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         return recover_declared_children_from_titles(
-            parent_name="",
+            parent_name=parent_name,
             section_text=section_text,
             subsections_dict=subsections_dict,
             title_hints=None,
         )
+
+    def extract_section_lead_in(
+        section_text: str,
+        subsections_dict: Dict[str, Any],
+    ) -> Tuple[Optional[Dict[str, List[str]]], Optional[str]]:
+        child_names = list(subsections_dict.keys())
+        if not child_names:
+            return None, None
+
+        child_starts = [
+            start
+            for child_name in child_names
+            for start, _ in [find_heading_line_offsets_global(section_text, child_name)]
+            if start != -1
+        ]
+        if not child_starts:
+            return None, None
+
+        first_child_start = min(child_starts)
+        if first_child_start <= 0:
+            return None, None
+
+        lead_text = section_text[:first_child_start]
+        sanitized_lead_text = sanitize_section_scoring_text(lead_text).strip()
+        if not sanitized_lead_text or not re.search(r"[A-Za-z]", sanitized_lead_text):
+            return None, None
+
+        normalized_lead_text = re.sub(r"[ \t]+", " ", sanitized_lead_text).strip()
+        if len(normalized_lead_text) < 40:
+            return None, None
+
+        return process_section_text(normalized_lead_text), normalized_lead_text
+
+    def attach_section_lead_in(
+        nested_citations: Dict[str, Any],
+        nested_content: Dict[str, Any],
+        content: str,
+        subsections_dict: Dict[str, Any],
+    ) -> None:
+        if SECTION_LEAD_IN_NODE in nested_content:
+            return
+
+        lead_citations, lead_content = extract_section_lead_in(content, subsections_dict)
+        if not lead_content:
+            return
+
+        ordered_content = {SECTION_LEAD_IN_NODE: lead_content}
+        ordered_content.update(nested_content)
+        nested_content.clear()
+        nested_content.update(ordered_content)
+
+        ordered_citations = {SECTION_LEAD_IN_NODE: lead_citations or {}}
+        ordered_citations.update(nested_citations)
+        nested_citations.clear()
+        nested_citations.update(ordered_citations)
 
     def match_declared_sections_in_order(
         section_text: str,
@@ -975,9 +1077,45 @@ def extract_citations_by_section(
 
         numbered_levels = sorted({entry["level"] for entry in candidate_entries if entry["level"] > 0})
         if numbered_levels:
-            candidate_pool = [entry for entry in candidate_entries if entry["level"] == numbered_levels[0]]
-            if candidate_pool:
-                candidate_entries = candidate_pool
+            best_pool = candidate_entries
+            best_pool_score = -1.0
+            for level in numbered_levels:
+                candidate_pool = [entry for entry in candidate_entries if entry["level"] == level]
+                if not candidate_pool:
+                    continue
+
+                pool_score = 0.0
+                next_candidate_idx = 0
+                remaining_expected = len(expected_names)
+                for expected_name in expected_names:
+                    if next_candidate_idx >= len(candidate_pool):
+                        break
+
+                    max_start_idx = len(candidate_pool) - remaining_expected
+                    if max_start_idx < next_candidate_idx:
+                        max_start_idx = len(candidate_pool) - 1
+
+                    best_local_idx: Optional[int] = None
+                    best_local_score = 0.0
+                    for idx in range(next_candidate_idx, max_start_idx + 1):
+                        score = heading_similarity_score(expected_name, candidate_pool[idx]["title"])
+                        if best_local_idx is None or score > best_local_score:
+                            best_local_idx = idx
+                            best_local_score = score
+
+                    remaining_expected -= 1
+                    if best_local_idx is None:
+                        continue
+
+                    next_candidate_idx = best_local_idx + 1
+                    pool_score += best_local_score
+
+                if pool_score > best_pool_score:
+                    best_pool_score = pool_score
+                    best_pool = candidate_pool
+
+            if best_pool_score > 0:
+                candidate_entries = best_pool
 
         matches: List[Tuple[str, Dict[str, Any], float]] = []
         next_candidate_idx = 0
@@ -1040,7 +1178,11 @@ def extract_citations_by_section(
                     subsection_names = list(subsections.keys())
                     nested_citations, nested_content = process_sections(content, subsections, subsection_names)
                     if len(nested_content) < len(subsection_names):
-                        recovered_citations, recovered_content = recover_declared_children(content, subsections)
+                        recovered_citations, recovered_content = recover_declared_children(
+                            section_name,
+                            content,
+                            subsections,
+                        )
                         for child_name, child_content in recovered_content.items():
                             if child_name in nested_content:
                                 continue
@@ -1048,6 +1190,7 @@ def extract_citations_by_section(
                             nested_citations[child_name] = recovered_citations.get(child_name, {})
 
                     if nested_content:
+                        attach_section_lead_in(nested_citations, nested_content, content, subsections)
                         local_citations[section_name] = nested_citations
                         local_content[section_name] = nested_content
                     else:
@@ -1074,7 +1217,11 @@ def extract_citations_by_section(
                 subsection_names = list(subsections.keys())
                 nested_citations, nested_content = process_sections(content, subsections, subsection_names)
                 if len(nested_content) < len(subsection_names):
-                    recovered_citations, recovered_content = recover_declared_children(content, subsections)
+                    recovered_citations, recovered_content = recover_declared_children(
+                        section_name,
+                        content,
+                        subsections,
+                    )
                     for child_name, child_content in recovered_content.items():
                         if child_name in nested_content:
                             continue
@@ -1082,6 +1229,7 @@ def extract_citations_by_section(
                         nested_citations[child_name] = recovered_citations.get(child_name, {})
 
                 if nested_content:
+                    attach_section_lead_in(nested_citations, nested_content, content, subsections)
                     local_citations[section_name] = nested_citations
                     local_content[section_name] = nested_content
                 else:
@@ -1908,7 +2056,13 @@ def format_scored_segment_excerpt(segment_name: str, segment_content: Any, limit
 
 
 def normalize_for_match(text: str) -> str:
-    return re.sub(r"\s+", " ", text or "").strip()
+    normalized = unicodedata.normalize("NFKD", text or "")
+    normalized = re.sub(
+        r"^(\d+(?:\.\d+)*[\.\)]?)(?=[A-Za-zεϵ])",
+        r"\1 ",
+        normalized,
+    )
+    return re.sub(r"\s+", " ", normalized).strip()
 
 
 def is_page_artifact_line(line: str) -> bool:
@@ -1939,7 +2093,7 @@ def is_probable_heading_line(line: str) -> bool:
         return False
     if is_page_artifact_line(stripped):
         return False
-    if stripped.endswith((".", "?", "!", ";")):
+    if stripped.endswith((".", "!", ";")):
         return False
     if "@" in stripped:
         return False
@@ -1977,6 +2131,14 @@ def is_probable_heading_line(line: str) -> bool:
     uppercase_like = sum(1 for word in words if word.isupper() and len(word) > 1)
     title_like = sum(1 for word in words if word[:1].isupper())
     connector_words = {"and", "or", "of", "the", "on", "in", "with", "for", "to", "a", "an", "vs"}
+    lower_nonconnector = sum(
+        1
+        for word in words
+        if word[:1].islower() and word.lower() not in connector_words
+    )
+
+    if lower_nonconnector >= 2:
+        return False
 
     if uppercase_like >= max(1, len(words) - 2):
         return True
