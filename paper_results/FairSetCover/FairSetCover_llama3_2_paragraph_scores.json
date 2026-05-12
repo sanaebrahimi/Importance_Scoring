@@ -69,8 +69,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We first describe a naive algorithm for the FSC problem with large approximation ratio. We execute the well-known greedy algorithm for the standard set cover problem (its pseudocode is shown in the technical report [ 14]) and letXbe the set cover we get. If Xdoes not satisfy the fairness requirements, we arbitrarily add the minimal number of sets from each color to equalize the number of sets from each color in our final cover. The pseudocode is shown in the technical report [14]. Lemma 1. There exists a(\ufe01k(lnn+1))\ufe01-approximation algorithm for the FSC problem that runs in O(m\u00b7k\u00b7n)time.",
-    "technical_score": 0.012480656846047138,
-    "citation_score": 0.0022024688551847893
+    "technical_score": 0.012167070982297568,
+    "citation_score": 0.00214713017334663
   },
   {
     "section_path": [
@@ -79,7 +79,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "S",
-    "technical_score": 0.0003135765032569344,
+    "technical_score": 0.0008362248097799017,
     "citation_score": 0.0
   },
   {
@@ -89,7 +89,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "S 7S",
-    "technical_score": 0.007341562850615964,
+    "technical_score": 0.007575212982712051,
     "citation_score": 0.0
   },
   {
@@ -99,7 +99,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "S 3S",
-    "technical_score": 0.003670781425307982,
+    "technical_score": 0.004205718896245976,
     "citation_score": 0.0
   },
   {
@@ -109,7 +109,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "S 5S",
-    "technical_score": 0.003670781425307982,
+    "technical_score": 0.005041943706025878,
     "citation_score": 0.0
   },
   {
@@ -119,7 +119,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "P oints R ed sets Blue sets",
-    "technical_score": 0.02202468855184789,
+    "technical_score": 0.017708290089456742,
     "citation_score": 0.0
   },
   {
@@ -129,7 +129,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "(FSC) problem, consisting of 16 points and 7 sets: 4 red sets and 3 blue sets. The Greedy Fair Set Cover algorithm (\u00a7 4.2) selects(S1,S5)as the first pair of red and blue sets, followed by the pairs(S3,S6)and(S4,S1). The standard greedy algorithm selects the sets S1,S2,S3,S4, andS7, resulting in 4 red sets and 1 blue set, highlighting its lack of fairness.",
-    "technical_score": 0.011012344275923945,
+    "technical_score": 0.013035269093627882,
     "citation_score": 0.0
   },
   {
@@ -139,8 +139,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In this subsection we propose an algorithm for the FSC problem whose approximation ratio does not depend onk. For simplicity of explanation, we describe our algorithm for the case we have only two demographic groups, i.e., G={g1,g2}. In the end, our algorithm can be extended almost verbatim to k>2groups. LetX=\u2205be the cover we construct and let U\u2212=Ube the set of uncovered elements. We repeat the following steps until U\u2212=\u2205. In each iteration, we find the pair of sets(SA,SB)such that i) setsSA,SBcover the maximum number of uncovered elements, i.e.,U\u2212\u2229(SA\u222aSB)is maximized, and ii) set SAhas color g1and SBhas color g2, i.e., g(SA)=g1andg(SB)=g2. Once we find SA,SBwe update the set U\u2212removing the new covered element, U\u2212\u2190U\u2212\\(SA\u222aSB), and we add SA,SBinX. In the end, after covering all elements ( U\u2212=\u2205), we return X. The pseudocode of our algorithm is shown in the technical report [14].",
-    "technical_score": 0.025480509016889842,
-    "citation_score": 0.0034746148659395236
+    "technical_score": 0.026226712180801193,
+    "citation_score": 0.0035763698428365265
   },
   {
     "section_path": [
@@ -149,7 +149,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Analysis. First, it is straightforward to see that Xis a fair cover. The algorithm stops when there is no uncovered element so Xis a cover. In every iteration, we add exactly one set of color g1and one set of color g2, soXis a fair cover. Lemma 2.|X|\u2264( lnn+1)\u00b7|X\u2217|.",
-    "technical_score": 0.0036193904853536697,
+    "technical_score": 0.0037253852529547157,
     "citation_score": 0.0
   },
   {
@@ -159,7 +159,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Proof: For each pair SA,SB\u2208S, letSA,B=SA\u222aSB. We consider the following instance of the set cover problem. We define the set U\u2032=UandS\u2032={Si,j|Si\u2208S1,Sj\u2208S2}. LetC\u2217be the optimum solution of the set cover instance (U\u2032,S\u2032). Any fair cover returned by our algorithm can be straightforwardly mapped to a valid set cover for(U\u2032,S\u2032). Hence, by definition, we have |C\u2217|\u22641 2|X\u2217|.",
-    "technical_score": 0.0018096952426768348,
+    "technical_score": 0.0018626926264773578,
     "citation_score": 0.0
   },
   {
@@ -169,7 +169,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Recall that the standard greedy algorithm for the set cover prob- lem returns a(lnn+1)-approximation. We show that our algo- rithm implements such a greedy algorithm and returns a (lnn+1)- approximation in the set cover instance (U\u2032,S\u2032). At the beginning of an iteration i, without loss of generality, assume that our algo- rithm has selected the pairs (SA1,SB1),...,(SAi\u22121,SBi\u22121), so the sets SA1,B1,...,SAi\u22121,Bi\u22121have been selected for the set cover instance(U\u2032,S\u2032). LetU\u2212be the set of uncovered elements in U\u2032at the be- ginning of the i-th iteration. Let SAj,Bjbe the set inS\u2032that covers the maximum number of elements in U\u2212. We consider two cases. IfSAj\u2208\u0338{SA1,...,SAi\u22121}andSBj\u2208\u0338{SB1,...,SBi\u22121}, then by definition our greedy algorithm selects the pair (SAj,SBj)so the setSAj,Bjis added in the cover of the set cover instance (U\u2032,S\u2032). Next, consider the case where SAj\u2208\u0338{SA1,...,SAi\u22121}andSBj\u2208 {SB1,...,SBi\u22121}(the proof is equivalent if the set SAjhas been selected before). Since there are enough sets from each group, let SBhbe a set with color g2such thatSBh\u2208\u0338{SB1,...,SBi\u22121}. By definition, we have |SAj,Bh\u2229U\u2212| \u2265 |SAj,Bj\u2229U\u2212|. Our greedy algorithm selects the pair SA\u2217,SB\u2217such that|(SA\u2217\u222aSB\u2217)\u2229U\u2212| is maximized, and SA\u2217\u2208\u0338{SA1,...,SAi\u22121},SB\u2217\u2208\u0338{SB1,...,SBi\u22121}. Hence,|SA\u2217,B\u2217\u2229U\u2212|=|(SA\u2217\u222aSB\u2217)\u2229U\u2212|\u2265|(SAj\u222aSBh)\u2229U\u2212|\u2265 |(SAj\u222aSBj)\u2229U\u2212|=|SAj,Bj\u2229U\u2212|.",
-    "technical_score": 0.001085817145606101,
+    "technical_score": 0.0011176155758864145,
     "citation_score": 0.0
   },
   {
@@ -179,7 +179,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "In every iteration, our greedy algorithm computes a set SA,Bthat covers the most uncovered elements in U\u2032. LetCbe the family of sets returned by the greedy algorithm executed on (U\u2032,S\u2032). Every selected set in Cis a pair of sets inS. Hence,|X|\u22642(lnn+1)|C\u2217|.",
-    "technical_score": 0.0007238780970707341,
+    "technical_score": 0.0007450770505909432,
     "citation_score": 0.0
   },
   {
@@ -189,7 +189,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "2|X\u2217|as shown in the first paragraph of the proof. We conclude that |X|\u2264( lnn+1)|X\u2217|. \u25a1 Notice that there exists O(m1m2)=O(m2)pairs of sets with different colors. At the beginning of the algorithm, for every pair of sets we compute the number of elements they cover in O(m2n) time. Each time we cover a new element we update the counters inO(m2)time. In total, our algorithm runs in O(m2n)time. This algorithm can be extended to kgroups, straightforwardly. In each iteration, we find the ksets of different color that cover the the most uncovered elements. The running time increases to O(mkn). Theorem 1. There exists an(lnn+1)-approximation algorithm for the FSC problem that runs in O(mkn)time.",
-    "technical_score": 0.0012480656846047143,
+    "technical_score": 0.00018813195527421316,
     "citation_score": 0.0
   },
   {
@@ -199,7 +199,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "While our algorithm returns an O(logn)-approximation, which is the best that someone can hope for the FSC, the running time depends exponentially on the number of groups k. Next, we propose two fasterO(poly(n,m,k))time randomized algorithms with the same asymptotic approximation.",
-    "technical_score": 0.0001881459019541606,
+    "technical_score": 0.00018813195527421316,
     "citation_score": 0.0
   },
   {
@@ -209,7 +209,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "The expensive part of the greedy algorithm is the selection of k sets of different color that cover the most uncovered elements, in every iteration. We focus on one iteration of the greedy algorithm. Intuitively, we need to find ksets, each from a different color, that maximizes the coverage over the uncovered elements. We call this problem, max k-color cover. Formally, Definition 2 (max k-color cover). Consider a set U\u2212\u2286U, called the set of uncovered elements, a family of sets S\u2212\u2286S, called the sets not selected so far, and the value kshowing the number colors (groups) that sets belong to. Our goal is to select ksetsX\u2286S\u2212, one from each color, such that|\ufe01|\ufe01X\u2229U\u2212|\ufe01|\ufe01is maximized. The maxk-color cover problem is NP-complete. The proof is straight-forward using the reduction from the traditional max k- cover (MC) problem by creating kcopies of each original set, while assigning each copy to a unique color. Now the max-cover problem has a solution with coverage l, if and only if the k-color MC has a solution with coverage l. Since max k-color cover is NP-complete, we propose constant-approximation polynomial algorithms for it.",
-    "technical_score": 0.016055516347774114,
+    "technical_score": 0.004515618488429958,
     "citation_score": 0.0
   },
   {
@@ -219,8 +219,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "2- approximation algorithm. Inspired by [ 32], where the au- thors also study a version of the max k-color cover problem (to design efficient algorithms for the fair regret minimizing set prob- lem), we propose the following algorithm. We run the standard greedy algorithm for the max k-cover problem. Let Y=U\u2212be the current set of uncovered elements in U\u2212and letC=\u2205be the family ofksets we return. The next steps are repeated until |C|=k orY=\u2205. In each iteration, the algorithm chooses the set S\u2208S\u2212 such that|S\u2229Y|is maximized. If Ccontains another set with color g(S), then we remove Sand we continue with the next iteration. Otherwise, we add SinCand we update Y=Y\\S. IfY=\u2205andC does not contain sets from all groups, we add in Cexactly one set per missing group. Theorem 2. There exists an1 2-approximation algorithm for the maxk-color cover problem that runs in O(n\u03bc)time. Proof: By definition, Ccontains one set from each group in G, so it is a valid k-color cover. Let Shbe theh-th set added in C. Without loss of generality, assume g(Sh)=gh, forh=1,...,k . LetO\u2217={O1,...,Ok} \u2286 S\u2212be the optimum solution for the maxk-color cover problem. Without loss of generality, assume that g(Oh)=gh, forh=1,...,k . We have, |C|=k\u2211\ufe02 i=1|Si\\(\u222ah=1..i\u22121Sh)|\u2265k\u2211\ufe02 i=1|\ufe01|\ufe01Oi\\\u222ai\u22121 h=1Sh|\ufe01|\ufe01\u2265k\u2211\ufe02 i=1|Oi\\C| \u2265|O\u2217|\u2212|C|. Hence|C|\u22651 2|O\u2217|. Each time we cover a new element, we update the number of uncovered elements in each set in O(\u03bc)time. Hence, the algorithm runs in O(n\u03bc)time. \u25a1 (1\u22121 e)-approximation algorithm. We design a randomized LP-based algorithm for the max k-color cover problem with better approximation ratio. For every element ej\u2208U\u2212we define the variableyj. For every set Si\u2208S\u2212we define the variable xi.",
-    "technical_score": 0.0026491601973827284,
-    "citation_score": 0.0003612491178249175
+    "technical_score": 0.005960616404727544,
+    "citation_score": 0.0008128113279173923
   },
   {
     "section_path": [
@@ -229,7 +229,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Let S\u2212 h={S\u2208S\u2212|S\u2208Sh}. The next Integer Program represents an instance of the max k-color cover problem. max\u2211\ufe02 jyj \u2211\ufe02 i:Si\u2208S\u2212 hxi=1,\u2200gh\u2208G \u2211\ufe02 i:ej\u2208Sixi\u2265yj,\u2200ej\u2208U\u2212 xi\u2208{0,1},\u2200Si\u2208S\u2212, yj\u2208{0,1},\u2200ej\u2208U\u2212 We then replace the integer variables to continuous ( xi\u2208[0,1]and yj\u2208[0,1]) and use a polynomial time LPsolver to compute the solution of the LPrelaxation. Let x\u2217 i,y\u2217 jbe the values of the variables in the optimum solution. For every group gh\u2208G, we sample exactly one set fromS\u2212 h, using the probabilities {x\u2217 i|Si\u2208S\u2212 h}. LetCbe the family of ksets we return.",
-    "technical_score": 0.0010034697717358821,
+    "technical_score": 0.011289046221074895,
     "citation_score": 0.0
   },
   {
@@ -239,7 +239,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Analysis. By definition Ccontains exactly one set from every group gi. Next, we show the approximation factor.Lemma 3. An elementejis covered by a set in Cwith probability at least(1\u22121 e)y\u2217 j. Proof: By definition, ejis not covered by a set in S\u2212 hwith proba- bility 1\u2212\u2211\ufe02 i:ej\u2208Si,Si\u2208S\u2212 hx\u2217 i\u2264e\u2212\u2211\ufe01 i:ej\u2208Si,Si\u2208S\u2212 hx\u2217 i. The inequality holds because of the well know inequality 1+x\u2264 exfor everyx\u2208R. Hence, Pr[ej\u2208\u0338C]=\u220f\ufe02 gh\u2208G(1\u2212\u2211\ufe02 i:ej\u2208Si,Si\u2208S\u2212 hx\u2217 i)\u2264\u220f\ufe02 gh\u2208Ge\u2212\u2211\ufe01 i:ej\u2208Si,Si\u2208S\u2212 hx\u2217 i =e\u2212\u2211\ufe01 gh\u2208G\u2211\ufe01 i:ej\u2208Si,Si\u2208S\u2212 hx\u2217 i=e\u2212\u2211\ufe01 i:ej\u2208Six\u2217 i\u2264e\u2212y\u2217 j. We conclude that Pr[ej\u2208C]\u22651\u2212e\u2212y\u2217 j\u2265(1\u22121 e)y\u2217 j. \u25a1 Lemma 4. The expected number of elements covered by sets in C is at least(1\u22121 e)OPT , where OPT is the number of covered elements in the optimum solution for the max k-color cover problem. Proof: LetOPTLP=\u2211\ufe01 jy\u2217 jbe the optimum solution of the LP above. LetZjbe a random variable which is 1ifejis covered in C, and0otherwise. We have E[\ufe02\u2211\ufe02 jZj]\ufe02 =\u2211\ufe02 jE[Zj]=\u2211\ufe02 jPr[Zj=1]=\u2211\ufe02 jPr[ej\u2208C] \u2265\u2211\ufe02 j(1\u22121 e)y\u2217 j=(1\u22121 e)OPTLP\u2265(1\u22121 e)OPT. \u25a1 LetL(a,b)be the running time to solve an LPwithaconstraints andbvariables. Our algorithm for the max k-color cover problem runs inO(L(n+k,2n+2\u03bc))time. Putting everything together, we conclude with the next theorem. Theorem 3. There exists a randomized (1\u22121 e)-approximation algorithm for the max k-color cover problem that runs in O(L(n+ k,2n+2\u03bc))time. The approximation factor holds in expectation.",
-    "technical_score": 0.0040138790869435285,
+    "technical_score": 0.002257809244214979,
     "citation_score": 0.0
   },
   {
@@ -249,8 +249,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Faster algorithm for FSC. We combine the results from Theo- rem 1 and Theorem 3 (or Theorem 2) to get a faster algorithm for the FSC problem. In each iteration of the greedy algorithm from Theo- rem 1 we execute the algorithm from Theorem 3 (or Theorem 2). The pseudocode of the overall method is shown in the technical report [14]. It is known [ 51] that the greedy algorithm for the standard Set Cover problem, where in each iteration it selects a set that covers a \u03b2-approximation (for \u03b2<1) of the maximum number of uncovered elements returns a1 \u03b2(lnn+1)-approximation. From the proof of Lemma 2 we mapped the FSC problem to an instance of the standard set cover problem, so the approximation ratio of our new algorithm ise e\u22121(lnn+1)(or2(lnn+1)). The algorithm from Theorem 3 runs in O(L(n+k,2n+2m\u00b7k)). We execute this algorithm in every iteration of the greedy algorithm. In the worst case the greedy algorithm selects all sets in S, so a loose upper bound on the number of iterations is O(m). The number of iterations can also be bounded as follows. If IGreedy is the number of iterations of the greedy algorithm, then by definition it holds thatk\u00b7IGreedy\u2264e e\u22121(lnn+1)|X\u2217|\u21d4IGreedy =O(|X\u2217| klogn).",
-    "technical_score": 0.0003813185132596352,
-    "citation_score": 0.00012041637260830584
+    "technical_score": 9.532019067226799e-05,
+    "citation_score": 3.0101112843874102e-05
   },
   {
     "section_path": [
@@ -259,7 +259,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "Theorem 4. There exists a randomizede e\u22121(lnn+1)-approximation algorithm for the FSC problem that runs in O(|X\u2217| kL(n+k,2n+2m\u00b7 k)logn)time. The approximation factor holds in expectation. Fur- thermore, there exists a 2(lnn+1)-approximation algorithm that runs inO(|X\u2217|\u00b7n\u00b7m\u00b7logn)time.",
-    "technical_score": 0.0005017348858679411,
+    "technical_score": 0.0001254213035161421,
     "citation_score": 0.0
   },
   {
@@ -379,7 +379,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Due to space limitations, we defer the details of our algorithms for GFSC and GFWSC problems to Appendix B. Recall that in these problems, each color ghis associated with a fraction fh\u2208[0,1], such that\u2211\ufe01 gh\u2208Gfh=1, and the goal is to return a (fair) cover Xsuch that|X\u2229Sh| |X|=fh, for every color gh\u2208G. Our greedy (and faster greedy) algorithms from the previous sections (for the FSC and FWSC problems) easily extend to GFSC and GFWSC with similar theoretical guarantees. The high level idea is the following: In each iteration of the greedy algorithm, instead of selecting exactly one set from each group, the algorithm selects phsets for group gh. The selection is made such that fh=ph\u2211\ufe01 gj\u2208Gpjis satisfied for each group gh. As the greedy algorithm operates for integral rounds, the final set cover also satisfies the ratio constraints.",
-    "technical_score": 0.06264109539837834,
+    "technical_score": 0.022371819785135125,
     "citation_score": 0.0
   },
   {
@@ -389,7 +389,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Our algorithms for the GFSC problem can be used for the less constrained \u03b5-GFSC problem, where, instead of zero unfairness, the goal is to ensure a maximum unfairness of \u03b5. Particularly, in Theorem 9, we show that a solver for the GFSC problem provides a good approximation for the \u03b5-GFSC problem.",
-    "technical_score": 0.039177535704920594,
+    "technical_score": 0.07123188309985562,
     "citation_score": 0.0
   },
   {
@@ -399,7 +399,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Theorem 9. Any\u03b1-approximation algorithm for the GFSC prob- lem is an((1+\u03b5)\u03b1)-approximation for the \u03b5-GFSC problem. Proof: LetX\u2217be the optimum solution to the GFSC problem and letX\u2217\u03b5be the optimum solution to the \u03b5-GFSC problem. Starting fromX\u2217\u03b5we find a feasible cover X\u2032\u03b5for the GFSC problem.",
-    "technical_score": 0.007345787944672611,
+    "technical_score": 0.013355978081222925,
     "citation_score": 0.0
   },
   {
@@ -409,7 +409,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Initially, X\u2032\u03b5=X\u2217\u03b5. Then, we add(1+\u03b5)fh|X\u2217\u03b5|\u2212|X\u2217\u03b5\u2229Sh|sets from group gh, inX\u2217\u03b5. In the end, notice that |X\u2032\u03b5\u2229Sh|=(1+\u03b5)fh|X\u2217\u03b5|for every group gh, and|X\u2032\u03b5|=(1+\u03b5)|X\u2217\u03b5|. Hence,|X\u2032 soX\u2032\u03b5is a solution for the GFSC problem and |X\u2217| \u2264 |X\u2032\u03b5|, by definition. We conclude that |X\u2217|\u2264|X\u2032\u03b5|=(1+\u03b5)|X\u2217\u03b5|. LetAbe an \u03b1-approximation algorithm for the GFSC and Xbe the output of",
-    "technical_score": 0.0024485959815575375,
+    "technical_score": 0.004451992693740976,
     "citation_score": 0.0
   },
   {
@@ -419,7 +419,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "As a result, all the approximation algorithms proposed in the pre- vious sections also approximate the \u03b5-GFSC problem with asymp- totically the same approximation ratio of O(lnn).",
-    "technical_score": 0.00024608389614653244,
+    "technical_score": 0.00044742526572096806,
     "citation_score": 0.0
   },
   {
@@ -568,8 +568,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Algorithmic fairness has received a lot of attention in the last few years. However, most of the recent work focuses on the intersection of fairness and Machine Learning [7, 36].",
-    "technical_score": 0.006627401515587316,
-    "citation_score": 0.009536992424869552
+    "technical_score": 0.008082196970228434,
+    "citation_score": 0.008082196970228434
   },
   {
     "section_path": [
@@ -577,8 +577,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Despite its importance, limited work has been done on algorith- mic fairness in the context of combinatorial problems [ 49]. Satisfy- ing fairness constraints while optimizing sub-modular functions is studied in [ 49]. Further examples include satisfying fairness in Coverage Maximization problems [ 2,4] and Facility Locations [ 29]. In the red-blue set cover problem [ 10], the goal is to select a family of sets to cover all red points, while minimizing the number of blue points covered. In this body of work, the focus is on defining fair- ness on the point set (ground set). In other words, they assume the points belong to different demographic groups. In contrast, in thiswork, we define fairness on the family of sets. Fairness is also stud- ied in problems like Matching [ 19,20], Resource Allocation [ 35], Ranking [3, 52], Queue Systems [15], and Clustering [33, 44]. There has been recent work studying fairness in the Hitting Set problem [ 25]. Although hitting set is the dual of the set cover problem, the definition of fairness used is different from ours. We define and guarantee perfect fairness based on demographic parity (count and ratio parity). In other words, we require an exact equal- ity (e.g., equality of count equality or exact color ratio) between demographic groups. By contrast, in [ 25], a hitting set is defined to be fair if does not contain many points from a color. They have upper bounds on the number of points (equivalent to the subsets in the set cover problem) that can be picked from any particular color. Furthermore, they design exact (fixed-parameter) algorithms with running time exponential in kand/or exponential on maximum number of sets that an element belongs to.",
-    "technical_score": 0.009213704546060415,
-    "citation_score": 0.015032886364624886
+    "technical_score": 0.009698636364274121,
+    "citation_score": 0.014547954546411179
   },
   {
     "section_path": [

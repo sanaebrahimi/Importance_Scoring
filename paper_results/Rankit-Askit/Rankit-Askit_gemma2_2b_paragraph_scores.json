@@ -146,7 +146,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We define a utility function on different orderings of I. Based on the objective function in our Problem Definition (Section 2.3), the utility of a reranking function \u03c0should capture the expected error .",
-    "technical_score": 0.0036027459954233398,
+    "technical_score": 0.0038008063637354245,
     "citation_score": 0.0
   },
   {
@@ -156,7 +156,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Let us define a function Relq:I \u2192 [ 0,1]that captures the relevance of each element ei\u2208Ito the query q. That is,Relq(ei) is the relevance of eito the query q.",
-    "technical_score": 0.0024018306636155607,
+    "technical_score": 0.0025338709091569504,
     "citation_score": 0.0
   },
   {
@@ -166,7 +166,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Also, letXL(i)denote the \u201cexposure\u201d of the position iin a ranked input to the LLML, i.e., the likelihood that the LLM will not miss an element in position i. Then, the expected utility of a ranking \u03c0 of the inputIis calculated as [31], E[utility(\u03c0|q)]=|I|\u2211\ufe02",
-    "technical_score": 0.0018013729977116699,
+    "technical_score": 0.0016330681776906032,
     "citation_score": 0.0
   },
   {
@@ -176,7 +176,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Relq(e\u03c0(i))]\ufe01 (2) Example 2: Consider the graph G, with 6 vertices and the fol- lowing edges: e1e2e3e4e5e6e7e8e9e10",
-    "technical_score": 0.0012009153318077804,
+    "technical_score": 0.0009996004504013657,
     "citation_score": 0.0
   },
   {
@@ -187,7 +187,7 @@
     "paragraph_index": 5,
     "paragraph": "Also, let the exposure function be XL(i)=1 i. Now let the query qbe\u201ccompute the degree of v1\u201d. For edges incident to v1, Relq(ei)=1, while for the others the relevance is 0. As a result, the utility of the ranking \u03c0={1,2,\u00b7\u00b7\u00b7,10}isutility(\u03c0|q)= 1+1 3+1 5\u22431.53. Note that the ranking with maximum utility pute1,e3, ande5at the beginning of the list, and has the utility of1+1 2+1 3\u22431.83.",
     "technical_score": 0.0,
-    "citation_score": 0.0012009153318077804
+    "citation_score": 0.0012669354545784752
   },
   {
     "section_path": [
@@ -196,7 +196,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "Thefirst step towardscomputing theutility ofaranking isto specifytheexposurefunctionX.Wenote that theexposurevalues areLLM-sp ecific, i.e.,theexposureofaposition intheranking may varybasedontheLLM athand andthelength ofeach element in theinputI.Ther efore,during thepreprocessing time,weneedto estimate theexposurevalues foragivenLLM. Todoso,inSection 4,Algorithm 1 Warm-up Input: ThelistofelementsI,Thequer yq,ThehelperLLMH,Numb er ofpartitionsm Output: Thelistofrelevance scores{Relq(ei)|ei\u2208I} 1:function PSM(I,q,H,m) 2:P\u2190Partition(I,m)\u22b2PartitionIintomchunks ofequal size",
-    "technical_score": 0.0013131960335621663,
+    "technical_score": 0.0012669354545784752,
     "citation_score": 0.0
   },
   {
@@ -206,7 +206,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "4:R\u2190H(Pj,q)\u22b2Askhelpertogivetherelevant elementsR 5: forei\u2208PjdoRelq(ei)\u21901ifei\u2208R,0other wise 6: Return{Relq(ei)|ei\u2208I} wedevelop anapproach basedonsample tasks forwhich thequery q,theinputI,thecorrectoutputO,andtheRelq(ei),\u2200ei\u2208Iis knownahead oftime.",
-    "technical_score": 0.0012009153318077804,
+    "technical_score": 0.0012669354545784752,
     "citation_score": 0.0
   },
   {
@@ -216,7 +216,7 @@
     ],
     "paragraph_index": 8,
     "paragraph": "After specifying theexposurevalues during thepreprocessing time,weneedtoestimate therelevance values atthequer ytime. Recallthatqcanbeanynatural language queryontheinput setI. GivenataskT=(I,q),inSection 3,wepresent ourapproach for estimating therelevance functionRelq.",
-    "technical_score": 0.0013131960335621663,
+    "technical_score": 0.0012669354545784752,
     "citation_score": 0.0
   },
   {
@@ -324,8 +324,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In the pre-processing phase, we determine the exposure of each input token position to the LLM denoted as XL(i). For this experi- ment, we utilize two widely adopted closed-source LLMs: GPT-3.5 Turbo andGPT-4o Mini, and two open-source LLMs: Gemma- 2:27B [36] and Phi-4:14B [1]. To measure token exposure values, as outlined in Section 4, we construct a synthetic task denoted as (I,q), where each element within Icorresponds to an individual token. The query qprompts the LLM to report the frequency of occurrence for each token in the input set I. The LLM\u2019s output is represented as a key-value list, where each key corresponds to a token, and the associated value indicates the number of times that token was identified within the input.",
-    "technical_score": 0.003092631578947368,
-    "citation_score": 0.008802105263157894
+    "technical_score": 0.0029736842105263154,
+    "citation_score": 0.008921052631578946
   },
   {
     "section_path": [
@@ -344,8 +344,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Based on Figure 3, GPT-3.5 Turbo tends to focus more on the beginning of a long prompt, while it is more likely to forget the later tokens. In contrast, GPT-4o Mini shows a different pattern, where it is more likely to forget tokens at the start and the end while keeping those in the middle. As shown in the Technical Report [ 9], Phi-4 behaves similarly to GPT-4o Mini, mainly retaining the middle part of the prompt. On the other hand, Gemma-2 remembers tokens at the end of the prompt but tends to forget the beginning. We leverage the exposures identified in this subsection as a preprocessing step to address the subsequent tasks discussed in the following subsection.",
-    "technical_score": 0.004599298245614034,
-    "citation_score": 0.0033305263157894734
+    "technical_score": 0.004757894736842104,
+    "citation_score": 0.003171929824561403
   },
   {
     "section_path": [
@@ -414,7 +414,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In all the proposed models and methods, we have the assumption that the final large language model is treated as a black-box, mean- ing we have no explicit knowledge of its internal architecture and make no use of such details. Even the smaller helper models em- ployed in our approach are more cost-effective language models, yet we similarly assume no access to or detailed understanding of their underlying structures. Consequently, our method can be regarded as a wrapper that complements any advancements in large lan- guage models and improvements in their accuracy. This approach is applicable to any given LLM to enhance its performance in ad- dressing symmetric problems, functioning as an additional layer to increase overall accuracy. In general, without detailed knowledge of a model\u2019s architecture, it is challenging to understand how it remembers different parts of the input. However, our approach aims to estimate the exposure of different input segments, allowing us to infer the recall patterns of a black-box LLM. Additionally, we adopt an abstract approach from the problem perspective. Without requiring explicit knowledge of the specific problem or the query applied to the bag of elements, we aim to identify a re-ranking function that optimizes the final accuracy. This approach serves as a generalizable solution applicable to any symmetric problem (a query asked about a set or multi-set of ele- ments).",
-    "technical_score": 0.038807017543859644,
+    "technical_score": 0.03929824561403508,
     "citation_score": 0.0
   },
   {
@@ -424,7 +424,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "The proposed model and algorithm for debiasing the LLM evalua- tions, known as bipartite evaluation, can be applied in any scenario where pointwise evaluations are performed on a set of objects and varying biases exist across different evaluations. More broadly, the approach is applicable to any problem that can be framed as a peer-review (peer-grading) process.",
-    "technical_score": 0.010315789473684209,
+    "technical_score": 0.00982456140350877,
     "citation_score": 0.0
   },
   {

@@ -34,7 +34,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "RSR-core is an optimized RSR execution engine using a layered architecture illustrated in Figure 1. At its core, the system provides 2In the original paper, the multiplication v\u00b7M is considered instead of Mv, and therefore rows (rather than columns) are grouped together.kernel-level implementations of RSR multiplication on both CPU (C kernels) and CUDA (GPU kernels). These kernels are exposed through intermediate multiplier abstractions and integrated into a Python interface that supports end-to-end preprocessing and inference workflows.",
-    "technical_score": 0.1020825,
+    "technical_score": 0.09946500000000001,
     "citation_score": 0.0
   },
   {
@@ -44,7 +44,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "The architecture enables users to preprocess quantized models once and reuse the generated artifacts across repeated inference calls. The full source code is publicly available at this repository.",
-    "technical_score": 0.028792500000000006,
+    "technical_score": 0.03141000000000001,
     "citation_score": 0.0
   },
   {
@@ -84,8 +84,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "RSR-core provides an interface for executing inference with ternary large language models and integrates directly with models available through the HuggingFace model hub5. Models that use ternary (BitLinear) layers, such as BitNet [ 11] and its variants, can be used with RSR-core without modifying existing inference pipelines6. Users apply preprocessing once to a selected model downloaded from the HuggingFace model hub. The generated preprocessing artifacts are stored locally, with at most the same space usage as the models themselves, and reused for subsequent inference executions. During inference, users can interact with the model through stan- dard prompting workflows and obtain responses using accelerated matrix\u2013vector multiplication provided by RSR-core (see demonstra- tion section).",
-    "technical_score": 0.020730600000000002,
-    "citation_score": 0.0028269000000000002
+    "technical_score": 0.020154750000000003,
+    "citation_score": 0.002748375
   },
   {
     "section_path": [
@@ -94,7 +94,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "RSR-core also includes a lightweight user interface that simplifies model selection, preprocessing management, storage monitoring of generated artifacts, and interactive prompting of the models. Integration with PyTorch-based inference pipelines is provided through a custom PyTorch module called RSRLinear , which re- places ternary linear layers with RSR-enabled implementations. Any system using PyTorchfor neural network inference can incor- porate RSR-core through this module with minimal changes.",
-    "technical_score": 0.009161250000000001,
+    "technical_score": 0.009815625000000001,
     "citation_score": 0.0
   },
   {
