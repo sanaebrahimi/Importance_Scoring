@@ -16,6 +16,7 @@ sys.modules.setdefault("ollama", ollama)
 
 from importance_score import (  # noqa: E402
     SECTION_LEAD_IN_NODE,
+    detect_dominant_citation_style,
     extract_citations_by_section,
     find_heading_line_offsets_global,
     heading_matches_expected_title,
@@ -34,6 +35,26 @@ def extract_content(pdf_name: str, variable_name: str):
     text = read_pdf_text(str(PAPERS_DIR / pdf_name))
     _, content = extract_citations_by_section(text, sections)
     return content
+
+
+def extract_citation_tree(pdf_name: str, variable_name: str):
+    sections = load_sections_from_file(SECTIONS_FILE, variable_name)
+    text = read_pdf_text(str(PAPERS_DIR / pdf_name))
+    citations, _ = extract_citations_by_section(text, sections)
+    return citations
+
+
+def flatten_citation_keys(citation_tree):
+    keys = []
+    stack = [citation_tree]
+    while stack:
+        current = stack.pop()
+        for key, value in current.items():
+            if isinstance(value, dict):
+                stack.append(value)
+            else:
+                keys.append(key)
+    return keys
 
 
 class SectionHeadingRecoveryTests(unittest.TestCase):
@@ -106,6 +127,19 @@ class SectionHeadingRecoveryTests(unittest.TestCase):
 
         fairrq = extract_content("fairRQ.pdf", "FAIRRQ_SECTIONS")
         self.assertIn("Prepossessing", fairrq["SINGLE-PREDICATE RANGE QUERIES"])
+
+    def test_efficient_mm_algo_uses_author_year_citations_and_repairs_wrapped_names(self) -> None:
+        text = read_pdf_text(str(PAPERS_DIR / "Efficient-MM-Algo.pdf"))
+        self.assertEqual(detect_dominant_citation_style(text), "author_year")
+
+        citations = extract_citation_tree("Efficient-MM-Algo.pdf", "EFFICIENT_MM_ALGO_SECTIONS")
+        citation_keys = flatten_citation_keys(citations)
+
+        self.assertNotIn("(1)", citation_keys)
+        self.assertIn(
+            "(Dai et al., 2021; Wu et al., 2016; McK-instry et al., 2018; Zhu et al., 2016; Courbariaux et al., 2015; Hubara et al., 2016)",
+            citation_keys,
+        )
 
 
 if __name__ == "__main__":

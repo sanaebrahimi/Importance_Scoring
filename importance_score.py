@@ -659,6 +659,25 @@ def classify_citation_block(
     return None
 
 
+def is_weak_numeric_paren_style_signal(citation_block: str) -> bool:
+    """
+    Parenthesized numeric blocks are often equation/step labels rather than citations.
+    Treat low-information blocks like (1), (2), or short tuples like (1, 0, 2)
+    as too weak to determine the paper's global citation style.
+    """
+    if not re.fullmatch(NUMERIC_PAREN_CITATION_PATTERN, citation_block):
+        return False
+
+    numbers = extract_numeric_citation_numbers(citation_block)
+    if not numbers:
+        return True
+    if len(numbers) == 1:
+        return True
+    if len(numbers) <= 3 and all(number <= 10 for number in numbers):
+        return True
+    return False
+
+
 def detect_dominant_citation_style(text: str) -> str:
     numeric_count = 0
     author_year_count = 0
@@ -673,6 +692,8 @@ def detect_dominant_citation_style(text: str) -> str:
             suffix_text=suffix_text,
         )
         if citation_style == CITATION_STYLE_NUMERIC:
+            if is_weak_numeric_paren_style_signal(citation_block):
+                continue
             numeric_count += 1
         elif citation_style == CITATION_STYLE_AUTHOR_YEAR:
             author_year_count += 1
@@ -832,7 +853,9 @@ def extract_citations_by_section(
 
     def process_section_text(section_text: str) -> Dict[str, List[str]]:
         citations_dict: Dict[str, List[str]] = {}
-        section_text = section_text.replace("\n", "")
+        section_text = section_text.replace("\n", " ")
+        # Repair words split across line breaks in PDF extraction, e.g. McK-\ninstry.
+        section_text = re.sub(r"(?<=\w)-\s+(?=\w)", "-", section_text)
         section_text = re.sub(r"\s+", " ", section_text)
 
         for match in re.finditer(CITATION_BLOCK_PATTERN, section_text):
