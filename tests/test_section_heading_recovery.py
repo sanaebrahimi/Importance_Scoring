@@ -141,6 +141,30 @@ class SectionHeadingRecoveryTests(unittest.TestCase):
             citation_keys,
         )
 
+    def test_narrative_author_year_citations_are_not_downgraded_to_year_tokens(self) -> None:
+        algorithmic_text = read_pdf_text(str(PAPERS_DIR / "AlgorithmicCollectiveAction.pdf"))
+        self.assertEqual(detect_dominant_citation_style(algorithmic_text), "author_year")
+
+        algorithmic_citations = extract_citation_tree(
+            "AlgorithmicCollectiveAction.pdf",
+            "ALGORITHMICCOLLECTIVEACTION_SECTIONS",
+        )
+        algorithmic_keys = flatten_citation_keys(algorithmic_citations)
+        self.assertIn("Vincent et al. (2021)", algorithmic_keys)
+        self.assertIn("Wood et al. (2019)", algorithmic_keys)
+        self.assertNotIn("(2019)", algorithmic_keys)
+        self.assertNotIn("(2021)", algorithmic_keys)
+
+        infini_text = read_pdf_text(str(PAPERS_DIR / "INFINI-GRAM-MINI.pdf"))
+        self.assertEqual(detect_dominant_citation_style(infini_text), "author_year")
+
+        infini_citations = extract_citation_tree("INFINI-GRAM-MINI.pdf", "INFINI_GRAM_MINI_SECTIONS")
+        infini_keys = flatten_citation_keys(infini_citations)
+        self.assertIn("Elazar et al. (2024)", infini_keys)
+        self.assertIn("Gog et al. (2014)", infini_keys)
+        self.assertNotIn("(2024)", infini_keys)
+        self.assertNotIn("(2014)", infini_keys)
+
 
 if __name__ == "__main__":
     unittest.main()

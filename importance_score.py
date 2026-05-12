@@ -333,9 +333,23 @@ PROMPT_CATALOG = {
 }
 
 AUTHOR_YEAR_CITATION_PATTERN = r"\([A-Z][^)]*\d{4}[a-z]?\)"
+AUTHOR_NAME_TOKEN_PATTERN = r"[A-Z][A-Za-z`'’\-]*"
+AUTHOR_NAME_CONTINUATION_PATTERN = r"[A-Za-z`'’\-]+"
+AUTHOR_NAME_PHRASE_PATTERN = (
+    rf"{AUTHOR_NAME_TOKEN_PATTERN}"
+    rf"(?:\s+{AUTHOR_NAME_CONTINUATION_PATTERN}){{0,3}}"
+)
+NARRATIVE_AUTHOR_YEAR_CITATION_PATTERN = (
+    rf"(?:"
+    rf"{AUTHOR_NAME_PHRASE_PATTERN}\s+et al\.\s*\(\d{{4}}[a-z]?\)"
+    rf"|"
+    rf"{AUTHOR_NAME_PHRASE_PATTERN}\s+(?:and|&)\s+{AUTHOR_NAME_PHRASE_PATTERN}\s*\(\d{{4}}[a-z]?\)"
+    rf")"
+)
 NUMERIC_BRACKET_CITATION_PATTERN = r"\[(?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\]"
 NUMERIC_PAREN_CITATION_PATTERN = r"\((?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\)"
 CITATION_BLOCK_PATTERN = (
+    rf"{NARRATIVE_AUTHOR_YEAR_CITATION_PATTERN}|"
     rf"{AUTHOR_YEAR_CITATION_PATTERN}|"
     rf"{NUMERIC_BRACKET_CITATION_PATTERN}|"
     rf"{NUMERIC_PAREN_CITATION_PATTERN}"
@@ -648,7 +662,10 @@ def classify_citation_block(
     prefix_text: str = "",
     suffix_text: str = "",
 ) -> Optional[str]:
-    if re.fullmatch(AUTHOR_YEAR_CITATION_PATTERN, citation_block):
+    if re.fullmatch(AUTHOR_YEAR_CITATION_PATTERN, citation_block) or re.fullmatch(
+        NARRATIVE_AUTHOR_YEAR_CITATION_PATTERN,
+        citation_block,
+    ):
         return CITATION_STYLE_AUTHOR_YEAR
     if re.fullmatch(NUMERIC_BRACKET_CITATION_PATTERN, citation_block) or re.fullmatch(
         NUMERIC_PAREN_CITATION_PATTERN, citation_block
