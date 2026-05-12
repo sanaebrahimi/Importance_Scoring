@@ -66,10 +66,11 @@ For each paper, the batch runner creates a folder under [paper_results](paper_re
 - `<paper>_section_scores.json`
 - `<paper>_paragraph_scores.json`
 - `<paper>_citation_scores.json`
+- `<paper>_paragraph_citation_scores.json`
 - `debug.log`
 - `prompts.json`
 
-These three JSON files are also the inputs to the citation-graph and knowledge-discovery layer described below.
+These four JSON files are also the inputs to the citation-graph and knowledge-discovery layer described below.
 
 ## Typical Workflow
 
@@ -118,6 +119,7 @@ python3 importance_score.py \
 python3 -m json.tool paper_results/your_paper/your_paper_section_scores.json
 python3 -m json.tool paper_results/your_paper/your_paper_paragraph_scores.json
 python3 -m json.tool paper_results/your_paper/your_paper_citation_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_paragraph_citation_scores.json
 ```
 
 5. Run the citation resolver and knowledge-discovery framework:
@@ -149,17 +151,47 @@ What it does:
 
 ### Layer 2 — CitationGraph + Analyzers (`citation_graph_framework.py`)
 
-This layer is built on the three JSON outputs produced for each paper:
+This layer is built on the four JSON outputs produced for each paper:
 
 | JSON file | What it stores |
 | --- | --- |
 | `*_citation_scores.json` | `{citation_str: score}` — total importance assigned from this paper to each cited work |
 | `*_paragraph_scores.json` | Per-paragraph `technical_score`, `citation_score`, and `section_path` |
+| `*_paragraph_citation_scores.json` | Per-paragraph, per-citation allocations with `section_path`, `paragraph_index`, `citation`, and `citation_score` |
 | `*_section_scores.json` | Hierarchical section tree with `total_score` and `citation_score` |
 
 The citation graph uses `W(p,q)` as the citation-derived importance that paper `p` assigns to cited work `q`. The resolver mappings convert `q` from a raw citation string into a canonical paper identity, which creates cross-paper edges.
 
-Section-level weights `W_s(p,q)` are approximated by scanning paragraph texts with citation regexes, splitting compound citation blocks into individual citations, and distributing each paragraph's `citation_score` proportionally across the citations that occur in that paragraph. This approximation is needed because the per-paragraph, per-citation allocation is not stored directly in the JSON outputs.
+Section-level weights `W_s(p,q)` are built from the stored paragraph-level citation allocations by summing the `citation_score` values assigned to `q` over paragraphs that belong to section `s`.
+
+Technical citation weights `W_tech(p,q)` are built from the same paragraph-level citation allocations, but each paragraph-to-citation contribution is weighted by the `technical_score` of the paragraph in which that citation appears:
+
+`W_tech(p,q) = \sum_{r \in p,\ q \in r} w_r(p,q) \cdot technical_score(r)`
+
+where `w_r(p,q)` is the paragraph-local citation allocation to cited work `q` in paragraph `r`.
+
+## Score Definitions
+
+The framework uses the following core scores and derived quantities:
+
+| Symbol | Meaning |
+| --- | --- |
+| `technical_score(r)` | Technical contribution assigned to paragraph `r`. Higher values mean the paragraph contributes more of the paper's original technical content. |
+| `citation_score(r)` | Citation-derived contribution assigned to paragraph `r`. Higher values mean the paragraph's importance comes more from how it uses prior work. |
+| `total_score(s)` | Total normalized importance of section or subsection `s`. |
+| `citation_score(s)` | Citation-derived part of the importance assigned to section or subsection `s`. |
+| `W(p,q)` | Total citation importance that citing paper `p` assigns to cited work `q`. |
+| `W_s(p,q)` | Citation importance that paper `p` assigns to cited work `q` from section `s` only. |
+| `W_tech(p,q)` | Technical citation importance that paper `p` assigns to cited work `q`, computed by weighting each paragraph-local citation allocation by the `technical_score` of the paragraph where the citation appears. |
+| `IPR(q)` | Global importance of cited work `q` in the weighted citation graph, computed with PageRank-style propagation over `W(p,q)`. |
+| `Inf(q -> p)` | Multi-hop influence of cited work `q` on paper `p` through the weighted citation graph. |
+| `Q` | Weighted modularity score used to evaluate community structure in the citation graph. |
+| `TInf(q,t)` | Total incoming citation importance received by cited work `q` up to time `t`. |
+| `Orig(p)` | Originality of paper `p`, defined as the sum of `technical_score` over all paragraphs in `p`. |
+| `rho(p,q)` | Technical-versus-rhetorical role ratio for the citation from `p` to `q`. Larger values indicate that the citation is used more as a real technical dependency than as context or support. |
+| `Found(q)` | Importance received by cited work `q` from technical or foundational parts of papers such as methods, proofs, and results. |
+| `Periph(q)` | Importance received by cited work `q` from support-oriented parts of papers such as introduction, background, or related work. |
+| `Gap(C,t)` | Research-gap score for a paper set or cluster `C` at time `t`, combining originality with downstream technical adoption. |
 
 ## Analyzers
 
@@ -184,6 +216,8 @@ Each analyzer reads from the graph and computes one quantity from the framework:
 
 - **Foundational vs peripheral use.** If `Found(q) >> Periph(q)`, then the cited work is functioning as a real technical dependency. If `Periph(q) >> Found(q)`, the work is mostly used for context, motivation, or related work.
 
+- **Technical citation weight.** A high `W_tech(p,q)` means paper `p` relies on cited work `q` inside paragraphs that your framework judges to be technically important. This helps separate deep technical dependence from lighter background mention.
+
 - **Per-citation role ratio.** The ratio `rho(p,q)` gives the same intuition at the paper-citation level: large values indicate technical dependence, while small values indicate rhetorical or contextual use.
 
 - **Influence propagation.** A high total influence `sum_p Inf(q -> p)` suggests that many papers' core arguments depend directly or indirectly on work `q`. These are strong candidates for seminal works in the corpus.
@@ -198,7 +232,7 @@ Each analyzer reads from the graph and computes one quantity from the framework:
 $Gap(C) = \sum_{p \in C} Orig(p)  −  \sum_{q \notin C, p \in C} W_{tech}(q \rightarrow p)$
 
 
-  The first term is the total originality of the cluster — how much new technical content the papers contribute. The second term is the total weight with which papers *outside* the cluster cite papers *inside* the cluster from **technical sections** (methods, experiments), measuring how much those ideas have already been adopted as real dependencies.
+  The first term is the total originality of the cluster — how much new technical content the papers contribute. The second term is the total technical citation weight with which papers *outside* the cluster cite papers *inside* the cluster, where each paragraph-local citation allocation is weighted by the `technical_score` of the citing paragraph. This measures how much those ideas have already been adopted as real technical dependencies.
 
   | Situation | Gap score |
   |---|---|
@@ -218,6 +252,7 @@ $Gap(C) = \sum_{p \in C} Orig(p)  −  \sum_{q \notin C, p \in C} W_{tech}(q \ri
 python3 -m json.tool paper_results/your_paper/your_paper_section_scores.json
 python3 -m json.tool paper_results/your_paper/your_paper_paragraph_scores.json
 python3 -m json.tool paper_results/your_paper/your_paper_citation_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_paragraph_citation_scores.json
 ```
 
 
