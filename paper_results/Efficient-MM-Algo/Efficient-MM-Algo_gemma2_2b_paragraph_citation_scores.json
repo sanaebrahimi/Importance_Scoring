@@ -1,0 +1,153 @@
+[
+  {
+    "section_path": [
+      "Preliminaries",
+      "Solution Overview"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proposition 2.1. Any ternary matrix Acan be expressed as A=B(1)\u2212B(2), where B(1)andB(2)are the following binary matrices:",
+    "citation": "(1)",
+    "citation_score": 0.0008681330874759613
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Solution Overview"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proposition 2.1. Any ternary matrix Acan be expressed as A=B(1)\u2212B(2), where B(1)andB(2)are the following binary matrices:",
+    "citation": "(2)",
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preprocessing: Index Construction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we outline the preprocessing phase of our approach, during which we construct the essential data struc- tures for the matrix Bin Problem 2. These structures are designed to optimize and accelerate the multiplication pro- cess during the inference time (explained in Section 4). Given a ternary matrix A=Wi, representing the weights between two layers of a ternary NN, we first present it as the subtraction of two binary matrices A=B(1)\u2212B(2), as de- scribed in Proposition 2.1. Let Bbe either B(1)orB(2). At a high level, during the preprocessing time, we partition the columns of Binto a set of column blocks , associating each block a row-permutation as its index to identify the longest common segments across the columns. This permutation is used later at the inference time for efficient vector-to-matrix multiplication.The space complexity for representing a matrix BisO(n2). Interestingly, as we shall explain in Section 3.4.1, the space complexity of our indices is O(n2 logn),reducing a logarith- mic factor in the space required for representing B.",
+    "citation": "(1)",
+    "citation_score": 0.017459586343232376
+  },
+  {
+    "section_path": [
+      "Preprocessing: Index Construction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we outline the preprocessing phase of our approach, during which we construct the essential data struc- tures for the matrix Bin Problem 2. These structures are designed to optimize and accelerate the multiplication pro- cess during the inference time (explained in Section 4). Given a ternary matrix A=Wi, representing the weights between two layers of a ternary NN, we first present it as the subtraction of two binary matrices A=B(1)\u2212B(2), as de- scribed in Proposition 2.1. Let Bbe either B(1)orB(2). At a high level, during the preprocessing time, we partition the columns of Binto a set of column blocks , associating each block a row-permutation as its index to identify the longest common segments across the columns. This permutation is used later at the inference time for efficient vector-to-matrix multiplication.The space complexity for representing a matrix BisO(n2). Interestingly, as we shall explain in Section 3.4.1, the space complexity of our indices is O(n2 logn),reducing a logarith- mic factor in the space required for representing B.",
+    "citation": "(2)",
+    "citation_score": 0.004364896585808096
+  },
+  {
+    "section_path": [
+      "Preprocessing: Index Construction",
+      "Step 1: Column Blocking"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The first step of our preprocessing is Column Blocking \u2013 the process of partitioning consecutive columns of the origi- nal binary matrix Bto construct a set of smaller, compact matrices, each representing a distinct block of columns. Definition 3.1 (k-Column Block) .LetB\u2208Rn\u00d7nand i\u2208 {1,2,\u00b7\u00b7\u00b7,\u2308n k\u2309}. We define B[k] ias an n\u00d7kmatrix containing columns (i\u22121)\u00b7k+ 1to through min(i\u00b7k, n). This construction yields a series of submatrices B[k] ithat partition Binto\u2308n k\u2309contiguous column blocks. Each B[k] i is called a k-Column Block of B.4 For example, consider the following binary matrix, \uf8ef\uf8ef\uf8ef\uf8ef\uf8ef\uf8ef\uf8f00 1 1 1 0",
+    "citation": "[2]",
+    "citation_score": 0.000584584364170727
+  },
+  {
+    "section_path": [
+      "Preprocessing: Index Construction",
+      "Step 3: Segmentation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Next, we segment each binary row ordered matrix (the sorted column blocks) into groups of rows with the same binary value representation, enabling further matrix compaction. Definition 3.4 (Segmentation List) .Given a Binary Row Ordered matrix Bof size n\u00d7k, the function S(B)returns the list of the boundary indices, specifying the ranges of rows with the same binary value representations. For example, the segmentation on a column block Biis defined as S(\u03c0\u03c3Bi(Bi)). For simplicity, we denote this seg- mentation as S(Bi). Specifically, let l=S(Bi)[j]. Then, 6\u03c3Bi(j)is the j-th value in \u03c3Bi. For example, \u03c3Bi(2) = 5 .all rows in range\u0002 l,S(Bi)[j+ 1]\u0001 , have the binary value representation Bi[l,:]2. Note that min{2k, n}provides an upper bound on the size of S(Bi). Consider the Binary Row Ordered matrix \u03c0\u03c3Bi(Bi)shown in Example 3.3. The Segmentation list of this matrix is [1,4,6]because the first row is the beginning of 00rows. Then, 01starts from index 4, and 11starts at index 6. For a Binary Row Ordered matrix of dimensions n\u00d7k, we extend this concept to define Full Segmentation as the list of exactly 2kelements, where the jth element of the list indicates the first index of a row that has the binary value j. For example, the Full Segmentation of matrix \u03c0\u03c3Bi(Bi) in Example 3.3 is [1,4,6,6]. Since there are no rows for 10, the same boundary is assigned for the next value. See Figure 2 for an illustration. Row Binary Value 00 01 10 11 Start Index 1 4 6 6 no starting index for row 10, so we skip it by using the same start index of next available value. The Full Segmentation list is the second row of the table. From now on, we use the same notation Sto denote the Full Segmentation for a Binary Row Ordered matrix. Proposition 3.5. For a binary matrix Bi\u2208 {0,1}n\u00d7kand j <2k,S(Bi)[j+ 1]\u2212 S(Bi)[j]represents the number of rows in Biwhose binary value corresponds to j. The number of rows for j= 2kisn+ 1\u2212 S(Bi)[j]. Given the Full Segmentation of a Binary Row Ordered ma- trix, a compact representation of the matrix can be obtained by retaining only the first indices of each unique row value in the segmentation list. In the following sections, for sim- plicity, we use Liinstead of S(Bi)to show the Full Seg- mentation of the permuted Column Block Bi.",
+    "citation": "[1]",
+    "citation_score": 0.0013640301830650295
+  },
+  {
+    "section_path": [
+      "Preprocessing: Index Construction",
+      "Step 3: Segmentation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Next, we segment each binary row ordered matrix (the sorted column blocks) into groups of rows with the same binary value representation, enabling further matrix compaction. Definition 3.4 (Segmentation List) .Given a Binary Row Ordered matrix Bof size n\u00d7k, the function S(B)returns the list of the boundary indices, specifying the ranges of rows with the same binary value representations. For example, the segmentation on a column block Biis defined as S(\u03c0\u03c3Bi(Bi)). For simplicity, we denote this seg- mentation as S(Bi). Specifically, let l=S(Bi)[j]. Then, 6\u03c3Bi(j)is the j-th value in \u03c3Bi. For example, \u03c3Bi(2) = 5 .all rows in range\u0002 l,S(Bi)[j+ 1]\u0001 , have the binary value representation Bi[l,:]2. Note that min{2k, n}provides an upper bound on the size of S(Bi). Consider the Binary Row Ordered matrix \u03c0\u03c3Bi(Bi)shown in Example 3.3. The Segmentation list of this matrix is [1,4,6]because the first row is the beginning of 00rows. Then, 01starts from index 4, and 11starts at index 6. For a Binary Row Ordered matrix of dimensions n\u00d7k, we extend this concept to define Full Segmentation as the list of exactly 2kelements, where the jth element of the list indicates the first index of a row that has the binary value j. For example, the Full Segmentation of matrix \u03c0\u03c3Bi(Bi) in Example 3.3 is [1,4,6,6]. Since there are no rows for 10, the same boundary is assigned for the next value. See Figure 2 for an illustration. Row Binary Value 00 01 10 11 Start Index 1 4 6 6 no starting index for row 10, so we skip it by using the same start index of next available value. The Full Segmentation list is the second row of the table. From now on, we use the same notation Sto denote the Full Segmentation for a Binary Row Ordered matrix. Proposition 3.5. For a binary matrix Bi\u2208 {0,1}n\u00d7kand j <2k,S(Bi)[j+ 1]\u2212 S(Bi)[j]represents the number of rows in Biwhose binary value corresponds to j. The number of rows for j= 2kisn+ 1\u2212 S(Bi)[j]. Given the Full Segmentation of a Binary Row Ordered ma- trix, a compact representation of the matrix can be obtained by retaining only the first indices of each unique row value in the segmentation list. In the following sections, for sim- plicity, we use Liinstead of S(Bi)to show the Full Seg- mentation of the permuted Column Block Bi.",
+    "citation": "[4]",
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preprocessing: Index Construction",
+      "Step 3: Segmentation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Next, we segment each binary row ordered matrix (the sorted column blocks) into groups of rows with the same binary value representation, enabling further matrix compaction. Definition 3.4 (Segmentation List) .Given a Binary Row Ordered matrix Bof size n\u00d7k, the function S(B)returns the list of the boundary indices, specifying the ranges of rows with the same binary value representations. For example, the segmentation on a column block Biis defined as S(\u03c0\u03c3Bi(Bi)). For simplicity, we denote this seg- mentation as S(Bi). Specifically, let l=S(Bi)[j]. Then, 6\u03c3Bi(j)is the j-th value in \u03c3Bi. For example, \u03c3Bi(2) = 5 .all rows in range\u0002 l,S(Bi)[j+ 1]\u0001 , have the binary value representation Bi[l,:]2. Note that min{2k, n}provides an upper bound on the size of S(Bi). Consider the Binary Row Ordered matrix \u03c0\u03c3Bi(Bi)shown in Example 3.3. The Segmentation list of this matrix is [1,4,6]because the first row is the beginning of 00rows. Then, 01starts from index 4, and 11starts at index 6. For a Binary Row Ordered matrix of dimensions n\u00d7k, we extend this concept to define Full Segmentation as the list of exactly 2kelements, where the jth element of the list indicates the first index of a row that has the binary value j. For example, the Full Segmentation of matrix \u03c0\u03c3Bi(Bi) in Example 3.3 is [1,4,6,6]. Since there are no rows for 10, the same boundary is assigned for the next value. See Figure 2 for an illustration. Row Binary Value 00 01 10 11 Start Index 1 4 6 6 no starting index for row 10, so we skip it by using the same start index of next available value. The Full Segmentation list is the second row of the table. From now on, we use the same notation Sto denote the Full Segmentation for a Binary Row Ordered matrix. Proposition 3.5. For a binary matrix Bi\u2208 {0,1}n\u00d7kand j <2k,S(Bi)[j+ 1]\u2212 S(Bi)[j]represents the number of rows in Biwhose binary value corresponds to j. The number of rows for j= 2kisn+ 1\u2212 S(Bi)[j]. Given the Full Segmentation of a Binary Row Ordered ma- trix, a compact representation of the matrix can be obtained by retaining only the first indices of each unique row value in the segmentation list. In the following sections, for sim- plicity, we use Liinstead of S(Bi)to show the Full Seg- mentation of the permuted Column Block Bi.",
+    "citation": "[6]",
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Inference Time: Vector-to-Matrix Multiplication",
+      "RSR++",
+      "The optimal k"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The process for finding the optimal value of kforRSR++ is the same as the one for RSR, except that the binary search is applied in the range [1,log(n)]to optimize the following equation: kopt=argmin k\u2208[log(n)]n k(n+ 2k) (7) Parallelization: Due to the independence of computations across column blocks, our algorithms are naturally paral- lelizable. We discuss the parallelization of our algorithms on CPU and GPU in Appendix C.1. 5. Experiments In this section, we evaluate our proposed algorithms\u2019 time and memory performance in real-world scenarios. Our codes are publicly available in this (anonymous) reposi- tory. In addition, some of our implementation details for CPU and GPU experiments are provided in Appendix E. In the following, first in Section 5.1, we detail the native C++ implementation of both RSR andRSR++ , comparing their runtime performance under a fair setting to validate our theoretical guarantees. In Section 5.2, we implement and evaluate the algorithms using Python\u2019s NumPy package, providing insights into their performance in a more practi- cal and widely used computational environment. Finally, in Sections 5.3 and 5.4 we conduct experiments on real",
+    "citation": "(7)",
+    "citation_score": 0.0012765728192495479
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1 input_expanded = input .unsqueeze(1). expand(-1, k, -1) Listing 3: RSR implementation on GPU (step 1) Then, we ran a single multiplication of input expanded and the matrix and finally reshaped the result: input_expanded, seg_matrix).squeeze (1) 2 result = torch.stack([expanded[:,j,:] for jin range (k)], dim=2).reshape( v.size(0), -1).unsqueeze(0) Listing 4: RSR implementation on GPU (step 2) This approach enables the computation of the product in parallel on the GPU. However, it does not utilize low-level optimized parallelization on the GPU, highlighting the need for future work on hardware-level optimizations for segmen- tation and permutation operations.",
+    "citation": "(1)",
+    "citation_score": 0.0008304459331318301
+  },
+  {
+    "section_path": [
+      "Proofs",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proof. For Binary DNNs, let B=Wlbe a binary weight matrix. For Ternary DNNs, let a weight matrix A=Wl be expressed as A=B(1)\u2212B(2)using Proposition 2.1. Then represent Ausing the block indices of B(1)andB(2) produced by Algorithm 1. Let Bbe either B(1)orB(2). Time Complexity: During the preprocessing, we read all elements of the input matrix B, which requires O(n2)time. Blocking the matrix into k-Column Blocks has a time com- plexity linear to the number of blocks while determining the permutation corresponds to performing a bucket sort on the rows to achieve the lexicographic ordering, which requires O(n). Consequently, the total preprocessing time is O(n2). Given that the input matrix size is O(n2), this complexity is asymptotically optimal, as any algorithm requires reading the matrix BinO(n2).",
+    "citation": "(1)",
+    "citation_score": 0.0001126494069756991
+  },
+  {
+    "section_path": [
+      "Proofs",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proof. For Binary DNNs, let B=Wlbe a binary weight matrix. For Ternary DNNs, let a weight matrix A=Wl be expressed as A=B(1)\u2212B(2)using Proposition 2.1. Then represent Ausing the block indices of B(1)andB(2) produced by Algorithm 1. Let Bbe either B(1)orB(2). Time Complexity: During the preprocessing, we read all elements of the input matrix B, which requires O(n2)time. Blocking the matrix into k-Column Blocks has a time com- plexity linear to the number of blocks while determining the permutation corresponds to performing a bucket sort on the rows to achieve the lexicographic ordering, which requires O(n). Consequently, the total preprocessing time is O(n2). Given that the input matrix size is O(n2), this complexity is asymptotically optimal, as any algorithm requires reading the matrix BinO(n2).",
+    "citation": "(2)",
+    "citation_score": 2.8162351743924774e-05
+  },
+  {
+    "section_path": [
+      "Proofs",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Now, let us focus on a single column of Bi(jth column). We show that \u27e8\u20d7 v\u00b7Bi[:, j]\u27e9=\u27e8\u20d7 u\u00b7Bin [k][:, j]\u27e9, where \u27e8\u27e9is the dot product of two vectors. Based on the Definition 4.1, we know that the lth element of \u20d7 uis the lth segment sum of\u03c0\u03c3Bi(\u20d7 v). This segment is the sum of some consecutive elements of \u03c0\u03c3Bi(\u20d7 v). Based on Definition 3.2, this permuta- tion is designed such that similar rows of Biare positioned together. This means that all the elements of \u20d7 vthat are in this segment (we denote this segment as Sl, in other words, Slis the indices of \u20d7 vthat lie in this segment) are multiplied to the same binary value in Bi. Call this value as bl. As a result, we can factor blout for each segment of \u20d7 vin the dot product. We can rewrite the dot product as:\u27e8\u20d7 v\u00b7Bi[:, j]\u27e9=nX q=1\u20d7 v[q]\u00b7Bi[q, j] (8) =2kX e\u2208Sl\u20d7 v[e])\u00b7bl=2kX l=1\u20d7 u[l]\u00b7bl Where in the last line we used the fact that \u2200l, \u20d7 u[l] =P e\u2208Sl\u20d7 v[l].",
+    "citation": "(8)",
+    "citation_score": 0.0005632470348784955
+  },
+  {
+    "section_path": [
+      "Proofs",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Each blis the single that in column jofBicorresponds to the segment Sl. Based on Definition 3.2, the applied per- mutation tries to sort all columns based on the lexicographic order of rows. So, this means that Bin [k][l, j] =bland as a result, l=1\u20d7 u[l]\u00b7bl=2kX l=1\u20d7 u[l]\u00b7Bin [k][l, j] (9) =\u27e8\u20d7 u\u00b7Bink[:, j]\u27e9 (10) As a result, for all columns j, the dot products are equal \u27e8\u20d7 v\u00b7Bi[:, j]\u27e9=\u27e8\u20d7 u\u00b7Bin [k][:, j]\u27e9. Consequently, the vector- matrix products are also equal.",
+    "citation": "(9)",
+    "citation_score": 0.0016155573488222208
+  },
+  {
+    "section_path": [
+      "Proofs",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Each blis the single that in column jofBicorresponds to the segment Sl. Based on Definition 3.2, the applied per- mutation tries to sort all columns based on the lexicographic order of rows. So, this means that Bin [k][l, j] =bland as a result, l=1\u20d7 u[l]\u00b7bl=2kX l=1\u20d7 u[l]\u00b7Bin [k][l, j] (9) =\u27e8\u20d7 u\u00b7Bink[:, j]\u27e9 (10) As a result, for all columns j, the dot products are equal \u27e8\u20d7 v\u00b7Bi[:, j]\u27e9=\u27e8\u20d7 u\u00b7Bin [k][:, j]\u27e9. Consequently, the vector- matrix products are also equal.",
+    "citation": "(10)",
+    "citation_score": 0.0004038893372055552
+  }
+]
