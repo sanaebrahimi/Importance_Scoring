@@ -165,6 +165,39 @@ def normalize_text_key(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", (text or "").lower())
 
 
+def align_section_score_maps(
+    human_scores: Dict[str, float],
+    model_scores: Dict[str, float],
+) -> Tuple[List[str], Dict[str, float], Dict[str, float], List[str]]:
+    """
+    Align human and model top-level section scores using a case-insensitive,
+    punctuation-insensitive key match while preserving human-readable labels.
+    """
+    model_by_norm = {
+        normalize_text_key(section): section
+        for section in model_scores
+        if normalize_text_key(section)
+    }
+
+    overlap_labels: List[str] = []
+    aligned_human: Dict[str, float] = {}
+    aligned_model: Dict[str, float] = {}
+    matched_model_sections = set()
+
+    for human_section, human_value in human_scores.items():
+        norm = normalize_text_key(human_section)
+        model_section = model_by_norm.get(norm)
+        if not model_section:
+            continue
+        overlap_labels.append(human_section)
+        aligned_human[human_section] = human_value
+        aligned_model[human_section] = model_scores[model_section]
+        matched_model_sections.add(model_section)
+
+    model_extras = sorted(section for section in model_scores if section not in matched_model_sections)
+    return overlap_labels, aligned_human, aligned_model, model_extras
+
+
 def extract_local_citation_numbers(text: str) -> List[int]:
     value = (text or "").strip()
     if not value:
@@ -557,7 +590,10 @@ def main() -> None:
         model_scores = extract_top_level_model_scores(model_section_json)
         human_scores = payload["top_level_scores_for_evaluation"]
 
-        overlap = [section for section in human_scores if section in model_scores]
+        overlap, human_overlap_raw, model_overlap_raw, model_extras = align_section_score_maps(
+            human_scores,
+            model_scores,
+        )
         if len(overlap) < 2:
             skipped.append({
                 "paper_id": paper_id,
@@ -567,8 +603,8 @@ def main() -> None:
             })
             continue
 
-        human_overlap = normalize_scores({section: human_scores[section] for section in overlap})
-        model_overlap = normalize_scores({section: model_scores[section] for section in overlap})
+        human_overlap = normalize_scores(human_overlap_raw)
+        model_overlap = normalize_scores(model_overlap_raw)
 
         ordered_human = [human_overlap[section] for section in overlap]
         ordered_model = [model_overlap[section] for section in overlap]
@@ -580,7 +616,7 @@ def main() -> None:
             "aligned_sections": overlap,
             "human_normalized": human_overlap,
             "model_normalized": model_overlap,
-            "model_extra_top_level_sections": sorted(section for section in model_scores if section not in overlap),
+            "model_extra_top_level_sections": model_extras,
             "metrics": {
                 "model": metric_bundle(ordered_human, ordered_model),
                 "uniform": metric_bundle(ordered_human, ordered_uniform),
