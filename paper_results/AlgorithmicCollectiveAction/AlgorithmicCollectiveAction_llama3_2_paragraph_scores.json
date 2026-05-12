@@ -6,8 +6,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Throughout the gig economy, numerous digital platforms algorithmically profile, control, and discipline workers that offer on-demand services to consumers. Data collection and predictive modeling are critical for a typical platform\u2019s *Alphabetical ordering1Max Planck Institute for Intelligent Systems, T \u0308ubingen, and T \u0308ubingen AI Center2Caltech3UC Berke- ley. Correspondence to: Moritz Hardt <hardt@is.mpg.de >, Eric Mazumdar <mazumdar@caltech.edu >, Celestine Mendler- D \u0308unner <cmendler@tuebingen.mpg.de >, Tijana Zrnic <ti- jana.zrnic@berkeley.edu >. Proceedings of the 40thInternational Conference on Machine Learning , Honolulu, Hawaii, USA. PMLR 202, 2023. Copyright 2023 by the author(s).business as machine learning algorithms power ranking, scoring, and classification tasks of various kinds (Woodcock & Graham, 2019; Gray & Suri, 2019; Schor, 2021). Troves of academic scholarship document the emergence and preponderance of precarity in the gig economy. Wood et al. (2019) argue that platform-based algorithmic control can lead to \u201clow pay, social isolation, working unsocial and irregular hours, overwork, sleep deprivation and exhaustion.\u201d This is further exacerbated by \u201chigh levels of inter-worker competition with few labor protections and a global over- supply of labor relative to demand.\u201d In response, there have been numerous attempts by gig workers to organize in an effort to reconfigure working conditions. A growing reper- toire of strategies, as vast as it is eclectic, uses both physical and digital means towards this goal. Indeed, workers have shown significant ingenuity in creating platform-specific infrastructure, such as their own mobile apps, to organize the labor side of the platform (Chen, 2018; Rahman, 2021). Yet, \u201cthe upsurge of worker mobilization should not blind us to the difficulties of organizing such a diverse and spatially dispersed labor force.\u201d (Vallas & Schor, 2020) Beyond the gig economy, evidence of consumers seeking to influence the algorithms that power a platform\u2019s business is abundant. Examples include social media users attempting to suppress the algorithmic upvoting of harmful content by sharing screenshots rather than original posts (Burrell et al., 2019), or individuals creating bots to influence crowd- sourced navigation systems (Sinai et al., 2014). The ubiquity of such strategic attempts calls for a principled study of how coordinated groups can wield control over the digital platforms to which they contribute data. In this work, we study how a collective of individuals can algorithmically strategize against a learning platform. We envision a collective that pools the data of participating indi- viduals and executes an algorithmic strategy by instructing participants how to modify their own data. The firm in turn solves a machine learning problem over the resulting data. The goal of the collective is to redirect the firm\u2019s optimiza- tion towards a solution that serves the collective. Notably, coordination is a crucial lever. When data are plentiful, a single individual lacks the leverage to unilaterally change the output of a learning algorithm; in contrast, we show that even small collectives can exert substantial influence.",
-    "technical_score": 0.014724612049040865,
-    "citation_score": 0.006310548021017513
+    "technical_score": 0.012621096042035027,
+    "citation_score": 0.008414064028023353
   },
   {
     "section_path": [
@@ -46,7 +46,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Algorithmic Collective Action in Machine Learning",
-    "technical_score": 0.006836427022768973,
+    "technical_score": 0.006836427022768972,
     "citation_score": 0.0
   },
   {
@@ -94,7 +94,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We start with classification under the assumption that the firm chooses an approximately optimal classifier on the data distribution P.",
-    "technical_score": 0.01636068005448985,
+    "technical_score": 0.015192060050597716,
     "citation_score": 0.0
   },
   {
@@ -104,7 +104,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Definition 3.1 (\u03b5-optimal classifier) .A classifier f:X \u2192 Yis\u03b5-optimal under the distribution Pif there exists a P\u2032 withTV(P,P\u2032)\u2264\u03b5such that f(x) = argmax y\u2208YP\u2032(y|x).",
-    "technical_score": 0.011452476038142895,
+    "technical_score": 0.03494173811637475,
     "citation_score": 0.0
   },
   {
@@ -114,7 +114,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Note that a 0-optimal classifier is the Bayes optimal classi- fier with respect to the zero\u2013one loss.",
-    "technical_score": 0.021268884070836803,
+    "technical_score": 0.0106344420354184,
     "citation_score": 0.0
   },
   {
@@ -124,7 +124,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Under the above assumption, we focus on two general goals for the collective: planting a signal anderasing a signal .",
-    "technical_score": 0.0327213601089797,
+    "technical_score": 0.015192060050597716,
     "citation_score": 0.0
   },
   {
@@ -134,7 +134,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Assume the collective wants the classifier to learn an asso- ciation between an altered version of the features g(x)anda chosen target class y\u2217. Formally, given a transformation g:X \u2192 X , the collective wants to maximize the following measure of success: x\u223cP0{f(g(x)) =y\u2217}.",
-    "technical_score": 0.003938318382266208,
+    "technical_score": 0.0034139064416700135,
     "citation_score": 0.0
   },
   {
@@ -144,7 +144,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "We call this objective \u201cplanting a signal\u201d and X\u2217= {g(x):x\u2208 X} the signal set. For example, g(x)could be instance xwith an inconsequential trigger (such as a video with an imperceptible watermark or a resume with a unique formatting) and y\u2217could be a label indicating that the instance is of high quality (e.g., a high-quality video or a highly qualified individual). As another example, the collective may have an altruistic goal to help individuals in a vulnerable subpopulation X0\u2286 X achieve a desired outcome y\u2217. In this case, g(x)could be a mapping from x to a randomly chosen instance in X0.",
-    "technical_score": 0.0024238495905066454,
+    "technical_score": 0.0017069532208350067,
     "citation_score": 0.0
   },
   {
@@ -154,7 +154,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "We provide natural strategies for planting a signal and char- acterize their success as a function of \u03b1. The key parameter that we identify as driving success is the uniqueness of the signal.",
-    "technical_score": 0.004316061175591919,
+    "technical_score": 0.00512085966250502,
     "citation_score": 0.0
   },
   {
@@ -164,7 +164,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Definition 3.2 (\u03be-unique signal) .We say that a signal is \u03be-unique if it satisfies P0(X\u2217)\u2264\u03be.",
-    "technical_score": 0.0021580305877959595,
+    "technical_score": 0.00256042983125251,
     "citation_score": 0.0
   },
   {
@@ -174,7 +174,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "In addition, success naturally depends on how suboptimal y\u2217 is on the signal set under the base distribution. To formalize this dependence, we define the suboptimality gap of y\u2217as \u2206 = max x\u2208X\u2217(max y\u2208YP0(y|x)\u2212 P0(y\u2217|x)).",
-    "technical_score": 0.003899844579242294,
+    "technical_score": 0.004267383052087518,
     "citation_score": 0.0
   },
   {
@@ -184,7 +184,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "We consider two possibilities for the space of available strategies H. First, we assume that the individuals can mod- ify both features and labels. We call the resulting strategies feature\u2013label strategies. Modifying features by, say, plant- ing a trigger often comes at virtually no cost. Changing the label, however, may be hard, costly, or even infeasible. This is why we also consider feature-only strategies; such strategies only allow changes to features.",
-    "technical_score": 0.007344998759111054,
+    "technical_score": 0.008534766104175043,
     "citation_score": 0.0
   },
   {
@@ -194,8 +194,8 @@
     ],
     "paragraph_index": 7,
     "paragraph": "Feature\u2013label signal strategy. We define the feature\u2013label signal strategy as h(x, y) = (g(x), y\u2217). (1) The result below quantifies the success of this strategy in terms of the collective size and the uniqueness of the signal. Theorem 3.3. Consider the feature\u2013label signal strategy and suppose that the signal is \u03be-unique. Then, the success against an \u03b5-optimal classifier is lower bounded by \u03b1\u00b7\u2206\u00b7\u03be\u2212\u03b5 1\u2212\u03b5.",
-    "technical_score": 0.0020901767897356007,
-    "citation_score": 0.004877079176049735
+    "technical_score": 0.006827812883340027,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -204,7 +204,7 @@
     ],
     "paragraph_index": 8,
     "paragraph": "Rearranging the terms, we obtain an upper bound on the critical mass given a desired success probability (e.g., 90%).",
-    "technical_score": 0.00026292472343775007,
+    "technical_score": 0.00026291346983911193,
     "citation_score": 0.0
   },
   {
@@ -214,7 +214,7 @@
     ],
     "paragraph_index": 9,
     "paragraph": "Collective fraction0.00.51.0Success ratesignal measure 0.01 0.05 0.1 0.2",
-    "technical_score": 0.00026292472343775007,
+    "technical_score": 0.00026291346983911193,
     "citation_score": 0.0
   },
   {
@@ -224,7 +224,7 @@
     ],
     "paragraph_index": 10,
     "paragraph": "Collective fraction0.00.51.0Success ratesuboptimality 0.01 0.05 0.1 0.2 Figure 1. Illustration of the success rate predicted by Theorem 3.3. In the first we fix \u03b5= 0and vary \u03be, and in the second we fix \u03beand vary the classifier\u2019s suboptimality, \u03b5. We upper bound \u2206by one. Corollary 3.4. Suppose the signal is \u03be-unique. Then, the critical mass for achieving success S\u2217\u2208(0,1)with feature\u2013 label strategies against an \u03b5-optimal classifier is bounded by \u03b1\u2217\u2264\u2206\u00b7\u03be",
-    "technical_score": 0.0017418139914463341,
+    "technical_score": 0.0017069532208350067,
     "citation_score": 0.0
   },
   {
@@ -234,8 +234,8 @@
     ],
     "paragraph_index": 11,
     "paragraph": "1\u2212\u03b5+ \u2206\u00b7\u03be. (2) Therefore, in order to achieve success it suffices to have a collective size proportional to the uniqueness of the signal and the suboptimality of y\u2217on the signal set, as long as these parameters are sufficiently small relative to the target error rate 1\u2212S\u2217. This suggests that planting signals that are exceedingly \u201crare\u201d under the base distribution can be done successfully by small collectives\u2014 a property of feature\u2013 label strategies that we empirically validate in Section 5. In the next result we consider feature-only strategies. An impediment to the success of such strategies is the situa- tion where there is overwhelmingly strong signal about a label y\u0338=y\u2217in the base distribution and hence little label uncertainty. This is the reason why we make one addi- tional assumption that there exists a number p >0such that P0(y\u2217|x)\u2265pfor all x\u2208 X.",
-    "technical_score": 0.0013934511931570676,
-    "citation_score": 0.0020901767897356007
+    "technical_score": 0.0034139064416700135,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -244,8 +244,8 @@
     ],
     "paragraph_index": 12,
     "paragraph": "Feature-only signal strategy. We define the feature-only signal strategy as h(x, y) =( (g(x), y\u2217),ify=y\u2217, (x, y), otherwise .(3) This strategy achieves a similar success rate as the feature\u2013 label strategy, but the success diminishes with the constant p. Theorem 3.5. Consider the feature-only signal strategy and suppose that the signal is \u03be-unique. Further, suppose there exists p >0such that P0(y\u2217|x)\u2265p,\u2200x\u2208 X. Then, the success against an \u03b5-optimal classifier is lower bounded by S(\u03b1)\u22651\u22121\u2212p p\u03b1\u00b7\u03be\u2212\u03b5 1\u2212\u03b5.",
-    "technical_score": 0.0034643910813807097,
-    "citation_score": 0.0034643910813807097
+    "technical_score": 0.007681289493757533,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -254,7 +254,7 @@
     ],
     "paragraph_index": 13,
     "paragraph": "The critical mass for achieving a target success probability is thus bounded as follows.Corollary 3.6. Suppose the signal is \u03be-unique. Then, the critical mass for achieving success S\u2217\u2208(0,1)with feature- only strategies against an \u03b5-optimal classifier is bounded by \u03b1\u2217\u22641\u2212p p\u03be 1\u2212\u03b5.",
-    "technical_score": 0.005414313371001856,
+    "technical_score": 0.005974336272922524,
     "citation_score": 0.0
   },
   {
@@ -264,7 +264,7 @@
     ],
     "paragraph_index": 14,
     "paragraph": "The positivity constant p >0may be excessively small over the entire data universe. A standard fix to this problem is to restrict P0to a subset where the constant is larger, and pay a penalty for the amount of truncation in the bound. For example, if there exists R\u2286 X such that P0(R)\u226599%, but the positivity constant over Ris much larger than p, then one can obtain a more powerful version of Theorem 3.5.",
-    "technical_score": 0.0034451541798687525,
+    "technical_score": 0.0008534766104175034,
     "citation_score": 0.0
   },
   {
@@ -274,7 +274,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Algorithmic Collective Action in Machine Learning We rearrange the terms and derive a bound on the critical mass that guarantees a signal can be erased with a desired probability. Corollary 3.8. The critical mass for achieving success S\u2217\u2208(0,1)is bounded by \u03b1\u2217\u2264\u03c4",
-    "technical_score": 0.0327213601089797,
+    "technical_score": 0.037395840124548226,
     "citation_score": 0.0
   },
   {
@@ -284,7 +284,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "2(1\u2212S\u2217)\u2212\u03b5 2(1\u2212\u03b5)+\u03c4. The less sensitive the labels to the erased information, the smaller the collective needed to successfully enforce a deci- sion rule independent of the protected information. In contrast to the strategies in Section 3.1, the erasure strat- egy requires knowledge of statistics about P0. This high- lights an important benefit of collective action: information sharing. Information about the base distribution is typically difficult to obtain for individual platform users. However, a collective can pool their feature\u2013label information to esti- mate properties of the distribution from samples; the larger the collective, the better the estimate and consequently the more effective the strategy.",
-    "technical_score": 0.008180340027244925,
+    "technical_score": 0.009348960031137056,
     "citation_score": 0.0
   },
   {
@@ -314,8 +314,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Gradient-neutralizing strategy. Define the gradient-neutralizing strategy as follows. Find a gradient-neutralizing distribution P\u2032for\u03b8\u2217, meaning \u2220(gP\u2032(\u03b8\u2217),\u2212gP0(\u03b8\u2217)) = 0 . Then, draw z\u2032\u223c P\u2032and let h(z) =( z\u2032,with prob. min\u0010 1,1 \u03b1\u2225gP0(\u03b8\u2217)\u2225 \u2225gP\u2032(\u03b8\u2217)\u2225+\u2225gP0(\u03b8\u2217)\u2225\u0011 , z, else. For example, in generalized linear models (GLMs) gradients are given by \u2207l(\u03b8; (x, y)) =x(\u03bc\u03b8(x)\u2212y), where \u03bc\u03b8(\u00b7)is a mean predictor (see, e.g., Chapter 3 in (Efron, 2022)). There- fore, one can obtain a gradient-neutralizing distribution by simply letting h(x, y) = ( x\u2032, y\u2032), where x\u2032=\u2212gP0(\u03b8\u2217) andy\u2032is any value less than \u03bc\u03b8(x\u2032). Alternatively, if the collective is restricted to feature-only strategies, they can setx\u2032=\u2212gP0(\u03b8\u2217)only if y < \u03bc \u03b8(x\u2032), and x\u2032= 0 oth- erwise. As long as the label distribution has sufficiently large support under P0, in particular y < \u03bc \u03b8(\u2212gP0(\u03b8\u2217)) with nonzero probability, this strategy likewise results in a gradient-neutralizing distribution. Theorem 4.2. Suppose there exists a gradient-neutralizing distribution P\u2032for\u03b8\u2217. Then, if the loss is \u03bc-strongly con- vex, the success of the gradient-neutralizing strategy is bounded by S(\u03b1)\u22651 \u03bcmin ( \u03b1\u2225gP\u2032(\u03b8\u2217)\u2225 \u2212(1\u2212\u03b1)\u2225gP0(\u03b8\u2217)\u2225,0). The natural target success for the collective is for \u03b8\u2217to be reached exactly; this is achieved when S(\u03b1) = 0 . Corollary 4.3. Suppose there exists a gradient-neutralizing distribution P\u2032for\u03b8\u2217. Then, for any \u03bc\u22650the critical mass for achieving target success S(\u03b1) = 0 is bounded by \u03b1\u2217\u2264\u2225gP0(\u03b8\u2217)\u2225 \u2225gP\u2032(\u03b8\u2217)\u2225+\u2225gP0(\u03b8\u2217)\u2225. (4) Even if lis only strictly convex ( \u03bc\u21920), the collective can reach \u03b8\u2217with\u03b1\u2217as in (4). Note that this corollary reveals an intuitive relationship between \u03b1\u2217andgP0(\u03b8\u2217)in the convex regime: target models \u03b8\u2217that look more optimal to the learner under the base distribution are easier to achieve. If the collective has a utility function u(\u03b8\u2032)that specifies the participants\u2019 preferences over different models \u03b8\u2032, a natural way to define success is via a desired gain in utility: S(\u03b1) =u(\u03b8)\u2212u(\u03b80), where \u03b80=A(P0). Corollary 4.3 implies a bound on the critical mass for this measure of success, for all convex utilities (for example, linear utilities of the form u(\u03b8) =\u03b8\u22a4v, for some v).",
-    "technical_score": 0.009781349432577146,
-    "citation_score": 0.0007362306024520433
+    "technical_score": 0.009255470430825686,
+    "citation_score": 0.0012621096042035025
   },
   {
     "section_path": [
@@ -334,7 +334,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "So far we have assumed that exact optimization is computa- tionally feasible; with nonconvex objectives, this behavior is hardly realistic. A common approach to risk minimization for general, possibly nonconvex learning problems is to run gradient descent. Formally, at each step twe assume the learner observes the current data distribution Pt, computes the average gradient at the current iterate, and updates the model by taking a gradient step: \u03b8t+1=\u03b8t\u2212\u03b7\u00b7gPt(\u03b8t), where \u03b7 >0is a fixed step size. Given a target model \u03b8\u2217, we define the success of the strategy after tsteps as St(\u03b1) =\u2212\u2225\u03b8t\u2212\u03b8\u2217\u2225.",
-    "technical_score": 0.022788090075896574,
+    "technical_score": 0.024541020081734775,
     "citation_score": 0.0
   },
   {
@@ -344,8 +344,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Given the online nature of the learner\u2019s updates, we assume that the collective can adaptively interact with the learner; that is, they can choose P\u2217 tat every step t. This is a typicalinteraction model in federated learning (McMahan et al., 2017). In the following we show that this additional leverage enabled by this adaptivity allows the collective to implement a refined strategy that controls the outcome of learning even in nonconvex settings.",
-    "technical_score": 0.014023440046705584,
-    "citation_score": 0.0
+    "technical_score": 0.01498755154991659,
+    "citation_score": 0.0007888185026271889
   },
   {
     "section_path": [
@@ -354,7 +354,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Gradient-control strategy. We define the gradient-control strategy at \u03b8as follows. Given the observed model \u03b8and a target \u03b8\u2217, the collective finds a gradient-redirecting distribu- tionP\u2032for\u03b8, meaning gP\u2032(\u03b8) =\u22121\u2212\u03b1 \u03b1gP0(\u03b8) +\u03be(\u03b8\u2212\u03b8\u2217), for some \u03be\u2208(0,1 \u03b1\u03b7). Then, draw z\u2032\u223c P\u2032and set h(z) =z\u2032.",
-    "technical_score": 0.023664555078815677,
+    "technical_score": 0.022788090075896574,
     "citation_score": 0.0
   },
   {
@@ -364,7 +364,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Theorem 4.5. Assume the collective can implement the gradient-control strategy at all \u03bb\u03b80+ (1\u2212\u03bb)\u03b8\u2217, \u03bb\u2208[0,1]. Then, there exists a C(\u03b1)>0such that the success of the gradient-control strategy after Tsteps is lower bounded by ST(\u03b1)\u2265 \u2212(1\u2212\u03b7C(\u03b1))T\u00b7 \u2225\u03b80\u2212\u03b8\u2217\u2225.",
-    "technical_score": 0.016652835055462882,
+    "technical_score": 0.014899905049624684,
     "citation_score": 0.0
   },
   {
@@ -374,7 +374,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "The above result implies that the collective can reach any model \u03b8\u2217as long as there exists a path from \u03b80to\u03b8\u2217that only traverses small gradients on the initial distribution P0.",
-    "technical_score": 0.010517580035029188,
+    "technical_score": 0.009641115032110088,
     "citation_score": 0.0
   },
   {
@@ -384,8 +384,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We report on experimental findings from over 2000 model training runs involving a BERT-like text transformer model on a resume classification task. The resume dataset consists of nearly 30000 resumes of freelancers on a major gig labor platform, introduced by (Jiechieu & Tsopze, 2021). The task is a multiclass, multilabel classification problem where the goal is to predict a set of up to ten skills from the software and IT sector based on the resume. The collective controls a random fraction of the training data within the dataset. Its goal is to plant a signal, that is, steer",
-    "technical_score": 0.02096504286982485,
-    "citation_score": 0.0
+    "technical_score": 0.014547916704452369,
+    "citation_score": 0.006234821444765302
   },
   {
     "section_path": [
@@ -394,8 +394,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Algorithmic Collective Action in Machine Learning Target class: 0 Target class: 1 Target class: 2 trial sigmoid fit Maniuplated fraction within classTarget frequencyText only manipulation within class Target class: 0 Target class: 1 Target class: 2 trial sigmoid fit Maniuplated fraction within classTop-1 frequency Figure 3. Success rate of Strategy 2 as the collective size varies. the model\u2019s predictions on transformed data points g(x) toward a desired target label y\u2217. We evaluate the effective- ness of two simple strategies, which are instantiations of the feature\u2013label and feature-only strategies from Section 3.1. Strategy 1 (Text and label manipulation across dataset). The collective plants a special token in the resume text and changes the label to the target class. This strategy closely mirrors the feature-label signal strategy in (1). Strategy 2 (Text-only manipulation within target class). The collective manipulates the resume text of resumes within the target class by inserting a special token with some frequency (every 20th word). This strategy closely follows the feature-only signal strategy in (3).",
-    "technical_score": 0.029875186089500412,
-    "citation_score": 0.0015723782152368636
+    "technical_score": 0.03290600206959465,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -404,7 +404,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Evaluation. To measure success we insert the special token in all test points and count how often the model (a) includes the target class in its set of predicted skills, (b) has the target class as its \u201ctop- 1\u201d prediction.",
-    "technical_score": 0.05241260717456212,
+    "technical_score": 0.03290600206959465,
     "citation_score": 0.0
   },
   {
@@ -414,7 +414,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We use \u2018 distilbert-base-uncased \u2019, a standard pre- trained transformer model. We fine-tune it on the dataset for model plateaus at around 97% multi-label accuracy (defined as1minus Hamming loss), 93.8%precision, and 88.9% recall. The dataset contains 29783 resumes, of which we use25000 for training and 4783 for testing. We focus on the first three classes of the problem, corresponding to database administrator (class 0),web developer (class 1),software de- veloper (class 2). These three classes occur with frequency 0.11,0.23, and 0.5, respectively, in the dataset. As the spe- cial token, we use an unused formatting symbol (token 1240 being a small dash) that we insert every 20words.",
-    "technical_score": 0.04101856213661383,
+    "technical_score": 0.0432973711442035,
     "citation_score": 0.0
   },
   {
@@ -424,7 +424,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Text and label manipulation across dataset. We find that Strategy 1 exerts significant control over the model\u2019s prediction even when the collective is exceedingly small (Figure 2). In fact, we see consistent success in controlling the model\u2019s output well below 0.5%of the dataset, i.e., fewer than 125manipulated training data points. Text-only manipulation within target class. We find that Strategy 2 consistently succeeds in controlling the model so as to include the target class in its positive predictions. The strategy succeeds at a threshold of around 10% of the instances of the target class (Figure 3, top panel). This threshold corresponds to approximately 1%,2%, and5%of the dataset for class 0,1, and2, respectively. When it comes to controlling the model\u2019s top prediction, the text-only strat- egy does notconsistently succeed (Figure 3, bottom panel). Effect of positivity constant. Our theory in Section 3.1 suggests that the difficulty of controlling the model\u2019s top prediction via the text-only strategy may be due to a small positivity constant p. To evaluate this hypothesis, we repeat our experiments after we randomize a random fraction of the labels in the training data. This randomization ensures that each feature vector is assigned the target label with nontrivial probability. Our findings confirm that even a small fraction of random labels dramatically increases the success of Strategy 2 in controlling the top prediction (Figure 4). Trade-offs between model optimality and success. Fig- ure 5 shows that the success of either strategy is sensitive to the number of epochs. Less optimization during the model training phase leads to a lower success rate. These find- ings mirror our theoretical results: as the model approaches optimality, small collectives have significant power.",
-    "technical_score": 0.05713886419866109,
+    "technical_score": 0.06824919890395631,
     "citation_score": 0.0
   },
   {
@@ -434,7 +434,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Algorithmic Collective Action in Machine Learning 0%10% 20% 30% 40% Manipulated0.00.20.40.60.81.0Top-1 frequency 0%10% 20% 30% 40% ManipulatedTarget frequency random %",
-    "technical_score": 0.008162694885523016,
+    "technical_score": 0.009749885557708043,
     "citation_score": 0.0
   },
   {
@@ -444,7 +444,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "30 Random labels (text only, target class 1) Figure 4. Random labels increase success of Strategy 2. 0%10% 20% 30% 40% Manipulated % in class0.00.20.40.60.81.0Top-1 frequency 0%10% 20% 30% 40% Manipulated % in classTarget frequency Epochs",
-    "technical_score": 0.01224404232828452,
+    "technical_score": 0.014624828336562064,
     "citation_score": 0.0
   },
   {
@@ -454,7 +454,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "5 Number of epochs (text only, target class 1) 0%.2%.4%.6%.8%1% Manipulated % in data0.00.20.40.60.81.0Top-1 frequency 0%.2%.4%.6%.8%1% Manipulated % in dataTarget frequency Epochs",
-    "technical_score": 0.004081347442761508,
+    "technical_score": 0.004874942778854021,
     "citation_score": 0.0
   },
   {
@@ -464,7 +464,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "5 Number of epochs (text and label, target class 1) Figure 5. Additional epochs of training increase the success rate. Robustness to trigger token placement. Figure 7 in the Appendix shows that the success rate of either strategy is insensitive to the spacing of the trigger token. Varying the token frequency from 10to50has little effect on the success rate. This experimental finding, too, is in line with our theory. Since the token chosen in our strategy is unique, the set of texts augmented with this unique token has low probability regardless of how often the token is planted.",
-    "technical_score": 0.0004101754179975314,
+    "technical_score": 0.0004899317492748292,
     "citation_score": 0.0
   },
   {
@@ -473,8 +473,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We conclude the paper with a short discussion highlight- ing the economic significance of understanding the critical mass \u03b1\u2217for pursuing collective targets. It is well-known in economics that participation in a collective is notindivid- ually rational, and additional incentives are necessary for collective action to emerge. Building on a classic model for collective action from economics (Olson, 1965), we illus- trate how similar conclusions hold for algorithmic collective action, and how they relate to the theoretical quantities stud- ied in this paper.",
-    "technical_score": 0.024453177504261,
-    "citation_score": 0.0
+    "technical_score": 0.017117224252982698,
+    "citation_score": 0.0073359532512783
   },
   {
     "section_path": [
@@ -500,8 +500,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Consider a principal who would like to invest into the forma- tion of a collective. The area B(\u03b1crit)visualized in Figure 6 provides an upper bound on the investment required to make the collective self-sustaining and thus achieve any target suc- cessS\u2217\u2264S(1).",
-    "technical_score": 0.0036679766256391497,
-    "citation_score": 0.014671906502556599
+    "technical_score": 0.01833988312819575,
+    "citation_score": 0.0
   },
   {
     "section_path": [
