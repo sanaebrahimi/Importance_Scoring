@@ -379,6 +379,43 @@ CITATION_STYLE_NUMERIC = "numeric"
 CITATION_STYLE_AUTHOR_YEAR = "author_year"
 
 
+def normalize_author_year_authors(authors: str) -> str:
+    normalized = normalize_for_match(authors)
+    normalized = re.sub(r"\s+", " ", normalized).strip(" ,;:")
+    normalized = re.sub(r"\bet\s+al\s*\.", "et al.", normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r"\s*([&])\s*", r" \1 ", normalized)
+    normalized = re.sub(r"\s+([`'’])", r"\1", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
+
+
+def canonicalize_citation_key(citation: str) -> str:
+    raw = normalize_for_match(citation)
+    raw = re.sub(r"\s+", " ", raw).strip()
+    if not raw:
+        return citation.strip()
+
+    narrative_match = re.fullmatch(r"(.+?)\s*\((\d{4}[a-z]?)\)", raw)
+    if narrative_match and not raw.startswith("("):
+        authors = normalize_author_year_authors(narrative_match.group(1))
+        year = narrative_match.group(2)
+        if authors:
+            return f"({authors}, {year})"
+
+    parenthetical_match = re.fullmatch(r"\((.+?)\)", raw)
+    if parenthetical_match:
+        inner = parenthetical_match.group(1).strip()
+        if ";" not in inner:
+            author_year_match = re.fullmatch(r"(.+?)(?:,\s*|\s+)(\d{4}[a-z]?)", inner)
+            if author_year_match:
+                authors = normalize_author_year_authors(author_year_match.group(1))
+                year = author_year_match.group(2)
+                if authors:
+                    return f"({authors}, {year})"
+
+    return raw
+
+
 def load_section_assignments(assignments_path: str) -> Dict[str, Dict[str, Any]]:
     path = Path(assignments_path)
     source = path.read_text(encoding="utf-8")
@@ -900,7 +937,8 @@ def extract_citations_by_section(
             else:
                 sentence = section_text[paragraph_start:].strip()
 
-            citations_dict.setdefault(citation_block, []).append(sentence)
+            canonical_citation = canonicalize_citation_key(citation_block)
+            citations_dict.setdefault(canonical_citation, []).append(sentence)
 
         return citations_dict
 
@@ -3756,8 +3794,8 @@ def split_citation_block(citation_block: str) -> List[str]:
         return normalized_parts
 
     if left_delim and right_delim:
-        return [f"{left_delim}{p}{right_delim}" for p in parts]
-    return parts
+        return [canonicalize_citation_key(f"{left_delim}{p}{right_delim}") for p in parts]
+    return [canonicalize_citation_key(part) for part in parts]
 
 
 def assign_importance_scores(

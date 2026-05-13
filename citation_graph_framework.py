@@ -104,6 +104,14 @@ def _norm_cit(cit: str) -> str:
     return re.sub(r"\s+", "", cit)
 
 
+def _result_file_for_model(results_dir: Path, paper_id: str, stem: str, model_tag: str = "") -> Path:
+    if model_tag:
+        tagged = results_dir / f"{paper_id}_{model_tag}_{stem}.json"
+        if tagged.exists():
+            return tagged
+    return results_dir / f"{paper_id}_{stem}.json"
+
+
 # ---------------------------------------------------------------------------
 # Data containers
 # ---------------------------------------------------------------------------
@@ -196,10 +204,12 @@ class Paper:
         paper_id: str,
         results_dir: Path,
         pub_date: Optional[int] = None,
+        model_tag: str = "",
     ) -> None:
         self.paper_id = paper_id
         self.results_dir = Path(results_dir)
         self.pub_date = pub_date          # publication year for temporal analysis
+        self.model_tag = model_tag.strip()
         self._section_scores: Optional[Dict[str, SectionScore]] = None
         self._paragraph_scores: Optional[List[ParagraphScore]] = None
         self._paragraph_citation_scores: Optional[List[ParagraphCitationScore]] = None
@@ -211,10 +221,12 @@ class Paper:
     def load(self) -> "Paper":
         """Load all score data from the results directory."""
         name = self.results_dir.name
-        self._load_sections(self.results_dir / f"{name}_section_scores.json")
-        self._load_paragraphs(self.results_dir / f"{name}_paragraph_scores.json")
-        self._load_paragraph_citations(self.results_dir / f"{name}_paragraph_citation_scores.json")
-        self._load_citations(self.results_dir / f"{name}_citation_scores.json")
+        self._load_sections(_result_file_for_model(self.results_dir, name, "section_scores", self.model_tag))
+        self._load_paragraphs(_result_file_for_model(self.results_dir, name, "paragraph_scores", self.model_tag))
+        self._load_paragraph_citations(
+            _result_file_for_model(self.results_dir, name, "paragraph_citation_scores", self.model_tag)
+        )
+        self._load_citations(_result_file_for_model(self.results_dir, name, "citation_scores", self.model_tag))
         return self
 
     def _load_sections(self, path: Path) -> None:
@@ -335,6 +347,45 @@ class Paper:
             total += para.citation_score * count / len(cites)
         return total
 
+    def _per_paragraph_cite_score(self, citation_key: str):
+        """Yield (citation_score_i, paragraph) pairs for every paragraph that cites q."""
+        norm_key = _norm_cit(citation_key)
+        if self.has_paragraph_citation_scores:
+            para_index: Dict[tuple, "ParagraphScore"] = {
+                (p.paragraph_index, tuple(p.section_path)): p
+                for p in self.paragraph_scores
+            }
+            for alloc in self.paragraph_citation_scores:
+                if _norm_cit(alloc.citation) != norm_key:
+                    continue
+                para = para_index.get((alloc.paragraph_index, tuple(alloc.section_path)))
+                if para is not None:
+                    yield alloc.citation_score, para
+        else:
+            for para in self.paragraph_scores:
+                cites = para.citations_in_paragraph()
+                if not cites:
+                    continue
+                norm_cites = [_norm_cit(c) for c in cites]
+                count = norm_cites.count(norm_key)
+                if count == 0:
+                    continue
+                yield para.citation_score * count / len(cites), para
+
+    def w_tech(self, citation_key: str) -> float:
+        """W_tech(p, q) = Σ_i cite_score_i(q) × technical_score_i."""
+        return sum(
+            cite_score * para.technical_score
+            for cite_score, para in self._per_paragraph_cite_score(citation_key)
+        )
+
+    def w_rhet(self, citation_key: str) -> float:
+        """W_rhet(p, q) = Σ_i cite_score_i(q) × citation_score_i (paragraph's citation score)."""
+        return sum(
+            cite_score * para.citation_score
+            for cite_score, para in self._per_paragraph_cite_score(citation_key)
+        )
+
     def citation_role_vector(self, citation_key: str) -> Dict[str, float]:
         """r⃗(p, q): maps each top-level section to W_s(p, q).  (Definition 4.2)"""
         return {
@@ -403,6 +454,7 @@ class CitationGraph:
         results_dir: str | Path,
         citation_mappings: Optional[Dict[str, Dict[str, str]]] = None,
         pub_dates: Optional[Dict[str, int]] = None,
+        model_tag: str = "",
     ) -> "CitationGraph":
         """
         Load every paper subdirectory under results_dir and build the graph.
@@ -419,7 +471,12 @@ class CitationGraph:
             if not paper_dir.is_dir() or paper_dir.name.startswith("."):
                 continue
             paper_id = paper_dir.name
-            paper = Paper(paper_id, paper_dir, pub_date=(pub_dates or {}).get(paper_id))
+            paper = Paper(
+                paper_id,
+                paper_dir,
+                pub_date=(pub_dates or {}).get(paper_id),
+                model_tag=model_tag,
+            )
             try:
                 paper.load()
                 graph.add_paper(paper)
@@ -775,31 +832,23 @@ class SectionCitationAnalyzer:
         self,
         citing_id: str,
         cited_key: str,
-        tech_sections: Optional[Set[str]] = None,
-        rhet_sections: Optional[Set[str]] = None,
     ) -> Tuple[float, str]:
         """
-        ρ(p,q) = Σ_{s∈S_tech} W_s / Σ_{s∈S_rhet} W_s  (Definition 4.4)
+        ρ(p,q) = W_tech(p,q) / W_rhet(p,q)
 
+        W_tech = Σ_i cite_score_i(q) × technical_score_i
+        W_rhet = Σ_i cite_score_i(q) × citation_score_i (paragraph's citation score)
+
+        No keyword-based section classification — relies purely on paragraph scores.
         Returns (rho, label) where label ∈ {'technical','rhetorical','balanced','unclassified'}.
         """
         paper = self.graph.papers.get(citing_id)
         if paper is None:
             return 0.0, "unclassified"
 
-        if tech_sections is None:
-            tech_sections = {
-                s for s, sec in paper.section_scores.items()
-                if sec.section_type == "technical"
-            }
-        if rhet_sections is None:
-            rhet_sections = {
-                s for s, sec in paper.section_scores.items()
-                if sec.section_type == "rhetorical"
-            }
-
-        tech_w = sum(self.section_weight(citing_id, cited_key, s) for s in tech_sections)
-        rhet_w = sum(self.section_weight(citing_id, cited_key, s) for s in rhet_sections)
+        cit_strings = self.graph._citation_strings_for(paper, cited_key) or {cited_key}
+        tech_w = sum(paper.w_tech(cs) for cs in cit_strings)
+        rhet_w = sum(paper.w_rhet(cs) for cs in cit_strings)
 
         if tech_w == 0 and rhet_w == 0:
             return 0.0, "unclassified"
@@ -1004,9 +1053,10 @@ class KnowledgeDiscoveryFramework:
         results_dir: str | Path,
         citation_mappings: Optional[Dict[str, Dict[str, str]]] = None,
         pub_dates: Optional[Dict[str, int]] = None,
+        model_tag: str = "",
     ) -> "KnowledgeDiscoveryFramework":
         """Build the framework from a directory of importance-scoring results."""
-        graph = CitationGraph.from_results_dir(results_dir, citation_mappings, pub_dates)
+        graph = CitationGraph.from_results_dir(results_dir, citation_mappings, pub_dates, model_tag=model_tag)
         return cls(graph)
 
     def summary(self) -> Dict:

@@ -36,6 +36,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run knowledge-graph analyses.")
     parser.add_argument("--results",  default="paper_results/", help="Results directory")
     parser.add_argument("--papers",   default="papers/",        help="PDF directory")
+    parser.add_argument(
+        "--model-tag",
+        default="",
+        help="Optional model tag for selecting tagged score files during graph analysis (e.g. llama3_2).",
+    )
     parser.add_argument("--save-mappings", default="",
                         help="Save resolved citation mappings to this JSON file")
     parser.add_argument("--load-mappings", default="",
@@ -81,6 +86,7 @@ def main() -> None:
     fw = KnowledgeDiscoveryFramework.from_results_dir(
         args.results,
         citation_mappings=mappings,
+        model_tag=args.model_tag,
     )
     print(f"\n{fw.graph}")
 

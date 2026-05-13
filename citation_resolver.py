@@ -85,6 +85,33 @@ def _normalize_title_key(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", (text or "").lower())
 
 
+def _model_tag_from_citation_filename(paper_id: str, path: Path) -> Optional[str]:
+    filename = path.name
+    suffix = "_citation_scores.json"
+    prefix = f"{paper_id}_"
+    if filename == f"{paper_id}{suffix}":
+        return ""
+    if filename.startswith(prefix) and filename.endswith(suffix):
+        middle = filename[len(prefix) : -len(suffix)]
+        if middle == "paragraph" or middle.endswith("_paragraph"):
+            return None
+        return middle
+    return None
+
+
+def _discover_citation_score_files(paper_dir: Path, paper_id: str) -> List[Tuple[str, Path]]:
+    discovered: List[Tuple[str, Path]] = []
+    for candidate in sorted(paper_dir.iterdir()):
+        if not candidate.is_file():
+            continue
+        model_tag = _model_tag_from_citation_filename(paper_id, candidate)
+        if model_tag is None:
+            continue
+        discovered.append((model_tag, candidate))
+    discovered.sort(key=lambda item: (item[0] != "", item[0]))
+    return discovered
+
+
 def _extract_pdf_title(pdf_path: str | Path) -> Optional[str]:
     reader = PyPDF2.PdfReader(str(pdf_path))
     metadata = reader.metadata or {}
@@ -520,6 +547,10 @@ class CitationResolver:
         self._corpus_titles: Dict[str, str] = {}
         # normalized extracted title → [paper_id, ...]
         self._title_to_paper_ids: Dict[str, List[str]] = defaultdict(list)
+        # paper_id → {model_tag: {citation_str: score}}
+        self._paper_model_citation_scores: Dict[str, Dict[str, Dict[str, float]]] = defaultdict(dict)
+        # paper_id → {model_tag: file_path}
+        self._paper_model_citation_files: Dict[str, Dict[str, str]] = defaultdict(dict)
 
     def register_corpus_papers(
         self,
@@ -657,15 +688,37 @@ class CitationResolver:
                 print(f"[CitationResolver] No PDF found for {paper_id}, skipping.")
                 continue
 
-            citation_file = paper_dir / f"{paper_id}_citation_scores.json"
-            if not citation_file.exists():
+            citation_files = _discover_citation_score_files(paper_dir, paper_id)
+            if not citation_files:
                 print(f"[CitationResolver] No citation scores for {paper_id}, skipping.")
                 continue
 
-            with open(citation_file) as f:
-                keys = list(json.load(f).keys())
+            keys: List[str] = []
+            seen_keys = set()
+            model_tags: List[str] = []
+            for model_tag, citation_file in citation_files:
+                with open(citation_file) as f:
+                    raw_scores = json.load(f)
+                score_map = {
+                    citation: float(payload.get("citation_score", 0.0))
+                    for citation, payload in raw_scores.items()
+                }
+                self._paper_model_citation_scores[paper_id][model_tag] = score_map
+                self._paper_model_citation_files[paper_id][model_tag] = str(citation_file)
+                label = model_tag or "default"
+                model_tags.append(label)
+                for citation in score_map:
+                    norm_key = re.sub(r"\s+", " ", citation).strip()
+                    if norm_key in seen_keys:
+                        continue
+                    seen_keys.add(norm_key)
+                    keys.append(citation)
 
             self.parse_paper(paper_id, pdf_path, keys)
+            print(
+                f"[CitationResolver] {paper_id}: discovered {len(citation_files)} citation-score files "
+                f"({', '.join(model_tags)})"
+            )
 
         return self
 
@@ -739,7 +792,19 @@ class CitationResolver:
         raw: Dict[str, str] = {}
         for (paper_id, cit_str), entry in self._raw_map.items():
             raw[f"{paper_id}|||{cit_str}"] = entry.canonical_id
-        return {"entries": entries, "raw_map": raw, "corpus_titles": dict(self._corpus_titles)}
+        return {
+            "entries": entries,
+            "raw_map": raw,
+            "corpus_titles": dict(self._corpus_titles),
+            "paper_model_citation_scores": {
+                paper_id: dict(model_scores)
+                for paper_id, model_scores in self._paper_model_citation_scores.items()
+            },
+            "paper_model_citation_files": {
+                paper_id: dict(model_files)
+                for paper_id, model_files in self._paper_model_citation_files.items()
+            },
+        }
 
     def save(self, path: str | Path) -> None:
         """Save all resolved entries to a JSON file."""
@@ -776,6 +841,15 @@ class CitationResolver:
                 normalized = _normalize_title_key(title)
                 if normalized and paper_id not in resolver._title_to_paper_ids[normalized]:
                     resolver._title_to_paper_ids[normalized].append(paper_id)
+            for paper_id, model_scores in data.get("paper_model_citation_scores", {}).items():
+                resolver._paper_model_citation_scores[paper_id] = {
+                    model_tag: {citation: float(score) for citation, score in score_map.items()}
+                    for model_tag, score_map in model_scores.items()
+                }
+            for paper_id, model_files in data.get("paper_model_citation_files", {}).items():
+                resolver._paper_model_citation_files[paper_id] = {
+                    model_tag: str(file_path) for model_tag, file_path in model_files.items()
+                }
         else:
             # Old flat format: {citation_str: entry_dict} — no paper scope
             for key, d in data.items():
