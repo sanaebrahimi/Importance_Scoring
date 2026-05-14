@@ -9,10 +9,12 @@ browser-side filters such as:
 Usage:
     python3 visualize_graph.py
     python3 visualize_graph.py --top-k 30 --min-weight 0.002
+    python3 visualize_graph.py --model-tag llama3_2 --top-k 40 --min-weight 0.005
     python3 visualize_graph.py --load-mappings citation_mappings.json --output graph.html
 """
 
 import argparse
+import colorsys
 import json
 import re
 from pathlib import Path
@@ -22,17 +24,54 @@ from citation_graph_framework import KnowledgeDiscoveryFramework
 
 
 _COMMUNITY_COLOURS = [
-    "#4e9af1",
-    "#4ef17a",
-    "#f1a14e",
-    "#a14ef1",
-    "#f14e4e",
-    "#f1e84e",
-    "#4ef1e8",
-    "#f14ea1",
+    "#2E86DE",
+    "#E74C3C",
+    "#16A085",
+    "#8E44AD",
+    "#F39C12",
+    "#00B8D4",
+    "#D81B60",
+    "#7CB342",
+    "#6D4C41",
+    "#3949AB",
+    "#FF7043",
+    "#00897B",
+    "#C2185B",
+    "#9C27B0",
+    "#43A047",
+    "#5C6BC0",
+    "#EF5350",
+    "#26A69A",
+    "#FFB300",
+    "#1E88E5",
+    "#8D6E63",
+    "#EC407A",
+    "#66BB6A",
+    "#AB47BC",
 ]
 _EXTERNAL_COLOUR = "#f0a500"
 _EDGE_COLOUR = "#666666"
+
+
+def _rgb_to_hex(r: float, g: float, b: float) -> str:
+    return "#{:02X}{:02X}{:02X}".format(
+        max(0, min(255, round(r * 255))),
+        max(0, min(255, round(g * 255))),
+        max(0, min(255, round(b * 255))),
+    )
+
+
+def _community_colour(community: int) -> str:
+    if community < len(_COMMUNITY_COLOURS):
+        return _COMMUNITY_COLOURS[community]
+
+    # Golden-angle hue stepping keeps later colors well separated even when the
+    # number of detected communities exceeds the curated palette.
+    hue = ((community - len(_COMMUNITY_COLOURS)) * 0.61803398875) % 1.0
+    saturation = 0.72
+    value = 0.92 if community % 2 == 0 else 0.78
+    r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+    return _rgb_to_hex(r, g, b)
 
 
 def _scale(val: float, lo: float, hi: float, out_lo: float, out_hi: float) -> float:
@@ -66,6 +105,7 @@ def _external_label_and_tooltip(resolver: CitationResolver, node_id: str) -> tup
 def build_graph_payload(
     fw: KnowledgeDiscoveryFramework,
     resolver: CitationResolver,
+    model_tag: str = "",
 ) -> dict:
     pagerank = fw.pagerank.compute()
     corpus_ids = sorted(fw.graph.papers.keys())
@@ -89,7 +129,7 @@ def build_graph_payload(
 
         if node_id in corpus_set:
             community = partition.get(node_id, 0)
-            colour = _COMMUNITY_COLOURS[community % len(_COMMUNITY_COLOURS)]
+            colour = _community_colour(community)
             label = node_id
             tooltip = _corpus_tooltip(node_id)
         else:
@@ -145,7 +185,7 @@ def build_graph_payload(
     community_legend = [
         {
             "community": community,
-            "color": _COMMUNITY_COLOURS[community % len(_COMMUNITY_COLOURS)],
+            "color": _community_colour(community),
         }
         for community in used_communities
     ]
@@ -163,6 +203,7 @@ def build_graph_payload(
             "corpus_nodes": len(corpus_ids),
             "external_nodes": len(external_ranked),
         },
+        "model_tag": model_tag,
     }
 
 
@@ -304,6 +345,11 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
     input:focus {{
       border-color: rgba(78, 154, 241, 0.9);
       box-shadow: 0 0 0 3px rgba(78, 154, 241, 0.18);
+    }}
+
+    input[readonly] {{
+      opacity: 0.92;
+      cursor: default;
     }}
 
     .actions {{
@@ -488,6 +534,10 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
         <h2 class="controls-title">Graph Controls</h2>
         <div class="controls-grid">
           <div>
+            <label for="model-tag-input">Scoring model</label>
+            <input id="model-tag-input" type="text" readonly>
+          </div>
+          <div>
             <label for="top-k-input">Top external works by PageRank</label>
             <input id="top-k-input" type="number" min="0" step="1">
           </div>
@@ -629,6 +679,8 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
     }}
 
     function writeInputs(state) {{
+      const modelTag = GRAPH_PAYLOAD.model_tag || "default";
+      document.getElementById("model-tag-input").value = modelTag;
       document.getElementById("top-k-input").value = String(state.top_k);
       document.getElementById("min-weight-input").value = String(state.min_weight);
     }}
@@ -727,7 +779,9 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
         `${{filtered.edges.length}} edges.`;
 
       document.getElementById("command-preview").textContent =
-        `python3 visualize_graph.py --load-mappings citation_mappings.json ` +
+        `python3 visualize_graph.py ` +
+        `${{GRAPH_PAYLOAD.model_tag ? `--model-tag ${{GRAPH_PAYLOAD.model_tag}} ` : ``}}` +
+        `--load-mappings citation_mappings.json ` +
         `--top-k ${{state.top_k}} --min-weight ${{formatNumber(state.min_weight)}} ` +
         `--output docs/index.html`;
     }}
@@ -784,6 +838,11 @@ def main() -> None:
     parser.add_argument("--results", default="paper_results/", help="Results directory")
     parser.add_argument("--papers", default="papers/", help="PDF directory")
     parser.add_argument(
+        "--model-tag",
+        default="",
+        help="Optional model tag for selecting tagged score files (e.g. llama3_2).",
+    )
+    parser.add_argument(
         "--load-mappings",
         default="",
         help="Load pre-saved citation_mappings.json",
@@ -831,6 +890,7 @@ def main() -> None:
     fw = KnowledgeDiscoveryFramework.from_results_dir(
         args.results,
         citation_mappings=mappings,
+        model_tag=args.model_tag,
     )
 
     payload = build_graph_payload(fw, resolver)
