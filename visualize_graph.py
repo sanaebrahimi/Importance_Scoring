@@ -9,6 +9,7 @@ browser-side filters such as:
 Usage:
     python3 visualize_graph.py
     python3 visualize_graph.py --top-k 30 --min-weight 0.002
+    python3 visualize_graph.py --model-tag llama3_2 --top-k 40 --min-weight 0.005
     python3 visualize_graph.py --load-mappings citation_mappings.json --output graph.html
 """
 
@@ -784,6 +785,11 @@ def main() -> None:
     parser.add_argument("--results", default="paper_results/", help="Results directory")
     parser.add_argument("--papers", default="papers/", help="PDF directory")
     parser.add_argument(
+        "--model-tag",
+        default="",
+        help="Optional model tag for selecting tagged score files (e.g. llama3_2).",
+    )
+    parser.add_argument(
         "--load-mappings",
         default="",
         help="Load pre-saved citation_mappings.json",
@@ -831,6 +837,7 @@ def main() -> None:
     fw = KnowledgeDiscoveryFramework.from_results_dir(
         args.results,
         citation_mappings=mappings,
+        model_tag=args.model_tag,
     )
 
     payload = build_graph_payload(fw, resolver)
