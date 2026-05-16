@@ -1,0 +1,711 @@
+[
+  {
+    "section_path": [
+      "Introduction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The necklace splitting problem, first introduced by Bhatt and Leiserson [ 6], is a classic 28 combinatorial fair division problem. In this work, we extend it to a dynamic setting, enabling 29 applications such as data-informed fair hash maps and improved load-balancing among 30 multiple servers.",
+    "technical_score": 0.020249999999999994,
+    "citation_score": 0.024749999999999994
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Problem Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We are given a string Sofmbeads. We denote the jth element in SbyS[j]and the substring 33 from thej1th element to the j2th element by [j1,j2].1Each bead is a certain colori\u2208[n]. 34 Letmi=|{b\u2208S|bis colori}|. Letkbe the number of agents. For simplicity, assume that 35 kdividesmifor alli. The goal is to find a set Pof small cardinality consisting of cuts of S 36 with the property that the resulting set of intervals can be allocated to the agents in such a 37 way that each agent receives exactly mi/kbeads of color i. An overview of the notation is 38 given in Table 1. 39 1For ease of notation, when j1> j2, we write [j1, j2]instead of [j1, m]\u222a[1, j2]. \u00a9Rishi Advani, Abolfazl Asudeh, Mohsen Dehghankar, and Stavros Sintos; licensed under Creative Commons License CC-BY 4.0 29th International Conference on Database Theory (ICDT 2026). Editors: Balder ten Cate and Maurice Funk; Article No.19; pp.19:1\u201319:20 Leibniz International Proceedings in Informatics Schloss Dagstuhl \u2013 Leibniz-Zentrum fu\u0308r Informatik, Dagstuhl Publishing, Germany",
+    "technical_score": 0.009,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Problem Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "19:2 Dynamic Necklace Splitting Table 1Key notation used in the paper. Notation Description SThe string representing the necklace PThe set of cuts in S mThe number of beads in S miThe number of beads of color iinS nThe number of distinct colors of beads in S kThe number of agents GThe neighborhood graph associated with P TThe neighborhood tree associated with SandP We are interested in the dynamic case. We are given an instance of the necklace splitting 40 problem solved using an offline algorithm (see Section 2). We allow the following dynamic 41 updates: 42 Relocation BeadS[j1]is moved to index j2. 43 Insertion\u03b1kbeads of the same color are inserted into S. 44 Deletion\u03b1kbeads of the same color are deleted from S. 45 We can also allow for recoloring of beads by performing successive deletion and insertion. 46",
+    "technical_score": 0.020999999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Contributions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Here we give a brief overview of our contributions: 48 We introduce and formalize the problem of dynamic necklace splitting. 49 We design a linear-time algorithm for swapping adjacent beads when n= 2that achieves 50 the optimal bound of 2(k\u22121)cuts. We design two linear-time algorithms for relocation 51 of arbitrary distance when n= 2that achieve the optimal bound of 2(k\u22121)cuts. We 52 also design a linear-time algorithm for relocation with looser bounds for general n\u22652",
+    "technical_score": 0.0048,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Contributions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We introduce the MinNodeMaxFlow problem and prove it to be NP-complete. We design 55 an approximation algorithm for special cases that we then use as part of an algorithm 56 to efficiently perform batch relocation when n= 2with the optimal number of cuts",
+    "technical_score": 0.0018,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Contributions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "We design two linear-time algorithms for relocation with general n\u22652whenm=nk 59 that achieve the optimal bound of n(k\u22121)cuts (Section 5). 60 We adapt our algorithm for batch relocation to be used for efficient insertion and deletion",
+    "technical_score": 0.0042,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Contributions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "We design a randomized, polylogarithmic-time algorithm for relocation, insertion, and 63 deletion that produces an approximately fair set of cuts with high probability when n= 2",
+    "technical_score": 0.003,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Contributions"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "See Table 2 for a comparison of our algorithms.",
+    "technical_score": 0.0012,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Data Structures"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We assume a standard RAM model in which the basic objects manipulated by the algorithms 68 (e.g., beads) occupy a constant number of memory words and the entire input fits in main 69 memory. 70",
+    "technical_score": 0.014700117600940806,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Data Structures"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "R.",
+    "technical_score": 7.497059976479811e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Data Structures"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Advani, A.",
+    "technical_score": 7.497059976479811e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Data Structures"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Asudeh, M.",
+    "technical_score": 7.497059976479811e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Data Structures"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Dehghankar, and S. Sintos 19:3 Table 2Key details of dynamic algorithms presented in the paper. Algorithm nUpdate Exact? Optimal # of cuts? Running time (per bead) Swap 2Swap \u2713 \u2713 O/parenleft\uf8ecig m k/parenright\uf8ecig Path 2 Any \u2713 \u2713 O/parenleft\uf8ecig k+k\u2032m k/parenright\uf8ecig ColorPath 2 Any \u2713 \u2713 O/parenleft\uf8ecig k+k\u2032m k/parenright\uf8ecig Fence Any Relocation \u2713 \u2717 O/parenleft\uf8ecig m kn/parenright\uf8ecig BatchPath 2 Any \u2713 \u2713 O/parenleft\uf8ecig logk+k\u2032m km\u2032/parenright\uf8ecig DenseSwap m/k Swap \u2713 \u2713 O(n) DenseJump m/kRelocation \u2713 \u2713 O(k+n) Approx 2 Any \u2717 N/A O/parenleftbig k222k\u03b5\u22122(logm)2+ log m/parenrightbig The choice of which data structures to use to store information about the necklace has a 71 significant impact on the running time of our algorithms. We implement the necklace itself 72 as a doubly linked list, allowing for efficient dynamic updates. Each node/bead also stores 73 its index, the agent to whom it belongs, and a pointer to the next node/bead belonging to 74 the same agent. Given any bead, this allows us to find the subsequence of beads belonging 75 to the same agent in O(m/k)time. 76 Note that the cuts are stored implicitly and can be explicitly generated in O(m)time by 77 iterating through the necklace and identifying pairs of consecutive beads where the associated 78 agents switch. Alternatively, with minimal added cost, we can maintain a hash table mapping 79 each possible pair of agents to the set of cuts adjacent to both agents. 80 For certain algorithms, we need to make use of a neighborhood graph Gwhere each vertex 81 represents an agent and two vertices are joined by an edge if the corresponding agents possess 82 adjacent beads. We implement Gas an adjacency list. If the beads corresponding to k\u203283 agents are reassigned among the same agents, Gcan be updated in O(k\u2032m/k)time. We 84 remove all edges incident to the k\u2032agents and then determine which edges to add by iterating 85 through the k\u2032m/kbeads assigned to those agents. 86",
+    "technical_score": 7.497059976479811e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Soon after the necklace splitting problem was originally introduced [ 6], Goldberg and West [ 9] 88 proved that a solution always exists if k= 2. Alon and West [ 3] gave a simpler proof using 89 the Borsuk\u2013Ulam theorem [ 7], and Alon [ 1] generalized the results to k>2. Finally, Alon 90 and Graur [ 2] discovered an efficient approximation algorithm for finding a solution with few 91 cuts. Alon and Graur [ 2] also consider an online variation of the problem. They derive lower 92 and upper bounds on the number of cuts needed when k= 2based on the value of n. They 93 also generalize some of these results to the k>2case. 94 In addition to necklace splitting, other fair division problems can be extended to dynamic 95 settings. Kash et al. [ 13] study a fair division problem with divisible goods where agents with 96 Leontiefpreferencesarriveovertimeandgoodsmustbeirrevocablyallocated. Benadeetal.[ 5] 97 study the problem of allocating indivisible goods that arrive in an online manner, again with 98 irrevocable decisions. He et al. [ 11] generalize this to a setting where reallocation is allowed 99 but expensive. 100 ICDT 2026",
+    "technical_score": 0.00225,
+    "citation_score": 0.0033750000000000004
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "19:4 Dynamic Necklace Splitting",
+    "technical_score": 0.001875,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we discuss several key applications of the dynamic necklace splitting problem.",
+    "technical_score": 0.0046875,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "Fair Hash Maps"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In addition to ensuring fairness, such data-informed hash maps can even be faster than 105 traditional hash maps [ 14,17]. Shahbazi et al. [ 19] use the static necklace splitting problem 106 to design hash maps that satisfy group fairness. However, making dynamic updates to these 107 hash maps is infeasible without a dynamic solution to the necklace splitting problem. 108 For a concrete application, consider the use of fair hash maps to maintain user information 109 on a social network. Whenever new users join the network, their data needs to be efficiently 110 added to the hash map, and when users leave, their data needs to be efficiently removed. 111 As users\u2019 attributes change, their data needs to be efficiently updated (corresponding to 112 relocation of beads in a necklace). 113 Another concrete application involves table joins in data lakes. Consider an organization 114 seeking to share its data with third parties. The data is stored in a data lake and includes 115 sensitive information as primary keys for certain tables. To protect user privacy, the data 116 needs to be hashed, which introduces the risk of hash collision. A fair hashing scheme 117 must be used to ensure any resulting errors when joining on the hashed columns do not 118 disproportionately impact a specific demographic group [ 19]. For this system to be efficient, 119 it needs to be easy to update the hashes as the data changes.",
+    "technical_score": 0.0011718750000000002,
+    "citation_score": 0.0003906250000000001
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "Load-Balancing"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Consider the problem of load-balancing among multiple servers, where tasks need to be 122 completed in a specific order. Each agent corresponds to a server, and each bead color 123 corresponds to a different type of task. We want to spread the load across the servers evenly, 124 but we also want to minimize communication costs [ 12]. This necessitates having as few cuts 125 as possible. 126 If the order of tasks needs to be modified, new tasks need to be added, or existing tasks 127 need to be canceled, we would want to be able to update the computation plan without 128 recreating it from scratch. As a special case, if computation has already begun, we can 129 still perform dynamic updates that don\u2019t affect the already-completed tasks using dynamic 130 necklace splitting.",
+    "technical_score": 0.000375,
+    "citation_score": 0.00025
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "Bucketization"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Another key application is ensuring minority representation in bucketization. For example, 133 when partitioning data for machine learning tasks, it is crucial that the training data is 134 accurately represented by the test data for reliable results [ 18]. Intentionally designing the 135 bucketization process to maintain fairness helps prevent downstream fairness issues [ 15,16]. 136 Here, each agent represents a bucket, and the color of each bead represents the grouping 137 attribute. If the \u201cred\u201d data is more sparse than the \u201cblue\u201d data, it is important that the 138 relative proportions are preserved to have accurate results. 139",
+    "technical_score": 1.4423076923076921e-05,
+    "citation_score": 0.0002740384615384615
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "Bucketization"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "R.",
+    "technical_score": 9.615384615384617e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "Bucketization"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Advani, A.",
+    "technical_score": 4.8076923076923084e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "Bucketization"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Asudeh, M.",
+    "technical_score": 9.615384615384617e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Applications",
+      "Bucketization"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Dehghankar, and S. Sintos 19:5",
+    "technical_score": 9.615384615384617e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Offline Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We present a simplified version of the algorithm of Shahbazi et al. [ 19] here, as it is used as 141 a subroutine in our algorithms for the n= 2case. Without loss of generality, we refer to 142 the colors as red and blue. Initialize a doubly linked list Lsuch that, for each j\u2208[0,m\u22121], 143 L[j]is the number of red beads in the substring [j,j+m/k\u22121]. Initialize a hash set H 144 that contains all indices jwhereL[j] =m1/k. This takes O(m)time. By the discrete 145 intermediate value theorem, there is a substring with m1/kred beads and m2/kblue beads, 146 soHis nonempty. We remove the smallest index jfromHand allocate the sublist of length 147 m/kbeginning at jinLto the first agent. We remove all indices within m/k\u22121beads ofj 148 inLfromH, update the values of Lform/k\u22121beads preceding j, add new indices to H 149 as necessary, and update the element preceding jinLto point to the next unallocated bead. 150 We repeat this process k\u22121more times to allocate the remaining beads. Each step takes 151 O(m/k)time, so in total, the algorithm takes O(m)time. When we use this algorithm as a 152 subroutine, we will often run it on a subsequence of length k\u2032m/kwith onlyk\u2032agents. For 153 this special case, the algorithm takes only O(k\u2032m/k)time. 154 As shown by Alon and Graur [ 2], this algorithm produces at most 2(k\u22121)cuts. It is 155 also known that no algorithm can guarantee fewer than 2(k\u22121)cuts.2156 We now walk through a sample execution of the offline algorithm. 157 \u25b6Example 1. Suppose we are splitting the following necklace between three agents.",
+    "technical_score": 0.02860606060606061,
+    "citation_score": 0.02860606060606061
+  },
+  {
+    "section_path": [
+      "Offline Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Each agent needs to receive two red beads and two blue beads. The first interval with the 160 correct number of beads of each color is assigned to the first agent.",
+    "technical_score": 0.0143030303030303,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Offline Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The second agent receives the first, second, seventh, and eighth beads, and the third agent 163 receives the remaining beads.",
+    "technical_score": 0.00715151515151515,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Offline Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Each agent receives two red beads and two blue beads in total. \u231f",
+    "technical_score": 0.0013333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Two Colors",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We now study the dynamic update of relocation with two colors.",
+    "technical_score": 0.036,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Two Colors",
+      "Adjacent Indices"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "First, we consider the case where we restrict ourselves to relocating a bead to an adjacent 170 index. Notice that this is equivalent to swapping two adjacent beads. For brevity, we will 171 refer to relocation from jtoj+ 1as swapping beads S[j]andS[j+ 1]. 172 We now show how we can maintain a valid set of cuts after swapping two adjacent beads 173 S[j]andS[j+ 1]. If they are the same color or belong to the same agent, we can maintain 174 the same set of cuts P. The only interesting case is when S[j]andS[j+ 1]are different colors 175 and belong to different agents. Let A1be the owner of S[j]andA2the owner of S[j+ 1].",
+    "technical_score": 0.06,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Two Colors",
+      "Nonadjacent Indices"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "First, we consider the case where we restrict ourselves to relocating a bead to an adjacent 170 index. Notice that this is equivalent to swapping two adjacent beads. For brevity, we will 171 refer to relocation from jtoj+ 1as swapping beads S[j]andS[j+ 1]. 172 We now show how we can maintain a valid set of cuts after swapping two adjacent beads 173 S[j]andS[j+ 1]. If they are the same color or belong to the same agent, we can maintain 174 the same set of cuts P. The only interesting case is when S[j]andS[j+ 1]are different colors 175 and belong to different agents. Let A1be the owner of S[j]andA2the owner of S[j+ 1].",
+    "technical_score": 0.024,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Batch Relocation with Two Colors"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "To make relocation more efficient, we can perform batch updates. Instead of moving a 320 single bead, we will move m\u2032beads (of the same color)4from indices j1 1,...,jm\u2032 1to indices 321 j1 2,...,jm\u2032 2. LetA1andA2be the corresponding sets of agents. If there are any agents in 322 both sets, we can remove them from both. Let k\u2032\u2032be the number of agents remaining. Let 323 m\u2032\u2032be the number of beads that need to change owners. 324 We construct a flow network G\u2032\u2032= (V\u2032\u2032,E\u2032\u2032)fromGas follows. For each node in V, there 325 is a corresponding node in V\u2032\u2032. In addition, there is a source sand sinkt. For each node 326 u\u2208V\u2032\u2032\\{s,t}, let\u2206(u)denote the net change in the number of beads that the corresponding 327 agent owns. For each node ucorresponding to an agent in A1, there is an edge (s,u)with 328 capacitycsu:=\u2212\u2206(u). For each node ucorresponding to an agent in A2, there is an edge 329 (u,t)with capacity cut:= \u2206(u). For each edge in E, there is a corresponding edge (u,v)in 330 E\u2032\u2032with infinite capacity. 331 Define an activenode to be one with positive incoming and outgoing flow. We want to 332 find a max flow (of value m\u2032\u2032) such that the number of active nodes is minimized. We will 333 henceforth refer to this problem as MinNodeMaxFlow . 334 3Proposition 2 can technically still be made to work with some adjustments. After usage of Fence, a modified Proposition 2 would guarantee that the number of cuts increases by one with each execution ofSwap. 4Our techniques can be adapted in a straightforward manner to work with beads of both colors being relocated simultaneously, but for ease of exposition, we restrict ourselves to a single color here. ICDT 2026",
+    "technical_score": 0.06240097501523461,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Batch Relocation with Two Colors"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "19:10 Dynamic Necklace Splitting \u25b6Proposition 9. MinNodeMaxFlow is NP-complete.5335 We now describe the construction of a spanning tree of Gthat will allow us to approxi- 336 mately solve MinNodeMaxFlow . Consider the process of generating the neighborhood graph 337 Gwhile the offline necklace splitting algorithm is being run. When a new node is added, we 338 initially assign it a levelof 1. If the corresponding agent\u2019s interval encloses any other agents\u2019 339 intervals, then we increment the levels of all the nodes corresponding to agents with enclosed 340 intervals. 341 For example, the node corresponding to the first agent allocated beads is initially on level 342 1. If the second agent\u2019s interval encloses that of the first, the first agent\u2019s node is moved to 343 level 2. If the third agent\u2019s interval encloses that of the second, then we have the first agent\u2019s 344 node on level 3 and the second agent\u2019s node on level 2. 345 We continue the process of updating the levels until all agents have been assigned their 346 intervals and the graph Gis finalized. Then, we construct a new graph by removing all 347 edges between nodes on the same level, other than those on level 1. We will denote this 348 neighborhood tree byT. 349 A1 A2 A3 A4 A6 A7 A5 A8 Figure 1 An example of a neighborhood tree. The dashed lines indicate additional edges present in the corresponding neighborhood graph. \u25b6Proposition 10. Tis a spanning tree of G. 350 Proof.First, we prove that Tis connected. Gis trivially connected since the necklace it 351 represents is a contiguous collection of beads. We need to show that the edges removed 352 fromGto construct Tare unnecessary for connectivity. Consider any edge removed. By 353 construction, neither endpoint is on level 1. Thus, both endpoints are joined to a node on the 354 previous level corresponding to an enclosing agent, and consequently, they remain connected. 355 Next, we prove that Tis acyclic. Assume for contradiction that there exists a cycle in T. 356 Letlbe the lowest level represented in the cycle. Consider a node uin the cycle on level l. 357 Both of its neighbors in the cycle must be on level l\u22121. However, by construction, each 358 node is joined to at most one node on the level below it. We have a contradiction, so Tmust 359 be acyclic. Therefore, Tis a spanning tree of G. \u25c0 360 We now describe how we can efficiently produce an approximate solution to MinNode- 361 MaxFlow using the properties of T. We construct a flow network T\u2032fromTanalogous to 362 G\u2032\u2032. The only difference from G\u2032\u2032is the lack of edges between nodes on the same level (other 363 than level 1). 364 \u25b6Lemma 11. The number of active nodes in a solution to MinNodeMaxFlow onT\u2032is at 365 most twice the number of active nodes in a solution on G\u2032\u2032. 366 5See Appendix B for proof.",
+    "technical_score": 0.015600243753808654,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Batch Relocation with Two Colors"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "R.",
+    "technical_score": 0.00039975624619134674,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Batch Relocation with Two Colors"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Advani, A.",
+    "technical_score": 0.00039975624619134674,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Batch Relocation with Two Colors"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Asudeh, M.",
+    "technical_score": 0.00039975624619134674,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Batch Relocation with Two Colors"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Dehghankar, and S. Sintos 19:11 Proof.Consider an optimal solution to MinNodeMaxFlow onG\u2032\u2032. Assume, without loss 367 of generality, that there is no pair of nodes uandvsuch that both (u,v)and(v,u)have 368 positive flow. Let k\u2032be the number of active nodes. For each edge (u,v)with positive flow 369 whereuandvare on the same level (other than level 1), we can remove the flow and instead 370 add equal flow to (u,w)and(w,v), wherewis the unique node on the previous level joined 371 to bothuandv. If we replicate the resulting flow on T\u2032, we have a feasible solution to 372 MinNodeMaxFlow onT\u2032. 373 Since each node is joined to at most two nodes on the same level, there are at most k\u2032374 pairs of adjacent active nodes on the same level. In the worst case, we add k\u2032active nodes to 375 the solution, resulting in 2k\u2032active nodes. The optimal solution to MinNodeMaxFlow onT\u2032376 must have at most as many active nodes as this feasible solution, so it also has at most 2k\u2032377 active nodes. Therefore, the number of nodes is at most twice the number of active nodes in 378 an optimal solution on G\u2032\u2032. \u25c0 379 \u25b6Lemma 12. MinNodeMaxFlow can be solved in O(k\u2032\u2032logk\u2032\u2032+k\u2032)time onT\u2032. 380 Proof.The edges from the source sand to the sink tmust all be saturated to produce a 381 max flow, so we can ignore both nodes. The remaining subgraph has structure identical 382 toT, and is thus a tree. We sort the sources/sinks by their level in descending order and 383 initialize a linked list of pointers to them in that order. Consider the set of nodes with excess 384 (potentially negative) flow on the highest level (other than level 1). At first, these are all 385 sources/sinks. Each of these nodes has a unique edge leading to the level below. Any valid 386 flow must have flow on these edges. We place the appropriate amount of flow on each of these 387 edges to satisfy the demands of the sources/sinks. Then we consider the new set of nodes 388 with excess flow on the highest level (other than level 1) and repeat the process, updating 389 the linked list accordingly. We terminate once all nodes not on level 1 have no excess flow. 390 In each step, the highest level with excess flow decreases, so this process must terminate. 391 If any nodes with excess flow remain, they are on level 1. Consider the leftmost such 392 node. We put flow on each edge to the right until the current node has no excess flow. Then 393 we find the new leftmost node with excess flow and repeat the process. In each step, the 394 number of nodes with excess flow decreases, so eventually no nodes will have excess flow, at 395 which point we terminate. 396 Sorting the initial list takes O(k\u2032\u2032logk\u2032\u2032)time. In the first phase, we process only the 397 nodes in the solution, and each in constant time, giving a running time of O(k\u2032)for the 398 first phase. In the second phase, assuming the relative position of each node on level 1 is 399 stored when Tis constructed, we can find the leftmost node in O(k\u2032)time, and after that, 400 we only process nodes in the solution, each in constant time. This gives us a running time of 401 O(k\u2032)for the second phase. Overall, we have a running time of O(k\u2032\u2032logk\u2032\u2032+k\u2032)for solving 402 MinNodeMaxFlow onT\u2032. \u25c0 403 \u25b6Example 13. Consider the following neighborhood tree. 404 A1 A2 A3 A4 A6 A7 A5 A8405 SupposeA1andA5are sources and A3andA6are sinks, all with demands of 1. At first, 406 A1andA3are the highest nodes with excess flow. We put flow on the edges (A1,A4)and 407 (A4,A3). 408 ICDT 2026",
+    "technical_score": 0.00039975624619134674,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Batch Relocation with Two Colors"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "19:12 Dynamic Necklace Splitting A1 A2 A3 A4 A6 A7 A5 A8409 Now the highest node with excess flow is A6, so we put flow on (A8,A6). 410 A1 A2 A3 A4 A6 A7 A5 A8411 Continuing, we put flow on (A5,A8). 412 A1 A2 A3 A4 A6 A7 A5 A8413 All nodes are now satisfied, so the algorithm terminates. \u231f 414 After MinNodeMaxFlow has been solved on T\u2032, we can return to Gto perform a heuristic 415 optimization. For each active node uthat is neither a source/sink nor sending flow to the 416 level below, consider the subgraph consisting of its active neighbors on the level above. If that 417 subgraph is connected, then we can remove ufrom the solution. Finding all such subgraphs 418 takesO(k)time since we consider each edge a constant number of times. Checking if the 419 subgraphs are connected takes O(k)time in total. Overall, this heuristic pruning process 420 addsO(k)additional time. 421 Finally, we rerun the offline necklace splitting algorithm on the substring belonging to 422 the agents corresponding to the active nodes. We will henceforth refer to this procedure as 423 BatchPath . We have an overall running time of O/parenleft\uf8ecig m\u2032/parenleft\uf8ecig k\u2032\u2032logk\u2032\u2032+k\u2032+k\u2032m k/parenright\uf8ecig/parenright\uf8ecig =O/parenleft\uf8ecig k\u2032\u2032logk\u2032\u2032 m\u2032+ 424 k\u2032m km\u2032/parenright\uf8ecig per bead for BatchPath (without pruning). Since k\u2032\u2032\u2264m\u2032, we also have the looser but 425 more intuitive running time of O/parenleft\uf8ecig logk+k\u2032m km\u2032/parenright\uf8ecig . Thus, there is only an O(logk)overhead 426 when using BatchPath compared to Path, without accounting for the m\u2032\u00d7speedup from 427 batching updates. 428 \u25b6Theorem 14. BatchPath produces a set of cuts of size at most 2(k\u22121)and has time 429 complexity O/parenleft\uf8ecig logk+k\u2032m km\u2032/parenright\uf8ecig . 430",
+    "technical_score": 0.00039975624619134674,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Next, we consider the case of relocation for general n\u22652with the additional restriction 432 thatm=nk. Note that using the corresponding offline algorithm of Alon and Graur [ 2, 433 Proposition 1], the initial solution is guaranteed to have exactly n(k\u22121)cuts (some may be 434",
+    "technical_score": 0.025476923076923074,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "R.",
+    "technical_score": 0.008492307692307693,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Advani, A.",
+    "technical_score": 0.0042461538461538465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Asudeh, M.",
+    "technical_score": 0.008492307692307693,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Dehghankar, and S. Sintos 19:13 redundant). This initial solution is produced in O(m)time. To enable efficient implementa- 435 tions for our dynamic algorithms, we maintain a two-dimensional array indexed by agent 436 and color that points to the corresponding bead in S. 437",
+    "technical_score": 0.008492307692307693,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "Adjacent Indices"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Suppose we need to swap a red bead (on the left) and blue bead (on the right) between A1439 andA2, respectively. There are three possible cases based on whether or not there is a cut 440 to the left of the red bead and/or the right of the blue bead (Table 3). 441 Table 3The possible cases for the DenseSwap algorithm.",
+    "technical_score": 0.013200000000000002,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "Adjacent Indices"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In the first case, there is a cut to the left of the red bead and to the right of the blue 442 bead (or it is at the end of the necklace). This is the simplest case \u2013 we swap the beads and 443 let the agents retain ownership of their original beads. No cuts need to be adjusted. 444 In the second case, there is a cut on the left, but not the right. We swap the beads and do 445 not adjust any cuts. A2takes possession of the left interval, and A1takes possession of the 446 right interval. As part of the right interval, A1gains at least one unneeded extra bead (the 447 green one). Each extra bead lacks a cut to its left, so they must be the first of their colors. 448 Thus, the original beads of A1are somewhere to the right in the necklace. Furthermore, 449 since each of the original beads is not the first of its color, they each start their own intervals. 450 A2takes ownership of each of these intervals and repeats the process with each of them if 451 they have multiple beads, continuing to attempt to re-satisfy the fairness constraint. Since 452 the necklace has exactly n\u22121pairs of adjacent beads without a cut, this results in at most 453 nownership exchanges throughout the procedure. 454 In the third case, there is no cut on the left. We swap the beads and move the cut left 455 by one bead (to ensure that the set of cuts maintains the structure of one generated by the 456 offline algorithm). A1andA2retain the left and right intervals, respectively. Similarly to 457 the second case, to maintain the fairness constraint, at most n\u22121intervals will have to be 458 exchanged between the two agents. 459 We will henceforth refer to this procedure as DenseSwap . The two-dimensional array 460 allows us to perform each ownership exchange in constant time, giving a running time of 461 O(n)forDenseSwap . 462 \u25b6Theorem 15. DenseSwap produces a set of cuts of size exactly n(k\u22121)and has time 463 complexity O(n).",
+    "technical_score": 0.030800000000000004,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "Nonadjacent Indices"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We can generalize the ideas from the previous section to design an algorithm for arbitrary 466 relocation. In addition to the two-dimensional array, we maintain for each color a red\u2013black 467 ICDT 2026",
+    "technical_score": 0.00624,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Relocation with Multiple Colors and High Cut Density",
+      "Nonadjacent Indices"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "19:14 Dynamic Necklace Splitting tree tracking the indices of the beads of that color in S. Suppose we need to relocate a red 468 bead. There are four possible cases. 469 In the first case, the bead to be relocated begins as the first of its color and remains 470 so. We move the bead to the desired position, and if the interval is owned by a different 471 agent, we re-satisfy the fairness constraint by exchanging at most nintervals between the 472 two agents, as in the previous section. 473 In the second case, the bead to be relocated begins not as the first of its color and remains 474 so. We move the bead and its corresponding cut to an arbitrary boundary to make it a 475 singleton interval, and if the two affected intervals are not owned by the same agent, we 476 re-satisfy the fairness constraint by exchanging at most n\u22121intervals between the two 477 agents. Then, we move the bead and its corresponding cut to the desired position, and if 478 the destination interval does not belong to the owner of the bead, we re-satisfy the fairness 479 constraint by exchanging at most nintervals between the two agents. 480 In the third case, the bead begins as the first of its color but does not remain so. We 481 relocate the bead directly to the left of the second red bead via Case 1, and then we relocate 482 the second red bead to the desired position via Case 2. At most 3n\u22121intervals are exchanged 483 throughout this case. 484 In the fourth case, the bead begins not as the first of its color but becomes the first. We 485 relocate the bead and its corresponding cut directly to the right of the first red bead via 486 Case 2, and then we relocate the first red bead to the desired position via Case 1. At most 487 3n\u22121intervals are exchanged throughout this case. 488 We will henceforth refer to this procedure as DenseJump . Updating the red\u2013black tree in 489 Case 2 takes O(k)time if the rank of the bead changes. Otherwise, all updates to the tree 490 take constant time. This gives us a total running time of O(k+n)forDenseJump . 491 \u25b6Theorem 16. DenseJump produces a set of cuts of size exactly n(k\u22121)and has time 492 complexity O(k+n). 493",
+    "technical_score": 0.014559999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Insertion and Deletion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we study the complementary dynamic updates of insertion and deletion with 495 two colors. For insertion, we simply give \u03b1beads to each agent and then relocate the \u03b1k 496 beads to the desired indices using BatchPath . For deletion, we delete the desired beads and 497 then relocate beads from agents with surpluses to those with deficits, again using BatchPath . 498 Both insertion and deletion take O/parenleft\uf8ecig k\u2032\u2032logk\u2032\u2032 \u03b1k+k\u2032m \u03b1k2/parenright\uf8ecig =O/parenleft\uf8ecig logk \u03b1+k\u2032m \u03b1k2/parenright\uf8ecig time per bead using 499 this approach. 500 \u25b6Theorem 17. There is an algorithm for insertion and deletion that produces a set of cuts 501 of size at most 2(k\u22121)and has time complexity O/parenleft\uf8ecig logk \u03b1+k\u2032m \u03b1k2/parenright\uf8ecig . 502 We now show how the running time can be more precisely understood in the special case 503 of\u03b1= 1by bounding the value of k\u2032\u2032askgrows. Suppose each of the beads is associated 504 with a scalar value, such that the position of a bead in the necklace is determined by the 505 rank of its value.6If the bead values are drawn independently from the same distribution D, 506 then the distribution of the rank of a new sample among the existing beads in the necklace 507 is simply the uniform distribution. As such, it is well motivated to consider beads as being 508 inserted into the necklace uniformly at random. Equivalently, agents to receive beads are 509 6This is the case, for example, when designing fair hash maps [19].",
+    "technical_score": 0.017066666666666664,
+    "citation_score": 0.025599999999999998
+  },
+  {
+    "section_path": [
+      "Insertion and Deletion"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "R.",
+    "technical_score": 0.010666666666666666,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Insertion and Deletion"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Advani, A.",
+    "technical_score": 0.005333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Insertion and Deletion"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Asudeh, M.",
+    "technical_score": 0.005333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Insertion and Deletion"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Dehghankar, and S. Sintos 19:15 chosen uniformly at random. In the absence of any further information, it is justified to 510 assume that beads to be deleted are chosen uniformly at random as well. 511 Ideally (to reduce running time), we want to have as many agents receive exactly one 512 bead as possible, since k\u2032\u2032is the number of agents that do not receive exactly one bead. 513 We will show that this is likely to be the case. Assume k>101. We sample kvalues from 514 the discrete uniform distribution on [k]. For each i\u2208[k], letXibe the Bernoulli random 515 variable indicating if the number iis not chosen exactly once.7LetX=/summationtext iXi. We have 516 k(1\u22121.005/e)<E[X]<k(1\u22121/e). For the variance, we have the following. 517 Var(X) = Var(k\u2212X) 518 =/summationdisplay iVar(1\u2212Xi) +k/summationdisplay i,j=1,i\u0338=jCov(1\u2212Xi,1\u2212Xj) 519 =kVar(1\u2212X1) +k(k\u22121) Cov(1\u2212X1,1\u2212X2) 520 <1.005k e\u2212k e2+k(k\u22121)/parenleftbigg(k\u22121)(k\u22122)k\u22122 kk\u22121\u2212(k\u22121)2k\u22122 k2k\u22122/parenrightbigg",
+    "technical_score": 0.005333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Insertion and Deletion"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "=1.005e\u22121 e2k+kk\u22121(k\u22121)2(k\u22122)k\u22122\u2212(k\u22121)2k\u22121 k2k\u22121522 <1.005e\u22121 e2k+k2k\u22121\u2212(k\u22121)2k\u22121 k2k\u22121523 =1.005e\u22121 e2k+ 1\u2212/parenleftbigg 1\u22121 k/parenrightbigg2k\u22121",
+    "technical_score": 0.005333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Insertion and Deletion"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "<1.005e\u22121 e2k+ 1\u22120.995 e2525 Then, by the Chebyshev\u2013Cantelli inequality, we have 526 Pr(X\u2265\u03bbk)<1.005e\u22121 e2k+ 1\u22120.995 e2 1.005e\u22121 e2k+ 1\u22120.995 e2+/parenleft\uf8ecig \u03bbk+1 e\u22121/parenright\uf8ecig2. 527 If we set\u03bb= 1\u22121/e, then we have k\u2032\u2032<(1\u22121/e)kwith probability greater than 99.3%. 528",
+    "technical_score": 0.005333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we design an algorithm for approximate necklace splitting with two colors 530 that works in both the static and dynamic settings. The algorithm is efficient when the 531 number of agents kis small, for example, k=o(m).",
+    "technical_score": 0.06,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Static Setting"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We construct a red\u2013black tree Tover the necklace Swith respect to the order of the beads 534 (i.e., we assume that S[j1]<S[j2]ifj1<j2). LetS1be the subsequence consisting of red 535 beads andS2the subsequence consisting of blue beads with |S1|=m1and|S2|=m2. Let 536 \u03b5\u2208(0,1)be a parameter specified by the user.",
+    "technical_score": 0.008799999999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Static Setting"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Let I0=\u2205. We run the following subroutine 537 forkiterations. 538 In thejth iteration, for each color i\u2208{1,2}, we useTto obtain a uniform random 539 sampleSj i\u2286Si\\Ij\u22121of cardinality O/parenleftbig (k\u2212j+ 1)222k\u03b5\u22122log(2km)/parenrightbig . LetSj=Sj 1\u222aSj 2. We 540 7Note that XiandXjare dependent random variables for i,j\u2208[k]. ICDT 2026",
+    "technical_score": 0.0112,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Static Setting"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "19:16 Dynamic Necklace Splitting execute one iteration of the exact offline algorithm with k\u2212j+ 1agents onS\\Ij\u22121. LetIj 541 be the interval returned by the algorithm. We add the (at most) two corresponding cuts. 542 LetIj=Ij\u22121\u222a{Ij}. 543 After thekth iteration, the resulting set of cuts is returned. We will henceforth refer to 544 this procedure as ApproxStatic . 545 \u25b6Theorem 18. ApproxStatic produces an approximate solution with at most 2(k\u22121)cuts, 546 such that each agent gets at least (1\u2212\u03b5)mi kand at most (1 +\u03b5)mi kbeads of color iwith 547 probability at least 1\u22121 m. It has time complexity O/parenleftbig m+k322k\u03b5\u22122(logm)2/parenrightbig .8548",
+    "technical_score": 0.02,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Dynamic Setting"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We now show how to adapt ApproxStatic to the dynamic setting. Our algorithm can handle 550 any type of dynamization, including relocation, insertion, and deletion. 551 Notice that the crux of ApproxStatic relies on a small set of samples (given sufficiently 552 smallk). Hence, if we ensure that sampling is performed efficiently under updates, we 553 can have a dynamic algorithm for approximate necklace splitting with an update time that 554 only depends logarithmically on m. Indeed, assume that the tree Tis constructed in the 555 preprocessing phase. It is known that a red\u2013black tree can be updated in O(logm)time under 556 insertion/deletion of an element. Thus, our algorithm for the dynamic necklace splitting 557 problem consists of maintaining Tunder relocations/insertions/deletions (a relocation can 558 be handled as a deletion followed by an insertion). When the user requests the set of cuts, 559 we execute ApproxStatic as a subroutine using the updated T. We will henceforth refer to 560 this procedure as Approx. 561 When a batch of kupdates is encountered, Tis updated in O(klogm)time, and the 562 new set of cuts can be constructed in O/parenleftbig k322k\u03b5\u22122(logm)2/parenrightbig time. The overall running time 563 ofApproxis thusO/parenleftbig k222k\u03b5\u22122(logm)2+logm/parenrightbig per bead. If we do not often need to produce 564 the actual set of cuts, we only need O(logm)time per bead to maintain T. 565 \u25b6Theorem 19. Approx produces an approximate solution with at most 2(k\u22121)cuts, such 566 that each agent gets at least (1\u2212\u03b5)mi kand at most (1 +\u03b5)mi kbeads of color iwith probability 567 at least 1\u22121 m. It has time complexity O/parenleftbig k222k\u03b5\u22122(logm)2+ logm/parenrightbig . 568 8See Appendix C for proof.",
+    "technical_score": 0.009999999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Dynamic Setting"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "R.",
+    "technical_score": 0.0033333333333333344,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Dynamic Setting"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Advani, A.",
+    "technical_score": 0.0016666666666666672,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Dynamic Setting"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Asudeh, M.",
+    "technical_score": 0.0016666666666666672,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Approximate Necklace Splitting",
+      "Dynamic Setting"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Dehghankar, and S. Sintos 19:17",
+    "technical_score": 0.0033333333333333344,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Offline Algorithm is Optimal"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "\u25b6Proposition 20. For everyk, there exists a necklace that requires exactly 2(k\u22121)cuts. 624 Proof.Thek= 1case is trivial, so we assume k >1. Consider the necklace withm beads followed bym",
+    "technical_score": 0.064,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Offline Algorithm is Optimal"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The first interval in the resulting allocation consists of at mostm of generality, assume this interval belongs to A1. If it has exactlym the next interval (without loss of generality, owned by A2). Else, we check if the first two 629 intervals combined have more thanm until the first interval has exactlym all the red beads of A1in the rest of the necklace to A2(without adding any cuts). We then 632 move to the next interval. Instead, if the first two intervals combined have at mostm we remove the cut between them and add one cut within another interval with red beads 634 belonging to A1, maintaining the overall number of cuts. 635 We repeat this process from both the left (red) and right (blue) ends of the necklace 636 until we reach the center interval, which consists ofm have exactly 2(k\u22121)cuts, and since the number of cuts remained constant throughout this 638 procedure, the original optimal set of cuts was of size 2(k\u22121). \u25c0",
+    "technical_score": 0.016,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B NP-completeness of MinNodeMaxFlow"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Proof of Proposition 9. First, we show that MinNodeMaxFlow is in NP. We are given a flow 641 network and a limit \u03baon the number of active nodes as input and a proposed flow as a 642 certificate. We can compute the value of a max flow on the graph (in polynomial time). 643 Then we can easily verify whether the proposed flow has that value and satisfies the flow 644 constraints and whether the number of active nodes is at most \u03ba.MinNodeMaxFlow is in NP. 645 Next, we show that MinNodeMaxFlow is NP-hard, via reduction from Vertex Cover . Given 646 an undirected graph \u0393 = (V\u0393,E\u0393)and parameter \u03ba, we want to determine whether \u0393has 647 a vertex cover of size at most \u03ba. We construct an auxiliary, directed graph \u0393\u2032= (V\u0393\u2032,E\u0393\u2032) 648 containing the same vertices in addition to a source node \u03c3, a sink node \u03c4, and an extra node 649 uvfor every edge (u,v)\u2208E\u0393. We replace each edge (u,v)\u2208E\u0393with two infinite-capacity 650 edges: (uv,u )and(uv,v). We add a unit-capacity edge from \u03c3to each extra node uvand 651 an infinite-capacity edge from each original node uto\u03c4. 652 If there is a vertex cover of size \u03bain\u0393, then there is a max flow on \u0393\u2032with|E\u0393|+\u03ba 653 active nodes. Conversely, suppose there is a max flow on \u0393\u2032with\u03baactive nodes. If any 654 nodeuvis sending fractional flow to each of its neighbors, we can reroute its flow to go to 655 just one neighbor without changing the number of active nodes. We would need to do this 656 at most|E\u0393|times, so we can always efficiently find an integral solution, given the initial 657 solution. Once we obtain an integral solution, we have a corresponding vertex cover of size \u03ba. 658 Therefore, MinNodeMaxFlow is NP-hard. \u25c0 659",
+    "technical_score": 0.0768,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B NP-completeness of MinNodeMaxFlow"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "R.",
+    "technical_score": 0.0192,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B NP-completeness of MinNodeMaxFlow"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Advani, A.",
+    "technical_score": 0.0096,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B NP-completeness of MinNodeMaxFlow"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Asudeh, M.",
+    "technical_score": 0.0048,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B NP-completeness of MinNodeMaxFlow"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Dehghankar, and S. Sintos 19:19",
+    "technical_score": 0.0096,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Correctness and Time Complexity of ApproxStatic"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "\u25b6Definition 21 (\u03b5-sample [ 10, Chapter 5]) .Let(X,R)be a set system. For any \u03b5\u2208[0,1], a 661 subsetC\u2286Xis an\u03b5-sample for(X,R)if for every \u03c1\u2208R, we have 662 /vextendsingle/vextendsingle/vextendsingle/vextendsingle|\u03c1| |X|\u2212|C\u2229\u03c1| |C|/vextendsingle/vextendsingle/vextendsingle/vextendsingle\u2264\u03b5. 663 Proof of Theorem 18. Wecanconstruct TinO(m)time. Wecanretrieveanelementfrom T 664 inO(logm)time, sowecanconstructtheset SjinO(|Sj|logm) =O/parenleftbig k222k\u03b5\u22122(logm)2/parenrightbig time. 665 Executing the exact offline algorithm for one iteration takes O(|Sj|) =O/parenleftbig k222k\u03b5\u22122logm/parenrightbig time. We run the subroutine for kiterations, so the total running time of ApproxStatic 667 isO/parenleftbig m+k322k\u03b5\u22122(logm)2/parenrightbig . It is clear that, by construction, the algorithm produces at 668 most 2(k\u22121)cuts. What remains is to show that the resulting assignment of beads is 669 approximately fair. 670 For any subset of beads Xin the necklace, consider the set system (X,RS)of VC 671 dimension 2, whereRSis the family of all possible intervals (sets of contiguous beads) in 672 S. Then, with probability at least 1\u2212\u03c6, a uniform random subset C\u2286Xof cardinality 673 O/parenleftbig \u03b5\u22122log/parenleftbig \u03c6\u22121/parenrightbig/parenrightbig is an\u03b5-sample for (X,RS)[4]. 674 Let \u0304\u03b5=\u03b5 2k. By definition, the probability that Sj iis a \u0304\u03b5 k\u2212j+1-sample is at least 1\u22121 2km. 675 We have that in the jth iteration, both Sj 1andSj 2are \u0304\u03b5 k\u2212j+1-samples for (S1\\Ij\u22121,RS) 676 and(S2\\Ij\u22121,RS), respectively, with probability at least 1\u22121 km. Via a union bound 677 over the iterations, with probability at least 1\u22121 m, we have thatSj iis a \u0304\u03b5 k\u2212j+1-sample for 678 (Si\\Ij\u22121,RS)for allj\u2208[k]andi\u2208{1,2}. 679 We now prove by induction that for each iteration j\u2208[k]and colori\u2208{1,2}, we have 680 1\u2212(2j\u22121) \u0304\u03b5 k\u2264|Si\u2229Ij| |Si|\u22641 + (2j\u22121) \u0304\u03b5 k681 ifSj iis an \u0304\u03b5 k\u2212j+1-sample for Si\\Ij\u22121. First we consider the base case: j= 1. By definition, 682 in the first iteration, S1 iis a \u0304\u03b5 k\u2212j+1-sample for Si. By the correctness of the exact offline 683 algorithm onS1, for eachi\u2208{1,2}, we have that|S1 i\u2229I1|/|S1 i|= 1/k. Thus, we have 684 1\u2212 \u0304\u03b5 k\u2264|Si\u2229I1| |Si|\u22641 + \u0304\u03b5 k. 685 For the inductive step, assume that the claim holds for all j < \u03b6. We will show that 686 it holds for j=\u03b6. By the correctness of the exact offline algorithm on S1we have that 687 |S\u03b6 i\u2229I\u03b6|/|S\u03b6 i|= 1/(k\u2212\u03b6+ 1). SinceS\u03b6 iis a \u0304\u03b5 k\u2212\u03b6+1-sample for Si\\I\u03b6\u22121, we have 688 1\u2212 \u0304\u03b5 k\u2212\u03b6+ 1\u2264|(Si\\I\u03b6\u22121)\u2229I\u03b6| |Si\\I\u03b6\u22121|\u22641 + \u0304\u03b5 k\u2212\u03b6+ 1. 689 Notice that (Si\\I\u03b6\u22121)\u2229I\u03b6=Si\u2229I\u03b6, so we can rewrite this as 690 1\u2212 \u0304\u03b5 k\u2212\u03b6+ 1|Si\\I\u03b6\u22121|\u2264|Si\u2229I\u03b6|\u22641 + \u0304\u03b5 k\u2212\u03b6+ 1|Si\\I\u03b6\u22121|. 691 ICDT 2026",
+    "technical_score": 0.01185185185185185,
+    "citation_score": 0.0237037037037037
+  },
+  {
+    "section_path": [
+      "Correctness and Time Complexity of ApproxStatic"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "19:20 Dynamic Necklace Splitting We first prove the left inequality of the claim. 692 |Si\u2229I\u03b6|\u22651\u2212 \u0304\u03b5 k\u2212\u03b6+ 1/vextendsingle/vextendsingleSi\\I\u03b6\u22121/vextendsingle/vextendsingle693 =1\u2212 \u0304\u03b5 k\u2212\u03b6+ 1/parenleftbigg mi\u2212\u03b6\u22121/summationdisplay j=1|Si\u2229Ij|/parenrightbigg",
+    "technical_score": 0.008888888888888889,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Correctness and Time Complexity of ApproxStatic"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "\u22651\u2212 \u0304\u03b5 k\u2212\u03b6+ 1/parenleft\uf8ecigg 1\u2212\u03b6\u22121/summationdisplay j=11 +/parenleftbig 2j\u22121/parenrightbig \u0304\u03b5 k/parenright\uf8ecigg mi695 = (1\u2212 \u0304\u03b5)/parenleftbigg 1\u2212 \u0304\u03b5 k\u2212\u03b6+ 1\u03b6\u22121/summationdisplay j=1/parenleftbig 2j\u22121/parenrightbig/parenrightbiggmi k696 = (1\u2212 \u0304\u03b5)/parenleft\uf8ecigg 1\u2212/parenleftbig \u2212\u03b6+ 2\u03b6\u22121/parenrightbig \u0304\u03b5 k\u2212\u03b6+ 1/parenright\uf8ecigg mi k697 \u2265(1\u2212 \u0304\u03b5)/parenleftbig 1\u2212/parenleftbig \u2212\u03b6+ 2\u03b6\u22121/parenrightbig \u0304\u03b5/parenrightbigmi k698 \u2265/parenleftbig 1\u2212 \u0304\u03b5+\u03b6 \u0304\u03b5\u22122\u03b6 \u0304\u03b5+ \u0304\u03b5/parenrightbigmi k699 \u2265/parenleftbig 1\u2212/parenleftbig 2\u03b6\u22121/parenrightbig \u0304\u03b5/parenrightbig|Si| k700 Similarly, we prove the right inequality. 701 |Si\u2229I\u03b6|\u22641 + \u0304\u03b5 k\u2212\u03b6+ 1/vextendsingle/vextendsingleSi\\I\u03b6\u22121/vextendsingle/vextendsingle702 =1 + \u0304\u03b5 k\u2212\u03b6+ 1/parenleftbigg mi\u2212\u03b6\u22121/summationdisplay j=1|Si\u2229Ij|/parenrightbigg",
+    "technical_score": 0.026666666666666665,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Correctness and Time Complexity of ApproxStatic"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "\u22641 + \u0304\u03b5 k\u2212\u03b6+ 1/parenleft\uf8ecigg 1\u2212\u03b6\u22121/summationdisplay j=11\u2212/parenleftbig 2j\u22121/parenrightbig \u0304\u03b5 k/parenright\uf8ecigg mi 704 = (1 + \u0304\u03b5)/parenleft\uf8ecigg 1 +/parenleftbig \u2212\u03b6+ 2\u03b6\u22121/parenrightbig \u0304\u03b5 k\u2212\u03b6+ 1/parenright\uf8ecigg mi k705 \u2264(1 + \u0304\u03b5)/parenleftbig 1 +/parenleftbig \u2212\u03b6+ 2\u03b6\u22121/parenrightbig \u0304\u03b5/parenrightbigmi k706 =/parenleftbig 1 + 2\u03b6 \u0304\u03b5\u2212\u03b6 \u0304\u03b5+/parenleftbig 2\u03b6\u2212\u03b6\u22121/parenrightbig \u0304\u03b52/parenrightbigmi k707 </parenleftbig 1 + 2\u03b6 \u0304\u03b5\u2212\u03b6 \u0304\u03b5+ \u0304\u03b5/parenrightbigmi k708 \u2264/parenleftbig 1 +/parenleftbig 2\u03b6\u22121/parenrightbig \u0304\u03b5/parenrightbig|Si| k709 By induction, the claim holds. Finally, substituting \u0304\u03b5=\u03b5 2k, we have 710 (1\u2212\u03b5)|Si| k<|Si\u2229Ij|<(1 +\u03b5)|Si| k. 711 \u25c0 712",
+    "technical_score": 0.008888888888888889,
+    "citation_score": 0.0
+  }
+]
