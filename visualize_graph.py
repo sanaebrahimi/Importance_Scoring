@@ -18,6 +18,7 @@ import colorsys
 import json
 import re
 from pathlib import Path
+from typing import Optional, Union
 
 from citation_resolver import CitationResolver
 from citation_graph_framework import KnowledgeDiscoveryFramework
@@ -51,6 +52,7 @@ _COMMUNITY_COLOURS = [
 ]
 _EXTERNAL_COLOUR = "#f0a500"
 _EDGE_COLOUR = "#666666"
+_DEFAULT_MODEL_STORAGE_KEY = "__default__"
 
 
 def _rgb_to_hex(r: float, g: float, b: float) -> str:
@@ -72,6 +74,46 @@ def _community_colour(community: int) -> str:
     value = 0.92 if community % 2 == 0 else 0.78
     r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
     return _rgb_to_hex(r, g, b)
+
+
+def _result_model_tag_from_filename(paper_id: str, filename: str) -> Optional[str]:
+    suffixes = [
+        "_paragraph_citation_scores.json",
+        "_paragraph_scores.json",
+        "_section_scores.json",
+        "_citation_scores.json",
+    ]
+    for suffix in suffixes:
+        if filename == f"{paper_id}{suffix}":
+            return ""
+        prefix = f"{paper_id}_"
+        if filename.startswith(prefix) and filename.endswith(suffix):
+            return filename[len(prefix) : -len(suffix)]
+    return None
+
+
+def discover_available_model_tags(results_dir: Union[str, Path]) -> list[str]:
+    tags = set()
+    for paper_dir in sorted(Path(results_dir).iterdir()):
+        if not paper_dir.is_dir() or paper_dir.name.startswith("."):
+            continue
+        paper_id = paper_dir.name
+        for child in paper_dir.iterdir():
+            if not child.is_file() or not child.name.endswith(".json"):
+                continue
+            model_tag = _result_model_tag_from_filename(paper_id, child.name)
+            if model_tag is None:
+                continue
+            tags.add(model_tag)
+    return sorted(tags, key=lambda tag: (tag != "", tag))
+
+
+def _model_storage_key(model_tag: str) -> str:
+    return model_tag or _DEFAULT_MODEL_STORAGE_KEY
+
+
+def _model_display_name(model_tag: str) -> str:
+    return model_tag or "default"
 
 
 def _scale(val: float, lo: float, hi: float, out_lo: float, out_hi: float) -> float:
@@ -203,14 +245,20 @@ def build_graph_payload(
             "corpus_nodes": len(corpus_ids),
             "external_nodes": len(external_ranked),
         },
+        "model_key": _model_storage_key(model_tag),
+        "model_label": _model_display_name(model_tag),
         "model_tag": model_tag,
     }
 
 
-def render_html(payload: dict, default_top_k: int, default_min_weight: float) -> str:
-    payload_json = json.dumps(payload, ensure_ascii=False)
+def render_html(payloads_by_model: dict, default_model_key: str, default_top_k: int, default_min_weight: float) -> str:
+    payloads_json = json.dumps(payloads_by_model, ensure_ascii=False)
     default_state_json = json.dumps(
-        {"top_k": default_top_k, "min_weight": default_min_weight},
+        {
+            "model": default_model_key,
+            "top_k": default_top_k,
+            "min_weight": default_min_weight,
+        },
         ensure_ascii=False,
     )
     title = "Importance-Weighted Citation Graph"
@@ -331,7 +379,8 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       color: var(--muted);
     }}
 
-    input {{
+    input,
+    select {{
       width: 100%;
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
@@ -342,12 +391,14 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       outline: none;
     }}
 
-    input:focus {{
+    input:focus,
+    select:focus {{
       border-color: rgba(78, 154, 241, 0.9);
       box-shadow: 0 0 0 3px rgba(78, 154, 241, 0.18);
     }}
 
-    input[readonly] {{
+    input[readonly],
+    select:disabled {{
       opacity: 0.92;
       cursor: default;
     }}
@@ -535,7 +586,7 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
         <div class="controls-grid">
           <div>
             <label for="model-tag-input">Scoring model</label>
-            <input id="model-tag-input" type="text" readonly>
+            <select id="model-tag-input"></select>
           </div>
           <div>
             <label for="top-k-input">Top external works by PageRank</label>
@@ -603,7 +654,7 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
   </div>
 
   <script>
-    const GRAPH_PAYLOAD = {payload_json};
+    const GRAPH_PAYLOADS = {payloads_json};
     const DEFAULT_STATE = {default_state_json};
     const NETWORK_OPTIONS = {{
       physics: {{
@@ -635,7 +686,6 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       }}
     }};
 
-    const maxExternal = GRAPH_PAYLOAD.external_order.length;
     const nodesDataset = new vis.DataSet([]);
     const edgesDataset = new vis.DataSet([]);
     const network = new vis.Network(
@@ -654,7 +704,9 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       return value.toFixed(3);
     }}
 
-    function clampTopK(value) {{
+    function clampTopK(value, modelKey = null) {{
+      const payload = modelKey ? (GRAPH_PAYLOADS[modelKey] || currentPayload()) : currentPayload();
+      const maxExternal = payload.external_order.length;
       if (!Number.isFinite(value)) {{
         return DEFAULT_STATE.top_k;
       }}
@@ -668,35 +720,65 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       return value;
     }}
 
+    function availableModelKeys() {{
+      return Object.keys(GRAPH_PAYLOADS);
+    }}
+
+    function currentPayload(state = null) {{
+      const modelKey = state?.model ?? DEFAULT_STATE.model;
+      return GRAPH_PAYLOADS[modelKey] || GRAPH_PAYLOADS[DEFAULT_STATE.model];
+    }}
+
     function parseQueryState() {{
       const params = new URLSearchParams(window.location.search);
-      const topK = clampTopK(Number(params.get("top_k")));
+      const requestedModel = params.get("model");
+      const validModel = availableModelKeys().includes(requestedModel || "")
+        ? (requestedModel || DEFAULT_STATE.model)
+        : DEFAULT_STATE.model;
+      const topK = clampTopK(Number(params.get("top_k")), validModel);
       const minWeight = clampMinWeight(Number(params.get("min_weight")));
       return {{
+        model: validModel,
         top_k: params.has("top_k") ? topK : DEFAULT_STATE.top_k,
         min_weight: params.has("min_weight") ? minWeight : DEFAULT_STATE.min_weight
       }};
     }}
 
     function writeInputs(state) {{
-      const modelTag = GRAPH_PAYLOAD.model_tag || "default";
-      document.getElementById("model-tag-input").value = modelTag;
+      document.getElementById("model-tag-input").value = state.model;
       document.getElementById("top-k-input").value = String(state.top_k);
       document.getElementById("min-weight-input").value = String(state.min_weight);
     }}
 
     function readInputs() {{
       return {{
-        top_k: clampTopK(Number(document.getElementById("top-k-input").value)),
+        model: document.getElementById("model-tag-input").value || DEFAULT_STATE.model,
+        top_k: clampTopK(
+          Number(document.getElementById("top-k-input").value),
+          document.getElementById("model-tag-input").value || DEFAULT_STATE.model,
+        ),
         min_weight: clampMinWeight(Number(document.getElementById("min-weight-input").value))
       }};
     }}
 
-    function buildLegend() {{
+    function buildModelOptions() {{
+      const modelSelect = document.getElementById("model-tag-input");
+      modelSelect.innerHTML = "";
+      for (const modelKey of availableModelKeys()) {{
+        const payload = GRAPH_PAYLOADS[modelKey];
+        const option = document.createElement("option");
+        option.value = modelKey;
+        option.textContent = payload.model_label;
+        modelSelect.appendChild(option);
+      }}
+      modelSelect.disabled = availableModelKeys().length <= 1;
+    }}
+
+    function buildLegend(payload) {{
       const legendItems = document.getElementById("legend-items");
       legendItems.innerHTML = "";
 
-      for (const item of GRAPH_PAYLOAD.community_legend) {{
+      for (const item of payload.community_legend) {{
         const row = document.createElement("span");
         row.className = "legend-item";
         row.innerHTML =
@@ -708,33 +790,34 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       const external = document.createElement("span");
       external.className = "legend-item";
       external.innerHTML =
-        `<span class="legend-dot" style="background:${{GRAPH_PAYLOAD.external_color}}"></span>` +
+        `<span class="legend-dot" style="background:${{payload.external_color}}"></span>` +
         `External cited work`;
       legendItems.appendChild(external);
     }}
 
     function filteredGraph(state) {{
+      const payload = currentPayload(state);
       const externalIncluded = new Set(
-        GRAPH_PAYLOAD.external_order.slice(0, state.top_k)
+        payload.external_order.slice(0, state.top_k)
       );
-      const allowedNodes = new Set(GRAPH_PAYLOAD.corpus_ids);
+      const allowedNodes = new Set(payload.corpus_ids);
       for (const nodeId of externalIncluded) {{
         allowedNodes.add(nodeId);
       }}
 
-      const visibleEdges = GRAPH_PAYLOAD.edges.filter((edge) =>
+      const visibleEdges = payload.edges.filter((edge) =>
         allowedNodes.has(edge.from) &&
         allowedNodes.has(edge.to) &&
         edge.raw_weight >= state.min_weight
       );
 
-      const connectedNodes = new Set(GRAPH_PAYLOAD.corpus_ids);
+      const connectedNodes = new Set(payload.corpus_ids);
       for (const edge of visibleEdges) {{
         connectedNodes.add(edge.from);
         connectedNodes.add(edge.to);
       }}
 
-      const visibleNodes = GRAPH_PAYLOAD.nodes.filter((node) => {{
+      const visibleNodes = payload.nodes.filter((node) => {{
         if (node.is_corpus) {{
           return true;
         }}
@@ -762,6 +845,7 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       const externalVisible = visibleNodes.length - corpusVisible;
 
       return {{
+        payload,
         nodes: visibleNodes,
         edges: scaledEdges,
         corpusVisible,
@@ -772,15 +856,15 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
     function updateSummary(state, filtered) {{
       document.getElementById("visible-nodes").textContent = String(filtered.nodes.length);
       document.getElementById("visible-edges").textContent = String(filtered.edges.length);
-      document.getElementById("max-external").textContent = String(maxExternal);
+      document.getElementById("max-external").textContent = String(filtered.payload.external_order.length);
       document.getElementById("stats-line").textContent =
-        `Showing ${{filtered.corpusVisible}} corpus papers, ` +
+        `Model ${{filtered.payload.model_label}}: showing ${{filtered.corpusVisible}} corpus papers, ` +
         `${{filtered.externalVisible}} external works, and ` +
         `${{filtered.edges.length}} edges.`;
 
       document.getElementById("command-preview").textContent =
         `python3 visualize_graph.py ` +
-        `${{GRAPH_PAYLOAD.model_tag ? `--model-tag ${{GRAPH_PAYLOAD.model_tag}} ` : ``}}` +
+        `${{filtered.payload.model_tag ? `--model-tag ${{filtered.payload.model_tag}} ` : ``}}` +
         `--load-mappings citation_mappings.json ` +
         `--top-k ${{state.top_k}} --min-weight ${{formatNumber(state.min_weight)}} ` +
         `--output docs/index.html`;
@@ -788,6 +872,9 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
 
     function updateUrl(state) {{
       const params = new URLSearchParams();
+      if (state.model && state.model !== DEFAULT_STATE.model) {{
+        params.set("model", String(state.model));
+      }}
       params.set("top_k", String(state.top_k));
       params.set("min_weight", String(state.min_weight));
       const nextUrl = `${{window.location.pathname}}?${{params.toString()}}`;
@@ -801,6 +888,7 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       edgesDataset.clear();
       nodesDataset.add(filtered.nodes);
       edgesDataset.add(filtered.edges);
+      buildLegend(filtered.payload);
       updateSummary(state, filtered);
       updateUrl(state);
       network.fit({{ animation: {{ duration: 400, easingFunction: "easeInOutQuad" }} }});
@@ -812,6 +900,7 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
 
     document.getElementById("apply-btn").addEventListener("click", applyFromInputs);
     document.getElementById("reset-btn").addEventListener("click", () => render(DEFAULT_STATE));
+    document.getElementById("model-tag-input").addEventListener("change", () => render(readInputs()));
     document.getElementById("top-k-input").addEventListener("keydown", (event) => {{
       if (event.key === "Enter") {{
         applyFromInputs();
@@ -823,7 +912,7 @@ def render_html(payload: dict, default_top_k: int, default_min_weight: float) ->
       }}
     }});
 
-    buildLegend();
+    buildModelOptions();
     render(parseQueryState());
   </script>
 </body>
@@ -887,26 +976,50 @@ def main() -> None:
         print(f"Mappings saved to {args.save_mappings}")
 
     mappings = resolver.build_citation_mappings()
-    fw = KnowledgeDiscoveryFramework.from_results_dir(
-        args.results,
-        citation_mappings=mappings,
-        model_tag=args.model_tag,
-    )
+    if args.model_tag:
+        model_tags = [args.model_tag.strip()]
+    else:
+        model_tags = discover_available_model_tags(args.results)
+        if not model_tags:
+            model_tags = [""]
 
-    payload = build_graph_payload(fw, resolver)
+    payloads_by_model = {}
+    for model_tag in model_tags:
+        fw = KnowledgeDiscoveryFramework.from_results_dir(
+            args.results,
+            citation_mappings=mappings,
+            model_tag=model_tag,
+        )
+        payload = build_graph_payload(fw, resolver, model_tag=model_tag)
+        payloads_by_model[_model_storage_key(model_tag)] = payload
+
+    default_model_key = _model_storage_key(model_tags[0])
+    if not args.model_tag and _model_storage_key("llama3_2") in payloads_by_model:
+        default_model_key = _model_storage_key("llama3_2")
+
+    default_payload = payloads_by_model[default_model_key]
     output_path = Path(args.output)
     output_path.write_text(
-        render_html(payload, default_top_k=args.top_k, default_min_weight=args.min_weight),
+        render_html(
+            payloads_by_model,
+            default_model_key=default_model_key,
+            default_top_k=args.top_k,
+            default_min_weight=args.min_weight,
+        ),
         encoding="utf-8",
     )
 
     print(
-        f"Corpus: {payload['graph_stats']['corpus_nodes']} papers  |  "
-        f"Total graph nodes: {payload['graph_stats']['total_nodes']}"
+        f"Corpus: {default_payload['graph_stats']['corpus_nodes']} papers  |  "
+        f"Total graph nodes: {default_payload['graph_stats']['total_nodes']}"
     )
     print(
         f"Website defaults: top-k={args.top_k}, min-weight={args.min_weight}  |  "
-        f"max external candidates={payload['graph_stats']['external_nodes']}"
+        f"max external candidates={default_payload['graph_stats']['external_nodes']}"
+    )
+    print(
+        "Models embedded: "
+        + ", ".join(payload["model_label"] for payload in payloads_by_model.values())
     )
     print(f"\nGraph saved -> {output_path}")
     print("Open it in any browser.")

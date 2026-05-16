@@ -1,6 +1,6 @@
 {
-  "model_tag": "phi3_medium_run2",
-  "papers_evaluated": 27,
+  "model_tag": "qwen3_4b",
+  "papers_evaluated": 28,
   "paper_ids": [
     "AFD",
     "QR",
@@ -9,6 +9,7 @@
     "Dynamic_Necklace_Splitting",
     "HENN_ICLR_26-1",
     "axolotl",
+    "adv_res_paper",
     "requal",
     "Random_access_Retrieval-5",
     "fairRQ",
@@ -32,38 +33,38 @@
   ],
   "aggregate": {
     "model": {
-      "mean_spearman": 0.39809599456382233,
-      "mean_kendall_tau_b": 0.3278358806695827,
-      "mean_l1": 0.6242095484242394,
+      "mean_spearman": 0.5069170895491438,
+      "mean_kendall_tau_b": 0.430991157415666,
+      "mean_l1": 0.5895805157269818,
       "bootstrap_ci_spearman": [
-        0.2096579611512732,
-        0.5756893259362192
+        0.3720389388992251,
+        0.640502515805789
       ],
       "bootstrap_ci_kendall_tau_b": [
-        0.16851610289421973,
-        0.47243098594774435
+        0.30464142441000497,
+        0.5505936309335515
       ],
       "bootstrap_ci_l1": [
-        0.5331228353248731,
-        0.7223678907432911
+        0.51464700568054,
+        0.6609010397564822
       ]
     },
     "uniform": {
       "mean_spearman": null,
       "mean_kendall_tau_b": null,
-      "mean_l1": 0.6923729977341918,
+      "mean_l1": 0.6870331457742972,
       "bootstrap_ci_spearman": null,
       "bootstrap_ci_kendall_tau_b": null,
       "bootstrap_ci_l1": [
-        0.6377249725925743,
-        0.7476774670604359
+        0.633747627110966,
+        0.7405327330291994
       ]
     }
   },
   "per_paper": [
     {
       "paper_id": "AFD",
-      "section_file": "paper_results/AFD/AFD_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/AFD/AFD_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Data Model & Problem Definition",
@@ -81,23 +82,19 @@
         "Related Work": 0.07291666666666667
       },
       "model_normalized": {
-        "Introduction": 0.09275749480558029,
-        "Data Model & Problem Definition": 0.17863856732957353,
-        "Solution Framework: Bound Computation": 0.21747303848817648,
-        "Anytime AFD Algorithms": 0.20639160977540316,
-        "Experiments": 0.20579796180864748,
-        "Related Work": 0.09894132779261897
+        "Introduction": 0.16666666666666666,
+        "Data Model & Problem Definition": 0.11111111111111112,
+        "Solution Framework: Bound Computation": 0.22222222222222224,
+        "Anytime AFD Algorithms": 0.16666666666666666,
+        "Experiments": 0.22222222222222224,
+        "Related Work": 0.11111111111111112
       },
-      "model_extra_top_level_sections": [
-        "A Intractability Results under Certain Assumptions",
-        "B Proofs of theorems",
-        "Optimization Techniques"
-      ],
+      "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.9428571428571428,
-          "kendall_tau_b": 0.8666666666666667,
-          "l1": 0.21675571386168002
+          "spearman": 0.7171371656006361,
+          "kendall_tau_b": 0.5962847939999439,
+          "l1": 0.29166666666666663
         },
         "uniform": {
           "spearman": null,
@@ -108,7 +105,7 @@
     },
     {
       "paper_id": "QR",
-      "section_file": "paper_results/QR/QR_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/QR/QR_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -124,11 +121,11 @@
         "Final remarks": 0.02
       },
       "model_normalized": {
-        "Introduction": 0.14301254159201432,
-        "Preliminaries": 0.23105963654978243,
-        "Efficiently Updating Neighbors, and the Use of k-Sets": 0.2009214230867674,
-        "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression": 0.2812899923214743,
-        "Final remarks": 0.14371640644996161
+        "Introduction": 0.2,
+        "Preliminaries": 0.2,
+        "Efficiently Updating Neighbors, and the Use of k-Sets": 0.2,
+        "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression": 0.2,
+        "Final remarks": 0.2
       },
       "model_extra_top_level_sections": [
         "Details of k-set based two dimensional QR problem",
@@ -139,9 +136,9 @@
       ],
       "metrics": {
         "model": {
-          "spearman": 0.6668859288553503,
-          "kendall_tau_b": 0.5270462766947299,
-          "l1": 0.5955771691835167
+          "spearman": null,
+          "kendall_tau_b": null,
+          "l1": 0.76
         },
         "uniform": {
           "spearman": null,
@@ -152,7 +149,7 @@
     },
     {
       "paper_id": "FCM_SIGMOD_CRV",
-      "section_file": "paper_results/FCM_SIGMOD_CRV/FCM_SIGMOD_CRV_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/FCM_SIGMOD_CRV/FCM_SIGMOD_CRV_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminary",
@@ -174,23 +171,23 @@
         "Discussions": 0.024997500249975
       },
       "model_normalized": {
-        "Introduction": 0.06944444444444443,
-        "Preliminary": 0.09259259259259259,
-        "Fair-Count-Min using Group-Aware Semi-Uniform Hashing": 0.046296296296296294,
-        "Computing The Column Widths": 0.023148148148148147,
-        "Price of Fairness Analysis": 0.16203703703703703,
-        "Experiments": 0.2939814814814816,
-        "Related Work": 0.13888888888888887,
-        "Discussions": 0.17361111111111108
+        "Introduction": 0.12173913043478264,
+        "Preliminary": 0.11086956521739132,
+        "Fair-Count-Min using Group-Aware Semi-Uniform Hashing": 0.11086956521739132,
+        "Computing The Column Widths": 0.11086956521739132,
+        "Price of Fairness Analysis": 0.11086956521739132,
+        "Experiments": 0.21521739130434786,
+        "Related Work": 0.10869565217391305,
+        "Discussions": 0.11086956521739132
       },
       "model_extra_top_level_sections": [
         "Conclusion"
       ],
       "metrics": {
         "model": {
-          "spearman": -0.21557272714438658,
-          "kendall_tau_b": -0.181848241863327,
-          "l1": 0.9350935276842687
+          "spearman": 0.26069011747551457,
+          "kendall_tau_b": 0.22680460581325723,
+          "l1": 0.8346326236941523
         },
         "uniform": {
           "spearman": null,
@@ -201,7 +198,7 @@
     },
     {
       "paper_id": "Fair_Epsilon_Net",
-      "section_file": "paper_results/Fair_Epsilon_Net/Fair_Epsilon_Net_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Fair_Epsilon_Net/Fair_Epsilon_Net_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -223,23 +220,25 @@
         "Experiments": 0.10638936106389361
       },
       "model_normalized": {
-        "Introduction": 0.07825647929989901,
-        "Preliminaries": 0.14669583754067092,
-        "Background": 0.05623807921014248,
-        "Fair -nets": 0.03845506563446651,
-        "Fair Geometric Hitting Set": 0.03587456524178166,
-        "Related Work": 0.04058678335016268,
-        "Application to Database Systems": 0.04818803994165825,
-        "Experiments": 0.5557051497812184
+        "Introduction": 0.13131554076699886,
+        "Preliminaries": 0.12527061750612192,
+        "Background": 0.12527061750612192,
+        "Fair -nets": 0.12228136973975429,
+        "Fair Geometric Hitting Set": 0.12228136973975429,
+        "Related Work": 0.12228136973975429,
+        "Application to Database Systems": 0.12228136973975429,
+        "Experiments": 0.12901774526174034
       },
       "model_extra_top_level_sections": [
+        "A Fair -sample",
+        "B Additional Experiments",
         "Conclusion"
       ],
       "metrics": {
         "model": {
-          "spearman": -0.21957751641341994,
-          "kendall_tau_b": -0.03779644730092272,
-          "l1": 1.198805991722156
+          "spearman": -0.1570271767770641,
+          "kendall_tau_b": -0.1745743121887939,
+          "l1": 0.891370182339108
         },
         "uniform": {
           "spearman": null,
@@ -250,7 +249,7 @@
     },
     {
       "paper_id": "Dynamic_Necklace_Splitting",
-      "section_file": "paper_results/Dynamic_Necklace_Splitting/Dynamic_Necklace_Splitting_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Dynamic_Necklace_Splitting/Dynamic_Necklace_Splitting_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Offline Algorithm",
@@ -270,24 +269,20 @@
         "Approximate Necklace Splitting": 0.0631063106310631
       },
       "model_normalized": {
-        "Introduction": 0.08749999999999998,
-        "Offline Algorithm": 0.08749999999999998,
-        "Relocation with Two Colors": 0.07499999999999998,
-        "Batch Relocation with Two Colors": 0.14999999999999997,
-        "Relocation with Multiple Colors and High Cut Density": 0.17499999999999996,
-        "Insertion and Deletion": 0.19999999999999996,
-        "Approximate Necklace Splitting": 0.22500000000000023
+        "Introduction": 0.1288421052631579,
+        "Offline Algorithm": 0.17431578947368423,
+        "Relocation with Two Colors": 0.14357894736842106,
+        "Batch Relocation with Two Colors": 0.14357894736842106,
+        "Relocation with Multiple Colors and High Cut Density": 0.14357894736842106,
+        "Insertion and Deletion": 0.14357894736842106,
+        "Approximate Necklace Splitting": 0.12252631578947368
       },
-      "model_extra_top_level_sections": [
-        "A Offline Algorithm is Optimal",
-        "B NP-completeness of MinNodeMaxFlow",
-        "Correctness and Time Complexity of ApproxStatic"
-      ],
+      "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": -0.07339758434175737,
-          "kendall_tau_b": -0.15389675281277312,
-          "l1": 0.8113261326132615
+          "spearman": 0.1404501619333974,
+          "kendall_tau_b": 0.11846977555181847,
+          "l1": 0.6880812712850234
         },
         "uniform": {
           "spearman": null,
@@ -298,7 +293,7 @@
     },
     {
       "paper_id": "HENN_ICLR_26-1",
-      "section_file": "paper_results/HENN_ICLR_26-1/HENN_ICLR_26-1_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/HENN_ICLR_26-1/HENN_ICLR_26-1_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Background and Definitions",
@@ -356,7 +351,7 @@
     },
     {
       "paper_id": "axolotl",
-      "section_file": "paper_results/axolotl/axolotl_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/axolotl/axolotl_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Methodology",
@@ -374,19 +369,19 @@
         "Limitations": 0.035699999999999996
       },
       "model_normalized": {
-        "Introduction": 0.21464646464646464,
-        "Methodology": 0.33933080808080807,
-        "Experiments": 0.20359848484848486,
-        "Related Work": 0.07070707070707072,
-        "Conclusion": 0.08080808080808081,
-        "Limitations": 0.09090909090909091
+        "Introduction": 0.17,
+        "Methodology": 0.14,
+        "Experiments": 0.24,
+        "Related Work": 0.13,
+        "Conclusion": 0.13999999999999999,
+        "Limitations": 0.18
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.7714285714285715,
-          "kendall_tau_b": 0.6,
-          "l1": 0.41552727272727286
+          "spearman": 0.3142857142857143,
+          "kendall_tau_b": 0.2,
+          "l1": 0.6686000000000001
         },
         "uniform": {
           "spearman": null,
@@ -396,8 +391,73 @@
       }
     },
     {
+      "paper_id": "adv_res_paper",
+      "section_file": "paper_results/adv_res_paper/adv_res_paper_qwen3_4b_section_scores.json",
+      "aligned_sections": [
+        "Introduction",
+        "System Overview",
+        "Team of Agents",
+        "CrS-Aware Aggregation",
+        "Learning Credibility Scores On-The-Fly",
+        "Experiment Results",
+        "Conclusion",
+        "Limitations",
+        "Related Work",
+        "Incentives and Adversarially-behaving Agents",
+        "Coordination Mechanisms",
+        "Reward Calculation",
+        "Experiments Setting Details",
+        "Extended Experiment Results"
+      ],
+      "human_normalized": {
+        "Introduction": 0.075,
+        "System Overview": 0.075,
+        "Team of Agents": 0.075,
+        "CrS-Aware Aggregation": 0.125,
+        "Learning Credibility Scores On-The-Fly": 0.15,
+        "Experiment Results": 0.1999999999999998,
+        "Conclusion": 0.025,
+        "Limitations": 0.05,
+        "Related Work": 0.025,
+        "Incentives and Adversarially-behaving Agents": 0.05,
+        "Coordination Mechanisms": 0.05,
+        "Reward Calculation": 0.05,
+        "Experiments Setting Details": 0.025,
+        "Extended Experiment Results": 0.025
+      },
+      "model_normalized": {
+        "Introduction": 0.07600000000000054,
+        "System Overview": 0.07599999999999998,
+        "Team of Agents": 0.06999999999999998,
+        "CrS-Aware Aggregation": 0.06999999999999998,
+        "Learning Credibility Scores On-The-Fly": 0.06999999999999998,
+        "Experiment Results": 0.06999999999999998,
+        "Conclusion": 0.06999999999999998,
+        "Limitations": 0.06999999999999998,
+        "Related Work": 0.06999999999999998,
+        "Incentives and Adversarially-behaving Agents": 0.06999999999999998,
+        "Coordination Mechanisms": 0.06999999999999998,
+        "Reward Calculation": 0.06999999999999998,
+        "Experiments Setting Details": 0.07199999999999998,
+        "Extended Experiment Results": 0.07599999999999997
+      },
+      "model_extra_top_level_sections": [],
+      "metrics": {
+        "model": {
+          "spearman": -0.11314161074479431,
+          "kendall_tau_b": -0.10147651372376075,
+          "l1": 0.5400000000000001
+        },
+        "uniform": {
+          "spearman": null,
+          "kendall_tau_b": null,
+          "l1": 0.5428571428571426
+        }
+      }
+    },
+    {
       "paper_id": "requal",
-      "section_file": "paper_results/requal/requal_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/requal/requal_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -420,20 +480,20 @@
       },
       "model_normalized": {
         "Introduction": 0.12,
-        "Preliminaries": 0.23197903014416774,
-        "Technical Details": 0.13936216688510267,
-        "Experiments": 0.17837483617300132,
+        "Preliminaries": 0.124,
+        "Technical Details": 0.124,
+        "Experiments": 0.2,
         "Related Work": 0.1,
-        "Benefits": 0.07972913936216688,
+        "Benefits": 0.126,
         "Conclusion": 0.08,
-        "Limitations": 0.07055482743556138
+        "Limitations": 0.126
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.8095238095238095,
-          "kendall_tau_b": 0.6428571428571429,
-          "l1": 0.4858094094478712
+          "spearman": 0.3494229522161129,
+          "kendall_tau_b": 0.29649972666444047,
+          "l1": 0.7234780521947803
         },
         "uniform": {
           "spearman": null,
@@ -444,7 +504,7 @@
     },
     {
       "paper_id": "Random_access_Retrieval-5",
-      "section_file": "paper_results/Random_access_Retrieval-5/Random_access_Retrieval-5_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Random_access_Retrieval-5/Random_access_Retrieval-5_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Applications Overview",
@@ -503,7 +563,7 @@
     },
     {
       "paper_id": "fairRQ",
-      "section_file": "paper_results/fairRQ/fairRQ_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/fairRQ/fairRQ_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "INTRODUCTION",
         "PRELIMINARIES",
@@ -525,21 +585,21 @@
         "FINAL REMARKS": 0.01
       },
       "model_normalized": {
-        "INTRODUCTION": 0.12,
-        "PRELIMINARIES": 0.1916935033357573,
-        "SINGLE-PREDICATE RANGE QUERIES": 0.12875656001672153,
-        "MULTI-PREDICATE RANGE QUERIES": 0.09092676520198739,
-        "EXPERIMENTS": 0.2770919605975535,
-        "RELATED WORK": 0.06263092393655657,
-        "DISCUSSION AND FUTURE WORK": 0.07751552313043435,
-        "FINAL REMARKS": 0.05138476378098942
+        "INTRODUCTION": 0.11315789473684211,
+        "PRELIMINARIES": 0.1342105263157895,
+        "SINGLE-PREDICATE RANGE QUERIES": 0.09210526315789475,
+        "MULTI-PREDICATE RANGE QUERIES": 0.10263157894736842,
+        "EXPERIMENTS": 0.2605263157894737,
+        "RELATED WORK": 0.10263157894736842,
+        "DISCUSSION AND FUTURE WORK": 0.09210526315789475,
+        "FINAL REMARKS": 0.10263157894736842
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.6666666666666666,
-          "kendall_tau_b": 0.5,
-          "l1": 0.560633349562582
+          "spearman": 0.1595843002455768,
+          "kendall_tau_b": 0.23145502494313785,
+          "l1": 0.6105263157894735
         },
         "uniform": {
           "spearman": null,
@@ -550,7 +610,7 @@
     },
     {
       "paper_id": "shapley",
-      "section_file": "paper_results/shapley/shapley_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/shapley/shapley_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "INTRODUCTION",
         "PRELIMINARIES",
@@ -568,19 +628,19 @@
         "FINAL REMARKS": 0.0
       },
       "model_normalized": {
-        "INTRODUCTION": 0.16039163328882955,
-        "PRELIMINARIES": 0.23587004895416108,
-        "SHAPLEY VALUE BASED SOLUTION": 0.2585288320935851,
-        "EXPERIMENTS": 0.1938966240701888,
-        "RELATED WORK": 0.0803293279928794,
-        "FINAL REMARKS": 0.07098353360035603
+        "INTRODUCTION": 0.15639999999999998,
+        "PRELIMINARIES": 0.164,
+        "SHAPLEY VALUE BASED SOLUTION": 0.20332513966480448,
+        "EXPERIMENTS": 0.19227486033519556,
+        "RELATED WORK": 0.134,
+        "FINAL REMARKS": 0.15000000000000002
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
           "spearman": 0.9428571428571428,
           "kendall_tau_b": 0.8666666666666667,
-          "l1": 0.5351490876724521
+          "l1": 0.6488
         },
         "uniform": {
           "spearman": null,
@@ -591,7 +651,7 @@
     },
     {
       "paper_id": "ranked-ret",
-      "section_file": "paper_results/ranked-ret/ranked-ret_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/ranked-ret/ranked-ret_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Formal Definitions",
@@ -615,24 +675,24 @@
         "conclusion": 0.0
       },
       "model_normalized": {
-        "Introduction": 0.07290011226617289,
-        "Formal Definitions": 0.13324196519262638,
-        "Background": 0.0708602051247159,
-        "Solution Overview": 0.1305462810412728,
-        "Algorithm Based on k-th level of arrangement": 0.17091674321178466,
-        "-sampling Approach": 0.12208338800841753,
-        "Experiments": 0.150621351956882,
-        "Related Work": 0.07776011975058442,
-        "conclusion": 0.07106983344754352
+        "Introduction": 0.11026241267590185,
+        "Formal Definitions": 0.10364652236721643,
+        "Background": 0.11026483847809035,
+        "Solution Overview": 0.14139304815873052,
+        "Algorithm Based on k-th level of arrangement": 0.11402616620431304,
+        "-sampling Approach": 0.1212888965237109,
+        "Experiments": 0.10946501921191013,
+        "Related Work": 0.10144122559765462,
+        "conclusion": 0.08821187078247228
       },
       "model_extra_top_level_sections": [
         "A Lower Bounds and Optimality of Our Algorithms"
       ],
       "metrics": {
         "model": {
-          "spearman": 0.593305565668209,
-          "kendall_tau_b": 0.4351941398892446,
-          "l1": 0.8539997375595958
+          "spearman": 0.3220801642198849,
+          "kendall_tau_b": 0.26111648393354675,
+          "l1": 0.9693698745439524
         },
         "uniform": {
           "spearman": null,
@@ -643,7 +703,7 @@
     },
     {
       "paper_id": "unf-prms",
-      "section_file": "paper_results/unf-prms/unf-prms_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/unf-prms/unf-prms_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -666,20 +726,20 @@
       },
       "model_normalized": {
         "Introduction": 0.12,
-        "Preliminaries": 0.21980676328502416,
-        "Unified Regret Minimization": 0.23510466988727857,
-        "Max Regret Ratio ORACLE": 0.08051529790660225,
-        "Average Regret Ratio ORACLE": 0.0607085346215781,
-        "Experiments": 0.18483091787439615,
-        "Related Work": 0.043961352657004835,
-        "Final Remarks": 0.05507246376811595
+        "Preliminaries": 0.12074226804123711,
+        "Unified Regret Minimization": 0.12474226804123711,
+        "Max Regret Ratio ORACLE": 0.12074226804123711,
+        "Average Regret Ratio ORACLE": 0.12874226804123712,
+        "Experiments": 0.14822680412371134,
+        "Related Work": 0.1,
+        "Final Remarks": 0.1368041237113402
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.7857142857142857,
-          "kendall_tau_b": 0.6428571428571429,
-          "l1": 0.6687600644122383
+          "spearman": 0.05988131309566294,
+          "kendall_tau_b": 0.10910894511799618,
+          "l1": 0.8090309278350516
         },
         "uniform": {
           "spearman": null,
@@ -690,7 +750,7 @@
     },
     {
       "paper_id": "RRR",
-      "section_file": "paper_results/RRR/RRR_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/RRR/RRR_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Problem Definition",
@@ -712,21 +772,21 @@
         "Final Remarks": 0.0
       },
       "model_normalized": {
-        "Introduction": 0.12,
-        "Problem Definition": 0.15625,
-        "Geometric interpretation of items": 0.0892857142857143,
-        "RRR in 2D": 0.04464285714285715,
-        "RRR in MD": 0.03125000000000001,
-        "Experimental Evaluation": 0.07196428571428573,
-        "Related Work": 0.04017857142857143,
-        "Final Remarks": 0.44642857142857145
+        "Introduction": 0.07599280457607098,
+        "Problem Definition": 0.059517305798623195,
+        "Geometric interpretation of items": 0.2065971093971771,
+        "RRR in 2D": 0.13869964906873547,
+        "RRR in MD": 0.290479658120972,
+        "Experimental Evaluation": 0.11754852582696833,
+        "Related Work": 0.06908501702312214,
+        "Final Remarks": 0.042079930188330825
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": -0.6190476190476191,
-          "kendall_tau_b": -0.5714285714285714,
-          "l1": 1.2042857142857144
+          "spearman": 0.8571428571428571,
+          "kendall_tau_b": 0.7142857142857143,
+          "l1": 0.4626067740233388
         },
         "uniform": {
           "spearman": null,
@@ -737,7 +797,7 @@
     },
     {
       "paper_id": "reg-ratio",
-      "section_file": "paper_results/reg-ratio/reg-ratio_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/reg-ratio/reg-ratio_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "INTRODUCTION",
         "PRELIMINARIES",
@@ -759,21 +819,21 @@
         "CONCLUSION": 0.0
       },
       "model_normalized": {
-        "INTRODUCTION": 0.0684931506849315,
-        "PRELIMINARIES": 0.0821917808219178,
-        "2D REGRET-RATIO MINIMIZING SET": 0.10958904109589042,
-        "HD REGRET-RATIO MINIMIZING SET": 0.05479452054794521,
-        "DISCUSSION": 0.027397260273972605,
-        "EXPERIMENTS": 0.3986301369863014,
-        "RELATED WORK": 0.14383561643835616,
-        "CONCLUSION": 0.11506849315068492
+        "INTRODUCTION": 0.12,
+        "PRELIMINARIES": 0.11699999999999999,
+        "2D REGRET-RATIO MINIMIZING SET": 0.123,
+        "HD REGRET-RATIO MINIMIZING SET": 0.127,
+        "DISCUSSION": 0.121,
+        "EXPERIMENTS": 0.21200000000000002,
+        "RELATED WORK": 0.1,
+        "CONCLUSION": 0.08
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": -0.16868694244915797,
-          "kendall_tau_b": -0.07412493166611012,
-          "l1": 1.0378407703784078
+          "spearman": 0.7470421737034139,
+          "kendall_tau_b": 0.5929994533288809,
+          "l1": 0.787128712871287
         },
         "uniform": {
           "spearman": null,
@@ -784,7 +844,7 @@
     },
     {
       "paper_id": "Fast-Monte-Carlo",
-      "section_file": "paper_results/Fast-Monte-Carlo/Fast-Monte-Carlo_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Fast-Monte-Carlo/Fast-Monte-Carlo_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction.",
         "Review of linear algebra.",
@@ -802,19 +862,19 @@
         "Discussion and conclusion.": 0.020200000000000003
       },
       "model_normalized": {
-        "Introduction.": 0.10289947864264155,
-        "Review of linear algebra.": 0.11758895088264887,
-        "The pass-e\ufb03cient model and sampling lemmas.": 0.18807280709777738,
-        "The basic matrix multiplication approximation algorithm.": 0.24586115430348487,
-        "A second matrix multiplication algorithm.": 0.2289581999451203,
-        "Discussion and conclusion.": 0.1166194091283271
+        "Introduction.": 0.14166666666666664,
+        "Review of linear algebra.": 0.14814814814814814,
+        "The pass-e\ufb03cient model and sampling lemmas.": 0.16666666666666663,
+        "The basic matrix multiplication approximation algorithm.": 0.20871459694989103,
+        "A second matrix multiplication algorithm.": 0.23480392156862762,
+        "Discussion and conclusion.": 0.09999999999999996
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.8285714285714286,
+          "spearman": 0.8857142857142857,
           "kendall_tau_b": 0.7333333333333333,
-          "l1": 0.5495612915027895
+          "l1": 0.6121629629629626
         },
         "uniform": {
           "spearman": null,
@@ -825,7 +885,7 @@
     },
     {
       "paper_id": "Fairness-Expo-Rankings",
-      "section_file": "paper_results/Fairness-Expo-Rankings/Fairness-Expo-Rankings_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Fairness-Expo-Rankings/Fairness-Expo-Rankings_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Related Work",
@@ -843,19 +903,19 @@
         "Conclusions": 0.010800000000000002
       },
       "model_normalized": {
-        "Introduction": 0.05,
-        "Related Work": 0.1875,
-        "A Framework for Ranking under Fairness Constraints": 0.5125,
-        "Constructing Group Fairness Constraints": 0.15,
-        "Discussion": 0.05,
-        "Conclusions": 0.05
+        "Introduction": 0.15533333333333338,
+        "Related Work": 0.14049999999999999,
+        "A Framework for Ranking under Fairness Constraints": 0.22709999999999986,
+        "Constructing Group Fairness Constraints": 0.21733333333333335,
+        "Discussion": 0.14733333333333337,
+        "Conclusions": 0.11239999999999999
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.5161002296110788,
-          "kendall_tau_b": 0.4472135954999579,
-          "l1": 0.5321999999999999
+          "spearman": 0.9428571428571428,
+          "kendall_tau_b": 0.8666666666666667,
+          "l1": 0.5368666666666669
         },
         "uniform": {
           "spearman": null,
@@ -866,7 +926,7 @@
     },
     {
       "paper_id": "LSH-Curves",
-      "section_file": "paper_results/LSH-Curves/LSH-Curves_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/LSH-Curves/LSH-Curves_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -888,23 +948,23 @@
         "Conclusion": 0.0070999999999999995
       },
       "model_normalized": {
-        "Introduction": 0.09946296673330908,
-        "Preliminaries": 0.15250988232440701,
-        "Linear approximation factor": 0.13261728897774544,
-        "Constant approximation factor": 0.13261728897774544,
-        "Trade-off between approximation factor and query time": 0.13261728897774544,
-        "Handling constrained alignments": 0.13261728897774544,
-        "Extensions to dynamic time warping": 0.13261728897774544,
-        "Conclusion": 0.08494070605355647
+        "Introduction": 0.1296168227585479,
+        "Preliminaries": 0.12990400056263407,
+        "Linear approximation factor": 0.12990400056263407,
+        "Constant approximation factor": 0.12990400056263407,
+        "Trade-off between approximation factor and query time": 0.12990400056263407,
+        "Handling constrained alignments": 0.12990400056263407,
+        "Extensions to dynamic time warping": 0.12990400056263407,
+        "Conclusion": 0.09095917386564767
       },
       "model_extra_top_level_sections": [
         "A Conditional lower bound"
       ],
       "metrics": {
         "model": {
-          "spearman": 0.5555555555555556,
-          "kendall_tau_b": 0.4714045207910317,
-          "l1": 0.48089626613352693
+          "spearman": 0.7222222222222222,
+          "kendall_tau_b": 0.665640235470275,
+          "l1": 0.49717599662419537
         },
         "uniform": {
           "spearman": null,
@@ -915,7 +975,7 @@
     },
     {
       "paper_id": "AlgorithmicCollectiveAction",
-      "section_file": "paper_results/AlgorithmicCollectiveAction/AlgorithmicCollectiveAction_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/AlgorithmicCollectiveAction/AlgorithmicCollectiveAction_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Problem Formulation",
@@ -934,18 +994,18 @@
       },
       "model_normalized": {
         "Introduction": 0.12,
-        "Problem Formulation": 0.1794871794871795,
-        "Collective Action in Classification": 0.15384615384615385,
-        "Collective Action in Risk Minimization": 0.12820512820512822,
-        "Experiments": 0.16205128205128205,
-        "Discussion": 0.25641025641025644
+        "Problem Formulation": 0.14,
+        "Collective Action in Classification": 0.18,
+        "Collective Action in Risk Minimization": 0.21000000000000002,
+        "Experiments": 0.18999999999999997,
+        "Discussion": 0.16
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": -0.37142857142857144,
-          "kendall_tau_b": -0.3333333333333333,
-          "l1": 0.5538974358974359
+          "spearman": 0.6571428571428571,
+          "kendall_tau_b": 0.4666666666666667,
+          "l1": 0.33799999999999997
         },
         "uniform": {
           "spearman": null,
@@ -956,7 +1016,7 @@
     },
     {
       "paper_id": "INFINI-GRAM-MINI",
-      "section_file": "paper_results/INFINI-GRAM-MINI/INFINI-GRAM-MINI_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/INFINI-GRAM-MINI/INFINI-GRAM-MINI_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Background: FM-index",
@@ -974,19 +1034,19 @@
         "Conclusion": 0.02195927939452084
       },
       "model_normalized": {
-        "Introduction": 0.12000000000000001,
-        "Background: FM-index": 0.10000000000000002,
-        "INFINI-GRAM MINI": 0.36000000000000004,
-        "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI": 0.24000000000000002,
-        "Related Work": 0.10000000000000002,
-        "Conclusion": 0.08000000000000002
+        "Introduction": 0.16373684210526315,
+        "Background: FM-index": 0.1444736842105263,
+        "INFINI-GRAM MINI": 0.24923609496928442,
+        "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI": 0.18250074713597875,
+        "Related Work": 0.1444736842105263,
+        "Conclusion": 0.11557894736842106
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
           "spearman": 0.898645105261295,
           "kendall_tau_b": 0.8280786712108251,
-          "l1": 0.3384287389404115
+          "l1": 0.6749550547298852
         },
         "uniform": {
           "spearman": null,
@@ -997,7 +1057,7 @@
     },
     {
       "paper_id": "Native-Sparse-Attention",
-      "section_file": "paper_results/Native-Sparse-Attention/Native-Sparse-Attention_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Native-Sparse-Attention/Native-Sparse-Attention_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Methodology",
@@ -1013,18 +1073,18 @@
         "Conclusion": 0.019981460500566484
       },
       "model_normalized": {
-        "Introduction": 0.2168862538427756,
-        "Methodology": 0.2772227885503574,
-        "Experiments": 0.14714040863892677,
-        "Efficiency Analysis": 0.23517786561264822,
-        "Conclusion": 0.12357268335529206
+        "Introduction": 0.17425,
+        "Methodology": 0.24206493506493507,
+        "Experiments": 0.27568506493506495,
+        "Efficiency Analysis": 0.185,
+        "Conclusion": 0.12299999999999998
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.6999999999999998,
-          "kendall_tau_b": 0.6,
-          "l1": 0.5913807227292698
+          "spearman": 0.8999999999999998,
+          "kendall_tau_b": 0.8,
+          "l1": 0.4046071171078381
         },
         "uniform": {
           "spearman": null,
@@ -1035,7 +1095,7 @@
     },
     {
       "paper_id": "Rankit-Askit",
-      "section_file": "paper_results/Rankit-Askit/Rankit-Askit_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Rankit-Askit/Rankit-Askit_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -1055,20 +1115,20 @@
         "Conclusion": 0.017898210178982105
       },
       "model_normalized": {
-        "Introduction": 0.12,
-        "Preliminaries": 0.16778865769073847,
-        "Estimating the Relevance": 0.1342309261525908,
-        "Pre-processing: Exposure Discovery": 0.1485108119135047,
-        "Experiments": 0.2606283149734802,
-        "Discussions": 0.08884128926968585,
-        "Conclusion": 0.08
+        "Introduction": 0.11999999999999997,
+        "Preliminaries": 0.13851540616246497,
+        "Estimating the Relevance": 0.15459383753501396,
+        "Pre-processing: Exposure Discovery": 0.16459383753501397,
+        "Experiments": 0.20694677871148465,
+        "Discussions": 0.134593837535014,
+        "Conclusion": 0.0807563025210084
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
           "spearman": 0.7857142857142856,
-          "kendall_tau_b": 0.7142857142857143,
-          "l1": 0.33101600080710003
+          "kendall_tau_b": 0.6190476190476191,
+          "l1": 0.37475046893069797
         },
         "uniform": {
           "spearman": null,
@@ -1079,7 +1139,7 @@
     },
     {
       "paper_id": "FairSetCover",
-      "section_file": "paper_results/FairSetCover/FairSetCover_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/FairSetCover/FairSetCover_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Application Demonstration",
@@ -1103,22 +1163,22 @@
         "Conclusion": 0.009000900090009001
       },
       "model_normalized": {
-        "Introduction": 0.04504504504504505,
-        "Application Demonstration": 0.3153153153153153,
-        "Preliminaries": 0.0900900900900901,
-        "Fair Set Cover": 0.06306306306306307,
-        "Weighted Fair Set Cover": 0.07207207207207209,
-        "Generalized Fair Set Cover": 0.08108108108108109,
-        "Experiments": 0.15333333333333335,
+        "Introduction": 0.12,
+        "Application Demonstration": 0.14520300751879697,
+        "Preliminaries": 0.10009022556390978,
+        "Fair Set Cover": 0.11009022556390977,
+        "Weighted Fair Set Cover": 0.10009022556390978,
+        "Generalized Fair Set Cover": 0.10009022556390978,
+        "Experiments": 0.14443609022556386,
         "Related Work": 0.1,
         "Conclusion": 0.08
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": -0.1617387408441622,
-          "kendall_tau_b": -0.1767766952966369,
-          "l1": 0.7926919178404325
+          "spearman": 0.3116912322922415,
+          "kendall_tau_b": 0.27695585470349865,
+          "l1": 0.6223396414829453
         },
         "uniform": {
           "spearman": null,
@@ -1129,7 +1189,7 @@
     },
     {
       "paper_id": "Minoria",
-      "section_file": "paper_results/Minoria/Minoria_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Minoria/Minoria_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -1155,23 +1215,23 @@
         "Conclusion": 0.0066
       },
       "model_normalized": {
-        "Introduction": 0.03804166666666666,
-        "Preliminaries": 0.1964583333333334,
-        "Geometric Interpretation": 0.06166666666666666,
-        "Minoria Mining in 2D": 0.086875,
-        "Generalized Ray-sweeping for Higher Dimensions": 0.07125,
-        "Practical Heuristics": 0.09208333333333332,
-        "Experiments": 0.180625,
-        "Related Work": 0.08529166666666667,
-        "Discussion": 0.10770833333333332,
-        "Conclusion": 0.07999999999999999
+        "Introduction": 0.10000000000000002,
+        "Preliminaries": 0.10000000000000002,
+        "Geometric Interpretation": 0.10000000000000002,
+        "Minoria Mining in 2D": 0.10000000000000002,
+        "Generalized Ray-sweeping for Higher Dimensions": 0.10000000000000002,
+        "Practical Heuristics": 0.10000000000000002,
+        "Experiments": 0.12000000000000002,
+        "Related Work": 0.10000000000000002,
+        "Discussion": 0.10000000000000002,
+        "Conclusion": 0.08000000000000002
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": -0.17179207335915767,
-          "kendall_tau_b": -0.1164050492949297,
-          "l1": 0.7571666666666669
+          "spearman": 0.4334607234315053,
+          "kendall_tau_b": 0.3787770095392851,
+          "l1": 0.5496
         },
         "uniform": {
           "spearman": null,
@@ -1182,7 +1242,7 @@
     },
     {
       "paper_id": "RSR-Core",
-      "section_file": "paper_results/RSR-Core/RSR-Core_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/RSR-Core/RSR-Core_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "System Overview",
@@ -1194,16 +1254,16 @@
         "Demonstration Scenarios": 0.2857
       },
       "model_normalized": {
-        "Introduction": 0.3085185185185185,
-        "System Overview": 0.3939836347975883,
-        "Demonstration Scenarios": 0.29749784668389323
+        "Introduction": 0.12,
+        "System Overview": 0.5800000000000001,
+        "Demonstration Scenarios": 0.3
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": 0.4999999999999999,
-          "kendall_tau_b": 0.3333333333333333,
-          "l1": 0.3548327304048235
+          "spearman": 0.9999999999999998,
+          "kendall_tau_b": 1.0,
+          "l1": 0.045800000000000035
         },
         "uniform": {
           "spearman": null,
@@ -1214,7 +1274,7 @@
     },
     {
       "paper_id": "Efficient-MM-Algo",
-      "section_file": "paper_results/Efficient-MM-Algo/Efficient-MM-Algo_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/Efficient-MM-Algo/Efficient-MM-Algo_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "Introduction",
         "Preliminaries",
@@ -1232,12 +1292,12 @@
         "Conclusion": 0.0088
       },
       "model_normalized": {
-        "Introduction": 0.10563936107097703,
-        "Preliminaries": 0.2091788239508112,
-        "Preprocessing: Index Construction": 0.18537032308019824,
-        "Inference Time: Vector-to-Matrix Multiplication": 0.18189462952244453,
-        "Experiments": 0.2123648763787522,
-        "Conclusion": 0.10555198599681685
+        "Introduction": 0.1684556346323245,
+        "Preliminaries": 0.1684556346323245,
+        "Preprocessing: Index Construction": 0.1684556346323245,
+        "Inference Time: Vector-to-Matrix Multiplication": 0.1684556346323245,
+        "Experiments": 0.16573715513623144,
+        "Conclusion": 0.16044030633447057
       },
       "model_extra_top_level_sections": [
         "Background",
@@ -1249,9 +1309,9 @@
       ],
       "metrics": {
         "model": {
-          "spearman": 0.6957252427829381,
-          "kendall_tau_b": 0.5520524474738834,
-          "l1": 0.43374034203721007
+          "spearman": 0.2572478777137633,
+          "kendall_tau_b": 0.1781741612749496,
+          "l1": 0.5877031511982391
         },
         "uniform": {
           "spearman": null,
@@ -1262,7 +1322,7 @@
     },
     {
       "paper_id": "mm-mlp",
-      "section_file": "paper_results/mm-mlp/mm-mlp_phi3_medium_run2_section_scores.json",
+      "section_file": "paper_results/mm-mlp/mm-mlp_qwen3_4b_section_scores.json",
       "aligned_sections": [
         "INTRODUCTION",
         "BENEFITS OF TRAINING NEURAL NETWORKS ON CPUS",
@@ -1290,24 +1350,24 @@
         "CONCLUSION": 0.006600000000000001
       },
       "model_normalized": {
-        "INTRODUCTION": 0.12,
-        "BENEFITS OF TRAINING NEURAL NETWORKS ON CPUS": 0.13021412911245572,
-        "RELATED WORK": 0.07853747542248365,
-        "PRELIMINARIES": 0.05781162301512544,
-        "EFFICIENT TRAINING BY SAMPLING FROM CURRENT LAYER": 0.040389776689300806,
-        "EFFICIENT TRAINING BY SAMPLING FROM PREVIOUS LAYER": 0.03405771918308061,
-        "THEORETICAL ANALYSIS": 0.030258008828208772,
-        "EXPERIMENT SETUP": 0.12497406775531654,
-        "EXPERIMENT RESULTS": 0.24614504441566853,
-        "LESSONS AND DISCUSSION": 0.05761215557836001,
+        "INTRODUCTION": 0.09982178217821783,
+        "BENEFITS OF TRAINING NEURAL NETWORKS ON CPUS": 0.09582178217821782,
+        "RELATED WORK": 0.09382178217821782,
+        "PRELIMINARIES": 0.09182178217821782,
+        "EFFICIENT TRAINING BY SAMPLING FROM CURRENT LAYER": 0.08982178217821783,
+        "EFFICIENT TRAINING BY SAMPLING FROM PREVIOUS LAYER": 0.08782178217821783,
+        "THEORETICAL ANALYSIS": 0.08582178217821783,
+        "EXPERIMENT SETUP": 0.10495509223367047,
+        "EXPERIMENT RESULTS": 0.10245084836038894,
+        "LESSONS AND DISCUSSION": 0.06784158415841583,
         "CONCLUSION": 0.08
       },
       "model_extra_top_level_sections": [],
       "metrics": {
         "model": {
-          "spearman": -0.29748984767207,
-          "kendall_tau_b": -0.261785157202368,
-          "l1": 0.7432513445805115
+          "spearman": -0.09611210463251492,
+          "kendall_tau_b": -0.11219363880101485,
+          "l1": 0.7039715706059546
         },
         "uniform": {
           "spearman": null,
@@ -1320,7 +1380,7 @@
   "citation_top_k": {
     "enabled": true,
     "k": 4,
-    "papers_evaluated": 27,
+    "papers_evaluated": 28,
     "paper_ids": [
       "AFD",
       "QR",
@@ -1329,6 +1389,7 @@
       "Dynamic_Necklace_Splitting",
       "HENN_ICLR_26-1",
       "axolotl",
+      "adv_res_paper",
       "requal",
       "Random_access_Retrieval-5",
       "fairRQ",
@@ -1351,36 +1412,36 @@
       "mm-mlp"
     ],
     "aggregate": {
-      "mean_overlap_at_k": 1.2592592592592593,
-      "mean_precision_at_k": 0.3148148148148148,
-      "mean_recall_at_k": 0.3148148148148148,
-      "mean_hit_at_k": 0.7777777777777778,
-      "mean_mrr_human_rank1_in_model_top_k": 0.30864197530864196,
+      "mean_overlap_at_k": 1.6071428571428572,
+      "mean_precision_at_k": 0.4017857142857143,
+      "mean_recall_at_k": 0.4017857142857143,
+      "mean_hit_at_k": 0.8571428571428571,
+      "mean_mrr_human_rank1_in_model_top_k": 0.32142857142857145,
       "bootstrap_ci_overlap_at_k": [
-        0.9259259259259259,
-        1.5925925925925926
+        1.2857142857142858,
+        1.9285714285714286
       ],
       "bootstrap_ci_precision_at_k": [
-        0.23148148148148148,
-        0.39814814814814814
+        0.32142857142857145,
+        0.48214285714285715
       ],
       "bootstrap_ci_recall_at_k": [
-        0.23148148148148148,
-        0.39814814814814814
+        0.32142857142857145,
+        0.48214285714285715
       ],
       "bootstrap_ci_hit_at_k": [
-        0.6296296296296297,
-        0.9259259259259259
+        0.7142857142857143,
+        0.9642857142857143
       ],
       "bootstrap_ci_mrr_human_rank1_in_model_top_k": [
-        0.1728395061728395,
-        0.4567901234567902
+        0.18749999999999997,
+        0.4613095238095239
       ]
     },
     "per_paper": [
       {
         "paper_id": "AFD",
-        "citation_file": "paper_results/AFD/AFD_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/AFD/AFD_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1412,51 +1473,51 @@
         ],
         "model_picked_citations": [
           {
-            "title": "The lattice-based approaches for mining association rules: a review.",
-            "citation_score": 0.044892354082014446
+            "title": "Online algorithms: a survey.",
+            "citation_score": 0.03801007407407408
           },
           {
-            "title": "Anytime measures for top-k algorithms on exact and fuzzy data sets.",
-            "citation_score": 0.012561502142773486
+            "title": "An incremental algorithm for a generalization of the shortest-path problem.",
+            "citation_score": 0.0319277037037037
           },
           {
             "title": "Approximate inference of functional dependencies from relations.",
-            "citation_score": 0.0059024438699075464
+            "citation_score": 0.012493473932056168
           },
           {
-            "title": "Mixed integer linear programming formulation techniques.",
-            "citation_score": 0.005611544260251806
+            "title": "Efficient discovery of approximate dependencies.",
+            "citation_score": 0.007657615648804832
           }
         ],
         "model_top_k": [
           {
-            "citation": "[25]",
-            "citation_score": 0.044892354082014446
+            "citation": "[1]",
+            "citation_score": 0.03801007407407408
           },
           {
-            "citation": "[2]",
-            "citation_score": 0.012561502142773486
+            "citation": "[39]",
+            "citation_score": 0.0319277037037037
           },
           {
             "citation": "[21]",
-            "citation_score": 0.0059024438699075464
+            "citation_score": 0.012493473932056168
           },
           {
-            "citation": "[44]",
-            "citation_score": 0.005611544260251806
+            "citation": "[23]",
+            "citation_score": 0.007657615648804832
           }
         ],
         "metrics": {
-          "overlap_at_k": 1,
-          "precision_at_k": 0.25,
-          "recall_at_k": 0.25,
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
           "hit_at_k": 1.0,
           "mrr_human_rank1_in_model_top_k": 0.3333333333333333
         }
       },
       {
         "paper_id": "QR",
-        "citation_file": "paper_results/QR/QR_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/QR/QR_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1481,45 +1542,45 @@
           }
         ],
         "human_top_k_resolved_model_keys": [
-          "(4)",
+          "[4]",
           "[9]",
           "[12]",
           "[27]"
         ],
         "model_picked_citations": [
           {
-            "title": "An improved algorithm for discrete l1linear approximation.",
-            "citation_score": 0.05297383489646612
+            "title": "Thegaussianhareandthelaplaciantortoise:computability of squared-error versus absolute-error estimators.",
+            "citation_score": 0.0631977436912951
           },
           {
-            "title": "Thegaussianhareandthelaplaciantortoise:computability of squared-error versus absolute-error estimators.",
-            "citation_score": 0.04425583200213408
+            "title": "An improved algorithm for discrete l1linear approximation.",
+            "citation_score": 0.0599569850349128
+          },
+          {
+            "title": "Xxii.",
+            "citation_score": 0.028899898632429127
           },
           {
             "title": "Least absolute deviations: theory, applications, and algorithms .",
-            "citation_score": 0.014325080114614563
-          },
-          {
-            "title": "A gentle introduction to quantile regression for ecologists.",
-            "citation_score": 0.010678399253196292
+            "citation_score": 0.022337600931205782
           }
         ],
         "model_top_k": [
           {
-            "citation": "[1]",
-            "citation_score": 0.05297383489646612
+            "citation": "[24]",
+            "citation_score": 0.0631977436912951
           },
           {
-            "citation": "[24]",
-            "citation_score": 0.04425583200213408
+            "citation": "[1]",
+            "citation_score": 0.0599569850349128
+          },
+          {
+            "citation": "[13]",
+            "citation_score": 0.028899898632429127
           },
           {
             "citation": "[2]",
-            "citation_score": 0.014325080114614563
-          },
-          {
-            "citation": "(3)",
-            "citation_score": 0.010678399253196292
+            "citation_score": 0.022337600931205782
           }
         ],
         "metrics": {
@@ -1532,7 +1593,7 @@
       },
       {
         "paper_id": "FCM_SIGMOD_CRV",
-        "citation_file": "paper_results/FCM_SIGMOD_CRV/FCM_SIGMOD_CRV_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/FCM_SIGMOD_CRV/FCM_SIGMOD_CRV_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1564,38 +1625,38 @@
         ],
         "model_picked_citations": [
           {
-            "title": "An improved data stream summary: the count-min sketch and its applications.",
-            "citation_score": 0.02874123840748641
+            "title": "The space complexity of approximating the frequency moments.",
+            "citation_score": 0.01976551809372588
           },
           {
             "title": "Identifying insufficient data coverage for ordinal continuous-valued attributes.",
-            "citation_score": 0.018091346153846152
+            "citation_score": 0.014933709921311213
           },
           {
-            "title": "The space complexity of approximating the frequency moments.",
-            "citation_score": 0.014343780859536671
+            "title": "An improved data stream summary: the count-min sketch and its applications.",
+            "citation_score": 0.011902472803549387
           },
           {
-            "title": "Sketching techniques for large scale NLP.",
-            "citation_score": 0.0125302734375
+            "title": "(Learned) Frequency Estimation Algorithms under Zipfian Distribution.",
+            "citation_score": 0.009348027012416243
           }
         ],
         "model_top_k": [
           {
-            "citation": "[28]",
-            "citation_score": 0.02874123840748641
+            "citation": "(5)",
+            "citation_score": 0.01976551809372588
           },
           {
             "citation": "(10)",
-            "citation_score": 0.018091346153846152
+            "citation_score": 0.014933709921311213
           },
           {
-            "citation": "(5)",
-            "citation_score": 0.014343780859536671
+            "citation": "[28]",
+            "citation_score": 0.011902472803549387
           },
           {
-            "citation": "[44]",
-            "citation_score": 0.0125302734375
+            "citation": "(1)",
+            "citation_score": 0.009348027012416243
           }
         ],
         "metrics": {
@@ -1603,12 +1664,12 @@
           "precision_at_k": 0.25,
           "recall_at_k": 0.25,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 1.0
+          "mrr_human_rank1_in_model_top_k": 0.3333333333333333
         }
       },
       {
         "paper_id": "Fair_Epsilon_Net",
-        "citation_file": "paper_results/Fair_Epsilon_Net/Fair_Epsilon_Net_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Fair_Epsilon_Net/Fair_Epsilon_Net_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1636,51 +1697,51 @@
         ],
         "model_picked_citations": [
           {
-            "title": "RRR: Rank-regret representative.",
-            "citation_score": 0.033375837680751204
-          },
-          {
             "title": "On Fair Epsilon Net and Geometric Hitting Set (Technical Report).",
-            "citation_score": 0.02724780769624096
+            "citation_score": 0.01783750230209611
           },
           {
-            "title": "Fairness and machine learning: Limitations and opportunities.",
-            "citation_score": 0.008820361962803256
+            "title": "The Discrepancy Method: Randomness and Complexity .",
+            "citation_score": 0.013976366681680915
           },
           {
-            "title": "A survey on bias and fairness in machine learning.",
-            "citation_score": 0.00880277462302129
+            "title": "Epsilon-approximations & epsilon-nets.",
+            "citation_score": 0.01024333059222225
+          },
+          {
+            "title": "Epsilon-nets and simplex range queries.",
+            "citation_score": 0.009254893500105867
           }
         ],
         "model_top_k": [
           {
-            "citation": "[11]",
-            "citation_score": 0.033375837680751204
-          },
-          {
             "citation": "[32]",
-            "citation_score": 0.02724780769624096
+            "citation_score": 0.01783750230209611
           },
           {
-            "citation": "[16]",
-            "citation_score": 0.008820361962803256
+            "citation": "[25]",
+            "citation_score": 0.013976366681680915
           },
           {
-            "citation": "[63]",
-            "citation_score": 0.00880277462302129
+            "citation": "[65]",
+            "citation_score": 0.01024333059222225
+          },
+          {
+            "citation": "[47]",
+            "citation_score": 0.009254893500105867
           }
         ],
         "metrics": {
-          "overlap_at_k": 0,
-          "precision_at_k": 0.0,
-          "recall_at_k": 0.0,
-          "hit_at_k": 0.0,
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
+          "hit_at_k": 1.0,
           "mrr_human_rank1_in_model_top_k": 0.0
         }
       },
       {
         "paper_id": "Dynamic_Necklace_Splitting",
-        "citation_file": "paper_results/Dynamic_Necklace_Splitting/Dynamic_Necklace_Splitting_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Dynamic_Necklace_Splitting/Dynamic_Necklace_Splitting_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1703,44 +1764,44 @@
         ],
         "human_top_k_resolved_model_keys": [
           "[2]",
-          "[1]",
+          "(1)",
           "[6]",
           "[19]"
         ],
         "model_picked_citations": [
           {
             "title": "[19]",
-            "citation_score": 0.02312818584070796
-          },
-          {
-            "title": "[6]",
-            "citation_score": 0.014492219764011795
+            "citation_score": 0.08269293420861891
           },
           {
             "title": "[2]",
-            "citation_score": 0.003614498525073745
+            "citation_score": 0.011239400743673056
           },
           {
-            "title": "19:20 Dynamic Necklace Splitting We first prove the left inequality of the claim.",
-            "citation_score": 0.00180245485831769
+            "title": "[12]",
+            "citation_score": 0.008083864299789474
+          },
+          {
+            "title": "(1)",
+            "citation_score": 0.00407342251962183
           }
         ],
         "model_top_k": [
           {
             "citation": "[19]",
-            "citation_score": 0.02312818584070796
-          },
-          {
-            "citation": "[6]",
-            "citation_score": 0.014492219764011795
+            "citation_score": 0.08269293420861891
           },
           {
             "citation": "[2]",
-            "citation_score": 0.003614498525073745
+            "citation_score": 0.011239400743673056
           },
           {
-            "citation": "[4]",
-            "citation_score": 0.00180245485831769
+            "citation": "[12]",
+            "citation_score": 0.008083864299789474
+          },
+          {
+            "citation": "(1)",
+            "citation_score": 0.00407342251962183
           }
         ],
         "metrics": {
@@ -1748,12 +1809,12 @@
           "precision_at_k": 0.75,
           "recall_at_k": 0.75,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 0.3333333333333333
+          "mrr_human_rank1_in_model_top_k": 0.5
         }
       },
       {
         "paper_id": "HENN_ICLR_26-1",
-        "citation_file": "paper_results/HENN_ICLR_26-1/HENN_ICLR_26-1_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/HENN_ICLR_26-1/HENN_ICLR_26-1_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1774,7 +1835,7 @@
           }
         ],
         "human_top_k_resolved_model_keys": [
-          "[25]",
+          "[9]",
           "[28]",
           "[46]",
           "[47]"
@@ -1782,37 +1843,37 @@
         "model_picked_citations": [
           {
             "title": "Approximate nearest neighbor algorithm based on navigable small world graphs.",
-            "citation_score": 0.020136804991099277
+            "citation_score": 0.012446769648455015
+          },
+          {
+            "title": "Revisiting the index construction of proximity graphbased approximate nearest neighbor search.",
+            "citation_score": 0.011319110945802693
           },
           {
             "title": "Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs.",
-            "citation_score": 0.019457688208188263
+            "citation_score": 0.01103275633965819
           },
           {
-            "title": "Computing optimal epsilon-nets is as easy as finding an unhit set.",
-            "citation_score": 0.007922835069623414
-          },
-          {
-            "title": "Product quantization for nearest neighbor search.",
-            "citation_score": 0.00736715285127083
+            "title": "Fast approximate nearest neighbor search with the navigating spreading-out graph.",
+            "citation_score": 0.010164750418965111
           }
         ],
         "model_top_k": [
           {
             "citation": "[47]",
-            "citation_score": 0.020136804991099277
+            "citation_score": 0.012446769648455015
+          },
+          {
+            "citation": "[66]",
+            "citation_score": 0.011319110945802693
           },
           {
             "citation": "[46]",
-            "citation_score": 0.019457688208188263
+            "citation_score": 0.01103275633965819
           },
           {
-            "citation": "[51]",
-            "citation_score": 0.007922835069623414
-          },
-          {
-            "citation": "[33]",
-            "citation_score": 0.00736715285127083
+            "citation": "[19]",
+            "citation_score": 0.010164750418965111
           }
         ],
         "metrics": {
@@ -1825,7 +1886,7 @@
       },
       {
         "paper_id": "axolotl",
-        "citation_file": "paper_results/axolotl/axolotl_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/axolotl/axolotl_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1853,51 +1914,123 @@
         ],
         "model_picked_citations": [
           {
-            "title": "One embedder, any task: Instruction-\ufb01netuned text embeddings",
-            "citation_score": 0.0704398688992731
+            "title": "Self-Diagnosis and Self-Debiasing: A Proposal for Reducing CorpusBased Bias in NLP",
+            "citation_score": 0.030194487323732123
           },
           {
-            "title": "Man is to computer programmer as woman is to homemaker? debiasing word embeddings",
-            "citation_score": 0.05645186400949269
+            "title": "One embedder, any task: Instruction-\ufb01netuned text embeddings",
+            "citation_score": 0.023504399999999995
           },
           {
             "title": "Bold: Dataset and metrics for measuring biases in open-ended language generation",
-            "citation_score": 0.028328843157608207
+            "citation_score": 0.015642136954218875
           },
           {
-            "title": "Multilingual machine translation with large language models: Empirical results and analysis",
-            "citation_score": 0.020928030303030306
+            "title": "Does gender matter? towards fairness in dialogue systems",
+            "citation_score": 0.012506668794218877
           }
         ],
         "model_top_k": [
           {
-            "citation": "(22)",
-            "citation_score": 0.0704398688992731
+            "citation": "(26)",
+            "citation_score": 0.030194487323732123
           },
           {
-            "citation": "(19)",
-            "citation_score": 0.05645186400949269
+            "citation": "(22)",
+            "citation_score": 0.023504399999999995
           },
           {
             "citation": "(23)",
-            "citation_score": 0.028328843157608207
+            "citation_score": 0.015642136954218875
           },
           {
-            "citation": "(1)",
-            "citation_score": 0.020928030303030306
+            "citation": "(42)",
+            "citation_score": 0.012506668794218877
           }
         ],
         "metrics": {
-          "overlap_at_k": 1,
-          "precision_at_k": 0.25,
-          "recall_at_k": 0.25,
-          "hit_at_k": 1.0,
+          "overlap_at_k": 0,
+          "precision_at_k": 0.0,
+          "recall_at_k": 0.0,
+          "hit_at_k": 0.0,
           "mrr_human_rank1_in_model_top_k": 0.0
         }
       },
       {
+        "paper_id": "adv_res_paper",
+        "citation_file": "paper_results/adv_res_paper/adv_res_paper_qwen3_4b_citation_scores.json",
+        "k": 4,
+        "human_top_k": [
+          {
+            "rank": 1,
+            "citation": "(Amayuelas et al., 2024)"
+          },
+          {
+            "rank": 2,
+            "citation": "(Liang et al., 2023a)"
+          },
+          {
+            "rank": 3,
+            "citation": "(Shapley, 1951)"
+          },
+          {
+            "rank": 4,
+            "citation": "(Ebrahimi et al., 2024)"
+          }
+        ],
+        "human_top_k_resolved_model_keys": [
+          "(Amayuelas et al., 2024)",
+          "(Liang et al., 2023a)",
+          "(Shapley, 1951)",
+          "(Ebrahimi et al., 2024)"
+        ],
+        "model_picked_citations": [
+          {
+            "title": "More agents is all you need.",
+            "citation_score": 0.03554543293493281
+          },
+          {
+            "title": "Multiagent collaboration attack: Investigating adversarial attacks in large language model collaborations via debate.",
+            "citation_score": 0.0245129351762857
+          },
+          {
+            "title": "Requal-lm: Reliability and equity through aggregation in large language models.",
+            "citation_score": 0.013101211452851496
+          },
+          {
+            "title": "The rise and potential of large language model based agents: A survey.",
+            "citation_score": 0.009777329541504958
+          }
+        ],
+        "model_top_k": [
+          {
+            "citation": "(Li et al., 2024a)",
+            "citation_score": 0.03554543293493281
+          },
+          {
+            "citation": "(Amayuelas et al., 2024)",
+            "citation_score": 0.0245129351762857
+          },
+          {
+            "citation": "(Ebrahimi et al., 2024)",
+            "citation_score": 0.013101211452851496
+          },
+          {
+            "citation": "(Xi et al., 2025)",
+            "citation_score": 0.009777329541504958
+          }
+        ],
+        "metrics": {
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
+          "hit_at_k": 1.0,
+          "mrr_human_rank1_in_model_top_k": 0.5
+        }
+      },
+      {
         "paper_id": "requal",
-        "citation_file": "paper_results/requal/requal_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/requal/requal_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1918,45 +2051,45 @@
           }
         ],
         "human_top_k_resolved_model_keys": [
-          "(Hammersley,2013)",
+          "(Hammersley, 2013)",
           "(Durrett, 2010)",
           "(Su et al., 2023)",
           "(Gao et al., 2023)"
         ],
         "model_picked_citations": [
           {
-            "title": "One embedder, any task: Instruction-finetuned text embeddings.",
-            "citation_score": 0.12279106596767148
+            "title": "One embedder, any task: Instruction-\ufb01netuned text embeddings",
+            "citation_score": 0.07607119999999999
           },
           {
             "title": "Mithraranking: A system for responsible ranking design.",
-            "citation_score": 0.039
+            "citation_score": 0.022080000000000002
           },
           {
             "title": "Double equivariance for inductive link prediction for both new nodes and new relation types.",
-            "citation_score": 0.0234
+            "citation_score": 0.014904000000000002
           },
           {
-            "title": "An empirical survey of the effectiveness of debiasing techniques for pre-trained language models.",
-            "citation_score": 0.01625
+            "title": "Redditbias: A real-world resource for bias evaluation and debiasing of conversational language models",
+            "citation_score": 0.011450621475704862
           }
         ],
         "model_top_k": [
           {
             "citation": "(Su et al., 2023)",
-            "citation_score": 0.12279106596767148
+            "citation_score": 0.07607119999999999
           },
           {
             "citation": "(Guan et al., 2019)",
-            "citation_score": 0.039
+            "citation_score": 0.022080000000000002
           },
           {
             "citation": "(Gao et al., 2023)",
-            "citation_score": 0.0234
+            "citation_score": 0.014904000000000002
           },
           {
-            "citation": "(Meade et al., 2022)",
-            "citation_score": 0.01625
+            "citation": "(Barikeri et al., 2021)",
+            "citation_score": 0.011450621475704862
           }
         ],
         "metrics": {
@@ -1969,7 +2102,7 @@
       },
       {
         "paper_id": "Random_access_Retrieval-5",
-        "citation_file": "paper_results/Random_access_Retrieval-5/Random_access_Retrieval-5_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Random_access_Retrieval-5/Random_access_Retrieval-5_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -1997,38 +2130,38 @@
         ],
         "model_picked_citations": [
           {
-            "title": "CSMetrics.",
-            "citation_score": 0.021866193718793673
+            "title": "Algorithms in combinatorial geometry , volume 10.",
+            "citation_score": 0.01968629053920498
           },
           {
             "title": "Geometric approximation algorithms .",
-            "citation_score": 0.01793003824791286
+            "citation_score": 0.013275690759165642
           },
           {
-            "title": "Time bounds for selection.",
-            "citation_score": 0.010540830376807558
+            "title": "Point location in arrangements of hyperplanes.",
+            "citation_score": 0.012078440253528062
           },
           {
             "title": "Reporting points in halfspaces.",
-            "citation_score": 0.00995016795357509
+            "citation_score": 0.0076781907838683215
           }
         ],
         "model_top_k": [
           {
-            "citation": "(1)",
-            "citation_score": 0.021866193718793673
+            "citation": "[41]",
+            "citation_score": 0.01968629053920498
           },
           {
             "citation": "[50]",
-            "citation_score": 0.01793003824791286
+            "citation_score": 0.013275690759165642
           },
           {
-            "citation": "[18]",
-            "citation_score": 0.010540830376807558
+            "citation": "[73]",
+            "citation_score": 0.012078440253528062
           },
           {
             "citation": "[72]",
-            "citation_score": 0.00995016795357509
+            "citation_score": 0.0076781907838683215
           }
         ],
         "metrics": {
@@ -2041,7 +2174,7 @@
       },
       {
         "paper_id": "fairRQ",
-        "citation_file": "paper_results/fairRQ/fairRQ_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/fairRQ/fairRQ_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2073,51 +2206,51 @@
         ],
         "model_picked_citations": [
           {
-            "title": "Risk assessment in criminal sentencing.",
-            "citation_score": 0.02654847072481036
+            "title": "How data, analytics, and technology are helping us \ufb01ght covid-19.",
+            "citation_score": 0.01400533969687179
           },
           {
             "title": "https://salaries.",
-            "citation_score": 0.023232227696379757
+            "citation_score": 0.011992043368421057
           },
           {
-            "title": "Data preprocessing techniques for classi\ufb01cation without discrimination.",
-            "citation_score": 0.01509586338769088
+            "title": "Coverage-based Rewriting for Data Preparation.",
+            "citation_score": 0.011806788413247213
           },
           {
-            "title": "Fairness and machine learning: Limitations and opportunities.",
-            "citation_score": 0.010405362977944078
+            "title": "The impact of rewriting on coverage constraint satisfaction.",
+            "citation_score": 0.01149631296888575
           }
         ],
         "model_top_k": [
           {
-            "citation": "[48]",
-            "citation_score": 0.02654847072481036
+            "citation": "(1)",
+            "citation_score": 0.01400533969687179
           },
           {
             "citation": "[47]",
-            "citation_score": 0.023232227696379757
+            "citation_score": 0.011992043368421057
           },
           {
-            "citation": "[43]",
-            "citation_score": 0.01509586338769088
+            "citation": "[36]",
+            "citation_score": 0.011806788413247213
           },
           {
-            "citation": "[41]",
-            "citation_score": 0.010405362977944078
+            "citation": "[35]",
+            "citation_score": 0.01149631296888575
           }
         ],
         "metrics": {
-          "overlap_at_k": 0,
-          "precision_at_k": 0.0,
-          "recall_at_k": 0.0,
-          "hit_at_k": 0.0,
+          "overlap_at_k": 1,
+          "precision_at_k": 0.25,
+          "recall_at_k": 0.25,
+          "hit_at_k": 1.0,
           "mrr_human_rank1_in_model_top_k": 0.0
         }
       },
       {
         "paper_id": "shapley",
-        "citation_file": "paper_results/shapley/shapley_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/shapley/shapley_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2140,56 +2273,56 @@
         "human_top_k_resolved_model_keys": [
           "[7]",
           "[10]",
-          null,
+          "[15]",
           "[16]"
         ],
         "model_picked_citations": [
           {
-            "title": "A backcasting approach for matching regional ecosystem services supply and demand.",
-            "citation_score": 0.02181964765276256
+            "title": "A value for n-person games , page 31\u201340.",
+            "citation_score": 0.026022031553575575
           },
           {
             "title": "A unified approach to interpreting model predictions.",
-            "citation_score": 0.02061703350499078
+            "citation_score": 0.01497881550577051
           },
           {
-            "title": "A linear approximation method for the shapley value.",
-            "citation_score": 0.019868701125309942
+            "title": "Answering why-not questions on reverse top-k queries.",
+            "citation_score": 0.011985496
           },
           {
-            "title": "Springer International Publishing, Cham, 2016.",
-            "citation_score": 0.01652174050990541
+            "title": "On answering why-not questions in reverse skyline queries.",
+            "citation_score": 0.011387403377777779
           }
         ],
         "model_top_k": [
           {
-            "citation": "[1]",
-            "citation_score": 0.02181964765276256
+            "citation": "[7]",
+            "citation_score": 0.026022031553575575
           },
           {
             "citation": "[10]",
-            "citation_score": 0.02061703350499078
+            "citation_score": 0.01497881550577051
           },
           {
-            "citation": "[14]",
-            "citation_score": 0.019868701125309942
+            "citation": "[57]",
+            "citation_score": 0.011985496
           },
           {
-            "citation": "[2]",
-            "citation_score": 0.01652174050990541
+            "citation": "[59]",
+            "citation_score": 0.011387403377777779
           }
         ],
         "metrics": {
-          "overlap_at_k": 1,
-          "precision_at_k": 0.25,
-          "recall_at_k": 0.25,
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 0.0
+          "mrr_human_rank1_in_model_top_k": 1.0
         }
       },
       {
         "paper_id": "ranked-ret",
-        "citation_file": "paper_results/ranked-ret/ranked-ret_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/ranked-ret/ranked-ret_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2222,37 +2355,37 @@
         "model_picked_citations": [
           {
             "title": "Geometric approximation algorithms .",
-            "citation_score": 0.026916813179835228
+            "citation_score": 0.028160432368272016
           },
           {
-            "title": "Time bounds for selection.",
-            "citation_score": 0.01975326741844994
+            "title": "The Discrepancy Method: Randomness and Complexity .",
+            "citation_score": 0.012976666666666668
           },
           {
-            "title": "Algorithms in combinatorial geometry .",
-            "citation_score": 0.019346365941863463
+            "title": "Algorithms in combinatorial geometry , volume 10.",
+            "citation_score": 0.011752921181931171
           },
           {
-            "title": "Lower bounds on the complexity of polytope range searching.",
-            "citation_score": 0.01931262816609953
+            "title": "Tractable orders for direct access to ranked answers of conjunctive queries.",
+            "citation_score": 0.009521047733227286
           }
         ],
         "model_top_k": [
           {
             "citation": "[27]",
-            "citation_score": 0.026916813179835228
+            "citation_score": 0.028160432368272016
           },
           {
-            "citation": "[7]",
-            "citation_score": 0.01975326741844994
+            "citation": "[12]",
+            "citation_score": 0.012976666666666668
           },
           {
             "citation": "[22]",
-            "citation_score": 0.019346365941863463
+            "citation_score": 0.011752921181931171
           },
           {
-            "citation": "[11]",
-            "citation_score": 0.01931262816609953
+            "citation": "[9]",
+            "citation_score": 0.009521047733227286
           }
         ],
         "metrics": {
@@ -2265,7 +2398,7 @@
       },
       {
         "paper_id": "unf-prms",
-        "citation_file": "paper_results/unf-prms/unf-prms_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/unf-prms/unf-prms_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2291,57 +2424,57 @@
         ],
         "human_top_k_resolved_model_keys": [
           "[10]",
-          "(5)",
+          "[11]",
           "[15]",
           "[12]"
         ],
         "model_picked_citations": [
           {
+            "title": "Clustering by means of medoids, statistical data analysis based on the l1 norm and related methods.",
+            "citation_score": 0.032189141990233316
+          },
+          {
+            "title": "Finding average regret ratio minimizing set in database.",
+            "citation_score": 0.023587910104939647
+          },
+          {
             "title": "Regret-minimizing representative databases.",
-            "citation_score": 0.030440633006911418
+            "citation_score": 0.01204445780299303
           },
           {
-            "title": "Ef\ufb01cient algorithms for k-regret minimizing sets.",
-            "citation_score": 0.023504469036936013
-          },
-          {
-            "title": "On the complexity of computing the volume of a polyhedron.",
-            "citation_score": 0.01813245937637242
-          },
-          {
-            "title": "On obtaining stable rankings.",
-            "citation_score": 0.014872556636617656
+            "title": "Discovering the skyline of web databases.",
+            "citation_score": 0.010036751996855848
           }
         ],
         "model_top_k": [
           {
+            "citation": "[17]",
+            "citation_score": 0.032189141990233316
+          },
+          {
+            "citation": "[15]",
+            "citation_score": 0.023587910104939647
+          },
+          {
             "citation": "[10]",
-            "citation_score": 0.030440633006911418
+            "citation_score": 0.01204445780299303
           },
           {
-            "citation": "[12]",
-            "citation_score": 0.023504469036936013
-          },
-          {
-            "citation": "[18]",
-            "citation_score": 0.01813245937637242
-          },
-          {
-            "citation": "(5)",
-            "citation_score": 0.014872556636617656
+            "citation": "[8]",
+            "citation_score": 0.010036751996855848
           }
         ],
         "metrics": {
-          "overlap_at_k": 3,
-          "precision_at_k": 0.75,
-          "recall_at_k": 0.75,
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 1.0
+          "mrr_human_rank1_in_model_top_k": 0.3333333333333333
         }
       },
       {
         "paper_id": "RRR",
-        "citation_file": "paper_results/RRR/RRR_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/RRR/RRR_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2373,38 +2506,38 @@
         ],
         "model_picked_citations": [
           {
-            "title": "Query reranking as a service.",
-            "citation_score": 0.04496528908455675
-          },
-          {
-            "title": "Qr2: A third-party query reranking service over web databases.",
-            "citation_score": 0.02586572150268209
-          },
-          {
-            "title": "Algorithms in combinatorial geometry, volume 10.",
-            "citation_score": 0.0232421751652727
+            "title": "Algorithms in combinatorial geometry , volume 10.",
+            "citation_score": 0.02820900556482253
           },
           {
             "title": "Crowdsourcing pareto-optimal object finding by pairwise comparisons.",
-            "citation_score": 0.009078409150300918
+            "citation_score": 0.018165536794838864
+          },
+          {
+            "title": "Qr2: A third-party query reranking service over web databases.",
+            "citation_score": 0.01624928778021525
+          },
+          {
+            "title": "Query reranking as a service.",
+            "citation_score": 0.01592590316883718
           }
         ],
         "model_top_k": [
           {
-            "citation": "[1]",
-            "citation_score": 0.04496528908455675
-          },
-          {
-            "citation": "[2]",
-            "citation_score": 0.02586572150268209
-          },
-          {
             "citation": "[17]",
-            "citation_score": 0.0232421751652727
+            "citation_score": 0.02820900556482253
           },
           {
             "citation": "[3]",
-            "citation_score": 0.009078409150300918
+            "citation_score": 0.018165536794838864
+          },
+          {
+            "citation": "[2]",
+            "citation_score": 0.01624928778021525
+          },
+          {
+            "citation": "[1]",
+            "citation_score": 0.01592590316883718
           }
         ],
         "metrics": {
@@ -2417,7 +2550,7 @@
       },
       {
         "paper_id": "reg-ratio",
-        "citation_file": "paper_results/reg-ratio/reg-ratio_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/reg-ratio/reg-ratio_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2450,37 +2583,37 @@
         "model_picked_citations": [
           {
             "title": "Regret-minimizing representative databases.",
-            "citation_score": 0.046029708904109595
+            "citation_score": 0.03600242181317949
           },
           {
             "title": "Computing k-regret minimizing sets.",
-            "citation_score": 0.04497200342465754
+            "citation_score": 0.027752410783561863
           },
           {
             "title": "Approximation algorithms for convex hulls.",
-            "citation_score": 0.03015785902073573
+            "citation_score": 0.022005734868602765
           },
           {
             "title": "The skyline operator.",
-            "citation_score": 0.020732102787496622
+            "citation_score": 0.02148991671489189
           }
         ],
         "model_top_k": [
           {
             "citation": "[22]",
-            "citation_score": 0.046029708904109595
+            "citation_score": 0.03600242181317949
           },
           {
             "citation": "[6]",
-            "citation_score": 0.04497200342465754
+            "citation_score": 0.027752410783561863
           },
           {
-            "citation": "[1]",
-            "citation_score": 0.03015785902073573
+            "citation": "(1)",
+            "citation_score": 0.022005734868602765
           },
           {
-            "citation": "[2]",
-            "citation_score": 0.020732102787496622
+            "citation": "(2)",
+            "citation_score": 0.02148991671489189
           }
         ],
         "metrics": {
@@ -2493,7 +2626,7 @@
       },
       {
         "paper_id": "Fast-Monte-Carlo",
-        "citation_file": "paper_results/Fast-Monte-Carlo/Fast-Monte-Carlo_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Fast-Monte-Carlo/Fast-Monte-Carlo_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2517,43 +2650,43 @@
         "human_top_k_resolved_model_keys": [
           "[11]",
           "(1)",
-          "[2]",
+          "(2)",
           "[15]"
         ],
         "model_picked_citations": [
           {
             "title": "(1)",
-            "citation_score": 0.050165860307637866
+            "citation_score": 0.03073223383686227
+          },
+          {
+            "title": "R.",
+            "citation_score": 0.027514184375972608
           },
           {
             "title": "D.",
-            "citation_score": 0.04575597654081004
-          },
-          {
-            "title": "P.",
-            "citation_score": 0.022109579158076924
+            "citation_score": 0.027123746894572184
           },
           {
             "title": "G.",
-            "citation_score": 0.01297157230403366
+            "citation_score": 0.025370345962846142
           }
         ],
         "model_top_k": [
           {
             "citation": "(1)",
-            "citation_score": 0.050165860307637866
+            "citation_score": 0.03073223383686227
           },
           {
-            "citation": "[2]",
-            "citation_score": 0.04575597654081004
+            "citation": "[20]",
+            "citation_score": 0.027514184375972608
           },
           {
-            "citation": "[10]",
-            "citation_score": 0.022109579158076924
+            "citation": "(2)",
+            "citation_score": 0.027123746894572184
           },
           {
             "citation": "[18]",
-            "citation_score": 0.01297157230403366
+            "citation_score": 0.025370345962846142
           }
         ],
         "metrics": {
@@ -2566,7 +2699,7 @@
       },
       {
         "paper_id": "Fairness-Expo-Rankings",
-        "citation_file": "paper_results/Fairness-Expo-Rankings/Fairness-Expo-Rankings_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Fairness-Expo-Rankings/Fairness-Expo-Rankings_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2587,58 +2720,58 @@
           }
         ],
         "human_top_k_resolved_model_keys": [
-          "(4)",
+          "[4]",
           "[28]",
           "[22]",
           "[17]"
         ],
         "model_picked_citations": [
           {
-            "title": "Cumulated gain-based evaluation of IR techniques.",
-            "citation_score": 0.052044375
-          },
-          {
-            "title": "2017.",
-            "citation_score": 0.051256884507275134
+            "title": "The probability ranking principle in IR.",
+            "citation_score": 0.05993733552969417
           },
           {
             "title": "Big data\u2019s disparate impact.",
-            "citation_score": 0.030038468915343917
+            "citation_score": 0.014690672940244235
           },
           {
-            "title": "Equity of attention: Amortizing individual fairness in rankings.",
-            "citation_score": 0.028504478557504875
+            "title": "Redundancy, diversity and interdependent document relevance.",
+            "citation_score": 0.014394148363636356
+          },
+          {
+            "title": "Cumulated gain-based evaluation of IR techniques.",
+            "citation_score": 0.013887619200000003
           }
         ],
         "model_top_k": [
           {
-            "citation": "[17]",
-            "citation_score": 0.052044375
-          },
-          {
-            "citation": "(1)",
-            "citation_score": 0.051256884507275134
+            "citation": "[28]",
+            "citation_score": 0.05993733552969417
           },
           {
             "citation": "(2)",
-            "citation_score": 0.030038468915343917
+            "citation_score": 0.014690672940244235
           },
           {
-            "citation": "[3]",
-            "citation_score": 0.028504478557504875
+            "citation": "[24]",
+            "citation_score": 0.014394148363636356
+          },
+          {
+            "citation": "[17]",
+            "citation_score": 0.013887619200000003
           }
         ],
         "metrics": {
-          "overlap_at_k": 1,
-          "precision_at_k": 0.25,
-          "recall_at_k": 0.25,
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
           "hit_at_k": 1.0,
           "mrr_human_rank1_in_model_top_k": 0.0
         }
       },
       {
         "paper_id": "LSH-Curves",
-        "citation_file": "paper_results/LSH-Curves/LSH-Curves_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/LSH-Curves/LSH-Curves_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2667,50 +2800,50 @@
         "model_picked_citations": [
           {
             "title": "[16]",
-            "citation_score": 0.029738770334826463
+            "citation_score": 0.013012329896907213
+          },
+          {
+            "title": "[29]",
+            "citation_score": 0.012087008659793813
+          },
+          {
+            "title": "[26]",
+            "citation_score": 0.008665240319999998
           },
           {
             "title": "[17]",
-            "citation_score": 0.027258547458800853
-          },
-          {
-            "title": "[14]",
-            "citation_score": 0.003630377974837123
-          },
-          {
-            "title": "(1)",
-            "citation_score": 0.0032812440935359997
+            "citation_score": 0.008316923355715815
           }
         ],
         "model_top_k": [
           {
             "citation": "[16]",
-            "citation_score": 0.029738770334826463
+            "citation_score": 0.013012329896907213
+          },
+          {
+            "citation": "[29]",
+            "citation_score": 0.012087008659793813
+          },
+          {
+            "citation": "[26]",
+            "citation_score": 0.008665240319999998
           },
           {
             "citation": "[17]",
-            "citation_score": 0.027258547458800853
-          },
-          {
-            "citation": "[14]",
-            "citation_score": 0.003630377974837123
-          },
-          {
-            "citation": "(1)",
-            "citation_score": 0.0032812440935359997
+            "citation_score": 0.008316923355715815
           }
         ],
         "metrics": {
-          "overlap_at_k": 1,
-          "precision_at_k": 0.25,
-          "recall_at_k": 0.25,
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 0.5
+          "mrr_human_rank1_in_model_top_k": 0.25
         }
       },
       {
         "paper_id": "AlgorithmicCollectiveAction",
-        "citation_file": "paper_results/AlgorithmicCollectiveAction/AlgorithmicCollectiveAction_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/AlgorithmicCollectiveAction/AlgorithmicCollectiveAction_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2731,58 +2864,58 @@
           }
         ],
         "human_top_k_resolved_model_keys": [
-          "(2021)",
-          null,
-          null,
+          "(Vincent et al., 2021)",
+          "(Jiechieu & Tsopze, 2021)",
+          "(Vallas & Schor, 2020)",
           null
         ],
         "model_picked_citations": [
           {
-            "title": "(2019)",
-            "citation_score": 0.0221325
+            "title": "(Olson, 1965)",
+            "citation_score": 0.010917372569390274
           },
           {
-            "title": "(1)",
-            "citation_score": 0.00859990509020813
+            "title": "(Schor, 2021)",
+            "citation_score": 0.009967884728589473
           },
           {
-            "title": "(2021)",
-            "citation_score": 0.004972500000000001
+            "title": "(Gray & Suri, 2019)",
+            "citation_score": 0.009967239109389472
           },
           {
-            "title": "(4)",
-            "citation_score": 0.004038461538461539
+            "title": "(Woodcock & Graham, 2019)",
+            "citation_score": 0.009967239109389472
           }
         ],
         "model_top_k": [
           {
-            "citation": "(2019)",
-            "citation_score": 0.0221325
+            "citation": "(Olson, 1965)",
+            "citation_score": 0.010917372569390274
           },
           {
-            "citation": "(1)",
-            "citation_score": 0.00859990509020813
+            "citation": "(Schor, 2021)",
+            "citation_score": 0.009967884728589473
           },
           {
-            "citation": "(2021)",
-            "citation_score": 0.004972500000000001
+            "citation": "(Gray & Suri, 2019)",
+            "citation_score": 0.009967239109389472
           },
           {
-            "citation": "(4)",
-            "citation_score": 0.004038461538461539
+            "citation": "(Woodcock & Graham, 2019)",
+            "citation_score": 0.009967239109389472
           }
         ],
         "metrics": {
-          "overlap_at_k": 1,
-          "precision_at_k": 0.25,
-          "recall_at_k": 0.25,
-          "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 0.3333333333333333
+          "overlap_at_k": 0,
+          "precision_at_k": 0.0,
+          "recall_at_k": 0.0,
+          "hit_at_k": 0.0,
+          "mrr_human_rank1_in_model_top_k": 0.0
         }
       },
       {
         "paper_id": "INFINI-GRAM-MINI",
-        "citation_file": "paper_results/INFINI-GRAM-MINI/INFINI-GRAM-MINI_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/INFINI-GRAM-MINI/INFINI-GRAM-MINI_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2803,58 +2936,58 @@
           }
         ],
         "human_top_k_resolved_model_keys": [
-          null,
-          null,
-          null,
-          null
+          "(Ferragina and Manzini, 2000)",
+          "(Gog et al., 2014)",
+          "(Liu et al., 2024)",
+          "Labeit et al. (2017)"
         ],
         "model_picked_citations": [
           {
-            "title": "(2024)",
-            "citation_score": 0.09152715310266103
+            "title": "Opportunistic data structures with applications.",
+            "citation_score": 0.04232480921802483
           },
           {
-            "title": "(1)",
-            "citation_score": 0.05258301315288769
+            "title": "Infini-gram: Scaling unbounded n-gram language models to a trillion tokens.",
+            "citation_score": 0.009827837026950554
           },
           {
-            "title": "(2)",
-            "citation_score": 0.02343366766552371
+            "title": "Liu et al. (2024)",
+            "citation_score": 0.008114626170452499
           },
           {
-            "title": "(2014)",
-            "citation_score": 0.0234
+            "title": "Elazar et al. (2024)",
+            "citation_score": 0.008062274329212669
           }
         ],
         "model_top_k": [
           {
-            "citation": "(2024)",
-            "citation_score": 0.09152715310266103
+            "citation": "(Ferragina and Manzini, 2000)",
+            "citation_score": 0.04232480921802483
           },
           {
-            "citation": "(1)",
-            "citation_score": 0.05258301315288769
+            "citation": "(Liu et al., 2024)",
+            "citation_score": 0.009827837026950554
           },
           {
-            "citation": "(2)",
-            "citation_score": 0.02343366766552371
+            "citation": "Liu et al. (2024)",
+            "citation_score": 0.008114626170452499
           },
           {
-            "citation": "(2014)",
-            "citation_score": 0.0234
+            "citation": "Elazar et al. (2024)",
+            "citation_score": 0.008062274329212669
           }
         ],
         "metrics": {
-          "overlap_at_k": 0,
-          "precision_at_k": 0.0,
-          "recall_at_k": 0.0,
-          "hit_at_k": 0.0,
-          "mrr_human_rank1_in_model_top_k": 0.0
+          "overlap_at_k": 2,
+          "precision_at_k": 0.5,
+          "recall_at_k": 0.5,
+          "hit_at_k": 1.0,
+          "mrr_human_rank1_in_model_top_k": 1.0
         }
       },
       {
         "paper_id": "Native-Sparse-Attention",
-        "citation_file": "paper_results/Native-Sparse-Attention/Native-Sparse-Attention_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Native-Sparse-Attention/Native-Sparse-Attention_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2883,37 +3016,37 @@
         "model_picked_citations": [
           {
             "title": "(DeepSeek-AI, 2025)",
-            "citation_score": 0.051938550262348906
+            "citation_score": 0.04412359507029093
           },
           {
             "title": "(Zelik-man et al., 2022)",
-            "citation_score": 0.051938550262348906
+            "citation_score": 0.025374854515255545
+          },
+          {
+            "title": "Gemini 1.",
+            "citation_score": 0.023771754515255542
           },
           {
             "title": "Generative agents: Interactive simulacra of human behavior.",
-            "citation_score": 0.022259378683863813
-          },
-          {
-            "title": "Yarn: Efficient context window extension of large language models.",
-            "citation_score": 0.01912825312306048
+            "citation_score": 0.023771754515255542
           }
         ],
         "model_top_k": [
           {
             "citation": "(DeepSeek-AI, 2025)",
-            "citation_score": 0.051938550262348906
+            "citation_score": 0.04412359507029093
           },
           {
             "citation": "(Zelik-man et al., 2022)",
-            "citation_score": 0.051938550262348906
+            "citation_score": 0.025374854515255545
+          },
+          {
+            "citation": "(Google et al., 2024)",
+            "citation_score": 0.023771754515255542
           },
           {
             "citation": "(Park et al., 2023)",
-            "citation_score": 0.022259378683863813
-          },
-          {
-            "citation": "(Peng et al., 2024)",
-            "citation_score": 0.01912825312306048
+            "citation_score": 0.023771754515255542
           }
         ],
         "metrics": {
@@ -2926,7 +3059,7 @@
       },
       {
         "paper_id": "Rankit-Askit",
-        "citation_file": "paper_results/Rankit-Askit/Rankit-Askit_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Rankit-Askit/Rankit-Askit_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -2950,55 +3083,55 @@
           "[9]",
           "[15]",
           "[23]",
-          "[31]"
+          null
         ],
         "model_picked_citations": [
           {
-            "title": "Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks.",
-            "citation_score": 0.03179470387596899
+            "title": "Lost in the middle: How language models use long contexts.",
+            "citation_score": 0.04136831999999999
           },
           {
-            "title": "Integrating rankings into quantized scores in peer review.",
-            "citation_score": 0.016997662178702577
+            "title": "Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks.",
+            "citation_score": 0.008823132100840337
+          },
+          {
+            "title": "Longformer: The longdocument transformer.",
+            "citation_score": 0.008581812552872792
           },
           {
             "title": "Double equivariance for inductive link prediction for both new nodes and new relation types.",
-            "citation_score": 0.014332500000000001
-          },
-          {
-            "title": "Gemma 2: Improving open language models at a practical size.",
-            "citation_score": 0.014265397738532377
+            "citation_score": 0.007269004799999999
           }
         ],
         "model_top_k": [
           {
-            "citation": "[9]",
-            "citation_score": 0.03179470387596899
+            "citation": "[23]",
+            "citation_score": 0.04136831999999999
           },
           {
-            "citation": "[25]",
-            "citation_score": 0.016997662178702577
+            "citation": "[9]",
+            "citation_score": 0.008823132100840337
+          },
+          {
+            "citation": "(3)",
+            "citation_score": 0.008581812552872792
           },
           {
             "citation": "[15]",
-            "citation_score": 0.014332500000000001
-          },
-          {
-            "citation": "[36]",
-            "citation_score": 0.014265397738532377
+            "citation_score": 0.007269004799999999
           }
         ],
         "metrics": {
-          "overlap_at_k": 2,
-          "precision_at_k": 0.5,
-          "recall_at_k": 0.5,
+          "overlap_at_k": 3,
+          "precision_at_k": 0.75,
+          "recall_at_k": 0.75,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 1.0
+          "mrr_human_rank1_in_model_top_k": 0.5
         }
       },
       {
         "paper_id": "FairSetCover",
-        "citation_file": "paper_results/FairSetCover/FairSetCover_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/FairSetCover/FairSetCover_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -3026,38 +3159,38 @@
         ],
         "model_picked_citations": [
           {
-            "title": "Inherent trade-offs in the fair determination of risk scores.",
-            "citation_score": 0.06739864864864864
-          },
-          {
-            "title": "The black: white disparity in breast cancer mortality: the example of chicago.",
-            "citation_score": 0.040439189189189186
+            "title": "Algorithms for fair team formation in online labour marketplaces.",
+            "citation_score": 0.04270109072681705
           },
           {
             "title": "Fair set cover.",
-            "citation_score": 0.03944677178646846
+            "citation_score": 0.01638161362886955
           },
           {
-            "title": "Algorithms for fair team formation in online labour marketplaces.",
-            "citation_score": 0.027009009009009013
+            "title": "Balancing utility and fairness in submodular maximization (technical report).",
+            "citation_score": 0.01398151182456231
+          },
+          {
+            "title": "Inherent trade-offs in the fair determination of risk scores.",
+            "citation_score": 0.010536005807751655
           }
         ],
         "model_top_k": [
           {
-            "citation": "[30]",
-            "citation_score": 0.06739864864864864
-          },
-          {
-            "citation": "[23]",
-            "citation_score": 0.040439189189189186
+            "citation": "[5]",
+            "citation_score": 0.04270109072681705
           },
           {
             "citation": "[14]",
-            "citation_score": 0.03944677178646846
+            "citation_score": 0.01638161362886955
           },
           {
-            "citation": "[5]",
-            "citation_score": 0.027009009009009013
+            "citation": "[49]",
+            "citation_score": 0.01398151182456231
+          },
+          {
+            "citation": "[30]",
+            "citation_score": 0.010536005807751655
           }
         ],
         "metrics": {
@@ -3065,12 +3198,12 @@
           "precision_at_k": 0.5,
           "recall_at_k": 0.5,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 0.3333333333333333
+          "mrr_human_rank1_in_model_top_k": 0.5
         }
       },
       {
         "paper_id": "Minoria",
-        "citation_file": "paper_results/Minoria/Minoria_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Minoria/Minoria_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -3099,50 +3232,50 @@
         "model_picked_citations": [
           {
             "title": "Algorithms in combinatorial geometry , volume 10.",
-            "citation_score": 0.03412888952020203
+            "citation_score": 0.01674219641112118
           },
           {
-            "title": "Mining the minoria: Unknown, under-represented, and under-performing minority groups.",
-            "citation_score": 0.01669477200695579
-          },
-          {
-            "title": "Measuring skewness: a forgotten statistic? Journal of statistics education , 19(2), 2011.",
-            "citation_score": 0.016576171875
+            "title": "Representation Bias in Data: A Survey on Identification and Resolution Techniques.",
+            "citation_score": 0.016720047386297527
           },
           {
             "title": "Slice finder: Automated data slicing for model validation.",
-            "citation_score": 0.01040752178030303
+            "citation_score": 0.015357819883040937
+          },
+          {
+            "title": "Looking for trouble: Analyzing classifier behavior via pattern divergence.",
+            "citation_score": 0.011543695906432748
           }
         ],
         "model_top_k": [
           {
             "citation": "[21]",
-            "citation_score": 0.03412888952020203
+            "citation_score": 0.01674219641112118
           },
           {
-            "citation": "[16]",
-            "citation_score": 0.01669477200695579
-          },
-          {
-            "citation": "[19]",
-            "citation_score": 0.016576171875
+            "citation": "[38]",
+            "citation_score": 0.016720047386297527
           },
           {
             "citation": "[14]",
-            "citation_score": 0.01040752178030303
+            "citation_score": 0.015357819883040937
+          },
+          {
+            "citation": "[33]",
+            "citation_score": 0.011543695906432748
           }
         ],
         "metrics": {
-          "overlap_at_k": 2,
-          "precision_at_k": 0.5,
-          "recall_at_k": 0.5,
+          "overlap_at_k": 1,
+          "precision_at_k": 0.25,
+          "recall_at_k": 0.25,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 0.5
+          "mrr_human_rank1_in_model_top_k": 0.0
         }
       },
       {
         "paper_id": "RSR-Core",
-        "citation_file": "paper_results/RSR-Core/RSR-Core_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/RSR-Core/RSR-Core_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -3173,51 +3306,51 @@
         ],
         "model_picked_citations": [
           {
-            "title": "Bitnet: Scaling 1-bit transformers for large language models.",
-            "citation_score": 0.0631570880300307
-          },
-          {
             "title": "An efficient matrix multiplication algorithm for accelerating inference in binary and ternary neural networks.",
-            "citation_score": 0.05731644331331514
+            "citation_score": 0.04004701790281331
           },
           {
-            "title": "Towards efficient generative large language model serving: A survey from algorithms to systems.",
-            "citation_score": 0.051237212962962964
+            "title": "Bitnet: Scaling 1-bit transformers for large language models.",
+            "citation_score": 0.03396709442455243
           },
           {
-            "title": "Maximum inner product is query-scaled nearest neighbor.",
-            "citation_score": 0.02927840740740741
+            "title": "Hugging Face Model Hub and Transformers Library.",
+            "citation_score": 0.005765760000000001
+          },
+          {
+            "title": "Pytorch: An imperative style, high-performance deep learning library.",
+            "citation_score": 0.0036691199999999992
           }
         ],
         "model_top_k": [
           {
-            "citation": "[11]",
-            "citation_score": 0.0631570880300307
-          },
-          {
             "citation": "[2]",
-            "citation_score": 0.05731644331331514
+            "citation_score": 0.04004701790281331
           },
           {
-            "citation": "[7]",
-            "citation_score": 0.051237212962962964
+            "citation": "[11]",
+            "citation_score": 0.03396709442455243
           },
           {
-            "citation": "[1]",
-            "citation_score": 0.02927840740740741
+            "citation": "[5]",
+            "citation_score": 0.005765760000000001
+          },
+          {
+            "citation": "[8]",
+            "citation_score": 0.0036691199999999992
           }
         ],
         "metrics": {
-          "overlap_at_k": 2,
-          "precision_at_k": 0.5,
-          "recall_at_k": 0.5,
+          "overlap_at_k": 3,
+          "precision_at_k": 0.75,
+          "recall_at_k": 0.75,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 0.5
+          "mrr_human_rank1_in_model_top_k": 1.0
         }
       },
       {
         "paper_id": "Efficient-MM-Algo",
-        "citation_file": "paper_results/Efficient-MM-Algo/Efficient-MM-Algo_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/Efficient-MM-Algo/Efficient-MM-Algo_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -3245,51 +3378,51 @@
         ],
         "model_picked_citations": [
           {
-            "title": "(Dai et al., 2021)",
-            "citation_score": 0.012909369206677613
+            "title": "arXiv preprint arXiv:2402.",
+            "citation_score": 0.011827074763755201
           },
           {
-            "title": "(Wu et al., 2016)",
-            "citation_score": 0.007007943283624989
+            "title": ", 1970) is a classical method for efficient Boolean matrix multiplication.",
+            "citation_score": 0.011538258605547249
           },
           {
-            "title": "(McK-instry et al., 2018)",
-            "citation_score": 0.005532586802861833
+            "title": "(OpenAI, 2024)",
+            "citation_score": 0.009195954957153814
           },
           {
-            "title": "(Zhu et al., 2016)",
-            "citation_score": 0.004426069442289467
+            "title": "(Hugging Face, 2023)",
+            "citation_score": 0.008539101031642826
           }
         ],
         "model_top_k": [
           {
-            "citation": "(Dai et al., 2021)",
-            "citation_score": 0.012909369206677613
+            "citation": "(Ma et al., 2024)",
+            "citation_score": 0.011827074763755201
           },
           {
-            "citation": "(Wu et al., 2016)",
-            "citation_score": 0.007007943283624989
+            "citation": "(Arlazarov et al., 1970)",
+            "citation_score": 0.011538258605547249
           },
           {
-            "citation": "(McK-instry et al., 2018)",
-            "citation_score": 0.005532586802861833
+            "citation": "(OpenAI, 2024)",
+            "citation_score": 0.009195954957153814
           },
           {
-            "citation": "(Zhu et al., 2016)",
-            "citation_score": 0.004426069442289467
+            "citation": "(Hugging Face, 2023)",
+            "citation_score": 0.008539101031642826
           }
         ],
         "metrics": {
-          "overlap_at_k": 0,
-          "precision_at_k": 0.0,
-          "recall_at_k": 0.0,
-          "hit_at_k": 0.0,
-          "mrr_human_rank1_in_model_top_k": 0.0
+          "overlap_at_k": 1,
+          "precision_at_k": 0.25,
+          "recall_at_k": 0.25,
+          "hit_at_k": 1.0,
+          "mrr_human_rank1_in_model_top_k": 1.0
         }
       },
       {
         "paper_id": "mm-mlp",
-        "citation_file": "paper_results/mm-mlp/mm-mlp_phi3_medium_run2_citation_scores.json",
+        "citation_file": "paper_results/mm-mlp/mm-mlp_qwen3_4b_citation_scores.json",
         "k": 4,
         "human_top_k": [
           {
@@ -3318,46 +3451,46 @@
         ],
         "model_picked_citations": [
           {
-            "title": "Scalable and Sustainable Deep Learning via Randomized Hashing.",
-            "citation_score": 0.03224931725147331
-          },
-          {
             "title": "Faster Neural Network Training with Approximate Tensor Operations.",
-            "citation_score": 0.028037527678888525
+            "citation_score": 0.04749474371707671
           },
           {
-            "title": "Sampling-Based Techniques for Training Deep Neural Networks with Limited Computational Resources: A Scalability Evaluation.",
-            "citation_score": 0.023100642548883103
+            "title": "Adaptive Dropout for Training Deep Neural Networks.",
+            "citation_score": 0.04332587007456194
           },
           {
-            "title": "The MNIST Database of Handwritten Digit Images for Machine Learning Research.",
-            "citation_score": 0.015036603813999117
+            "title": "2014.",
+            "citation_score": 0.01911546976081899
+          },
+          {
+            "title": "Scalable and Sustainable Deep Learning via Randomized Hashing.",
+            "citation_score": 0.017692161747755175
           }
         ],
         "model_top_k": [
           {
-            "citation": "[50]",
-            "citation_score": 0.03224931725147331
-          },
-          {
             "citation": "[1]",
-            "citation_score": 0.028037527678888525
+            "citation_score": 0.04749474371707671
           },
           {
-            "citation": "[17]",
-            "citation_score": 0.023100642548883103
+            "citation": "[6]",
+            "citation_score": 0.04332587007456194
           },
           {
-            "citation": "[14]",
-            "citation_score": 0.015036603813999117
+            "citation": "[52]",
+            "citation_score": 0.01911546976081899
+          },
+          {
+            "citation": "[50]",
+            "citation_score": 0.017692161747755175
           }
         ],
         "metrics": {
-          "overlap_at_k": 2,
-          "precision_at_k": 0.5,
-          "recall_at_k": 0.5,
+          "overlap_at_k": 3,
+          "precision_at_k": 0.75,
+          "recall_at_k": 0.75,
           "hit_at_k": 1.0,
-          "mrr_human_rank1_in_model_top_k": 1.0
+          "mrr_human_rank1_in_model_top_k": 0.25
         }
       }
     ]
