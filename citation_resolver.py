@@ -36,6 +36,7 @@ Quick start
 
 from __future__ import annotations
 
+import difflib
 import json
 import re
 from collections import defaultdict
@@ -83,6 +84,25 @@ def _pdf_full_text(pdf_path: str | Path) -> str:
 
 def _normalize_title_key(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", (text or "").lower())
+
+
+def _titles_match(t1: str, t2: str, threshold: float = 0.85) -> bool:
+    """True if two title strings refer to the same work despite minor OCR/formatting variation.
+
+    Operates on pre-normalized (alphanumeric-only, lowercase) forms so that
+    punctuation, spacing, and ligature differences are invisible to the comparison.
+    A 40-char prefix equality check catches truncated reference titles cheaply;
+    difflib ratio catches the remaining cases (transpositions, missing articles, etc.).
+    """
+    n1 = _normalize_title_key(t1)
+    n2 = _normalize_title_key(t2)
+    if not n1 or not n2:
+        return False
+    if n1 == n2:
+        return True
+    if len(n1) >= 40 and len(n2) >= 40 and n1[:40] == n2[:40]:
+        return True
+    return difflib.SequenceMatcher(None, n1, n2).ratio() >= threshold
 
 
 def _model_tag_from_citation_filename(paper_id: str, path: Path) -> Optional[str]:
@@ -643,7 +663,7 @@ class CitationResolver:
             if base_id in self._canonical_map:
                 existing = self._canonical_map[base_id]
                 # Same paper referenced again under a different key — reuse entry
-                if _normalize_ws(existing.title).lower()[:60] == _normalize_ws(entry.title).lower()[:60]:
+                if _titles_match(existing.title, entry.title):
                     self._raw_map[(paper_id, norm_key)] = existing
                     resolved += 1
                     continue
@@ -755,9 +775,21 @@ class CitationResolver:
         """Return the graph target id for a resolved citation."""
         normalized_title = _normalize_title_key(entry.title)
         if normalized_title:
+            # Exact normalized match
             matched_papers = self._title_to_paper_ids.get(normalized_title, [])
             if len(matched_papers) == 1:
                 return matched_papers[0]
+            # Fuzzy match — handles minor PDF-extraction differences between
+            # the reference string and the corpus paper's own title
+            best_ratio, best_id = 0.0, None
+            for corpus_norm, paper_ids in self._title_to_paper_ids.items():
+                if len(paper_ids) != 1:
+                    continue
+                ratio = difflib.SequenceMatcher(None, normalized_title, corpus_norm).ratio()
+                if ratio > best_ratio:
+                    best_ratio, best_id = ratio, paper_ids[0]
+            if best_ratio >= 0.90 and best_id is not None:
+                return best_id
         return entry.canonical_id
 
     def build_citation_mappings(self) -> Dict[str, Dict[str, str]]:
