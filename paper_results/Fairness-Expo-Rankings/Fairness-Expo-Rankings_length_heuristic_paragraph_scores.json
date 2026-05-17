@@ -1,0 +1,461 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Rankings have become one of the dominant forms with which online systems present results to the user. Far surpassing their con- ception in library science as a tool for finding books in a library, the prevalence of rankings now ranges from search engines and online stores, to recommender systems and news feeds. Consequently, it is no longer just books that are being ranked, but there is hardly Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.",
+    "technical_score": 0.02262222474589745,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u00a92018 Copyright held by the owner/author(s). Publication rights licensed to Associa- tion for Computing Machinery.",
+    "technical_score": 0.0023167338595196183,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "ACM ISBN 978-1-4503-5552-0/18/08. . . $15.00 https://doi.org/10.1145/3219819.3220088anything that is notbeing ranked today \u2013 products, jobs, job seek- ers, opinions, potential romantic partners. Nevertheless, one of the guiding technical principles behind the optimization of ranking sys- tems still dates back to four decades ago \u2013 namely the Probability Ranking Principle (PRP) [ 28]. It states that the ideal ranking should order items in the decreasing order of their probability of relevance, since this is the ranking that maximizes utility of the retrieval sys- tem to the user for a broad range of common utility measures in Information Retrieval. But is this uncompromising focus on utility to the users still appropriate when we are not ranking books in a library, but people, products and opinions? There are now substantial arguments and precedent that many of the ranking systems in use today have responsibility not only to their users, but also to the items that are being ranked. In particular, the scarce resource that ranking systems allocate is the exposure of items to users, and exposure is largely determined by position in the ranking \u2013 and so is a job applicant\u2019s chances to be interviewed by an employer, an AirBnB host\u2019s ability to rent out their property, or a writer to be read. This exposes companies operating with sensitive data to legal and reputation risks, and disagreements about a fair allocation of exposure have already led to high-profile legal challenges such as the European Union antitrust violation fine on Google [ 30], and it has sparked a policy debate about search neutrality [ 14]. It is unlikely that there will be a universal definition of fairness that is appropriate across all applications, but we give three concrete examples where a ranking system may be perceived as unfair or biased in its treatment of the items that are being ranked, and where the ranking system may want to impose fairness constraints that guarantee some notion of fairness. The main contribution of this paper is a conceptual and compu- tational framework for formulating fairness constraints on rank- ings, and the associated efficient algorithms for computing utility- maximizing rankings subject to such fairness constraints. This framework provides a flexible way for balancing fairness to the items being ranked with the utility the rankings provide to the users. In this way, we are not limited to a single definition of fair- ness, since different application scenarios probably require different trade-offs between the rights of the items and what can be consid- ered an acceptable loss in utility to the user. We show that a broad range of fairness constraints can be implemented in our framework, using its expressive power to link exposure, relevance, and impact. In particular, we show how to implement forms of demographic parity, disparate treatment, and disparate impact constraints. The ranking algorithm we develop provides provable guarantees for optimizing expected utility while obeying the specified notion of fairness in expectation. To motivate the need and range of situations where one may want to trade-off utility for some notion of fairness, we start with presenting the following three application scenarios. They make Research Track Paper a1 0.82 a3 0.80a2 0.81a4 0.79a5 0.78a6 0.77 a1 a2 a3 a4 a5 a6 Relevance Prob. of interview (Exposure)0.390.71 0.780.81Ranking0.03 difference in avg relevance. 0.32 difference in avg exposure. ence in relevance can lead to a large difference in exposure (an opportunity) for the group of females. use of the concept of protected groups1, where fairness is related to the differences in how groups are treated. However, we later discuss how this extends to individual fairness by considering groups of size one. The three examples illustrate how fairness can be related to a biased allocation of opportunity, misrepresentation of real-world distributions, and fairness as a freedom of speech principle. Example 1: Fairly Allocating Economic Opportunity. Consider a web-service that connects employers (users) to potential employees (items). The following example demonstrates how small differences in item relevance can cause a large difference in exposure and therefore economic opportunity across groups. In this case, the web- service uses a ranking-based system to present a set of 6 applicants for a software engineering position to relevant employers (Figure 1). The set contains 3 males and 3 females. The male applicants have relevance of 0.80, 0.79, 0.78 respectively for the employers, while the female applicants have relevance of 0.77, 0.76, 0.75 respectively. Here we follow the standard probabilistic definition of relevance, where 0.77 means that 77% of all employers issuing the query find that applicant relevant. The Probability Ranking Principle suggests ranking these applicants in the decreasing order of relevance i.e. the 3 males at the top positions, followed by the females. What does this mean for exposure between the two groups? If we consider a standard exposure drop-off (i.e., position bias) of 1/log( 1+j), where jis the position in the ranking, as commonly used in the Discounted Cumulative Gain (DCG) measure, the female applicants will get 30% less exposure \u2013 even though the average difference in relevance between male and female applicants is just 0.03 (see Figure 1). Is this winner-take-all allocation of exposure fair in this context, even if the winner just has a tiny advantage in relevance? 2It seems reasonable to distribute exposure more evenly, even if this may mean a small drop in utility to the employers. 1Groups that are protected from discrimination by law, based on sex, race, age, disability, color, creed, national origin, or religion. We use a broader meaning of protected groups here that suits our domain. 2Note that this tiny advantage may come from 3% of the employers being gender biased, but this is not a problem we are addressing here. showing a disproportionate number of male CEOs. Example 2: Fairly Representing a Distribution of Results. Some- times the results of a query are used as a statistical sample \u2013 either explicitly or implicitly. For example, a user may expect that an im- age search for the query \u201cCEO\u201d on a search engine returns roughly the right number of male and female executives, reflecting the true distribution of male vs. female CEOs in the world. If a search engine returns a highly disproportionate number of males as compared to females like in the hypothetical results in Figure 2, then the search engine may be perceived as biased. In fact, a study detected the presence of gender bias in image search results for a variety of occupations [ 5,19]. A biased information environment may affect users\u2019 perceptions and behaviors, and it was shown that such biases indeed affect people\u2019s belief about various occupations [ 19]. Note that the Probability Ranking Principle does not necessarily produce results that represent the relevance distribution in an unbiased way. This means that even if users\u2019 relevance distribution agrees with the true distribution of female CEOs, the optimal ranking accord- ing to the Probability Ranking Principle may still look like that in Figure 2. Instead of solely relying on the PRP, it seems reasonable to distribute exposure proportional to relevance, even if this may mean a drop in utility to the users. Example 3: Giving Speakers Fair Access to Willing Listeners. Rank- ing systems play an increasing role as a medium for speech, creating a connection between bias and fairness in rankings and principles behind freedom of speech [ 14]. While the ability to produce speech and make this speech available on the internet has certainly created new opportunities to exercise freedom of speech for a speaker, there remains the question whether or not free speech makes its way to the interested listeners. Hence the study of the medium becomes necessary. Search engines are the most popular mediums of this kind and therefore have an immense capability of influencing user attention through their editorial policies, which has sparked a pol- icy debate around search neutrality [ 13,14,16]. While no unified definition of search neutrality exists, many argue that search en- gines should have no editorial policies other than that their results are comprehensive, impartial, and solely ranked by relevance [ 26]. But does ranking solely on relevance necessarily imply the Proba- bility Ranking Principle, or are there other relevance-based ranking principles that lead to a medium with a more equitable distribution of exposure and access to willing listeners? Research Track Paper",
+    "technical_score": 0.1932428595764011,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Before introducing the algorithmic framework for formulating a broad range of fairness constraints on rankings, we first survey three related strands of prior work. First, this paper draws on con- cepts for algorithmic fairness of supervised learning in the presence of sensitive attributes. Second, we relate to prior work on algorith- mic fairness for rankings. Finally, we contrast fairness with the well-studied area of diversified ranking in information retrieval.",
+    "technical_score": 0.00922266139657444,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Algorithmic Fairness"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "As algorithmic techniques, especially machine learning, find wide- spread applications, there is much interest in understanding its societal impacts. While algorithmic decisions can counteract ex- isting biases, algorithmic and data-driven decision making affords new mechanisms for introducing unintended bias [ 2]. There have been numerous attempts to define notions of fairness in the super- vised learning setting. The individual fairness perspective states that two individuals similar with respect to a task should be clas- sified similarly [ 12]. Individual fairness is hard to define precisely because of the lack of agreement on task-specific similarity metrics for individuals. There is also a group fairness perspective for super- vised learning that implies constraints like demographic parity and equalized odds. Demographic parity posits that decisions should be balanced around a sensitive attribute like gender or race [ 6,37]. However, it has been shown that demographic parity causes a loss in the utility and infringes individual fairness [ 12], since even a perfect predictor typically does not achieve demographic parity. Equalized odds represents the equal opportunity principle for super- vised learning and defines the constraint that the false positive and true positive rates should be equal for different protected groups [15]. Several recent works have focused on learning algorithms compatible with these definitions of fair classification [ 31,33,35], including causal approaches to fairness [ 20,21,23]. In this paper, we draw on many of the concepts introduced in the context of fair supervised learning but do not consider the problem of learning. Instead, we ask how to fairly allocate exposure in rankings based on relevance, independent of how these relevances may be estimated.",
+    "technical_score": 0.03316299642386599,
+    "citation_score": 0.0022783738001129305
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Fairness in Rankings"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Several recent works have raised the question of group fairness in rankings. Yang and Stoyanovich [ 32] propose statistical parity based measures that compute the difference in the distribution of different groups for different prefixes of the ranking (top-10, top-20 and so on). The differences are then averaged for these prefixes using a discounted weighting (like in DCG). This measure is then used as a regularization term. Zehlike et al. [ 34] formulate the problem of finding a \u2018Fair Top-k ranking\u2019 that optimizes utility while satisfying two sets of constraints: first, in-group monotonicity for utility (i.e. more relevant items above less relevant within the group), second, a fairness constraint that the proportion of protected group items in every prefix of the top-k ranking is above a minimum threshold. Celis et al. [ 8] propose a constrained maximum weight matching algorithm for ranking a set of items efficiently under a fairness constraint indicating the maximum number of items with each sensitive attribute allowed in the top positions. Some recent approaches, like Asudeh et al. [ 1], have also looked at the taskof designing fair scoring functions that satisfy desirable fairness constraints.",
+    "technical_score": 0.02529644268774703,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Fairness in Rankings"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most of the fairness constraints defined in the previous work reflect parity constraints restricting the fraction of items with each attribute in the ranking. The framework we propose goes beyond such parity constraints, as we propose a general algorithmic frame- work for efficiently computing optimal probabilistic rankings for a large class of possible fairness constraints.",
+    "technical_score": 0.007246376811594202,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Fairness in Rankings"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Concurrent and independent work by Biega et al. [ 3] formulates fairness for rankings similar to the special case of our framework discussed in Section \u00a7 4.2, aiming to achieve amortized fairness of attention by making exposure proportional to relevance. They focus on individual fairness, which in our framework amounts to the special case of protected groups of size one. The two approaches not only differ in expressive power, but algorithmically, they solve an integer linear program to generate a series of rankings, while our approach provides a provably efficient solution via a standard linear program and the Birkhoff-von Neumann decomposition [ 4].",
+    "technical_score": 0.013438735177865613,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Information Diversity in Retrieval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "At first glance, fairness and diversity in rankings may appear re- lated, since they both lead to more diverse rankings. However, their motivation and mechanisms are fundamentally different. Like the PRP, diversified ranking is entirely beholden to maximizing utility to the user, while our approach to fairness balances the needs of users and items. In particular, both the PRP and diversified ranking maximize utility for the user alone, their difference lies merely in the utility measure that is maximized. Under extrinsic diversity [24], the utility measure accounts for uncertainty and diminishing returns from multiple relevant results [ 7,25]. Under intrinsic di- versity [ 24], the utility measure considers rankings as portfolios and reflects redundancy [ 10]. And under exploration diversity [ 24], the aim is to maximize utility to the user in the long term through more effective learning. The work on fairness in this paper is fun- damentally different in its motivation and mechanism, as it does not modify the utility measure for the user but instead introduces rights of the items that are being ranked.",
+    "technical_score": 0.016735177865612648,
+    "citation_score": 0.0061897233201581026
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "FAIRNESS CONSTRAINTS Acknowledging the ubiquity of rankings across applications, we conjecture that there is no single definition of what constitutes a fair ranking, but that fairness depends on context and application. In particular, we will see below that different notions of fairness imply different trade-offs in utility, which may be acceptable in one situation but not in the other. To address this range of pos- sible fairness constraints, this section develops a framework for formulating fairness constraints on rankings, and then computing the utility-maximizing ranking subject to these fairness constraints with provable guarantees. For simplicity, consider a single query qand assume that we want to present a ranking rof a set of documents D={d1,d2,d3 . . . ,dN}. Denoting the utility of a ranking rfor query qwith U(r|q), the problem of optimal ranking under fairness constraints can be Research Track Paper formulated as the following optimization problem: r=argmaxrU(r|q) s.t.ris fair In this way, we generalize the goal of the Probabilistic Ranking Principle, which emerges as the special case of no fairness con- straints. To fully instantiate and solve this optimization problem, we will specify the following four components. First, we define a general class of utility measures U(r|q)that contains many com- monly used ranking metrics. Second, we address the problem of how to optimize over rankings, which are discrete combinatorial objects, by extending the class of rankings to probabilistic rankings. Third, we reformulate the optimization problem as an efficiently solvable linear program, which implies a convenient yet expressive language for formulating fairness constraints. And, finally, we show how a probabilistic ranking can be efficiently recovered from the solution of the linear program.",
+    "technical_score": 0.03741765480895916,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Utility of a Ranking"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Virtually all utility measures used for ranking evaluation derive the utility of the ranking from the relevance of the individual items being ranked. For each user uand query q,rel(d|u,q)denotes the binary relevance of the document d, i.e. whether the document is relevant to user uor not. Note that different users can have different rel(d|u,q)even if they share the same q. To account for personalization, we assume that the query qalso contains any personalization features and that Uis the set of all users that lead to identical q. Beyond binary relevance, relcould also represent other relevance rating systems such as a Likert scale in movie ratings, or a real-valued score. A generic way to express many utility measures commonly used in information retrieval is U(r|q)=O\u0303 u\u2208UP(u|q)O\u0303 d\u2208Dv(rank( d|r))\u03bb(rel(d|u,q)), wherevand\u03bbare two application-dependent functions. The func- tionv(rank( d|r))models how much attention document dgets at rank rank( d|r), and\u03bbis a function that maps the relevance of the document for a user to its utility. In particular, the choice of vcould be based on the position bias i.e. the fraction of users who examine the document shown at a particular position out of the total number of users who issue the query q. The choice of \u03bbmapping relevance to utility is somewhat arbitrary. For example, a widely used evaluation measure, Discounted Cumulative Gain (DCG) [ 17] can be repre- sented in our framework where v(rank( d|r))=1 log(1+rank( d|r)), and \u03bb(rel(d|u,q))=2rel(d|u,q)\u22121(or sometimes simply rel( d|u,q)): DCG(r|q)=O\u0303 u\u2208UP(u|q)O\u0303 d\u2208D2rel(d|u,q)\u22121 lo\u0434(1+rank( d|r)) For a measure like DCG @k(r|q), we can choose v(rank( d|r))= log(1+rank( d|r))forrank( d|r)\u2264kandv(rank( d|r))=0forrank( d|r)> k.Since utility is linear in both vand\u03bb, we can combine the indi- vidual utilities into an expectation U(r|q)=O\u0303 d\u2208Dv(rank( d|r))\u0012O\u0303 u\u2208U\u03bb(rel(d|u,q))P(u|q)\u0013 =O\u0303 d\u2208Dv(rank( d|r))u(d|q), where u(d|q)=O\u0303 u\u2208U\u03bb(rel(d|u,q))P(u|q) is the expected utility of a document dfor query q. In the case of binary relevances and \u03bbas the identity function, u(d|q)is equivalent to the probability of relevance. It is easy to see that sorting the documents by u(d|q)leads to the ranking that maximizes the utility argmaxrU(r|q)\u2261argsortd\u2208Du(d|q) for any function vthat decreases with rank. This is the insight behind the Probability Ranking Principle (PRP) [28].",
+    "technical_score": 0.047786561264822114,
+    "citation_score": 0.01387351778656126
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Probabilistic Rankings"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Rankings are combinatorial objects, such that naively searching the\nspace of all rankings for a utility-maximizing ranking under fairness\nconstraints would take time that is exponential in |D|. To avoid\nsuch combinatorial optimization, we consider probabilistic rankings\nRinstead of a single deterministic ranking r. A probabilistic ranking\nRis a distribution over rankings, and we can naturally extend the\ndefinition of utility to probabilistic rankings.\nU(R|q)=\u00d5\nrR(r)\u00d5\nu\u2208UP(u|q)\u00d5\nd\u2208Dv(rank( d|r))\u03bb(rel(d|u,q))\n=\u00d5\nrR(r)\u00d5\nd\u2208Dv(rank( d|r))u(d|q)\nWhile distributions Rover rankings are still exponential in size, we\ncan make use of the additional insight that utility can already be\ncomputed from the marginal rank distributions of the documents.\nLetPi,jbe the probability that Rplaces document diat rank j, then\nPforms a doubly stochastic matrix of size N\u00d7N, which means\nthat the sum of each row and each column of the matrix is equal\nto 1. In other words, the sum of probabilities for each position is 1\nand the sum of probabilities for each document is 1, i.e.\u00cd\niPi,j=1\nand\u00cd\njPi,j=1. With knowledge of the doubly stochastic matrix\nP, expected utility for a probabilistic ranking can be computed as\nU(P|q)=\u00d5\ndi\u2208DN\u00d5\nj=1Pi,ju(di|q)v(j). (1)\nTo make notation more concise, we can rewrite the utility of the\nranking as a matrix product. For this, we introduce two vectors: u\nis a column vector of size Nwith ui=u(di|q), and vis another\ncolumn vector of size Nwith vj=v(j). So, the expected utility (e.g.\nDCG) can be written as:\nU(P|q)=uTPv (2)\nResearch Track Paper\nKDD 2018, August 19\u201223, 2018, London, United Kingdom\n2222",
+    "technical_score": 0.021666666666666664,
+    "citation_score": 0.017727272727272727
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Optimizing Fair Rankings via Linear Programming"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We will see in Section \u00a7 3.4 that not only does Rimply a doubly stochastic matrix P, but that we can also efficiently compute a probabilistic ranking Rfor every doubly stochastic matrix P. We can, therefore, formulate the problem of finding the utility-maximizing probabilistic ranking under fairness constraints in terms of doubly stochastic matrices instead of distributions over rankings. P=argmaxPuTPv (expected utility) s.t.1TP=1T(sum of probabilities for each position) P1=1(sum of probabilities for each document) 0\u2264Pi,j\u22641 (valid probability) Pis fair (fairness constraints) Note that the optimization objective is linear in N2variables Pi,j,1\u2264 i,j\u2264N. Furthermore, the constraints ensuring that Pis doubly stochastic are linear as well, where 1is the column vector of size N containing all ones. Without the fairness constraint and for any vj that decreases with j, the solution is the permutation matrix that ranks the set of documents in decreasing order of utility (conform- ing to the PRP).",
+    "technical_score": 0.02168266516092603,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Optimizing Fair Rankings via Linear Programming"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Now that we have expressed the problem of finding the utility- maximizing probabilistic ranking, besides the fairness constraint, as a linear program, a convenient language to express fairness constraints would be linear constraints of the form fTPg=h.",
+    "technical_score": 0.005024032171434081,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Optimizing Fair Rankings via Linear Programming"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "One or more of such constraints can be added, and the resulting linear program can still be solved efficiently and optimally with standard algorithms like interior point methods. As we will show in Section \u00a7 4, the vectors f,gand the scalar hcan be chosen to implement a range of different fairness constraints. To give some intuition, the vector fcan be used to encode group identity and/or relevance of each document, while gwill typically reflect the im- portance of each position (e.g. position bias).",
+    "technical_score": 0.011237966699260443,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Sampling Rankings"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The solution Pof the linear program is a matrix containing probabil- ities of each document at each position. To implement this solution in a ranking system, we need to compute a probabilistic ranking Rthat corresponds to P. From this probabilistic ranking, we can then sample rankings r\u223cRto present to the user3. Given the derivation of our approach, it is immediately apparent that the rankings rsampled from Rfulfill the specified fairness constraints in expectation.",
+    "technical_score": 0.010451977401129943,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Sampling Rankings"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Computing Rfrom Pcan be achieved via the Birkhoff-von Neu- mann (BvN) decomposition [ 4], which provides a transformation to decompose a doubly stochastic matrix into a convex sum of per- mutation matrices. In particular, if Ais a doubly stochastic matrix, there exists a decomposition of the form a hash of the user\u2019s identity, so that the same user receives the same ranking rif the same query is repeated.where 0\u2264\u03b8i\u22641,I\u0301 i\u03b8i=1, and where the Aiare permutation matrices [ 4]. In our case, the permutation matrices correspond to deterministic rankings of the document set and the coefficients correspond to the probability of sampling each ranking. According to the Marcus-Ree theorem, there exists a decomposition with no more than(N\u22121)2+1permutation matrices [ 22]. Such a decompo- sition can be computed efficiently in polynomial time using several algorithms [ 9,11]. For the experiments in this paper, we use the implementation provided at https://github.com/jfinkels/birkhoff.",
+    "technical_score": 0.022881355932203393,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Summary of Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The following summarizes the algorithm for optimal ranking under fairness constraints. Note that we have assumed knowledge of the true relevances u(d|q)throughout this paper, whereas in practice one would work with estimates \u02c6u(d|q)from some predictive model. (1)Set up the utility vector u, the position discount vector v, as well as the vectors fandg, and the scalar hfor the fairness constraints (see Section \u00a7 4).",
+    "technical_score": 0.0043432711367493975,
+    "citation_score": 0.0019713438735177867
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Summary of Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(2) Solve the linear program from Section \u00a7 3.3 for P. (3)Compute the Birkhoff-von Neumann decomposition P= \u03b81P1+\u03b82P2+\u00b7\u00b7\u00b7+\u03b8nPn.",
+    "technical_score": 0.0035309222265744004,
+    "citation_score": 0.002888936367197237
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Summary of Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "(4)Sample permutation matrix Piwith probability proportional to\u03b8iand display the corresponding ranking ri.",
+    "technical_score": 0.001852287069678374,
+    "citation_score": 0.0015155076024641243
+  },
+  {
+    "section_path": [
+      "A Framework for Ranking under Fairness Constraints",
+      "Summary of Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Note that the rankings sampled in the last step of the algorithm fulfill the fairness constraints in expectation, while at the same time they maximize expected utility.",
+    "technical_score": 0.0014207883773101166,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "CONSTRAINTS Now that we have established a framework for formulating fairness constraints and optimally solving the associated ranking problem, we still need to understand the expressiveness of constraints of the form fTPg=h. In this section, we explore how three concepts from algorithmic fairness \u2013 demographic parity, disparate treatment, and disparate impact \u2013 can be implemented in our framework and thus be enforced efficiently and with provable guarantees. They all aim to fairly allocate exposure, which we now define formally. Let vjrepresent the importance of position j, or more concretely the position bias at j, which is the fraction of users that examine the item at this position. Then we define exposure for a document di under a probabilistic ranking Pas Exposure( di|P)=NO\u0303 j=1Pi,jvj (3) The goal is to allocate exposure fairly between groups Gk. Doc- uments and items may belong to different groups because of some sensitive attributes \u2013 for example, news stories belong to different sources, products belong to different manufacturers, applicants be- long to different genders. The fairness constraints we will formulate in the following implement different goals for allocating exposure between groups. To illustrate the effect of the fairness constraints, we will provide empirical results on two ranking problems. For both, we use the average relevance of each document (normalized between 0 and 1) as the utility ui=u(di|q)and set the position bias to vj=1 log(1+ j) Research Track Paper just like in the standard definition of DCG. More generally, one can also plug in the actual position-bias value, which can be estimated through an intervention experiment [18].",
+    "technical_score": 0.022474516330351565,
+    "citation_score": 0.01838824063392401
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Job-seeker example. We come back to the job-seeker example from the introduction, and as illustrated in Figure 1. The ranking problem consists of 6 applicants with probabilities of relevance to andG1reflect gender, with the first three applicants belonging to the male group and the last three to the female group. News recommendation dataset. We use a subset the Yow news recommendation dataset [ 36] to analyze our method on a larger and real-world relevance distribution. The dataset contains explicit and implicit feedback from a set of users for news articles from different RSS feeds. We randomly sample a subset of news articles in the \u201cpeople\u201d topic coming from the top two sources. The sources are identified using RSS Feed identifier and used as groups G0and G1. The \u2018relevant\u2019 field is used as the measure of relevance for our task. Since the relevance is given as a rating from 1 to 5, we divide it by 5 and add a small amount of Gaussian noise ( \u03b5=0.05) to break ties. The resulting uiare clipped to lie between 0 and 1. In the following, we formulate fairness constraints using three ideas for allocation of exposure to different groups. In particular, we will define constraints of the form fTPg=hfor the optimization problem in \u00a7 3.3. For simplicity, we will only present the case of a binary valued sensitive attribute i.e. two groups G0andG1. How- ever, these constraints may be defined for each pair of groups and for each sensitive attribute, and be included in the linear program.",
+    "technical_score": 0.028570708121363413,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Demographic Parity Constraints"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Arguably the simplest way of defining fairness of exposure between groups is to enforce that the average exposure of the documents in both the groups is equal. Denoting average exposure in a group di\u2208GkExposure( di|P), this can be expressed as the following constraint in our framework: \u21d41 j=1Pi,jvj=1 j=1Pi,jvj (5) j=1\u00121di\u2208G0",
+    "technical_score": 0.01092131629745381,
+    "citation_score": 0.005845849802371543
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Demographic Parity Constraints"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Pi,jvj=0 (6) \u21d4fTPv=0 (with fi=1di\u2208G0",
+    "technical_score": 0.004984833164812942,
+    "citation_score": 0.0040784998621196805
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Demographic Parity Constraints"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Compared to the DCG of the unfair ranking with 3.8193, the optimal fair ranking has slightly lower utility with a DCG of 3.8031. However, the drop in utility due to the demographic parity con- straint could be substantially larger. For example, if we lowered the relevances for the female group to u=(0.82,0.81,0.80,0.03,0.02, lution, since this fairness constraint is ignorant of relevance. In this ranking, roughly every second document has low relevance, leading to a large drop in DCG. It is interesting to point out that the effect of demographic parity in ranking is therefore analogous to its effect in supervised learning, where it can also lead to a large drop in classification accuracy [12].",
+    "technical_score": 0.020739927076630818,
+    "citation_score": 0.005845849802371543
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Demographic Parity Constraints"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "We also conducted the same experiment on the news recom- mendation dataset. Figure 4 shows the optimal ranking matrix and the fair probabilistic ranking along with DCG for each. Note that even though the optimal unfair ranking places documents from G1 starting at position 5, the constraint pushes the ranking of the news items from G1further up the ranking starting either at rank 1 or rank 2. In this case, the optimal fair ranking happens to be (almost) deterministic except at the beginning.",
+    "technical_score": 0.012537610687256796,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Treatment Constraints"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Unlike demographic parity, the constraints we explore in this and the following section depend on the relevance of the items being ranked. In this way, these constraints have the potential to address the concerns for the job-seeker example from the introduction, where a small difference in relevance was magnified into a large difference in exposure. Furthermore, we saw that in the image- search example from the introduction that it may be desirable to have exposure be proportional to relevance to achieve some form of unbiased statistical representation. Denoting the average utility of a group with U(Gk|q)=1 |Gk|O\u0303 di\u2208Gkui, this motivates the following type of constraint, which enforces that exposure of the two groups to be proportional to their average Research Track Paper",
+    "technical_score": 0.015940889916582185,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Treatment Constraints"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "123456 Position",
+    "technical_score": 0.00024907640494659664,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Treatment Constraints"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "6= 0.500\u00d7 (c) DCG=3.8132",
+    "technical_score": 0.0008717674173130882,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Treatment Constraints"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "6+ 0.500\u00d7 (d) DCG=3.7929",
+    "technical_score": 0.0008717674173130882,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Treatment Constraints"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "G0: Document id. 0-14, G1: 15-24 (a) Opti- mal unfair ranking that maximizes DCG. (b) Optimal fair ranking under demographic parity. utility. Exposure( G0|P) U(G0|q)=Exposure( G1|P) U(G1|q) \u21d41 |G0|I\u0301 di\u2208G0I\u0301N j=1Pi,jvj U(G0|q)=1 |G1|I\u0301 di\u2208G1I\u0301N j=1Pi,jvj U(G1|q)(7) \u21d4NO\u0303 i=1NO\u0303 j=1\u00121di\u2208G0 |G0|U(G0|q)\u22121di\u2208G1 |G1|U(G1|q)\u0013 Pi,jvj=0 (8) \u21d4fTPv=0 (with fi=\u0012 1di\u2208G0 |G0|U(G0|q)\u22121di\u2208G1 |G1|U(G1|q)\u0013 ) We name this constraint a Disparate Treatment Constraint be- cause allocating exposure to a group is analogous to treating the two groups of documents. This is motivated in principle by the con- cept of Recommendations as Treatments [29], where recommending or exposing a document is considered as treatment and the user\u2019s click or purchase is considered the effect of the treatment. To quantify treatment disparity, we also define a measure called Disparate Treatment Ratio (DTR) to evaluate how unfair a ranking is in this respect i.e. how differently the two groups are treated. DTR( G0,G1|P,q)=Exposure( G0|P)/U( G0|q) Exposure( G1|P)/U( G1|q) Note that this ratio equals one if the disparate treatment constraint in Equation 7 is fulfilled. Whether the value is less than 1 or greater than 1 tells which group out of G0orG1is disadvantaged in terms of disparate treatment.Experiments. We again compute the optimal ranking without fairness constraint, and with the disparate treatment constraint. The results for the job-seeker example are shown in Figure 5. The figure also shows the BvN decomposition of the resultant proba- bilistic ranking into three permutation matrices. As expected, the fair ranking has an optimal DTR while the unfair ranking has a DTR of 1.7483. Also expected is that the fair ranking has a lower DCG than the optimal deterministic ranking, but that it has higher DCG than the optimal fair ranking under demographic parity. We conducted the same experiment for the news recommenda- tion dataset. Figure 6 shows the optimal ranking matrix and the fair probabilistic ranking along with DCG for each. Here, the ranking computed without the fairness constraint happened to be almost fair according to disparate treatment already, and the fairness con- straint has very little impact on DCG.",
+    "technical_score": 0.03767280624817275,
+    "citation_score": 0.030823205112141334
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Impact Constraints"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In the previous section, we constrained the exposures (treatments) for the two groups to be proportional to their average utility. How- ever, we may want to go a step further and define a constraint on the impact, i.e. the expected clickthrough or purchase rate, as this more directly reflects the economic impact of the ranking. In particular, we may want to assure that the clickthrough rates for the groups as determined by the exposure and relevance are pro- portional to their average utility. To formally define this, let us first model the probability of a document getting clicked according to the following simple click model [27]: P(click on document i)=P(examining i)\u00d7P(iis relevant) =Exposure( di|P)\u00d7 P(iis relevant) =\u0012NO\u0303 j=1Pi,jvj\u0013 \u00d7ui We can now compute the average clickthrough rate of documents in a group Gkas CTR( Gk|P)=1 |Gk|O\u0303 i\u2208GkNO\u0303 j=1Pi,juivj. The following Disparate Impact Constraint enforces that the ex- pected clickthrough rate of each group is proportional to its average Research Track Paper",
+    "technical_score": 0.039995474290826616,
+    "citation_score": 0.009189723320158102
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Impact Constraints"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "123456 Position",
+    "technical_score": 0.00043334975868708996,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Impact Constraints"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "6= 0.497\u00d7 (c) DCG=3.7972, DTR=0.8179",
+    "technical_score": 0.00216674879343545,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Impact Constraints"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "6+ 0.453\u00d7 (d) DCG=3.8132, DTR=1.2815",
+    "technical_score": 0.00216674879343545,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Impact Constraints"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "6+ 0.050\u00d7 (e) DCG=3.7959, DTR=0.7879",
+    "technical_score": 0.00216674879343545,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Impact Constraints"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "05101520 Position",
+    "technical_score": 0.00043334975868708996,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Constructing Group Fairness Constraints",
+      "Disparate Impact Constraints"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Experiments. We again compare the optimal rankings with and without the fairness constraint. The results for the job-seeker ex- ample are shown in Figure 7. Again, the optimal fair ranking has a BvN decomposition into three deterministic rankings, and it has a slightly reduced DCG. However, there is a large improvement in DIR from the fairness constraint, since the PRP ranking has a substantial disparate impact on the two groups.The results for the news recommendation dataset are given in Figure 8, where we also see a large improvement in DIR. The DCG is lower than the unconstrained DCG and the DCG with disparate treatment constraint, but higher than the DCG with demographic parity constraint.",
+    "technical_score": 0.02513428600385122,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In the last section, we implemented three fairness constraints in our framework, motivated by the concepts of demographic parity, disparate treatment, and disparate impact. The main purpose was to explore the expressiveness of the framework, and we do not argue that these constraints are the only conceivable ones or the correct ones for a given application. In particular, it appears that fairness in rankings is inherently a trade-off between the utility of the users and the rights of the items that are being ranked, and that different applications require making this trade-off in different ways. For example, we may not want to convey strong rights to the books in a library when a user is trying to locate a book, but the situation is different when candidates are being ranked for a job opening. We, therefore, focused on creating a flexible framework that covers a substantial range of fairness constraints. Group fairness vs. individual fairness. In our experiments, we observe that even though the constraints ensure that the rank- ings have no disparate treatment or disparate impact across groups, individual items within a group might still be considered to suffer from disparate treatment or impact. For example, in the job-seeker experiment for disparate treatment (Figure 5), the allocation of exposure to the candidates within group G0still follows the same exposure drop-off going down the ranking that we considered un- fair according to the disparate treatment constraint. As a remedy, one could include additional fairness constraints for other sensitive attributes, like race, disability, and national origin to further refine the desired notion of fairness. In the extreme, our framework allows protected groups of size one, such that it can also express notions of individual fairness. For example, in the case of Disparate Treatment, we could express individual fairness as a set of N\u22121constraints over Ngroups of size one, resulting in a notion of fairness similar to [3]. However, for the Disparate Impact constraint where the expected clickthrough rates are proportional to the relevances, it is not clear whether individual fairness makes sense, unless we rank items uniformly at random. Using estimated utilities. In our definitions and experiments, we assumed that we have access to the true expected utilities (i.e. Research Track Paper",
+    "technical_score": 0.038183057436178405,
+    "citation_score": 0.0283102766798419
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "123456 Position",
+    "technical_score": 0.0003114441878970506,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "6= 0.536\u00d7 (c) DCG=3.8059, DIR=1.1192",
+    "technical_score": 0.001557220939485253,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "6+ 0.304\u00d7 (d) DCG=3.7929, DIR=0.7501",
+    "technical_score": 0.001557220939485253,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "6+ 0.160\u00d7 (e) DCG=3.8089, DIR=1.1801",
+    "technical_score": 0.001557220939485253,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "05101520 Position",
+    "technical_score": 0.0003114441878970506,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Cost of fairness. Including the fairness constraints in the opti- mization problem comes at the cost of effectiveness as measured by DCG and other conventional measures. This loss in utility can be computed as CoF=uT(P\u2217\u2212P)v, where P\u2217is the deterministic optimal ranking, and Prepresents the fair ranking. We have already discussed for the demographic parity constraint that this cost can be substantial. In particular, for demographic parity it is easy to see that the utility of the fair ranking approaches zero if all rele- vant documents are in one group, and the size of the other group approaches infinity. Feasibility of fair solutions. The linear program from Sec- tion \u00a7 3.3 may not have a solution in extreme conditions, corre- sponding to cases where no fair solution exists. Consider the dis- parate treatment constraint Exposure( G0|P) Exposure( G1|P)=U(G0|q) U(G1|q). We can adversarially construct an infeasible constraint by choosing the relevance so that the ratio on the RHS lies outside the range that LHS can achieve by varying P. The maximum of the RHS occurs when all the documents of G0are placed above all the documentsofG1, and vice versa for the minimum. max\u001aExposure( G0|P) Exposure( G1|P)\u001b =I\u0301|G0| j=1vj I\u0301|G0|+|G1| j=|G0|+1vj, (allG0documents in top|G0|positions) min\u001aExposure( G0|P) Exposure( G1|P)\u001b =I\u0301|G1|+|G0| j=|G1|+1vj I\u0301|G1| j=1vj (allG0documents in bottom |G0|positions) Hence, a fair ranking according to disparate treatment only exists if the ratio of average utilities lies within the range of possible values for the exposure: I\u0301|G1|+|G0| j=|G1|+1vj I\u0301|G1| j=1vj\u2264U(G0|q) U(G1|q)\u2264I\u0301|G0| j=1vj I\u0301|G0|+|G1| j=|G0|+1vj However, in such a scenario, the constraint can still be satisfied if we introduce more documents belonging to neither group (or the group with more relevant documents). This increases the range of the LHS, and the ranking doesn\u2019t have to give undue exposure to one of the groups.",
+    "technical_score": 0.05403556660013828,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we considered fairness of rankings through the lens of exposure allocation between groups. Instead of defining a single notion of fairness, we developed a general framework that em- ploys probabilistic rankings and linear programming to compute the utility-maximizing ranking under a whole class of fairness con- straints. To verify the expressiveness of this class, we showed how to express fairness constraints motivated by the concepts of de- mographic parity, disparate treatment, and disparate impact. We conjecture that the appropriate definition of fair exposure depends on the application, which makes this expressiveness desirable.",
+    "technical_score": 0.012648221343873518,
+    "citation_score": 0.0
+  }
+]
