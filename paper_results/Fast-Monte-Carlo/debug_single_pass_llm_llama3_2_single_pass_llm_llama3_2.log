@@ -1,0 +1,36 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction.
+Excerpt:
+Carlo algorithms for performing useful computations on large matrices. Examplesof such computations include matrix multiplication, the computation of the singularvalue decomposition of a matrix, and the computation of compressed approximatedecompositions of a matrix. In this paper, we present a computational model forcomputing on massive data sets (the pass-eﬃcient model) in which our algorithms ∗Received by the editors April 5, 2004; accepted for publication (in revised form) November 17, 2005; published electronically May 26, 2006. The technical report version of this paper appeared asFast Monte Carlo Algorithms for Matrices I:Approximating Matrix Multiplication , by P. Drineas, R. Kannan, and M. W. Mahoney [13]. A preliminary version of this paper, including the mainalgorithm and main theorem of section 4, appeared as Fast Monte-Carlo algorithms for approximate matrix multiplication ,
+
+Section name: Review of linear algebra.
+Excerpt:
+algebra that will be useful throughout the paper. For more detail, see [18, 20, 25, 6]and the references therein. For a vector x∈R nwe let |x|=/parenleftbig/summationtextn i=1|xi|2/parenrightbig1/2denote its Euclidean length. For a matrix A∈Rm×nwe let A(j),j=1,...,n , denote the jth column of Aas a column vector and A(i),i=1,...,m , denote the ith row of Aas a row vector. We denote matrix norms by /bardblA/bardblξ, using subscripts to distinguish between various norms. Of particular interest will be the Frobenius norm which is deﬁned by /bardblA/bardblF=/radicaltp/radicalvertex/radicalvertex/radicalbtm/summationdisplay i=1n/summationdisplay j=1A2 ij, (1) and the spectral norm which is deﬁned by /bardblA/bardbl2= sup x∈Rn,x/negationslash=0|Ax| |x|. (2) These norms are related to each other as /bardblA/bardbl2≤/bardblA/bardblF≤√n/bardblA/bardbl2.
+
+Section name: The pass-eﬃcient model and sampling lemmas.
+Excerpt:
+informally deﬁne a computational model in which the computational resources arethe number of passes over the data and the additional space and additional timerequired. In addition, we present several technical sampling lemmas. computation is a model that is motivated by the observation that in modern com-puters the amount of disk storage, i.e., sequential access memory, has increased veryrapidly while random access memory (RAM) and computing speeds have increased ata substantially slower pace [10]. Thus, one has the ability to store very large amountsof data but does not have random access to the data. Additionally, processing thedata with algorithms that take low polynomial time or linear time with large constantsis prohibitive. To model this phenomenon, we consider the pass-eﬃcient model, in which the three computational resources of interest are the number of passes over the data andt
+
+Section name: The basic matrix multiplication approximation algorithm.
+Excerpt:
+section, which describes the main result of the paper, the BasicMatrixMultipli- cation algorithm to approximate the product of two matrices is presented; it is analyzed in this section and in the appendix. After describing the algorithm in sec-tion 4.1 we describe its implementation and running time issues in section 4.2. Insection 4.3 we analyze the algorithm and provide error bounds for arbitrary probabil-ity distributions; in section 4.4 error bounds are derived for probability distributionswhich are nearly optimal in a well-deﬁned sense. We provide further discussion ofthe algorithm in section 6, and in the appendix we provide further analysis of theBasicMatrixMultiplication algorithm.Downloaded 05/10/26 to 76.16.58.116 . Redistribution subject to SIAM license or copyright; see https://epubs.siam.org/terms-privacy 138 PETROS DRINEAS, RAVI KANNAN, AND MICHAEL W. MAHONEY BasicMatrixMul
+
+Section name: A second matrix multiplication algorithm.
+Excerpt:
+theElementwiseMatrixMultiplication algorithm to approximate the product of two matrices. First, in section 5.1, we describe the algorithm, its implementation,and running time issues; then in section 5.2 we analyze the algorithm and bound itserror with respect to both the Frobenius and spectral norms. We will see that thealgorithm returns good approximations with respect to the spectral norm but notwith respect to the Frobenius norm.Downloaded 05/10/26 to 76.16.58.116 . Redistribution subject to SIAM license or copyright; see https://epubs.siam.org/terms-privacy FAST MONTE CARLO ALGORITHMS FOR MATRICES I 145 ElementwiseMatrixMultiplication Algorithm. Input: A∈Rm×n,B∈Rn×p,{pij}m,n i,j=1such that 0 ≤pij≤1, and {qij}n,p i,j=1such that 0 ≤qij≤1. Output: S∈Rm×nandR∈Rn×p. the product of two matrices that is presented in this section diﬀers from the previousalgorithm and is inspired by [2] and [
+
+Section name: Discussion and conclusion.
+Excerpt:
+randomized algorithm that approximates the product of two matrices is that of Cohenand Lewis [7]. This algorithm is based on random walks in a graph representationof the input matrices and attempts to identify all high-valued entries in nonnegativematrix products in order to improve estimates (relative to exact sparse multiplication)by spending less time on small-valued entries. Their algorithm is more complicatedthan ours, it requires diﬀerent graph representations of the input matrices if thematrices are allowed to contain negative entries, it needs to store the complete inputmatrices, and it is especially useful when the matrices are not sparse. It is worth emphasizing how the BasicMatrixMultiplication algorithm be- haves when AandBare well approximated by low-rank matrices. Since a low-rank matrix or a matrix that is well approximated by a low-rank matrix is a matrix whoserows and co
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 10
+Review of linear algebra: 20
+The pass-eﬃcient model and sampling lemmas: 30
+The basic matrix multiplication approximation algorithm: 25
+A second matrix multiplication algorithm: 15
+Discussion and conclusion: 0

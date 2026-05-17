@@ -1,0 +1,38 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+Throughout the gig economy, numerous digital platforms algorithmically profile, control, and discipline workers that offer on-demand services to consumers. Data collection and predictive modeling are critical for a typical platform’s *Alphabetical ordering1Max Planck Institute for Intelligent Systems, T ¨ubingen, and T ¨ubingen AI Center2Caltech3UC Berke- ley. Correspondence to: Moritz Hardt <hardt@is.mpg.de >, Eric Mazumdar <mazumdar@caltech.edu >, Celestine Mendler- D¨unner <cmendler@tuebingen.mpg.de >, Tijana Zrnic <ti- jana.zrnic@berkeley.edu >. Proceedings of the 40thInternational Conference on Machine Learning , Honolulu, Hawaii, USA. PMLR 202, 2023. Copyright 2023 by the author(s).business as machine learning algorithms power ranking, scoring, and classification tasks of various kinds (Woodcock & Graham, 2019; Gray & Suri, 2019; Schor, 2021). Troves of academic scholarship documen
+
+Section name: Problem Formulation
+Excerpt:
+We study the strategic interaction of a firm operating a pre- dictive system with a population of individuals. We assume that the firm deploys a learning algorithm Athat operates on data points in a universe Z=X × Y . Each individ- ual corresponds to a single data point z∈ Z, typically a feature–label pair. We model the population of individual participants as a distribution P0overZ. We say that a fraction α >0of the individuals form a col- lective in order to strategically respond to the firm’s learning behavior. The collective agrees on a potentially randomized strategy h:Z → Z from a space of available strategies H. The possible strategies Hcapture feasible changes to the data. For example, content creators on a video streaming platform may be indifferent between videos that differ only in a hidden watermark not visible to human viewers. Free- lancers may be indifferent between two re
+
+Section name: Collective Action in Classification
+Excerpt:
+We start with classification under the assumption that the firm chooses an approximately optimal classifier on the data distribution P. Definition 3.1 (ϵ-optimal classifier) .A classifier f:X → Yisϵ-optimal under the distribution Pif there exists a P′ withTV(P,P′)≤ϵsuch that f(x) = argmax y∈YP′(y|x). Note that a 0-optimal classifier is the Bayes optimal classi- fier with respect to the zero–one loss. Under the above assumption, we focus on two general goals for the collective: planting a signal anderasing a signal . Assume the collective wants the classifier to learn an asso- ciation between an altered version of the features g(x)anda chosen target class y∗. Formally, given a transformation g:X → X , the collective wants to maximize the following measure of success: S(α) = Pr x∼P0{f(g(x)) =y∗}. We call this objective “planting a signal” and X∗= {g(x):x∈ X} the signal set. For example, g(
+
+Section name: Collective Action in Risk Minimization
+Excerpt:
+We next study the effect of collective size when the learner is solving parametric risk minimization. Here the firm is choosing a model from a parameterized set {fθ}θ∈Θ. We will use A(P)to denote an element in Θthat determines the model chosen by the firm. We begin by studying convex risk minimizers. Then, motivated by nonconvex settings, we look at gradient-descent learners without imposing any convexity assumptions on the objective. Our main working assumption will be that of a risk-minimizing firm. Definition 4.1 (Risk minimizer) .Fix a loss function ℓ. The firm is a risk minimizer if under distribution Pit determines the parameter of the model fθaccording to θ= argmin θ′∈ΘE z∼Pℓ(θ′;z). To begin, we assume that ℓ(θ;z)is a convex function of θ, and that the collective’s goal is to move the model from θ0—the optimal model under the base distribution P0—to a target model θ∗. To that end,
+
+Section name: Experiments
+Excerpt:
+We report on experimental findings from over 2000 model training runs involving a BERT-like text transformer model on a resume classification task. The resume dataset consists of nearly 30000 resumes of freelancers on a major gig labor platform, introduced by (Jiechieu & Tsopze, 2021). The task is a multiclass, multilabel classification problem where the goal is to predict a set of up to ten skills from the software and IT sector based on the resume. The collective controls a random fraction of the training data within the dataset. Its goal is to plant a signal, that is, steer Algorithmic Collective Action in Machine Learning Target class: 0 Target class: 1 Target class: 2 trial sigmoid ﬁt Maniuplated fraction within classTarget frequencyText only manipulation within class Target class: 0 Target class: 1 Target class: 2 trial sigmoid ﬁt Maniuplated fraction within classTop-1 frequency Fi
+
+Section name: Discussion
+Excerpt:
+We conclude the paper with a short discussion highlight- ing the economic significance of understanding the critical mass α∗for pursuing collective targets. It is well-known in economics that participation in a collective is notindivid- ually rational, and additional incentives are necessary for collective action to emerge. Building on a classic model for collective action from economics (Olson, 1965), we illus- trate how similar conclusions hold for algorithmic collective action, and how they relate to the theoretical quantities stud- ied in this paper. Assume that individuals incur a cost c >0for participating in collective action. This cost might represent overheads ofαcritcB(αcrit)S(α) γS(α) α Figure 6. Visualization of the critical threshold αcritafter which a collective is self-sustaining and the principal’s required investment B(αcrit)to incentivize the whole population to join th
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Here are the allocations:
+
+Section name: Introduction: 10
+Section name: Problem Formulation: 20
+Section name: Collective Action in Classification: 25
+Section name: Collective Action in Risk Minimization: 20
+Section name: Experiments: 15
+Section name: Discussion: 10
