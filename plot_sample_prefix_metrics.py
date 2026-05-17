@@ -3,13 +3,15 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
 MODEL_LABELS = {
     "llama3.2_1b": "llama3.2:1b",
-    "llama3_2": "ollama3.2:3b",
-    "gemma2_2b_2": "gemma2:2b",
+    "llama3_2_3": "ollama3.2:3b",
+    "gemma2_2b_3": "gemma2:2b",
     "gemma3_4b": "gemma3:4b",
     "phi3_medium_run2": "phi3:medium",
     "qwen3_4b": "qwen3:4b",
@@ -19,8 +21,8 @@ MODEL_LABELS = {
 # User-specified palette.
 MODEL_COLORS = {
     "llama3.2_1b": "#9400D3",      # darkviolet
-    "llama3_2": "#228B22",         # forestgreen
-    "gemma2_2b_2": "#B22222",      # firebrick
+    "llama3_2_3": "#228B22",       # forestgreen
+    "gemma2_2b_3": "#B22222",      # firebrick
     "gemma3_4b": "#008080",        # teal
     "phi3_medium_run2": "#FF8C00", # darkorange
     "qwen3_4b": "#000080",         # navy
@@ -29,8 +31,8 @@ MODEL_COLORS = {
 
 MODEL_MARKERS = {
     "llama3.2_1b": "X",
-    "llama3_2": "o",
-    "gemma2_2b_2": "s",
+    "llama3_2_3": "o",
+    "gemma2_2b_3": "s",
     "gemma3_4b": "v",
     "phi3_medium_run2": "^",
     "qwen3_4b": "D",

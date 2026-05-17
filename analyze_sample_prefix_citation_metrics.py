@@ -17,8 +17,8 @@ from evaluate_human_section_scores import (
 
 VALID_DEBUG_LOGS = {
     "llama3.2_1b": "debug_llama3.2_1b.log",
-    "llama3_2": "debug_llama3_2.log",
-    "gemma2_2b_2": "debug_gemma2_2b_2.log",
+    "llama3_2_3": "debug_llama3_2_3.log",
+    "gemma2_2b_3": "debug_gemma2_2b_3.log",
     "gemma3_4b": "debug_gemma3_4b.log",
     "phi3_medium_run2": "debug_phi3_medium_run2.log",
     "qwen3_4b": "debug_qwen3_4b.log",
