@@ -1,0 +1,1321 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Random access to data is a foundational operation in computer science, enabling efficient algorithms for search, selection, and exploration. However, this operation largely breaks down in mod- ern data systems where access is governed by ranking functions rather than static keys. In such systems, data items are ordered by a query-specific ,user-specific , ormachine-generated scoring function,1 often dynamically defined over high-dimensional feature spaces. Yet, accessing the items at arbitrary rank positions or within a rank window typically requires fully materializing or sequentially scanning the ranked list, using operations such as get-next . This limitation arises across a wide range of data-driven applica- tions, including database systems, interactive data exploration and analytics tools, information retrieval and recommendation systems, and machine learning pipelines [ 13,19,21,33,42,84]. Common scenarios include database queries on derived attributes[ 64,68], 1Also known as ranking functions.analytical exploration for business decisions [ 68], paged naviga- tion of search results [ 33], browsing ranked product lists in e- commerce [ 78], and scrolling through personalized feeds on social platforms [65]. A concrete example arises in web application APIs, which im- plement this through paged or offset-based navigation: Example 1. In web and e-commerce applications, APIs commonly useoffset-based pagination . For instance, a request such as [GET /items?offset=400&limit=5] retrieves items ranked 401\u2013405. More generally, this pattern requires efficient retrieval of results at deeper ranks without scanning all earlier entries [78, 90]. Similar scenarios also arise in data science and visual analyt- ics tooling, where analysts frequently interact with large, ranked datasets. Tools such as spreadsheets, notebooks, and visual analyt- ics platforms provide intuitive interfaces for exploration [ 30,82, 86,100], but the explosive growth of data volumes driven by big data and AI has placed heavy demands on their efficiency and re- sponsiveness [ 17]. For example, while using data science workflows such as Jupyter notebooks [ 62], analysts may need random access to particular ranks or quantiles (e.g., 10th, 20th, etc.) in a sorted dataframe, effectively skipping earlier-ranked items. Beyond ranked retrieval, closely related challenges arise in simi- larity search, where items are ordered by their distance or similarity to a query object. Example 2. In similarity search applications, such as nearest- neighbor queries over high-dimensional embeddings, items are ranked by their similarity to a query point. While existing systems efficiently retrieve the top- kmost similar items, users and downstream applica- tions may need to access items at arbitrary similarity ranks or within specific distance bands. For example, an analyst may wish to exam- ine the points whose similarity lies within a narrow range around a decision boundary. Traditionally, research on ranked retrieval has focused on top-k query processing, where the goal is to identify the highest-ranked tuples [ 34,44,53,54]. In this setting, results are retrieved sequen- tially from the top of the ranking up to position k, wherekis typically a small constant relative to the dataset size. Similarly, in the context of similarity search, k-nearest neighbor (kNN) search aims to retrieve the kmost similar points to a query [ 70,79,97]. These approaches are designed for small values of kand, as shown in our evaluations, become ineffective for random-access queries that seek to retrieve a tuple at an arbitrary rank position i, wherei may be as large as O(n).",
+    "technical_score": 0.001993355481727575,
+    "citation_score": 0.03787375415282392
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Direct access to conjunctive queries in database systems has been studied to directly access a specific position in the join re- sult, without fully materializing the join [ 14,23,42,93]. However, these works assume a prespecified ordering of the tuples (e.g., lex- icographic order on an attribute) and focus on skipping the join operation. As a result, such approaches are not suitable for settings where the ranking function is part of the input query.2 Contributions . In this paper, we formalize and study the Random- Access Ranked Retrieval (RAR ) problem and the Random-Access Similarity Search problem ( RAS) (Section 3). We show a reduction from RAS toRAR problem. Next, we propose an algorithm for RAR that uses computational geometric concepts of duality, arrange- ments, and levels of arrangements. However, this algorithm suffers from the curse of dimensionality, and its space complexity increases exponentially with dimension (Appendix E). Consequently, we propose several algorithms with linear space complexity even for a large number of attributes, based on the con- cept of\u03b5-samples (Section 6). We start from the two-dimensional case and extend our algorithm to higher dimensions by combining it with the stripe range searching problem. This approach offers an efficient solution for finding a conformal set for an arbitrary rank position. Efficiently finding the tuples within a narrow stripe range is fundamental in the development of our solution. We formulate this as the stripe range retrieval (SRR) problem, focusing on devel- oping efficient algorithms for the challenging narrow ranges that contain only a few tuples. Inspired by the Hierarchical Navigable Small World graphs for approximate nearest neighbor search [ 37,70], our practical and scalable algorithm constructs a hierarchical sampling structure for answering SRR, maintaining the neighborhood regions of points in the hierarchy using smallest enclosing balls (Section 6.3). Theoretically, we show that our algorithms achieve near-optimal efficiency up to a logarithmic factor (Appendix L). In addition, we conduct extensive experiments on real-world and synthetic datasets to evaluate the performance of our algorithms in practice and com- pare them with existing baselines (Section 7). Our experiments confirm the efficiency and scalability of our proposed algorithms. In particular, the \u03b5-sampling algorithm, when combined with the hierarchical structure, achieves the best scalability with respect to both dimension and dataset size in terms of query time and index size, whereas the baseline methods are mostly affected by the curse of dimensionality. Due to space limitations, we defer extended discussions on appli- cations, related work, more general settings (including dynamic and non-linear scoring functions), additional experiments, and omitted proofs and pseudocode to the appendix.",
+    "technical_score": 0.008970099667774088,
+    "citation_score": 0.0009966777408637875
+  },
+  {
+    "section_path": [
+      "Applications Overview"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Random-access ranked retrieval ( RAR ) arises naturally across a broad range of modern data systems that rely on query-dependent ranking functions. While Examples 1 and 2 illustrate its relevance in web and e-commerce applications, similar access patterns appear in databases, data analytics platforms, and decision-support systems. Below, we briefly summarize several representative application domains; a detailed discussion with concrete examples is provided in Appendix A. Together, these applications highlight RAR as a 2Please refer to Appendix B for a complete review of the related work.general-purpose access primitive with broad impact across ranked data management and analysis. cess to arbitrary positions in arrays and sorted lists is a fundamental algorithmic primitive, enabling classic techniques such as binary search . In contrast, ranked retrieval systems typically only sup- port sequential access, where retrieving the item at rank irequires enumerating all higher-ranked results. RAR bridges this gap by enabling direct access to arbitrary rank positions under a ranking function, thereby extending a broad class of random-access\u2013based algorithms to query-dependent, high-dimensional ranking settings.",
+    "technical_score": 0.01682383077731915,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Applications Overview"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Analytical Insights and Decision Support. Many analytics and business decision-making tasks require understanding how key metrics behave across different rank positions or percentiles, rather than focusing solely on top- kresults. Examples include boundary analysis in targeted advertising, percentile-based customer analyt- ics, and sensitivity analysis around decision cut-offs [ 32,48,89,101]. Such tasks require efficient access to arbitrary quantiles and narrow rank intervals, which RAR supports without exhaustive scanning.",
+    "technical_score": 0.0037853619248968094,
+    "citation_score": 0.0004205957694329788
+  },
+  {
+    "section_path": [
+      "Applications Overview"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Database Queries over Derived Attributes. Modern database and spreadsheet systems frequently operate over derived attributes computed at query time, such as weighted combinations or transfor- mations of existing columns [46, 64, 68, 83]. Since these attributes do not exist at indexing time, supporting efficient ranked access over them is challenging. By treating derived attributes as query- defined scoring functions, RAR enables scalable access to arbitrary rank positions and rank ranges without materializing or sorting the full result set.",
+    "technical_score": 0.012512724140631117,
+    "citation_score": 0.0022081277895231385
+  },
+  {
+    "section_path": [
+      "Applications Overview"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Individually Fair Decision Boundaries. In score-based deci- sion systems, cut-off points often serve as decision boundaries and must be chosen carefully to ensure interpretability and individual fairness [ 6,15,66,74]. Identifying meaningful boundaries requires localized inspection of ranked items around candidate cut-off points to detect significant score gaps. RAR enables such narrow, rank- local exploration, supporting principled and responsible boundary selection.",
+    "technical_score": 0.006836918464825442,
+    "citation_score": 0.0017092296162063605
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We consider a dataset D={p1,p2,\u00b7\u00b7\u00b7,pn}consisting of npoints in Rd, where each point p\u2208D hasdreal-valued (scoring) attributes, aka. features, used for ranking.3Ascoring function score :Rd\u2192R assigns a real-valued score to each point in the dataset.4We consider thelinear scoring functions , where the score is defined as a weighted sum of the features. Specifically, given a weight vector f\u2208Rd, the score assigned to a point pis computed as the dot product5: scoref(p)=f\u22a4p=\u2211\ufe01d j=1f[j]p[j]. We may directly call fas the scoring function. Figure 1 (left) provides an example of a dataset Dwithn=16points and two attributes xandy. Let the red origin-anchored ray in the figure represent f. The perpendicular projection of each point pon the vector fshows scoref(p). Our work extends beyond linear functions, supporting (a) scores expressed as linear combinations of non-linear terms (Appendix C) 3Besides scoring attributes, the dataset may contain other attributes such as non- ordinal descriptive attributes that are not used for ranking. In this paper, we use the terms attribute and feature interchangeably to refer to the scoring attributes. 4We use the terms scoring function and ranking function interchangeably. 5We assume that the scoring vector fis normalized, i.e.,\u2225f\u2225=1. contain 16 points and the query asks for (i=8)-th point with the scoring function shown in red. (Left) First, we find the bounds by solving RAR on the\u03b5-sample. (Right) Finding the landuvalues, we solve the SRR problem on the stripe range. and (b) common similarity measures, like Euclidean and Cosine similarity (Section 3.3).",
+    "technical_score": 0.013150609080841643,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Random-Access Ranked Retrieval (RAR)"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The main problem is to efficiently find the point at a specific rank i. Problem 1 ( \u03ba-Random-Access Ranked Retrieval ( \u03ba-RAR)). Given a datasetDavailable at preprocessing time, a query consists of a linear scoring function f\u2208Rdand an integer i\u2208[n], find a",
+    "technical_score": 0.0019725913621262458,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Random-Access Ranked Retrieval (RAR)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Based on this definition, when \u03ba=1, the task reduces to identify- ing the exact i-th ranked element. As shown in Appendix L, finding p(i)in high-dimensional spaces is challenging, as its complexity is tied to that of the half-space range counting problem [ 2,26]. For 1<\u03ba\u226an, this formulation naturally leads to a relaxed variant of the problem: instead of returning a single point, the output is a small set that is guaranteed to contain p(i). Inspired by the notion of conformal prediction in machine learning [ 8,85], we refer to this set as the conformal set for ranki.6",
+    "technical_score": 0.0008876661129568104,
+    "citation_score": 0.0020712209302325576
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Stripe Range Retrieval (SRR)"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While addressing Problem 1, we also solve a side problem that finds all points that fall in a stripe range. Formally, a stripe range Sf,l,u is defined by a scoring function f\u2208Rdand two real-valued boundariesl,u\u2208Rsuch thatl\u2264u. It corresponds to the universe of all points x\u2208Rdwhose scores based on flies within the interval [l,u], i.e., Sf,l,u={x\u2208Rd|l\u2264scoref(x)\u2264u}. 6We remove\u03bawhen it is clear from the context or when we refer to the general problem for any \u03ba.",
+    "technical_score": 0.002301356589147287,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Stripe Range Retrieval (SRR)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "R2, which transforms segments (1D Balls) into the intersection of half-planes and parabola ( y=x2).",
+    "technical_score": 0.00345203488372093,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Stripe Range Retrieval (SRR)"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "(Left) Similarly, the R2toR3lifting. Given a stripe range query, we aim to return the set of points in Dthat fall inside the given stripe range. For example, in Figure 1, the stripe range query is highlighted between the two blue lines. Problem 2 (Stripe Range Retrieval (SRR)). Given a datasetD and a query consisting of a stripe rangeSf,l,u, return all points in Dthat lie within this range, i.e., Do=Sf,l,u\u2229D .",
+    "technical_score": 0.0049479166666666664,
+    "citation_score": 0.0008054748062015502
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Random-Access Similarity Search (RAS)"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Similar to the ranked retrieval problem, we define a random-access variant of the similarity search problem (also known as nearest neighbor search) under a given similarity metric. Formally, let d:D\u00d7D\u2192 Rbe a distance function that induces the similarity metric on the dataset D. For a query point q, we define a ranking function nn_rankq:D\u2192N,which orders points in D by decreasing similarity to q(equivalently, by increasing distance d(q,\u00b7)). In other words, the most similar point to q(i.e., the nearest neighbor) has rank 1. Despite the classical NN problem that retrieves the k-nearest neighbors for a constant k, we consider a more general random- access problem, retrieving the point in rank ifor anyi\u2208[n]. Problem 3 ( \u03ba-Random-Access Similarity Search ( \u03ba-RAS)). Given a datasetDand a similarity metric davailable at prepro- cesing time, a query consists of a point q\u2208Rd, and an integer i\u2208 [n], find a conformal set C(i) \u2282D , where|C(i)|=\u03baand",
+    "technical_score": 0.005917774086378738,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Random-Access Similarity Search (RAS)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Similar to Problem 1, when \u03ba=1, we look for the exact i-th point, while for 1<\u03ba\u226an, we have a relaxed version of the problem.6 In this work, we focus on two widely used distance metrics in ANN search and practical similarity search systems: the l2\u2212norm (Euclidean distance) and cosine similarity. In the following, we first show how the RAS problem can be reduced to RAR . Subsequently, we focus on solving RAR , which represents the more general problem.",
+    "technical_score": 0.008876661129568107,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Reducing RAS to RAR"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we use existing techniques to reduce the RAS prob- lem to the RAR problem, and show that an efficient solution to the RAR problem would also solve the RAS problem. Euclidean distance : Given a query point q\u2208Rd, thel2\u2212norm similarity of a point p\u2208D toqis measured as d(p,q)=\u2225p\u2212q\u22252. In Appendix D.1, we prove Lemma 1, which provides the reduction of the RAS problem to the RAR problem for l2-norm:",
+    "technical_score": 0.0026301218161683283,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Reducing RAS to RAR"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Lemma 1. Let\u03c6:Rd\u2192Rd+1denote the paraboloid lifting trans- form [ 50], which maps a point in RdtoRd+1(see Figure 2). The transformation is defined as \u03c6(p)=(p[1],p[2],...,p[d],\u2225p\u22252 2). Using this mapping, Euclidean balls in Rdcorrespond to halfspaces inRd+1. Moreover, using the scoring function f=(\u22122q[1],\u22122q[2],...,\u22122q[d],1), theRAS problem on query qreduces to the RAR problem onf. Cosine distance : Cosine distance is a dissimilarity measure derived from cosine similarity (more specifically, 1\u2212cosine similarity) that captures the angular separation between two vectors. For a query q, the cosine distance is given by d(p,q)=1\u2212(q\u22a4p)/(\u2225q\u22252\u00b7\u2225p\u22252). Lemma 2, proven in Appendix D.2, provides the reduction of the RAS problem to the RAR problem for this distance: Lemma 2. Let\u03c6:Rd\u2192Rddenote the normalization map, which scales each point to unit l2norm. The transformation is defined as \u03c6(p)=p \u2225p\u22252. Using this mapping, the RAS problem with query point q, can be reduced to RAR problem with the scoring function: f=(q[1] \u2225q\u22252,...,q[d] \u2225q\u22252). Note that these reductions equally apply to any value of \u03ba\u22651. These transformations, map a ball in \u03ba-RAS problem to a half-space in\u03ba-RAR problem (see Figure 2). As a result, from now on, we focus only on the general \u03ba-RAR problem.",
+    "technical_score": 0.004750657530454042,
+    "citation_score": 0.0008383513289036543
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we summarize the key concepts and definitions used in this paper. We assume to be given a range space (D,R), where Dis the dataset, andRis a collection of geometric ranges defined overD, such as all possible balls, half-spaces, or other ranges. for a range space is the size of the largest subset C\u2286 D such that every subset of Ccan be realized as the intersection of Cwith some range inR. A low VC-dimension implies a limited expressive power, which in turn allows for efficient sampling-based approxi- mations [50].",
+    "technical_score": 0.0010331415606514873,
+    "citation_score": 0.019629689652378254
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03b5-Samples . An\u03b5-sample of a range space (D,R)is a subsetN\u2286D such that, for every range R\u2208R, the proportion of points in Ris approximately preserved in N. More formally,Nis an\u03b5-sample if |N||\ufe01|\ufe01|\ufe01|\ufe01\u2264\u03b5.",
+    "technical_score": 0.0022958701347810828,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "For more details on \u03b5-sampling, we refer the reader to [ 50]. We use the following foundational theorem on \u03b5-samples as a key tool in deriving our theoretical guarantees:",
+    "technical_score": 0.0005739675336952707,
+    "citation_score": 0.0005739675336952707
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Theorem 3 ( \u03b5-sample theorem [ 95]).Let(D,R)be a range space of VC-dimension \u03b4. Then for any \u03b5,\u03c6\u2208(0,1), a random sample",
+    "technical_score": 0.021810766280420276,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "\u03b4 \u03b52log\u03b4 \u03b5+\u03b4 \u03b52log\u03b4 \u03c6)\ufe02 is an\u03b5-sample of(D,R)with probability at least 1\u2212\u03c6. \u25a1 In addition to random sampling, which provides a probabilistic method for constructing \u03b5-samples, there also exist deterministic construction algorithms based on discrepancy theory [27, 50].",
+    "technical_score": 0.0005739675336952707,
+    "citation_score": 0.0005739675336952707
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we provide a high-level overview of our proposed algorithms and summarize their theoretical guarantees. The baseline approach for answering the RAR queries uses the extension of the classic divide and conquer (D&C) median find- ing algorithm, which, instead of the median, finds the element at positioni[18,31]. To do so, it first makes a linear pass over D, and for each point p, computes scoref(p). Then, using the D&C algorithm, it finds rank\u22121 f(i)inO(n). The Quick Select algorithm8 also provides a randomized version of this baseline. Instead, our algorithms, summarized in Table 1, provide more efficient solutions by preprocessing the data and constructing proper data structures:",
+    "technical_score": 0.0005094130675526025,
+    "citation_score": 0.009678848283499448
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "KthLevel . Our first algorithm for solving the RAR problem uses the computational geometric concepts of duality andarrangement of hyperplanes [ 29,41]. This algorithm, named KthLevel , keeps track of different levels of the arrangement , which are searched at query time to efficiently answer RAR queries, i.e., finding the tuple at a given rank position i. Due to the space constraints, further details about this algorithm and its analysis are presented in Appendix E. This method is an exact solution to the 1- RAR problem (\u03ba=1) that offers highly efficient logarithmic query time , but it is not practi- cal for high-dimensional settings ( d>2) as it has a space complexity exponential to the number of attributes d. Our next algorithms based on\u03b5-samples aim to maintain linear space complexity. \u03b5-sampling . We start with the simple two-dimensional case, also illustrated in Figure 1. During the preprocessing, we compute an \u03b5-sample of the dataset, denoted by N\u03b5. Given a scoring function fand a target rank i, we approximately solve the RAR problem on the smaller set N\u03b5, rather than the full dataset D. From this approximate solution, we derive a stripe range containing the true i-th ranked point. By solving an instance of stripe range searching (SRR) we find this exact point. We refer to this algorithm as Eps2D . A visual representation of this approach is shown in Figure 1. For higher-dimensional settings, we follow a similar generalized strategy ( EpsRange ). However, unlike in 2D, standard range search- ing algorithms do not perform well in high-dimensional datasets. To overcome this, we propose a practical algorithm to solve the intermediate SRR problem with hierarchical sampling ( EpsHier ).",
+    "technical_score": 0.012990033222591364,
+    "citation_score": 0.002292358803986711
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Lower Bounds and Optimality . A discussion on the lower bounds and optimality of our algorithms is provided in the Appendix L.",
+    "technical_score": 0.025470653377630124,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In theory, the solution based on constructing the arrangement of dual hyperplanes provides a logarithmic time for answering the RAR queries (see Appendix E). However, it is not practical, espe- cially when the number of ranking attributes is not small ( d\u22653), since the size of the arrangement (hence, the space complexity) in- creases exponentially with d. Therefore, in this section, we propose practical solutions that keep the space complexity linear, i.e., O(n). Our algorithms are based on the computational geometric concept of\u03b5-samples [50] (also introduced in Section 4).",
+    "technical_score": 9.815765629719124e-05,
+    "citation_score": 0.0018649954696466327
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In the following, We start by discussing the two-dimensional Eps2D algorithm, then we will generalize our solution to the higher",
+    "technical_score": 0.0029447296889157358,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "KthLevel Following the levels of arrangement d\u22652 O(nd) O(logn) 1-RAR Eps2D \u03b5-sampling in 2D d=2 O(n) O(n2/3logn) 1-RAR EpsRange \u03b5-sampling + Range Searching d\u22652 O(n)O(max{n1\u22121/d,1 \u03b52log1",
+    "technical_score": 0.00490788281485956,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "O(max{n1\u22121/d,n2/3logn}) 1-RAR EpsHier \u03b5-sampling + Hierarchical Sampling d\u22652 O(n) Worst-caseO(n); Practically Efficient (\u03b5n)-RAR dimensions, and propose practical methods to solve the intermedi- ateSRR problem (Problem 2).",
+    "technical_score": 0.000981576562971912,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we discuss our solution based on \u03b5-samples in 2D, called Eps2D , also illustrated in Figure 1.",
+    "technical_score": 0.0032230070473941537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Preprocessing . During the preprocessing phase, the algorithm computes an \u03b5-sample of the dataset D, where the ranges are stripe ranges . We denote this \u03b5-sample byN\u03b5, for a given parameter \u03b5.",
+    "technical_score": 0.012892028189576615,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Query Answering . Letm=|N\u03b5|denote the size of the \u03b5-sample built during the preprocessing, where m\u226an.9We take the follow- ing steps to answer the query:",
+    "technical_score": 0.0016115035236970768,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "(Step i: Thresholding ) During the query phase , given a query pair (f,i), we begin by solving the 1-RAR problem on the \u03b5-sampleN\u03b5. Specifically, we identify the il-th andiu-th ranked points in N\u03b5 with respect to the scoring function f, where: il=\u230a\ufe03 m(\ufe03i n\u2212\u03b5)\ufe03\u230b\ufe03 , iu=\u2308\ufe03 m(\ufe03i n+\u03b5)\ufe03\u2309\ufe03 , (1) andm=|N\u03b5|. This step can be done by sorting the points in N\u03b5 according to scoref, or by using linear-time-in- mbaseline median- finding algorithms, such as median-of-medians. These two points serve as score-based thresholds that are guaranteed to bound the score of the i-th ranked point in the full dataset D, as stated in the following lemma.",
+    "technical_score": 3.2391220826311246e-05,
+    "citation_score": 0.00012956488330524498
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Lemma 4. LetN\u03b5be an\u03b5-sample of the dataset Dfor some\u03b5>0. Then, for any linear scoring function f, the score of the i-th ranked pointp(i)inDis bounded as scoref(ql)\u2264scoref(p(i))\u2264scoref(qu), whereqlandquare theil-th andiu-th ranked points in N\u03b5underf, i.e.,qj=rank\u22121 N\u03b5,f(ij),forj\u2208{l,u}.",
+    "technical_score": 0.01450353171327369,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we evaluate the performance of our algorithms in both the random-access ranked retrieval and similarity search set- tings. Our implementation is available at this anonymous repository . We begin by describing the datasets. Next, we present results for thestripe range searching subtask showcasing our proposed hierar- chical index (Subsection 7.1). We then evaluate our methods on two primary tasks: random-access ranked retrieval (Subsection 7.2) and random-access similarity search (Subsection 7.3). Additional results and experimental details are deferred to Appendix M.",
+    "technical_score": 0.00937047448675356,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Datasets . For the ranked retrieval, we use synthetic and real-world datasets. The synthetic dataset is generated from a Zipfian distri- bution. Our real-world datasets include US Used Cars [75] (3M andUS Flights [94] (5M records, 31 columns). For the similarity search setting, we evaluate our methods on five popular benchmark datasets from ann-benchmarks.com :SIFT-128-Euclidean [58] (1M vectors,l2),Fashion-MNIST-784-Euclidean [99] (60K vectors, l2), (1M vectors, cosine), and GloVe-25-Angular [80] (1M vectors, co- sine).13More details of the datasets are provided in Appendix M.1.",
+    "technical_score": 0.0016866854076156399,
+    "citation_score": 0.003935599284436492
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For the SRRproblem, we compare against classical and widely used range searching indices, including KD-Tree [ 16], R-Tree [ 49], and Partition Tree [ 71], and Ball Trees [ 77]. Our proposed hierarchical index is abbreviated as Hierarchical . As a baseline, we also include a simple linear search approach, denoted as Exhaustive . To apply the baseline range searching indices to stripe range queries, we traverse the tree top-down, pruning subtrees whose corresponding hyperrectangles do not intersect the query stripe (see Algorithm 4). More experiments on SRR problem is provided in Appendix M.2. 7.1.1 Synthetic Dataset. We begin by evaluating the performance of the algorithms on synthetic datasets.",
+    "technical_score": 3.895472312696909e-05,
+    "citation_score": 0.0007401397394124126
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Effect of Stripe Width . For these experiments, the scoring func- tionfis sampled uniformly from the unit hypersphere in Rd. We vary the stripeSf,l,u by adjusting its width, i.e., the number of points it contains. Figure 4 presents the query time performance across different dimensionalities das a function of stripe width. We 13The number in the dataset name represents the dimensionality of the vectors.",
+    "technical_score": 8.656605139326461e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "SRR problem vs dataset size. Large dandncases do not use KD-tree or R-tree, as these methods do not scale well. onSRR problem vs the stripe range width. on\u03ba-RAR problem vs dimension dand the rank i. In this setting, \u03b5=1 16. observe that both KD-Tree andR-Tree methods fail to scale effec- tively to high-dimensional settings, and thus we exclude them from experiments with d=128. The proposed Hierarchical Sampling method achieves up to a 16\u00d7speedup over Exhaustive search, particularly in narrow stripe queries. Such narrow stripes frequently arise when solving the RAR problem, indicating that this method is also helpful in this context. While the Partition Tree also shows a fast query time in low-dimensional spaces, its performance de- grades with increasing dimensionality.",
+    "technical_score": 0.0006925284111461169,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Effect of Dataset Size . Figure 5 illustrates the impact of increasing the dataset size non the query time of the algorithms, for both low- and high-dimensional settings. As observed, the Hierarchical Sampling method consistently outperforms the baselines.",
+    "technical_score": 0.0006835111141259853,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Real Datasets . Figure 6 shows the comparison on Us Used Cards dataset. As shown, Hierarchical Sampling significantly outperforms both Exhaustive search and the Partition Tree method. In this experiment, multiple random scoring functions are sampled uni- formly from the unit hypersphere. (See Appendix M.2 for other real-datasets).",
+    "technical_score": 0.0007875106064248377,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Accuracy of the Output . In all the settings, the output is guaran- teed to have a recall of 100% , reporting all the points in the range. on\u03ba-RAR problem vs dataset size and \u03b5. In the right plot, n=10000 and\u03ba=\u03b5n.",
+    "technical_score": 0.0007189791490718367,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Ranked Retrieval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We include the Threshold Algorithm (TA) and Fagin\u2019s algorithm [ 44] as baseline methods for retrieving top-K elements.14Additionally, we consider a simple search baseline, referred to as Exhaustive , which computes all the scores and extracts the i-th ranked element. Our proposed algorithms ( EpsRange andEpsHier ) are used for the\u03ba-RAR problem while the KthLevel algorithm solves the exact 1-RAR problem in 2D (see Appendix M.3). 7.2.1 Synthetic Dataset. Effect of Dimension and value of i. Figure 7 (left) presents the query time of algorithms as a function of dimension d. Asdin- creases, both Fagin andTAalgorithms exhibit poor scalability for random-access queries. Among the proposed methods, EpsHier consistently outperforms EpsRange , particularly when the d>8. The performance degradation of EpsRange in higher dimensions is because of its reliance on Partition Tree index [ 72], which suffers from the curse of dimensionality. Figure 7 (right) illustrates the im- pact of varying the value of iin the RAR query on the runtime. The TAalgorithm shows increasing query time as igrows, since it must retrieve all the top- iitems. In contrast, the runtime of EpsRange remains relatively stable, as it depends primarily on the position of the stripe rather than the value of i. The EpsHier method also shows a moderate increase in runtime for larger i, which can be because of the relative location of the stripes with respect to the dataset. The marginal stripes (smaller values of i) intersect with fewer balls in the hierarchical structure proposed in Section 6.3, and the pruning is more effective in this case.",
+    "technical_score": 0.00024987931964676164,
+    "citation_score": 0.00474770707328847
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Ranked Retrieval"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Effect of Dataset Size and \u03b5. Figure 8 (left) shows the effect of dataset size on the query time of the algorithms. We observe signif- icant speedups achieved by both EpsRange andEpsHier compared to the baseline methods. Figure 8 (right) illustrates the impact of varying the parameter \u03b5. As expected, this parameter influences the size of the output set, \u03ba, in the\u03ba-RAR problem. Increasing the value of\u03b5results in a larger output set, whereas smaller values of \u03b5 require searching over a larger \u03b5-sample during the initial phase of the algorithm. Both extremes lead to increased query times. The most efficient performance is typically achieved for a moderate value of\u03b5, which may serve as a default when not given by user.",
+    "technical_score": 0.001249396598233808,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Ranked Retrieval"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Real Datasets . Figure 9 presents the results of running the al- gorithms on the US Flights dataset, evaluating across different values of\u03b5(left) and different values of i(right). We observe signifi- cant speedups achieved by EpsHier , followed by EpsRange . Appen- dix M.3 shows the results on other datasets. 14Please refer to the related work (Appendix B).",
+    "technical_score": 0.005622284692052136,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Ranked Retrieval"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "\u03ba-RAR problem vs the value of \u03b5and rankion US Flights dataset. similarity search task. The dataset is Sift-128-Euclidean with 1M vectors of dimensionality 128 with l2distance.",
+    "technical_score": 0.000624698299116904,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Ranked Retrieval"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Accuracy of the Output . In all the experiments, the returned set is guaranteed to have the p(i), so the recall is always 100%.",
+    "technical_score": 0.004372888093818327,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Similarity Search"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For the similarity search setting, we first apply the reduction de- scribed in Section 3.4. For datasets under the l2metric, we lift the data points during preprocessing and apply the same lifting to the query at query time. For cosine similarity, we treat the query as a linear scoring function corresponding to the standard dot product. The objective is to retrieve the i-th nearest neighbor of a query point, where iis not necessarily O(1).",
+    "technical_score": 0.00013118664281454979,
+    "citation_score": 0.0024925462134764457
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Similarity Search"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We consider six baselines for comparison. Our first baseline is (i) the classical Quickselect algorithm for order statistics computa- tion.15We also evaluate several popular ANN indexes implemented in the widely-used Faiss library [ 40]: (ii) HNSW [ 70], (iii) PQ [ 58], (iv) IVFPQ [ 58], (v) IVFFlat [ 58], and (vi) LSH [ 7]. The details of these algorithms are discussed in the related works (Appendix B). In Appendix M.4, we describe how these ANN indexes are adapted to support the random-access version of the problem. We note that, as demonstrated by our experimental results, these methods are generally not well suited for random-access retrieval when i(or equivalently k) is large; they are included primarily for complete- ness and comparison.",
+    "technical_score": 0.003345259391771018,
+    "citation_score": 0.0005903398926654738
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Random-Access Similarity Search"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Figure 10 shows the recall and query time of our algorithm, EpsHier , compared with the baseline methods on the SIFT-128- Euclidean dataset. As the target rank iincreases to larger values (e.g., the first, second, and third quartiles), all ANN-based methods degrade substantially, exhibiting both increased query time and near-zero recall. In contrast, EpsHier consistently achieves close to 100% recall while maintaining relatively low query time, even when random-accessing elements in the middle of the ranked order. This behavior is particularly evident for large ranks i=O(n). Table 2 in Appendix M.4 shows a complete comparison on a wide range of i values and other datasets.",
+    "technical_score": 0.006559332140727488,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We studied the problem of Random-Access Ranked Retrieval ( RAR) and Random-Access Similarity Search ( RAS). We showed that RAS can be reduced to RAR . For solving the general RAR problem, we first proposed an algorithm based on geometric arrangements with logarithmic query time but an exponential space complexity. Next, we proposed our space-efficient algorithms based on \u03b5-samples. By providing a hierarchical sampling-based data structure for efficient stripe-range retrieval, we developed a practical algorithm for the relaxed\u03ba-RAR problem that scales to hundreds of dimensions.",
+    "technical_score": 0.042081949058693245,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A More on the Application Examples"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Examples 1 and 2 highlight two motivations for random-access ranked retrieval for e-commerce and web applications. Such exam- ples can be found across a wider range of domains. In this section, we highlight additional application examples of RAR and its varia- tions across a diverse set of domains. Extending random-access to ranked retrieval . Random access to arbitrary positions in an array or a sorted list is a fundamen- tal operation underlying many of the most efficient algorithms in computer science. Classic divide-and-conquer techniques, such as binary search andquick select , critically rely on the ability to ran- domly access elements at arbitrary positions in order to efficiently prune the search space. However, in ranked retrieval systems, this basic capability is largely missing. Although items are conceptually ordered by a scoring or ranking function, accessing the element at a given rank typically requires enumerating all higher-ranked items, effectively reducing random access to sequential scan. This limitation prevents the direct application of well-established algorithmic techniques in settings where ordering is induced by a query-dependent ranking rather than a static key. The random-access ranked retrieval ( RAR ) problem addresses this gap by providing efficient access to arbitrary rank positions under a ranking function without materializing the entire result prefix. RAR extends the power of random-access\u2013based algorithms to settings where the values are scores, determined by a ranking function or by similarity to a specific point. This capability opens the door to adapting a broad class of classical algorithms, previously confined to static (sorted) lists, to modern data retrieval workloads where rankings are query-specific (dynamic) and high-dimensional.",
+    "technical_score": 0.016510621161783954,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A More on the Application Examples"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Analytical Insights for Business Decision Support . In many business and decision-support applications, stakeholders are inter- ested in advanced analytics (e.g., income distribution, demographic distribution, shopping behavior) for not only in the top-ranked cus- tomers, or the ones in their close vicinity, but in understanding how key analytics look across different rank positions or percentiles of a scoring function [ 32,48,89,101]. Examples include analyzing income or demographic distributions across distance bands froma retail location, studying customer engagement at different rel- evance thresholds, or evaluating how small changes in targeting criteria affect the selected population. Consider a targeted advertising scenario in which a business defines its audience using a distance-based or machine-generated ranking function \u2013 for instance, customers ranked by proximity to a store or by predicted likelihood of conversion. While traditional systems efficiently retrieve the top-k customers, business decisions often hinge on understanding boundary cases: customers near a cut- off who are just included or excluded under a given targeting policy. These boundary regions are especially important for evaluating trade-offs, fairness, and return on investment. Supporting such analyses requires efficient access to records at arbitrary quantiles or rank positions (e.g., \u201cthe 90th-percentile customer according to this scoring function\u201d), as well as the ability to explore narrow rank intervals around these positions. Nai\u0308ve ap- proaches based on sampling or top-k retrieval are ineffective, since points at the same rank or distance may be widely dispersed in the feature space and cannot be approximated by local neighborhoods. Random-access ranked retrieval enables this form of fine-grained analytical exploration by allowing analysts to directly probe specific rank positions and score bands without exhaustively scanning the dataset. As a result, it provides a powerful primitive for interactive business analytics, sensitivity analysis, and decision support in large-scale, high-dimensional settings.",
+    "technical_score": 0.0012382965871337965,
+    "citation_score": 0.0028893587033121918
+  },
+  {
+    "section_path": [
+      "A More on the Application Examples"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Efficient Database Queries over Derived Attributes . Modern database systems routinely support queries over derived attributes , i.e., attributes that are not explicitly stored in the database but are computed on-the-fly as part of a query [ 46,64]. Such derived at- tributes are commonly expressed as functions over existing columns and are treated as first-class citizens in query predicates, projections, and orderings. For example, consider the following SQL query: SELECT Name, YEAR(Today_Date) - YEAR(Birth_Date) AS Age FROM Employees WHERE Age BETWEEN 25 AND 30; Here, Ageis not a stored attribute but is defined by the query itself as a function of Birth_Date . Conceptually, this corresponds to introducing a new attribute whose value is computed per tuple and then used for filtering or ranking. From a ranked-retrieval perspective, derived attributes naturally induce query-dependent scoring functions that combine existing attributes through arithmetic or functional transformations. Sup- porting efficient access to tuples based on such derived attributes poses a fundamental challenge. Since derived attributes do not exist at indexing time, traditional indexing techniques cannot be applied directly, and a nai\u0308ve solution requires computing the derived value for all tuples. This is particularly expensive when users wish to explore arbitrary rank positions or specific rank ranges. Also in spreadsheet applications [ 68,83], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explic- itly enumerating preceding entries. By treating derived attributes as scoring functions defined at query time, RAR enables efficient access to arbitrary rank positions without fully materializing or sorting the entire result set. This makes RAR a natural foundation for supporting interactive and scalable database queries over derived attributes, extending classical database functionality with modern rank-aware access patterns.",
+    "technical_score": 0.005778717406624383,
+    "citation_score": 0.008668076109936574
+  },
+  {
+    "section_path": [
+      "A More on the Application Examples"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Individually Fair Decision Boundaries . In many decision-making scenarios, the objective is not merely to retrieve items at a fixed rank, but to identify the cut-off points in a ranked list as the decision boundaries [ 6,15,66,74]. To minimize individual unfairness (i.e., to produce different outputs for similar inputs), the cut-off points should indicate meaningful transitions between the classes. In other words, the gap at the boundary should be wide. A tangible example arises in educational assessment, where instructors must determine grade boundaries (e.g., between an A and a B) based on student scores. Rather than enforcing a predefined percentile or absolute threshold, instructors often examine the score distribution around a target rank (e.g., the 90th percentile) to identify natural breaks that separate performance tiers. Similarly, drawing fair decision boundaries in score-based data-driven systems (e.g., for loan appli- cations) requires exploring a band (range) of valid cut-off points to maximize the decision-boundary gap [6]. Random-access ranked retrieval enables principled gap discovery by supporting direct, localized inspection of ranked items around candidate cut-off points. This capability allows decision makers to efficiently retrieve entities within the decision boundary candidates\u2019 range and to set the cut-off point responsibly.",
+    "technical_score": 0.0010319138226114971,
+    "citation_score": 0.009287224403503474
+  },
+  {
+    "section_path": [
+      "B Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Top-kRetrieval . Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 44] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 22]. Probabilistic top- kmethods [ 91] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 25] and view-based techniques [ 35,52] have been proposed to accelerate queries through structural or materialized reuse. For comprehensive surveys, see [ 34,54].In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis O(n). As a result, the algorithms proposed for top- kare inefficient for our setting, as shown in the experiments.",
+    "technical_score": 0.0007837894847861624,
+    "citation_score": 0.014892000210937086
+  },
+  {
+    "section_path": [
+      "B Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Direct Access Queries in Databases . Recent work in database theory has explored the notion of direct access to query answers, aiming to support efficient access to the i-th ranked tuple without materializing the full result [ 14,20,23,42,93]. In these works, the ordering is generally assumed to be fixed, lexicographically, on some attributes. Some work extends this to conjunctive queries with aggregation, designing algorithms that enable access to top- ranked answers without fully evaluating the query [ 42]. In our paper, we discuss any ranking function defined as as the weights on the features. Specifically, rather than assuming a predefined ordering, we consider a ranking function as part of the user query . As a result, the proposed algorithms for direct-access queries cannot be adapted to our setting.",
+    "technical_score": 0.0014220851131150135,
+    "citation_score": 0.0033181985972683646
+  },
+  {
+    "section_path": [
+      "B Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Range Searching Indexes . Range searching, specifically for sim- plex ranges, is related to our work in solving the intermediate SRR problem. Some approaches achieve logarithmic query time atthe cost of exponential space [ 5,39], while others aim for linear space and sublinear query time [ 29,51,71,72]. Specialized variants have also been studied, including half-space range searching [ 29] and axis-aligned queries [ 28]. For a comprehensive survey, see [ 2]. To address the SRR problem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for similarity search, like HNSW [ 70]. As an intermediate problem for solving RAR,our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our algorithm is the Ball Tree structure [ 77]. The key difference between Ball Trees and our approach lies in the con- struction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Other related topic is Max Inner Product Search (MIPS) [12,88] which focuses on retrieving the item with the highest inner product with a query vector. Techniques, such as asymmetric LSH [ 88] and tree- or graph-based indices [ 11,12], have been proposed to accel- erate MIPS. In parallel, Quantile Sketches [48,61] provide compact data summaries that approximate rank-based statistics, enabling efficient quantile estimation in streaming or large-scale settings. Unlike these methods, our work on Random-Access Retrieval aims to directly access the i-th element according to an arbitrary scoring function.",
+    "technical_score": 0.0008823498391604702,
+    "citation_score": 0.0013235247587407054
+  },
+  {
+    "section_path": [
+      "B Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Nearest Neighbor Search . A closely related problem to random- access similarity search (Problem 3) is Approximate Nearest Neighbor (ANN) search, which aims to retrieve the top- kmost similar points to a queryq. ANN has been extensively studied in the context of vector databases [ 10,55], and existing methods broadly fall into three categories: (a) graph-based indexing and traversal methods, (b) quantization-based approaches that compress the search space, and (c) hashing techniques inspired by locality-sensitive hashing. Graph-based methods construct a proximity graph over the dataset and perform greedy graph traversal at query time [81, 92]. Prominent examples include Navigable Small-World (NSW) graphs and their hierarchical variant HNSW [ 69,70], as well as Navigating Spread-out Graphs (NSG) [45] and DiskANN [57].",
+    "technical_score": 0.0030882244370616465,
+    "citation_score": 0.012352897748246586
+  },
+  {
+    "section_path": [
+      "B Related Work"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Quantization-based techniques aim to accelerate kNN search by compressing high-dimensional vectors. Widely used approaches include Product Quantization (PQ) [ 60] and Inverted File (IVF) in- dexing [ 40,59]. PQ and its variants decompose vectors into multiple low-dimensional subspaces and quantize each independently, en- abling fast approximate distance computation via lookup tables. For large-scale datasets, PQ is commonly combined with coarse partitioning schemes such as IVF, which clusters the dataset into centroid-based cells approximating Voronoi regions. The third category consists of hash-based methods such as locality- sensitive hashing, which provide theoretical guarantees [ 7,36, 67] but are known to degrade in high-dimensional real-world set- tings [56].",
+    "technical_score": 0.003304118546643464,
+    "citation_score": 0.004956177819965195
+  },
+  {
+    "section_path": [
+      "B Related Work"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "While these methods are designed to solve similarity search under distance metrics such as l2or cosine similarity, they primarily target regimes where kis a small constant. As demonstrated in our experiments, their performance degrades substantially when applied to random-access retrieval at an arbitrary rank i. In contrast, our algorithm is explicitly designed to address this setting.",
+    "technical_score": 0.002956810631229236,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Note that the term \u2225q\u22252 2is still needed to obtain the exact same value as the d(p,q)2term in Equation 5. But, as the term \u2225q\u22252 2is independent of p, and is missing for all pi\u2208D as part of the compu- tation off, there is no change in ranking. That is, while the scores for all points inDare offset by\u2225q\u22252 2, the ranking between points does not change. Hence, the transformation suffices to answer any l2norm based RAS query using a transformed RAR query with rank set to 1. A visual representation of this lifting transformation is shown in Figure 2. \u25a1 D.2 Cosine Distance: Proof of Lemma 2 Proof. For a query q, the cosine distance is given by, d(p,q)=1\u2212q\u22a4p \u2225q\u22252\u00b7\u2225p\u22252. (7) The numerator of the Equation 7, q\u22a4p, can be interpreted as a dot product between the linear function qandp. Therefore, d(p,q)=1\u2212(\ufe03q \u2225q\u22252)\ufe03\u22a4p \u2225p\u22252 =1+d\u2211\ufe02 j=1\u2212q[j] \u2225q\u22252p \u2225p\u22252 Removing the constant term from the scoring function, the rank- ing generated by Equation 8 is the same as Equation 7. figure shows an example of running KthLevel for i=3. The result of this query is the point D. Algorithm 1 KthLevel-Query(f,i) Input: The scoring function fand the order i Output: Thei-th highest scored point according to f:p(i) 1:Leveli\u2190preprocessed data structure \u22b2Get thei-th level 2:face\u2190Intersection(f,Level i) \u22b2Get the intersection 3:h\u2190The hyperplane corresponding to face in arrangement",
+    "technical_score": 0.0035681063122923596,
+    "citation_score": 0.0023787375415282395
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03b52log1 \u03b5)\ufe02 .Combining all steps, the total runtime is: T(Eps2D)=O(\ufe02 m+\u221an+|Do|log|Do|)\ufe02 . Using|Do|=O(\u03b5n)and choosing \u03b5=n\u22121/3(which minimizes the overall runtime), we get: T(Eps2D)=O(\ufe02 n2/3logn)\ufe02 . we proceed to steps iii and iv. In step iii, we solve an instance of range counting in ddimensions, which takes O(n1\u22121/d)[72] time and linear space. Finally, in step iv, we sort Do, which takes O(|Do|log|Do|).",
+    "technical_score": 0.003171650055370986,
+    "citation_score": 0.0021144333702473243
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Space Complexity . The space complexity of this algorithm is linear to the input size, since all structures require linear space.",
+    "technical_score": 0.004625322997416021,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Time Complexity for the \u03ba-RAR problem . The total query time of the algorithm for finding the conformal set is: T(EpsRange \u03ba-RAR)=O(m+n1\u22121/d) The size of\u03b5-samplemisO(d \u03b52logd \u03b5), since the VC-dimension of stripe range is \u03b4=d+1[50,51]. This gives us the following query time: T(EpsRange \u03ba-RAR)=O(max{n1\u22121/d,d \u03b52logd \u03b5})=\u03a9(n1\u22121/d). The output is a set Dowith sizeO(\u03b5n), guaranteed to contain p(i) (see Lemma 8). Note that the final time also depends on the choice of parameter \u03b5, which determines the size of output Do.",
+    "technical_score": 0.004499077150239942,
+    "citation_score": 0.0006135105204872648
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Time Complexity for the RAR problem . The exact version also includes the steps iii and iv: T(EpsRange Exact)=O(m+n1\u22121/d+|Do|log|Do|). Based on Lemma 8, we have |Do|=O(\u03b5n). As a result, by choosing \u03b5=n\u22121/3, we get the following runtime: T(EpsRange Exact)=O(max{n1\u22121/d,dn2/3logn}) Theorem 9. TheEpsRange algorithm solves the relaxed version of RAR problem with linear space usage and O(max{n1\u22121/d,d \u03b52logd \u03b5}) time. The exact version can also be solved with the same space usage andO(max{n1\u22121/d,dn2/3logn})time. to the dataset size for d=8. width across different dimensionalities on the synthetic data. onSRR problem vs the stripe range width. The scoring functions are sampled uniformly at random from a hypersphere. M.3 More on Direct-Access and Conformal Set Retrieval KthLevel Algorithm . Figure 15 shows the result of running the KthLevel algorithm on smaller datasets in 2D. As shown in, the KthLevel algorithm achieves substantial speedups. However, this improvement comes at the cost of increased index size.",
+    "technical_score": 0.0025847176079734223,
+    "citation_score": 0.0017231450719822814
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "2 D. Generally, KthLevel does not scale well with dimension dand sizen. Here, EpsRange in 2D is equivalent to Eps2D algorithm.",
+    "technical_score": 0.005197489848652639,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Other Real Datasets . Figures 16 and 17 compare the performance of the algorithms on the US Used Cars andFIFA datasets, where the parameters \u03b5and rankiare varied across different runs.",
+    "technical_score": 0.004536729420450351,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "\u03ba-RAR problem vs value of \u03b5and rankion FIFA 2023 dataset.",
+    "technical_score": 0.004396456256921374,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "\u03b5and rankion US Used Cars Dataset. M.4 Random-Access Similarity Search Adapting ANN Indexes to the \u03ba-RAR Problem . In this section, we describe how standard approximate nearest neighbor (ANN) indexes\u2014such as HNSW and Product Quantiza- tion\u2014are adapted to the random-access similarity search setting, and used to compare their performance with our proposed algo- rithm, EpsHier , in Section 7.3. Our algorithm directly solves the \u03ba-RAR problem with \u03ba=\u03b5nfor a given\u03b5. The output is a set of size \u03ba. To evaluate recall, we check whether the ground-truth i-th point, denoted by p(i), is contained in this output set (i.e., the conformal set). In contrast, ANN indexes are designed to return the top- knear- est neighbors. To approximate the i-th ranked point, we query each ANN index with k=i+10, where the additional constant mar- gin ensures that the true i-th neighbor is covered in the best-case scenario. Depending on the index configuration, the output size may beO(k)for largek, or bounded by a maximum size M. For example, in HNSW, Mcorresponds to the beam search candidate set size. Consequently, the final output size is min(M,k). Since this output does not directly correspond to a solution of the\u03ba-RAR problem, we apply a post-processing step to ensure a fair comparison. Specifically, we select the last \u03b5npoints (i.e., those with the largest distances) from the ANN output and then check whetherp(i)lies within this subset.",
+    "technical_score": 0.0022414174972314516,
+    "citation_score": 0.0014942783314876346
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "More Results on the RAS Task . Table 2 reports the recall and query time of ANN indexes across all five benchmark datasets for varying values of i, ranging from small values ( i=O(1)) to the median and third quartile of the dataset.",
+    "technical_score": 0.0027059431524547807,
+    "citation_score": 0.00036899224806201554
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "We observe that the performance of all ANN indexes degrades significantly as igrows beyond O(1). In particular, for large values ofi, these methods fail to retrieve the required point, resulting in near-zero recall. Moreover, their query time increases substan- tially, as the algorithms must iterate over an increasing number of candidates and compute distances for up to ipoints. In contrast, our algorithm, EpsHier , exhibits stable performance across all values of i, achieving fast query times and a guaranteed recall of 100% . This guarantee holds with high probability, condi- tioned on the sampled set forming an \u03b5-sample, as discussed in Section 6. Figure 18 compares the indexing (preprocessing) time and index size of EpsHier with those of the ANN indexes used in this experi- ment. We observe that both the index size and preprocessing time ofEpsHier are comparable to standard ANN methods. However, unlike ANN indexes, which do not meaningfully solve the RASproblem and exhibit zero recall for large i, our approach provides provable correctness guarantees across the entire range of i. for Random-Access Similarity Search task fashion-mnist-784-euclidean (n=60,000) i=10i=29(n/211)i=117(n/29)i=468(n/27)i=1875 (n/25)i=7500 (n/23)i=30000 (n/21)i=45000 (3n/4) EpsHier* (Ours) 0.018 1.000 0.021 1.000 0.021 1.000 0.020 1.000 0.022 1.000 0.021 1.000 0.019 0.920 0.023 1.000 Quick Select 0.114 1.000 0.113 1.000 0.112 1.000 0.111 1.000 0.111 1.000 0.113 1.000 0.117 1.000 0.117 1.000 IVFFlat 0.003 1.000 0.003 1.000 0.003 1.000 0.004 1.000 0.007 1.000 0.018 0.000 0.065 0.000 0.069 0.000 PQ 0.003 0.920 0.003 0.790 0.004 0.670 0.005 0.470 0.010 0.530 0.028 0.000 0.080 0.000 0.111 0.000 IVFPQ 0.001 0.810 0.001 0.610 0.001 0.400 0.002 0.450 0.007 0.420 0.026 0.000 0.030 0.000 0.032 0.000 HNSW 0.000 1.000 0.000 0.990 0.001 0.880 0.002 0.330 0.002 0.050 0.002 0.000 0.005 0.000 0.006 0.000 LSH 0.053 0.390 0.060 0.270 0.060 0.250 0.059 0.210 0.056 0.270 0.041 0.030 0.085 0.000 0.116 0.000 glove-100-angular (n=1,183,514) i=10i=144(n/213)i=2311 (n/29)i=9246 (n/27)i=36984 (n/25)i=147939 (n/23)i=591757 (n/21)i=887635 (3n/4) EpsHier* (Ours) 0.022 1.000 0.026 1.000 0.027 1.000 0.023 1.000 0.021 1.000 0.022 1.000 0.022 1.000 0.022 1.000 Quick Select 3.494 1.000 3.386 1.000 3.393 1.000 3.389 1.000 3.422 1.000 3.502 1.000 3.606 1.000 3.616 1.000 IVFFlat 0.006 0.990 0.006 0.980 0.011 0.960 0.027 0.950 0.089 0.840 0.339 0.000 1.261 0.000 1.352 0.000 PQ 0.044 1.000 0.044 0.920 0.050 0.600 0.063 0.550 0.128 0.600 0.402 0.000 1.432 0.000 2.078 0.000 IVFPQ 0.004 0.980 0.005 0.530 0.012 0.590 0.036 0.510 0.104 0.560 0.339 0.210 0.387 0.000 0.404 0.000 HNSW 0.002 0.810 0.001 0.490 0.005 0.100 0.005 0.000 0.008 0.000 0.021 0.000 0.067 0.000 0.090 0.000 LSH 0.056 0.740 0.043 0.400 0.049 0.400 0.056 0.360 0.130 0.400 0.431 0.000 1.538 0.000 2.227 0.000 glove-25-angular (n=1,183,514) i=10i=144(n/213)i=2311 (n/29)i=9246 (n/27)i=36984 (n/25)i=147939 (n/23)i=591757 (n/21)i=887635 (3n/4) EpsHier* (Ours) 0.176 1.000 0.170 1.000 0.168 1.000 0.169 1.000 0.159 1.000 0.021 1.000 0.013 1.000 0.016 1.000 Quick Select 3.470 1.000 3.360 1.000 3.371 1.000 3.382 1.000 3.391 1.000 3.486 1.000 3.574 1.000 3.573 1.000 IVFFlat 0.003 1.000 0.003 1.000 0.007 1.000 0.021 0.980 0.080 0.960 0.327 0.000 1.227 0.000 1.299 0.000 PQ 0.013 0.990 0.014 0.710 0.021 0.470 0.040 0.570 0.097 0.450 0.373 0.000 1.393 0.000 2.032 0.000 IVFPQ 0.003 1.000 0.003 0.940 0.010 0.680 0.034 0.800 0.103 0.640 0.330 0.060 0.383 0.000 0.402 0.000 HNSW 0.002 0.960 0.001 0.710 0.003 0.160 0.004 0.030 0.007 0.000 0.021 0.000 0.068 0.000 0.093 0.000 LSH 0.150 0.880 0.147 0.520 0.138 0.440 0.131 0.540 0.196 0.470 0.472 0.000 1.544 0.000 2.213 0.000 sift-128-euclidean (n=1,000,000) i=10i=122(n/213)i=1953 (n/29)i=7812 (n/27)i=31250 (n/25)i=125000 (n/23)i=500000 (n/21)i=750000 (3n/4) EpsHier* (Ours) 0.220 1.000 0.222 1.000 0.228 1.000 0.233 1.000 0.236 1.000 0.220 0.990 0.026 0.990 0.204 1.000 Quick Select 1.707 1.000 1.633 1.000 1.630 1.000 1.638 1.000 1.681 1.000 1.757 1.000 1.815 1.000 1.835 1.000 IVFFlat 0.006 1.000 0.007 1.000 0.011 1.000 0.022 1.000 0.069 0.610 0.250 0.000 0.922 0.000 0.962 0.000 PQ 0.022 1.000 0.022 0.590 0.028 0.480 0.043 0.410 0.086 0.370 0.296 0.000 1.083 0.000 1.603 0.000 IVFPQ 0.003 0.840 0.003 0.410 0.008 0.430 0.027 0.400 0.085 0.530 0.259 0.000 0.287 0.000 0.302 0.000 HNSW 0.001 0.990 0.001 0.760 0.003 0.110 0.004 0.040 0.006 0.000 0.017 0.000 0.056 0.000 0.081 0.000 LSH 0.136 0.700 0.134 0.430 0.123 0.430 0.121 0.430 0.161 0.520 0.370 0.000 1.189 0.000 1.709 0.000 gist-960-euclidean (n=1,000,000) i=10i=122(n/213)i=1953 (n/29)i=7812 (n/27)i=31250 (n/25)i=125000 (n/23)i=500000 (n/21)i=750000 (3n/4) EpsHier* (Ours) 0.497 1.000 0.492 1.000 0.496 1.000 0.497 1.000 0.458 1.000 0.388 1.000 0.256 1.000 0.363 1.000 Quick Select 2.131 1.000 2.019 1.000 2.015 1.000 2.022 1.000 2.049 1.000 2.126 1.000 2.238 1.000 2.266 1.000 IVFFlat 0.056 1.000 0.057 1.000 0.062 1.000 0.078 0.990 0.144 0.990 0.386 0.000 1.256 0.000 1.510 0.000 PQ 0.035 0.430 0.035 0.290 0.042 0.280 0.056 0.300 0.118 0.440 0.375 0.000 1.357 0.000 2.003 0.000 IVFPQ 0.005 0.420 0.005 0.200 0.012 0.260 0.033 0.340 0.097 0.380 0.320 0.060 0.451 0.000 0.466 0.000 HNSW 0.002 0.770 0.001 0.490 0.006 0.090 0.006 0.030 0.009 0.000 0.019 0.000 0.059 0.000 0.079 0.000 LSH 0.125 0.160 0.116 0.150 0.109 0.110 0.127 0.150 0.177 0.120 0.429 0.100 1.462 0.000 2.123 0.000",
+    "technical_score": 0.0014485049833887044,
+    "citation_score": 0.000965669988925803
+  },
+  {
+    "section_path": [
+      "Extension to Non-linear Scoring Functions"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "0.9 are shown in bold with green highlight , and values less than 0.2 are shown with red highlight . The fastest query time among methods with recall > 0.9 is shown in bold for each i.",
+    "technical_score": 0.0017534145441122188,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we use existing techniques to reduce the RAS prob- lem to the RAR problem, and show that an efficient solution to the RAR problem would also solve the RAS problem. Euclidean distance : Given a query point q\u2208Rd, thel2\u2212norm similarity of a point p\u2208D toqis measured as d(p,q)=\u2225p\u2212q\u22252. In Appendix D.1, we prove Lemma 1, which provides the reduction of the RAS problem to the RAR problem for l2-norm: dimensions, and propose practical methods to solve the intermedi- ateSRR problem (Problem 2). 6.1 Eps2D :\u03b5-sampling in 2D In this section, we discuss our solution based on \u03b5-samples in 2D, called Eps2D , also illustrated in Figure 1.",
+    "technical_score": 0.0032622058382152353,
+    "citation_score": 0.0010301702646995478
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Preprocessing . During the preprocessing phase, the algorithm computes an \u03b5-sample of the dataset D, where the ranges are stripe ranges . We denote this \u03b5-sample byN\u03b5, for a given parameter \u03b5.",
+    "technical_score": 0.0037558290900504354,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Query Answering . Letm=|N\u03b5|denote the size of the \u03b5-sample built during the preprocessing, where m\u226an.9We take the follow- ing steps to answer the query: (Step i: Thresholding ) During the query phase , given a query pair (f,i), we begin by solving the 1-RAR problem on the \u03b5-sampleN\u03b5. Specifically, we identify the il-th andiu-th ranked points in N\u03b5 with respect to the scoring function f, where: il=\u230a\ufe03 m(\ufe03i n\u2212\u03b5)\ufe03\u230b\ufe03 , iu=\u2308\ufe03 m(\ufe03i n+\u03b5)\ufe03\u2309\ufe03 , (1) andm=|N\u03b5|. This step can be done by sorting the points in N\u03b5 according to scoref, or by using linear-time-in- mbaseline median- finding algorithms, such as median-of-medians. These two points serve as score-based thresholds that are guaranteed to bound the score of the i-th ranked point in the full dataset D, as stated in the following lemma. Lemma 4. LetN\u03b5be an\u03b5-sample of the dataset Dfor some\u03b5>0. Then, for any linear scoring function f, the score of the i-th ranked pointp(i)inDis bounded as scoref(ql)\u2264scoref(p(i))\u2264scoref(qu), whereqlandquare theil-th andiu-th ranked points in N\u03b5underf, i.e.,qj=rank\u22121 N\u03b5,f(ij),forj\u2208{l,u}.",
+    "technical_score": 0.004249452341885635,
+    "citation_score": 0.0005794707738934956
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Proof.",
+    "technical_score": 0.0045606496093469565,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "See Appendix G for proof. \u25a1 (Step ii: SRR) Next, we compute the score thresholds correspond- ing to the boundary points identified in the previous step: l=scoref(ql), u=scoref(qu). (2) Using these values, we define the stripe range Sf,l,u. We then solve an instance of the SRR problem on the dataset Dusing this stripe range. The result is a subset of points within the score in- terval[l,u], which we denote by Do. This set contains the i-th ranked point p(i), sinceN\u03b5is an\u03b5-sample. Note that this set is a 8The Big-Oh notations in our guarantees hide constants that are polynomially depen- dent on the dimension d. Consistent with the prior literature [ 2], our focus is on the exponential dependence on d. 9This comes from Theorem 3, while noting that the VC-dimension of stripe ranges is \u03b4=d+1.conformal set for rank i, hence providing a solution to the relaxed |Do|-RAR problem. (Step iii: Range Counting) We define the half-space Huas, Hu={p\u2208D|p\u22a4f\u2265u}, (3) Hucontains all points in Dwhose score under fis at leastu. We then apply a half-space range counting algorithm in two dimensions to compute the number of points lying within Hu[71]. (Step iv: Final Selection) In the final step, we sort the points in the candidate setDoin descending order according to the scoring function scoref. Let|Hu|denote the number of points in Dwhose score is greater than or equal to u, as computed in the previous step. We then return the (i\u2212|Hu|)-th point in the sorted list as the exact answer to the RAR query. A pseudo-code of Eps2D is shown in Algorithm 2 in Appendix K. The analysis of the space and time complexity of Eps2D algorithm is also provided in Appendix F. The result can be summarized in the following theorem: Theorem 5. TheEps2D algorithm solves the exact RAR problem in 2D using linear space in nandO(n2/3logn)query time.10 6.2 EpsRange :\u03b5-sampling in Higher Dimensions Now, we present the generalization of the Eps2D algorithm to higher dimensions ( d\u22652), referred to as the EpsRange algorithm. The preprocessing phase remains unchanged: we compute an \u03b5-sample N\u03b5of the datasetD, of sizem, for a chosen parameter \u03b5. We know thatm\u226an, because the VC-dim of stripe ranges is \u03b4=d+1[50]. During query time, the algorithm proceeds similarly to Eps2D . In Step i, we find the il-th andiu-th points inN\u03b5according to the scoring function f. In Step ii, we solve a high-dimensional instance of the SRRproblem. The resulting set Docontains candidate points fromDthat lie between the scores of the il-th andiu-th ranked points in the sample. This set is a conformal set for the relaxed problem|Do|-RAR . To obtain the exact solution, we proceed to Step iii, where we perform a high-dimensional range counting query to determine the exact rank of each point in Do. Finally, in Step iv, we sort the candidates in Doand return the point with exact ranki, completing the solution to the RAR selection problem.",
+    "technical_score": 0.0030583179733267817,
+    "citation_score": 0.0020388786488845212
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Analysis . The analysis is similar to the 2D case, provided in Ap- pendix I. The results are as follows: Theorem 6. TheEpsRange algorithm solves the \u03ba-RAR problem with linear space usage and O(max{n1\u22121/d,d \u03b52logd \u03b5})time, where \u03ba=O(\u03b5n). The exact version, 1-RAR , is also solved with the same space usage and O(max{n1\u22121/d,dn2/3logn})time. 10Note that we assumed the set Nto be an\u03b5-sample. According to Theorem 3, this happens with high probability via random sampling. width across different dimensionalities on the synthetic data. its neighbors in the next lower layer, denoted by Nl\u22121(p). The full query procedure is provided in Algorithm 4 in Appendix K. A visual illustration of this process is shown in Figure 3 (right). 7 Experiments In this section, we evaluate the performance of our algorithms in both the random-access ranked retrieval and similarity search set- tings. Our implementation is available at this anonymous repository . We begin by describing the datasets. Next, we present results for thestripe range searching subtask showcasing our proposed hierar- chical index (Subsection 7.1). We then evaluate our methods on two primary tasks: random-access ranked retrieval (Subsection 7.2) and random-access similarity search (Subsection 7.3). Additional results and experimental details are deferred to Appendix M.",
+    "technical_score": 0.002414461557889566,
+    "citation_score": 0.0016096410385930439
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Datasets . For the ranked retrieval, we use synthetic and real-world datasets. The synthetic dataset is generated from a Zipfian distri- bution. Our real-world datasets include US Used Cars [75] (3M records, 66 columns), FIFA 2023 [63] (300K records, 54 columns), andUS Flights [94] (5M records, 31 columns). For the similarity search setting, we evaluate our methods on five popular benchmark datasets from ann-benchmarks.com :SIFT-128-Euclidean [58] (1M vectors,l2),Fashion-MNIST-784-Euclidean [99] (60K vectors, l2), GIST-960-Euclidean [58] (1M vectors, l2),GloVe-100-Angular [80] (1M vectors, cosine), and GloVe-25-Angular [80] (1M vectors, co- sine).13More details of the datasets are provided in Appendix M.1. 7.1 Stripe Range Retrieval For the SRRproblem, we compare against classical and widely used range searching indices, including KD-Tree [ 16], R-Tree [ 49], and Partition Tree [ 71], and Ball Trees [ 77]. Our proposed hierarchical index is abbreviated as Hierarchical . As a baseline, we also include a simple linear search approach, denoted as Exhaustive . To apply the baseline range searching indices to stripe range queries, we traverse the tree top-down, pruning subtrees whose corresponding hyperrectangles do not intersect the query stripe (see Algorithm 4). More experiments on SRR problem is provided in Appendix M.2. 7.1.1 Synthetic Dataset. We begin by evaluating the performance of the algorithms on synthetic datasets.",
+    "technical_score": 0.0020925333501709566,
+    "citation_score": 0.0013950222334473046
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Effect of Stripe Width . For these experiments, the scoring func- tionfis sampled uniformly from the unit hypersphere in Rd. We vary the stripeSf,l,u by adjusting its width, i.e., the number of points it contains. Figure 4 presents the query time performance across different dimensionalities das a function of stripe width. We 13The number in the dataset name represents the dimensionality of the vectors.",
+    "technical_score": 0.003001564688044105,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "SRR problem vs dataset size. Large dandncases do not use KD-tree or R-tree, as these methods do not scale well. onSRR problem vs the stripe range width. on\u03ba-RAR problem vs dimension dand the rank i. In this setting, \u03b5=1 16. observe that both KD-Tree andR-Tree methods fail to scale effec- tively to high-dimensional settings, and thus we exclude them from experiments with d=128. The proposed Hierarchical Sampling method achieves up to a 16\u00d7speedup over Exhaustive search, particularly in narrow stripe queries. Such narrow stripes frequently arise when solving the RAR problem, indicating that this method is also helpful in this context. While the Partition Tree also shows a fast query time in low-dimensional spaces, its performance de- grades with increasing dimensionality.",
+    "technical_score": 0.00251557379246995,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Effect of Dataset Size . Figure 5 illustrates the impact of increasing the dataset size non the query time of the algorithms, for both low- and high-dimensional settings. As observed, the Hierarchical Sampling method consistently outperforms the baselines.",
+    "technical_score": 0.002029582896895794,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Real Datasets . Figure 6 shows the comparison on Us Used Cards dataset. As shown, Hierarchical Sampling significantly outperforms both Exhaustive search and the Partition Tree method. In this experiment, multiple random scoring functions are sampled uni- formly from the unit hypersphere. (See Appendix M.2 for other real-datasets).",
+    "technical_score": 0.0015435920013216382,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "Accuracy of the Output . In all the settings, the output is guaran- teed to have a recall of 100% , reporting all the points in the range. on\u03ba-RAR problem vs dataset size and \u03b5. In the right plot, n=10000 and\u03ba=\u03b5n. 7.2 Random-Access Ranked Retrieval We include the Threshold Algorithm (TA) and Fagin\u2019s algorithm [ 44] as baseline methods for retrieving top-K elements.14Additionally, we consider a simple search baseline, referred to as Exhaustive , which computes all the scores and extracts the i-th ranked element. Our proposed algorithms ( EpsRange andEpsHier ) are used for the\u03ba-RAR problem while the KthLevel algorithm solves the exact 1-RAR problem in 2D (see Appendix M.3). 7.2.1 Synthetic Dataset. Effect of Dimension and value of i. Figure 7 (left) presents the query time of algorithms as a function of dimension d. Asdin- creases, both Fagin andTAalgorithms exhibit poor scalability for random-access queries. Among the proposed methods, EpsHier consistently outperforms EpsRange , particularly when the d>8. The performance degradation of EpsRange in higher dimensions is because of its reliance on Partition Tree index [ 72], which suffers from the curse of dimensionality. Figure 7 (right) illustrates the im- pact of varying the value of iin the RAR query on the runtime. The TAalgorithm shows increasing query time as igrows, since it must retrieve all the top- iitems. In contrast, the runtime of EpsRange remains relatively stable, as it depends primarily on the position of the stripe rather than the value of i. The EpsHier method also shows a moderate increase in runtime for larger i, which can be because of the relative location of the stripes with respect to the dataset. The marginal stripes (smaller values of i) intersect with fewer balls in the hierarchical structure proposed in Section 6.3, and the pruning is more effective in this case.",
+    "technical_score": 0.0006768647076783888,
+    "citation_score": 0.00038073639806909365
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Effect of Dataset Size and \u03b5. Figure 8 (left) shows the effect of dataset size on the query time of the algorithms. We observe signif- icant speedups achieved by both EpsRange andEpsHier compared to the baseline methods. Figure 8 (right) illustrates the impact of varying the parameter \u03b5. As expected, this parameter influences the size of the output set, \u03ba, in the\u03ba-RAR problem. Increasing the value of\u03b5results in a larger output set, whereas smaller values of \u03b5 require searching over a larger \u03b5-sample during the initial phase of the algorithm. Both extremes lead to increased query times. The most efficient performance is typically achieved for a moderate value of\u03b5, which may serve as a default when not given by user.",
+    "technical_score": 0.0007791419904665608,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Real Datasets . Figure 9 presents the results of running the al- gorithms on the US Flights dataset, evaluating across different values of\u03b5(left) and different values of i(right). We observe signifi- cant speedups achieved by EpsHier , followed by EpsRange . Appen- dix M.3 shows the results on other datasets. 14Please refer to the related work (Appendix B).",
+    "technical_score": 0.0013868308450266879,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "\u03ba-RAR problem vs the value of \u03b5and rankion US Flights dataset.",
+    "technical_score": 0.0017717095060204593,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "D Missing Details for Reducing RAS to RAR"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "8 Conclusion We studied the problem of Random-Access Ranked Retrieval ( RAR) and Random-Access Similarity Search ( RAS). We showed that RAS can be reduced to RAR . For solving the general RAR problem, we first proposed an algorithm based on geometric arrangements with logarithmic query time but an exponential space complexity. Next, we proposed our space-efficient algorithms based on \u03b5-samples. By providing a hierarchical sampling-based data structure for efficient stripe-range retrieval, we developed a practical algorithm for the relaxed\u03ba-RAR problem that scales to hundreds of dimensions.",
+    "technical_score": 0.0018083427540412458,
+    "citation_score": 0.0005710556065393408
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we describe the details of KthLevel algorithm. We begin by introducing key concepts from computational geometry, and then describe our algorithm in detail.",
+    "technical_score": 0.015749969238341332,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.1 Preliminaries"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Duality . We use the classic dual space transformation that maps points to hyperplanes and vice versa. This transformation is well- defined and preserves intersection relationships [ 29,41]. Formally, the dual of a point p\u2208Rdis defined as: dual(p):={\ufe02 x\u2208Rd|x\u22a4p=1}\ufe02 .",
+    "technical_score": 1.0738615389778183e-05,
+    "citation_score": 0.0002040336924057854
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.1 Preliminaries"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In other words, the transformation dual(\u00b7)maps a point in the primal space to a hyperplane in the dual space . This hyperplane is represented by the equation: h:d\u2211\ufe02 i=1p[i]\u00b7xi=1.",
+    "technical_score": 0.0010523843081982614,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.1 Preliminaries"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "We refer to the original input domain as the primal space , and the space of dual hyperplanes as the dual space . Figure 11 provides a visual illustration of this transformation. The left figure shows the primal space, while the middle figure shows the dual hyperplanes in the dual space. The following key observation follows from this duality. A formal proof can be found in [41].",
+    "technical_score": 0.0012306453236685796,
+    "citation_score": 0.0028715057552266858
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.1 Preliminaries"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "To simplify the explanations, let d=2. Sweep a ray fcoun- terclockwise from the x-axis to the y-axis. At each orientation of f, the ray intersects all dual hyperplanes (dual lines) in H. These intersection points can be sorted by their distance from the origin. Thek-th level is the locus of points that lie on the k-th closest dual line intersected by f, as the direction of fvaries continuously [ 41]. In generald-dimensional space, consider a ray foriginating at the origin and sweeping over all directions on the unit sphere Sd\u22121.For each direction f, the ray intersects the hyperplanes in Hin up tondistinct points, which can again be ordered by increasing distance from the origin. The k-th level is the set of all such k-th intersection points across all directions f\u2208Sd\u22121. Figure 11 illustrates the first and second levels of the arrangement inR2, shown in orange and green, respectively.",
+    "technical_score": 0.000483237692540018,
+    "citation_score": 5.369307694889089e-05
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.2 KthLevel Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we formally present our algorithm, KthLevel . We begin by describing the preprocessing phase, followed by a dis- cussion of the query phase , and conclude with a theoretical analysis of the algorithm\u2019s performance. The overall structure of the algo- rithm applies uniformly across dimensions d\u22652; however, for the purpose of analysis, we distinguish between the planar case ( d=2) and the general higher-dimensional case ( d>2).",
+    "technical_score": 0.003221584616933454,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.2 KthLevel Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Preprocessing . During the preprocessing phase, we construct the arrangement of the dual hyperplanes induced by the point set D, and the levels of the arrangement for all 1\u2264k\u2264n. We assume access to an oracle Kthat, for a given i, returns an efficient data structure representing the i-th level of the arrangement [ 41]. By calling this oracle for each i\u2208 [n], we obtain the complete set of structures needed for query processing. Each such structure allows constant-time access to the hyperplanes intersecting on each face of the arrangement, as well as the points in the primal space corresponding to those hyperplanes [41].",
+    "technical_score": 0.0038659015403201455,
+    "citation_score": 0.009020436927413672
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.2 KthLevel Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "5:returnp(i) Now, consider the intersection point of the query function fwith the unit sphere Sd\u22121. Finding the face segment of a level iwith a functionfis equivalent to finding the cell of the arrangement on the surface of the sphere that intersects with f. This problem is known as point location on the arrangement of hyperplanes [ 73]. Line 2 of Algorithm 1 uses a state-of-art point-location algorithm for finding the intersection of fwith thei-th level.",
+    "technical_score": 0.0013691734621967178,
+    "citation_score": 0.00024161884627000907
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.3 Analysis of KthLevel Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Preprocessing . In 2D, the complexity of the k-th level in an ar- rangement of nlines in the plane is O(nk1/3)[38]. Hence, consid- ering an arbitrary level i=O(n), the complexity of the i-th level isO(n4/3). The total preprocessing time to construct all levels of the arrangement is O(n2), where each individual level can be built inO(nlogn+nk)time [ 43]. In 3D, the complexity of the k-th level isO(nk3/2)[87]. As a result, the complexity of each level i\u2208[n] is bounded by O(n5/2). The complexity of the arrangement in the generald-dimensional setting is O(nd), and the total time required to construct it is also O(nd)[3, 41].",
+    "technical_score": 0.0006078613127708738,
+    "citation_score": 0.011549364942646597
+  },
+  {
+    "section_path": [
+      "E Our Algorithm Based on k-th Level of Arrangement",
+      "E.3 Analysis of KthLevel Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Query Time . During the query time, Algorithm 1 finds the inter- section of the i-th level with the vector of the function f. Given that the total number of faces in each level i\u2208[n]is bounded by O(nd), identifying this intersection using a state-of-the-art algorithm for point location on the arrangement of hyperplanes is in O(logn), ignoring the constant factors that depend on d[73].",
+    "technical_score": 0.0014615971453180757,
+    "citation_score": 0.00016239968281311955
+  },
+  {
+    "section_path": [
+      "F Analysis of the Eps2D Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We analyze the time and space complexity of the Eps2D algorithm (discussed in section 6.1) step-by-step.(Step i) Finding the il-th andiu-th point inN\u03b5of sizemtakes O(m)using the extension of the median finding algorithm. (Step ii) This step involves solving a simplex range searching query in 2D (with stripe ranges). Using the Matous\u030cek\u2019s efficient range searching technique [ 71], this can be done in O(\u221an+|Do|) time withO(n)space. (Step iii) We perform a half-space range counting query. Again using Matous\u030cek\u2019s partition tree [ 71], this takes O(\u221an)time and O(n)space. (Step iv) Finally, we sort the set Do, which requires O(|Do|log|Do|)time.",
+    "technical_score": 0.0006302521008403363,
+    "citation_score": 0.011974789915966389
+  },
+  {
+    "section_path": [
+      "F Analysis of the Eps2D Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Space Complexity . All operations use data structures with linear space requirements. Thus, the total space usage is linear in input.",
+    "technical_score": 0.001400560224089636,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "F Analysis of the Eps2D Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Query Time Complexity . To analyze the runtime precisely, we bound the size of the result set Doas follows: Lemma 8. The size of the result set DoisO(\u03b5n).",
+    "technical_score": 0.011204481792717089,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "F Analysis of the Eps2D Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "\u25a1 Proof. The result setDoconsists of the points in the dataset D that lie between the il-th andiu-th ranked points in the sample N\u03b5. Define the corresponding score interval as the stripe range: S={x\u2208Rd|f\u22a4ql\u2264f\u22a4x\u2264f\u22a4qu}.",
+    "technical_score": 0.00980392156862745,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "F Analysis of the Eps2D Algorithm"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Then,|Do|=|S\u2229D| . SinceN\u03b5is an\u03b5-sample ofDfor stripe ranges, we have (with high probability):|\ufe01|\ufe01|\ufe01|S\u2229N\u03b5| |N\u03b5|\u2212|Do| |D||\ufe01|\ufe01|\ufe01\u2264\u03b5.From Equation 1, we know that |S\u2229N\u03b5|=|iu\u2212il|\u22642m\u03b5+2. Hence:|\ufe01|\ufe01|\ufe01|\ufe01|S\u2229N\u03b5| m\u2212|Do| n|\ufe01|\ufe01|\ufe01|\ufe01\u2264\u03b5=\u21d2|Do| n\u22642m\u03b5+2 m+\u03b5=\u21d2|Do|=O(\u03b5n). \u25a1 In 2D, the size of the \u03b5-sample satisfies (see Section 4): m= O(\ufe02",
+    "technical_score": 0.005602240896358544,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "F Analysis of the Eps2D Algorithm"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "\u03b52log1 \u03b5)\ufe02 .Combining all steps, the total runtime is: T(Eps2D)=O(\ufe02 m+\u221an+|Do|log|Do|)\ufe02 . Using|Do|=O(\u03b5n)and choosing \u03b5=n\u22121/3(which minimizes the overall runtime), we get: T(Eps2D)=O(\ufe02 n2/3logn)\ufe02 .",
+    "technical_score": 0.00700280112044818,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "G Missing Proofs"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "G.1 Proof of Lemma 4 Proof. LetHbe the half-space defined by: H={x\u2208Rd| f\u22a4x\u2265f\u22a4p(i)}.This half-space is perpendicular to the direction vectorfand contains exactly the top ipoints ofDranked byf, includingp(i). In other words,|H\u2229D| =i.",
+    "technical_score": 0.01303292056780429,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "G Missing Proofs"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "SinceN\u03b5is an\u03b5-sample ofDfor half-space (and slab) ranges, it preserves the proportion of points in any half-space up to additive |D||\ufe01|\ufe01|\ufe01|\ufe01\u2264\u03b5.",
+    "technical_score": 0.009250377529447299,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "G Missing Proofs"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Substituting|H\u2229D| =i, and denoting n=|D|andm=|N\u03b5|, we m\u2212i n|\ufe01|\ufe01|\ufe01|\ufe01\u2264\u03b5, which implies: m(\ufe03i n\u2212\u03b5)\ufe03 \u2264|H\u2229N\u03b5|\u2264m(\ufe03i n+\u03b5)\ufe03 . Rounding to integers, define: il=\u230a\ufe03 m(\ufe03i n\u2212\u03b5)\ufe03\u230b\ufe03 , iu=\u2308\ufe03 m(\ufe03i n+\u03b5)\ufe03\u2309\ufe03 .",
+    "technical_score": 0.020635457565690126,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "G Missing Proofs"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "These bounds indicate that the number of points in N\u03b5with score at least scoref(p(i))lies between ilandiu. Equivalently, the score scoref(p(i))lies between the scores of the iu-th andil-th ranked points inN\u03b5. We conclude that: scoref(ql)\u2264scoref(p(i))\u2264scoref(qu), as desired. \u25a1",
+    "technical_score": 0.00857626094835397,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "H Dynamic Setting"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we discuss the dynamic setting. We consider two types of dynamic operations: Insert(p) andDelete(p) . For the KthLevel algorithm, these operations are supported following the literature on dynamically maintaining levels of arrangements [ 4,24]. Below, we focus on the EpsHier algorithm; analogous results can be shown for EpsRange .",
+    "technical_score": 0.017497231450719825,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "H Dynamic Setting"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Insert(p) . This operation adds a new point pto the datasetD. ForEpsHier , we must update both the \u03b5-sampleN\u03b5and the hi- erarchical sampling structure described in Section 6.3. Following Theorem 3, we want to maintain an unbiased random subset of size |N\u03b5|ofDas an\u03b5-sample. Our goal is to maintain such a random subset without resampling the entire dataset. This can be efficiently achieved using reservoir sampling [96], which allows us to main- tain a uniform random sample as new elements arrive. To update the hierarchical structure used for the SRR problem, we apply this reservoir sampling procedure bottom-up, from the base layer to higher layers. At each layer, we decide whether to include the new point, as each layer is a random sample of the one below it. This process takes O(logn)time since the index contains lognlayers.Delete(p) . This operation removes pfromD. Under the backing sample method [ 47], ifp\u2208N\u03b5, we delete it from the sample. If the sample size drops below a predefined lower bound L, we rebuildN\u03b5 by resampling all the points. The amortized time for this operation (based on the definition of L) isO(1)[47]. For the hierarchical structure, each layer lis maintained similarly, with its own bound Ll, and each layer lis the sample maintained at level l\u22121. Hence, a rebuild at level lonly scans the immediately lower level, not the entire dataset, keeping the amortized cost low. In other words, this rescanning at layer ltakesO(|Ll\u22121|)=O(n is stillO(1)for this layer and it takes O(logn)to resample all the top layers. As a result, the total amortized time for this operation is O(logn)for the hierarchical structure.",
+    "technical_score": 0.02230897009966778,
+    "citation_score": 0.003936877076411961
+  },
+  {
+    "section_path": [
+      "Analysis of the EpsRange Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The analysis is similar to Eps2D , however, the time complexity of the algorithm depends on the specific range counting and simplex range searching we use at steps ii and iii. Step i takesO(m)for finding the thresholds in the \u03b5-sample. Step ii requires solving the SRR problem. Following the simplex range searching algorithms, we can solve this problem in O(n1\u22121/d+|Do|) we proceed to steps iii and iv. In step iii, we solve an instance of range counting in ddimensions, which takes O(n1\u22121/d)[72] time and linear space. Finally, in step iv, we sort Do, which takes O(|Do|log|Do|).",
+    "technical_score": 0.0008671096345514949,
+    "citation_score": 0.016475083056478403
+  },
+  {
+    "section_path": [
+      "Analysis of the EpsRange Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Space Complexity . The space complexity of this algorithm is linear to the input size, since all structures require linear space.",
+    "technical_score": 0.0019269102990033225,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Analysis of the EpsRange Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Time Complexity for the \u03ba-RAR problem . The total query time of the algorithm for finding the conformal set is: T(EpsRange \u03ba-RAR)=O(m+n1\u22121/d) The size of\u03b5-samplemisO(d \u03b52logd \u03b5), since the VC-dimension of stripe range is \u03b4=d+1[50,51]. This gives us the following query time: T(EpsRange \u03ba-RAR)=O(max{n1\u22121/d,d \u03b52logd \u03b5})=\u03a9(n1\u22121/d). The output is a set Dowith sizeO(\u03b5n), guaranteed to contain p(i) (see Lemma 8). Note that the final time also depends on the choice of parameter \u03b5, which determines the size of output Do.",
+    "technical_score": 0.01541528239202658,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Analysis of the EpsRange Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Time Complexity for the RAR problem . The exact version also includes the steps iii and iv: T(EpsRange Exact)=O(m+n1\u22121/d+|Do|log|Do|). Based on Lemma 8, we have |Do|=O(\u03b5n). As a result, by choosing \u03b5=n\u22121/3, we get the following runtime: T(EpsRange Exact)=O(max{n1\u22121/d,dn2/3logn}) Theorem 9. TheEpsRange algorithm solves the relaxed version of RAR problem with linear space usage and O(max{n1\u22121/d,d \u03b52logd \u03b5}) time. The exact version can also be solved with the same space usage andO(max{n1\u22121/d,dn2/3logn})time.",
+    "technical_score": 0.013488372093023258,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "J Analysis of Hierarchical Sampling"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The total space usage for storing the hierarchical layers is linear to the input, since the size of each layer decreases exponentially: \u2211\ufe02 rl=O(n), assumingr=O(1). The runtime of Algorithm 3 is dominated by theforloop at line 6, where the layers are constructed, and edges and area sets are updated. At each layer l, we sample|Ll|points. Then, for each point in Ll\u22121, we compute its nearest neighbor in Ll. The time complexity at the layer lis: Tl=O(d\u00b7|Ll|\u00b7|Ll\u22121|).",
+    "technical_score": 0.0010382059800664453,
+    "citation_score": 0.01972591362126246
+  },
+  {
+    "section_path": [
+      "J Analysis of Hierarchical Sampling"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Summing over all layers, the total runtime becomes: \u2211\ufe02 lTl=\u2211\ufe02 ld\u00b7n rl\u00b7n rl\u22121=\u2211\ufe02 ldn2 r2l\u22121=O(dn2), again assuming r=O(1). For computing the smallest enclosing ball of each area, we use Welzl\u2019s algorithm, which runs in linear time with respect to the number of points [98].",
+    "technical_score": 0.011212624584717609,
+    "citation_score": 0.0012458471760797344
+  },
+  {
+    "section_path": [
+      "J Analysis of Hierarchical Sampling"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Theorem 10. The preprocessing phase of the hierarchical sampling algorithm takes O(dn2)time and uses linear space.",
+    "technical_score": 0.008305647840531562,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "K Additional Pseudo-codes"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Algorithm 2 Eps2D-Query(N\u03b5,D,f,i) Input: Precomputed \u03b5-sampleN\u03b5of sizem, original datasetD, scoring vector f, target rank i Output: The exactk-th ranked point p(i)inDunder scoref 1:Calculateilandiu \u22b2equation 1 2:ql\u2190rank\u22121 N\u03b5,f(il),qu\u2190rank\u22121 N\u03b5,f(iu) \u22b2Median of medians algorithm 3:l\u2190scoref(ql),u\u2190scoref(qu) \u22b2end of step i 4:Do\u2190Sf,l,u\u2229D \u22b2viaSRSquery; step ii 5:|Hu|\u2190|\ufe01|\ufe01{p\u2208D|f\u22a4p\u2265u}|\ufe01|\ufe01 \u22b2via range counting; step iii 6:SortDoascending by scoref 7:return the(i\u2212|Hu|)-th point in the sorted list \u22b2step ivAlgorithm 3 Hierarchical-Sampling-Preprocess (D,r) Input: The datasetDand the exponential decay rate r Output: The hierarchical graph G(D) which contains a list of layersL, neighboring relations N, and enclosing balls of nodes B. 1:L\u2190\u230alogrn\u230b \u22b2Number of layers 2:Ll\u2190[],\u2200l\u2264L \u22b2Placeholder for the layers",
+    "technical_score": 0.008970099667774087,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "K Additional Pseudo-codes"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Output: The set of pointsDo=Sf,l,u\u2229D. 1:Do\u2190\u2205 \u22b2Placeholder for result",
+    "technical_score": 0.004485049833887043,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "K Additional Pseudo-codes"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "3:forcurr_layer fromLto1do \u22b2top-down 4:tmp\u2190\u2205 \u22b2Placeholder for new candidates 5: foreach pointp\u2208Candidates do 6: ifBcurr _layer(p)\u2229Sf,l,u=\u0338\u2205then 7: tmp\u2190tmp\u222aNcurr _layer(p)\u22b2Explore the area 8:candidates\u2190tmp 9:forp\u2208candidates do 10: ifp\u2208Sf,l,uthen 12:returnDo",
+    "technical_score": 0.03139534883720931,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we analyze the complexity of the RAR problem and show the near-optimality of our proposed algorithms. Specifically, the well-studied half-space range counting problem [ 2,26] reduces to our problem. Hence, the complexity of the state-of-the-art algo- rithms for half-space range counting provides a lower bound for theRAR problem.",
+    "technical_score": 7.833420371337462e-05,
+    "citation_score": 0.0014883498705541174
+  },
+  {
+    "section_path": [
+      "Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The half-space range counting problem is defined as follows: given a point set in Rdand a query half-space H, determine the number of points lying within H.",
+    "technical_score": 0.0008703800412597179,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Now, these are the two important observations:",
+    "technical_score": 0.0008703800412597179,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Observation 1. If the algorithm uses linear space, i.e., m=O(n), then the query time cannot be faster than O(n1\u22121 d)up to logarith- mic factors.",
+    "technical_score": 0.016537220783934638,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Observation 2. If the algorithm uses exponential space, i.e., m= 2\u0398(d), then the lower bound becomes \u03a9(logn). In fact, our exact algorithm KthLevel has logarithmic query time but requires ex- ponential space, which matches this bound. Note that querying KthLevelntimes is equivalent to sorting all nelements, which takes\u03a9(nlogn)time.",
+    "technical_score": 0.014796460701415203,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Conclusion. These results demonstrate that our algorithms for theRAR problem are optimal up to logarithmic factors, given the space-time trade-offs imposed by known lower bounds.",
+    "technical_score": 0.017407600825194356,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.1 Dataset Details"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We use both synthetic and real-world datasets for our evaluation. The synthetic datasets are generated using the Zipfian distribution, with variations in dimensionality, dataset size, and distribution parameters. The Zipfian distribution is particularly challenging for range searching due to its inherent skewness and is commonly observed in many real-world scenarios. It allows us to evaluate the algorithms under non-uniform workloads.For our real-world experiments, we use three datasets: the US Used Cars dataset [ 75], the FIFA 2023 dataset [ 63], and the US Flights dataset [ 94]. The US Used Cars dataset contains approxi- mately 3 million entries with 66 attributes describing vehicle spec- ifications, market prices, and regional features, making it suit- able for evaluating ranking and filtering performance over high- dimensional numeric attributes. The FIFA 2023 dataset comprises around 300,000 records with 54 player and team attributes, includ- ing overall ratings, skills, and physical characteristics, and provides a structured benchmark for similarity and top- kretrieval tasks. Finally, the US Flights dataset contains over 5 million flight records with 31 attributes collected from the U.S. Department of Trans- portation, including flight times, delays, cancellations, and carrier information, offering a real-world testbed with temporal and cate- gorical dimensions for large-scale ranked retrieval evaluation.",
+    "technical_score": 0.0011203642180386368,
+    "citation_score": 0.00377443090931463
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.1 Dataset Details"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Scoring Functions. In our experiments, we generate a uniformly random unit vector fas the ranking function on all the above datasets.",
+    "technical_score": 0.004727451704195888,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.1 Dataset Details"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Similarity Search Datasets . For the similarity search task, we evaluate our methods on five standard benchmark datasets from ann-benchmarks.com, covering both vision and language domains: \u2022SIFT-128-Euclidean [58]: Contains 1M vectors in a 128- dimensional space with l2(Euclidean) distance, derived from local image descriptors and widely used as a canonical bench- mark for large-scale visual similarity search. \u2022Fashion-MNIST-784-Euclidean [99]: Contains 60K vectors in a 784-dimensional space with l2distance, obtained from grayscale images of fashion items and representing a moderate- scale, high-dimensional vision dataset. \u2022GIST-960-Euclidean [58]: Contains 1M vectors in a 960- dimensional space with l2distance, based on global image descriptors that capture coarse scene-level structure, making it significantly higher-dimensional than SIFT. word embedding vectors in 100- and 25-dimensional spaces, respectively, using cosine similarity, and serve as standard benchmarks for semantic similarity search in natural lan- guage processing.",
+    "technical_score": 0.00784840654608097,
+    "citation_score": 0.0013554817275747521
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.2 More on Stripe Range Retrieval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Preprocessing (Indexing) Phase . During the preprocessing phase in all the baselines, an index structure is constructed. Figure 12 (left) shows the memory usage of these indices as a function of the dataset size n, while the right plot illustrates the corresponding preprocessing time. As shown, the space overhead of Hierarchical Sampling is comparable to that of KD-Tree andR-Tree , both of which are commonly used in existing systems. Moreover, the space usage grows linearly with the dataset size n. The time required to build the Hierarchical Sampling index is also on par with that of thePartition Tree andR-Tree .",
+    "technical_score": 0.002674880029531193,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.2 More on Stripe Range Retrieval"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "More Comparison Reports . Figure 13 shows the query time of different methods, when the value of dis4and32. Figure 14 shows the experiments for Stripe Range Searching on FIFA dataset. to the dataset size for d=8. width across different dimensionalities on the synthetic data. onSRR problem vs the stripe range width. The scoring functions are sampled uniformly at random from a hypersphere. M.3 More on Direct-Access and Conformal Set",
+    "technical_score": 0.002031653746770026,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.3 More on Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "KthLevel Algorithm . Figure 15 shows the result of running the KthLevel algorithm on smaller datasets in 2D. As shown in, the KthLevel algorithm achieves substantial speedups. However, this improvement comes at the cost of increased index size.",
+    "technical_score": 0.007701600724856538,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.3 More on Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "2 D. Generally, KthLevel does not scale well with dimension dand sizen. Here, EpsRange in 2D is equivalent to Eps2D algorithm.",
+    "technical_score": 0.003850800362428269,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.3 More on Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Other Real Datasets . Figures 16 and 17 compare the performance of the algorithms on the US Used Cars andFIFA datasets, where the parameters \u03b5and rankiare varied across different runs.",
+    "technical_score": 0.0028881002718212007,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.3 More on Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "\u03ba-RAR problem vs value of \u03b5and rankion FIFA 2023 dataset.",
+    "technical_score": 0.004813500453035336,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.3 More on Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "\u03b5and rankion US Used Cars Dataset.",
+    "technical_score": 0.0019254001812141345,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.4 Random-Access Similarity Search"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Adapting ANN Indexes to the \u03ba-RAR Problem . In this section, we describe how standard approximate nearest neighbor (ANN) indexes\u2014such as HNSW and Product Quantiza- tion\u2014are adapted to the random-access similarity search setting, and used to compare their performance with our proposed algo- rithm, EpsHier , in Section 7.3. Our algorithm directly solves the \u03ba-RAR problem with \u03ba=\u03b5nfor a given\u03b5. The output is a set of size \u03ba. To evaluate recall, we check whether the ground-truth i-th point, denoted by p(i), is contained in this output set (i.e., the conformal set). In contrast, ANN indexes are designed to return the top- knear- est neighbors. To approximate the i-th ranked point, we query each ANN index with k=i+10, where the additional constant mar- gin ensures that the true i-th neighbor is covered in the best-case scenario. Depending on the index configuration, the output size may beO(k)for largek, or bounded by a maximum size M. For example, in HNSW, Mcorresponds to the beam search candidate set size. Consequently, the final output size is min(M,k). Since this output does not directly correspond to a solution of the\u03ba-RAR problem, we apply a post-processing step to ensure a fair comparison. Specifically, we select the last \u03b5npoints (i.e., those with the largest distances) from the ANN output and then check whetherp(i)lies within this subset.",
+    "technical_score": 0.00031234269606362635,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.4 Random-Access Similarity Search"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "More Results on the RAS Task . Table 2 reports the recall and query time of ANN indexes across all five benchmark datasets for varying values of i, ranging from small values ( i=O(1)) to the median and third quartile of the dataset.",
+    "technical_score": 0.0005723145071982284,
+    "citation_score": 7.804288734521297e-05
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.4 Random-Access Similarity Search"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "We observe that the performance of all ANN indexes degrades significantly as igrows beyond O(1). In particular, for large values ofi, these methods fail to retrieve the required point, resulting in near-zero recall. Moreover, their query time increases substan- tially, as the algorithms must iterate over an increasing number of candidates and compute distances for up to ipoints. In contrast, our algorithm, EpsHier , exhibits stable performance across all values of i, achieving fast query times and a guaranteed recall of 100% . This guarantee holds with high probability, condi- tioned on the sampled set forming an \u03b5-sample, as discussed in Section 6. Figure 18 compares the indexing (preprocessing) time and index size of EpsHier with those of the ANN indexes used in this experi- ment. We observe that both the index size and preprocessing time ofEpsHier are comparable to standard ANN methods. However, unlike ANN indexes, which do not meaningfully solve the RASproblem and exhibit zero recall for large i, our approach provides provable correctness guarantees across the entire range of i. for Random-Access Similarity Search task fashion-mnist-784-euclidean (n=60,000) i=10i=29(n/211)i=117(n/29)i=468(n/27)i=1875 (n/25)i=7500 (n/23)i=30000 (n/21)i=45000 (3n/4) EpsHier* (Ours) 0.018 1.000 0.021 1.000 0.021 1.000 0.020 1.000 0.022 1.000 0.021 1.000 0.019 0.920 0.023 1.000 Quick Select 0.114 1.000 0.113 1.000 0.112 1.000 0.111 1.000 0.111 1.000 0.113 1.000 0.117 1.000 0.117 1.000 IVFFlat 0.003 1.000 0.003 1.000 0.003 1.000 0.004 1.000 0.007 1.000 0.018 0.000 0.065 0.000 0.069 0.000 PQ 0.003 0.920 0.003 0.790 0.004 0.670 0.005 0.470 0.010 0.530 0.028 0.000 0.080 0.000 0.111 0.000 IVFPQ 0.001 0.810 0.001 0.610 0.001 0.400 0.002 0.450 0.007 0.420 0.026 0.000 0.030 0.000 0.032 0.000 HNSW 0.000 1.000 0.000 0.990 0.001 0.880 0.002 0.330 0.002 0.050 0.002 0.000 0.005 0.000 0.006 0.000 LSH 0.053 0.390 0.060 0.270 0.060 0.250 0.059 0.210 0.056 0.270 0.041 0.030 0.085 0.000 0.116 0.000 glove-100-angular (n=1,183,514) i=10i=144(n/213)i=2311 (n/29)i=9246 (n/27)i=36984 (n/25)i=147939 (n/23)i=591757 (n/21)i=887635 (3n/4) EpsHier* (Ours) 0.022 1.000 0.026 1.000 0.027 1.000 0.023 1.000 0.021 1.000 0.022 1.000 0.022 1.000 0.022 1.000 Quick Select 3.494 1.000 3.386 1.000 3.393 1.000 3.389 1.000 3.422 1.000 3.502 1.000 3.606 1.000 3.616 1.000 IVFFlat 0.006 0.990 0.006 0.980 0.011 0.960 0.027 0.950 0.089 0.840 0.339 0.000 1.261 0.000 1.352 0.000 PQ 0.044 1.000 0.044 0.920 0.050 0.600 0.063 0.550 0.128 0.600 0.402 0.000 1.432 0.000 2.078 0.000 IVFPQ 0.004 0.980 0.005 0.530 0.012 0.590 0.036 0.510 0.104 0.560 0.339 0.210 0.387 0.000 0.404 0.000 HNSW 0.002 0.810 0.001 0.490 0.005 0.100 0.005 0.000 0.008 0.000 0.021 0.000 0.067 0.000 0.090 0.000 LSH 0.056 0.740 0.043 0.400 0.049 0.400 0.056 0.360 0.130 0.400 0.431 0.000 1.538 0.000 2.227 0.000 glove-25-angular (n=1,183,514) i=10i=144(n/213)i=2311 (n/29)i=9246 (n/27)i=36984 (n/25)i=147939 (n/23)i=591757 (n/21)i=887635 (3n/4) EpsHier* (Ours) 0.176 1.000 0.170 1.000 0.168 1.000 0.169 1.000 0.159 1.000 0.021 1.000 0.013 1.000 0.016 1.000 Quick Select 3.470 1.000 3.360 1.000 3.371 1.000 3.382 1.000 3.391 1.000 3.486 1.000 3.574 1.000 3.573 1.000 IVFFlat 0.003 1.000 0.003 1.000 0.007 1.000 0.021 0.980 0.080 0.960 0.327 0.000 1.227 0.000 1.299 0.000 PQ 0.013 0.990 0.014 0.710 0.021 0.470 0.040 0.570 0.097 0.450 0.373 0.000 1.393 0.000 2.032 0.000 IVFPQ 0.003 1.000 0.003 0.940 0.010 0.680 0.034 0.800 0.103 0.640 0.330 0.060 0.383 0.000 0.402 0.000 HNSW 0.002 0.960 0.001 0.710 0.003 0.160 0.004 0.030 0.007 0.000 0.021 0.000 0.068 0.000 0.093 0.000 LSH 0.150 0.880 0.147 0.520 0.138 0.440 0.131 0.540 0.196 0.470 0.472 0.000 1.544 0.000 2.213 0.000 sift-128-euclidean (n=1,000,000) i=10i=122(n/213)i=1953 (n/29)i=7812 (n/27)i=31250 (n/25)i=125000 (n/23)i=500000 (n/21)i=750000 (3n/4) EpsHier* (Ours) 0.220 1.000 0.222 1.000 0.228 1.000 0.233 1.000 0.236 1.000 0.220 0.990 0.026 0.990 0.204 1.000 Quick Select 1.707 1.000 1.633 1.000 1.630 1.000 1.638 1.000 1.681 1.000 1.757 1.000 1.815 1.000 1.835 1.000 IVFFlat 0.006 1.000 0.007 1.000 0.011 1.000 0.022 1.000 0.069 0.610 0.250 0.000 0.922 0.000 0.962 0.000 PQ 0.022 1.000 0.022 0.590 0.028 0.480 0.043 0.410 0.086 0.370 0.296 0.000 1.083 0.000 1.603 0.000 IVFPQ 0.003 0.840 0.003 0.410 0.008 0.430 0.027 0.400 0.085 0.530 0.259 0.000 0.287 0.000 0.302 0.000 HNSW 0.001 0.990 0.001 0.760 0.003 0.110 0.004 0.040 0.006 0.000 0.017 0.000 0.056 0.000 0.081 0.000 LSH 0.136 0.700 0.134 0.430 0.123 0.430 0.121 0.430 0.161 0.520 0.370 0.000 1.189 0.000 1.709 0.000 gist-960-euclidean (n=1,000,000) i=10i=122(n/213)i=1953 (n/29)i=7812 (n/27)i=31250 (n/25)i=125000 (n/23)i=500000 (n/21)i=750000 (3n/4) EpsHier* (Ours) 0.497 1.000 0.492 1.000 0.496 1.000 0.497 1.000 0.458 1.000 0.388 1.000 0.256 1.000 0.363 1.000 Quick Select 2.131 1.000 2.019 1.000 2.015 1.000 2.022 1.000 2.049 1.000 2.126 1.000 2.238 1.000 2.266 1.000 IVFFlat 0.056 1.000 0.057 1.000 0.062 1.000 0.078 0.990 0.144 0.990 0.386 0.000 1.256 0.000 1.510 0.000 PQ 0.035 0.430 0.035 0.290 0.042 0.280 0.056 0.300 0.118 0.440 0.375 0.000 1.357 0.000 2.003 0.000 IVFPQ 0.005 0.420 0.005 0.200 0.012 0.260 0.033 0.340 0.097 0.380 0.320 0.060 0.451 0.000 0.466 0.000 HNSW 0.002 0.770 0.001 0.490 0.006 0.090 0.006 0.030 0.009 0.000 0.019 0.000 0.059 0.000 0.079 0.000 LSH 0.125 0.160 0.116 0.150 0.109 0.110 0.127 0.150 0.177 0.120 0.429 0.100 1.462 0.000 2.123 0.000",
+    "technical_score": 0.00028803986710963466,
+    "citation_score": 3.927816369676836e-05
+  },
+  {
+    "section_path": [
+      "More on Experiments",
+      "M.4 Random-Access Similarity Search"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "0.9 are shown in bold with green highlight , and values less than 0.2 are shown with red highlight . The fastest query time among methods with recall > 0.9 is shown in bold for each i.",
+    "technical_score": 0.001063248766737139,
+    "citation_score": 0.0
+  }
+]
