@@ -13,7 +13,10 @@ try:
     import PyPDF2
 except ImportError:  # pragma: no cover - fallback for environments with pypdf only
     import pypdf as PyPDF2
-from ollama import Client
+try:
+    from ollama import Client
+except ImportError:  # pragma: no cover - optional for non-LLM workflows
+    Client = None  # type: ignore[assignment]
 
 
 DEFAULT_PDF_PATH = "adv_res_paper.pdf"
@@ -51,13 +54,15 @@ def sanitize_model_tag(model: str) -> str:
     return cleaned or "model"
 
 
-SAMPLE_TEMPERATURE_MAX_DELTA = 0.03
+DEFAULT_SAMPLE_TEMPERATURE_JITTER = 0.03
+_SAMPLE_TEMPERATURE_JITTER = DEFAULT_SAMPLE_TEMPERATURE_JITTER
+_SAMPLE_TEMPERATURE_RNG = random
 
 
 def sample_temperature(base_temperature: float, _sample_idx: int) -> float:
     # Give each sample a small independent temperature jitter.
     base = max(0.0, base_temperature)
-    offset = random.uniform(0.0, SAMPLE_TEMPERATURE_MAX_DELTA)
+    offset = _SAMPLE_TEMPERATURE_RNG.uniform(0.0, _SAMPLE_TEMPERATURE_JITTER)
     return min(1.0, base + offset)
 
 SECTION_PAIRWISE_SYSTEM_PROMPT = (
@@ -1911,6 +1916,8 @@ def append_run_separator(debug_log_path: str, args: argparse.Namespace) -> None:
         f"[run_start] time={timestamp} model={args.model} host={args.host} "
         f"paper_id={args.paper_id} "
         f"n_samples={max(1, args.n_samples)} temperature={max(0.0, args.temperature)} "
+        f"sample_temperature_jitter={max(0.0, args.sample_temperature_jitter)} "
+        f"seed={args.seed if args.seed is not None else 'none'} "
         f"max_retries={max(1, args.max_retries)} "
         f"paragraph_direct_max_tokens={max(0, args.paragraph_direct_max_tokens)} "
         f"paragraph_compressed_snippet_limit={max(60, args.paragraph_compressed_snippet_limit)}\n"
@@ -3805,6 +3812,8 @@ def assign_importance_scores(
     host: str = "localhost:11434",
     n_samples: int = 3,
     temperature: float = 0.2,
+    sample_temperature_jitter: float = DEFAULT_SAMPLE_TEMPERATURE_JITTER,
+    seed: Optional[int] = None,
     max_retries: int = 3,
     paragraph_direct_max_tokens: int = 0,
     paragraph_compressed_snippet_limit: int = 180,
@@ -3818,6 +3827,11 @@ def assign_importance_scores(
     - strict normalization at each tree level,
     - paragraph-level technical and citation channel decomposition.
     """
+    if Client is None:
+        raise ImportError("The 'ollama' Python package is required for LLM-based scoring.")
+    global _SAMPLE_TEMPERATURE_JITTER, _SAMPLE_TEMPERATURE_RNG
+    _SAMPLE_TEMPERATURE_JITTER = max(0.0, sample_temperature_jitter)
+    _SAMPLE_TEMPERATURE_RNG = random.Random(seed) if seed is not None else random
     client = Client(host=host)
     citation_scores: Dict[str, Any] = {}
     section_scores: Dict[str, Any] = {}
@@ -4218,6 +4232,18 @@ def main() -> None:
     parser.add_argument("--host", default="localhost:11434", help="Ollama host")
     parser.add_argument("--n-samples", type=int, default=5, help="Number of LLM samples to average")
     parser.add_argument("--temperature", type=float, default=0.2, help="Base sampling temperature")
+    parser.add_argument(
+        "--sample-temperature-jitter",
+        type=float,
+        default=DEFAULT_SAMPLE_TEMPERATURE_JITTER,
+        help="Maximum per-sample temperature increase added on top of --temperature.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Optional random seed for reproducible per-sample temperature jitter.",
+    )
     parser.add_argument("--max-retries", type=int, default=5, help="Retries per sample for JSON parsing")
     parser.add_argument(
         "--paragraph-direct-max-tokens",
@@ -4278,6 +4304,8 @@ def main() -> None:
         host=args.host,
         n_samples=max(1, args.n_samples),
         temperature=max(0.0, args.temperature),
+        sample_temperature_jitter=max(0.0, args.sample_temperature_jitter),
+        seed=args.seed,
         max_retries=max(1, args.max_retries),
         paragraph_direct_max_tokens=max(0, args.paragraph_direct_max_tokens),
         paragraph_compressed_snippet_limit=max(60, args.paragraph_compressed_snippet_limit),
