@@ -402,7 +402,11 @@ class SinglePassLLMSectionBaseline(BaselineModel):
         "You are an expert academic reviewer. "
         "Given the top-level sections of one paper, distribute 100 points across them "
         "based on how much each contributes to the paper's main scientific contribution. "
-        "Return plain text lines of the form 'Section Name: value'. "
+        "Higher scores should go to sections that carry the core scientific contribution "
+        "through methods, theory, algorithms, proofs, experimental findings, analysis, "
+        "or important problem formulation. Lower scores should usually go to sections "
+        "that mainly provide background, motivation, transitions, setup details, or "
+        "lower-impact narrative. Return plain text lines of the form 'Section Name: value'. "
         "Use non-negative values that sum to 100."
     )
 
@@ -424,6 +428,15 @@ class SinglePassLLMSectionBaseline(BaselineModel):
         user_prompt = (
             "Allocate importance across the following top-level sections.\n\n"
             f"{section_blocks}\n\n"
+            "Guidelines:\n"
+            "- Higher scores: segments that carry the core scientific contribution through\n"
+            "  methods, theory, algorithms, proofs, experimental findings, analysis, or\n"
+            "  important problem formulation.\n"
+            "- Lower scores: segments that mainly provide background, motivation, transitions,\n"
+            "  setup details, or lower-impact narrative.\n"
+            "- If one segment contributes about 3x as much as another, assign about 3x the score.\n"
+            "- If two segments contribute equally, assign equal scores.\n"
+            "- Do not copy decimal values that appear inside the excerpts. Infer new percentages.\n\n"
             "Return one line per section exactly in the form:\n"
             "Section Name: percentage"
         )
