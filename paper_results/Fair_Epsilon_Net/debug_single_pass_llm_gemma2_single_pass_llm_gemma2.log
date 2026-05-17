@@ -1,0 +1,71 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+As algorithmic decisions continue to influence critical aspects of modern human life, from resource allocation and recommendation to hiring and even predictive policing, the need to ensure fairness in data-driven systems has become increasingly urgent. Geometric approximation algorithms and notions such as 𝜀-nets facilitate Approximate Query Processing (AQP ) by providing compact data summaries, aka data representations, that preserve key proper- ties of large datasets [ 47,65]. These geometric tools are especially valuable due to their provable guarantees of approximation quality and computational efficiency. 𝜀-nets, for example, are well-known as small subsets of data that guarantee to contain at least one sample from each range larger than 𝜀, and hence can be used for fast query answering. To further clarify this, let us consider the following example for approximate database range-qu
+
+Section name: Preliminaries
+Excerpt:
+In this section, we begin by introducing the necessary notation, followed by formal definitions of the preliminary concepts. We then provide a formulation of the problem studied in this paper. Range spaces: A range space(𝑋,R)consists of a finite set of points𝑋, where|𝑋|=𝑛, and each point 𝑝𝑖(1≤𝑖≤𝑛) lies in a 𝑑-dimensional space R𝑑. Associated with 𝑋is a family of subsets R, referred to as ranges, where each 𝑅𝑗∈Ris a subset of 𝑋. While the 1It is important to note that any algorithm satisfying the more general custom- ratio (CR) fairness also satisfies demographic parity (DP); however, it may not do so efficiently. set of rangesRmay be infinite in general, we denote by 𝑚=|R| the number of ranges when Ris finite. Thedual of a range space(𝑋,R)is another range space, denoted by(R,X), in which each range in Ris treated as a point, and the new family of ranges Xis defined as below: X={R(𝑝)|𝑝∈𝑋}
+
+Section name: Background
+Excerpt:
+In this section, we briefly review classical results related to the problems defined in Section
+
+Section name: Fair -nets
+Excerpt:
+In this section, we discuss our algorithms for the Fair 𝜀-net and 𝜀-sample problems. First, in Sections 4.1 and 4.2, we address fair 𝜀-net under the demographic parity, followed by the custom-ratios fairness in § 4.3. We will then study fair 𝜀-sample in § 4.4. We propose two categories of algorithms for constructing fair 𝜀- nets that satisfy demographic parity: a Monte-Carlo sampling-based and a discrepancy-based algorithm. The sampling-based approach returns a larger fair 𝜀-net efficiently, while the discrepancy-based method algorithms return a smaller fair 𝜀-net at the expense of increased runtime. We design two discrepancy-based algorithms. While they both return a fair 𝜀-net of (asymptotically) the same size, the second one is more efficient when 𝑑is small and 𝑚is large. A comparative summary of all our algorithms is presented in Table 2. Our first algorithm is a sampling-based Monte
+
+Section name: Fair Geometric Hitting Set
+Excerpt:
+In this section, we give an algorithm for satisfying the CR con- straints in the Geometric Hitting Set. The goal of FGHS is to find the smallest subset S∗⊆𝑋, given the ratiosT=(𝜏1,𝜏2,···,𝜏𝑘), such that: (1)∀𝑐ℓ∈𝐶,|S∗ 𝑐ℓ| |S∗|=𝜏𝑙, (2)∀𝑅∈R, 𝑅∩S∗≠∅. Equivalently, one can consider Fair Geometric Set Cover defined in the dual range space where sets are associated with colors. There are two popular algorithms for solving the (unfair) Geometric Hitting Set problem. The first approach relies on the Multiplicative Weight Update method [ 5,40,56]. This is a greedy algorithm that starts by choosing a subset of points. If this subset is not a hitting set forR, they re-weight all the points that belong to at least a range that is not hit by the current solution. Iteratively repeating thisprocess results in finding a logOPT GHS approximation solution, where OPT GHS is the optimum geometric hitting set 
+
+Section name: Related Work
+Excerpt:
+It is now almost a decade that fairness has become a central topic in data-driven systems, and has been studied across various domains, including AI and Machine Learning [ 16,63], data management [ 6, 87], and in algorithms [51]. Fairness-aware Data Management . Fairness in data-driven sys- tems has been extensively studied in responsible data manage- ment [ 87], and various data-centric fairness-aware approaches have been proposed for different components of the responsible data- analytics pipeline [ 67]. The research in this domain include causal data repair methods aimed at ensuring fairness [ 74,75], techniques for identifying and tuning problematic data slices [ 89], fairness- aware query adjustment [ 1,53,73,84,102], coverage-based meth- ods for addressing representation bias [ 10,78], label correction ap- proaches promoting individual fairness [ 100], methods for mining the underr
+
+Section name: Application to Database Systems
+Excerpt:
+In Example 1, we highlighted the application of 𝜀-nets as dataset summaries for range queries , where the goal is to compress potentially very large datasets to a small subset that contains at least one tuple from any possible (axis-parallel) range query. The 𝜀-net can then facilitate AQP by quickly identifying a tuple in the set that satisfies a query range. In the following, we briefly outline some other applications of 𝜀-nets,𝜀-samples, and geometric hitting set in database systems and beyond. 𝜀-samples are foundational to Approximate Query Processing (AQP) because they provide small yet statistically representative subsets of the data. By ensuring that the selectivity of every query range deviates by at most 𝜀from that on the full data, they en- able consistent accuracy guarantees for aggregate functions such as COUNT, SUM, and AVG. Modern systems like VerdictDB [ 70] implement hiera
+
+Section name: Experiments
+Excerpt:
+We evaluate the proposed algorithms on (a) real-world datasets from related applications and (b) synthetic data. Our code and artifacts are publicly available.3Due to the space constraints, a detailed discussion of the experiments and additional results is provided in the technical report [32]. We implemented the following four tasks to compare the proposed algorithms with baselines: •Database Summarization for Range Queries: As illustrated in Example 1, the goal in this setting is to find a small, represen- tative sample of the database table. Given a collection of range queriesQ=𝑞1,𝑞2,···,𝑞𝑚, the objective is to select a small fair representative subset of tuples such that each heavy query is hit by at least one tuple from the sample. •Neighborhood Hitting on Geographic Data: Given a set of geographic coordinates representing individual locations, we aim 3Github repositoryto select a s
+
+Section name: Conclusion
+Excerpt:
+We studied the geometric approximation problems of 𝜀-net,𝜀-sample, and geometric hitting set through the lens of fairness. We formu- lated the problems using two notions of group fairness and proposed efficient randomized and deterministic algorithms with small ap- proximation factors to address them. In addition to the theoretical guarantees, our experimental evaluations further demonstrated the effectiveness of our algorithms across various tasks and datasets.
+
+Section name: A Fair -sample
+Excerpt:
+In this section, we discuss the Fair 𝜀-sample problem by addressing both DP and CR constraints. Most of the results are similar to Section 4, so we only rely on a brief discussion. Based on Theorem 2 in Background, an 𝜀-sample can be built by randomly sampling 𝛾≥𝑐0 𝜀2(︂ 𝑑log𝑑 𝜀+log1 𝜑)︂ from𝑋. As a result, both the Monte-Carlo sampling-based and the discrepancy-based algorithms discussed in Section 4 also apply here to build a fair 𝜀-sample for satisfying DP. Specifically, The discrepancy-based algorithm for building 𝜀-samples follows similar steps to those in 𝜀-nets [ 25]. By constructing the Fair Matchings (as discussed in Section 4.2), one can similarly build fair 𝜀-samples. However, it is not always possible to build an 𝜀-sample satisfying any arbitrary CR constraint. We provide a counter-example of a case where satisfying a large set of possible ratios Tis impossible. Assume that fo
+
+Section name: B Additional Experiments
+Excerpt:
+We use four real-world datasets in our experiments. PopSim[ 69] is a large semi-synthetic dataset of 2 million individuals from Illinois, annotated with geographic and racial information. Adult[ 34] is a UCI benchmark from the 1994 U.S. Census, where the task is to pre- dict income; we use gender as the sensitive attribute (66% male, 33% female). COMPAS[ 4] includes criminal and demographic data for over 7,000 defendants, using race as the sensitive attribute across three groups: African-American (48%), Caucasian (37%), and His- panic (14%). College Admission[ 23] contains application featuresfor international students, with gender as the sensitive attribute (52% male, 47% female). PopSim contains 2,000,000 rows and three columns: latitude, lon- gitude, and a categorical attribute representing race. Adult consists of 48,000 rows and 15 attributes, covering demographic and employ- ment in
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 25
+Preliminaries: 10
+Background: 15
+Fair -nets: 30
+Fair Geometric Hitting Set: 15
+Related Work: 10
+Application to Database Systems: 10
+Experiments: 25
+Conclusion: 10
+A Fair -sample: 10
+B Additional Experiments: 10
