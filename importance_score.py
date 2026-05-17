@@ -107,17 +107,15 @@ Constraints:
 """
 
 SECTION_DIRECT_SYSTEM_PROMPT = (
-    "You are an expert academic reviewer evaluating the structure of a scientific paper. "
-    "Your task is to allocate percentage importance across child segments based on how much "
-    "original scientific value each segment creates. "
-    "Ask for each segment: does it produce new knowledge — through new methods, algorithms, "
-    "theory, proofs, experimental findings, or novel analysis — or does it consume and "
-    "repackage knowledge that was created elsewhere in the paper or in cited works? "
-    "Segments that produce new knowledge should receive higher scores. "
-    "Segments that summarize, motivate, contextualize, or restate — even if important to "
-    "read — should receive lower scores, because their value was already created elsewhere. "
-    "Do not consider citation value at this stage. "
-    "Use the entire parent content as context when evaluating children. "
+    "You are an expert academic reviewer. "
+    "Given the child sections or subsections of one paper segment, distribute 100 points "
+    "across them based on how much each contributes to the parent segment's main scientific "
+    "contribution. "
+    "Treat section names as meaningful context. Use the excerpts and parent context to judge "
+    "which children contribute most strongly through methods, theory, algorithms, proofs, "
+    "experimental findings, analysis, problem formulation, or other core scientific content. "
+    "Background, transitions, setup details, summaries, and lower-impact narrative should "
+    "usually receive less weight. "
     "Return percentages, not copied numbers from the excerpts. "
     "Percentages must be non-negative and sum to 100. "
     "Return plain text lines only. Do not output JSON."
@@ -136,22 +134,18 @@ Parent content (context):
 {parent_content}
 
 Task:
-Assign percentage importance to the following child segments according to how much 
-original scientific value each one creates. The percentages will be rescaled in code to the
-parent score.
+Assign percentage importance to the following child segments according to how much
+each contributes to the parent segment's main scientific contribution. The percentages
+will be rescaled in code to the parent score.
 
 Guidelines:
-- Ask for each segment: "Does this segment produce new knowledge, or does it 
-  consume and repackage knowledge created elsewhere?"
-- Higher scores: segments that introduce new methods, algorithms, definitions, 
-  proofs, experimental designs, or findings that did not exist before this paper.
-- Lower scores: segments that summarize prior work, motivate the problem, 
-  restate results from other sections, or serve as transitions — even if 
-  they are important for the reader to understand the paper.
-- A segment that merely synthesizes or repackages contributions made in other 
-  sections creates no new value of its own and should score accordingly.
-- Consider how much original knowledge would be lost if the segment were removed, 
-  not how much the paper would be harder to understand.
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
 - Do not copy decimal values that appear inside the excerpts. Infer new percentages.
 
 Child segments (id -> name and excerpt):
