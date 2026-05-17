@@ -12,6 +12,7 @@ The code reads a PDF, matches its content to a predefined section tree, and then
 
 ```bash
 python3 visualize_graph.py \
+  --model-tag llama3_2 \
   --load-mappings citation_mappings.json \
   --top-k 40 \
   --min-weight 0.005 \
@@ -26,7 +27,11 @@ The repo is set up so the interactive graph can be published as a static site fr
 Rebuild the published site with:
 
 ```bash
-./build_github_pages_site.sh
+./build_github_pages_site.sh \
+  --model-tag llama3_2 \
+  --load-mappings citation_mappings.json \
+  --top-k 40 \
+  --min-weight 0.005
 ```
 
 This writes the graph to `docs/index.html`, copies the local JS/CSS assets into `docs/lib`, and refreshes `docs/.nojekyll`.
@@ -63,12 +68,12 @@ The scorer supports both author-year citations like `(Smith et al., 2024)` and n
 
 For each paper, the batch runner creates a folder under [paper_results](paper_results) containing:
 
-- `<paper>_section_scores.json`
-- `<paper>_paragraph_scores.json`
-- `<paper>_citation_scores.json`
-- `<paper>_paragraph_citation_scores.json`
-- `debug.log`
-- `prompts.json`
+- `<paper>_<model_tag>_section_scores.json`
+- `<paper>_<model_tag>_paragraph_scores.json`
+- `<paper>_<model_tag>_citation_scores.json`
+- `<paper>_<model_tag>_paragraph_citation_scores.json`
+- `debug_<model_tag>.log`
+- `prompts_<model_tag>.json`
 
 These four JSON files are also the inputs to the citation-graph and knowledge-discovery layer described below.
 
@@ -94,13 +99,40 @@ python3 extract_sections.py papers/your_paper.pdf
 python3 extract_paper_sections.py
 ```
 
-3. Score all papers:
+3. Score all papers for one model:
 
 ```bash
-python3 run_importance_scores_all_papers.py --continue-on-error
+python3 run_importance_scores_all_papers.py \
+  --model llama3.2 \
+  --model-tag llama3_2 \
+  --host http://localhost:11434 \
+  --n-samples 5 \
+  --temperature 0 \
+  --max-retries 5 \
+  --paragraph-direct-max-tokens 1200 \
+  --paragraph-compressed-snippet-limit 800 \
+  --continue-on-error \
+  --skip-existing
 ```
 
-3. Score one paper directly:
+For long runs on a server:
+
+```bash
+nohup python3 run_importance_scores_all_papers.py \
+  --model qwen3:4b \
+  --model-tag qwen3_4b \
+  --host http://localhost:11434 \
+  --n-samples 5 \
+  --temperature 0 \
+  --max-retries 5 \
+  --paragraph-direct-max-tokens 1200 \
+  --paragraph-compressed-snippet-limit 800 \
+  --continue-on-error \
+  --skip-existing \
+  > nohup_run_qwen3_4b.out 2>&1 &
+```
+
+4. Score one paper directly:
 
 ```bash
 python3 importance_score.py \
@@ -108,25 +140,126 @@ python3 importance_score.py \
   --paper-id your_paper \
   --sections-file papers_section_titles.txt \
   --sections-var YOUR_PAPER_SECTIONS \
-  --output1 results/your_paper \
-  --output2 results/your_paper \
-  --output3 results/your_paper
+  --output1 paper_results/your_paper/your_paper \
+  --output2 paper_results/your_paper/your_paper \
+  --output3 paper_results/your_paper/your_paper \
+  --model llama3.2 \
+  --model-tag llama3_2 \
+  --host http://localhost:11434 \
+  --n-samples 5 \
+  --temperature 0 \
+  --max-retries 5 \
+  --paragraph-direct-max-tokens 1200 \
+  --paragraph-compressed-snippet-limit 800 \
+  --debug-log paper_results/your_paper/debug_llama3_2.log \
+  --prompts-output paper_results/your_paper/prompts_llama3_2.json
 ```
 
-4. Inspect one paper's JSON outputs from the terminal:
+5. Inspect one paper's JSON outputs from the terminal:
 
 ```bash
-python3 -m json.tool paper_results/your_paper/your_paper_section_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_paragraph_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_citation_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_paragraph_citation_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_section_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_citation_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_citation_scores.json
 ```
 
-5. Run the citation resolver and knowledge-discovery framework:
+6. Run the citation resolver and knowledge-discovery framework:
 
 ```bash
-python3 run_knowledge_graph.py --save-mappings citation_mappings.json
+python3 run_knowledge_graph.py \
+  --model-tag llama3_2 \
+  --save-mappings citation_mappings.json
 ```
+
+7. Build an interactive graph for one model:
+
+```bash
+python3 visualize_graph.py \
+  --model-tag llama3_2 \
+  --load-mappings citation_mappings.json \
+  --top-k 40 \
+  --min-weight 0.005 \
+  --output graph_focused.html
+```
+
+If you omit `--model-tag`, the HTML bundles every discovered model and lets you switch between them in the browser.
+
+## Evaluation
+
+### Human-annotation evaluation
+
+To compare model outputs against [human_expert_annotations.json](human_expert_annotations.json):
+
+```bash
+python3 evaluate_human_section_scores.py \
+  --annotations-file human_expert_annotations.json \
+  --model-tag llama3_2 \
+  --enable-citation-eval \
+  --citation-top-k 4 \
+  --output-json results/human_eval_llama3_2.json
+```
+
+The same pattern works for other model tags, for example:
+
+```bash
+python3 evaluate_human_section_scores.py \
+  --annotations-file human_expert_annotations.json \
+  --model-tag gemma2_2b_2 \
+  --enable-citation-eval \
+  --citation-top-k 4 \
+  --output-json results/human_eval_gemma2_2b_2.json
+```
+
+```bash
+python3 evaluate_human_section_scores.py \
+  --annotations-file human_expert_annotations.json \
+  --model-tag qwen3_4b \
+  --enable-citation-eval \
+  --citation-top-k 4 \
+  --output-json results/human_eval_qwen3_4b.json
+```
+
+### ChatGPT baseline evaluation
+
+To compare the same model outputs against [chatgpt_baseline_annotations.json](chatgpt_baseline_annotations.json):
+
+```bash
+python3 evaluate_human_section_scores.py \
+  --annotations-file chatgpt_baseline_annotations.json \
+  --model-tag llama3_2 \
+  --enable-citation-eval \
+  --citation-top-k 4 \
+  --output-json results/chatgpt_baseline_eval_llama3_2.json
+```
+
+### Sample-size citation analysis
+
+The repo also includes a replay-based analysis over the saved `debug_<model_tag>.log` files, measuring how citation metrics change as the number of averaged samples increases from `1` to `5`:
+
+```bash
+python3 analyze_sample_prefix_citation_metrics.py \
+  --annotations-file human_expert_annotations.json \
+  --model-tags llama3.2_1b llama3_2 gemma2_2b_2 gemma3_4b phi3_medium_run2 qwen3_4b qwen2_5_3b \
+  --output-json results/sample_prefix_citation_metrics_all_models.json
+```
+
+Then plot the `W`-based curves with matplotlib:
+
+```bash
+python3 plot_sample_prefix_metrics.py \
+  --input-json results/sample_prefix_citation_metrics_all_models.json \
+  --score-key w \
+  --output-dir results/plots
+```
+
+This produces:
+
+- `sample_prefix_metrics_w_combined.pdf`
+- `sample_prefix_metrics_w_overlapat4.pdf`
+- `sample_prefix_metrics_w_recallat4.pdf`
+- `sample_prefix_metrics_w_hitat4.pdf`
+- `sample_prefix_metrics_w_mrr.pdf`
 
 ## Knowledge Discovery Layer
 
@@ -249,10 +382,10 @@ $Gap(C) = \sum_{p \in C} Orig(p)  −  \sum_{q \notin C, p \in C} W_{tech}(q \ri
 ### View one paper's raw scoring outputs
 
 ```bash
-python3 -m json.tool paper_results/your_paper/your_paper_section_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_paragraph_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_citation_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_paragraph_citation_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_section_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_citation_scores.json
+python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_citation_scores.json
 ```
 
 
