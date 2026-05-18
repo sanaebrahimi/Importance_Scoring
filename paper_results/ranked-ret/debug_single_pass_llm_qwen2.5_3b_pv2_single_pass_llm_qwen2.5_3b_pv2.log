@@ -1,0 +1,66 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al
+
+Section name: Formal Definitions
+Excerpt:
+Data Model. We consider a dataset D={𝑝1,𝑝2,···,𝑝𝑛}consist- ing of𝑛points in R𝑑, where each point 𝑝∈D has𝑑real-valued dataset contain 16 points and the query asks for (𝑖=8)-th point with the scoring function shown in red. (Left) First, we find the bounds by solving DAR on the𝜀-sample. (Right) Finding the ℓand𝑢values, we solve the SRR problem on the stripe range. (scoring) attributes, aka. features, used for ranking.1Ascoring func- tionscore :R𝑑→Rassigns a real-valued score to each point in the dataset.2In this work, we focus on linear scoring functions , where the score is defined as a weighted sum of the features. Specifically, given a weight vector 𝑓∈R𝑑, the score assigned to a point 𝑝is computed as the dot product3:score𝑓(𝑝)=𝑓⊤𝑝=∑︁𝑑 𝑗=1𝑓[𝑗]𝑝[𝑗]. We may directly call 𝑓as the scoring function. Figure 1 (left) pro- vides a toy example of a dataset Dwith𝑛=16points and two attributes𝑥and𝑦. 
+
+Section name: Background
+Excerpt:
+In this section, we summarize the key concepts and definitions used in the subsequent discussions. We assume a range space (D,R), whereDis the dataset, and Ris a collection of geometric ranges defined overD, such as all possible balls, half-spaces, or other regions in R𝑑. VC-Dimension. The Vapnik-Chervonenkis (VC) dimension [ 50] is a fundamental combinatorial measure of complexity for a range space. Formally, the VC-dimension is the size of the largest subset 𝐶⊆D such that every subset of 𝐶can be realized as the intersection of𝐶with some range in R. A low VC-dimension implies that the range space has limited expressive power, which in turn allows for efficient sampling-based approximations (see [ 27] for more details). 𝜀-Samples. An𝜀-sample (or 𝜀-approximation) of a range space (D,R)is a subsetN⊆D such that, for every range 𝑅∈R, the proportion of points in 𝑅is approximately preserved in
+
+Section name: Solution Overview
+Excerpt:
+In this section, we provide a high-level overview of our proposed algorithms, with a summary of their theoretical guarantees. The baseline approach for answering the DAR queries uses the extension of the classic divide and conquer (D&C) median finding algorithm, which, instead of the median, finds the element at posi- tion𝑖[7,16]. To do so, it first makes a linear pass over D, and for each point𝑝, computes score𝑓(𝑝). Then, using the D&C algorithm, it finds rank−1 𝑓(𝑖)in𝑂(𝑛). Instead, our algorithms, summarized in Table 1, provide more ef- ficient solutions by preprocessing the data and constructing proper data structures. KthLevel .We begin by introducing an algorithm that leverages the construction of the level of the arrangement of hyperplanes to solve the exact DAR problem (see Section 5.1 for detailed defini- tions). This method offers highly efficient logarithmic query time, but it 
+
+Section name: Algorithm Based on k-th level of arrangement
+Excerpt:
+ARRANGEMENT In this section, we present an algorithm for solving the DAR prob- lem using the computational geometric concepts of duality and arrangement of hyperplanes [ 14,22]. At a high level, building the arrangement of dual hyperplanes of the tuples, our approach, named Algorithm Name Summary Dimension Space Complexity Query Time Problem KthLevel Following the levels of arrangement 𝑑≥2 𝑂(𝑛𝑑) 𝑂(log𝑛) DAR Eps2D 𝜀-sampling in 2D 𝑑=2 𝑂(𝑛) 𝑂(𝑛2/3log𝑛) DAR EpsRange 𝜀-sampling + Range Searching 𝑑≥2 𝑂(𝑛)𝑂(max{𝑛1−1/𝑑,1 𝜀2log1 𝜀}) CSR 𝑂(max{𝑛1−1/𝑑,𝑛2/3log𝑛}) DAR EpsHier 𝜀-sampling + Hierarchical Sampling 𝑑≥2 𝑂(𝑛) Worst-case𝑂(𝑛); Practically Efficient CSR KthLevel , keeps track of different levels of the arrangement , which are used at the query time for efficient answering of DAR queries, i.e., finding the tuple at a given rank position 𝑖. This algorithm achieves a logarithmic query time , but
+
+Section name: -sampling Approach
+Excerpt:
+In theory, the solution based on constructing the arrangement of dual hyperplanes provides a logarithmic time for answering theDAR queries. It, however, is not practical especially when the number of ranking attributes is not small ( ≥3), since the size of the arrangement (hence, the space complexity) increases exponentially with𝑑. Therefore, in this section, we propose practical solutions that keep the space complexity linear, i.e., 𝑂(𝑛). Our algorithms are based on the computational geometric concept of 𝜀-samples [ 27] (also introduced in Section 3). In the following, we start by discussing the two-dimensional Eps2D algorithm, then, we will generalize our solution to the higher dimensions, and propose practical methods to solve the intermedi- ateSRR problem (Problem 3). In this section, we discuss our solution based on 𝜀-samples in 2D, called Eps2D . Preprocessing. During the preproces
+
+Section name: Experiments
+Excerpt:
+We conducted our experiments on a server running Ubuntu 20.04, equipped with 123 GB of RAM and a 64-core processor. Our code and other artifacts are available on this GitHub repository. 7.1.1 Datasets. We use both synthetic and real-world datasets for our evaluation. The synthetic datasets are generated using the Zipfian distribution, with variations in dimensionality, dataset size, and distribution parameters. The Zipfian distribution is particularly challenging for range searching due to its inherent skewness and is commonly observed in many real-world scenarios. It allows us to evaluate the algorithms under non-uniform workloads. For our real-world experiments, we use two datasets: the US Used Cars dataset [ 40] and the FIFA 2023 dataset [ 33]. The US Used Cars dataset contains approximately 3 million entries with 66 Mohsen Dehghankar, Raghav Mittal, Suraj Shetiya, Abolfazl Asudeh, an
+
+Section name: Related Work
+Excerpt:
+In this section, we briefly review the relevant literature, including prior work on top- 𝑘retrieval, direct access queries in databases, and range searching. Top-𝑘Retrieval. Top-𝑘query processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- 𝑘results and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- 𝑘methods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctne
+
+Section name: conclusion
+Excerpt:
+In this paper, we introduced and studied the problem of Direct Access Ranked Retrieval ( DAR ) and its relaxed variant, Conformal Set Ranked Retrieval ( CSR). We first proposed an algorithm based on geometric arrangements with logarithmic query time but an ex- ponential space complexity to the number of dimensions. Next, we proposed our space-efficient algorithms based on 𝜀-samples. Specif- ically, providing a hierarchical sampling-based data structure for efficient stripe-range retrieval, we developed a practical algorithm for the CSR problem that scales to hundreds of dimensions. Our focus in this paper was on static settings, where the dataset does not change. Extending the scope of our problem to dynamic settings with insert, delete, and update operations is an important next step for future work. Moreover, it would be interesting to study the problem under non-linear ranking functio
+
+Section name: A Lower Bounds and Optimality of Our Algorithms
+Excerpt:
+OUR ALGORITHMS In this section, we analyze the complexity of the DAR problem and show the near-optimality of our proposed algorithms. Specifically, the well-studied half-space range counting problem [ 1,11] reduces to our problem. Hence, the complexity of the state-of-the-art algo- rithms for half-space range counting provides a lower bound for theDAR problem. The half-space range counting problem is defined as follows: given a point set in R𝑑and a query half-space 𝐻, determine the number of points lying within 𝐻. Lemma 8. LetAbe an algorithm that solves the DAR problem with query time 𝑇(A) and space complexity 𝑆(A). Then, usingA, one can solve an instance of the half-space range counting problem using space𝑆(A) and query time: Θ(log𝑛·𝑇(A)). □ Proof. To count the number of points within a given half-space 𝐻, we can perform a binary search over 𝑘∈{1,2,...,𝑛}. In each iteration, we query A
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 15
+Formal Definitions: 20
+Background: 10
+Solution Overview: 15
+Algorithm Based on k-th level of arrangement: 30
+-Esampling Approach: 10
+Experiments: 7
+Related Work: 5
+Conclusion: 4
+A Lower Bounds and Optimality of Our Algorithms: 2

@@ -1,0 +1,61 @@
+[
+  {
+    "section_path": [
+      "Fair Set Cover",
+      "Naive Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We first describe a naive algorithm for the FSC problem with large approximation ratio. We execute the well-known greedy algorithm for the standard set cover problem (its pseudocode is shown in the technical report [ 14]) and letXbe the set cover we get. If Xdoes not satisfy the fairness requirements, we arbitrarily add the minimal number of sets from each color to equalize the number of sets from each color in our final cover. The pseudocode is shown in the technical report [14]. Lemma 1. There exists a(\ufe01k(lnn+1))\ufe01-approximation algorithm for the FSC problem that runs in O(m\u00b7k\u00b7n)time.",
+    "citation": "[14]",
+    "citation_score": 0.009849908212602022
+  },
+  {
+    "section_path": [
+      "Fair Set Cover",
+      "Greedy Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection we propose an algorithm for the FSC problem whose approximation ratio does not depend onk. For simplicity of explanation, we describe our algorithm for the case we have only two demographic groups, i.e., G={g1,g2}. In the end, our algorithm can be extended almost verbatim to k>2groups. LetX=\u2205be the cover we construct and let U\u2212=Ube the set of uncovered elements. We repeat the following steps until U\u2212=\u2205. In each iteration, we find the pair of sets(SA,SB)such that i) setsSA,SBcover the maximum number of uncovered elements, i.e.,U\u2212\u2229(SA\u222aSB)is maximized, and ii) set SAhas color g1and SBhas color g2, i.e., g(SA)=g1andg(SB)=g2. Once we find SA,SBwe update the set U\u2212removing the new covered element, U\u2212\u2190U\u2212\\(SA\u222aSB), and we add SA,SBinX. In the end, after covering all elements ( U\u2212=\u2205), we return X. The pseudocode of our algorithm is shown in the technical report [14].",
+    "citation": "[14]",
+    "citation_score": 0.010989872458084742
+  },
+  {
+    "section_path": [
+      "Fair Set Cover",
+      "Faster algorithms"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Faster algorithm for FSC. We combine the results from Theo- rem 1 and Theorem 3 (or Theorem 2) to get a faster algorithm for the FSC problem. In each iteration of the greedy algorithm from Theo- rem 1 we execute the algorithm from Theorem 3 (or Theorem 2). The pseudocode of the overall method is shown in the technical report [14]. It is known [ 51] that the greedy algorithm for the standard Set Cover problem, where in each iteration it selects a set that covers a \u03b2-approximation (for \u03b2<1) of the maximum number of uncovered elements returns a1 \u03b2(lnn+1)-approximation. From the proof of Lemma 2 we mapped the FSC problem to an instance of the standard set cover problem, so the approximation ratio of our new algorithm ise e\u22121(lnn+1)(or2(lnn+1)). The algorithm from Theorem 3 runs in O(L(n+k,2n+2m\u00b7k)). We execute this algorithm in every iteration of the greedy algorithm. In the worst case the greedy algorithm selects all sets in S, so a loose upper bound on the number of iterations is O(m). The number of iterations can also be bounded as follows. If IGreedy is the number of iterations of the greedy algorithm, then by definition it holds thatk\u00b7IGreedy\u2264e e\u22121(lnn+1)|X\u2217|\u21d4IGreedy =O(|X\u2217| klogn).",
+    "citation": "[14]",
+    "citation_score": 0.014351107151896653
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Having theoretically analyzed the proposed algorithms, in this section we experimentally evaluate the efficiency and efficacy of our algorithms on real and synthetic datasets. Datasets: We use 3 real datasets, one semi-synthesized, and one synthesized dataset to evaluate our methods. Our first set of ex- periments (\u00a7 7.1 and \u00a7 7.2) are motivated by Example 1 (Team of Experts Formation), for which we use the Strategeion Resume Skills dataset1. It consists of 1986 rows as candidates with differ- ent skills. The skill of a candidate is shown as 218 binary columns each corresponding to one skill. As an AI Ethics benchmark, the dataset also contains demographic group information, including the (binary) gender. The male-to-female ratio in this dataset is 0.8. Motivated by the \"Fair survey data collection\" application demon- strated in \u00a7 2, we use two additional real datasets: Adult Income andCOMPAS (\u00a7 7.3). The Adult Income Dataset [ 18] consists of demographic information for individuals, which was extracted from the 1994 Census database. The dataset is primarily used to predict whether a person earns more than $50,000 per year based on various attributes (14 columns and 48,842 rows). Gender is the sensitive attribute in this dataset. The COMPAS dataset [ 1] con- tains data used to evaluate the effectiveness and fairness of the COMPAS recidivism prediction algorithm. This dataset includes criminal history, jail and prison time, demographics, and COM- PAS risk scores for defendants from Broward County, Florida (52 columns and 18,316 rows), while race is the sensitive attribute. The third set of experiments (\u00a7 7.4) are using the POPSIM [38] dataset. POPSIM is a semi-synthetic dataset that combines popu- lation statistics along with a geo-database. It is used to represent 1http://bit.ly/2SeS4xoindividual-level data with demographic information for the state of Illinois. Race is used as the sensitive attribute (5 groups). It contains 2,000,000 locations represented as points in R2. For the last set of experiments, (\u00a7 7.5), we synthesized a dataset consisting of a number of points as ground set and a family of sub- sets with different coverage distributions on this ground set. More details about this dataset is provided in the technical report [14]. Algorithms: We compare four algorithms over all the experi- ments: Standard Greedy Set Cover (SC), Naive Algorithm (Naive), Fair Greedy Algorithm (AllPick), Efficient or Faster Fair Greedy Algorithm (EffAllPick). We also compare these algorithms with the optimum solution (using the brute-force algorithm for Standard Set Cover (Opt-SC) and a brute-force algorithm for Fair Set Cover (Opt-Fair)). These algorithms simply check all possible covers to find the best optimum solution. For the generalized version of the problem, we compared the General Fair Set Cover (GFSC) algo- rithm and the Efficient or Faster GFSC algorithm (EffGFSC) along with Naive and Standard Greedy (SC) algorithms. Evaluation metrics: We used three metrics for evaluating the",
+    "citation": "[38]",
+    "citation_score": 0.009513246688327917
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Having theoretically analyzed the proposed algorithms, in this section we experimentally evaluate the efficiency and efficacy of our algorithms on real and synthetic datasets. Datasets: We use 3 real datasets, one semi-synthesized, and one synthesized dataset to evaluate our methods. Our first set of ex- periments (\u00a7 7.1 and \u00a7 7.2) are motivated by Example 1 (Team of Experts Formation), for which we use the Strategeion Resume Skills dataset1. It consists of 1986 rows as candidates with differ- ent skills. The skill of a candidate is shown as 218 binary columns each corresponding to one skill. As an AI Ethics benchmark, the dataset also contains demographic group information, including the (binary) gender. The male-to-female ratio in this dataset is 0.8. Motivated by the \"Fair survey data collection\" application demon- strated in \u00a7 2, we use two additional real datasets: Adult Income andCOMPAS (\u00a7 7.3). The Adult Income Dataset [ 18] consists of demographic information for individuals, which was extracted from the 1994 Census database. The dataset is primarily used to predict whether a person earns more than $50,000 per year based on various attributes (14 columns and 48,842 rows). Gender is the sensitive attribute in this dataset. The COMPAS dataset [ 1] con- tains data used to evaluate the effectiveness and fairness of the COMPAS recidivism prediction algorithm. This dataset includes criminal history, jail and prison time, demographics, and COM- PAS risk scores for defendants from Broward County, Florida (52 columns and 18,316 rows), while race is the sensitive attribute. The third set of experiments (\u00a7 7.4) are using the POPSIM [38] dataset. POPSIM is a semi-synthetic dataset that combines popu- lation statistics along with a geo-database. It is used to represent 1http://bit.ly/2SeS4xoindividual-level data with demographic information for the state of Illinois. Race is used as the sensitive attribute (5 groups). It contains 2,000,000 locations represented as points in R2. For the last set of experiments, (\u00a7 7.5), we synthesized a dataset consisting of a number of points as ground set and a family of sub- sets with different coverage distributions on this ground set. More details about this dataset is provided in the technical report [14]. Algorithms: We compare four algorithms over all the experi- ments: Standard Greedy Set Cover (SC), Naive Algorithm (Naive), Fair Greedy Algorithm (AllPick), Efficient or Faster Fair Greedy Algorithm (EffAllPick). We also compare these algorithms with the optimum solution (using the brute-force algorithm for Standard Set Cover (Opt-SC) and a brute-force algorithm for Fair Set Cover (Opt-Fair)). These algorithms simply check all possible covers to find the best optimum solution. For the generalized version of the problem, we compared the General Fair Set Cover (GFSC) algo- rithm and the Efficient or Faster GFSC algorithm (EffGFSC) along with Naive and Standard Greedy (SC) algorithms. Evaluation metrics: We used three metrics for evaluating the",
+    "citation": "[14]",
+    "citation_score": 0.009513246688327917
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Despite its importance, limited work has been done on algorith- mic fairness in the context of combinatorial problems [ 49]. Satisfy- ing fairness constraints while optimizing sub-modular functions is studied in [ 49]. Further examples include satisfying fairness in Coverage Maximization problems [ 2,4] and Facility Locations [ 29]. In the red-blue set cover problem [ 10], the goal is to select a family of sets to cover all red points, while minimizing the number of blue points covered. In this body of work, the focus is on defining fair- ness on the point set (ground set). In other words, they assume the points belong to different demographic groups. In contrast, in thiswork, we define fairness on the family of sets. Fairness is also stud- ied in problems like Matching [ 19,20], Resource Allocation [ 35], Ranking [3, 52], Queue Systems [15], and Clustering [33, 44]. There has been recent work studying fairness in the Hitting Set problem [ 25]. Although hitting set is the dual of the set cover problem, the definition of fairness used is different from ours. We define and guarantee perfect fairness based on demographic parity (count and ratio parity). In other words, we require an exact equal- ity (e.g., equality of count equality or exact color ratio) between demographic groups. By contrast, in [ 25], a hitting set is defined to be fair if does not contain many points from a color. They have upper bounds on the number of points (equivalent to the subsets in the set cover problem) that can be picked from any particular color. Furthermore, they design exact (fixed-parameter) algorithms with running time exponential in kand/or exponential on maximum number of sets that an element belongs to.",
+    "citation": "[15]",
+    "citation_score": 0.0017808047988002998
+  }
+]

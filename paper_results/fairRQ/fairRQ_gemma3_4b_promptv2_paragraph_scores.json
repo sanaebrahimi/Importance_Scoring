@@ -1,0 +1,769 @@
+[
+  {
+    "section_path": [
+      "INTRODUCTION"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In the era of big data and advanced computation models, we are all constantly being judged by the analysis, algorithmic outcomes, and AI models generated using data about us. Such analysis are valuable as they assist decision makers take wise and just actions. For example, the abundance of large amounts of data has enabled building extensive big data systems to fight COVID-19, such as controlling the spread of the disease, or in finding effective factors, decisions, and policies [1]. Similar examples can be found in almost all corners of human life including resource allocation and city policies, policing, judiciary system, college admission, credit scoring, breast cancer prediction, job interviewing, hiring, and promotion, to name a few. In particular, let us consider the following as a running example: Example 1. (Part 1) Consider a company that would like to make a policy decision, targeted at its \u201cprofitable\u201d employees. Following our real experiment in \u00a7 V-B, suppose the company has around 150K employees. Using salary as an indicator of how profitable an employee is, the business management office of the company considers the query SELECT *FROM EMP WHERE salary\u0015$65K , which includes around 18% of em- ployees. Surveying this group, the company wants to develop some mechanisms to motivate and retain these employees. Looking at these analyses through the lens of fairness, algorithmic decisions look promising as they seem to eliminate human biases. However, \u201can algorithm is only as good as the data it works with\u201d [2]. In fact, the use of data in all aforementioned applications have been highly criticised for being discriminatory, racist, sexist, and unfair [3], [4]. Proba- bly the main reason is that real-life social data is almost always\u201cbiased\u201d [2]. Using biased data for algorithmic decisions create fairness dilemmas such as impossibility and inherent trade-offs of fairness [5], [6], [7]. Besides historical biases and false stereotypes reflected in data, other sources such as selection bias can amplify unfairness issues [2]. To highlight a real example, let us continue with Example 1: EXAMPLE 1.(Part 2) As we shall later elaborate in \u00a7 V-B, it turns out the company has more female employees than male. Still, due to the known historical discrimination [8], the selected group of employees contain noticeably more males. As a result, targeting this group for the analysis, the company will end up favoring the preferences of the male employees, which is unfair to female employees and will, in a feedback loop, result in losing more of the \u201cprofitable\u201d female candidates. Fortunately, recently different computer science communi- ties, such as machine learning and, in particular, data manage- ment, have taken fairness issues seriously. In past three years alone, there have been many publications in related topics such as fairness-aware data repair, cleaning, and integration [9], [10], [11], [12], data bias detection/resolution [13], [14], [15], [16], [17], [18], [19], and data/model annotation [20], [21], systems [22], [23], [24], ranking [25], [26], [27], [28], crowdsourcing [29], as well as different keynotes [30], [31] and tutorials [32], [33], [3] dedicated to this topic in premier database conferences, that underscore this community\u2019s role in properly addressing this problem. Despite extensive efforts within the database community, there is still a need to integrate fairness requirements with database systems. Existing work is limited to query for- mulation for achieving data coverage (minimum count on demographic (sub)groups) [34], [35], [36]. To our knowledge, this paper is the first to integrate fairness (parity on counts) with (selection) query answering . In particular, as our first attempt, we consider range queries and pay attention to the facts: (i) the conditions in the range query may be selected intuitively by the human user. For instance, in Example 1 the user could have chosen $65K as the query bound because it was (roughly) a good choice that would make sense for them; (ii) considering the ethical obligations and consequences, the user might be interested in accepting a \u201csimilar enough\u201d query to their initial choice, if it returns a \u201cfair\u201d outcome. In Example 1, we note that the company could, for instance, in a post-query processing step, remove some male employees from the selected group, or it could add some females to the selected pool, even though they do not belong to the query result. While such fixes are technically easy, those are illegal in many jurisdictions [37], because those amount to disparate- treatment discrimination: \u201cwhen the decisions an individual user receives change with changes to her sensitive attribute information\u201d [38], [2], [25]. For instance, one cannot simply increase or decrease the grade of a student, because of their race or gender. Instead, they should design a \u201cfair rubric\u201d that is not discriminatory. Therefore, instead of practicing disparate treatment, we propose to adjusting the range to find a range (similar to finding a rubric for grading) with a fair output. Following the above argument, our system allows the user to specify the fairness and similarity constraints (in a declarative manner) along with the selection conditions, and we return an output range that satisfies these conditions. To further clarify this, let us continue with Example 1 in the following. EXAMPLE 1.(Part 3) Being aware of the historical discrim- ination, ethical obligations, and the potential negative impacts on the company, besides knowing that the choice of salary lower-bound has been fuzzy, the business management office would like to find a query whose output is similar enough to the initial query and the number of male employees returned is at most 1000 (around 5%) more than the females. Using our system, they can issue a SQL query to find such a set. As ex- plained in \u00a7 V-B, our system found the most similar fair range asSELECT *FROM EMP WHERE $60.5K \u0014salary\u0014$152K . Its outcome is 75% similar to the initial range query, and satisfies the fairness requirement. Observing the high Jaccard similarity between these two sets, the company now has the option to use this for their analysis, to make sure they are not discriminating against their female employees, hence not losing their valuable candidates. Our system provides an alternative to the initial query provided by the user. This is useful since often the choice of filtering ranges is ad-hoc, hence our system helps the user responsibly tune their range. If the discovered range is not satisfactory to the user, they can change the fairness and similarity requirements and explore different choices until they select the final result in a responsible manner [39], [25]. Summary of contributions: Initiating fairness-aware query answering, in this paper we tackle non-trivial technical chal- lenges and propose proper algorithms to address them. In particular, we make the following contributions in this paper: \u000fWe initiate research on integrating fairness conditions into database query processing and data management systems. While the specific problem investigated in our paper focuses on fairness in range queries, we hope this work will spur further research in this important and emerging field. \u000fWe study the problem of fairness-aware range queries. That is, finding the most similar fair range to a user-provided range query for the database D. We propose using SQL for declaring the fairness-aware queries. \u000fFor single-predicate (SP) range queries, we propose the algorithm SPQA with sub-linear query time. The algorithm uses an innovative linear-size index Jump pointers . \u000fWe model the problem for multi-predicate (MP) rangeid A0 A1 color id A0A1 color t0 3.1 1.5 red t7 13 5.4 red t1 0.7 2.3 red t8 11.3 2.6 blue t2 8 0.65 blue t9 2.3 8.4 blue t3 10.9 1.5 red t10 5.6 4.7 red t4 4.4 8.7 blue t11 12.7 2.8 red t5 1.2 4.1 red t12 7 0.3 blue t6 6.2 6.3 blue t13 9.1 9.4 red TABLE I: A toy example database Dwith two attributes A0and A1and the sensitive attribute color . queries as the traversal over a graph where nodes represent different queries and there is an edge between two nodes if their outputs differ by one tuple. In particular, we propose Best First Search MP (BFSMP) algorithm that, starting from the input range, efficiently explores neighbouring nodes to find the most similar fair range. \u000fInspired by the A* algorithm, we propose Informed BFSMP that improves BFSMP , using an upper-bound on the Jaccard similarity for effective graph exploration. \u000fWe conduct comprehensive experiments to evaluate our SP and MP algorithms. Our results demonstrate the efficiency and efficacy of SPQA for SP queries. Similarly, IBFSMP performs well for MP queries.",
+    "technical_score": 0.108,
+    "citation_score": 0.011999999999999999
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Database Model"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Database: We consider a relation Dwith nobjects,t1totn. Each object in D, consists of numeric attributes A1toAd. We refer to the value of attribute Aj2Rof objecttias ti[j]. While the numeric attributes of the database Dcan be used for range queries, objects may also consist of categorical attributes. These categorical attributes are used for filtering the objects based on the user\u2019s criteria. A toy example of a database can be seen in Table I with 14 objectst0tot13. The attributes of this database are in the form ofAi, namelyA0,A1. The database also includes the non- ordinal attribute color used in the fairness model. We use this database for illustrating various techniques across the paper. Range Query: Given a database D, a range query is made up of conjunction of range constraints placed on some/all of the attributes of D. A range constraint fstart; endg(aka a range predicate) on an attribute Aifilters the objects such that the attributeAilies within the filter range( start\u0014Ai\u0014end). For instance, Query 1 is a query with one range predicate on the toy example of Table I that returns the objects ft4;t6;t10;t12g: QUERY 1:select id from Dwhere 4\u0014A0\u00147 In this paper, we consider the conjunction of multiple range predicates using \u201cand\u201d operation. Similarity Measure: The distance between two range queries is the dissimilarity of the two queries. Without loss of gener- ality, the distance measured between two range queries can be normalized to lie in the range [0;1]. The similarity between two range queries can be computed as one minus dissimilarity. Various similarity models can be used to measure the similarity between two range queries. Without loss of generality, we use Jaccard similarity and leave other models for future work.",
+    "technical_score": 0.032846715328467155,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Database Model"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Jaccard similarity between two range queries can be computed by the ratio of intersection between the output of the two range queries to the union of the output to the two range queries. SIM(Q1;Q2) =out(D;Q1)\\out(D;Q2) out(D;Q1)[out(D;Q2) whereoutis the output of the range query on D. QUERY 2:select id from Dwhere 3\u0014A0\u00146:2 For instance, the similarity between the example queries Query 1 and Query 2 ( out(D;Query2 ) =ft0;t4;t6;t10g) is: SIM(Query 1, Query 2 ) =jft4;t6;t10gj jft0;t4;t6;t10;t12gj= 0:6",
+    "technical_score": 0.04014598540145986,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Fairness Model"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Our definition of fairness is based on group fairness [40] and the notion of demographic parity, aka statistical parity and disparate impact [41], [42], [40], [2], [3].",
+    "technical_score": 0.013001824817518248,
+    "citation_score": 0.0006843065693430658
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Fairness Model"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Sensitive attribute: Group fairness is defined as parity over different demographic groups such as white andblack . The demographic groups are identified by a non-ordinal attribute, such as race orgender , known as sensitive attributes . In many of the existing applications, sensitive attributes are binary, separating a minority group (e.g. female ) from the majorities (e.g. male ). Therefore, in this paper, we follow the existing work such as [43] and consider the sensitive attribute to be binary in nature. We leave the non-binary sensitive attributes and more general cases for the future work. As highlighted in our sample database in table I, we use the attribute color (with two values red andblue ) to abstract the sensitive attribute (and the demographic groups). Fairness constraint: The fairness measure is defined as the parity over the demographic groups, identified by the colors blue andred. The parity condition is identified using a criteria that decides whether the output of a query is fair. Let CrandCbbe the number of red and blue objects in the output. In some application, the parity can be defined as having equal number of objects from the demographic groups in the output set.",
+    "technical_score": 0.01628649635036497,
+    "citation_score": 0.002874087591240877
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Fairness Model"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "That is, Cr=Cb. In other words, the objects in the selected set should have equal chance of belonging to each demographic group. For instance, Query 1 in our toy example, returns three blue objects ( ft4;t6;t12g) and one red object (ft10g) and does not satisfy the parity condition Cr=Cb, while Query 2 returns two blue ( ft4;t6g) and two red object (ft0;t10g) \u2013 hence satisfies the parity condition. Alternatively, some applications consider the underlying distributions and require that the set of selected objects to represent the underlying demographic from which they were chosen from. In other words, the objects from different demo- graphic groups should have equal chances of being selected in the output set. That is, Cr=nr=Cb=nb, wherenrandnbare the total number of red andblue objects in D. Similarly, different applications may require different notions of parity based on societal norms. To support all these cases under the same fairness model, we abstract the fairness constraint, usingFAIRRANGE QUERY PROBLEM :Given a database D, a range query Qand a disparity value \", find a fair range that is most similar to Qwith a disparity value at most\".",
+    "technical_score": 0.016423357664233577,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Fairness Model"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "|WrCr-WbCb| <= eps and SIM >= tau a weight parameter Was following: WrCr=WbCb. Specif- ically, we refer to the case where W1=W2asunweighted fairness and other cases as weighted fairness model. Achieving perfect demographic parity in form of equality is rarely practical in the real-world, hence we use a threshold \" to identify an acceptable disparity [41]. Using this threshold, the fairness constraint can be rewritten as",
+    "technical_score": 0.004927007299270074,
+    "citation_score": 0.0005474452554744527
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Problem de\ufb01nition"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Having formally defined the database and fairness notions, we are now ready to provide our problem formulation. We consider the problem of finding the most similar fair range to a user provided range query for the database D. Figure 1 pro- vides the formal formulation of the fair range query problem. This problem formulation helps the data scientists to slightly change their query to find the data that is similar to their initial query output and is also fair. Declarative query model: Our problem formulation follows adeclarative fairness-aware query model as specified in Figure 2. Using this declarative interface, we expect the user to easily formulate the fairness-aware queries. In particular, we realize that the user might not be interested to accept the queries that are far from their initial choices, hence might require to identify a constraint on the minimum similarity they would find relevant. This, along with the fairness constraint, is identified as part of the constraints, followed after the \u201csubject to\u201d phrase. Note that there may be multiple queries equally near to the input range query that satisfy the constraints. The problem of finding all fair range queries nearest to the given query is an interesting direction for future work, discussed in section VII. For example, knowing that Query 1 does not satisfy the demographic parity for unweighted fairness, the user can reformulate the query in form of Query 3 to discover a similar query (with at least 80% similarity) that has at most a disparity of 1. QUERY 3:select id from Dwhere 4\u0014A0\u00147 subject tojCb\u0000Crj\u00141and SIM\u001580% Formulating Query 3 as fair range query problem, the optimal solution, by changing the range predicate to 3:1\u0014 A0\u00147, addst0to the output set, satisfying both the fairness and similarity constraints specified by the user.",
+    "technical_score": 0.019160583941605837,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Problem de\ufb01nition"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "After providing the terms and discussing the problem formulation, we now turn attention to designing efficient algorithms for our problem. In particular, we realize that a large portion of the queries in practice have a single range predicate. Therefore, in \u00a7 III, we focus on this case, designing a tailored solution for it. Then in \u00a7 IV, we will devise an algorithm for the queries with multiple range predicates. We show empirical results in \u00a7 V.",
+    "technical_score": 0.03558394160583943,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Next, we consider queries with a single range condition. We first provide definitions and theorems that form the basis for our algorithms, in \u00a7 III-A. Then we design SPQA , our algo- rithm for the unweighted case in \u00a7 III-B, discuss preprocessing details in \u00a7 III-C, and present weighted SPQA in \u00a7 III-D.",
+    "technical_score": 0.013555787278415018,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Jump pointers"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Query answering systems usually conduct offline prepro- cessing (indexing) that facilitates online query answering. One extreme approach for finding fair range queries, that optimises for query time, is to precompute and store the answer to all possible range queries during preprocessing. Such an approach, using proper data structures, enables constant-time query answering. This, however, requires an extensive space ofO(n2)to store the answer to all possible single-predicate range queries, which might not be reasonable, specifically for databases with millions of objects. The other extreme is to optimize for the space and to delay the computation to online query answering time. This, however, might require enumerat- ingO(n2)possible ranges, which makes query answering in- efficient \u2013O(n2). Our proposal is between these two extremes, by building a linear -size index ( Jump pointers ) that enables thesublinear query answering time of O(logn+disparity ), wheredisparity is the unfairness of the input query. The idea behind the Single Predicate Query Answering (SPQA ) algorithm is to quickly lookup fair ranges, each of which have a similarity of \". Theorem 1 proves that for any unfair unweighted query, the nearest fair query has a disparity value of exactly \". Among the fair ranges which have a disparity of \", the ones which have a potential to be nearest byJaccard similarity to the input range are explored by SPQA to find the most similar fair range. Definition 1. (Jump pointers): Consider a database Dand the attribute Afor the single-predicate range query model. A right (resp. left)blue jump pointer from location oipoints to the nearest/closest location br(resp.bl) such that the number of blues in the range [oi+ 1;br](resp. [bl;oi\u00001]) is equal to the number of reds plus one. Red jump pointers are also defined in the same manner. For the sample database of Table I, Figure 3a depicts the right and left jump pointers for attribute A0. The index is constructed on top of the sorted list of object ids according to their values on A0. Therefore, since t1[0] = 0:7is the minimum of A0,t1is the first object in the list. For example, consider the object t12, wheret12[0] = 7 ; the range [8;10:9] (8\u0014A0\u001410.9) consists of the smallest range starting from 8 that has one additional redthan the blues in the range. Hence,its right redjump pointer points to t3(t3[0] = 10:9). Note that not all objects have jump pointers; for example there is no right redjump pointer from t10as no location ahead of t10has one additional redthat than the number of blues in the same range. Even though there exists four jump pointers ( fleftorrightg andfblue orredg) for every object in the list, two of those pointers are trivial. For example, the range [8;8](8\u0014A0\u00148) consists oft2and is the smallest range after t12that consists of one additional blue. As this trivial information can be quickly determined inO(1)time, this pointer need not maintained and can be looked up at query time. Left jump pointer follows a similar pattern; for example the node t8maintains a left blue pointer tot6as the range [6:2;10:9](6.2\u0014A0\u001410:9) consist of one additional blue than reds. We refer to travelling along the jump pointer from location oias following a jump pointer. Following a blue jump pointer ktimes from location oigives us the closest location ojfrom oisuch that the range from oitoojhaskblues more than the range that would end at oi. The algorithm to find jump pointers is described in \u00a7 III-C. Lemma 1. Following the red colored jump pointer ktimes fromoilands at a location where the range ending at it is haskmore reds than the same range ending at oi.",
+    "technical_score": 0.0031204379562043785,
+    "citation_score": 0.00016423357664233575
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Jump pointers"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proof. We provide the proof by induction: Base case: By the definition of jump pointer, a redcolored jump pointer points to the nearest location which has one additional red. This gives us the base case for k= 1. Induction step: Assume that the lemma holds for k\u00001red jump pointers. Let the k\u00001thjump pointer point at location olandkthjump pointer point at location om. Suppose there exists aom0which is closer to oithanomwhile also satisfying thekadditional reds criteria. If om0lies to the left of olthen we already have a contradiction as the k\u00001thjump pointer would lie to the left of om0. On the other hand if om0lies to the right of ol, then the red jump pointer should point to om0 as the range oltoom0consists of one additional red than blue. As both cases are not possible, om0is the same as om. Jump pointers will be used for two operations (expansion and shrink) in single-predicate range queries. An expansion operation expands a range to include more objects. Excluding objects by shrinking the range is done using shrink operations. Definition 2. (Cumulative sum): Consider an attribute Afor the single-predicate range query model. The cumulative sum ciat a location oiis the difference between the number of reds and blues from the left most location along Atooi. As an illustration from the sample dataset, consider comput- ing the cumulative sum for t0. There is one blue and three reds untilt0from the left most position t1. Hence, the cumulative sum fort0is\u00002(1\u00003 =\u00002). Given the two locations oiandoj([oi;oj]), cumulative sums can be used to obtain the disparity between the start and end location inO(1)time. disparity =c[i]\u0000c[j\u00001] (2)",
+    "technical_score": 0.0022992700729927017,
+    "citation_score": 0.0002554744525547446
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Jump pointers"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Fox example, consider the example query II-A, with range 4\u0014A0\u00147. The objects lying in the input range are ft4;t10;t6;t12g. With 3 blues and a red, the query has a disparity of 2 which can be computed using cumulative sum byc[12]\u0000c[0] = 2 . Note that any two locations with the same cumulative sum represent a range with perfect parity .",
+    "technical_score": 0.0014598540145985403,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "one were to fix one of the two end points of the range query, to make the range query fair, the other end point can be moved to shrink the range or to expand it. An expansion would require an addition ofjdisparity\u0000\"jdeficient colored objects to make it fair (proved later in theorem 1). For example, consider the input range query to be [4:4;7](4.4\u0014A0\u00147) with\"= 0. Figure 4a shows the query range [4:4;7](4.4\u0014A0\u00147) marked with an enclosing box. As there are two more blues in the range query, we require two additional reds to expand the query range to make it fair. Expanding the range by following two red jump pointers gives us a fair range. Figure 4a shows a fair range when the start of the range, t4, is fixed and the other end point is allowed to expand to incorporate two additional reds, thus obtaining the range [4:4;13](4.4\u0014A0\u001413), marked by the dotted line. In general, one can follow the deficient pointerjdisparity\u0000\"jtimes.",
+    "technical_score": 0.00479320352499377,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Our goal is to find the most similar range that resolves the disparity ofjdisparity\u0000\"j. Such a disparity can be covered by moving either end points, that is jdisparity\u0000\"jshould equal to the sum of the changes on the right and left. For instance, figure 4b shows the end of the input query expanded by one red pointer and start expanded (resp. shrunk) by one red (resp. blue) pointer. Similarly, figures 4c, 4d and figure 4e shows the input query expanding/shrinking to cover the disparity of 2. We design a window-sweeping algorithm to find such a range. Algorithm 1, SPQA , describes our approach, for finding the most similar fair range to the input query. Algorithm 3, JP describes the algorithm used for moving along a jump pointer. Initially, the start end-point of the range is fixed and SPQA expands endend-point until a fair query is found, as shown in Figure 4a. The window is shown in the figure with the dotted lines indicating start and end of the fair range. The naming convention used for the boundaries is, Sfor start of input range and Efor end of input range; Lfor left andRfor right. Hence, SL(resp.SR) stands for start of input range expanded (resp. shrunk) to the left (resp. right). When the window is swept to the left, the start end point can perform a shrink or an expansion as shown in Figure 4b. The remaining steps of the exploration by SPQA can be seen in Figures 4c, which is most similar to the input query is provided as output to the user.",
+    "technical_score": 0.0035949026437453284,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Theorem 1. Given a database D, the disparity threshold \", and the input query Q(Aj: [start;end ]), the optimal range has a disparity value of exactly \".",
+    "technical_score": 0.0017974513218726642,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Proof. Letdbe the disparity of the given range query. Let the disparity of optimal range be dopt. Knowing that boththe left and right end points of the input range could have moved, let the range for optimal range be [lopt;ropt]. Let us consider two new ranges, [lopt;start\u00001],[end+ 1;ropt]and let their corresponding disparities be dloptanddropt. The total disparitydoptcan be written as the sum of disparity of three different ranges, dloptfor range [lopt;start\u00001],droptfor range [end+ 1;ropt]anddfor range [start;end ]. d\u0000dopt=dlopt\u0000dropt Supposedopt6=\". Let us now construct a range [l0 opt;r0 opt] such that the disparity is exactly \". To construct the range we will modify loptandropt. Ifloptlies on the left of start , then there was an expansion operation that has been performed. Instead of expanding it to cover a disparity of dlopt, one can only expand it to a smaller extend such that the over all disparity is exactly \". As the expansion was smaller the Jaccard similarity measure would be larger. Applying a similar approach in case loptwas on the right of start would also result in a larger Jaccard similarity measure as intersection between the two sets would be larger. A similar approach can be applied to the roptend point. The newly constructed range [l0 opt;r0 opt]is more similar and has disparity of exactly \u000f. Lemma 2. (Correctness) Given a database D, the disparity threshold\", and the input query Q(Aj: [start;end ]), SPQA Algorithm 1 finds the optimal solution (the most similar fair range toq).",
+    "technical_score": 0.0011983008812484427,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Proof. To prove this theorem we use the property that the fair optimal range has a disparity of exactly \", which is proved in theorem 1.",
+    "technical_score": 0.0005991504406242214,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "SPQA uses a windowed approach to explore all ranges around the input range which have a disparity value of \". Let the disparity covered by moving the left the left end point disparity ([left;start\u00001])bedland the disparity covered by the right end point, drbe equal todisparity ([end+1;right ]). The sum of dl,dranddis\". dl+dr=\"\u0000d SPQA explores 4\u0002disparity number of windows, where every pair ofdl,drsatisfies the above equation. Thus the optimal result must lie in one of these pairs.",
+    "technical_score": 0.0005991504406242214,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Time complexity : The total amount of time taken by SPQA to answer the unweighted fairness queries with one range predicate isO(log(n)+disparity (input )), which can be seen in theorem below.",
+    "technical_score": 0.0005991504406242214,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Theorem 2. Given a database Dwithntuples and an input range with disparity dthe total time taken by SPQA algorithm isO(log(n) +d).",
+    "technical_score": 0.0005991504406242214,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Proof. Searching the jump pointer data structure to reach the end points takesO(log(n))time. Once the end points are found in the data structure, SPQA algorithm uses a window based approach to explore the fair ranges whose disparity is exactly equal to \u000f. There are a total of O(4d)such ranges, each of which takes O(1)time to compute Jaccard similarity. Thus, the total amount of time taken is O(log(n) +d).",
+    "technical_score": 0.0005691929185930103,
+    "citation_score": 2.995752203121107e-05
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "- 1 - 2 - 1 - 2 - 1 - 2 - 1 - 1 0 0 0 - 2 - 1 1(a)Right and left jump pointers for attribute A0of the sample database of Table 1.",
+    "technical_score": 7.297652366803015e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "- 2 - 4 - 1 - 3 0 - 2 1 3 4 5 6 2 4 7 (b)Right and left jump pointers for attribute A0of the sample database of Table 1 with weights Fig. 3: Jump pointers for sample database of Table",
+    "technical_score": 7.297652366803015e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Query answering for unweighted fairness"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "Fair range starting at StackSLInput Query (d) The right end point of the window shrunk within the input query Fair range starting at StackSL , StackSRInput Query (e) Exploration for all windows is completed Fig. 4: Step wise movement of the window over the course a run of the single predicate algorithm General positioning assumption : The algorithm and the definitions in the current section have been designed with the general positioning assumption. General positioning makes the assumption that no two points are co-located for the given attribute. In practice, with small modifications, our algorithms can handle the case when multiple points are present at a single location. Combining the co-located points into a single point with the aggregate weight would help us in creating a new dataset with no co-location. When the jump pointer encounters the new point with a variable weight, it needs to update the data structure with the variable weight value. Note though that the similarity function needs to take the number of points co-located into account while computing the similarity. This algorithm holds unless there are too many of the same demographic data point at the same location so as to move a range from unfair because of lack of a group to unfair because of excess of that group. Note that this case is highly unlikely in practise. In such extreme cases, where the unfairness suddenlyswitches from one group being disadvantaged to the other, we choose two problems, one in which the aggregate point does not belong thus limiting one side of the search space or the second in which we explore further by looking for the inverse jump pointers past that point.",
+    "technical_score": 7.297652366803015e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For every attribute in D, a jump pointers index is created during the preprocessing. For this, the objects in every list are sorted based on the corresponding attribute (Figure 3a) so that look ups can be performed quickly and then right and left pointers from each location of the database is calculated. Finding jump pointer :Jump pointers play a key role in SP queries. A right red jump pointer points to the closest location to the right of the current location such that the number of reds in the range exceed the number of blues by1. At any given location oi, the range [oi+ 1;oi+ 1] is a trivial range that satisfies this criteria. Hence, one of the 2 colored jump",
+    "technical_score": 0.002627758248343359,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Input : Database D, Input query Q(Aj: [start; end ]), accept- able disparity \" Output : Most similar fair range query fair 1:ts binary search (D; Aj; start ) 2:te binary search (D; Aj; end) 3:disparity c[j; ts]\u0000c[j; te] 4:dColor disparity > 0 .deficient: true-red, false-blue 5:ifdisparity\u0014\"then .Input range is already fair 6: return [start; end ] 7:LEP ts . LEP stands for Left End Point 8:while disparity > \" do 9: PushJP(D; Aj; LEP; \"left\"; deficient )toLEP , update disparity for [tLEP; te] 10:fair fg ;sim 0 11:WindowSweep (tLEP ,te, \u201cshrink\u201d) .Shift window by shrinking te 12:WindowSweep (tLEP ,te,\u201cexpand\u201d) 13:WindowSweep (ts,te,\u201cshrink\u201d) .Shift win. by shrinking te 14:WindowSweep (ts,te, \u201cexpand\u201d) 15:return fair",
+    "technical_score": 0.0017518388322289068,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Input : Database D, Attribute: Aj, start end-point: ts, end end- point: te, operation, input query Q(Aj: [start; end ]), reference to fair ,sim Output : Update fair based on most fair range found 1:disparity c[j; te]\u0000c[j; ts\u00001] 2:dColor disparity > 0 3:ifts< start thents Pop(LEP ) 4:elsets JP(D; Aj; ts;\"right \";!dColor ) .Shrink ts 5:while disparity > \" do .Adjust tepointer 6: disparity c[j; te]\u0000c[j; ts\u00001] 7: dColor disparity > 0 8: ifoperation == \" expand \"then 9: te JP(DAj; te;\"right \"; dColor ) .Expand 10: elsete JP(DAj; te;\"left\";!dColor ) .Shrink 11:ifJaccard ([ts; te]; Q)> sim then 12: sim Jaccard ([ts; te]; Q);fair [ts; te] 13:WindowSweep (ts; te; operation ) pointers will point to oi+1. The goal of the algorithm is to compute the other (non-trivial) right jump pointer. In order to obtain the non-trivial right jump pointer, we need to find the location that differs by 1 (in the opposite sign than at locationoi+1). For example, in Figure 3a, the cumulative sum at location t12is 0 and as the color at location t2is blue, the cumulative sum is 1. The non-trivial right jump pointer points the closest location with cumulative sum of \u00001. The algorithm to find the jump pointers is given in Algo- rithm 4. The algorithm to find the jump pointers maintains a balanced binary search tree (BST) for the cumulative sums, which are used as keys for the BST. The indices which will be resolved when the specific cumulative sum is seen are stored as values within the BST. For example, when resolving the non- trivial red right jump pointer for t12, closest location with a cumulative sum of \u00001needs to be found. Hence, \u00001is used as a key within the BST with the index t12as a value. The total time taken in the pre-processing step is O(nlog(n)), as proved in theorem below.Algorithm 3 JPalgorithm for leftjump pointer Input : Database D, Attribute: Aj, Database object oi, colorc Output :Database object ojpointed by jump pointer, directiondir 1:ifdir== \u201dleft\u201d then 2: ifAj[oi\u00001]is of colorcthen 3: returnoi\u00001 4: else 5: returnLJP [oi]. LJP stands for Left Jump",
+    "technical_score": 0.0011678925548192708,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "6:else 7: ifAj[oi+ 1] is of colorcthen 8: returnoi+ 1 9: else 10: returnRJP [oi]. RJP stands for Left Jump",
+    "technical_score": 0.0002919731387048177,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Algorithm 4 (Preprocessing) Building left jump pointers Output :jump pointers",
+    "technical_score": 3.127032315528598e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "3:cumulative 0 4:fori 0to n do 5: cumulative cumulative + color (oi) 6:c[j;i] cumulative . Cumulative sum is contained inc 7: ifcumulative present inBST then 8: forobj2values ofBST [cumulative ]do 9: LJP [j;obj ] i . Left jump pointer 10: InsertiintoBST [cumulative\u00002\u0003color (oi)] Theorem 3. Given a database Dwithntuples and an attribute Aipre-processing step takes O(nlog(n))time.",
+    "technical_score": 3.127032315528598e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Proof. The sorting step of pre-processing takes O(nlog(n)) time for the given attribute Ai. Establishing the right and left jump pointers makes use of a balanced binary search tree (BST). A total of nindexes need to be inserted/deleted into theBST, which consumes O(nlog(n))time. Hence, the total time taken for building the jump pointer structure for given attributeAiis inO(nlog(n)).",
+    "technical_score": 3.127032315528598e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Note that, while the initial pre-processing takes O(nlog (n)) time, query processing is sub-linear:",
+    "technical_score": 3.127032315528598e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Prepossessing"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "O(log(n) +d), wheredis the disparity of input query. Note on space complexity : During the pre-processing phase, SPQA algorithm creates a linear space data structure to aid in query processing. The query processing stores a total of disparity jump pointers to find the the most similar fair range which is small compared to the linear space data structure. Thus the total space complexity is O(n).",
+    "technical_score": 0.0002919731387048177,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SINGLE-PREDICATE RANGE QUERIES",
+      "Generalization to weighted fairness"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "So far, our attention has been on the unweighted fairness model. In this section, we move to our general model of fairness: weighted fairness. As explained in \u00a7 II, the fairness constraint for this model is in the form of jWrCr\u0000WbCbj\u0014\", whereWrandWbare the weights for the red and blue counts, respectively. That is, the difference between the weighted sum of the number of objects from the two demographic groups should not be bounded by the threshold \". Note that any rational values for weights can be expressed as integer weights by scaling these weights. For example, weights Wr= 1:1and Wb= 1:2are equivalent to Wr= 11 andWb= 12 . The fair range query problem in the generalized case would refer to finding the most similar fair range to the input fair range such that the disparity is within a value of \". Note that finding cases where the disparity is less than max(Wr;Wb)=2 would infer finding ranges with a level of precision less than a single unit of disparity (less than a single weighted colored object). For the sake of simplicity and practicality, we omit such cases and assume that the value of \"\u0015max(Wr;Wb)=2. The algorithm that deals with the weighted case uses similar concepts like jump pointer and cumulative sum. In the general case, a blue (resp. red) right jump pointer from location oi points to the closest location right of oi,jisuch that the range [oi+1;ji]contains more blues than reds (resp. reds than blues ) by weight. A similar definition for left jump pointers can be defined. Jump pointers for the sample dataset presented in Table I is presented in Figure 3b using weights of 3forblue and2forred. For the weighted case, the cumulative sum at a location oi indicates the weighted difference of blues andreds. Theorem 4. (Correctness) Given a database D, the dispar- ity threshold \", weightsWrandWb, and a query Q(A: [start;left ]), algorithm 1 finds the the most similar fair range toQ. Time complexity : The total time taken by SPQA algorithm is same as the unweighted case, O(log(n) +d), wheredis the disparity in the input range. The details of the time complexity for the unweighted case which is mentioned in theorem 2 also applies to the weighted case. Note on space complexity : During the pre-processing phase, SPQA algorithm creates a linear space data structure to aid in query processing. The query processing stores a total of disparity jump pointers to find the the most similar fair range which is small compared to the linear space data structure. Thus the total space complexity is O(n). Preprocessing for the weighted fairness model In the weighted case, a blue pointer points to a location that has more blues than reds. We use the same notation as that of the unweighted case and denote the cumulative sum at location oi for the index of attribute Ajasc[j;i]. If the location next to oihad a blue then the pointer would be trivial as it is pointing to the immediate next location. Let us consider the case where the immediate next location had a redinstead. In such a case we need to find the nearest location whose cumulative sum is larger that the c[j;i]. In the opposite case where the neighbour was a blue one would like to find the closest location whose cumulative sum is smaller that the c[j;i]. Basedon this approach, two data structures can be maintained. One for the locations whose pointers can be resolved if we found a cumulative sum with a smaller value than in the data structure. And the other data structure whose pointers can be resolved if we found a cumulative sum with a larger value. We use a balanced binary search tree for the two data structures. The pseudo-code to find the jump pointers for the weighted single predicate range query is in algorithm 5. The algorithm is an extension of the unweighted jump pointers . The algorithm uses a sort over the database as a the first step before adding and removingnitems from a balanced BST in order to find the jump pointers, it takes O(nlogn)time. General positioning assumption : The algorithm and the definitions in the current section have been designed with the general positioning assumption. General positioning makes the assumption that no two points are co-located for the given attribute. In practice, with small modifications, our algorithms can handle the case when multiple points are present at a single location. Combining the co-located points into a single point with the aggregate weight would help us in creating a new dataset with no co-location. When the jump pointer encounters the new point with a variable weight, it needs to update the data structure with the variable weight value. Note though that the similarity function needs to take the number of points co-located into account while computing the similarity. This algorithm holds until and unless we have too many of the same demographic data point at the same location so as to move a range from unfair because of lack of reds to unfair because of excess of reds. Note that this case is highly unlikely in practise. In such extreme cases, where the unfairness suddenly switches from one the advantaged group to the disadvantaged one, we choose two problems, one in which the aggregate point does not belong thus limiting one side of the search space or the second in which we try further exploration.",
+    "technical_score": 0.01668404588112617,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Next, we study the queries that contain multiple range pred- icates. Unfortunately, moving from single-predicate (SP) range queries to multi-predicate (MP) range queries complicates the problem significantly and the idea of jump pointers does not carry over. The reason is that in MP queries, there are different directions (along different angles) which a single jump can occur, while in SP there is only one direction (along x-axis) to make a jump. Moreover, while a SP query is identified by its two end-points, a MP query with drange predicates forms a hyper-cube with 2dsides. Hence, instead of the two end points of an SP range, one may need to move all sides of the hyper-cube to obtain the closest fair range, even when the disparity is slightly above the allowed fairness threshold, \". An observation that helps us with the MP cases is that the user may not be interested in fair ranges that are far away from the input query. Hence, the fair range query should be highly similar to the input range, otherwise it is not valuable for the user. We use this observation to design a best-first search (BFS) fair range query algorithm for the MP query.",
+    "technical_score": 0.0023306441285695987,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Algorithm 5 (Preprocessing) Left jump pointers for weighted case Input : Database D, attributeAj Output :jump pointers 1:SortDalong attribute Aj 2:largerBST fg ;smallerBST fg 3:cumulative 0 4:fori 0to n do 5: ifcolor(oi)==\u2019blue\u2019 then.Blue always has a positive score 6:smallerBST [cumulative ] i 7: else 8:largerBST [cumulative ] i 9:cumulative cumulative +weight (color (oi)) 10:iterator Findcumulative inlargerBST 11: whileiterator6=;do.Until end of largerBST 12:LJP [j;iterator ] i . Left jump pointer 13: Incrementiterator 14:iterator smallerBST:begin ().Start of smallerBST 15: whilecumulative>iterator do 16:LJP [j;iterator ] i 17: Incrementiterator",
+    "technical_score": 0.0009988474836726852,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "At a high level, the BFS algorithm can be viewed as a \u201csmart\u201d traversal over a graph where every range is modeled as a node and there is an edge between two nodes if the outputs of their corresponding queries vary only in one tuple. That is, a node Q2is a neighbor ofQ1if the output of queryQ1differs from the output of query Q2by exactly have a symmetric difference of size 1.",
+    "technical_score": 0.0005456357491634512,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The unfair input range provided by the user serves as a starting point in the graph traversal. This can be viewed as starting from the node with Jaccard similarity of 1(Jaccard distance of0), discovering its neighbors, deciding which node to visit next, and pruning the blanket of nodes in the graph that their corresponding ranges have similarity less than the current best fair range discovered.",
+    "technical_score": 0.00023384389249862198,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Starting from the node of the input query, the algorithm first needs to discover its neighboring nodes in the graph. For this, we rely on the existence of an oracle neighbors (Q)that discovers the neighbors of a query Q. It turns out, due to the frequency of calling this oracle, it can significantly impact the performance of the BFS algorithm. We shall provide a careful development of this oracle in \u00a7 IV-B.",
+    "technical_score": 0.00015589592833241468,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "At any point of traversal, the algorithm selects the node that has the maximum Jaccard similarity with the input query for being visited next. The Jaccard similarity can be represented as the ratio of the intersection of two sets to their union, and the neighboring range to a given range can differ only by a single element. Accordingly the neighboring ranges are the ranges with the smallest Jaccard similarity.",
+    "technical_score": 0.00023384389249862198,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Upon visiting a node, the algorithm checks if it satisfies the fairness requirements. If so, the algorithm stops and returnsAlgorithm 6 Best-First Search algorithm for MP : BFSMP Input : Database D, attribute list A, input query Q Output :most similar fair range",
+    "technical_score": 7.794796416620734e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "2:whilejHeapj6= 0 do 3: top Heap:pop () 4: iffair(top)then return top 5: forneighbor2neighbors (top)do 6: Heap:push (neighbor ) 7:return; this range as the most similar fair range with query input. Otherwise, it calls the neighbor oracle to discover the unseen neighbors of this node to be considered for traversal. The pseudocode of the BFS algorithm is provided in Algorithm 6. It uses a max-heap for efficient traversal of the graph. Using the heap data structure, adding the new nodes to the list of discovered nodes and identifying the most similar node to the input range is done in logarithmic time to the size of heap. Lemma 3. (Correctness) Algorithm 6 finds the most similar fair range to the input range.",
+    "technical_score": 0.00031179185666482936,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Proof. TheJaccard similarity of the set being explored is I=U, and the sets being added can have a reduced Jaccard similarity of(I\u00001)=UorI=(U+ 1) . These are the smallest possible decreases in Jaccard similarity possible by removing or adding points.",
+    "technical_score": 0.00015589592833241468,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Best First Search algorithm"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Starting from the input range, let us now consider the neighborhood path from the input range to the most similar fair range. As at every stage of the algorithm all the neighborhood ranges which account to the smallest possible decreases in Jaccard similarity have been added to the heap, the fair output range that the algorithm produces is the most similar one.",
+    "technical_score": 7.794796416620734e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Neighboring range computation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Having explained the BFS algorithm, we now turn our attention to developing the neighbors Oracle. Computing the neighboring ranges is an important step of the BFS algorithm. The challenge here is to make sure allneighbors of a range have been discovered in an efficient manner. To better explain the oracle, let us consider a sample dataset as shown in Figure 5. Consider a sample range be as shown in Figure 6. Suppose we want to expand the range outwards in order to add a new point. One simple approach of expansion that can be thought of is to move a side while maintaining either the height or the width constant. Figure 7 shows the expanded rectangle while moving the lower bound while maintaining the width constant. A similar approach can be performed on the left bound as seen in Figure 8. Note that these are not the only possible expansions. These expanded ranges will later be used to limit our search for finding the other neighboring ranges along the diagonal direction. For 2D, there are 4such expansions. As a generalization, one can obtain 2dsuch expansions in ddimensions. Such points can be found out inO(logdn+k)using a range tree [44]. One can think of adding an additional point by moving a corner point along the diagonal direction. One such diagonal expansion can be seen in Figure 9. The bottom left corner can",
+    "technical_score": 0.002509924446151876,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Neighboring range computation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Fig. 5: Sample set of points Fig. 6: Sample input range Fig. 7: Expanding the rectangle down- wards Fig. 8: Expanding the rectangle to- wards left Fig. 9: Neighboring ranges in diagonal Fig. 10: Skyline computation over a range query be expanded to add one more point along the diagonal. As one may observe, such expansions are limited by the expansion of the sides which border the corner. The expanded boundary shown in Figures 7 shows the extent to which one may expand the bottom boundary downwards until they find a point. If a point laid in the diagonal beyond such a boundary, it would not account to a neighborhood range as such an expansion would contain two points instead of one. Figure 10 shows the expanded vertical and horizontal ranges that add a single point in solid green lines. The expanded boundaries form the limits of the region containing the diago- nal expansion end points. The problem of finding all possible diagonal expansion points can be formulated as finding a skyline within the range shown by the dotted green lines: Given a corner point pofor diagonal expansion1in ad- dimensional space, consider the bounding box specified by the side expansion (e.g. the dashed rectangle in the bottom-left of Figure 10). A point p1inside the bounding box dominates another point p2in the bounding box if 80< i\u0014d: jp1[i]\u0000po[i]j<jp2[i]\u0000po[i]j. The skyline of the points in the bounding box is the set of points not dominated by any other point. Every skyline point is a valid diagonal expansion. As a result, in order to find all neighbors of a given range, it is enough to find (a) all neighbors by side expansion/shrinking and (b) all diagonal expansion points in the skylines. A MP query withdrange predicates contains 2dcorners. Each corner can be expanded away from the center of the MP query in order to find queries that differ by a single point, i.e. a neighbouring range. There can be many neighbouring ranges for each corner. A range skyline query can be constructed for each corner using the intersection of the boundaries of the side expansion as one of the end points of the range query and the corner point\u2019s coordinates itself as the other end point. One naive approach is to obtain the points that lie within the range using a R-tree and then apply a skyline algorithm on the points obtained. This is not efficient. We use studies that efficiently compute the skyline on range queries. In particular, we use the the Range-Skyline-Query algorithm by Janardan et. al. [45] for skyline discovery. This algorithm has a complexity of O((k+ 1) logdn), wherekis size of skyline. Note that kshould generally be a small number. In particular, as the number of dimensions increase, and as the size of the range grows, the expected number of points that occur within the corner ranges will decrease. That is because with each dimension the number of ranges it must occur within increases by one; and it will decrease with the size of the 1Shrinking a range is done similarly.range, as more points that are potentially the nearest point will equate to a decrease in the size of the corner.",
+    "technical_score": 0.000914329619669612,
+    "citation_score": 0.00016135228582404916
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Informed best \ufb01rst search"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The BFS algorithm discussed so far searches for the fair range by exploring the node with the maximum Jaccard similarity first. Branching out from a node to explore for a fair range requires discovering it neighbors, adding them to the heap, and repeating the same process for its neighbors in a recursive manner \u2013 which is time-consuming. On the other hand, given the amount of disparity at a node, it may be clear that its neighbor up to a certain number of hops cannot fill the disparity gap. That simply is because every neighboring node has a difference of exactly one element with the current node and, hence, in the best case can drop the disparity by one unit . In other words, if the current disparity is equal to \u000eand the fairness threshold is \"<\u000e , at least\u000e\u0000\"hops are needed to fill the disparity gap. Every hop in the path from the current node reduces the similarity from the initial query to a certain degree. As a result, combining the minimum number of hops to achieve fairness with the similarity decay per hop, we can compute an upper-bound threshold on the maximum similarity for a fair range (referred as U-threshold) that one can hope to achieve by branching out from the current node. The above observation enables to design a more efficient algorithm, Informed Best Frist Search algorithm for Multi- Predicate (IBFSMP), with an early stop criteria, that delays exploring the branches that their U-threshold is not the max- imum. In other words, instead of selecting the most similar node to be explored next, IBFS selects the node with maximum U-threshold to be explored next. IBFSMP is inspired from theA* algorithm [46] which utilizes the lower-bound on the remaining distance to the destination to perform an efficient search. However, IBFSMP differs from the A* in details and the way the bounds are calculated. We still need to compute the U-threshold of a node, which is done in Theorem 5. Theorem 5. The U-threshold of a node Qis: JU(Q) =8 >>>>>>>>>>< >>>>>>>>>>:max C0r\u0014d\u000e\u0000\" WreI\u0000dmax (\u000e\u0000\u000f\u0000Wr\u0001C0 r;0) Wbe U+C0rWr>Wb;\u000e>\" max C0 b\u0014d\u000e\u0000\" WbeI\u0000C0 b U+dmax (\u000e\u0000\u000f\u0000Wb\u0001C0 b;0) WreWb>Wr;\u000e>\" max C0r\u0014d\u000e\u0000\" WreI\u0000C0 r U+dmax (\u0000\u000e\u0000\u000f\u0000Wr\u0001C0r;0) WbeWr>Wb;\u000e<\u0000\" max C0 b\u0014d\u000e\u0000\" WbeI\u0000dmax (\u0000\u000e\u0000\u000f\u0000Wb\u0001C0 b;0) Wre U+C0 bWb>Wr;\u000e<\u0000\" (3) where\u000e=Wb\u0001Cb\u0000Wr\u0001Cr.",
+    "technical_score": 0.001094890510948905,
+    "citation_score": 5.762581636573185e-05
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Informed best \ufb01rst search"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proof. Let the node Qhave an intersection of Iand union of Uwith the input range. Let the disparity of the unfair range Qbe\u000e=Wb\u0001Cb\u0000Wr\u0001Cr. As the range Qis unfair,j\u000ej>\". Let us consider the case that the range Qis unfair because of the presence of too many blues in Qcompared to the reds. \u000e=Wb\u0001Cb\u0000Wr\u0001Cr>\" As we are trying to find the upper bound, we would like to maximize the Jaccard similarity such that such a range can potentially exist. In order to obtain a fair range, either blues can be removed, reds can be added or both can be done. Let B0be the blues that are removed and R0be the reds that are added toQto make it a fair range. \u0000\"\u0014Wb(Cb\u0000C0 b)\u0000Wr(Cr+C0 r)\u0014\" \u0000\"\u0014\u000e\u0000Wb\u0001C0 b\u0000Wr\u0001C0 r\u0014\" Moving around the terms, we get \u000e\u0000\"\u0014Wb\u0001C0 b+Wr\u0001C0 r\u0014\u000e+\" (4) In order to maximize the Jaccard similarity , various values ofB0andR0need to be checked which satisfy the equation 4. Note that for a given value of B0(resp.R0), using the smallest R0(resp.B0) that satisfies the equation 4 would provide a larger Jaccard similarity . Thus, given B0the smallest value of red satisfying the equation would be, C0 r=d\u000e\u0000\" Wre The U-threshold thus can be expressed as a maximization in terms ofR0, max 0\u0014C0r\u0014d\u000e\u0000\" WreI\u0000dmax(\u000e\u0000\u000f\u0000Wr\u0001C0 r;0)=Wbe U+C0r(5) Similarly, given R0theU-threshold thus can be expressed as a maximization in terms of B0as, max 0\u0014C0 b\u0014d\u000e\u0000\" WbeI\u0000C0 b U+dmax(\u000e\u0000\u000f\u0000Wb\u0001C0 b;0)=Wre(6) The amount of time taken to compute the U-threshold using the equation 5 isd\u000e\u0000\" Wre. The amount of time taken to compute theU-threshold using the equation 6 is d\u000e\u0000\" Wbe. In caseWris larger than Wbthe complexity for exploring all the values for reds using equation 5 is better. Equation 6 can be used to explore all the values for blues when Wbis larger than Wr. A similar approach can be applied when the range is unfair because of excessive reds to obtain the final two cases in equation 3. Replacing the selection criteria for traversing the graph with U-threshold, the only component of Algorithm 6 that needs tochange is the max-heap and the rest remains unchanged, i.e., instead of structuring the heap according to similarity, IBFS builds the heap according to U-threshold (Equation 3). Note that the IBFS algorithm is agnostic to the heuristic and similarity measure satisfying two important properties. (1) The similarity measure being used must be a set based similarity measure based on the points in the output range. (2) As can be seen from U-threshold, the heuristic must provide a upper- bound threshold on the maximum similarity for a fair range. Note on space complexity : BFSMP algorithm explores neigh- bouring ranges to reach the fair range query that is nearest to the input query. Along the process a large number of ranges are explored and stored in memory in a heap . The space consumed by the algorithm depends on the number of neighboring ranges explored. Thus the space complexity for BFSMP algorithm is O(number of explored ranges ).",
+    "technical_score": 0.0003073376872839032,
+    "citation_score": 7.68344218209758e-05
+  },
+  {
+    "section_path": [
+      "MULTI-PREDICATE RANGE QUERIES",
+      "Using MP algorithms for SP"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Before concluding this section, we would like to note that MP algorithms also work for SP. However, SPQA has a provably better time complexity than BFS, in all instances. This is because SPQA takes advantage of pre-computed jump pointers which is only available when the possible changes in the bounds of the range are restricted to one degree of freedom. As explained in \u00a7 III-B, SPQA has a worst-case time complexity ofO(log(n)+disparity ). One can easily establish abest case complexity for BFS algorithms that is at least as slow as this. First, in order to reach it\u2019s destination, BFS can adjust its range with each step by adding or removing a point. In the best case, it visits only points which monotonically decrease the disparity, and stops after disparity more steps. Additionally, BFS constructs a one dimensional range tree (which is equivalent to a balanced binary search tree) as pre-processing to find the closest point. This requires an initial setup time of nlog(n). Therefore, the best case time- complexity of BFSs is (nlog(n) +disparity ). This demon- strates that the time-complexity of SPQA is comprehensively better, and accordingly, we favor it for SP queries.",
+    "technical_score": 0.004353950569855297,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Datasets : We used both real and synthetic datasets for our experiments. For the real world datasets we use TexasTribune andUrbanGB datasets. Along with the real world datasets, a synthetic dataset Uniform was generated for the experiments. Below we provide a brief description of these datasets. Dataset name Items dSens. attribute Weights Texas Tribune [47] 149,481 21 gender,race gen. (1:1) race (4:5) COMPASS [48] 60,842 12 race 2:1 UrbanGB [49] 1,600,00033 #vehicles in accident2:1 (Synthetic) Uniform 10,000 4 Synthetic 1:1 \u000f(Real dataset) TexasTribune2: Texas Tribune dataset consists of 149,481 records with the salary/compensation informa- tion for Texas state employees. The dataset has 21 attributes with gender and race being the main sensitive attributes and salary/compensation being numeric. 2https://salaries.texastribune.org/",
+    "technical_score": 0.03696418795620439,
+    "citation_score": 0.0019454835766423363
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Overall Input query Fair query Distributions0204060Percentage of peopleMaleFemaleFig. 11: Demographic dis- tributions in dataset, input query, and similar fair query. 00.511.52 Disparity 1040200040006000Duration( secs)Fig. 12: Time taken by SPQA v.s. disparity - Texas Tribune with gen- der as SA 0 2 4 6 Disparity 104050001000015000Duration( secs)Fig. 13: Amount of time taken by SPQA against disparity - Texas Tri- bune with race as SA 0 500 1000 1500 Disparity02004006008001000Duration ( seconds)Fig. 14: Amount of time taken by SPQA against disparity - COMPASS dataset 200-400 400-600 600-800 Buckets0200400600800Time(sec)Fig. 15: Amount of time taken by IBFSMP - Uni- form dataset 3 range predi- cates 200-400 400-600 600-800 800-1000 1000-1200 1200-1400 Buckets020040060080010001200Duration (seconds) Fig. 16: Average amount of time taken by IBFSMP algo- rithm for different bucket sizes -UrbanGB dataset 200-400 400-600 600-800 800-1000 1000-1200 1200-1400 Buckets0200400600800100012001400Duration (seconds)Fig. 17: Average amount of time taken by IBFSMP algo- rithm for different bucket sizes -Uniform dataset 200-400 400-600 600-800 800-1000 1000-1200 1200-1400 Buckets02468101214Rectanges explored106Fig. 18: Rectangles explored by IBFSMP algorithm for dif- ferent bucket sizes - Urban GB dataset 200-400 400-600 600-800 800-1000 1000-1200 1200-1400 Buckets024681012141618Rectanges explored106Fig. 19: Rectangles explored by IBFSMP algorithm for dif- ferent bucket sizes - Uniform dataset \u000f(Real dataset) COMPASS [48] : COMPASS dataset (un- processed) consists of 60,842 data points collected with 12 attributes with race as sensitive attribute and one real numbered attribute( raw score ). The dataset has around 21K Caucasian (blue) and 39K non-Caucasian (red) warranting a ratio of 2:1. \u000f(Real dataset) UrbanGB3: UrbanGB dataset consists of 1.6 million records of accidents over a period 2000 and 2016. The dataset has 33 attributes, including latitude, longitude, accident severity, number of vehicles involved in the acci- dent, date and time of accident. For the experiments, 10;000 records from the UrbanGB dataset have been used. As UrbanGB dataset does not have a sensitive attribute inherent to it, we use the number of vehicles that were involved in the accident to create a sensitive attribute. There are 3,088 records where a single vehicle was involved in an accident and 6,912 records where more than one vehicle was involved. Hence, we use a weight of 2 for the 3,088 records and 1 for the 6,912 records. \u000f(Synthetic dataset) Uniform : The dataset consists of 10,000 points sampled uniformly from a cube which has a side of length 1,000 and a uniformly sampled binary sensitive attribute. The dataset has 4,967 blues and 5,033 reds. The Texas Tribune andCOMPASS datasets consist of one numerical attribute, a few other categorical attributes and sensitive attribute. Hence, the two datasets have been used with SPQA . As Uniform andUrbanGB datasets consist of multiple numeric attributes it is used for MPQA queries. Our experiments were conducted on a Intel(R) Core(TM) i7- 6850K CPU @ 3.60GHz with 64GB of main memory using Linux operating system (Ubuntu 18.04.5 LTS). Algorithms implemented : Along with SPQA , weighted SPQA and IBFSMP algorithms, to evaluate multi-predicate range 3kaggle.com/daveianhickey/2000-16-traffic-flow-england-scotland-wales/ dataqueries, we implemented a local search baseline algorithm. \u000fBaseline : The baseline approach for the multi-predicate range queries is based on limiting the search space to obtain a bounding box within which to search for fair queries. The maximum number of elements that can be added to the input range without violating the Jaccard similarity criteria is first computed. The boundaries of the expanded box are found by finding the smallest expansion along each of the directions/dimensions without violating the similarity criteria. This expansion limits the search space while still providing a valid box to search for the most similar fair range. This expanded range is then searched in a brute- force manner to obtain the closest fair range. \u000fCoverage based algorithm [35], [36]: We have used the code from [35], [36] to compare against our methods for multi-predicate range queries. The different techniques in the papers [35], [36] modify the input range to produce a range which covers at least a given threshold number from each demographic group. All the algorithms in the paper are implemented using C++. The implemented code can be found at the github location4. Experimental parameters : The value for \"plays an important role in simulating a real scenario. Satisfying perfect parity may not always be possible in practice and may require significant changes in the initial setting. In particular, in our problem setting, the ranges that are not similar enough to the user input may not be valuable. In our experiments, we allow a disparity of 5% between demographic groups. The corresponding value of\"is then computed as: \"=0:05 (jB Wbj+jRWrj)jout(Q)j 2(B+R) whereBandRare the total number of blues and reds in the universe respectively. Wb(resp.Wr) refer to the weight of each blue (resp. red). The entity (jB Wbj+jRWrj)=(B+R) 4https://github.com/surajshetiya/fairness-range-queries-icde-2022 gives us the expected magnitude of the weight each point carries. The scaled weight for the given query Qwith an allowed disparity of 5%thus turns out to be 0:05(jB Wbj+ jR Wrj)jout(Q)j=(B+R). Choosing an appropriate value of \": Our system enables re- sponsible data selection through exploration. While the choice of\"varies based on the application, an exploration based approach helps the application owner to choose an appropriate value of\". That is, after the user specifies a range query and a value of\", we return the most similar query, satisfying it. The user then has the choice to accept our recommendation, or to adjust the value of \"and/or the range and continue exploring until a satisfactory range is identified.",
+    "technical_score": 0.040422825425790745,
+    "citation_score": 0.0071334397810218966
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Proof of Concept - TEXAS TRIBUNE"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For a proof of concept, we use the Texas Tribune dataset. The dataset consists of 149,481 records of compensation for Texas state employees. We use gender as the sensitive attribute. As the representation of males and females in the dataset is similar (64,153 men and 85,328 female), the weights for male and female in the query are considered to be the same. The distribution of male and female employees in the overall dataset can be seen in Figure 11. Following Example 1 on this dataset, we assume the business office is interested in finding the employees who earn a salary of more than $65,000. There are a total of 14,803 men and 12,182 women earning more than $65,000, with a difference of 2,621 (around 10%). Considering the ethical considerations, the business management office would like to find a query whose output is similar to the initial query and within which there are at most 1000 (around 5%) males more than females.",
+    "technical_score": 0.014410989456609897,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Proof of Concept - TEXAS TRIBUNE"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Using SPQA , a fair query which is most similar to the input input query is determined. The output of the fair query (60562\u0014salary\u0014152000 ) consists of 32,064 employees with 16,532 male and 15,532 female. The Jaccard similarity of the fair query with the input query is around 75% ( 76:23%). Figure 11 shows the distribution of male and female employees in input query and the most similar fair query.",
+    "technical_score": 0.008646593673965936,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Proof of Concept - TEXAS TRIBUNE"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Extended PoC: A function F(x)which for which data- points with the same x values but from different demographic groups have different results will underperform on a given demographic group if that demographic group is unfairly represented in designing the function. In the TexasTribune dataset, there is a function that meets this requirement where F(x)predicts the salary and the parameters xare their level (or lack of level) of employment and the part of the state for which of they are employed. We trained an auto-sklearn regressor on this task, using two datasets: the result of the original query in Example 1, and the result of the modified fair query. We then analyzed the dataset using R2scores over male and female data points. We observed that with the initial dataset there was a fractional difference of 0.088, while with the unbiased data, that fractional difference was reduced to 0.022, where a lower fractional difference represents a regressor predicting the salary for men and women more consistently.",
+    "technical_score": 0.02017538523925385,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Proof of Concept - TEXAS TRIBUNE"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Systems Integration PoC : As an integration with a DBMS system, we create a thin web based interface based on postgres .For this PoC, we use the TexasTribune dataset. The postgres database is created with index on the numeric attribute - salary. For the PoC, we compare the O(n2)naive algorithm with the jump pointer algorithm.",
+    "technical_score": 0.002882197891321979,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Proof of Concept - TEXAS TRIBUNE"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "For the naive algorithm, the time is computed for processing the query. For the jump pointer algorithm, there is a pre- processing phase where we calculate the cumulative sum and jump pointers and populate a separate table with these details. We measure the time taken for naive query, pre-processing to create jump pointers and SPQA query processing. Average time taken by the pre-processing algorithm taken by SPQA 0:043second. We run around 500randomly sampled queries and measured the time taken by each of these queries. While average time taken by SPQA algorithm is 0:0054 seconds, average time taken by naive algorithm is 6:938seconds. This shows the efficienly of SPQA when integrated with DBMS.",
+    "technical_score": 0.005764395782643958,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Performance of SPQA and weighted SPQA"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The performance of SPQA depends on the disparity of the input query. For these series of experiments, we measure the amount of time taken by the SPQA algorithm when provided with an input query. The experiment were averaged over five runs of SPQA algorithm for more reliable time measurements. For these experiments, the TexasTribune dataset was used. AsTexasTribune has 149,481 records with almost the same number of male asfemale we use gender as the sensitive attribute for the unweighted case. For the weighted case, we use race as the sensitive attribute while using white (majority) and non-white (minority) as the demographic groups. There are a total of 67;142white records and 82;339 non-white records. As the ratio of white tonon-white is very near to 4 : 5 (0:815), we use weights of 4and5for the weighted SPQA . For the SP queries, we use salary as the attribute for range predicates. A large part of the records of the database (95.6%) have a salary less than 100;000. Hence, to set the range query boundary, we pick all points in multiples of5;000between 5;000and100;000as start and end points. For every query, time taken by SPQA algorithm is measured along with the input query\u2019s disparity. For both the weighted and unweighted case, the \"value was set to 500 for this set of experiments.",
+    "technical_score": 0.03389464720194647,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Performance of SPQA and weighted SPQA"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "For the COMPASS dataset, the risk score varied between \u00004:79\u000051:0. Starting of the input range was generated between\u00004:79and51:0with multiples of 3:0. Ending of the input range varied from the starting in multiples of 3:0. The COMPASS dataset has around 21K Caucasian (blue) and 39K non-Caucasian (red) warranting a ratio of 2:1.",
+    "technical_score": 0.024210462287104623,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Performance of SPQA and weighted SPQA"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Figures 12 and 13 show the scatter plot for amount of time for SPQA against the input query\u2019s disparity value for theTexas Tribune dataset and figure 14 shows the scatter plot for the weighted SPQA queries run on the COMPASS dataset. As a baseline, we ran IBFS for single range predicate (weighted and unweighted). On average, IBFS ran about 3 orders of magnitude slower than the jump pointer algorithm. The plots show a linear scaling of time with the input query\u2019s disparity. This empirically validates the running time of both the unweighted and weighted SPQA algorithms.",
+    "technical_score": 0.0387367396593674,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Performance evaluation of MP algorithms"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For the multi-predicate range query evaluation, we use UrbanGB andUniform datasets. For the experiments, 10;000 records from the UrbanGB dataset have been used. There a total of 3,088 blues and 6,912 reds. Hence, we use a weight of longitude attributes from the database were used to form the range queries. The latitude values in the 10K records varied from\u00000:507015 to0:297345 and the longitude values varied from 51:306584 to51:660974 .Uniform dataset consists of",
+    "technical_score": 0.010375912408759125,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Performance evaluation of MP algorithms"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1;000. The sensitive attribute is made of an almost equal number of blues and reds and hence we use a weight of 1 for both these colors. For all sets of experiments, a disparity of 5% between demographic groups is allowed which is indicated by the value of \"used. The baseline algorithm restricts the search to a bounding box and performs a thorough search of all the ranges in this rectangle. In this section we compare the run times of IBFSMP and baseline algorithms. is an important measure as it impacts the performance of our algorithms. It impacts the number of points that are being added or removed to find a fair range. While there are many other factors which may impact the performance of the query, we choose many queries in each bucket and repeat our experiments with each of these and aggregate our results to reduce the impact of other factors. For our experiments, query sizes vary from 200 to1400 that are bucketized with intervals of 200. That is, if for example a query result contains bucket has 20range queries sampled for the experiment using rejection sampling. The input queries are chosen from different buckets using rejection sampling based on the points which satisfy the query. In each bucket, we execute 30queries each and aggregate the results for comparison. The average run-time is measured for both the algorithms under different bucket sizes. For the queries in each bucket, the mean time taken during the run of the IBFSMP algorithm for UrbanGB andUniform datasets is shown in Figure 16 and Figure 17, respectively. In case of the baseline algorithm which restricts the search space, experimental results for the bucket 200-400 show a mean of 697:4seconds and 557:1seconds for the UrbanGB andUniform datasets respectively. The cases for the larger bucket sizes did not complete even after 3hours and thus are not tabulated. The aggregated values of mean show that IBFSMP outperforms the baseline algorithm by orders of magnitude. For each individual query, the IBFSMP outper- forms the baseline algorithm. But, due to space constraints, the details of each query executed is not included. IBFSMP shows similar trend when run in higher dimen- sions. The experiments with 3 range predicates show that the time taken grows with input range size as seen in figure 15. One difference we observed was that the larger part of the computation was spent in computing skylines than in lower dimensions. One can observe the increase in run times between the two and dimension charts even for small input sizes.2) Effect of input query size on the number of ranges explored: For the next set of experiments, we evaluate the effect of input query size on the ranges explored. As the algorithm has a dependence on many factors, we choose input query arbitrarily to analyse the impact of input query size, Jaccard similarity from the input range on running time. The number of ranges explored by the IBFSMP algorithm is measured as a parameter along with the time taken. We use the same set of queries with different sizes, bucketized with intervals of 200, as in our previous experiment.",
+    "technical_score": 0.014526277372262777,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Performance evaluation of MP algorithms"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The number of ranges explored by IBFSMP forUrbanGB andUniform datasets are shown in Figure 18 and Figure 19 respectively. As can be seen in the figures, the number of ranges explored grows significantly with increase in query size. As the amount of time taken is proportional to the number of ranges, the mean time taken grows with the number of ranges explored as can be seen in the both the figures. We did not include the performance of BFSMP in the table asIBFSMP significantly outperformed it in all cases. For example, while IBFSMP on average required only 1:1seconds for the 200-400 bucket in Uniform dataset, BFSMP on average took 11:1seconds. That is because, on average, it explored",
+    "technical_score": 0.0062255474452554745,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Performance evaluation of MP algorithms"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "IBFSMP . Similarly, for UrbanGB dataset, BFSMP on average took 15:3seconds while IBFSMP took 3.6 seconds for this experiment. The reason was that BFSMP on average explored cases, IBFSMP outperformed BFSMP for every query.",
+    "technical_score": 0.010375912408759125,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Comparison with coverage based algorithms"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Coverage based algorithms [36], [35] output a range query by modifying the given query such that at least a given number of items from each sensitive group are present. Note that coverage based CRBase makes use of a threshold value for each demographic group. On the other hand demographic parity measure is based on the notion of weighted difference between the demographic groups. As a range expands by addition of the minority group, items from the majority group are also added which may increase the disparity. To find ranges which satisfy demographic parity measure, we make use of numerous values of threshold to find different ranges that satisfy demographic parity fairness measure. Among these fair ranges, we record the ones which have the most similarity. We have run these experiments with the uniform andUr- ban GB datasets. We measure the fair ranges from CRBase algorithm and record the one which has the most similarity. CRBase algorithm was run with 4,8,16and32bins. CRBase algorithm produces a fair range 33:9% of the time with theUniform dataset. We measure the error by computing 1\u0000CRSim=Optimal , whereCRSim is the similarity of the CRBase algorithm where as the Optimal is the similarity of the optimal range. For the ranges where CRBase algorithm does not satisfy the fairness or similarity criteria we mark CRSim as0. An average error measure of 0means that optimal range is always obtained, while an error of 1means that the range produced never satisfies the criteria. The error produced by CRBase is0:682 on average. For the UrbanGB dataset, we used a weighted fairness measure. CRBase was able to produce a fair range for only 3out of 120 sample ranges. The experiment shows that the two optimization prob- lems and hence, the solutions are different in nature.",
+    "technical_score": 0.11413503649635032,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Summary of experimental results"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "At a high level, the experiments verify the efficiency and efficacy of our methods. Firstly, we empirically show the efficiency of the unweighted and weighted SPQA algorithm. Secondly, for a wide spectrum of range queries, we show that BFS algorithms outperform the baseline algorithm by orders of magnitude. Moreover, IBFSMP outperformed BFSMP since it explored far less number of ranges before it found the optimal solution. Finally, we also show the effect of input range size on IBFSMP, the larger the set size the more the time taken by IBFSMP to find the most similar fair range.",
+    "technical_score": 0.024210462287104623,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Query answering : Efficiency is critical requirement in query answering. A large amount of research has focused on different aspects of query answering over the past few decades. One of the popular methods that has been explored is the query answering using views [50], [51], [52], [53], where the goal is to efficiently answer a query using a set of previously materialized views on the database.",
+    "technical_score": 0.010000000000000002,
+    "citation_score": 0.015
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Srivastava et. al. [52] answer SQL queries with grouping and aggregation in the presence of multiset tables by detecting when the information existing in a view is sufficient to answer a query.",
+    "technical_score": 0.00975,
+    "citation_score": 0.0052499999999999995
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Chaudhuri et. al. [53] solve the problem of optimizing queries in the presence of materialized views. Approximately answering queries has also been studied extensively in many works [54], [55], [56], [57], [58]. While there have been many works in the area of query answering, none of these works can be modified to incorporate fairness into them.",
+    "technical_score": 0.004000000000000001,
+    "citation_score": 0.006000000000000001
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Fairness : Reducing racial disparities has recently been a key research [3], [59], [60], [61], [62], [63], [11], [25].",
+    "technical_score": 0.0020000000000000005,
+    "citation_score": 0.0030000000000000005
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Feldman et. al. [59] propose methods to make make data unbiased by modifying the fields/attributes.",
+    "technical_score": 0.0032500000000000003,
+    "citation_score": 0.0017500000000000003
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Hajian et. al. [60] propose a data transformation that can consider combination of attributes to perform data transformation. While [59], [60] perform data modification, we do not modify any data point to remove bias from data instead we provide the nearest fair data points to work with. While [61], [62] propose methods that learn to produce fair machine learning models from the given data they do not eliminate bias from the data itself.",
+    "technical_score": 0.006,
+    "citation_score": 0.009
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Query reformulation : Salimi et. al. [64] created a system for detecting statistical dependencies which impact the result of the original query. In their work, they reformulate queries by modifying the attributes queried to account for these statistical anomalies. In other works [34], [35], [36], a system has been proposed which minimally relaxes a query to provide coverage for sensitive groups. The objective of [35], [36] is to modify the original query satisfying demographic coverage constraints (minimum number of items from a each group). Coverage constraint satisfaction involves only relaxing the constraints, which may not help in reducing disparity. Note that, trying tosatisfy coverage can further increase the disparity between the groups. Similar to these works [34], [35], [36], our algorithms also modify the original query. However, unlike existing work, our objective is to find queries (i) similar to the initial query that (ii) satisfy a disparity (unfairness) threshold on counts from different demographic groups.",
+    "technical_score": 0.012500000000000002,
+    "citation_score": 0.012500000000000002
+  },
+  {
+    "section_path": [
+      "DISCUSSION AND FUTURE WORK"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Fairness model: There are many fairness models which one can consider when the data contains demographic sensitive attributes. In this paper, we have used the fairness model in which objects from different demographic groups have equal chances of being selected in the output set. There are other fairness models like the demographic parity based on ratio which we consider for future work. Such a fairness model has the form,\u000e\u0015Cr=Cb\u0015\u000e\u00001.",
+    "technical_score": 0.010948905109489052,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "DISCUSSION AND FUTURE WORK"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Operators: In our current work, we have considered a con- junctive operator to join different predicates. Query models like SQL support operators like NOT andOR. Note that the subset of operations ( ORandAND ) would allow the output queries to allow for union of ranges. We consider the addition of these different operators to the query model as an extension of the paper for future work.",
+    "technical_score": 0.018248175182481754,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "DISCUSSION AND FUTURE WORK"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "All nearest fair ranges : The declarative query in 2 can have multiple range queries which are equally near while satisfying fairness constraints. An interesting area of research would be to enumerate all these nearest fair ranges.",
+    "technical_score": 0.021897810218978103,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "DISCUSSION AND FUTURE WORK"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Demographic group based extensions : Fairness problems based on binary demographic groups have been well stud- ied [65], [66], [67], [68] for various applications like clus- tering, PCA and other optimization problems. We note that a significant portion of existing literature fairness and its definitions consider binary cases, as there usually is an advantaged/majority v.s. disadvantaged/minority group(e.g. COMPAS dataset(black vs non-black), adult and salary dataset(female vs male)). While binary case for fairness is an important case, extensions to these problems are valuable in many scenarios. We consider extending the fair range queries to non-binary demographic groups and demographic parity constraints on multiple sensitive attributes as future work.",
+    "technical_score": 0.01970802919708029,
+    "citation_score": 0.00218978102189781
+  },
+  {
+    "section_path": [
+      "FINAL REMARKS"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we initiated research on integrating fairness into data management systems. As our first attempt, we fo- cused on selection bias in range queries, and proposed efficient algorithms. In particular, we proposed a sub-linear algorithm for single-predicate range queries and two algorithms based modeling the problem as graph traversal for multi-predicate range queries. Besides theoretical analysis, comprehensive ex- periments verified efficiency and effectiveness of our proposal. We consider the extensive research required for the full integration of fairness, including a comprehensive database and query model with a broad coverage of bias, fairness notions, and a broad range of SQL operators as well as designing more efficient algorithms, for our future work.",
+    "technical_score": 0.03649635036496351,
+    "citation_score": 0.0
+  }
+]

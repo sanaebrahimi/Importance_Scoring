@@ -1,0 +1,61 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+The abundance of data, coupled with AI and advanced algorithms, has revolutionized almost every aspect of human life. As data-driven technologies take root in our lives, their drawbacks and potential harms become increasingly evident. Subsequently, algorithmic fair- ness has become central in computer science research to minimize machine bias. However, despite substantial focus on fairness in pre- dictive analysis and machine learning [ 6,36,39], traditional combi- natorial optimization has received limited attention [ 49]. Neverthe- less, combinatorial problems such as ranking [ 3], matching [ 19,20], resource allocation [ 9,17,27], and graph problems of influence maximization [ 46] and edge recommendation [ 8,43] have massive societal impact. In this paper, we study the Set Cover problem through the lens of fairness. As one of Karp’s 21 NP-complete problems with various forms, set cove
+
+Section name: Application Demonstration
+Excerpt:
+In Example 1, we demonstrated an application of fair set cover for Team of Experts Formation. To demonstrate the application-spanof our formulation, in the following, we briefly mention a few more applications. Eqal Base-rate in representative data sets. An equal base rate is defined as having an equal number of objects for different subgroups in the data set [ 30]. Satisfying equal base-rate is im- portant for satisfying multiple fairness metrics in down-stream machine learning task. Consider the schema of a dataset of individ- ual records (e.g., Chicago breast-cancer examination data), with a set of attributes x={𝑥1,···,𝑥𝜂}, where dom(𝑥𝑖)>1is the domain of𝑥𝑖. In order to ensure representativeness in the data, suppose we would like to collect a minimal set that contains at least one instance from all possible level- ℓvalue combinations. A level- ℓ combination is a value-combination cont
+
+Section name: Preliminaries
+Excerpt:
+Problem definition. We are given a universe of 𝑛elements 𝑈={𝑒1,𝑒2,...,𝑒𝑛}, a family of 𝜇setsS={𝑆1,𝑆2,...,𝑆𝜇}, where ∪𝜇 𝑖=1𝑆𝑖=𝑈. We are also given a set of 𝑘demographic groups G={g1,..., g𝑘}(e.g., { white-male ,black-female ,...}), while each set𝑆𝑗in the familySbelongs to a specific demographic group g(𝑆𝑗)∈G . In the rest of this paper, we interchangeably refer to the group of a set as its color. LetSℎ⊆S be the family of sets from S with color gℎ∈G. Let𝑚ℎbe the number of sets of color gℎinS, i.e.,𝑚ℎ=|Sℎ|. Acover𝑋⊆S is a subset ofSsuch that for any 𝑒∈𝑈there exists a set 𝑆∈𝑋with𝑒∈𝑆. In other words, 𝑋is a cover if⋃︁ 𝑠𝑖∈𝑋=𝑈. To simplify the notation, for a family of sets 𝑋⊆S, we define𝑋∩𝑈=(⋃︁ 𝑆∈𝑋𝑆)∩𝑈. Fairness definition. Following Example 1 and the applications demonstrated in § 2, we adopt the group-fairness notion of demo- graphic parity, as the (weighted) parity between the number of sets
+
+Section name: Fair Set Cover
+Excerpt:
+We first describe a naive algorithm for the FSC problem with large approximation ratio. We execute the well-known greedy algorithm for the standard set cover problem (its pseudocode is shown in the technical report [ 14]) and let𝑋be the set cover we get. If 𝑋does not satisfy the fairness requirements, we arbitrarily add the minimal number of sets from each color to equalize the number of sets from each color in our final cover. The pseudocode is shown in the technical report [14]. Lemma 1. There exists a(︁𝑘(ln𝑛+1))︁-approximation algorithm for the FSC problem that runs in 𝑂(𝑚·𝑘·𝑛)time. 191 KDD ’25, August 3–7, 2025, Toronto, ON, Canada. Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh S 1 S 7S 2 S 3S 4 S 5S 6 P oints R ed sets Blue sets Figure 1: An illustration of a set system for the Fair Set Cover (FSC) problem, consisting of 16 points and 7 sets: 4 red sets 
+
+Section name: Weighted Fair Set Cover
+Excerpt:
+Throughout this section we define Δ=𝑤max 𝑤min, where𝑤max= max{𝑤(𝑆𝑖)|𝑆𝑖∈S} and𝑤min=min{𝑤(𝑆𝑖)|𝑆𝑖∈S} . In this section we need the assumption that for every group gℎ∈Gthere are at leastΩ(Δlog𝑛)·|𝑋∗| 𝑘sets. In Appendix A, we show that a naive algorithm for the FWSC, similar to the naive algorithm we proposed for the FSC returns a 𝑘Δ(ln𝑛+1)-approximation algorithm that runs in𝑂(𝑚·𝑘·𝑛)time. Theorem 5. There exists a 𝑘Δ(ln𝑛+1)-approximation algorithm for the FWSC problem that runs in 𝑂(𝑚·𝑘·𝑛)time. For simplicity, we describe our algorithm for the case we have only two demographic groups, i.e., G={g1,g2}. In the end, our algorithm can be extended almost verbatim to 𝑘>2groups. Let 𝑋𝑤=∅be the cover we construct and let 𝑈−=𝑈be the set of uncovered elements. We repeat the following steps until 𝑈−=∅. In each iteration, we find the pair of sets (𝑆𝐴,𝑆𝐵)such that i) the ratio𝑤(𝑆𝐴)+𝑤(𝑆𝐵) |(𝑆𝐴∪𝑆𝐵)∩𝑈−|is m
+
+Section name: Generalized Fair Set Cover
+Excerpt:
+Due to space limitations, we defer the details of our algorithms for GFSC and GFWSC problems to Appendix B. Recall that in these problems, each color gℎis associated with a fraction 𝑓ℎ∈[0,1], such that∑︁ gℎ∈G𝑓ℎ=1, and the goal is to return a (fair) cover 𝑋such that|𝑋∩Sℎ| |𝑋|=𝑓ℎ, for every color gℎ∈G. Our greedy (and faster greedy) algorithms from the previous sections (for the FSC and FWSC problems) easily extend to GFSC and GFWSC with similar theoretical guarantees. The high level idea is the following: In each iteration of the greedy algorithm, instead of selecting exactly one set from each group, the algorithm selects 𝑝ℎsets for group gℎ. The selection is made such that 𝑓ℎ=𝑝ℎ∑︁ g𝑗∈G𝑝𝑗is satisfied for each group gℎ. As the greedy algorithm operates for integral rounds, the final set cover also satisfies the ratio constraints. Our algorithms for the GFSC problem can be used for the less
+
+Section name: Experiments
+Excerpt:
+Having theoretically analyzed the proposed algorithms, in this section we experimentally evaluate the efficiency and efficacy of our algorithms on real and synthetic datasets. Datasets: We use 3 real datasets, one semi-synthesized, and one synthesized dataset to evaluate our methods. Our first set of ex- periments (§ 7.1 and § 7.2) are motivated by Example 1 (Team of Experts Formation), for which we use the Strategeion Resume Skills dataset1. It consists of 1986 rows as candidates with differ- ent skills. The skill of a candidate is shown as 218 binary columns each corresponding to one skill. As an AI Ethics benchmark, the dataset also contains demographic group information, including the (binary) gender. The male-to-female ratio in this dataset is 0.8. Motivated by the "Fair survey data collection" application demon- strated in § 2, we use two additional real datasets: Adult Income andC
+
+Section name: Related Work
+Excerpt:
+Algorithmic fairness has received a lot of attention in the last few years. However, most of the recent work focuses on the intersection of fairness and Machine Learning [7, 36]. Despite its importance, limited work has been done on algorith- mic fairness in the context of combinatorial problems [ 49]. Satisfy- ing fairness constraints while optimizing sub-modular functions is studied in [ 49]. Further examples include satisfying fairness in Coverage Maximization problems [ 2,4] and Facility Locations [ 29]. In the red-blue set cover problem [ 10], the goal is to select a family of sets to cover all red points, while minimizing the number of blue points covered. In this body of work, the focus is on defining fair- ness on the point set (ground set). In other words, they assume the points belong to different demographic groups. In contrast, in thiswork, we define fairness on the family of
+
+Section name: Conclusion
+Excerpt:
+Set cover has an extended scope for solving real-world problems with societal impact. In this paper we revisited this problem through the lens of fairness. We adopted the group fairness notion of demo- graphic parity, and proposed a general formulation that extends to various cases such as count-parity and ratio-parity for binary and non-binary demographic groups. We formulated set cover and weighted set cover under fairness constraint and proposed approx- imation algorithms that (a) always guarantee fairness, (b) have (almost) the same approximation ratio and similar time complexity with the the greedy algorithm for set cover (without fairness). Our experiments on real and synthetic data across different settings demonstrated the high performance of our algorithms.
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 15
+Application Demonstration: 10
+Preliminaries: 20
+Fair Set Cover: 25
+Weighted Fair Set Cover: 15
+Generalized Fair Set Cover: 5
+Related Work: 10
+Experiments: 10
+Conclusion: 10

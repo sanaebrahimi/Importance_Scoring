@@ -1,0 +1,56 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: INTRODUCTION
+Excerpt:
+A maxima query returns a tuple from a large database of ntuples, preferentially selected and returned according to a ranking/utility function that is used to model user preferences. Such queries are very useful in application domains where end-users are interested in multi-criteria decision making, and would like to see the most important tuples from the potentially huge answer space. Thus, much recent studies, including online, view-based and index-based techniques such as [5, 9–11, 15] have focused on this direction. In many applications, especially in databases containing numeric attributes, the ranking function used to model user preferences is expressed in the form of a linear combination of query attributes – i.e.PwiAi. Finding the top houses in a real estate database based on a linear combination of some criteria such as price and Permission to make digital or hard copies of all o
+
+Section name: PRELIMINARIES
+Excerpt:
+Database Model: Consider a database, Dwithmnumeric at- tributesA=fA1;:::;Amg. LetDom (Ai)0be the domain of attributeAi. The database may also have non-numeric attributes, but since they are usually not part of any ranking function, they are not considered in our context. We assume there are ndistinct tu- ples in the database. For a tuple t2D, we uset[Ai]2Dom (Ai) to denote the non-NULL value of attribute Aiint. Consider a ranking function F() :D!I Rthat assigns a score to each tuple tin the database. The ranking function sorts the tuples based on the scores assigned to them. Given such a user speciﬁed function, the database determines the tuple with maximum score that should be returned. In this paper, we assume a tuple t2D outranks a tuple t02Dbased onF, ifF(t)>F(t0). Furthermore, we follow the existing work [6, 22] and focus on the popular-in- practice [5, 29] linear ranking function
+
+Section name: 2D REGRET-RATIO MINIMIZING SET
+Excerpt:
+We start by considering the two-dimensional scenario which, as discussed in the introduction, not only has signiﬁcant theoretical implications but also represents popular use cases in practice. We show in Theorem 1 that the search space can be reduced to the skyline tuples rather than in all ntuples in the database. THEOREM 1.LetTbe the set of tuples which are removed from D. The maximum regret-ratio of the optimal solution for the regret- ratio minimizing set problem on Sis the same as the maximum regret-ratio of the optimal solution for the regret-ratio minimizing set problem on D, i.e.,E(T;D ) =E(T;S). PROOF . Please refer to Appendix A. Considering Theorem 1, we ﬁrst order all skyline tuples in a two- dimensional table from top left to the bottom right, i.e. S=ft1;t2; ;tsg. We add two dummy tuples t0andts+1to the left of the top left skyline tuple t1and to the right of the bottom 
+
+Section name: HD REGRET-RATIO MINIMIZING SET
+Excerpt:
+It is well known that the size of convex hull grows exponentially with the data dimensionality (i.e., the number of attributes) [27] (also shown in Figure 1). The need for designing a compact rep- resentation of high dimensional databases thus becomes even more pronounced. We address the discovery of regret-ratio minimizing sets over high-dimensional databases in this section. Speciﬁcally, we start with discussing the deﬁciency of the exist- ing heuristic solution. Then, we introduce a conceptual model of the problem as an inﬁnitely large matrix min-max problem [24]. We “operationalize” such a conceptual model with a matrix discretiza- tion approach that provides a user-controllable discretization pa- rameter. After discretizing the problem space to a manageable size, we then construct a reduction to set-cover [12] which solves the min-max problem deterministically in (theoretically) O(n
+
+Section name: DISCUSSION
+Excerpt:
+For enabling efﬁcient computation of Top-k queries (instead of only Top-1 queries) requires us to extend the compact set for higher values ofk>1, while minimizing the dissatisfaction of the kthtop tuple of the compact set versus the kthtuple of the actual database, An easy way of adopting the existing algorithms is an iterative ap- proach with kiterations. At each iteration we discover the max- ima set over the remaining tuples. Then we remove the tuples in the maxima set, as well as the tuples falling outside of the convex shape formed by the set, and start the next iteration over the re- maining tuples in the database. One can see that this method will constructkcompact layers around the data and can serve for dis- covering the Top-k . However, studying the theoretical guarantees of such adaptation requires further investigation in a future work. As an alternative for matrix discretiza
+
+Section name: EXPERIMENTS
+Excerpt:
+Hardware and Platform: All our experiments were performed on a Core-I7 machine running Ubuntu 14.04 with 8 GB of RAM. The algorithms were implemented in Python. Real-world Datasets: We used three publicly available real-world datasets, i.e., Airline dataset, Department of Transportation (DOT), and Basketball dataset (NBA). Airline dataset3:The 2008 Airline dataset has 5;810;463records with 13attributes, out of which two of them (namely Actual Elapsed Time andDistance) are ordinal. We used this dataset to test the performance of the two-dimensional algorithms over a large dataset. DOT dataset4:The ﬂight on-time dataset is published by the US Department of Transportation. It records, for all ﬂights con- ducted by the 14 US carriers in January 2015, attributes such as scheduled and actual departure time, taxiing time and other detailed delay metrics. The dataset consists of 457,013 tuples
+
+Section name: RELATED WORK
+Excerpt:
+Top-k discovery algorithms: These algorithms can be divided into on-demand query processing and index construction. On-demand Top-k algorithms focus on the data access methods. For exam- ple,NRA [11] considers the existence of one sorted list of tuples for each attribute, and ﬁnds the Top-k only by exploring the lists, while TA[10] applies both random and sorted access. CA[10], Up- per/Pick [3], and [20] are the more advanced algorithms in this cat- egory. Focusing on client-server databases, [21] views the existing query engine as the only data access method and designs efﬁcient Top-k discovery algorithms for them. Besides, methods like PRE- FER [15] and LPTA [9], employ the materialized views to increase the efﬁciency of Top-k discovery process. While the ﬁrst class of Top-k algorithms focuses on efﬁciently answering the queries on demand, the other set of works aims toward indexing th
+
+Section name: CONCLUSION
+Excerpt:
+In this paper, we made several fundamental theoretical as well as practical advances in developing a compact maxima representative. We have studied both two-dimensional as well as high-dimensional databases to ﬁnd a set limited to only rtuples that minimizes the maximum regret-ratio. In the case of two-dimensional databases, we have developed an innovative dynamic programming algorithm to build the optimal index that runs in linearithmic time. We have developed an innovative linearithmic algorithm that guarantees a regret ratio that is within a user-controllable distance from the op- timal regret ratio. Our comprehensive set of experiments on syn- thetic (with different correlation models) and real datasets of size up to several million records conﬁrm the efﬁciency, scalability, and effectiveness of our algorithms.
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+INTRODUCTION: 15
+PRELIMINARIES: 20
+2D REGRET-RATIO MINIMIZING SET: 25
+HD REGRET-RATIO MINIMIZING SET: 15
+DISCUSSION: 5
+RELATED WORK: 10
+EXPERIMENTS: 5
+CONCLUSION: 10

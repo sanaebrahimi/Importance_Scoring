@@ -1,0 +1,66 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+Linear Regression is a seminal technique in statistics and machine learning, where the objective is to build linear predictive models between a response (i.e., dependent) variable and one or more predictor (i.e., independent) variables from a given dataset of ninstances, where each instance is a set of values of the independent variables and the corresponding value of the dependent variable. One of the classical and widely used approaches is Ordinary Least Square Regression (OLS), where the objective is the minimize the average squared error between the predicted and actual value of the dependent variable. Another classical approach is Quantile Regression (QR), where the objective is to minimize the average weighted absolute error between the predicted and actual value of the dependent variable. QR(also known as “Median Regression” for the special case of the middle quantile), is less af
+
+Section name: Preliminaries
+Excerpt:
+In this section, we provide useful definitions and notations, as well as a formal description of the main problem considered in this paper. Some of the notations and formal problem definitions are borrowed from existing literature such as [1, 24]. t13.153.13 t21.97 1 t31.3692.43 t40.1491.287 t5-0.390.222 t6-0.51-0.65 t7-2.047.30 Table 3: A 2D dataset.In this paper, we use a toy dataset, shown in Table 3, which will be used throughout the paper. Assume that we want to build a linear model to predict A2fromA1. Figure 3 shows a scatter plot of the data points in 2-dimensional space (where the x-axis isA1andy-axis isA2), and two linear models, one being the classical OLSmodel and the other being the classical QRmodel. The former minimizes the sum of squared errors, while the latter minimizes the sum of absolute errors (this is also known as ℓ1-regression ), where the error is defined as the 
+
+Section name: Efficiently Updating Neighbors, and the Use of k-Sets
+Excerpt:
+As seen in Section 2, a vertex in the complete skeleton graph of the arrangement in dual space refers to a QR hyperplane in primal space. The optimal solution corresponds to one of these vertices in the complete skeleton graph. Note that each of these vertices (QR hyperplane in primal space) has an optimization function value associated with it. Computing the optimization from scratch at any vertex takes O(nd)time, and there are O(nd)such vertices. In this section we propose two improvements to this basic brute force approach: (a) design an efficient way to incrementally calculate the optimization function at a vertex from precomputed values at a neighboring vertex (along the complete skeleton graph), and (b) trim the complete skeleton graph to only consider the vertices corresponding to k-sets. In this subsection, we propose an UpdateNeighbor subroutine which can efficiently and incre- 
+
+Section name: RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression
+Excerpt:
+tile Regression In this section, we introduce a more efficient randomized algorithm RandomizedQR for solving the Quantile Regression problem. The high level overview of our approach and the intuition behind it are described in Section 4.1. We prove its expected running time of O(nlog2(n))in two dimensions in Section 4.2. The extension of our approach to three and higher dimensions is presented in Section 4.3. 2The proof is provided in Appendix D As discussed in in Section 2.3, a hyperplane in the primal space transforms to a point in the dual space. From Theorem 2, we can deduce that the optimal QR hyperplane is specialas it is located at a vertex in the skeleton graph Sof dual space. A naive search of vertices in Sto find the optimal QR hyperplane is computationally expensive as there are ndvertices. Our approach relies on restricting the search space to find the optimal QR vertex in Se
+
+Section name: Final remarks
+Excerpt:
+In this paper, we studied the Quantile Linear Regression problem in two and higher dimensions. Our first contribution is the UpdateNeighbor subroutine which helps us update the optimization function efficiently ( O(d)) while navigating the neighboring vertices (intersection points) in dual space. We propose two strongly polynomial approaches to solve the QR problem. The k-set based approach is a parameter sensitive algorithm that enumerates the kthlevel of the arrangement while using the UpdateNeighbor subroutine to compute the optimization functions values. We prove that its time complexity is better than all known approaches for two dimensions. The problem of efficient enumeration of k-sets in higher dimensions is an open problem which can improve our time complexity our higher dimensions. Our second approach - RandomizedQR , is a randomized divide- and-conquer approach to the QR probl
+
+Section name: Quantile Regression: Challenges, and State of Art
+Excerpt:
+Linear Regression is a seminal approach in statistics and machine learning, used for building linear predictive models between a response (i.e., dependent) variable and one or more predictor (i.e., independent) variables. Linear regression is over two centuries old (dating back to Legendre and Gauss) and is often considered as the forerunner of modern machine learning [ 24]. We revisit two classical linear regression techniques: Ordinary Least Square Regression (OLS) and Quantile Regression (QR). Both build linear models but with different objective functions: in OLS, the objective is to minimize the mean squared error (i.e., ℓ2norm) between the dependent variable and that predicted by the model; whereas in QR, the objective is to minimize the mean absolute error (i.e.,ℓ1norm). Why Quantile Regression? Historically, OLS has been much more widely used than QR. This is primarily because (a
+
+Section name: Related work and discussion on state of the art
+Excerpt:
+The idea of quantile regression was introduced even before OLSregression. Around 1757, Boscovich proposed the idea of fitting a line for 2-dimensional data by minimizing the sum of absolute residuals under the assumption of mean of residuals has to be zero. Laplace gave an algebraic formulation of the problem in his Methode de Situation in 1789. In 1809 Gauss suggested to remove zero mean residual constraint. Later in 1823, he also proposed least square criterion (i.e., OLS). As OLShas more analytical and computational simplicity, it has been always popular. However, a criterion is a choice and there are different cases where one criterion will outperform others. In 1888, Edgeworth proposed a geometry based solution for the bi-variate median regression problem [2]. In the 20th century, there has been extensive work on quantile regression which helped a wide range of applications. In 1974
+
+Section name: Details of k-set based two dimensional QR problem
+Excerpt:
+In this subsection, we introduce QR2D-Neighbor-Baseline algorithm that utilizes the Up- dateNeighbor subroutine. Exploring the vertices in the complete skeleton graph presents us with an interesting algorithm to obtain the optimal QRline. Let us consider for simplicity that a GetNeighbors oracle exists that can quickly provide us with the neighbors of a given vertex. We can start from any of the O(n2)vertices and explore neighboring vertices around it in a Breadth First Search (BFS) manner while updating the aggregate entities and objective cost. While for simplicity of understanding, we choose BFS for exploration, it does not change the analysis that follows. We stop when no new neighboring vertices with a lower optimization value are found. The optimal QR hyperplane is the vertex with the smallest optimization function among the explored intersection points. Note that a naive way to bu
+
+Section name: Proofs of Theorems and Lemmas
+Excerpt:
+Theorem3 .Given the aggregate values ∀1≤m≤d/summationtext i∈I+Xi[m],/summationtext i∈I+yi,/summationtext j∈I−yj,∀1≤m≤d/summationtext j∈I−Xj[m] for a vertex in the complete skeleton graph, the aggregate values can be updated in O(d)time when we move to a neighboring vertex. Proof.Any vertex in the complete skeleton graph represents a hyperplane in the primal space which divides the set of points in Dinto two sets, I+andI−. When we move from a vertex to its neighboring vertex, the sets I+andI−change in one of three ways, •A point in primal space moves from above the hyperplane to below the hyperplane i.e., a point moves from I+toI−. •A point in primal space moves from below the hyperplane to above the hyperplane i.e., a point moves from I−toI+. •The hyperplane moves such that a point from above is exchanged with a point from below. In such a case, the number of points above the hyperplane 
+
+Section name: Pseudocodes
+Excerpt:
+Algorithm 1 QReg2D 1:Input:Data setD,τ 2:Output: Parameters for optimal line H∗ 3:k←(1−τ)n 4:Yp=Ym =Xp=Xm = 0{Initialize aggregate sums to 0. Yp:/summationtextyi, Xp:/summationtextXifori∈I+Ym:/summationtextyj,Xm:/summationtextXjforj∈I−} 5:OptValue←∞;OptLine←∅ 6:Obtaink-level arrangement points P 7:Calculate the aggregate values Ym,Xm,Yp,Xp usinglfor the first point in P 8:forpinPdo 9:l←F−1(p){y=mx+c=⇒l←[m,c]} 10:Find outXsandXtthat swapped from I+andI−respectively 11:UpdateYm,Xm,Yp,Xpusing UpdateNeighbor subroutine 12:Value←τ(Yp−Xp×l[1]−l[0]×k) + (1−τ)(Xm×l[1]−l[0]×(n−k)−Ym) 13:ifValue<OptValue then 14:OptValue←LineValue ;OptLine←l 15:end if 16:end for 17:returnOptLine 25 Algorithm 2 BinarySearch2D 1:Input:Point setD,τ, intersections points 2:Output: Best score in plane zi=v, corresponding intersection point 3:low←0;high←n;OptScore←∞ 4:whilelow̸=highdo 5:mid←low+high 2 6:MidScore←Compute
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 10
+Preliminaries: 15
+Efficiently Updating Neighbors, and the Use of k-Sets: 15
+RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression: 20
+Final remarks: 10
+Quantile Regression: Challenges, and State of the Art: 10
+Related work and discussion on state of the art: 5
+Details of k-set based two dimensional QR problem: 5
+Proofs of Theorems and Lemmas: 5
+Pseudocodes: 5

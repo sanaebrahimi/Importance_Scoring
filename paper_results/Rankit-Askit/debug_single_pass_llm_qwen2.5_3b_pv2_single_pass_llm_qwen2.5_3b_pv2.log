@@ -1,0 +1,51 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+Large Language Models (LLMs) have rapidly become invaluable tools, expanding their impact far beyond the realm of natural lan- guage processing. Tasks that have long been studied across various areas of computer science are now finding alternative solutions with LLMs. In particular, LLMs can be used for symmetric [ 15] tasks where a query is issued on an input that takes the form of a bag (or multi-set) of elements. Dataset queries is an example of this type of task. To further clarify this, let us consider the following toy example. Example 1: Consider a publications dataset in form of a CSV file, containing the information of papers published across various domains: A uthors Title Venue Year Alan Turing Computing Machinery and Intelligence Mind 1950 · ·· ··· ··· ··· Suppose one is interested in finding out the number of publica- tions in an "Operations Research" (OR) venue since 2010. 
+
+Section name: Preliminaries
+Excerpt:
+In this section, we formally define the problem and the specific notations that we use in the following sections. We assume that each task 𝑇is a pair(I,𝑞). WhereIis a (large) bag of elements{𝑒1,𝑒2,...,𝑒𝑛}and𝑞is a query in natural language aboutI. For example, for the Graph Degree Task, Iis the list of edges with any order and 𝑞is a natural language question about the graph, like "What is the degree of node 10?". We assume that I and𝑞are given to the LLM as two different prompts in the same context. That is, we first provide the list to the LLM, then we ask about the query 𝑞. More details on the implementation is discussed in Section 5. We assume that we have API access to a black-box LLM L. For a task𝑇=(I,𝑞)as defined in the previous section, L(I,𝑞)is the response of the LLM. The output error is defined as: 𝜀L(I,𝑞)=Δ[L(I,𝑞),O(I,𝑞)] 452 Rank It, Then Ask It: Input Reranking for Maximizing
+
+Section name: Estimating the Relevance
+Excerpt:
+Each element𝑒𝑖∈Iisassociate dwith animplicit relevance score thatquantifies itsdegreeofrelevance tothequery𝑞.This relevance scoreisdenote das𝑅𝑒𝑙𝑞(𝑒𝑖).Forinstance ,inExample 2,theedges adjacent tothenode𝑣aremorerelevant tothequery“compute the degreeofnode𝑣”. However,computing therelevance values ischallenging since thetask𝑇isnotspecifiedbeforehand, and𝑞canbeanyquer yon I.Toaddressthisissue ,inthissection, westudy thesub-pr oblem ofestimating therelevance scoreforeach element𝑒𝑖∈I. Weutilize ahelperLLMHforestimating therelevance values. Hisasmall open-sour ceLLM that isrelativ elycheap torunand deplo y.Inourexperiments, wecompar ediffer entmodels asH, DeepSeek-Coder-v2 (16b) [43], andMistral (7b) [18]. Intherestofthissection, weexplain twometho dstoestimate therelevance scores.First, wediscuss awarm-up baseline that partitions theinput elementsIinto smaller subsets andidentifies therelevant
+
+Section name: Pre-processing: Exposure Discovery
+Excerpt:
+So far, we studied the relevance estimation of the input elements to a given query. The remaining information for the LLM-input reranking based on Equation 2 is to compute the exposure values for different rank positions. The exposure values are LLM-dependent, and hence, we compute those during the preprocessing phase for each large language model L. The exposure value of the position 𝑖in the ranking, i.e., XL(𝑖), represents the likelihood that the model misses each token in the input prompt as a function of its position 𝑖. Throughout this section, 𝑖will be used to indicate the position of a token within the input prompt toL. In the end, we shall explore how this information canbe utilized for the general list I, where each element 𝑒𝑖∈Iis not necessarily a token. In order to estimate the exposure values, we consider a sample set of predefined tasks, each consisting a query 𝑞and the input
+
+Section name: Experiments
+Excerpt:
+In this section, we assess the practical applicability of our results through experiments conducted on both real and synthetic datasets. Specifically, we evaluate three categories of tasks. The first category is similar to Example 1, where we have a dataset of published papers and ask for a query about the papers. The second task focuses on the Graph Degree Task (Example 2), where a graph is constructed, and its edges are provided as input to the LLM, denoted as I. A query𝑞is then issued, requesting the degree of a specific node within the graph. The final category involves answering queries about structured datasets. In these tasks, we supply a table to the LLM (I) and ask an aggregation query ( 𝑞), expressed in natural language, about the table. We try different real-world datasets for this category. All experiments were conducted on a local server equipped with 128 GB of memory, 32 CP
+
+Section name: Discussions
+Excerpt:
+In this section, we first examine the advantages of our method in practical applications, followed by a discussion of its limitations. In all the proposed models and methods, we have the assumption that the final large language model is treated as a black-box, mean- ing we have no explicit knowledge of its internal architecture and make no use of such details. Even the smaller helper models em- ployed in our approach are more cost-effective language models, yet we similarly assume no access to or detailed understanding of their underlying structures. Consequently, our method can be regarded as a wrapper that complements any advancements in large lan- guage models and improvements in their accuracy. This approach is applicable to any given LLM to enhance its performance in ad- dressing symmetric problems, functioning as an additional layer to increase overall accuracy. In general, without
+
+Section name: Conclusion
+Excerpt:
+In this work, we addressed the challenge of handling lengthy input prompts for large language models within the context of symmetric tasks. We observe that while the performance of LLMs drops for large inputs, certain positions in the input are less likely to be missed by an LLM. Moreover, reordering the input elements of symmetric tasks does not logically affect the query outcome. Following these observations, we introduced the LLM input reranking problem to reorder an input in a way that the accuracy of the LLM is maximized for the given query.We proposed a two-step solution for this problem. First, dur- ing the preprocessing phase, we identify the exposure of ranking positions for a given LLM. Next, at query time, we estimate the relevance score of each element to the query. By combining these insights, we rerank the input and pass the reranked data to the LLM. For query relevance est
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 10
+Preliminaries: 25
+Estimating the Relevance: 20
+Pre-processing: Exposure Discovery: 15
+Experiments: 15
+Discussions: 5
+Conclusion: 5

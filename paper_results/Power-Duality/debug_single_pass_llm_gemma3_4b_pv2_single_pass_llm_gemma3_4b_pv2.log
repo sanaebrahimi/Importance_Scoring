@@ -1,0 +1,19 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Please provide the top-level sections of the paper. I need the text of the sections to be able to evaluate them and assign scores. Once you provide the sections, I will generate the requested output.

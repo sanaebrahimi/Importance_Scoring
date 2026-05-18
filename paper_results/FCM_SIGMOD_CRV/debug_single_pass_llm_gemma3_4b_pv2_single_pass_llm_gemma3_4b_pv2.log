@@ -1,0 +1,127 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+Estimating element frequencies in data streams is a fundamental problem in computer science, where, given a universe of elements, the objective is to count the appearance of each within the stream. However, due to memory limitations and processing time in streaming settings, exact counting is often impractical. Consequently, approximating the counts using techniques such as the Count-Min (CM) sketch has become widely adopted [ 28]. The CM estimates the frequency of elements by randomly hashing the elements into a smaller set of buckets, while adding up the frequencies of all elements in each bucket. The frequency count of each bucket is then returned as an upper bound of the frequency of elements it contains. The CM sketches offer space-efficient frequency estimations with small error guarantees. Never- theless,the error guarantees are additive. Such errors may be negligible for popular 
+
+Section name: Preliminary
+Excerpt:
+LetDbe a data stream consisting of elements (or events), each belonging to a type from a finite universeU={𝑒 1,𝑒2,...,𝑒𝑛}of𝑛element types. Each element type 𝑒be associated with a group g∈G, whereG={ g1,g2,..., gℓ}, and𝑛gdenotes the number of element types belonging to group g. Let𝑁be the number of elements in the data stream D. We use the function 𝑓:U→[𝑁] to refer to the frequency of each element type in D. That is,𝑓(𝑒) is the number of times an element of type𝑒appears inD. Formally, 𝑓(𝑒)=∑︂ 𝑥∈D1(𝑥=𝑒), where1(𝑥=𝑒)is the indicator function that equals 1 if𝑥is of type𝑒and 0 otherwise. Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026. 179:4 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Notation Description Ddata stream UA universe of𝑛element types 𝑒an element type 𝑓(.)true frequency of an element type ˆ𝑓(.)estimated frequency of an element type GT
+
+Section name: Fair-Count-Min using Group-Aware Semi-Uniform Hashing
+Excerpt:
+Our idea for generating group-fair CM (FCM) is to utilize “semi-uniform” hash functions that separate element types of various groups. Specifically, reserving 𝑤g1bins for the group g1and 𝑤g2=𝑤−𝑤 g1for the group g2, the semi-uniform hash functionh (.)assigns each element in g1to Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:7 1 2···𝑤g1𝑤g1+1···𝑤𝑤g1 𝑤g2=𝑤−𝑤 g1 Fig. 1.Illustration of a column-partitioning based group-fair min-count with one row, i.e., one hash function h(.). the first𝑤 g1bins and the others to the remaining𝑤 g2bins (Figure 1): h:{︄ g1→[𝑤 g1] g2→𝑤 g1+[𝑤 g2] The key question we shall answer in the rest of this section is whether there exists a value 𝑤g1 (hence𝑤g2=𝑤−𝑤 g1) for which a CM based on the semi-uniform hash scheme becomes group-fair. In the following, first, we focus on the case where 𝑑=1, i.e., the sketch is based on only one ha
+
+Section name: Computing The Column Widths
+Excerpt:
+Our algorithm is straightforward; we should compute the integer value of 𝑤g1such that Equation (5) holds. We note that Equation (5)may not hold for an integer value of 𝑤g1. In this case the goal is to compute the integer value of 𝑤g1such that the left side of Equation (5)is as close as possible to the right side of Equation (5). A naive implementation is to try every value of 𝑤g1and calculate the value of the left and right side of Equation (5)by simply evaluate every term in the sum. Such an implementation would take Ω(𝑛3)time because we should try 𝑂(𝑛) values of𝑤g1, and for each such value the calculation of each side of Equation (5)takesΩ(𝑛2)time to evaluate the summations. We first show an exact near-linear time algorithm to compute the value of 𝑤g1that solves Equation 5 and then we briefly discuss an approximation algorithm that is used in our experiments to efficiently evaluate the
+
+Section name: Price of Fairness Analysis
+Excerpt:
+Improving fairness usually comes at a cost, known as the “price of fairness” (aka cost of fairness) – the reduction in the overall performance as a result of resolving unfairness [ 15]. After introducing FCM and its details, in this section, we study its price of fairness. Following Equation 1, the overall performance of a CM sketch can be measured in terms of the sum of its expected additive error across all element typesU={𝑒 1,···,𝑒𝑛}. That is, L𝐶𝑀=𝑛∑︂ 𝑖=1𝜀𝐴(𝑒𝑖)(8) Subsequently, we define the price of fairness (PoF) of FCM as the increase in its total expected additive error, compared to CM. That is, 𝑃𝑜𝐹=L𝐹𝐶𝑀−L𝐶𝑀 (9) In the Appendix B, we show the next lemma that provides our price of fairness analysis, proving that fairness even improves the expected performance, i.e.,𝑃𝑜𝐹<0, when𝑑=1. Lemma 5.When𝑑=1,𝑃𝑜𝐹=L 𝐹𝐶𝑀−L𝐶𝑀<0. The negative PoF sounds counterintuitive, but as we shall further ela
+
+Section name: Experiments
+Excerpt:
+In addition to the theoretical analysis, we perform extensive experiments across a range of settings to validate the fairness as well as the efficiency of our proposed sketch. Consistent with the theoretical guarantees established in previous sections, the experimental results confirm the effectiveness and efficiency of our sketch in practical scenarios. 179:14 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh We evaluate our proposed sketch based on three metrics 1) unfairness, 2) price of fairness and 3) efficiency. For each metric, we examine the impact of varying four parameters: the width of the sketch𝑤, the depth of the sketch 𝑑, and the number of groups ℓand the number of element types in the unpopular group 𝑛g1. Due to space constraints and the confirmed similarity of results across different datasets, for certain experiments, we present results for a single dataset per setting,
+
+Section name: Related Work
+Excerpt:
+Count-Min sketch.The CM sketch was first described by Cormode and Muthukrishnan [ 27,28]. It uses hash functions to map events to frequencies, but unlike a hash table uses only sub-linear space, at the expense of overcounting some events due to collisions. Count–min sketch is an alternative to count sketch [ 22] and AMS sketch [ 5] and can be considered an implementation of a counting Bloom filter [ 38,45] or multistage-filter [ 27]. Over the years multiple variations of min-count sketches have been proposed in the literature [ 41,58,68,72,85] improving the estimation or the performance under different settings. While CM sketches have been thoroughly studied there is still room for improvement. For example, the random hashing procedure may induce substantial uncertainty in the estimation, especially for low-frequency tokens. Furthermore, it is often the case that there exists an a priori
+
+Section name: Discussions
+Excerpt:
+CM sketches have a wide range of range of applications including heavy hitters detection to detecting rare words (infrequent items that are not stop-word) in NLP settings [44], to AQP [28]. Still, identifying heavy hitters is known as one of the traditional applications of CM sketches. For heavy hitters detection, FCM performs equally to the standard CM. A heavy hitter in the standard sketch remains a heavy hitter in FCM. This is because CM sketches, including FCM, alwaysoverestimate the frequencies. As a result, FCMnever missesa heavy hitter due to its fairness mechanism. Compared to the standard CM sketches, FCM focuses on stronger multiplicative error guaran- tees. In a standard CM sketch, the frequencies of a rare group (e.g., average frequency 10) could significantly get overestimated (e.g., 10,000) due to the collision with heavy hitters. FCM strictly equalizes this relative error 
+
+Section name: Conclusion
+Excerpt:
+In this paper we introduced FCM, a new frequency estimation framework that ensures equal expected approximation factors across different groups, addressing a key fairness limitation of traditional CM sketches. By proposing a fairness-preserving design—column partitioning with group-aware hashing, our work offers strong theoretical guarantees and validates its effectiveness through extensive experiments. Future research directions include extending FCM integrating learned hash functions for further efficiency gains, and exploring fairness notions beyond group- wise guarantees, such as individual fairness in streaming data sketches.
+
+Section name: A Extended Application Examples
+Excerpt:
+Example 1 highlights an application, where using traditional CM sketches can cause unfairness in an urban traffic setting. Such examples are not limited to this setting, and can be found across a wide range of domains. In this section, we further highlight some of the other application examples across a diverse set of domains, where additive error guarantees are not satisfactory, motivating the need for (multiplicative) approximation factor and fair count min. 1) Wild Life Monitoring:Automatic monitoring of wildlife in conservation areas is essential for collecting statistics needed to protect and manage species across conservation categories (e.g., endangered,threatened, andleast concern). Because manual monitoring is costly and difficult to scale, conservation efforts increasingly rely on automated data collection using resource-constrained sensors such as camera traps. These devices o
+
+Section name: B Missing Proofs
+Excerpt:
+Proof of Lemma 1. Let𝐶𝑖be the total frequency counts in each low-frequency bucket 𝑖∈[𝑤 g1]. That is,𝐶 𝑖=∑︁ 𝑒𝑗:h(𝑒𝑗)=𝑖𝑓(𝑒𝑗). For every element 𝑒𝑗∈g 1, the value of the bucket it hashed to is returned as its frequency estimation. That is, ˆ𝑓(𝑒𝑗)=𝐶 h(𝑒𝑗). Therefore, following the approximation factor definition, ˆ𝑓(𝑒𝑗)=𝑓(𝑒𝑗) 𝛼(𝑒𝑗)=𝐶 h(𝑒𝑗). Hence, 𝛼(𝑒𝑗)=𝑓(𝑒𝑗) 𝐶h(𝑒𝑗)(11) Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026. 179:30 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Therefore, E[︁ 𝛼g1]︁ =1 𝑛g1∑︂ 𝑒𝑗∈g1𝛼(𝑒𝑗)=1 𝑛g1∑︂ 𝑒𝑗∈g1𝑓(𝑒𝑗) 𝐶h(𝑒𝑗) =1 𝑛g1𝑤g1∑︂ 𝑖=1∑︂ 𝑒𝑗:h(𝑒𝑗)=𝑖𝑓(𝑒𝑗) 𝐶𝑖//breaking the calculation per cell =1 𝑛g1𝑤g1∑︂ 𝑖=11 𝐶𝑖∑︂ 𝑒𝑗:h(𝑒𝑗)=𝑖𝑓(𝑒𝑗)//factoring out the common term =1 𝑛g1𝑤g1∑︂ 𝑖=11 𝐶𝑖𝐶𝑖 //replacing sum of frequencies with𝐶 𝑖 =1 𝑛g1𝑤g1∑︂ 𝑖=11=𝑤g1 𝑛g1(12) Similarly, the expected approximation factor for the groupg 2can be computed as E[︁ 𝛼g
+
+Section name: Price of Fairness: Randomness vs. Uniformity
+Excerpt:
+In Section 5, we observed a counterintuitive result for 𝑑=1, proving a negative price of fairness (PoF) for FCM, compared to a regular CM sketch that uses a random hash function. This result can be explained by the fact that a random hash function is unlikely touniformlydistribute the elements to the buckets (an interesting related topic isthe occupant problem[ 63]). As a result, some of the buckets will have more than𝑛 𝑤elements in them. For example, Figure 41 illustrates a random hashing of𝑛=100element types into 𝑤= 10buckets. While a uniform distribution would allocate 10elements to each bucket, the random hashing allocated up to18elements in one bucket. Elements in large buckets will suffer from a large additive error, and there are a large number of them in such buckets. Hence, such buckets significantly increase the total additive error of the CM. FCM increases the size-uniformity 
+
+Section name: D Dataset Descriptions
+Excerpt:
+We use five sufficiently-large benchmark datasets for our experiments: NYC Bus [ 82]:The NYC Bus Dataset originates from the MTA real-time data stream, capturing detailed information about buses across NYC. Collected at approximately 10-minute intervals, each record includes a bus’s location, route, stop, and other operational details, along with its scheduled arrival time from the MTA timetable. This dataset contains approximately 27 million records, from which we sample 10% to form our stream. We construct the stream by combining the bus line attribute, PublishedLineName , with the bus ID attribute, VehicleRef , resulting in 53,622 distinct element types. Each element type belongs to one of two groups corresponding to the MTA’s bus subsidiaries:NYCTorMTABC. DDoS [ 69]:This dataset was compiled from several public IDS datasets, including CSE-CIC- IDS2018-AWS, CICIDS2017, and the CIC DoS
+
+Section name: E Additional Experiment Results
+Excerpt:
+In this section, we present comprehensive experimental results across five datasets: 1)google ngram, 2)census, 3)nyc bus, 4)ddos, 5)reddit-twitter. We also provide the absolute values of the approximation factors and additive errors for each group to facilitate a clearer understanding of the trends in unfairness and the associated price of fairness under each setting. Received October 2025; revised January 2026; accepted February 2026 Proc. ACM Manag. Data, Vol. 4, No. 2 (SIGMOD), Article 179. Publication date: June 2026. Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:37 Fig. 43.effect of varying 𝑤on unfairness,nyc bus,𝑑=5. Fig. 44.effect of varying 𝑤on unfairness,ddos,𝑑=5. Fig. 45.effect of varying 𝑤on unfairness,reddit-twitter, 𝑑=5. Fig. 46.effect of varying 𝑤on unfairness,census,𝑑=5. Fig. 47.effect of varying 𝑤on unfairness,google ngram,𝑑=5. Fig. 
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 12
+Preliminary: 20
+Fair-Count-Min using Group-Aware Semi-Uniform Hashing: 25
+Computing The Column Widths: 15
+Price of Fairness Analysis: 15
+Experiments: 15
+Related Work: 5
+Discussions: 5
+Price of Fairness: Randomness vs. Uniformity: 10
+D Dataset Descriptions: 5
+[single_pass_llm_response] attempt=2/5
+Introduction: 12
+Preliminary: 20
+Fair-Count-Min using Group-Aware Semi-Uniform Hashing: 25
+Computing The Column Widths: 15
+Price of Fairness Analysis: 15
+Experiments: 15
+Related Work: 5
+Discussions: 5
+Price of Fairness: Randomness vs. Uniformity: 10
+D Dataset Descriptions: 5
+[single_pass_llm_response] attempt=3/5
+Introduction: 12
+Preliminary: 20
+Fair-Count-Min using Group-Aware Semi-Uniform Hashing: 25
+Computing The Column Widths: 15
+Price of Fairness Analysis: 15
+Experiments: 15
+Related Work: 5
+Discussions: 5
+Price of Fairness: Randomness vs. Uniformity: 10
+D Dataset Descriptions: 5
+[single_pass_llm_response] attempt=4/5
+Introduction: 12
+Preliminary: 20
+Fair-Count-Min using Group-Aware Semi-Uniform Hashing: 25
+Computing The Column Widths: 15
+Price of Fairness Analysis: 15
+Experiments: 15
+Related Work: 5
+Discussions: 5
+Price of Fairness: Randomness vs. Uniformity: 10
+D Dataset Descriptions: 5
+[single_pass_llm_response] attempt=5/5
+Introduction: 12
+Preliminary: 20
+Fair-Count-Min using Group-Aware Semi-Uniform Hashing: 25
+Computing The Column Widths: 15
+Price of Fairness Analysis: 15
+Experiments: 15
+Related Work: 5
+Discussions: 5
+Price of Fairness: Randomness vs. Uniformity: 10
+D Dataset Descriptions: 5
+[single_pass_llm_fallback] reason=incomplete_parse_keys=['Computing The Column Widths', 'D Dataset Descriptions', 'Discussions', 'Experiments', 'Fair-Count-Min using Group-Aware Semi-Uniform Hashing', 'Introduction', 'Preliminary', 'Price of Fairness Analysis', 'Price of Fairness: Randomness vs. Uniformity', 'Related Work']

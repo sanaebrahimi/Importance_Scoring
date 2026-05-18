@@ -1,0 +1,41 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+The research community increasingly recognizes long-context modeling as a crucial capability for next-generation large language models, driven by diverse real-world applications ranging from in-depth reasoning (DeepSeek-AI, 2025; Zelik- man et al., 2022), repository-level code genera- tion (Zhang et al., 2023a; Zhang et al.) and multi- turn autonomous agent systems (Park et al., 2023). Recent breakthroughs, including OpenAI’s o-series GeneralLongBenchReasoning0.00.10.20.30.40.5ScorePerformanceonBenchmarks FullAttention NSA DecodeForwardBackward1.03.05.07.09.011.013.0SpeedupRatio11.6× 9.0× 6.0×SpeedonStagesFigure 1: Comparison of performance and efficiency be- tween Full Attention model and our NSA. Left: Despite being sparse, NSA surpasses Full Attention baseline on average across general benchmarks, long-context tasks, and reasoning evaluation. Right: For 64k-length sequence processing,
+
+Section name: Methodology
+Excerpt:
+Our technical approach spans algorithm design and kernel optimization. In the following subsections, we first introduce the background of our method- ology. Then we present the overall framework of NSA, followed by its key algorithmic components. Finally, we detail our hardware-optimized kernel design that maximizes practical efficiency. Attention Mechanism is widely used in language modeling where each query token qtcomputes relevance scores against all preceding keys k:tto generate a weighted sum of values v:t. Formally, for an input sequence of length t, the attention operation is defined as: ot= Attn ( qt,k:t,v:t) (1) where Attn denotes the attention function: Attn ( qt,k:t,v:t) =/summationtextt i=1αt,ivi/summationtextt j=1αt,j, αt,i=eq⊤ tki√ dk. (2) Here, αt,irepresents the attention weight between qtandki, and dkis the feature dimension of keys. As sequence length increases, attent
+
+Section name: Experiments
+Excerpt:
+We evaluate NSA through three lenses: (1) general benchmarks performance, (2) long-context bench- marks performance, and (3) chain-of-thought rea- soning performance, comparing against Full Atten- tion baseline and state-of-the-art sparse attention methods. We defer the efficiency analysis of our sparse computation paradigm to Section 4, where23082 ModelMMLU MMLU-PRO CMMLU BBH GSM8K MATH DROP MBPP HumanEvalAvg. across knowledge (MMLU, MMLU-PRO, CMMLU), reasoning (BBH, GSM8K, MATH, DROP), and coding (MBPP, HumanEval) tasks. NSA achieves superior average performance on most benchmarks despite high sparsity. ModelSQA MQA Synthetic CodeAvg. MFQA-en MFQA-zh Qasper HPQ 2Wiki GovRpt Dur PassR-en PassR-zh LCC document QA, multi-document QA, synthetic and code task categories. NSA outperformed most of the baselines including Full Attention. we provides detailed discussions on training and inferen
+
+Section name: Efficiency Analysis
+Excerpt:
+We evaluate the computational efficiency of NSA against Full Attention on an 8-GPU A100 system.For both methods, we configure the model with GQA group g= 4, head per group h= 16 , query/key dimension dk= 192 , and value dimen- siondv= 128 . The hyperparameters for NSA are kept consistent with Section 3. We compare the Triton-based implementations of our NSA attention and Full Attention with Triton- based FlashAttention-2 to ensure fair speed com- parison across the same backend. As shown in Figure 5, our NSA achieve progressively greater speedups as context length increases, up to 9.0 × forward and 6.0 ×backward speedup at 64k context-length. Notably, the speed advantage be- comes more pronounced with longer sequences. This speedup stems from our hardware-aligned al- gorithm design to maximize the efficiency of sparse attention architecture: (1) The Blockwise memory access pattern maximi
+
+Section name: Conclusion
+Excerpt:
+We present NSA, a hardware-aware sparse atten- tion architecture for efficient long-context model- ing. By integrating hierarchical token compres- sion with block selection within a trainable archi- tecture, we achieve faster training and inference while matching or surpassing Full Attention perfor- mance. Our approach demonstrates that hardware- aligned sparse attention can rival Full Attention im- plementations in efficiency and performance. NSA advances the state-of-the-art through: superior base model performance, exceptional long-context performance, and improved reasoning ability, all while achieving significant reductions in compu- tational latency. We present NSA, a hardware-23085 aligned sparse attention architecture for efficient long-context modeling. By integrating hierarchi- cal token compression with blockwise token selec- tion within a trainable architecture, our architect
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 10
+Methodology: 30
+Experiments: 30
+Efficiency Analysis: 15
+Conclusion: 5

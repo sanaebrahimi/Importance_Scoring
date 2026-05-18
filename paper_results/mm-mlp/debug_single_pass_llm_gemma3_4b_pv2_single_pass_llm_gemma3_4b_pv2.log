@@ -1,0 +1,71 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: INTRODUCTION
+Excerpt:
+The database community has played a significant role in tackling the complexities of big data, developing advanced technologies for addressing scalability challenges in very large data. Many such technologies have been used to address big-data challenges across various domains. For example, Asudeh et al . [3,4]leverage sampling-based similarity joins [ 10] and selectivity estimation queries [ 7,24] for signal reconstruction at scale. Among such ex- amples, data management for machine learning (ML) [ 32,35,62] shines as an interdisciplinary domain that led to many key ad- vances, including SystemML [ 8,9,20], join optimization for fea- ture selection [ 33], federated learning [ 41], ML model materializa- tion [ 26,61], etc. Following the theme of Extended Database Tech- nologies for Machine Learning , this paper studies the extension of sampling-based techniques for efficient training of 
+
+Section name: BENEFITS OF TRAINING NEURAL NETWORKS ON CPUS
+Excerpt:
+The pursuit of advancing DNN training on CPUs unveils a com- pelling avenue replete with practical advantages. Below, we briefly explain some of these potential benefits: Abundance of CPU Machines . CPU-equipped personal com- puting devices, including PCs and smartphones, enjoy wide- spread availability and accessibility among a vast segment of the population. Remarkably, the computational potential of these devices often remains underutilized. Leveraging such resources for DNN training introduces the opportunity to conduct this computational-intensive task at no additional hardware cost for personal endeavors. Furthermore, while individual devices pos- sess limited capacity, their collective potential can effectively address a multitude of moderate-sized artificial intelligence (AI) challenges. Recognizing this collective capability, recent endeav- ors have emerged to design client-side
+
+Section name: RELATED WORK
+Excerpt:
+The increasing importance of DNN applications opened the door to a variety of challenges associated with training these mod- els. While there are numerous works on techniques for scaling DNNs, many of them have expensive hardware requirements and use GPUs to accelerate training [ 18]. Unlike GPUs, CPUs are available on any device, so optimizing training performance on CPUs is beneficial. There have been studies in which distributed, concurrent, or parallel programming on CPUs has been used to accelerate training [ 13,25,27,29,50,55], but these methods are not always applicable due to variation in hardware requirements. Thus, algorithms focused on algorithmic optimization of feedfor- ward and backpropagation are essential. Usually, methods with little to no special hardware requirements are preferred. Several algorithms apply a variety of sampling-based [ 1,6,19,36,37,50] or non-sampling-
+
+Section name: PRELIMINARIES
+Excerpt:
+In this section, we describe the neural network model, feedfor- ward step, and backpropagation in the form of matrix operations. Finally, we discuss state-of-the-art sampling-based algorithms. Many neural network architectures have been studied over the past decade. In this paper we focus on the standard multi-layer perceptron (MLP) model and analyze two major directions of sampling-based techniques for training neural networks. Consider a feedforward neural network with 𝑚𝑖inputs,𝑚𝑜 outputs, and ℓhidden layers. In general, every hidden layer 𝑘 contains𝑛𝑘hidden nodes while the nodes in the (𝑘−1)-th and 𝑘-th layers are fully connected. Without loss of generality, for ease of explanation, we assume all hidden layers have exactly 𝑛 hidden nodes (Figure 1). For each layer 𝑘, we denote the vector of outputs by 𝑎𝑘∈R1×𝑛. Similarly,𝑊𝑘∈R𝑛×𝑛and𝑏𝑘∈R1×𝑛 are the weights and the biases of layer 𝑘,1resp
+
+Section name: EFFICIENT TRAINING BY SAMPLING FROM CURRENT LAYER
+Excerpt:
+Srivastava et al . [52] introduced Dropout , a computationally efficient training approach that reduces the risk of overfitting. During each feedforward step, the algorithm picks a subset of nodes uniformly at random in each hidden layer and drops the remaining nodes temporarily. The sampled nodes are then used for feedforward evaluation and backpropagation. While Dropout was originally introduced to fix overfitting, it introduced a computation reduction to the training process.187 In many cases, Dropout improved the runtime efficiency com- pared to the standard training process on the same architecture. However, there are scenarios in which training under Dropout requires more training iterations and eventually hurts the run- time. One can observe that due to the randomness in sampling with a fixed probability (usually 𝑝=1/2), there is a risk of drop- ping nodes that significantly affec
+
+Section name: EFFICIENT TRAINING BY SAMPLING FROM PREVIOUS LAYER
+Excerpt:
+While techniques discussed in §5 reduce the vector-matrix mul- tiplication time by selecting a subset of columns (nodes) from each weight matrix 𝑊𝑘and computing the inner product exactly for them, an alternative approach is to select all columns but to compute inner products approximately. This idea has been proposed by Adelman et al . [1]. This paper is built on the MC method by Drineas et al . [15] for fast approximation of matrix multiplication. We first review the work of Drineas et al . [15] in §6.1 and then in §6.2 we explain how Adelman et al . [1]adapt the method to develop an algorithm for efficient training of DNNs. Multiplication For many applications, a fast estimation of the matrix product is good enough. In addition to hardware/software oriented opti- mizations such as cache management [ 18,23] or half-precision computations [ 40,55], MC methods [ 46] have been used for suc
+
+Section name: THEORETICAL ANALYSIS
+Excerpt:
+As explained in §5.2 and §6.1, sampling-based approaches seek to speed up the training of DNNs by skipping a large number of computations and approximating matrix multiplications. In this section we provide negative theoretical results for scalabil- ity against the feedforward approximation. At a high level, we show that small estimation errors in the initial layers get prop- agated and compounded in subsequent layers. Adelman et al . [1]already observed the low performance of MC-approx when the feedforward step is approximated and therefore only applied approximation during backpropagation for MLPs. As such, we focus on ALSH-approx for our analysis. First, let us introduce the following notation, which we will use throughout this section. •¯𝑎𝑘 𝑗: the estimation of 𝑎𝑘 𝑗byALSH-approx . •𝑒𝑘 𝑗=𝑎𝑘 𝑗−¯𝑎𝑘 𝑗: the activation value estimation error. •↑𝑘 𝑗: the set of active nodes for 𝑛𝑘 𝑗. Lemma 
+
+Section name: EXPERIMENT SETUP
+Excerpt:
+This paper aims to evaluate sampling-based approaches for train- ing DNNs on regularly available machines; thus, we ran all exper- iments on a single-CPU machine (Intel Core i9-9920X machine with 128 GB of memory) without a GPU. We used the following six benchmark datasets for our experi- ments. MNIST [14] 70,000 handwritten digits, each in the form of a 28×28grayscale image, and 10 classes (digits zero to nine). Kuzushiji-MNIST [11] 70,000 cursive Japanese characters, each in the form of a 28×28grayscale image, and 10 classes. Fashion-MNIST [59] 70,000 fashion products, each in the form of a28×28grayscale image, and 10 classes. EMNIST-Letters [12] 145,600 handwritten letters, each in the form of a 28×28grayscale image, and 26 classes. NORB [34] 48,600 photographs of 50 toys from different angles, each in the form of a 96×96grayscale image, and 5 classes. CIFAR-10 [31] 60,000 color image
+
+Section name: EXPERIMENT RESULTS
+Excerpt:
+8.1 Hardware This paper aims to evaluate sampling-based approaches for train- ing DNNs on regularly available machines; thus, we ran all exper- iments on a single-CPU machine (Intel Core i9-9920X machine with 128 GB of memory) without a GPU. 8.2 Datasets We used the following six benchmark datasets for our experi- ments. MNIST [14] 70,000 handwritten digits, each in the form of a 28×28grayscale image, and 10 classes (digits zero to nine). Kuzushiji-MNIST [11] 70,000 cursive Japanese characters, each in the form of a 28×28grayscale image, and 10 classes. Fashion-MNIST [59] 70,000 fashion products, each in the form of a28×28grayscale image, and 10 classes. EMNIST-Letters [12] 145,600 handwritten letters, each in the form of a 28×28grayscale image, and 26 classes. each in the form of a 96×96grayscale image, and 5 classes. and 10 classes. We randomly partition the datasets as shown below: Da
+
+Section name: LESSONS AND DISCUSSION
+Excerpt:
+It is important to recognize that no single method serves as the optimal solution for optimizing training across all architectures and datasets. On the positive side though, our theoretical anal- ysis and experimental evaluations confirm the effectiveness of existing approaches under various settings. Specifically, our ex- perimental findings discussed in §9 confirm the superiority of MC-approx . When used on MLPs with an appropriately sized mini-batch larger than one, it offers enhanced accuracy, speed and memory efficiency. MC-approx effectively approximates the inner product at each layer by sampling nodes from the previous layer, and utilizing a batch of data point vectors significantly improves the sampling quality. Another notable observation is thatMC-approx decreases the number of cache misses which significantly contributes to its increased speed. Moreover, our theoretical analy
+
+Section name: CONCLUSION
+Excerpt:
+Many of the advanced technologies originally developed for ad- dressing big data challenges have been extended to solve scala- bility complexities across various domains. In this paper, we eval- uated one of these settings, where sampling-based techniques were proposed for training DNN on CPU machines with lim- ited resources. To this end, we made connection between two sampling-based research directions that can be viewed as matrix multiplication approximations. We provided theoretical analyses, followed by extensive empirical evaluations. Our results demonstrate a correlation between the number of hidden layers and approximation error in DNNs under hashing- based methods. In addition, we provided insights into the perfor- mance of fast training methods in different settings and highlight areas for further research. As a final note, energy consumption during DNN training raises environm
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+INTRODUCTION: 12
+BENEFITS OF TRAINING NEURAL NETWORKS ON CPUS: 8
+RELATED WORK: 15
+PRELIMINARIES: 10
+EFFICIENT TRAINING BY SAMPLING FROM CURRENT LAYER: 12
+EFFICIENT TRAINING BY SAMPLING FROM PREVIOUS LAYER: 10
+THEORETICAL ANALYSIS: 15
+EXPERIMENT SETUP: 8
+EXPERIMENT RESULTS: 10
+LESSONS AND DISCUSSION: 10
+CONCLUSION: 10
