@@ -1,0 +1,87 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+Section name: Introduction
+Excerpt:
+Deep Neural Networks (DNNs) such as Large Language Models (LLMs) have achieved remarkable success and demonstrated versatility across a wide range of domains, yet they encounter significant challenges related to inference in- efficiency. These models demand substantial computational 1Department of Computer Science, University of Illinois at Chicago, Chicago, USA. Correspondence to: Mohsen Dehghankar <mdehgh2@uic.edu >.resources, including specialized, costly GPUs with ample memory to achieve real-time inference. This inefficiency leads to slower response times, elevated energy consump- tion, higher operational expenses, and, particularly, limited accessibility for everyday users who lack access to advanced computational infrastructure. For instance, current deploy- ments of LLMs on typical consumer devices rely predom- inantly on API calls to powerful, remote servers (OpenAI, 2024; AI21 
+
+Section name: Preliminaries
+Excerpt:
+We consider the quantized DNNs with binary and ternary weights. The computation bottleneck of the inference pro- cess is a sequence of activation vector to weight matrix multiplications – the primary focus of our work.2In this section, we formally build the necessary notations, followed by our problem formulation. To simplify the explanations, we use ternary weights as a generalization of the binary weights. As a result, all of our algorithms are readily appli- cable to DNNs with either binary or ternary weights. We denote vectors by ⃗ vand use capital letters to refer to matrices. For example, A∈En×mis a matrix of size n×m with elements belonging to a set of permissible values, E. Specifically, if E={0,1}(resp. E={−1,0,1}), then A∈En×mis denoted as a binary (resp. ternary ) matrix. LetΣndenote the set of all bijective permutation functions σ:{1,2, . . . , n } → { 1,2, . . . , n }. For a
+
+Section name: Preprocessing: Index Construction
+Excerpt:
+In this section, we outline the preprocessing phase of our approach, during which we construct the essential data struc- tures for the matrix Bin Problem 2. These structures are designed to optimize and accelerate the multiplication pro- cess during the inference time (explained in Section 4). Given a ternary matrix A=Wi, representing the weights between two layers of a ternary NN, we first present it as the subtraction of two binary matrices A=B(1)−B(2), as de- scribed in Proposition 2.1. Let Bbe either B(1)orB(2). At a high level, during the preprocessing time, we partition the columns of Binto a set of column blocks , associating each block a row-permutation as its index to identify the longest common segments across the columns. This permutation is used later at the inference time for efficient vector-to-matrix multiplication.The space complexity for representing a matrix BisO(n2). I
+
+Section name: Inference Time: Vector-to-Matrix Multiplication
+Excerpt:
+To simplify our analysis, without loss of generality, let us assume the weight matrices are of size n×n. Specifically, given a preprocessed n×nbinary matrix B, we aim to efficiently compute the product ⃗ v·Bwhen a vector ⃗ v∈Rn is provided at inference time (see Figure 8 in Appendix A ). Recall that during the preprocessing time, for each column block Bi, we construct a permutation function σBiand a full segmentation list Lias its index. At the inference time, given a vector ⃗ v, our objective is to efficiently compute the multiplication of ⃗ vby each column block Bi, using (σBi, Li). Our first step is computing the Segmented Sums over the permuted vector πσBi(⃗ v)– i.e., the sum for each interval in the permuted vector that corresponds to groups of similar rows in the binary matrix Bi. Definition 4.1 (Segmented Sum) .Consider the permutation function σBiand the full segmentation list Li
+
+Section name: Experiments
+Excerpt:
+To optimize the runtime of the previously discussed CPU implementation on the GPU, we parallelized the vector- matrix multiplication. Using the segmentation matrix M, the multiplication was parallelized along its second dimen- sion, corresponding to k(see Section 4.2.2). To achieve this, we first expanded the input vector to a size ktimes larger: 1 input_expanded = input .unsqueeze(1). expand(-1, k, -1) Listing 3: RSR implementation on GPU (step 1) Then, we ran a single multiplication of input expanded and the matrix and finally reshaped the result: 1 expanded_result = torch.bmm( input_expanded, seg_matrix).squeeze (1) 2 result = torch.stack([expanded[:,j,:] for jin range (k)], dim=2).reshape( v.size(0), -1).unsqueeze(0) Listing 4: RSR implementation on GPU (step 2) This approach enables the computation of the product in parallel on the GPU. However, it does not utilize low-level optimiz
+
+Section name: Conclusion
+Excerpt:
+This paper presented algorithms that significantly improve inference time and memory efficiency for quantized neu- ral networks (like LLMs) with binary and ternary weights. By preprocessing weight matrices to create indices, our approach reduces storage complexity for maintaining the model weights by a logarithmic factor. It enhances inference efficiency, achieving a time complexity of O(n2 logn). Furthermore, our experiment results across various settings demonstrated the practical advantages of our methods, with observed reductions in inference time of up to 29x and memory usage of up to 6x. 10PyTorch default settings such as caching mechanisms, backend-specific optimizations (e.g., cuBLAS, cuDNN), and ker- nel fusion, are fully enabled. 8 An Efficient Matrix Multiplication Algorithm for Accelerating Inference in Binary and Ternary Neural Networks
+
+Section name: Background
+Excerpt:
+A trained DNN model consists of a collection of weights used for inference (Figure 7). The weights are learned during the training phase and are fixed during the inference time. During the inference time, given an input vector, the feedforward process can be viewed as a series of matrix multiplications applied to the input vector to produce the final output. For instance, consider the two consecutive layers shown in a multi-layer perceptron in Figure 7. Each weight matrix Wirepresents the edge weights between layers (i−1)andiwith layer 0 being the input vector. The feedforward step is a chain of matrix products and activation functions that maps input vector ⃗ xto output vector ⃗ y; it can be represented as follows (with ⃗ a0=⃗ x), where fis the activation function (e.g., sigmoid or ReLU). ⃗ zk=⃗ ak−1Wk⃗ ak=f(⃗ zk)Figure 8 visualizes the bottleneck operation of the inference process: the
+
+Section name: Related Work
+Excerpt:
+In this paper, we consider the quantized DNNs with binary and ternary weights (Dai et al., 2021; Wu et al., 2016; McK- instry et al., 2018; Zhu et al., 2016; Courbariaux et al., 2015; Hubara et al., 2016). Examples of ternary DNNs include (Moons et al., 2017; Hubara et al., 2018; Yuan et al., 2024) and 1.58-bit LLMs (Ma et al., 2024), where the weights are limited to{−1,0,1}. Previous research has explored enhancing matrix multiplica- tion through hardware-level accelerations (Guo et al., 2024; Wang et al., 2024; Park & Choi, 2019; Trusov et al., 2022; Choi et al., 2021). In contrast, our approach focuses on de- signing an algorithm that provides a guaranteed logarithmic improvement over naive matrix multiplication at the appli- cation layer, independent of specific hardware architectures. The Four Russians Algorithm (Arlazarov et al., 1970) is a classical method for efficient Boolean ma
+
+Section name: Proofs
+Excerpt:
+Theorem 3.6. Representing a binary or ternary weight ma- trix as block indices requires a space complexity O n2 log(n) , and the preprocessing algorithm to generate the block in- dices has a time complexity of O(n2). Proof. For Binary DNNs, let B=Wℓbe a binary weight matrix. For Ternary DNNs, let a weight matrix A=Wℓ An Efficient Matrix Multiplication Algorithm for Accelerating Inference in Binary and Ternary Neural Networks be expressed as A=B(1)−B(2)using Proposition 2.1. Then represent Ausing the block indices of B(1)andB(2) produced by Algorithm 1. Let Bbe either B(1)orB(2). Time Complexity: During the preprocessing, we read all elements of the input matrix B, which requires O(n2)time. Blocking the matrix into k-Column Blocks has a time com- plexity linear to the number of blocks while determining the permutation corresponds to performing a bucket sort on the rows to achieve the le
+
+Section name: Discussion
+Excerpt:
+In this section, we discuss some of the advantages and lim- itations of our proposed algorithms and outline potential directions for future research in this area. •OurRSR++ algorithm shows up to a 29x improvement in inference time and a 6x reduction in memory usage, as observed in our experiments. Note that following our complexity analyses, these numbers get even larger by the size of the network layers. This significant improvement indicates that the algorithm can support larger hidden layers and matrices to enhance model ac- curacy while requiring fewer computational resources. •The efficiency of our algorithm leads to reduced en- ergy consumption, further contributing to the model’s practicality and sustainability. •Our approach enables the deployment of more ad- vanced models on ordinary devices, such as per- sonal computers, with limited memory and processing power. •By processing 
+
+Section name: Experiments Details
+Excerpt:
+We built a synthetic dataset containing a set of short factual questions (ShortQuestions). In order to build this dataset, we used GPT-4 to give us a list of questions. For example, one sampled question from this dataset looks like: “What is the capital of France?”, and the responses of both Standard andRSR models were “Paris”. This is because we limited each model to generate only one token through a single feedforward pass. To further optimize Algorithm 2, for each column-block j, we constructed a segmentation matrix Mjof size n× 2k. Each column of Mjis a one-hot vector of size n, representing the indices of elements in ⃗ vthat belong to the corresponding segment before the permutation, with 2k segments in total (see Figure 1). The inference process is then reduced to a matrix multiplication ⃗ v× N , followed by reshaping the output, where N=M × Bin [k]andMis a 3D tensor containing all
+
+Section name: Extended Experiment Results
+Excerpt:
+As outlined in Section 4.2.2, the optimal value of kfor RSR (reps. RSR++ ) is determined through a binary search over the interval [0,log(n log(n))](resp. [0,log(n)]). Once the optimal kis identified for each n, it is then applied in the subsequent experiments. Figures 9a and 9b show the running time with respect to different kvalues. By increasing n, the optimum value of kalso increases. F.2.RSR vs.RSR++ on Native Implementation In Section 5.1, we observed the performance gain of RSR andRSR++ in comparison with the standard vector-matrix multiplication across different input sizes ( n). In this section, we focus on the performance gain of RSR++ versus RSR across different settings. To do so, we use our native C++ implementation discussed in Section 5.1. Figure 10 illustrates the difference between only RSR++ and RSR for in the inference time. In this figure, we can see up to 25% improve
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Introduction: 10
+Preliminaries: 25
+Preprocessing: Index Construction: 20
+Inference Time: Vector-to-Matrix Multiplication: 30
+Experiments: 5
+Conclusion: 15
+Background: 2
+Related Work: 8
+Proofs: 10
+Discussion: 5
+[single_pass_llm_response] attempt=2/5
+Introduction: 10
+Preliminaries: 25
+Preprocessing: Index Construction: 20
+Inference Time: Vector-to-Matrix Multiplication: 30
+Experiments: 5
+Conclusion: 5
+Background: 2
+Related Work: 3
+Proofs: 8
+Discussion: 7
+Experiments Details: 1
+Extended Experiment Results: 1

@@ -1,0 +1,27 @@
+[single_pass_llm_prompt]
+Allocate importance across the following top-level sections.
+
+
+
+Guidelines:
+- Higher scores: segments that carry the core scientific contribution through
+  methods, theory, algorithms, proofs, experimental findings, analysis, or
+  important problem formulation.
+- Lower scores: segments that mainly provide background, motivation, transitions,
+  setup details, or lower-impact narrative.
+- If one segment contributes about 3x as much as another, assign about 3x the score.
+- If two segments contribute equally, assign equal scores.
+- Do not copy decimal values that appear inside the excerpts. Infer new percentages.
+
+Return one line per section exactly in the form:
+Section Name: percentage
+[single_pass_llm_response] attempt=1/5
+Here are the allocations:
+
+Introduction: 10
+Literature Review: 15
+Methodology: 25
+Results: 20
+Discussion: 10
+Conclusion: 5
+Limitations and Future Work: 5

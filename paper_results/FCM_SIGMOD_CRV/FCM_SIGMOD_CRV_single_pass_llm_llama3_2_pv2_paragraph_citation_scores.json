@@ -1,0 +1,149 @@
+[
+  {
+    "section_path": [
+      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
+      "d=1"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "First, let us derive the expected approximation factor for an element ein group g1. For the case ofd=1, we employ the stronger guarantee of the average approximation factor instead of the expected one. For clarity, we use the expectation notation Eto also denote the average. Let ng1be the number of element types ing 1. In order to satisfy group fairness (Definition 2), we need to ensure that the expected approximation factor for the two groups is the same. That is, E[\ufe01 \u03b1g1]\ufe01 =E[\ufe01 \u03b1g2]\ufe01 . In Appendix B we show the next lemma. Lemma 1.E[\ufe01 \u03b1g1]\ufe01 =wg1 ng1andE[\ufe01 \u03b1g2]\ufe01 =w\u2212w g1 n\u2212n g1. By Lemma 1, to ensure fairness,w g1is chosen as follows: E[\ufe01 \u03b1g1]\ufe01 =E[\ufe01 \u03b1g2]\ufe01 \u21d4wg1 ng1=w\u2212w g1 n\u2212n g1\u21d4w g1=ng1 nw(3) In other words, according to Equation 3, if the number of bins allocated to each group is proportional to their size, i.e.,ng1 n, is sufficient to ensure fairness. Formally, Theorem 1.A CM sketch with a group-aware semi-uniform hash functionh (\u00b7)is group-fair, if the number of bins wgallocated to each group is proportional to the ratio of element types from that group. That is,w g=ng nw,\u2200g\u2208G. Before moving to the larger values of d, i.e., CM with more number of hash functions, let us take a closer look at Theorem 1 and what it indicates. A standard CM hashes the nelement types uniformly across the [w]bins (irrespective of which group they belong to). As a result, the expected number of element types in each bucket isn w. According to Theorem 1, wg=ng nw,\u2200 g\u2208G. As a result, the number of elements in each bucket for each groupgis: ng wg=ng ng nw=n w(4) In other words, to ensure fairness, we need toallocate bins to the group in a way that the expected number of element types hashed to each bucket remains unchanged, i.e.,n w. This helps us extend dto",
+    "citation": "(3)",
+    "citation_score": 0.013604930928564449
+  },
+  {
+    "section_path": [
+      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
+      "d=1"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "First, let us derive the expected approximation factor for an element ein group g1. For the case ofd=1, we employ the stronger guarantee of the average approximation factor instead of the expected one. For clarity, we use the expectation notation Eto also denote the average. Let ng1be the number of element types ing 1. In order to satisfy group fairness (Definition 2), we need to ensure that the expected approximation factor for the two groups is the same. That is, E[\ufe01 \u03b1g1]\ufe01 =E[\ufe01 \u03b1g2]\ufe01 . In Appendix B we show the next lemma. Lemma 1.E[\ufe01 \u03b1g1]\ufe01 =wg1 ng1andE[\ufe01 \u03b1g2]\ufe01 =w\u2212w g1 n\u2212n g1. By Lemma 1, to ensure fairness,w g1is chosen as follows: E[\ufe01 \u03b1g1]\ufe01 =E[\ufe01 \u03b1g2]\ufe01 \u21d4wg1 ng1=w\u2212w g1 n\u2212n g1\u21d4w g1=ng1 nw(3) In other words, according to Equation 3, if the number of bins allocated to each group is proportional to their size, i.e.,ng1 n, is sufficient to ensure fairness. Formally, Theorem 1.A CM sketch with a group-aware semi-uniform hash functionh (\u00b7)is group-fair, if the number of bins wgallocated to each group is proportional to the ratio of element types from that group. That is,w g=ng nw,\u2200g\u2208G. Before moving to the larger values of d, i.e., CM with more number of hash functions, let us take a closer look at Theorem 1 and what it indicates. A standard CM hashes the nelement types uniformly across the [w]bins (irrespective of which group they belong to). As a result, the expected number of element types in each bucket isn w. According to Theorem 1, wg=ng nw,\u2200 g\u2208G. As a result, the number of elements in each bucket for each groupgis: ng wg=ng ng nw=n w(4) In other words, to ensure fairness, we need toallocate bins to the group in a way that the expected number of element types hashed to each bucket remains unchanged, i.e.,n w. This helps us extend dto",
+    "citation": "(4)",
+    "citation_score": 0.013604930928564449
+  },
+  {
+    "section_path": [
+      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
+      "General Value of d"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "... dg1 dg1+1 ... ddg2=d\u2212d g1 dg1 Fig. 3.Illustration of the row-partitioning baseline. In order to satisfy group fairness (Definition 2), we need to ensure that the expected approximation factor for every group is the same. Given a groupg, in the next lemma we show a formula to computeg\u2019s expected approximation factor. The proof is shown in Appendix B. Lemma 2.E e\u2208g[Y]=\u2211\ufe01ng x=1[\ufe03\u2211\ufe01ng i=x(\ufe01ng i)\ufe01(\ufe02 wg)\ufe02i(\ufe02wg\u22121 wg)\ufe02ng\u2212i]\ufe03d . For two groups g1and g2, we allocate wg1columns to g1andwg2=w\u2212w g1columns to g2 by enforcing that the two groups have the same expected approximation factor. Formally, using Lemma 2, we solve the following equation (recall thatn g2=n\u2212n g1): Ee\u2208g 1[Y]=Ee\u2208g 2[Y]\u21d2 ng1\u2211\ufe02 x=1[\ufe04ng1\u2211\ufe02 i=x(\ufe03ng1 i)\ufe03 (\ufe031 wg1)\ufe03i(\ufe03wg1\u22121 wg1)\ufe03ng1\u2212i]\ufe04d (5) =n\u2212n g1\u2211\ufe02 x=1[\ufe04n\u2212n g1\u2211\ufe02 i=x(\ufe03n\u2212n g1 i)\ufe03 (\ufe031 w\u2212w g1)\ufe03i(\ufe03w\u2212w g1\u22121 w\u2212w g1)\ufe03n\u2212n g1\u2212i]\ufe04d Later in Section 4, we shall provide an efficient algorithm for solving Equation 5.",
+    "citation": "(5)",
+    "citation_score": 0.016478916289763137
+  },
+  {
+    "section_path": [
+      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
+      "Negative Result: Row Partitioning Baseline"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "FCM follows a column partitioning approach, using the group-aware semi-uniform hashing schemes. Alternatively, rows can be divided by allocating a specific number of exclusive rows to each group, where the allocation of rows to each group is determined by the number of element types within that group (Figure 3). Following Lemma 2, the expected size of the minimum-size bucket across the d\u2032rows,w\u2032columns, and a group withn\u2032elements can be computed as, E(n\u2032,d\u2032,w\u2032)=n\u2032\u2211\ufe02 x=1[\ufe04n\u2032\u2211\ufe02 i=x(\ufe03n\u2032 i)\ufe03 (\ufe031 w\u2032)\ufe03i(\ufe03w\u2032\u22121 w\u2032)\ufe03n\u2032\u2212i]\ufe04d\u2032 (6)",
+    "citation": "(6)",
+    "citation_score": 0.00776939635827141
+  },
+  {
+    "section_path": [
+      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
+      "Negative Result: Row Partitioning Baseline"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "179:10 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Letdg1anddg2=d\u2212d g1be the number of rows allocated to the groups g1and g2. Then, we can find the proper values ofd g1andd g2that achieve fairness by solving the following equation: E(n g1,dg1,w)=E(n g2,dg2,w)(7) However, there is a major issue that makes this approach unlikely to work: unlike w, which is a relatively large number, dis a small constant (usually on the order of tens). As a result, there are only a small, constant number of choices for dg1\u2208[d] . In practice, this makes it unlikely that dis divisible such that Equation 7 is satisfied. We shall verify this negative result in our experiments in Section 6.",
+    "citation": "(7)",
+    "citation_score": 0.00842119135477069
+  },
+  {
+    "section_path": [
+      "Computing The Column Widths"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Our algorithm is straightforward; we should compute the integer value of wg1such that Equation (5) holds. We note that Equation (5)may not hold for an integer value of wg1. In this case the goal is to compute the integer value of wg1such that the left side of Equation (5)is as close as possible to the right side of Equation (5). A naive implementation is to try every value of wg1and calculate the value of the left and right side of Equation (5)by simply evaluate every term in the sum. Such an implementation would take \u03a9(n3)time because we should try O(n) values ofwg1, and for each such value the calculation of each side of Equation (5)takes\u03a9(n2)time to evaluate the summations. We first show an exact near-linear time algorithm to compute the value of wg1that solves Equation 5 and then we briefly discuss an approximation algorithm that is used in our experiments to efficiently evaluate the sums of the binomial function. Efficient exact computation.We first assume that we have two groups, the unpopular elements g1and the popular elements g2. Then we extend our method to multiple groups G={ g1,..., gl}. Similarly, to the previous section, let E(n g1,d,w g1)be the function that represents the left side of Equation 5. Equivalently, the right side of Equation (5)is captured byE(n g2,d,w\u2212w g1). By definition, the function Ecomputes the expected error of group g1(resp. g2) elements. The values ng1,ng2, anddare fixed, so the more bins allocated to group g1(respectively, g2) elements, the smaller the expected error. Hence, the function E(n g1,d,w g1)is monotone decreasing with respect towg1, whileE(n g2,d,w\u2212w g1)is monotone increasing with respect to wg1. We formally establish the monotonicity ofEin the following proposition. The proof is shown in Appendix B. Proposition 1.For fixednandd, the functionE(n,d,w)is decreasing with respect tow. This property leads to the observation that instead of trying all values of wg1, we can run a binary search in the range [1,...,n] and compute the best value of wg1. The overall idea of our algorithm is the following. For every value of wg1in the binary search, we evaluate E(n g1,d,w g1) andE(n g2,d,w\u2212w g1). IfE(n g1,d,w g1)<E(n g2,d,w\u2212w g1)then we try larger values of wg1in the binary search. Otherwise, we continue the binary search with smaller values. In the end, we return the value of wg1found by the binary search such that |E(n g1,d,w g1)\u2212E(n g2,d,w\u2212w g1)|is minimized. Even if someone naively applies binary search, the running time would be \u03a9(n2)to evaluate the sums. Given a value of wg1we show how to compute E(n g1,d,w g1)in near-linear time with 3Proofs are provided in Appendix B.",
+    "citation": "(5)",
+    "citation_score": 0.04123062015503876
+  },
+  {
+    "section_path": [
+      "Price of Fairness Analysis",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Improving fairness usually comes at a cost, known as the \u201cprice of fairness\u201d (aka cost of fairness) \u2013 the reduction in the overall performance as a result of resolving unfairness [ 15]. After introducing FCM and its details, in this section, we study its price of fairness. Following Equation 1, the overall performance of a CM sketch can be measured in terms of the sum of its expected additive error across all element typesU={e 1,\u00b7\u00b7\u00b7,en}. That is, i=1\u03b5A(ei)(8) Subsequently, we define the price of fairness (PoF) of FCM as the increase in its total expected additive error, compared to CM. That is,",
+    "citation": "(8)",
+    "citation_score": 0.002700617283950617
+  },
+  {
+    "section_path": [
+      "Price of Fairness Analysis",
+      "General Value of d"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "ej\u2208g\u03b5A(ej), where each sum\u2211\ufe01 ej\u2208g\u03b5A(ej)is computed using Equation (10)forwgbuckets. Since we do not have a closed form for the wgvalues (ford> 1) from Equation (5), we cannot directly compute PoF=LCM\u2212LFCM. Instead, we compute the PoF experimentally for real datasets in Section 6.6. Particularly, our experiments, including Figures 12 to 18 confirm the small PoF ford>1.",
+    "citation": "(10)",
+    "citation_score": 0.00758101851851852
+  },
+  {
+    "section_path": [
+      "Price of Fairness Analysis",
+      "General Value of d"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "ej\u2208g\u03b5A(ej), where each sum\u2211\ufe01 ej\u2208g\u03b5A(ej)is computed using Equation (10)forwgbuckets. Since we do not have a closed form for the wgvalues (ford> 1) from Equation (5), we cannot directly compute PoF=LCM\u2212LFCM. Instead, we compute the PoF experimentally for real datasets in Section 6.6. Particularly, our experiments, including Figures 12 to 18 confirm the small PoF ford>1.",
+    "citation": "(5)",
+    "citation_score": 0.0025270061728395066
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Efficiency Evaluation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Having established the efficacy of the FCM sketch, we now turn our attention to its efficiency. A frequency-estimation sketch involves two main stages: (1) construction and (2) query time. In the following, we evaluate the impact of varying key parameters on the time required for each stage and provide a comparison with the standard CM sketch:",
+    "citation": "(1)",
+    "citation_score": 0.0004485492698240898
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Efficiency Evaluation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Having established the efficacy of the FCM sketch, we now turn our attention to its efficiency. A frequency-estimation sketch involves two main stages: (1) construction and (2) query time. In the following, we evaluate the impact of varying key parameters on the time required for each stage and provide a comparison with the standard CM sketch:",
+    "citation": "(2)",
+    "citation_score": 0.0004485492698240898
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "179:22 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh a partition of the elements into low frequency and high frequency elements. While this partition is the same as the one we used in our analysis, our objective is orthogonal to their problem. They do not necessarily aim to achieve the same estimation error between low and high frequency elements. Instead, they process light and heavy elements separately trying to improve the overall estimation error. To the best of our knowledge, none of these traditional and learned schemes can handle fair count-min estimations with theoretical guarantees. Finally, learning has been used to obtain other data structures as well, such asB-trees [54] or bloom filters [54, 62, 86]. Fairness.Fairness in data-driven systems has been studied by various research communities but mostly in machine learning (ML) [ 14,60,67]. Most of the existing work is on training a ML model that satisfies some fairness constraints. Some pioneering fair-ML efforts include [ 20,21,36,39,46,52,88]. Biases in data has also been studied extensively [ 9,10,66,73,77,83] to ensure data has been prepared responsibly [ 64,74,75,79]. Recent studies of fair algorithm design include fair clustering [ 3,16,18, 24,25,49,57,76], fairness in resource allocation and facility location problem [ 17,34,42,47,51,93], min cut [ 55], max cover [ 7], set cover [ 30], game theoretic approaches [ 4,35,92], hiring [ 6,70], ranking [8, 80, 81, 89], recommendation [23, 56, 84], representation learning [48], etc. Fairness in data structures is significantly under-studied, with the existing work being limited to [11\u201313,78]. Aumuller et al. [ 11\u201313] study individual fairness in near-neighbor search, while to the best of our knowledge, Shahbazi et al. [ 78] is the only work that studies group fairness in data structure design, and more specifically in hashing. Both in nearest-neighbor search and fair hashing, the objective is fundamentally different, so these techniques cannot be used for our FCM sketch.",
+    "citation": "[54]",
+    "citation_score": 0.0007407407407407408
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "179:22 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh a partition of the elements into low frequency and high frequency elements. While this partition is the same as the one we used in our analysis, our objective is orthogonal to their problem. They do not necessarily aim to achieve the same estimation error between low and high frequency elements. Instead, they process light and heavy elements separately trying to improve the overall estimation error. To the best of our knowledge, none of these traditional and learned schemes can handle fair count-min estimations with theoretical guarantees. Finally, learning has been used to obtain other data structures as well, such asB-trees [54] or bloom filters [54, 62, 86]. Fairness.Fairness in data-driven systems has been studied by various research communities but mostly in machine learning (ML) [ 14,60,67]. Most of the existing work is on training a ML model that satisfies some fairness constraints. Some pioneering fair-ML efforts include [ 20,21,36,39,46,52,88]. Biases in data has also been studied extensively [ 9,10,66,73,77,83] to ensure data has been prepared responsibly [ 64,74,75,79]. Recent studies of fair algorithm design include fair clustering [ 3,16,18, 24,25,49,57,76], fairness in resource allocation and facility location problem [ 17,34,42,47,51,93], min cut [ 55], max cover [ 7], set cover [ 30], game theoretic approaches [ 4,35,92], hiring [ 6,70], ranking [8, 80, 81, 89], recommendation [23, 56, 84], representation learning [48], etc. Fairness in data structures is significantly under-studied, with the existing work being limited to [11\u201313,78]. Aumuller et al. [ 11\u201313] study individual fairness in near-neighbor search, while to the best of our knowledge, Shahbazi et al. [ 78] is the only work that studies group fairness in data structure design, and more specifically in hashing. Both in nearest-neighbor search and fair hashing, the objective is fundamentally different, so these techniques cannot be used for our FCM sketch.",
+    "citation": "[48]",
+    "citation_score": 0.0003703703703703704
+  },
+  {
+    "section_path": [
+      "Discussions",
+      "Detecting Heavy Hitters"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "CM sketches have a wide range of range of applications including heavy hitters detection to detecting rare words (infrequent items that are not stop-word) in NLP settings [44], to AQP [28]. Still, identifying heavy hitters is known as one of the traditional applications of CM sketches. For heavy hitters detection, FCM performs equally to the standard CM. A heavy hitter in the standard sketch remains a heavy hitter in FCM. This is because CM sketches, including FCM, alwaysoverestimate the frequencies. As a result, FCMnever missesa heavy hitter due to its fairness mechanism.",
+    "citation": "[44]",
+    "citation_score": 0.0013849781301257516
+  },
+  {
+    "section_path": [
+      "Discussions",
+      "Detecting Heavy Hitters"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "CM sketches have a wide range of range of applications including heavy hitters detection to detecting rare words (infrequent items that are not stop-word) in NLP settings [44], to AQP [28]. Still, identifying heavy hitters is known as one of the traditional applications of CM sketches. For heavy hitters detection, FCM performs equally to the standard CM. A heavy hitter in the standard sketch remains a heavy hitter in FCM. This is because CM sketches, including FCM, alwaysoverestimate the frequencies. As a result, FCMnever missesa heavy hitter due to its fairness mechanism.",
+    "citation": "[28]",
+    "citation_score": 0.0013849781301257516
+  }
+]

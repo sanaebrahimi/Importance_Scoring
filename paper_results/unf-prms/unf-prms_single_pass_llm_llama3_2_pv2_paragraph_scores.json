@@ -1,0 +1,731 @@
+[
+  {
+    "section_path": [
+      "Introduction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Data-driven decision making is challenging when there are mul- tiple criteria to be considered. Consider a database of ntuples with dnumeric attributes. In certain cases, \u201cexperts\u201d can come up with a (usually linear) function to combine the criteria into a \u201cgoodness This work is licensed under the Creative Commons Attribution- NonCommercial-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/. For any use beyond those covered by this license, obtain permission by emailing info@vldb.org. Copyright is held by the owner/author(s). Publication rights licensed to the VLDB Endowment.",
+    "technical_score": 0.004330342043979849,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proceedings of the VLDB Endowment, V ol. 13, No. 3 ISSN 2150-8097. DOI: https://doi.org/10.14778/3368289.3368291score\u201d that reflects their preference for the tuples. This function can then be used for ranking and evaluating the tuples [1\u20134]. However, devising such a function is challenging [5, 6], hence not always a reasonable option, especially for ordinary non-expert users [7]. For instance consider a user who wants to book a hotel in Miami, FL. She wants to find a hotel that is affordable, is close to a beach, and has a good rating. It is not reasonable to expect her to come up with a ranking function, even though she may roughly know what she is looking for. Therefore, she will probably start exploring different options and may end up spending several confusing and frustrat- ing hours before she can finalize her decision. Alternatively, one could remove the set of \u201cdominated\u201d tuples [8], returning a Pareto- optimal [9] (a.k.a. skyline [7,8]) set, which is the smallest set guaranteed to contain the \u201cbest\u201d choice of the user, assuming that her preference is monotonic [8]. In the case where user preferences are further restricted to linear ranking functions, only the convex hullof the dataset needs to be returned. The problem with the skyline or convex hull is that they can be very large themselves, sometimes being a significant portion of the data [10, 11], hence they lose their appeal as a small representative set for facilitating decision making. Consequently, as outlined in x7, there has been extensive effort to reduce the size of the set. Nanongkai et al. [10] came up with the elegant idea of finding a small set that may not contain the absolute \u201cbest\u201d for any possi- ble user (ranking function), but guarantees to contain a satisfactory choice for each possible function. To do so, they defined the notion of \u201cregret-ratio\u201d of a representative subset of the dataset for any given ranking function as follows: it is the relative score difference between the best tuple in the database and the best tuple in the rep- resentative set. Given k < n, the task is to find the regret-ratio minimizing set (RRMS), i.e., a subset of size kthat minimizes the maximum regret-ratio across all possible ranking functions. This problem is shown to be NP-complete, even for a constant (larger than two) number of criteria (attributes) [12]. Other researchers have also considered different versions of the problem formulation. For instance Chester et. al. [13] generalize the notion of regret from the comparison of the the actual top-1 of database to the top-k. More recently, in [14, 15] the goal was to compute the representa- tive set that minimizes the average regret-ratio across all possible functions, instead of minimizing the max regret-ratio. All these variants have been shown to be NP-complete. Given their intractable nature, there has been significant effort in designing efficient heuristics and approximation algorithms for these problems. The RRMS problem has been investigated in sev- eral papers [11, 12,16], and several approximation algorithms have been designed; the algorithms in [11, 12] run in polynomial time and can approximate the max-regret ratio within any user-specified accuracy threshold. The average regret-ratio problem has been in- vestigated in [14], and a different greedy approach has been pro- posed, which achieves a constant (not user-specified though) ap- proximation factor with high probability.",
+    "technical_score": 0.02639446579187718,
+    "citation_score": 0.02639446579187718
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we make the following observations about the pre- vious works: (a) the proposed algorithms are dependent on the spe- cific problem formulation, and do not seem to generalize to differ- ent variants, and (b) the focus has been on designing approxima- tion algorithms, and not on optimal algorithms. We take a different route towards solving these problems, and our work makes two im- portant contributions:",
+    "technical_score": 0.004436487746792973,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Firstly, we develop a unified algorithm called URM that works across different formulations of the problem, including max [10] and average [14] regret minimizing sets. The unified algorithm makes calls to a subroutine (we refer to it as an \u201coracle\u201d), and it is this subroutine/oracle that needs to be customized for each prob- lem variant. Thus the customization is localized to the design of the oracle.",
+    "technical_score": 0.005447745983194313,
+    "citation_score": 0.005447745983194313
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Secondly, we make a connection between the various regret min- imizing problems and the seemingly unrelated classical data min- ing problem of clustering and the well-known K-MEDOID [17] al- gorithm. Most variants of clustering are NP-hard, yet the K-MEDOID algorithm is extremely popular in practice and is based on a hill- climbing approach to find a local optima. One of the main technical highlights of our contributions is to take inspiration from, and de- sign our unified algorithm based on the K-MEDOID algorithm, even though the regret minimization problems seemingly appear quite different from clustering problems. One of the consequences of our approach is that the well-known advantages of the K-MEDOID algorithm transfer over to our unified algorithm. For example, the K-MEDOID algorithm has the any-time property; given more time it can be repeatedly restarted from different random starting configu- rations, which gives it the ability to improve the local optima that it has discovered thus far. Our unified algorithm also has this prop- erty, which can be useful in time-sensitive applications, including a query answering system.",
+    "technical_score": 0.008147153049717241,
+    "citation_score": 0.007315311597193561
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "To achieve our two contributions, several novel and challenging technical problems had to be solved. The K-MEDOID algorithm provided inspiration, but was not easily adaptable for our case. In- stead, we had to carefully model our problem as that of optimally partitioning the space ranking functions into kconvex geometric re- gions, such that for each region exactly one tuple from the database is the \u201crepresentative\u201d, i.e., it has the highest (max, or average, de- pending on the problem variant being solved) score for any function in that region. At a high level, our algorithm first chooses ktuples randomly as our initial representative set. Then it only examines thesektuples, and partitions the function space into kconvex re- gions such that the tuple associated with each region outscores the remainingk\u00001tuples for any ranking function within its region. Then, the database is examined to update the best representative for each region, and the process iterates until a local optima is reached. The process of examining the database for updating the best rep- resentative for a region required us to develop variant-specific or- acles. For the case of the max regret-ratio, we propose different innovative strategies for designing an efficient oracle. For large regions, we design a threshold-based algorithm based on function- space discretization. For narrow regions, we model the problem as an instance of edge sampling from a weighted graph where edge weights are determined by solving (constant-sized) linear programs. For the average regret-ratio case, designing an oracle was chal- lenging. As another of our innovative technical highlights, we show that it is reducible to the classical problem of computing the volume of polytopes defined by the intersection of O(n)halfspaces. Unfor- tunately, this approach has a time complexity of (nd)[18]. Evenif we assume that the dimension of the database is fixed, this high complexity makes this approach only of theoretical interest. Conse- quently, we propose an alternative approach based on Monte-Carlo sampling of the function space.",
+    "technical_score": 0.01780303814567842,
+    "citation_score": 0.007315311597193561
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Highlights"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "We provide proof of convergence of our unified algorithm, as well as provide detailed theoretical analyses of our oracles. We also conduct extensive empirical experiments on both real and synthesis datasets that show the efficiency and effectiveness of our proposal.",
+    "technical_score": 0.0026096986745841023,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Data Model: We consider a database Din the form of ntuples t1totn, defined over dnumeric attributes A1toAd. We use the notation ti[j]to show the value of tion attributeAj. With- out loss of generality, we assume that attribute values are normal- ized and standardized as the non-negative real numbers, R+. The numeric attributes are used for scoring and ranking the tuples. Ad- ditionally, the dataset may also include non-ordinal attributes that may be used in filtering, but not in ranking. Finally, for each attributeAi, we assume that the larger attribute values are pre- ferred. The values xof an attribute Aiwith smaller-preferred na- ture require a straight forward transformation such as (max(A i)\u0000 x)=(max(A i)\u0000min(A i)). EXAMPLE 1.Consider a dataset of 10tuples, defined over the attributesA1toA3, as shown below. The values of the attributes are normalized in range [0,100] and for all attributes the higher values are preferred. In this example t4[3]refers to the value of tuplet4on attributed3which is equal to 75. tuple A 1A2A3tuple A 1A2A3 Ranking Model: The database tuples are ranked using the scores assigned by a ranking function. For every tuple t2D, a ranking functionf:Rd!R+assigns a non-negative score to t. A tuple tioutrankstjbased onfif its score is larger than the one of tj. Following the literature in regret-minimizing context [10\u201313], we consider the class of linear ranking functions in this paper1. The score of a tuple tbased on a linear function fwith a weight vector ~ w=fw1;w2;\u0001\u0001\u0001;wdgis computed as: f~ w(t) =dX i=1wi\u0001t[i] (1) In the rest of paper, we simplify f~ w(t)tof(t)when~ wis clear in the context. As an example, let us consider Example 1, while choosing ~ w=h:25;: 5;:25ifor the ranking function. Using this function, the score of other tuples, the ordering of the tuples in Dbased this function isft5;t1;t7;t9;t10;t4;t6;t2;t8;t3g. In ad-dimensional space every tuple is presented as a point, and every linear function can be modeled as a origin-starting ray that passes through the point specified by its weight vector. For ex- ample, the function fwith the weight vector ~ w=h:25;:5;:25iis modeled as the ray that starts from the origin and passes through the pointh:25;: 5;:25i. The ordering of tuples based on fis specified by the ordering their projections on the ray of f(please refer to [5] for further details). As a result, the universe of origin-starting rays in the first quadrant of the ddimensional space forms the universe of linear functions. We call this the function space. 1Note that a large class of non-linear functions can fit this model after a straight-forward linearization [19].",
+    "technical_score": 0.027011461063972838,
+    "citation_score": 0.016060373798714698
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "A tupletiof a database is said to dominate tuple tjif each of the attribute values for tiis not smaller than that of tj\u2019s while there exists an attribute Akwhereti[k]> tj[k]. For instance, in Ex- ample 1,t1:h60;80;77idominatest2:h55;75;63i. The set of tuples from the database which are not dominated tuples in the database is known as the skyline (or Pareto-optimal) [7\u20139]. A maxima representative, or simply a representative, is a subset S\u0012Dthat is used for finding the maximum of Dfor any arbitrary ranking function f. Skyline is the minimal representative of Dthat guarantees the containment of the maximum of any function in the class of monotonic ranking functions. That is the reason it is pop- ular for multi-criteria decision making (in the absence of a ranking function). Similarly, convex-hull is the minimal representative that contains the maximum for the class of linear ranking functions. However, the skyline or convex-hull may contain a large portion of the database, which diminishes their applicability as a small set for decision making [10, 11]. For instance, the skyline of Example 1 isft1;t4;t5;t6;t7;t8;t9;t10g, which includes 80% of the tuples.",
+    "technical_score": 0.013139473432813907,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Regret ratio is a measure of dissatisfaction of a user when she sees results returned from the subset instead of the entire database. Letfbe a ranking function, then regret ratio is defined as the ra- tio of the difference in ranking function scores between the top database tuple and the top tuple from the representative set to the score of the top database tuple:",
+    "technical_score": 0.003173092292951122,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "DEFINITION 1 (R EGRET RATIO ).Given a function f, let tu- pletbe argmax8t2Df(t). The regret ratio of set S\u0012Dfor a ranking function fcan be computed as rr(f;S) = min t02Sf(t)\u0000f(t0) f(t)(2) For instance, in Example 1, consider the set S=ft2;t3;t4gand the function fwith the weight vector ~ w=h:25;:5;:25i.t5is the max for this function (f (t5) = 75:75) while t4is the tuple with the max score (f (t4) = 70:75) in S. Therefore, rr(f;S)in this example is (75:75\u000070:75)=75:75':066.",
+    "technical_score": 0.004249677178059539,
+    "citation_score": 0.0032368374506220156
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "For a universe of ranking functions, an aggregate over the regret ratio of each ranking function is considered as the regret ratio of the representative set for the universe.",
+    "technical_score": 0.0014378074452434772,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "In this paper, we provide a unified model that can handle a wide variety of aggregates (any `pnorm):",
+    "technical_score": 0.0008924322073925032,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "DEFINITION 2.`pnorm regret measure : Given a database D, a representative S\u0012D, a real number p\u00151, and a set of ranking functionsF, the regret-ratio for the `pnorm is defined as: whereAggpis the`pnorm aggregate measure.",
+    "technical_score": 0.0018840235489397286,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "While different aggregates can be used here, so far the literature has considered maximum andaverage regret ratio minimizing sets. Without limiting our proposal to a specific value of norm, we espe- cially show the adaptation of our framework for the existing aggre- gates, i.e., (i) `1: maximum regret ratio and (ii) `1: average regret ratio. We will lay out the formal definitions of these measures in the remainder of this section.",
+    "technical_score": 0.003569728829570013,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "DEFINITION 3.Maximum (`1norm) Regret Ratio: Given a database Dand a set of functions F, the maximum regret ratio [10] of a setS\u0012Dis the maximum value of regret ratio for the set S over the set of all possible ranking functions F. That is, f2Frr(f;S) (3)While the maximum regret ratio looks at the worst case regret ra- tio for a set of functions, a different measure for user dissatisfaction is the average regret ratio.",
+    "technical_score": 0.004412581469885155,
+    "citation_score": 0.004412581469885155
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Regret optimization measures"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Given a database D, a set of functions F, and a probability dis- tribution\u0011(:)where\u0011(f)is the probability of each function f2F, the average regret ratio [14] of a set S\u0012Dis defined as f2F\u0011(f)rr(f;S)df (4) Even though the regret ratio notions are defined for general classes of functions, the majority of the existing work consider Fas the class of linear ranking functions (Eq. 1) [10\u201314, 20]. Also, for average regret ratio, the uniform distribution is considered as the probability distribution of ranking functions \u0011(:)[14]. We follow the literature on these. In the rest of the paper, we simplify the no- class of linear ranking functions (L).",
+    "technical_score": 0.009023481208079753,
+    "citation_score": 0.009023481208079753
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we consider the problem of finding a compact rep- resentative of size kfrom a database such that the regret optimiza- tion measure is minimized.",
+    "technical_score": 0.0014883589378017772,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Formally:",
+    "technical_score": 5.512440510376952e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Given a dataset D, a set of ranking functions F, and a value k, find the representative SofDforFsuch thatjSj=kand `pnorm regret measure (Definition 2) ofSis minimized. In particular, the problem for the max. (resp. avg.) regret ratio is to find a set S\u0012Dof sizekthat minimizes the max. (resp. avg.) regret ratio. For any constant number of dimensions larger than 2, the maximum regret ratio problem is NP-complete [12]. Similarly, the problem for average regret ratio is proven to be NP- complete [14].",
+    "technical_score": 0.005099007472098681,
+    "citation_score": 0.005099007472098681
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "The two problems we consider in this paper are the max and aver- age regret ratio optimizing set problems. In section 3, we describe the Regret Minimizing Framework algorithm, a general framework to solve the regret ratio class of problems, followed by sections 4 and 5 which discuss the details of the oracles for the Maximum and Average regret ratio problems respectively. We show empirical results for both these problems in section 6.",
+    "technical_score": 0.004024081572575175,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Overview"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we propose our Unified Regret Minimizer (URM) algorithm which is inspired by the K-MEDOID algorithm. Before providing the details of the algorithm, it is necessary to explain two central ideas in this paper: (i) representative and (ii) region of a tuplet, defined in definition 5and definition 6respectively. DEFINITION 5.Given a function fand a set of tuples S\u0012D, a tuplet2Sis a representative for fif it has the maximum score, based onfamong elements of S. Formally: \u001a(f;S ) =argmaxt2Sf(t) DEFINITION 6 (R EGION OF THETUPLEt).Given a setSand a tuplet2S, the region of tis the set of functions for which tis the representative. That is, Rt(S) =ff2Lj\u001a(f;S ) =tg",
+    "technical_score": 0.00832237568265364,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Overview"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "For example, Fig. 1shows the regions of the tuples ft1;t5;t7;t9g in Example 1. Having the necessary definitions in place, we now provide a brief overview of the K-MEDOID and then show the transformation of our problem to it. Recall that given a database D, the output size kand a regret measure, the URM algorithm finds a set of krepresentative tuples from D, such that the regret measure is minimized. K-MEDOID algorithm: An iterative algorithm that partitions a set ofnobjects intokclusters, such that the distance between objects belonging to a cluster and their cluster center are minimized. While many clustering algorithms (such as kNN [21]) have cluster centers that may not belong to the set of nobjects, the K-MEDOID algo- rithm sets itself apart by choosing the cluster centers from the set ofnobjects. More details about the algorithm is provided in [17]. Although the clustering problem and the K-MEDOID algorithm seem different from our regret minimization problems, the notion ofregion of a tuple, provided in Definition 6is the key in the prob- lem transformation. As we shall show in the following, we see the problem as a partitioning of the function space into kconvex regions while the tuples are the centroids. Before providing further technical details in x3.2, we would like to highlight a key difference between the nature of the problems: While the K-MEDOID algorithm deals with a countable set of ob- jectsn, the URM algorithm deals with an infinite set of objects (functions). The K-MEDOID algorithm clusters nobjects (n being a discrete and finite number) into kclusters, each of which contains finite number of objects. In contrast, as we shall elaborate next, the URM algorithm clusters the continuous space of ranking functions, which contains an infinite number of functions into kconvex re- gions of ranking functions. TheURM algorithm forms the basis for a unified framework to find compact representatives for a variety of regret measures. It does this by abstracting the various notions of regret measures into anoracle. At a high level, URM operates as follows. It is initialized with a set of ktuples, which form the compact representatives for the first iteration of the algorithm. These ktuples are used to par- tition the entire function space into kconvex regions, such that for each region the corresponding tuple is the representative. In each iteration, we replace the ktuples with a potentially new set of ktu- ples that improves the regret measure. This is done by choosing, for each convex region of functions, the tuple from the database Dthat is the best representative for that region (this is accomplished by making calls to the oracle). The function space is repartitioned into knew convex regions, and the iterations continue until we converge to a local optima (i.e., the ktuples do not change).",
+    "technical_score": 0.020518960734818455,
+    "citation_score": 0.020518960734818455
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Algorithm development"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The key in the design of URM is that a set of krepresentative tuples partition the function space into kconvex regions, such that each of the tuples tiis the \u201crepresentative\u201d for all functions of its re- gionRi. This enables adopting the K-MEDOID technique for clus- tering the function space. THEOREM 1.Consider the set S:ft1;\u0001\u0001\u0001;tkgas the compact representative of database Dand the region of functions that are represented by tibeRi. Then the followings hold: 1. The regions R1;\u0001\u0001\u0001;Rkpartition the function space. 2. For each tuple ti,Riis convex. 3. Each region Riis the intersection of (k\u00001)half-spaces.",
+    "technical_score": 0.008133838438127641,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Algorithm development"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "PROOF . Consider an arbitrary ranking function f.",
+    "technical_score": 0.0005527851365717813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Algorithm development"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "From Eq. 2, the regret ratio r=rr(f;S)is the regret ratio of the set Sfor the tition the function space into convex regions. For a representative of sizek, each region is formed as the intersection of (k\u00001)half spaces. Each tuple can be thought of as being in charge of its own region. functionf. The tuple from the set Swhich achieves this regret ra- tio ist=argmin8i\u0014k(f(t)\u0000f(ti))=f(t). This tuplet2Sis the representative for the function f. The re- gionRiconsists of all the functions that have tias the representa- tive. As the above property is applicable to the set of all ranking functions, regions R1;\u0001\u0001\u0001;Rkpartition the function space into k regions. This proves property 1. The region of functions for which the tuple tiis ranked higher than tuplet1is a half-space denoted by H+ i1, which is defined by the inequality, kX i=1wi\u0001(ti[i]\u0000t1[i])\u00150 (5) The hyper-plane represented by the left-hand side of Eq. 5is de- noted as ordering exchange hyper-plane as it divides the space into two regions, one in which tuple tiis better than t1and vice versa in the other.",
+    "technical_score": 0.009871163153067524,
+    "citation_score": 0.009871163153067524
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Algorithm development"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "As Eq. 5represents a half-space and half-spaces are convex,H+ i1is a convex region. Similarly, let H+ ijbe the region of functions where tiis better than tj. AsRiis the region of func- tions wheretiis the representative, we need to consider the func- tion space where tiis better than all the other tuples, which is given by,R1=\\k j=1H+ ij (6) Riis the intersection of k\u00001half-spaces which proves property 3. We know that, the intersection of convex regions is convex. As half-spaces are convex, region Ri, which is an intersection of (k\u0000 1)half-spaces is convex. This proves property 3. An interesting observation from Theorem 1is that each region is described as a list of (k\u00001)half-spaces (equations), which is independent of the number of dimensions. As an example let us consider Fig. 1, which shows the regions for the tuplesft1;t5;t7;t9gin Example 1. Table 1shows the three half-spaces that define each of the regions. For instance, the region oft1is described by the half-spaces between t1andt5,t7, andt9. Each of these regions are drawn in Fig. 1. One can verify that these regions are convex and partition the function space. Theorem 1shows that the regions of a set of tuples S:ft1;::;t kg partition the function space into knon-overlapping convex clusters. Now we show how this enables adopting the K-MEDOID algorithm. Consider a database Dand an initial set S:ft1;::;t kgofkrepre- sentative tuples in the first iteration of the algorithm. Let the region of functions Rifor tupletibe represented as the intersection of (k\u00001)half-spaces. Based on Definition 6,tiis preferred over all tuplestj2Snftigfor any function f2Ri.But it does not neces- sarily mean that tiis preferred over all tuples tj2Dnft ig.So, for eachi, there may be another tuple in the dataset that can introduce a smaller regret compared to tiforRi. This is a key observation in designing the subsequent iterations of the algorithm. To do so, we rely on the existence of the \u201cregret optimization oracle\u201d, that finds",
+    "technical_score": 0.015714891739683497,
+    "citation_score": 0.015714891739683497
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Algorithm development"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Region Half-space 1 Half-space 2 Half-space 3 Color Region for t1t1\u0000t5:\u000020A 1+ 5A2+ 4A3\u00150 t1\u0000t7:\u0000A1+ 2A2\u00003A3\u00150 t1\u0000t9:\u000026A 1+ 12A 2+ 3A3\u00150 Purple Region for t5t5\u0000t1:20A1\u00005A2\u00004A3\u00150 t5\u0000t7:19A 1\u00003A2\u00007A3\u00150 t5\u0000t9:\u00006A 1+ 7A2\u0000A3\u00150 Green Region for t7 t7\u0000t1:A1\u00002A2+ 3A3\u00150 t7\u0000t5:\u000019A 1+ 3A2+ 7A3\u00150t7\u0000t9:\u000025A 1+ 10A 2+ 6A3\u00150 Blue Region for t9t9\u0000t126A1\u000012A2\u00003A3\u00150 t9\u0000t5:6A1\u00007A2+A3\u00150 t9\u0000t7:25A1\u000010A2\u00006A3\u00150 Orange Algorithm 1 URM Algorithm Input: D, Regret Oracle Orc, Initial set of ktuplesinitial Output: Representative S 1:S initial 2:repeat 3:S0 new List 4: fortupletinSdo 5:Rt RegionOf(t, Snftg)2 6:t0 Orc(D;R t)// the best tuple for Rt 7: Add t0toS0 8: end for 9:S S0 10:until Convergence 11: returnS the best tuple in the database for Ri. This oracle is dependent on the variant of the regret measure we are seeking to optimize. Regret optimization oracle: The regret optimization oracle is the variant-specific part of our overall approach. It is used to find a rep- resentative tuple from the database which best optimizes a specific regret measure for a convex region of ranking functions Ri(e.g., max regret, average regret, more general `p-norm regret, etc). For- mally, given a database D, a particular variant of regret measure of interest, and a convex region of functions Ridefined by the inter- section of half-spaces, the regret optimization oracle finds the tuple (and the corresponding regret measure) from the database which minimizes the regret measure over all functions in Ri. For now, we assume that such a variant-specific oracle exists, and we proceed with describing how our unified algorithm URM can leverage such an oracle (details about the design of the ora- cle for different problem variants are deferred to x4andx5). At every iteration of the algorithm, for every region of functions Ri, the regret optimization oracle is used to find the new representative for the region Ri. The set ofktuples obtained from kcalls to the regret optimization oracle form the new set of representatives for the next iteration of the algorithm. The iterations continue until the representative set of tuples ceases to change. The pseudo code of the URM algorithm is given in Algorithm 1. Also, Algorithm 2shows the pseudo code for finding the region Ri for a tupleti, in the form of the intersection of (k\u00001)half-spaces. Algorithm 2 RegionOf Input: A set ofktuplesSand a tuplet2S Output:Rtin the form of intersection of (k\u00001)half spaces 1:Rt new set 2:fortupletjinSnftg do //Hjis defined as asPd i=1Hj[i]\u0002wi\u00150 3:Hj new list of sized 4: fori 1toddoHj[i] =t[i]\u0000tj[i] 5: AddHjtoRt 6:end for 7: returnRt 2Note that the region of a tuple can be empty unless it belongs to the convex hull. In case of a region of a tuple being empty we add a random tuple in its place.Compared to the existing literature for regret ratio minimizing problem, the URM algorithm has some unique and important fea- tures. URM provides a unified framework for the `pand`1classes of regret ratio measures. Our iterative algorithm has the any-time property where the user may stop at any time/iteration and still find a set of compact representatives. The any-time property can be very useful in case of real time query answering systems and other time-sensitive applications.",
+    "technical_score": 0.04777642966084681,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Proof of convergence for p and norms"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "A critical requirement for the iterative algorithm is the conver- gence guarantee. Here, we prove that our algorithm converges to a local optima, for the `pand`1norm class of regret ratio measures. THEOREM 2.In each successive iteration of the URM algo- rithm, the regret measure for the set S:ft1;\u0001\u0001\u0001;tkgimproves for the`pnorm regret measure.",
+    "technical_score": 0.003061529140067263,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Proof of convergence for p and norms"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "PROOF . Let us consider a set S:ft1;\u0001\u0001\u0001;tkgas the compact representatives before the iteration and let set S0:ft0 1;\u0001\u0001\u0001;t0 kgbe the compact representatives after the iteration. The `pnorm for the setScan be described by RR=psZ f2F(rr(f; S ))p=pvuutkX i=1Z f2Ri(rr(f; ti))p During the iteration, for every region Rithe regret minimization oracle finds a tuple from the database Dthat minimizes the `pnorm regret measure. Hence, we know that, k i=1Z f2Ri(rr(f;S))p\u0015Z f2R0 i(rr(f;t0 i))p(7) As the equation for RR0can be written as, RR0=pvuutkX i=1Z f2Ri(rr(f; t0 i))p (8) Using Eq. 7in Eq. 8, we get pvuutkX i=1Z f2Ri(rr(f; ti))p\u0015pvuutkX i=1Z f2Ri(rr(f; t0 i))p As the region of tidiffers from that of t0 i, we can conclude rr(f;t0 i))\u0015(rr(f;S0))RR\u0015RR0(9) A similar proof for `1norm can be proved. THEOREM 3.In each successive iteration of the URM algo- rithm, the regret measure for the set S:ft1;\u0001\u0001\u0001;tkgimproves for the`1norm regret measure(maximum regret ratio).",
+    "technical_score": 0.009318865014064388,
+    "citation_score": 0.009318865014064388
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Proof of convergence for p and norms"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "PROOF . Let us consider a set S:ft1;\u0001\u0001\u0001;tkgas the compact representatives before the iteration and let set S0:ft0 1;::;t0 kgbe the compact representatives after the iteration. The `1norm regret measure for the set Scan be described by RR=kmax i=isup f2Rirr(f;ti) During the iteration, for every region Rithe regret minimization oracle finds a tuple from the database Dthat minimizes the `1 norm regret measure. Hence, we know that k i=1sup f2Rirr(f;ti)\u0015sup f2Rirr(f;t0 i) (10) Using equations 9and 10we get, kmax i=isup f2Rirr(f;ti)\u0015kmax i=isup f2Rirr(f;t0 i)\u0015sup f2Frr(f;S0) RR\u0015RR0",
+    "technical_score": 0.004807137860281054,
+    "citation_score": 0.003786628146925299
+  },
+  {
+    "section_path": [
+      "Unified Regret Minimization",
+      "Running Example"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "To provide a better understanding of the algorithm, in this sec- tion we provide a run of the algorithm over Example 1, while con- sidering max as the target regret ratio measure. Let the set S= ft1;t5;t7;t9gbe the initial representative for the algorithm. The region of each tuple is highlighted in Table 1. Based on Defini- tion6, each tuple tiis in charge of its own region Ri, highlighted in Fig. 1, i.e.,tiis the best tuple in Sfor all the ranking func- tions lying inside Ri. In the next iteration the URM algorithm goes through each of these regions to find better representatives. To do this, it calls the oracle MaxO. We shall provide the details of this oracle inx4. For each region Ri, the oracle finds the best tuple in the entire dataset that has the minimum value of max regret ratio the functions inRi. After the first iteration, the representative changes toft1;t5;t6;t9g. This new representative creates a different par- titioning of the function space, shown in Fig. 2. We report the max regret ratio scores of this iteration in Table 2. As we can see, the new representative has a lower score of max regret ratio, which is due to the convergence property of the algorithm, discussed in x3.3. While in this example, only one of the tuples changed during the iteration, in practice more than one tuple may change during an iteration. The algorithm then calls the oracle MaxO to find the best tuples for the new regions and continues until convergence.",
+    "technical_score": 0.021791167973586465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "So far in this paper, we discussed the regret-minimizing problem in general, assuming the existence of an oracle for computing the regret. In this section we focus on the original (and dominant) mea- sure of regret-ratio: max regret-ratio [10]. Given a database Dand a region of ranking functions R, the oracle MaxRROrc finds the tu- ple that has the least maximum regret ratio score for all functions inR. The region of functions Ris formulated as the intersection of half spaces, R=fH1;::;H k\u00001g. The objective is to design an efficient oracle for this case.",
+    "technical_score": 0.004527581374465403,
+    "citation_score": 0.004527581374465403
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We first model the problem into a weighted directed complete graph, and use it for calculating the max regret ratio. Then, we propose three optimization techniques to make the oracle efficient and scalable.",
+    "technical_score": 0.00200550584372293,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Graph Transformation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to find the tuple with the least max regret ratio in a region R, we transform the problem into a graph exploration instance. Consider a weighted directed complete graph G, as illustrated in Fig. 3, withnnodes andn(n\u00001)edges such that:\u000fEvery tuplet2Dtranslates to the node tinG. \u000fThe weightwt!t0of an edget!t0(from nodetto nodet0) is equal to the max regret ratio of replacing t0withtin the regionR. In order to compute the weight of an edge t!t0we use the (fixed size \u2013 independent of n) linear programming (LP) shown in Eq.11. Having the graph Gconstructed, the max regret ratio of assign- ing a tupletas the representative (removing all other tuples t02 Dnftg) of the region R, is the maximum weight of its outgoing edges. This is proved in Theorem 4. THEOREM 4.Given the graph Gof a database D, a space of ranking functions Rthe max regret ratio of a tuple t2DinRis: RR(t;D;R) = max 8t02Dnftgwt!t0 PROOF . Letf02Rbe the ranking function for which the tuple thas the maximum regret ratio score. Let r0 f0be the maximum regret ratio score and tuple tf0be the tuple which has the maximum score from the database Dfor the function f0. By definition, the equation for maximum regret ratio r0 f0is rf0=f0(tf0)\u0000f0(t) f0(tf0) An important observation that we will use in this proof is that the equation for rf0is dependent only on the tuple tf0from the database. The computation of edge weight wt!t0can be formu- lated as, wt!t0= sup f2Rf(t0)\u0000f(t) f(t0) As we compute the edge weights between tuple tand all the other tuples from the database D, the maximum value is computed when the comparison between tuples tandtf0. Hence,RR(t;D;R)is equal torf0. The representative tuple for a region of functions Ris the node that has the minimum max-weight over its outgoing edges. There- fore, after constructing the graph G, the oracle can make a pass over the graph and find the representative node to assign to the region. Given that the LPs have a constant size, the construction of the graphGand finding the representative tuple for a region Rbased on it has the time complexity of O(n2). Even though the construction of graph Genables a polynomial algorithm for the max regret ratio oracle, it is still a quadratic algo- rithm which is not efficient and scalable in practice. Therefore, in the rest of this section we propose different approaches for making the oracle more efficient. The idea is to find the representative tuple of the region without the complete construction of G. For instance, following the con- vergence property of the URM algorithm, we know that, at every iteration, the max regret ratio of the representative of a region Ris not more than the one for the representative from the previous iter- ation. We can exploit this property by using the regret ratio value of the representative for the region Rias a threshold during the regret ratio value computation for the region Ri. That is, for any node in graphG, we ignore computing the weights of its outgoing edges, as soon as we find a edge that is not smaller than the threshold for this region. Following the idea of not computing the weights of all edges inG, next, we propose a threshold-based algorithm for the max regret ratio oracle. the function space into convex regions. This is the updated representative after one iter- ation of URM, withft1; t5; t7; t9gas the ini- tial set. The new representative has the max sponding to the max regret ratio problem for example 1. Regret ratio for each of the tuples in representative is shown. The last row gives the max regret ratio score for the representatives.",
+    "technical_score": 0.05124532283059969,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Graph Transformation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Initial Rep.",
+    "technical_score": 0.00016114881393270342,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Graph Transformation"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Rep. after one Iter. Tuple RR Tuple RR t1 0.0 t1 0.0103 t5 0.0223 t5 0.0177 t7 0.1208 t6 0.0230 t9 0.0938 t9 0.0444 0.1208 0.0444 gret ratio oracle maxr (11) s:t: r\u00150 \u0006d j=1wj\u0002t0[j] = 1 \u0006d j=1wj\u0002(t0[j]\u0000t[j])\u0015r 80<`<k : \u0006d j=1H`[j]\u0002wj\u00150",
+    "technical_score": 0.0047136028075315745,
+    "citation_score": 0.0047136028075315745
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Threshold-based Algorithm",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Threshold-based algorithms are proven to be effective in practice and are the de-facto solution for many important problems such as top-k query processing [2, 22]. When the objective value is mini- mization, the idea is to sort the tuples based on a lower bound on their objective values, ascending. Then starting from the top of the list, while maintaining a threshold, we continue processing the tu- ples in the sorted order until the lower bound value of the remaining tuples in the list is larger than the current threshold. The algorithm can stop then, as the objective value of the remaining tuples cannot be less that the best known threshold.",
+    "technical_score": 0.009327280231118448,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Threshold-based Algorithm",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We apply a similar strategy here. But, first, we need to find the lower bounds on the max regret ratio of the tuples in region R. We apply two strategies for finding the lower bound: (i) function sampling and (ii) edge sampling, explained in x4.2.1 andx4.2.2, respectively. The objective is to construct a sorted vector Vbased on the lower bound values on the max regret ratio of the tuples.",
+    "technical_score": 0.0060255881139083785,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Threshold-based Algorithm",
+      "Lower bound based on function sampling"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The first strategy is to use function sampling for finding the lower bounds. We use the existing work [5] for sampling unbiased func- tions from the region R. Using a set of NIID function samples drawn fromR, we construct a nbyNtableTthat every row in it is a tuple and every column is one of the sampled functions. Ev- ery cellT[i;j]is the regret ratio of the tuple tion the sampled functionfj(Fig. 4). In order to identify the cell values in T, we first make a pass over the matrix and fill every cell T[i;j]with the value of fj(ti). Also, for every column j, we keep track of its maximum value max j. After finishing the first pass over the matrix, we do a second pass replacing each cell value T[i;j]by (max j\u0000T[i;j])=max j. After the tableTis constructed, the lower bound on the max regret ratio of each tuple tiis the max value on row T[i]. That is, lower RR(ti;R) =Nmax j=1T[i;j] (12) Algorithm 3uses the above idea and returns a sorted vector of tu- ples based on the lower bound estimation of their max regret ratio.tid f1 \u0001 \u0001 \u0001 fj \u0001 \u0001 \u0001 fN t1 ... ti rrfj(ti) ... tn",
+    "technical_score": 0.01015846202574168,
+    "citation_score": 0.01015846202574168
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Threshold-based Algorithm",
+      "Lower bound based on function sampling"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Algorithm 3 SortedLB FS Input: Database D, Set of Function Samples F Output: Sorted vector of tuples based on the lower bound of their max regret ratio 1:forj 1tojFjdo 2:max j 0 3: fori 1tondo 4:T[i;j] F[j](ti) 5: ifT[i;j]>max jthenmax j T[i;j] 6: end for 7: fori 1tondoT[i;j] maxj\u0000T[i;j] maxj 8:end for 9:fori 1tondoV[i] (i;Nmax j=1T[i;j]) 10:return Sorted(V ) on second column Making two passes over Tand then sorting the vector V, Algo- rithm 3is inO(n(N + logn)). Note that, considering a fixed sampling budget, the algorithm is linearithmic.",
+    "technical_score": 0.0074172897330812265,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Threshold-based Algorithm",
+      "Lower bound based on edge sampling"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Function sampling works well for fat regions i.e. regions which have a large volume where sampling from these regions is easy. But if the space of function space is a thin region then function sampling from it would end up being costly. We propose weighted sampling of edges of Gfor these cases. Recall that the max regret ratio of a tuple tiin a regionRis the max of the weights of its outgoing edges in G(c.f. Theorem 4). A loose lower bound on the max regret ratio value can be obtained by uniformly sampling a few edges from the graph and computing their weights. To make it more effective, we use a weighted sam- pling of the edges. In order to obtain the weights for the sampling process, we start with a set of ranking functions, chosen within the regionR. To obtain the functions, a linear program is used to find the Chebyshev center [23], which is the center of largest inscribed hyper sphere inside of R. Using a normal distribution, we sample a few functions and transform these functions to lie on the surface of the hyper sphere described by the Chebyshev center. We use the sum of the scores of the tuples as a guidance for the weighted",
+    "technical_score": 0.010053959961070308,
+    "citation_score": 0.010053959961070308
+  },
+  {
+    "section_path": [
+      "Max Regret Ratio ORACLE",
+      "Threshold-based Algorithm",
+      "Lower bound based on edge sampling"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Algorithm 4 SortedLB ES Input: Database D, Number of samples N, Number of edge samplesNedge, Convex region of functions R Output: Sorted vector of tuples based on the lower bound of their max regret ratio 1:center;radius Compute Chebyshev Center for region R 2:F Sample (N)// draw Nsamples 3:forj 1tojFjdo 4: fori 1tondoP[i] P[i] +F[j](ti) 5:total total +P[i] 6:end for 7:fori 1tondoP[i] P[i] total//NormalizeP 8:fori 1tondo // draw Nedge samples from distribution P 9:E Sample(P;Nedge) 10: forj 1toNedge do 11:w max(w; computewi!E[j]based on Eq. 11) 12: end for 13:V[i] (i;w) 14:end for 15:return Sorted(V ) on second column Algorithm 5 MaxO Input: Database D, Convex region of functions R, Sampling budgetN, representative t, threshold Output: The representative tuple for R 1:F Sample(R ,N)// draw Nsamples from R 2:ifFis not empty thenV SortedLB FS(D,F) 3:elseV SortedLB ES(D,R,N) 4:fori 1tondo 5: ifV[i;2]\u0015 then break 6:rr 0 7: forj 1tonwherej6=V[i;1]do 8:w computewV[i;1]!j based on Eq. 11 9: ifw>rr thenrr w 10: ifrr\u0015 then continue 11: end for 12: ifrr< then rr;t V[i;1] 13:end for 14:returnt sampling. The idea is that the tuples with the higher scores are more likely of being representative of the region. Hence, we use the normalized vector of the score aggregates for the tuples, as the probability distribution for edge sampling. Weighted sampling is performed using these weights to obtain a few edges of the graph. Computing the weights of these edges gives us a tighter lower bound value for max regret ratio. These lower bound values are then used in a similar manner to the threshold based algorithmx4.2.1. Algorithm 4shows the pseudo code for the weighted edge sampling algorithm. Having the sorted list of tuples V, we can now design our thresh- old based algorithm (Algorithm 5). Starting from the first tuple in the list, the algorithm computes the weights for the outgoing edges the current tuple in graph G(Eq. 11). The max regret ratio of the current tuple is the max of its outgoing edges. While making a pass overVand computing the max regret ratio of the tuples, the algo- rithm keeps track of the best known solution (the least value of max regret ratio) as the threshold, and stops as soon as the lower bound values of the remaining tuples are higher than the threshold.",
+    "technical_score": 0.03346203467959278,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Average Regret Ratio ORACLE"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we shift our focus to a different measure of regret ratio, namely, average regret-ratio (ARR). An exact solution for theARR computation oracle requires to partition the region Rinto the \u201cmaxima sub-regions\u201d such that a specific tuple tiis the maxima for each and every of the functions in each sub-region. Let TM\u0012D be the set of tuples that have the maximum score for at least one function inR. Also letn0\u0014nbe the size of TM. For each tuple t2TM, the set of functions for which tis the maxima is a convex region, defined by the intersection of n0\u00001 =O(n)half-spaces. For every function finRt0(the maxima sub-region of a tuple t02 TM), the regret ratio of a tuple t2Dis(f(t0)\u0000f(t))=f (t0). This, in the end, provides an exact solution for computing the ARR of a tuple in a region R. However, it involves a volume computation under the regret ratio curves across the sub-regions. Unfortunately, even though the total number of sub-regions is in O(n)and each sub-region is defined as the intersection of a linear number of half spaces, the computation of ARR within each of the sub-regions is not computationally feasible in higher dimensions. That is because, as proven by Dyer et al. [18], the exact computation of the volume of a convex shape described as the intersection of a linear number of half-spaces is #P-hard. Fortunately, although exact volume computation is usually costly, Monte-carlo methods [24] combined with tail inequalities [25] pro- vide strong estimation methods for the problem. Following this, Zeighami et. al [15] have shown that the ARR value can be ap- proximated using Nsamples of ranking functions with an error bound of\u000fand a confidence of 1\u0000\u001b, where the relation between N;\u000f, and\u001bis shown in the following equation. \u000f=r",
+    "technical_score": 0.013254088440169946,
+    "citation_score": 0.013254088440169946
+  },
+  {
+    "section_path": [
+      "Average Regret Ratio ORACLE"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Nln1 \u001b(13) Essentially, [15] shows that discretizing the continuous function space to a set of Nuniform samples, and using the samples for finding the maxima representatives guarantee an error \u000f, with the confidence interval of 1\u0000\u001b, as specified in Eq. 13. We follow this in the design of the ARR oracle. That is, to use the discrete set of Nuniform function samples for finding the representative tuples. Consider a database Dand a set of representative tuples Sand their regions. For each of the regions, we want to find the tuple t2Dfor which the ARR score is the lowest. For any region Ri, we select the functions which lie inside Ri. We use this set of ranking functions to estimate the ARR score of each of the tuples in the database. Next, for each region, the tuple with the lowest ARR score replaces the previous representative of that region. The algorithm is given in 6.",
+    "technical_score": 0.006473521960160223,
+    "citation_score": 0.006473521960160223
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Datasets: For evaluating our algorithms, we have used the follow- ing datasets. We generated two synthetic datasets - Surface and Scaled along the lines of Sphere andSkyPoints in [12]. \u000f(Real dataset) Colors [26]: This is one of the commonly used datasets for the evaluation of regret ratio and skyline problems [10,12,27]. In our experiments, we have used the Color His- togram dataset. It contains 68,040 tuples, each being a color image. For every image, it contains 32 attributes, where each attribute is the density of a color in the entire image. \u000f(Synthetic) Surface: We generated the Surface dataset by uni- formly sampling points on the surface of a unit hypersphere. Therefore, by construction, all the points in the Surface dataset belong to the skyline. The dataset contain 20,000 tuples, over 12 attribute, in range [0;1]. \u000f(Synthetic) Scaled: For the Scaled dataset, we uniformly gener- ated points inside a unit hypersphere. Since, in a high dimen- sional space, a large portion of the total volume of a hypersphere",
+    "technical_score": 0.007802132676041452,
+    "citation_score": 0.0078021326760414535
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Algorithm 6 AvgO Input: D, Convex region R, Function samples FinR Output: The representative tuple for R 1:forj 1tojFjdomax[j ] 0 2:fori 1tondo 3: forj 1tojFjdo 4:scores [i;j] F[j](ti) 5: ifmax[j ]<scores[i;j ]thenmax[j ] scores [i;j] 6: end for 7:end for 8:min 1 9:fori 1to ndo 10:arr[i] PjSj j 1max[j ]\u0000scores[i;j ] max[j ] 11: ifmin>arr [i]thenmin arr[i];t i 12:end for 13:return t lies near the surface area, most of the points in the Scaled dataset is also present in the skyline. The scaled dataset contains a set of 20,000 tuples, each defined over 12 attributes in range [0;1]. \u000f(Real dataset) DOT [28]: The flight on-time dataset is published by the US Department of Transportation(DOT). It records, for all flights conducted by the 14 US carriers in January 2015, at- tributes such as scheduled and actual departure time, taxiing time and other detailed delay metrics. The dataset consists of 457,013 tuples and 7 ordinal attributes. \u000f(Real dataset) NBA [29]: NBA dataset contains the points for the combination of player,team,season up to 2009. It contains 21,961 tuples and 17 ordinal attributes: gp, minutes, pts, oreb, dreb, reb, asts, stl, blk, turnover, pf, fga, fgm, fta, ftm, tpa, tpm. Hardware and Platform: All our experiments were performed on a Core-i7 machine running Ubuntu 16.04 with 64 GB of RAM. The algorithms were implemented in Python. Evaluations: In order to asses the performance of our algorithm, we focus on two main criteria namely, efficiency and efficacy. Con- cretely, we evaluate based on the following metrics - (i) the quality of the results produced, i.e. the regret ratio measure of the result (ii) the amount of time taken by the algorithm. Algorithms Evaluated: For the max regret ratio representative problem, we have used HD-RRMS as the baseline [11], one of the recent and advanced algorithms for finding the max regret ratio rep- resentative that guarantees a tunable additive approximation. To do so, it discretizes the ranking function space and models the prob- lem as a discrete matrix min-max problem. A combination of bi- nary search technique and transforming the problem into fixed-size set covers are applied for solving the problem. To make the prob- lem practical, the greedy approximation algorithm is used for the set cover instances. As we shall later show in this section, the extra approximation induced by the greedy set cover in the HD- RRMS algorithm shows up in our results and can be seen in the HD-RRMS curve when the regret ratio does not reduce with time in some cases. For the average regret ratio case, we have imple- mented the G REEDY -SHRINK algorithm [15]. This algorithm starts with the entire database as its representative and iteratively removes the tuple for which the increase in the average regret ratio is the least. This process is continued until ktuples are left. In addition to G REEDY -SHRINK , we also compute the global minima, using Nsamples from the function space, drawn based on Eq. 13with \u000f= 0:01 and a confidence as 0:999. We filtered the dataset to only the skyline points. Using the Nsamples, a table containing the regret-ratio values for the filtered tuples is generated, similar totable 4. For every combination of ktuples as a representative, we compute the average regret-ratio value. It is important to note here that existing algorithms are all approximation algorithms and do not exhibit the anytime property. As a result, URM is not directly comparable to the existing work. In our experiments we focus on specific properties of our algorithm. We also compare our algorithm with several skyline reducing algorithms (which are discussed in more detail in x7). We have implemented the KRSPG REEDY algorithm from [30], EIQUE al- gorithm from [31], N AIVE GREEDY algorithm from [32], \u000f-ADR greedy algorithm from [33] and S KYCOVER algorithm from [34].",
+    "technical_score": 0.02829792201894474,
+    "citation_score": 0.02634131242261659
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Summary of experimental results"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "At a high level, the experiments verified the quality and effi- ciency of our proposal. We consider regret ratio score as the mea- sure of quality. For the max regret ratio representative problem, URM improves the quality of the representatives provided by HD- RRMS when used as a starting point. When provided with a time budget URM qualitatively outperforms HD-RRMS algorithm. In case of the average regret ratio representative problem, URM qual- itatively outperforms G REEDY -SHRINK when provided with the same time budget. Our experiments show that URM converges to the local minima very fast which increases the chance of discov- ering the global optima. In addition, the experiments demonstrate some of the useful properties of our approach, namely, (a) anytime property - even if the execution of the algorithm is terminated at any point of time, the algorithm will still have a representative (b) provision for getting better results - by restarting with a different set of initial points, URM can achieve better representatives.",
+    "technical_score": 0.01370202228642179,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Results when initial representative is given: Similar to other clustering-inspired algorithms, the quality of the results produced by the URM algorithm depends on the initial set of tuples. Often feeding the output of an existing approximation algorithm as the input to these iterative algorithms yield good results. In this set of experiments, we have used the compact representative returned by HD-RRMS as the initial set of tuples to the URM algorithm. To be fair in the assessment, while creating the plots for URM, we have taken the time to generate the initial points into consideration. Con- cretely, we have added the running time of HD-RRMS to the run- ning time of URM when creating the plots for the URM algorithm. We run the experiments on the Surface, Colors, NBA, DOT,and the Scaled datasets. For Surface, Colors, DOT andScaled datasets we runURM for 4 and 5 dimensions with 20k points each. We use the same configuration used in [11] for NBA andDOT datasets. While we use 20k tuples with 4, 5 and 6 dimensions for NBA dataset, we use 400k tuples with 4 and 5 dimensions for DOT dataset.",
+    "technical_score": 0.011810631731913932,
+    "citation_score": 0.011810631731913932
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Fig. 5 and6plot the obtained max regret ratio to the time taken by each algorithm for Surface, Colors, Scaled and the DOT datasets for di- mensions 4 and 5, respectively.",
+    "technical_score": 0.002928255801300975,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Fig. 7compares the URM and HD-RRMS algorithms for the NBA datasets. To get different results from HD-RRMS , we used different val- ues of for discretization. Every red point shows the experimental result of one individual run of the HD-RRMS algorithm. While HD- RRMS is expected to provide better results as increased, in several settings, one can see an increase in the max regret ratio of the gener- ated output. The reason is that HD-RRMS uses the greedy approach for solving the (theoretically fixed-size) set cover instances. This adds one more level of approximation to the algorithm which, in the end, results in the non-decreasing behavior of it in some cases. In the figures, each red point is connected to a blue point by a dotted line, which represents feeding the HD-RRMS algorithm\u2019s output to the URM algorithm. The string of blue points connected by the solid blue line show the performance of the URM algorithm",
+    "technical_score": 0.0159101898537353,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "\u0013 \u0018\u0013\u0013 \u0014\u0013\u0013\u0013 \u0014\u0018\u0013\u0013 \u0015\u0013\u0013\u0013 7LPH VHF \u0013\u0011\u0014\u0018\u0013\u0011\u0015\u0013\u0011\u0015\u0018\u0013\u0011\u00165HJUHW\u0003UDWLR",
+    "technical_score": 0.00039043410684013,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "+'\u00105506 (c) Colors [4D]\u0015\u0013\u0013\u0013 \u0016\u0013\u0013\u0013 \u0017\u0013\u0013\u0013 \u0018\u0013\u0013\u0013 7LPH VHF \u0013\u0011\u0013\u0014\u0018\u0013\u0011\u0013\u0015\u0013\u0011\u0013\u0015\u0018\u0013\u0011\u0013\u0016\u0013\u0011\u0013\u0016\u0018\u0013\u0011\u0013\u00175HJUHW\u0003UDWLR",
+    "technical_score": 0.00078086821368026,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "+'\u00105506 (d) DOT [4D]",
+    "technical_score": 0.00039043410684013,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "\u0013 \u0018\u0013\u0013 \u0014\u0013\u0013\u0013 \u0014\u0018\u0013\u0013 7LPH VHF \u0013\u0011\u0016\u0014\u0013\u0011\u0016\u0015\u0013\u0011\u0016\u0016\u0013\u0011\u0016\u00175HJUHW\u0003UDWLR850 +'\u00105506 (a) Surface [5D]\u0013 \u0018\u0013\u0013 \u0014\u0013\u0013\u0013 \u0014\u0018\u0013\u0013 \u0015\u0013\u0013\u0013 7LPH VHF \u0013\u0011\u0016\u0016\u0013\u0011\u0016\u0016\u0018\u0013\u0011\u0016\u0017\u0013\u0011\u0016\u0017\u00185HJUHW\u0003UDWLR",
+    "technical_score": 0.0011713023205203901,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "\u0013 \u0018\u0013\u0013 \u0014\u0013\u0013\u0013 \u0014\u0018\u0013\u0013 7LPH VHF \u0013\u0011\u0014\u0015\u0013\u0011\u0014\u0015\u0018\u0013\u0011\u0014\u0016\u0013\u0011\u0014\u0016\u0018\u0013\u0011\u0014\u00175HJUHW\u0003UDWLR",
+    "technical_score": 0.00039043410684013,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "+'\u00105506 (a) NBA [4D]\u0013 \u0018\u0013\u0013 \u0014\u0013\u0013\u0013 \u0014\u0018\u0013\u0013 7LPH VHF \u0013\u0011\u0015\u0016\u0013\u0011\u0015\u0017\u0013\u0011\u0015\u0018\u0013\u0011\u0015\u0019\u0013\u0011\u0015\u001a5HJUHW\u0003UDWLR",
+    "technical_score": 0.00078086821368026,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "+'\u00105506 (b) NBA [5D]\u0013 \u0014\u0013\u0013\u0013 \u0015\u0013\u0013\u0013 \u0016\u0013\u0013\u0013 \u0017\u0013\u0013\u0013 7LPH VHF \u0013\u0011\u0015\u0018\u0013\u0011\u0015\u0019\u0013\u0011\u0015\u001a\u0013\u0011\u0015\u001b\u0013\u0011\u0015 \u0013\u0011\u00165HJUHW\u0003UDWLR",
+    "technical_score": 0.00078086821368026,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "+'\u00105506 (c) NBA [6D] set for NBA dataset.\u0013\u0014 \u0013 \u0015 \u0013\u0013\u0018\u0014\u0013\u0014\u0018\u0015\u0013",
+    "technical_score": 0.00078086821368026,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "\u0013\u0011\u0013\u0015\u0013\u0011\u0013\u0014\u001b\u0013\u0011\u0013\u001a \u0013\u0011\u0013\u0015\u0014\u0013\u0011\u0015\u0016\u001a \u0013\u0011\u0013\u0015\u0014\u0013\u0011\u0018\u0014\u0017 \u0013\u0011\u0013\u0015\u0014\u0013\u0011\u0013\u0017\u0013\u0011\u0013\u0015\u0018\u0013\u0011\u0013\u0017\u0013\u0011\u0013\u0015\u0014 850 1* 563 (4 \u0010$'5 6&\u0013\u0013\u0011\u0015\u0013\u0011\u0017\u0013\u0011\u00195HJUHW\u0003UDWLR 55\u0003IRU\u0003RXWSXW\u0003RI\u0003WKH\u0003DOJRULWKP\u0003RQ\u0003;\u0003D[LV 55\u0003IRU\u0003RXWSXW\u0003RI\u0003RXU\u0003DOJRULWKP\u0003XVLQJ\u0003VWDUWLQJ\u0003SRLQW ing alg. with URM for DOT dataset with 4 dimensions",
+    "technical_score": 0.00351390696156117,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "\u0013\u0014 \u0013 \u0015 \u0013 7LPH VHF \u0013\u0011\u0014\u001b\u0013\u0011\u0015\u0013\u0011\u0015\u0015\u0013\u0011\u0015\u0017\u0013\u0011\u0015\u00195HJUHW\u0003UDWLR850 *OREDO\u0003PLQLPD *5(('<\u00106+5,1. (a) Colors, Set size = 4 [9D]\u0013 \u0018\u0013 \u0014\u0013\u0013 \u0014\u0018\u0013 7LPH VHF \u0013\u0011\u0014\u0015\u0013\u0011\u0014\u0015\u0018\u0013\u0011\u0014\u0016\u0013\u0011\u0014\u0016\u0018\u0013\u0011\u0014\u0017\u0013\u0011\u0014\u0017\u00185HJUHW\u0003UDWLR850 *OREDO\u0003PLQLPD *5(('<\u00106+5,1. (b) Colors, Set size = 5 [9D]\u0013 \u0015 \u0013\u0017 \u0013\u0019 \u0013\u001b \u0013 7LPH VHF \u0013\u0011\u0013\u001b\u0013\u0011\u0013 \u0013\u0011\u0014\u0013\u0011\u0014\u0014\u0013\u0011\u0014\u0015\u0013\u0011\u0014\u00165HJUHW\u0003UDWLR850 *OREDO\u0003PLQLPD *5(('<\u00106+5,1. (c) Colors, Set siz e = 6 [9D]",
+    "technical_score": 0.004782817808791592,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "\u0013\u0011\u0013\u0015\u0013\u0011\u0013\u0014\u001b\u0013\u0011\u0013\u001a \u0013\u0011\u0013\u0015\u0017\u0013\u0011\u0015\u0016\u001a \u0013\u0011\u0013\u0015\u0018\u0013\u0011\u0018\u0014\u001a \u0013\u0011\u0013\u0015\u0018\u0013\u0011\u0013\u0017\u0013\u0011\u0013\u0015\u0018\u0013\u0011\u0013\u0016\u0013\u0011\u0013\u0015\u0017 850 1* 563 (4 \u0010$'5 6&\u0013\u0013\u0011\u0015\u0013\u0011\u0017\u0013\u0011\u00195HJUHW\u0003UDWLR 55\u0003IRU\u0003RXWSXW\u0003RI\u0003WKH\u0003DOJRULWKP\u0003RQ\u0003;\u0003D[LV 55\u0003IRU\u0003RXWSXW\u0003RI\u0003RXU\u0003DOJRULWKP\u0003XVLQJ\u0003VWDUWLQJ\u0003SRLQW ing alg. with URM for DOT dataset with 5 dimensions over the subsequent iterations. First, our experiments show that URM quickly reaches the local minima of regret ratio in this set- ting. Also, in most of the experiments, URM improves the results of the HD-RRMS algorithm. The ones where URM could not im- prove the result of HD-RRMS were the ones that HD-RRMS had, by chance, discovered a local optima. Apart from the performance ofthe algorithm, it is interesting to see the existence of multiple localoptima and the impact of the starting point on the optima discov-ered.",
+    "technical_score": 0.012396282892174128,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "For instance in Fig. 5b, each setting discovered a different local optima. The fast convergence of URM enables multiple runs of the algorithm with multiple starting points, which increases thechance of discovering the global optima.Results on a fixed time budget : While URM is an anytime al- gorithm, HD-RRMS is not. That is, HD-RRMS returns a represen- tative only after it is finished. Therefore, in order to make a fairassessment, we run the HD-RRMS algorithm with different values of\u03b3and allocate the exact same amount of time taken by the HD- RRMS algorithm as the time budget for our URM algorithm. We run our experiments with Surface ,Colors ,NBA,DOT ,and the Scaled datasets. This set of experiments demonstrate two important prop-erties of the URM algorithm. First, as we can see from Fig. 9,10 and 11the regret ratio scores reduce monotonically. This is due to the convergence property of the algorithm, proved in \u00a73.3.I n addition, the URM algorithm produces reasonably good regret ratio scores even when the allocated time budget is small. This meansthat a user can still get a reasonably good set of representativeseven if she terminates the algorithm before it finishes. Another im- portant result is that URM actually allows the user to find a better representative. With a fixed time budget, we restart the algorithmwith a random set of starting points and repeat this process until ourtime budget expires. Essentially, with subsequent repetition of the URM algorithm, we find a different set of compact representatives with a better score of max regret-ratio. Another important propertythat our algorithm exhibits is the any time property. As URM is an iterative hill climbing algorithm, the best representative amongthe ones it has already visited can be consumed by the user even before the end of the time budget. This can be seen in Fig. 9and Fig.10where if we were to stop the algorithm at any point of time we would get a representative marked by the blue circles. First,looking at the figures, one can see the monotonically decreasingbehaviour of URM , compared to HD-RRMS . Also, HD-RRMS needs to finish at least once or will not provide any output.",
+    "technical_score": 0.03601754635600199,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Max Regret-Ratio"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "For instance, in Fig. 10(c), HD-RRMS did not provide any result for a time budget less than 8000 seconds. In contrast, having the anytime property,URM has an output to offer at any point of time. Proof of concept by an example: Using the NBA dataset, we high- light a concrete example. The dataset contains performance records of different Basketball players across different seasons. Considerthe case where the decision criteria are Points, Rebounds, Assistsand Steals. More than 60 tuples belonged to the skyline. Offer- ing such a large set to the user is overwhelming. Instead, using the URM algorithm while setting the output size to 6 we find theset{Wilt Chamberlain - 1967, Don Buse -1975, Nate Archibald - 1972, Michael Jordan - 1987, Wilt Chamberlain - 1961, JohnStockton - 1988 }with maximum regret-ratio of 0.058. That is, the user can make selection between these 6 tuples, yet be sure that the score (quality) of its selection is not more than 5.8% percent worsethan the optimal choice. For example, for the ranking function As-sists+Steals, the optimal tuple is John Stockton 1990 with the score of 1398. The tuple John Stockton - 1988 in the representative set has the score of 1381 which shows how close to optimal it is.",
+    "technical_score": 0.020497790609106826,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Avg Regret-Ratio"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Comparison against the global minima :URM is an iterative al- gorithm where the regret ratio score monotonically decreases overtime. That is, it produces better results as time passes. In contrast,",
+    "technical_score": 0.002654485423779687,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Avg Regret-Ratio"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "REEDY -SHRINK algorithm generates results only at program termination. For a fair comparison between the two algorithms,we run G REEDY -SHRINK with different parameter values of /epsilon1and \u03c3. We also demonstrate the ability of our algorithm to find the global minima given sufficient time. Therefore, in addition to the GREEDY -SHRINK algorithm we compare against the global min- ima, the computation of which is described in \u00a76.1. Concretely, we let the URM algorithm finish multiple iterations and recorded the regret ratio at the end of each iteration. Finally, we have com- pared the progression of these scores against the global minima along with the results from G REEDY -SHRINK . For this set of ex- periments, we have used 20,000 points from the Colors dataset, in a exact volumes, we approximate the average regret ratio score using Nsamples with an /epsilon1of0.01and a confidence of 0.999as described in13. We present the results of our experiments in Fig. 13. The black dotted line indicates the global minima while the red trian-gles show the output from the G",
+    "technical_score": 0.015838429695218797,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for Avg Regret-Ratio"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "URM algorithm outperforms the G REEDY -SHRINK algorithm for different output sizes of k. In all cases URM finds a representative with small value of average regret ratio in a small amount of time.In fact, our experiments show that it is possible to reach the globalminima of average regret ratio in a short time.",
+    "technical_score": 0.00486655661026276,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Results for skyline reducing algorithms"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "To compare our algorithm with skyline reducing algorithms, we have implemented the algorithms KRSPG REEDY [30],/epsilon1-ADR [33], EIQUE [ 31], N AIVE GREEDY [32], and S KYCOVER [34]. N AIVE - GREEDY takes the skyline and a starting tuple as input to output a representative. To be fair in comparison, we passed every point from the skyline as a starting point and chose the set with least re- gret ratio. /epsilon1-ADR and S KYCOVER take an error parameter /epsilon1as the input and output the smallest set size satisfying /epsilon1-ADR opti- mization criteria. To find a set of size kor smaller, we find a large /epsilon1which satisfies the set size criteria and apply a binary search to get the smallest /epsilon1satisfying the size requirement. The results for the DOT dataset with dimensions 4 and 5 are presented in Fig. 12 and Fig. 14. We denote KRSPG REEDY asRSP,NAIVE GREEDY as NG, EIQUE as EQ,/epsilon1-ADR greedy as /epsilon1-ADR and S KYCOVER as SCin the plots. The blue bar shows the regret ratio of the output of the skyline reducing algorithms, with the name of the algorithm on theXaxis. The orange bars show the regret ratio of the output of our (URM) algorithm when initialized with the corresponding al- gorithm\u2019s output. As expected URM outperforms other algorithms.",
+    "technical_score": 0.011044160132067684,
+    "citation_score": 0.007362773421378456
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Over the past few decades, a major amount of research has fo- cused on the generation of a representative of the dataset to assist users with multi-criteria decision making. Most of these published works can be grouped into skyline discovery, skyline reduction and regret based compact representative computations. In this section, in addition to discussing the related works in these three categories we also provide a brief summary of the clustering techniques that have inspired the URM algorithm.",
+    "technical_score": 0.002952266840351808,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Regret minimizing representatives: As an effective solution to the problem of finding compact representatives, Nanongkai et al. [10] introduced regret-ratio minimizing representative. The notion of regret introduced in the paper deals with the amount of dissat- isfaction the user would express when she is shown the top item from the representative set instead of the top item from the dataset when provided with the user preference. Many different variations of the original regret-minimizing representative problem have been studied since this paper [16, 35]. One specific variant, finding a representative set that minimizes the maximum regret ratio, has been extensively studied by several researchers. Agarwal et al. [12] proved that this problem is NP-complete for dimensions larger than the transformation of the problem to set-cover instances. [11, 12] propose approximation algorithms with similar tunable approxima- tion guarantees for the problem. Another interesting variant of this problem is finding the average regret ratio problem. It was intro- duced by Zeigami et al. [14, 15]. However, it is important to note that while others have studied and proposed solutions for single variants of the regret measures, we have proposed an unifying al- gorithm that can work with a class of regret measures. Skyline and convex hull: In the pursuit of efficiency, finding a small set of representatives of the entire dataset has been of key interest in recent years. In the absence of user preferences, sky- line [8, 36,37] and convex hull based algorithms obtain a part of the dataset which behave like representatives. While convex hull is more compact than the skyline, the computation of a convex hull is significantly more costly in large dimensions. Bentley et al have studied approximation algorithms with tight approximation ratios for convex hulls [38]. However, as we move to higher dimensions, most points in the dataset appear on the skyline or convex hull. As a result, even though these skyline/convex hull based algorithms are effective in lower dimensions, the large size of skyline and convex hull render them ineffective as representatives.",
+    "technical_score": 0.012436357332006393,
+    "citation_score": 0.009649588271131812
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Skyline reducing algorithms: Existing works have studied the problem of reducing the size of the skyline in various scenarios [30\u2013 34,39\u201341]. To the best of our knowledge, none, except the regret- minimizing literature, incorporate user customizable functions for skyline reduction nor can be directly translated to the regret ratio problem. [30] and [39] reduce the skyline size by choosing a subset of size kof it which maximizes the number of dominated tuples by this subset. [32] proposes distance-based skyline, a subset of size kthat minimizes the sum of the distances between the points and their closest representative. [41] and [31] find a subset of size kwith maximum diversity. [42] propose the concept of skyline ordering, which is skyline-based partitioning of a given data set such that an order exists among the partitions. This ordering is then exploited to reduce the set size to k. We note that all of the aforementioned have a different objective function than regret-ratio and cannot provide any guarantee on how good it is for an arbitrary function.Similarly, [33] and [34] propose a new measure, \u000f-ADR query, which chooses a subset of the skyline such that the tuples of the skyline when scaled by (1+ \u000f), dominate the rest of the skyline tuples. We illustrate the difference between the optimization mea- sure of\u000f-ADR query and regret ratio with an example. Consider a dataset with npoints (in 2D), out of which (n-2) are equi-angularly placed on the surface of a circle with radius 10and the two other points areh20;1iandh1;20i. Note that all the points belong to the skyline. Figure 8shows this example for n= 7. The opti- mal set for size 2 is (the convex hull) fh20; 1i;h1;20ig with max regret ratio 0. On the other hand, \u000f-ADR query chooses a subset of the skyline such that the tuples of the skyline when scaled by (1+\u000f), dominate the rest of the skyline tuples. As both h20;1iand h1;20ihave one of their attributes set to 1, the scaling required for these tuples to dominate the other tuples is large making them less attractive to the \u000f-ADR query. For the example of Figure 8, \u000f-ADR [33] returnsfh8:66; 5:0i;h5:0; 8:66ig. Note that, instead of h20;1iandh1;20i, we could add points hX;1iandh1;YiwithX andYsuch that there exists a tuple ha;bi from the database which has the propertyX a<bandY b<a. For example, we can increase XandYto49as this dataset contains the point h7:07; 7:07i for which49 7:07= 6:93<7:07.",
+    "technical_score": 0.023057577727810953,
+    "citation_score": 0.023057577727810953
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Clustering: Clustering have long been studied to partition data into similar groups. One of the major variants in this field is the K- MEDOID algorithm [17]. Like many other clustering algorithms, K-MEDOID is also an iterative algorithm that partitions the points into clusters by minimizing the distance between the points from the cluster center. However, the difference between the K-MEDOID algorithm and other clustering techniques is that K-MEDOID al- ways chooses the cluster centroids from the existing data points. In the literature, there have been several variations of K-MEDOID that have explored several avenues of choosing the best centroid. Few of the most prominent are PAM, CLARA [43] and CLARANS [44].",
+    "technical_score": 0.004951586789197652,
+    "citation_score": 0.004951586789197652
+  },
+  {
+    "section_path": [
+      "Final Remarks"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we proposed a unified algorithm for solving a va- riety of \u201cregret-minimizing representative\u201d problems for different aggregate norms. Unlike the existing work that design approxi- mation algorithms for a specific variant of problem, we design an iterative optimization algorithm to search for optima for the gen- eral problem. To do so, we make connection with the problem of clustering from data mining, and the corresponding K-MEDOID al- gorithm. We propose several innovative technical contributions in designing our algorithm and provide theoretical analysis as well as empirical experiments that demonstrate the effectiveness of our proposal. The experiments also highlight useful properties of our approach that makes it a suitable practical algorithm. Our work gives rise to several interesting optimization opportu- nities that deserve further study. For example, currently in URM, we update all regions concurrently. An interesting heuristic to up- date the regions one after the other with a specific ordering which might improve our algorithm. In particular, at every iteration, we could find the representative tuple with the smallest region by vol- ume as a good candidate for being replaced. This, however, is chal- lenging to develop and implement, as each update requires kex- pensive volume computations. We consider this, along with other possible optimizations and open problems for future work.",
+    "technical_score": 0.018076764341725133,
+    "citation_score": 0.0
+  }
+]
