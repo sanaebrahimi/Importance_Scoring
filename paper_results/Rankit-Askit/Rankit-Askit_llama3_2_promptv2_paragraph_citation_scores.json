@@ -287,5 +287,15 @@
     "paragraph": "Graph Size (# of Edges)246810A verage Error Graph Degree Task based on different input sizes. The error is the absolute difference between the real degree of a node (less than 20 in this case) and the reported degree by the LLM. questions about node degrees (see Example 2). We refer to this as the Graph Degree Task. LLMs follow a sequential randomized process to generate their outputs. As a result, their inputs are received and processed as ordered sequences. In particular, when the input is lengthy, LLMs are known to pay \u201cless attention\u201d to certain regions of the input, hence, struggling with retaining information from those regions. This leads to a performance degradation over extended inputs [ 23]. For example, Fig 1 shows the significant error of GPT-3.5 Turbo for Graph Degree Task when the graph size is more than 200. On the other hand, the input of a symmetric task is an unordered bag of elements. As a result, the input elements can be freely re- ordered. This gives us the opportunity to rerank the input elements before passing it to the LLM for maximizing its accuracy \u2013 which is the research focus of this paper. Specifically, we introduce a rerank- ing mechanism that (a) learns the so-called \u201cexposure\u201d of each rank position for an LLM during the preprocessing time. Then, at the query time, it (b) assesses the relevance of each input element to the given natural language query and (c) generates a reranking of the input that puts the relevant elements in high-exposure positions.",
     "citation": "[23]",
     "citation_score": 0.0003840000000000001
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Summary of Contributions"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Additionally, we conducted experiments on other tasks, such as database query answering with real-world datasets, and observed comparable improvements in the output of the LLMs after reranking the input. More details on the experiments and more empirical results are provided in the Technical Report [9].",
+    "citation": "[9]",
+    "citation_score": 0.0006000000000000001
   }
 ]

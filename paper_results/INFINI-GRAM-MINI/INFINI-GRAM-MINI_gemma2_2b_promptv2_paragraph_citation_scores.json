@@ -325,5 +325,138 @@
     "paragraph": "Magenta text is the mapping of answers. sive text corpus, and we show its scalability to a petabyte-scale corpus. We showcase INFINI -GRAM MINI \u2019s application on benchmark contamination analysis at scale. Limitations Although INFINI -GRAM MINI shows significant im- provements on text compression rate, document retrieval latency remains higher than a canoni- cal suffix array. For example, reconstructing a 3000-character document takes 1.8 seconds on Pile and 4.5 seconds on DCLM-baseline, compared to millisecond-level retrieval in system like Infini- gram (Liu et al., 2024). This is a trade-off with INFINI -GRAM MINI \u2019s compression rate: INFINI - GRAM MINI does not store the original text in a contiguous block. To retrieve a document, we need to reconstruct it character-by-character, leading to a large number of reads in random addresses. These process takes long time since the entire index is kept on disk at inference time. The high latency can potentially be reduced using techniques like disk page prefetching. Identifying co-occurrences of multiple patterns is inefficient with the FM-index, since mapping every match from the suffix array range back toits position in original text takes very long time thus making this operation impractical. In contrast, the original infini-gram supports this operation effi- ciently. INFINI -GRAM MINI only supports exact-match searches. As a result, our benchmark contami- nation analysis is limited to case-sensitive exact matching, which may fail to detect contamination of instances with minor textual discrepancies. As the text corpora may contain biased or toxic content, document retrieval output may contain content that can be perceived as ethically problem- atic, and may contain sensitive information. The output of INFINI -GRAM MINI does not reflect au- thors\u2019 views.",
     "citation": "(Liu et al., 2024)",
     "citation_score": 0.0048000000000000004
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Data Structures and Implementation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "INFINI -GRAM MINI , shown for a toy string with length n= 7. The suffix array is sampled with a sampling ratea= 3and only elements corresponding to bolded suffixes are stored. The BWT can be derived from the SA, and is stored in compressed form as a Huffman- shaped wavelet tree. representing the starting positions of all suffixes ofTin lexicographic order. Formally, SA[i] =j if the suffix T[j...n]ranks ith among all suffixes in lexicographical ordering. The suffix array en- ables quickly locating the positions where a pat- tern appears in the string. Canonically, storing the whole suffix array would take O(nlogn)space, or5nbytes for strings with length up to one tril- lion (Liu et al., 2024). To reduce storage overhead, FM-index samples SAat regular intervals, stor- ing only every ath entry where ais a parameter. When querying the index, if we need to access an unsampled SAentry, we can recover its value by referencing the BWT data structure, which is introduced below.",
+    "citation": "(Liu et al., 2024)",
+    "citation_score": 0.0004140786749482401
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Data Structures and Implementation"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Burrows-Wheeler transform (BWT). BWT (Burrows et al., 1994) rearranges the string T(with termination symbol $) into a reversible permuta- tionLthat clusters repeated symbols. The BWT is defined as a string Lwhere L[i] =T[SA[i]\u22121] ifSA[i]>0, orL[i] = $ otherwise. Intuitively, L is the concatenation of the symbol preceding each suffix when the suffixes are sorted in the SA order (see Figure 2). A key property of BWT is the Last-to-First (LF) mapping, which maps the ith occurrence of a sym- bolcinLto the ith occurrence of it in F, where F[i] =T[SA[i]]. The LF mapping is defined as LF(i) =C[c] +rank(c, i), where C[c]is the num- ber of symbols in Llexicographically smaller than c, and rank(c, i)counts the occurrences of cin L[0...i]. This property allows us to traverse the string in reverse order, which is essential for finding patterns in and reconstructing (part of) the string Tfrom the index. Huffman-shaped wavelet trees. Given the BWT Land the sampled SA, we can reconstruct the orig- inal string Tfrom these data structures so we don\u2019t need to store T. However, Lstill takes as much storage as T. To further compress L, a wavelet tree is used to represent Lby hierarchically partitioning the alphabet. In the wavelet tree, each leaf node rep- resents a symbol in the alphabet, and each non-leaf node stores a bitvector marking whether the symbol at each position of Lbelongs to the left or right sub- tree. A Huffman-shaped wavelet tree (Ma\u0308kinen and Navarro, 2005) optimizes the hierarchy by group- ing and coding symbols based on their frequencies inL. Storing it costs (nH0+ 2\u03c3logn)bits, where \u03c3is the alphabet size, and H0is the zeroth-order entropy2ofLandH0\u22480.26 log2\u03c3in our exper- iments with natural language text; this is smaller than storing Ldirectly, which is nlog2\u03c3bits. Be- sides compression, the tree can efficiently support two operations crucial to LF mapping: rank(c, l) counts the number of occurrences of a character c inL[0...l\u22121], and select (c, m)finds the position of the mth occurrence of cinL. Both operations have a time complexity of O(H0). Inverse suffix array. To allow reconstructing part of the original string Tfrom any given po- sition, FM-index also stores a sampled version of the inverse suffix array ISA.ISA is the inverse of the permutation specified in SAand is defined asISA[j] =iifSA[i] =j. When reconstructing Tfrom a given position, ISA is used to identify the corresponding rank in the suffix array to start reconstruction. In FM-index, we can use a different sampling rate for ISA, storing only every bth entry, where bcan be larger than aasISA is used less.",
+    "citation": "(Burrows et al., 1994)",
+    "citation_score": 0.00010666666666666667
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Data Structures and Implementation"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Burrows-Wheeler transform (BWT). BWT (Burrows et al., 1994) rearranges the string T(with termination symbol $) into a reversible permuta- tionLthat clusters repeated symbols. The BWT is defined as a string Lwhere L[i] =T[SA[i]\u22121] ifSA[i]>0, orL[i] = $ otherwise. Intuitively, L is the concatenation of the symbol preceding each suffix when the suffixes are sorted in the SA order (see Figure 2). A key property of BWT is the Last-to-First (LF) mapping, which maps the ith occurrence of a sym- bolcinLto the ith occurrence of it in F, where F[i] =T[SA[i]]. The LF mapping is defined as LF(i) =C[c] +rank(c, i), where C[c]is the num- ber of symbols in Llexicographically smaller than c, and rank(c, i)counts the occurrences of cin L[0...i]. This property allows us to traverse the string in reverse order, which is essential for finding patterns in and reconstructing (part of) the string Tfrom the index. Huffman-shaped wavelet trees. Given the BWT Land the sampled SA, we can reconstruct the orig- inal string Tfrom these data structures so we don\u2019t need to store T. However, Lstill takes as much storage as T. To further compress L, a wavelet tree is used to represent Lby hierarchically partitioning the alphabet. In the wavelet tree, each leaf node rep- resents a symbol in the alphabet, and each non-leaf node stores a bitvector marking whether the symbol at each position of Lbelongs to the left or right sub- tree. A Huffman-shaped wavelet tree (Ma\u0308kinen and Navarro, 2005) optimizes the hierarchy by group- ing and coding symbols based on their frequencies inL. Storing it costs (nH0+ 2\u03c3logn)bits, where \u03c3is the alphabet size, and H0is the zeroth-order entropy2ofLandH0\u22480.26 log2\u03c3in our exper- iments with natural language text; this is smaller than storing Ldirectly, which is nlog2\u03c3bits. Be- sides compression, the tree can efficiently support two operations crucial to LF mapping: rank(c, l) counts the number of occurrences of a character c inL[0...l\u22121], and select (c, m)finds the position of the mth occurrence of cinL. Both operations have a time complexity of O(H0). Inverse suffix array. To allow reconstructing part of the original string Tfrom any given po- sition, FM-index also stores a sampled version of the inverse suffix array ISA.ISA is the inverse of the permutation specified in SAand is defined asISA[j] =iifSA[i] =j. When reconstructing Tfrom a given position, ISA is used to identify the corresponding rank in the suffix array to start reconstruction. In FM-index, we can use a different sampling rate for ISA, storing only every bth entry, where bcan be larger than aasISA is used less.",
+    "citation": "(Ma\u0308kinen and Navarro, 2005)",
+    "citation_score": 2.6666666666666667e-05
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "See App. \u00a7A for more details. 3 I NFINI -GRAM MINI We develop INFINI -GRAM MINI as a scalable and efficient implementation of FM-index on natural 2zeroth-order entropy measures the unigram probability distribution of individual symbols (i.e. UTF-8 characters).24946 language data. For indexing, INFINI -GRAM MINI achieves 18 \u00d7speedup and reduces RAM usage by 3.2\u00d7compared to the previous best existing imple- mentation in SDSL . This paves way for indexing petabyte-level text corpora with reasonable time and compute. For querying, we extended the im- plementation in SDSL to work with indexes stored on disk, allowing us to query large indexes on ma- chines with limited RAM. In contrast to the original infini-gram which tok- enizes the text, we construct the index directly on raw UTF-8 bytes, which saves tokenization time and allows more flexibility when querying. Tok- enization is a technique to reduce index size, but since FM-index is already a compressed index, to- kenization would not be helpful here. 3.1 Index Construction Optimizing the indexing steps. We use a paral- lelized implementation of each indexing step. For building SA and BWT, we adapt from the parallel implementation in Liu et al. (2024). For building the wavelet tree, we use the parallel implemen- tation in Labeit et al. (2017). For sampling SA and creating a sampled version of ISA, we par- allelized the implementation in SDSL . All these steps were single-threaded in SDSL , and by paral- lelizing them we achieve significant speedup. We measured the time and peak RAM usage for indexing an 8.7 GB corpus (a single file from DCLM-baseline) using implementation of SDSL and INFINI -GRAM MINI . Their implementation re- quired 5,847 seconds and 74,807 MB of peak RAM, whereas INFINI -GRAM MINI completed indexing in 324 seconds (18 \u00d7speedup) and peak RAM of 23,742 MB (3.2 \u00d7reduction).",
+    "citation": "(Liu et al., 2024)",
+    "citation_score": 0.00018528168606334316
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "See App. \u00a7A for more details. 3 I NFINI -GRAM MINI We develop INFINI -GRAM MINI as a scalable and efficient implementation of FM-index on natural 2zeroth-order entropy measures the unigram probability distribution of individual symbols (i.e. UTF-8 characters).24946 language data. For indexing, INFINI -GRAM MINI achieves 18 \u00d7speedup and reduces RAM usage by 3.2\u00d7compared to the previous best existing imple- mentation in SDSL . This paves way for indexing petabyte-level text corpora with reasonable time and compute. For querying, we extended the im- plementation in SDSL to work with indexes stored on disk, allowing us to query large indexes on ma- chines with limited RAM. In contrast to the original infini-gram which tok- enizes the text, we construct the index directly on raw UTF-8 bytes, which saves tokenization time and allows more flexibility when querying. Tok- enization is a technique to reduce index size, but since FM-index is already a compressed index, to- kenization would not be helpful here. 3.1 Index Construction Optimizing the indexing steps. We use a paral- lelized implementation of each indexing step. For building SA and BWT, we adapt from the parallel implementation in Liu et al. (2024). For building the wavelet tree, we use the parallel implemen- tation in Labeit et al. (2017). For sampling SA and creating a sampled version of ISA, we par- allelized the implementation in SDSL . All these steps were single-threaded in SDSL , and by paral- lelizing them we achieve significant speedup. We measured the time and peak RAM usage for indexing an 8.7 GB corpus (a single file from DCLM-baseline) using implementation of SDSL and INFINI -GRAM MINI . Their implementation re- quired 5,847 seconds and 74,807 MB of peak RAM, whereas INFINI -GRAM MINI completed indexing in 324 seconds (18 \u00d7speedup) and peak RAM of 23,742 MB (3.2 \u00d7reduction).",
+    "citation": "(Labeit et al., 2017)",
+    "citation_score": 4.632042151583579e-05
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Index size. We choose the sampling rate empiri- cally to balance storage savings and query latency. In our implementation, we sample every a= 32 entries of SA and every b= 64 entries of ISA. This yields indexes with 0.44 \u00d7the size of the corpora (Table 1). Conceptually, if we set aandbto be very big, then the SA and ISA would have negligible size, and the index can be as small as 0.26 \u00d7the size of the corpus. 3.2 Querying with INFINI -GRAM MINI Similar to other exact-match search engines, INFINI -GRAM MINI supports two types of query: counting the number of occurrences of a string, and retrieving documents that contain a string. At query time, INFINI -GRAM MINI keeps all index files on disk as memory-mapped files, thus requiring only minimal CPU and RAM (loading all indexes uses only\u223c30MB if RAM and 1 vCPU in our setting). Querying in INFINI -GRAM MINI is slower and more complex than in canonical suffix arrays due to the compressive nature of FM-index. The SA is subsampled, and the original text is shuffled and 3We extract text from the CC crawls with resiliparse, fol- lowing Li et al. (2024).24947",
+    "citation": "(Li et al., 2024)",
+    "citation_score": 8.996851102114259e-05
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "citation": "(Touvron et al., 2023)",
+    "citation_score": 0.0016768472906403928
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "citation": "(Elazar et al., 2024)",
+    "citation_score": 0.001117898193760262
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "citation": "(Soldaini et al., 2024)",
+    "citation_score": 0.0008384236453201964
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "citation": "(Llama Team, 2024)",
+    "citation_score": 0.000558949096880131
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "citation": "(OLMo et al., 2025)",
+    "citation_score": 0.0002794745484400655
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "citation": "(Singh et al., 2024)",
+    "citation_score": 0.0002794745484400655
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "citation": "(Sainz et al., 2024)",
+    "citation_score": 0.0002794745484400655
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We classify an entry into three contamination levels using the same thresholds with different nam- ings as Touvron et al. (2023):",
+    "citation": "(Touvron et al., 2023)",
+    "citation_score": 0.004698412698412699
   }
 ]

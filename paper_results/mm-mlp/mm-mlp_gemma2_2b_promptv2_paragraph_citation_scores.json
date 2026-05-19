@@ -1055,5 +1055,94 @@
     "paragraph": "To evaluate this, we run experiments on stochastic setting where batch size is set to 1 ( MC-approx S) along with differentbatch sizes. The results are provided in Figures 6, 10, 11, and 12 and Tables 3 and 4. The results in Figure 10 show the decrease in accuracy for small mini-batches with the same learning rate: the accuracy drops from 98% to 84%. The optimal learning rate to use is smaller for smaller batch sizes [ 47], so to resolve the overfitting inMC-approx S, we decreased the learning rate from 10\u22123to10\u22124. As shown in Table 2 and Figure 6, MC-approx Sperforms well in terms of accuracy. Moreover, as the model gets more complex by adding hidden layers (Figure 12) and the variance increases, the model is unable to avoid overfitting even with decreasing the learning rate. We discussed in \u00a76.2 that MC-approx chooses row-column pairs from matrices such that the columns are from the first input matrix X\u2208Rm\u00d7nand the corresponding rows are sampled from the second matrix W\u2208Rn\u00d7n. Figure 12 provides evidence of the lack of scalability of MC-approx Sfor deep net- works. This can be attributed to the specific sampling procedure employed by MC-approx S. In the stochastic setting, X:,jis re- duced to a singleton set. As a result, the time overhead increases, while the reliability of probability estimation for row-column selection decreases.",
     "citation": "[47]",
     "citation_score": 0.000679864333897353
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Problem Description"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Notation Description akoutput vector of k-th layer zkinput vector of the k-th layer Wkweight matrix of the k-th layer Wk i,:rowiofWk Wk :,jcolumnjofWk \u27e8x1,x2\u27e9inner product of x1andx2 output vector y; it can be represented as follows (with a0=x): zk=ak\u22121Wk+bkak=f(zk) In the setting described above, matrix-vector multiplication can be done in \u0398(n2)time and applying the element-wise acti- vation function takes \u0398(n)time for each layer. Thus, the entire feedforward process for the whole network is in the order of \u0398(ln2). The final aspect in the training of neural networks is back- propagation, an efficient method of computing gradients for the weights to move the network towards an optimal solution via stochastic gradient descent2(SGD) [ 22]. The weight gradients for the backpropagation step can be computed recursively using Equation 1, whereLis the loss function and \u2299is the Hadamard product. \u03b4l=\u2207zlL=f\u2032(zl)\u2299\u2207alL \u2207WkL=ak\u03b4k+1 \u03b4k=\u2207zkL=f\u2032(zk)\u2299W\u03b4k+1\u2207bkL=\u03b4k+1(1) With gradient ak\u03b4k+1and learning rate \u03b7, the weight matrix Wk will be updated to Wk\u2212\u03b7ak\u03b4k+1. The gradient computation and update operations are also in form of vector-matrix operations that take \u0398(n2)time for each layer. As a result, the backpropaga- tion step in SGD also requires \u0398(ln2)time. 2While SGD uses only one data point to compute the gradients, an alternative approach is mini-batch gradient descent (MGD), where a small sample set (mini- batch) of the training set is used for estimations. Note that SGD can be viewed as a special case of MGD where the batch size is 1. Following our scope in this paper, SGD is considered for problem formulation, explaining the learning algorithm, and analysis. Nevertheless, as we shall later explain in \u00a76.1, one of the evaluated approaches, MC-approx , is based on MGD, the generalization of SGD. While SGD operations are in form of vector to matrix multiplication, MGD operations are in form of matrix (vectors of samples in the mini-batch) to matrix multiplication.ak\u22121 1\u00b7\u00b7\u00b7ak\u22121n\u0012 \u0013Wk 1,1Wk 1,2Wk 1,3Wk 1,n Wk 2,1Wk 2,2Wk 2,3Wk 2,n Wk 3,1Wk 3,2Wk 3,3Wk 3,n ............ Wk n,1Wk n,2Wk n,3Wkn,n\u00a9\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad \u00aba\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae \u00acak\u22121Wk:,2Sampling from Current LayerSampling from Prev. Layer",
+    "citation": "[22]",
+    "citation_score": 0.0004450679822633364
+  },
+  {
+    "section_path": [
+      "PRELIMINARIES",
+      "Problem Description"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Notation Description akoutput vector of k-th layer zkinput vector of the k-th layer Wkweight matrix of the k-th layer Wk i,:rowiofWk Wk :,jcolumnjofWk \u27e8x1,x2\u27e9inner product of x1andx2 output vector y; it can be represented as follows (with a0=x): zk=ak\u22121Wk+bkak=f(zk) In the setting described above, matrix-vector multiplication can be done in \u0398(n2)time and applying the element-wise acti- vation function takes \u0398(n)time for each layer. Thus, the entire feedforward process for the whole network is in the order of \u0398(ln2). The final aspect in the training of neural networks is back- propagation, an efficient method of computing gradients for the weights to move the network towards an optimal solution via stochastic gradient descent2(SGD) [ 22]. The weight gradients for the backpropagation step can be computed recursively using Equation 1, whereLis the loss function and \u2299is the Hadamard product. \u03b4l=\u2207zlL=f\u2032(zl)\u2299\u2207alL \u2207WkL=ak\u03b4k+1 \u03b4k=\u2207zkL=f\u2032(zk)\u2299W\u03b4k+1\u2207bkL=\u03b4k+1(1) With gradient ak\u03b4k+1and learning rate \u03b7, the weight matrix Wk will be updated to Wk\u2212\u03b7ak\u03b4k+1. The gradient computation and update operations are also in form of vector-matrix operations that take \u0398(n2)time for each layer. As a result, the backpropaga- tion step in SGD also requires \u0398(ln2)time. 2While SGD uses only one data point to compute the gradients, an alternative approach is mini-batch gradient descent (MGD), where a small sample set (mini- batch) of the training set is used for estimations. Note that SGD can be viewed as a special case of MGD where the batch size is 1. Following our scope in this paper, SGD is considered for problem formulation, explaining the learning algorithm, and analysis. Nevertheless, as we shall later explain in \u00a76.1, one of the evaluated approaches, MC-approx , is based on MGD, the generalization of SGD. While SGD operations are in form of vector to matrix multiplication, MGD operations are in form of matrix (vectors of samples in the mini-batch) to matrix multiplication.ak\u22121 1\u00b7\u00b7\u00b7ak\u22121n\u0012 \u0013Wk 1,1Wk 1,2Wk 1,3Wk 1,n Wk 2,1Wk 2,2Wk 2,3Wk 2,n Wk 3,1Wk 3,2Wk 3,3Wk 3,n ............ Wk n,1Wk n,2Wk n,3Wkn,n\u00a9\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad \u00aba\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae\u00ae \u00acak\u22121Wk:,2Sampling from Current LayerSampling from Prev. Layer",
+    "citation": "(1)",
+    "citation_score": 0.0001112669955658341
+  },
+  {
+    "section_path": [
+      "EFFICIENT TRAINING BY SAMPLING FROM CURRENT LAYER",
+      "Dropout"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In many cases, Dropout improved the runtime efficiency com- pared to the standard training process on the same architecture. However, there are scenarios in which training under Dropout requires more training iterations and eventually hurts the run- time. One can observe that due to the randomness in sampling with a fixed probability (usually p=1/2), there is a risk of drop- ping nodes that significantly affect the output values. Ba and Frey [6]addressed this issue by proposing Adaptive-Dropout , which uses a data-dependent distribution that is an approximation of the Bayesian posterior distribution over the model architecture and updates the sampling ratio adaptively w.r.t the current net- work. This method avoids randomly dropping significant nodes in the model.",
+    "citation": "[6]",
+    "citation_score": 0.0031713348441454454
+  },
+  {
+    "section_path": [
+      "EFFICIENT TRAINING BY SAMPLING FROM CURRENT LAYER",
+      "Asymmetric Locality-Sensitive Hashing for Training Approximation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": ".(4) ALSH-approx constructsLindependent hash tables with 2Khash buckets and assigns a K-bit randomized hash function to every table. Each layer has been assigned Lhash tables and a meta hash function to compute a hash signature for the weight vectors and fill all the hash tables before training. In this setting, KandL are tunable hyperparameters that affect the active set\u2019s size and quality. During training, ALSH-approx computes the hash signature of each incoming input using the existing hash functions. Then, a set of weight vectors will be returned using the hash values corresponding to the hash bucket. The active nodes in a layer are the union of their corresponding weight vectors from probing Lhash tables. Then, the model only performs the exact inner product on these active nodes and skips the rest. Finally, the gradient will only backpropagate through the active nodes and update the corresponding weights. In other words, ALSH is used to sample a subset of nodes with probability 1\u2212(1\u2212pK)Lifpis the probability of collision. Updating the hash tables ensures that the modified weight vectors are recognized. Based on the results reported by Spring and Shrivastava [50], the number of active nodes for each input can be as small as 5% of the total nodes per layer. Thus, ALSH- approx performs a significantly smaller set of inner products in each iteration. Moreover, due to the sparsity of the active sets belonging to different data inputs, the overlap between them throughout the dataset is small, so the weight gradient updates corresponding to these inputs are sparse as well. Thus, the hash table updates are executed after processing a batch of inputs and can be executed in parallel. The main advantage of ALSH- approx is that, unlike Dropout , it finds the active nodes before computing the inner products.",
+    "citation": "[50]",
+    "citation_score": 0.0013838552047180125
+  },
+  {
+    "section_path": [
+      "EFFICIENT TRAINING BY SAMPLING FROM CURRENT LAYER",
+      "Asymmetric Locality-Sensitive Hashing for Training Approximation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": ".(4) ALSH-approx constructsLindependent hash tables with 2Khash buckets and assigns a K-bit randomized hash function to every table. Each layer has been assigned Lhash tables and a meta hash function to compute a hash signature for the weight vectors and fill all the hash tables before training. In this setting, KandL are tunable hyperparameters that affect the active set\u2019s size and quality. During training, ALSH-approx computes the hash signature of each incoming input using the existing hash functions. Then, a set of weight vectors will be returned using the hash values corresponding to the hash bucket. The active nodes in a layer are the union of their corresponding weight vectors from probing Lhash tables. Then, the model only performs the exact inner product on these active nodes and skips the rest. Finally, the gradient will only backpropagate through the active nodes and update the corresponding weights. In other words, ALSH is used to sample a subset of nodes with probability 1\u2212(1\u2212pK)Lifpis the probability of collision. Updating the hash tables ensures that the modified weight vectors are recognized. Based on the results reported by Spring and Shrivastava [50], the number of active nodes for each input can be as small as 5% of the total nodes per layer. Thus, ALSH- approx performs a significantly smaller set of inner products in each iteration. Moreover, due to the sparsity of the active sets belonging to different data inputs, the overlap between them throughout the dataset is small, so the weight gradient updates corresponding to these inputs are sparse as well. Thus, the hash table updates are executed after processing a batch of inputs and can be executed in parallel. The main advantage of ALSH- approx is that, unlike Dropout , it finds the active nodes before computing the inner products.",
+    "citation": "(4)",
+    "citation_score": 0.00034596380117950324
+  },
+  {
+    "section_path": [
+      "THEORETICAL ANALYSIS"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "As explained in \u00a75.2 and \u00a76.1, sampling-based approaches seek to speed up the training of DNNs by skipping a large number of computations and approximating matrix multiplications. In this section we provide negative theoretical results for scalabil- ity against the feedforward approximation. At a high level, we show that small estimation errors in the initial layers get prop- agated and compounded in subsequent layers. Adelman et al . [1]already observed the low performance of MC-approx when the feedforward step is approximated and therefore only applied approximation during backpropagation for MLPs. As such, we focus on ALSH-approx for our analysis. First, let us introduce the following notation, which we will use throughout this section. \u2022 \u0304ak j: the estimation of ak jbyALSH-approx . \u2022ek j=ak j\u2212 \u0304ak j: the activation value estimation error. \u2022\u2191k j: the set of active nodes for nk j. Lemma 7.1. Letfbe a linear activation function such that a= f(z)=z. Assuming the active nodes are detected exactly, the estimation error for the node nk jbyALSH-approx is as follows. ek j=\uf8f1\uf8f4\uf8f4\uf8f4\uf8f4 \uf8f2 \uf8f4\uf8f4\uf8f4\uf8f4\uf8f3I\u0301 i\u2208\u0338\u21911 jxiW1 i,jifk=1 ek\u22121Wk :,j+I\u0301 i\u2208\u0338\u2191k j \u0304ak\u22121 iW1 i,jotherwise Proof. We want to show that the estimation error for the nodenk jbyALSH-approx is as follows. ek j=\uf8f1\uf8f4\uf8f4 \uf8f2 \uf8f4\uf8f4\uf8f3I\u0301 i\u2208\u0338\u21911 jxiW1 i,jifk=1 ek\u22121Wk :,j+I\u0301 i\u2208\u0338\u2191k j \u0304ak\u22121 iW1 i,jotherwise First, fork=1: a1 j=n\u2211\ufe01 i=1xiW1 i,j=\u2211\ufe01 l\u2208\u2191k jxlW1 l,j+\u2211\ufe01 i\u2208\u0338\u2191k jxiW1 i,j= \u0304a1 j+\u2211\ufe01 i\u2208\u0338\u2191k jxiW1 i,j =\u21d2e1 j=a1 j\u2212 \u0304a1 j=\u2211\ufe01 i\u2208\u0338\u2191k jxiW1 i,j189",
+    "citation": "[1]",
+    "citation_score": 0.002372175332223156
+  },
+  {
+    "section_path": [
+      "EXPERIMENT SETUP",
+      "Datasets"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We obtained similar results across different datasets. For brevity, we provide a detailed discussion only using the results on the MNIST dataset, but extensive results for other datasets are pro- vided in our technical report [17].",
+    "citation": "[17]",
+    "citation_score": 0.006598069274936794
+  },
+  {
+    "section_path": [
+      "LESSONS AND DISCUSSION",
+      "Feedforward Approximation Scalability"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We observed that backpropagation generally took significantly longer than the feedforward step (Tables 3 and 4). Fortunately, backpropagation optimization can significantly improve train- ing time [ 22,53]; introducing approximation only during the backpropagation step has the potential to significantly reduce training time. Nevertheless, designing scalable sampling-based algorithms that introduce approximation on both feedforward and backpropagation in DNNs on CPU machines remains an open research direction.",
+    "citation": "[22]",
+    "citation_score": 0.0010699114574774632
+  },
+  {
+    "section_path": [
+      "LESSONS AND DISCUSSION",
+      "Feedforward Approximation Scalability"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We observed that backpropagation generally took significantly longer than the feedforward step (Tables 3 and 4). Fortunately, backpropagation optimization can significantly improve train- ing time [ 22,53]; introducing approximation only during the backpropagation step has the potential to significantly reduce training time. Nevertheless, designing scalable sampling-based algorithms that introduce approximation on both feedforward and backpropagation in DNNs on CPU machines remains an open research direction.",
+    "citation": "[53]",
+    "citation_score": 0.00026747786436936586
   }
 ]

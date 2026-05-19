@@ -17,8 +17,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "ISBN 978-1-4503-4197-4/17/05. . . $15.00 DOI: http://dx.doi.org/10.1145/3035918.3035932floor area [29], or finding the best NBA player based on a linear combination of his performance criteria such as points and assists, are a few examples of this class of ranking function. A critical observation is that if the tuples are viewed as points in a high-dimensional space, the convex hull is the subset of points that can be used to find the maxima for any linear ranking func- tion [5,8]. However, in some real world applications such a convex hull can be overwhelmingly large, and therefore its performance is greatly reduced because many tuples have to be examined during query processing [15]. The size of such a set is highly correlated with the number of attributes, i.e., the number of convex hull tuples radically increases with the number of attributes/dimensions. Even in the case of two-dimensional database, the number of convex hull tuples might also be large. As has been studied in [13], the \u201ccur- vature\u201d of the shape of a region within which the database tuples are distributed greatly affects the number of convex hull tuples. As the curvature increases the number of convex hull tuples increases. For example, when npoints are uniformly distributed inside a con- vex polygon with ksides, the expected number of the convex hull points isO(klogn), while this value is O(n1 3)when points are uniformly distributed inside a circle. Consequently, it is of interest to develop a set limited to r<<n tuples (where ris an input parameter). Given such a reduced set, for a given ranking function, we can identify the maximum of the reduced set and return it as the query answer. One can observe a tradeoff between the size of the set and the accuracy of query answers (i.e., how the result might differ from the real maximum over the entire table). The task then is to design the most accurate set, i.e., the subset of rtuples for which the \u201cuser dissatisfaction\u201d over all possible ranking functions is minimized. Prior works on convex hull discovery in high-dimensions, such as [1,16], focus on designing efficient approximate algorithms with small approximate ratios. Thus, their goal is to discover a set that is as similar to the real convex hull as possible, rather than resolving the problem of a large convex hull, and usually find a super-set of the convex hull. There has also been work, such as [4,26], on reduc- ing the skyline [2] (the maxima representative that applies to more general monotonic ranking functions rather than just linear func- tions) size. However, their objective in ranking the skyline tuples is not minimizing the user dissatisfaction on maxima queries. For example, [4] relaxes the notion of domination to \u201ck \u0000domination\u201d in order to increase the chance domination and reduce the skyline. The problem investigated in our paper, which we call the Regret- ratio Minimizing Set (RRMS) problem, has been studied in prior papers.",
-    "technical_score": 0.015359341002950076,
-    "citation_score": 0.0,
+    "technical_score": 0.011882946948784421,
+    "citation_score": 0.0034763940541656553,
     "has_citation": true
   },
   {
@@ -50,8 +50,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "In the case of two-dimensional databases, we develop an inno- vative dynamic programming algorithm to find the optimal set by leveraging the total order property of the tuples that occur in the skyline of the database. Our two-dimensional exact polynomial time algorithm (2D-RRMS) runs in O(rslogslogc)time, where sandcare the number of skyline and convex hull tuples in the database respectively. This is a huge improvement over the O(n2r) algorithm proposed by [6], which is based on the notions of geo- metric duality and line arrangements.",
-    "technical_score": 0.010239560668633386,
-    "citation_score": 0.0,
+    "technical_score": 0.009034906472323577,
+    "citation_score": 0.00120465419630981,
     "has_citation": true
   },
   {
@@ -61,8 +61,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Next, as perhaps one of the major results of this paper, we de- velop an approximation algorithm (HD-RRMS) that guarantees a regret ratio that is within a small user-controllable distance from the optimal regret ratio. This algorithm is based on several inno- vative ideas. First, we model the problem conceptually as an in- finitely large matrix min-max problem [24], where the rows are the tuples and the (infinitely many) columns correspond to each pos- sible ranking function. Given an user controlled discretization pa- rameter, we discretize the ranking functions space into a bounded number of functions (based on the control parameter) in the polar system. We then take the advantage of the linear-size discretized problem space in order to find the optimal value for the discretized matrix min-max problem in O(nlogn)time, which is an approx- imate solution for the original problem. To do so, we convert the problem into linear number of fixed-size instances of the set-cover problem [12]. Thus, our eventual algorithm is able to guarantee a regret ratio that is within a user-controllable distance from the optimal regret ratio. The HD-RRMS algorithm is a theoretical al- gorithm, because although it runs in linearithmic time (assuming that the dimensions of the space and the user controlled parameter are both constants), the proportionality constant in the running time is large (exponentially dependent on the number of dimensions), mainly due to the large size of the set cover instances. Therefore, we make an important practical adaptation to HD-RRMS, by re- placing subroutine calls to an exact set-cover algorithm with calls to the well-known greedy approximate set-cover algorithm [7]. Beside the theoretical analysis, we also provide extensive experi- mental results over three publicly available real-world datasets, i.e., an Airline dataset, Department of Transportation (DOT), and Bas- ketball dataset (NBA), with sizes up to several million records. We also used synthetic datasets to evaluate the performance of the pro- posed algorithms in the presence of different correlation models, i.e., correlated, independent, and anti-correlated. All experimental results confirm that our algorithms not only are more efficient thanthe existing solutions, and are scalable, but also produce represen- tative sets with smaller regret ratios.",
-    "technical_score": 0.004095824267453355,
-    "citation_score": 0.0,
+    "technical_score": 0.003276659413962684,
+    "citation_score": 0.000819164853490671,
     "has_citation": true
   },
   {
@@ -149,8 +149,8 @@
     ],
     "paragraph_index": 7,
     "paragraph": "In this paper, we use the maximum regret-ratio defined by [22] in order to measure the error of removing a tuple tfrom a database D, formally defined by Equation 32Intuitively, the maximum regret- ratio is the worst-case score (ratio) difference between the true maximum tuple and the one in the compact set.",
-    "technical_score": 0.0064485600187842735,
-    "citation_score": 0.0,
+    "technical_score": 0.00520845232286422,
+    "citation_score": 0.0012401076959200528,
     "has_citation": true
   },
   {
@@ -171,8 +171,8 @@
     ],
     "paragraph_index": 9,
     "paragraph": "(4) In the rest of the paper, for simplicity we use ETasE(T;D ).",
-    "technical_score": 0.0064485600187842735,
-    "citation_score": 0.0,
+    "technical_score": 0.004513992013148992,
+    "citation_score": 0.001934568005635282,
     "has_citation": true
   },
   {
@@ -452,8 +452,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "8:R=MRST(M ,v[mid] ) 9: ifjRj\u0014rthen 10:TA=R,\u000fmin=v[mid] 11:high =mid\u00001 12: else 13:low=mid+ 1 14: end if 15:end while 16:returnTA SupposeTOis the optimal set with the minimum regret-ratio. Note that since the output of the HD-RRMS algorithm is the opti- mal solution for a subset of ranking functions, \u000fminis less than or equal to the regret-ratio of TO: \u000fmin\u0014EDnTO(11) That is because, if there is no subset of tuples with size of at most rthat satisfy the regret-ratio of less than \u000fmin forF(which is a subset ofF), no set will have the regret-ratio of less than \u000fmin for its super-set (F ). Moreover, based on Theorem 4 we know EDnTA\u0014c\u000fmin+ (1\u0000c). From Equation 11 c\u000fmin+ (1\u0000c)\u0014 cEDnTO+ (1\u0000c). Thus: EDnTA\u0014cEDnTO+ (1\u0000c) (12) Sincec\u00141, based on Equation 12, the regret-ratio of the set dis- covered by HD-RRMS is within (1\u0000c)distance from the regret- ratio of the optimal solution. MRST Oracle: The only missing part of the algorithm is the MRST oracle. We model the MRST problem with the set-cover prob- lem [12] by constructing the matrix M0as following: 8i;f :M0[i;f] =( 0;ifM[i;f]>\u000f 1; otherwise(13) M0contains constant number of columns and srows. Since the number of columns is bounded by a constant, there exists at most a constant number (more precisely, the power-set of jFj) of distinct combinations for the row values of M0. In the next step, the algo- rithm (giving a distinct id to each value-combination of columns) parsesM0and removes the duplicate rows. As a result, M0be- comes a matrix whose number of rows and columns are bound by constants! Next we transform the MRST problem to the set-cover problem as follows: \u000fEach column finM0is an item in the set-cover problem.",
-    "technical_score": 0.0022232662149462862,
-    "citation_score": 0.0,
+    "technical_score": 0.0019045183705095428,
+    "citation_score": 0.00031874784443674354,
     "has_citation": true
   },
   {
@@ -512,8 +512,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "To make the HD-RRMS Algorithm practical, we solve the set- cover instances approximately using the well-known greedy ap- proximate algorithm for set-cover [7]. Since this algorithm guar- antees a logfactor in the approximate-ratio, applying it adds an- other level of approximation and increases the set size to up torlog(jFj) =rmlog( )(rather thanr) tuples, while maintaining the distance from the optimal regret ratio in the bound provided in Theorem 4. Alternatively, one can find a new value (r0) for set- cover size such that r0=r mlog( ). In this way, we can make sure that the set size will not be more than r. However, the distance from the optimal solution may become larger than what provided in Theorem 4. Applying the greedy approximate set-cover reduces the running time to: log(n m):(n m+ (min(2 m;n): m)) \u00142n mlog(n m) (15) Given the importance of the choice of in Equation 15, we eval- uate the impact of the discretization control parameter ( ) in \u00a7 6.3 (Figures 24, 25, and 26). On examining the experiment results, it turns out even though increasing the value increases the running time significantly, the improvement on the quality of results drops quickly. In our experiments, choosing between 4 and 6 seemed to be appropriate.",
-    "technical_score": 0.0033832311966573918,
-    "citation_score": 0.0,
+    "technical_score": 0.003057920504671104,
+    "citation_score": 0.0003253106919862877,
     "has_citation": true
   },
   {

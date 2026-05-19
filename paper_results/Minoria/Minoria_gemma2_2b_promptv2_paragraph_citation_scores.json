@@ -567,5 +567,55 @@
     "paragraph": "According to the problem definition, we want to report top- l high-skew directions fas candidates to find Minoria. We should sample at least ldirections from the grids to achieve this. We want our samples to span all possible directions, so we should follow a sampling technique to satisfy the diversity of directions. We follow the DPP (Determinental Point Processing) sampling schema to achieve this [ 6]. Using this approach, one can get a set ofldiverse samples from a universe of npoints inO(n\u00b7l\u03c9\u22121), where\u03c9\u22482.37is the matrix multiplication factor. In this approach, we sampleO(l)grids in time of O((\u03c0 2\u00b71 \u03b5)d\u22121\u00b7l\u03c9\u22121)and push them in a Max-Heap structure based on the skew value. We analyze each grid by popping the heap and filtering those satisfying the condition of Problem 1. If we find less than lsuch directions, we continue sampling more directions (grids).6Calculating the skew ofldirections takes an additional O(lnd)time.",
     "citation": "[6]",
     "citation_score": 0.0001300699300699301
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03c3(V)(1) deviation of V. For a unit vector f, we defineDfas the projection of all points on f:Df={t\u22a4 if|ti\u2208D} (2) Then, the unit vectorf\u2217with the highest skew is defined as f\u2217=arg maxf\u22a4f=1,f\u2208Rdskew(Df). Since we would like to identify the Minoria candidates for further investigation, instead of returning the global optimum, i.e., the max- skew projection, we are interested in finding a top- lhigh-skew optima. Putting everything together, we define the Minoria mining problem as follows: Problem 1 (Minoria Mining). Given a datasetDofnsamples, each containing a d-dimensional observation vector Xand a target attributey, and the performance-disparity threshold \u03c4, find the unit vectors{f1,\u00b7\u00b7\u00b7,fl}as {f1,\u00b7\u00b7\u00b7,fl}= top-l f\u22a4f=1,f\u2208Rdskew(Df) such that for all i\u2208[l],E[LDgi(\u03b8)]\u2212E[LD(\u03b8)]\u2265\u03c4. top-lrefers to the top llocal optima (for a small constant l) with the maxi- mum skew,\u03b8is the parameter of the model h\u03b8that minimizes the expected loss onD, and giis thep-percentile tail ofDfi. \u25a1 Addressing Problem 1 is challenging as it requires identifying the median of each possible projection while there are infinite possible projections defined using different vectors f. To tackle this challenge, we provide a geometric dual transformation of Din the next section that helps us design our efficient algorithm in \u00a7 4.",
+    "citation": "(2)",
+    "citation_score": 0.0008609007572738145
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03c3(V)(1) deviation of V. For a unit vector f, we defineDfas the projection of all points on f:Df={t\u22a4 if|ti\u2208D} (2) Then, the unit vectorf\u2217with the highest skew is defined as f\u2217=arg maxf\u22a4f=1,f\u2208Rdskew(Df). Since we would like to identify the Minoria candidates for further investigation, instead of returning the global optimum, i.e., the max- skew projection, we are interested in finding a top- lhigh-skew optima. Putting everything together, we define the Minoria mining problem as follows: Problem 1 (Minoria Mining). Given a datasetDofnsamples, each containing a d-dimensional observation vector Xand a target attributey, and the performance-disparity threshold \u03c4, find the unit vectors{f1,\u00b7\u00b7\u00b7,fl}as {f1,\u00b7\u00b7\u00b7,fl}= top-l f\u22a4f=1,f\u2208Rdskew(Df) such that for all i\u2208[l],E[LDgi(\u03b8)]\u2212E[LD(\u03b8)]\u2265\u03c4. top-lrefers to the top llocal optima (for a small constant l) with the maxi- mum skew,\u03b8is the parameter of the model h\u03b8that minimizes the expected loss onD, and giis thep-percentile tail ofDfi. \u25a1 Addressing Problem 1 is challenging as it requires identifying the median of each possible projection while there are infinite possible projections defined using different vectors f. To tackle this challenge, we provide a geometric dual transformation of Din the next section that helps us design our efficient algorithm in \u00a7 4.",
+    "citation": "(1)",
+    "citation_score": 9.565563969709048e-05
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Exploration and Exploitation (E&E)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Without loss of generality, we adapt the epsilon-greedy ap- proach [ 42]. Define\u03b5\u22641as the exploration probability. We flip a coin with probability \u03b5in each iteration and choose to explore or exploit based on this trial result. Let f\u2032be the best-known solution with the maximum skew so far while considering a hyper-parameter \u03c4\u2032for the cosine similarity of the exploitation phase. During each exploration step, we draw random directions in the space of all possible directions. On the other hand, during the exploitation, we select the best-known direction f\u2032and select a random direc- tion from the space of possible direction in the \u03c4-vicinity of f\u2032, defined as{f(s)|cos(f\u2032,f(s))\u2264\u03c4\u2032}. This problem can be reduced to the problem of sampling uniformly from the surface of a unit d-dimensional spherical cone with the center f\u2032and the angular radius of\u03c4. We use the sampling approach proposed in [8].",
+    "citation": "[42]",
+    "citation_score": 8.72885979268958e-05
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Exploration and Exploitation (E&E)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Without loss of generality, we adapt the epsilon-greedy ap- proach [ 42]. Define\u03b5\u22641as the exploration probability. We flip a coin with probability \u03b5in each iteration and choose to explore or exploit based on this trial result. Let f\u2032be the best-known solution with the maximum skew so far while considering a hyper-parameter \u03c4\u2032for the cosine similarity of the exploitation phase. During each exploration step, we draw random directions in the space of all possible directions. On the other hand, during the exploitation, we select the best-known direction f\u2032and select a random direc- tion from the space of possible direction in the \u03c4-vicinity of f\u2032, defined as{f(s)|cos(f\u2032,f(s))\u2264\u03c4\u2032}. This problem can be reduced to the problem of sampling uniformly from the surface of a unit d-dimensional spherical cone with the center f\u2032and the angular radius of\u03c4. We use the sampling approach proposed in [8].",
+    "citation": "[8]",
+    "citation_score": 2.182214948172395e-05
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Percentile Accuracy F1-score 1 0.87 0.72 0.1 0.87 0.62 0.01 0.89 0.68 0.001 0.85 0.40 0.0001 0.87 0.30 skew direction (skew = 0.20). The tail is calculated on the entire dataset. Percentile Accuracy F1-score 1 0.87 0.72 0.1 0.87 0.62 0.01 0.89 0.68 0.001 0.79 0.32 0.0001 0.81 0.18 skew direction (skew = 0.16). The tail is calculated on the entire dataset. This indicates a pronounced class imbalance in the tail distribution, which is attributable to the demographic group imbalance. 7.1.2 College Admissions. The College-admission dataset [ 3] con- tains details about a group of students who sent applications to US universities. This dataset has 400 rows and 7 columns indicating the features of the submitted applications (like GRE, GPA, Gender/Race, etc.). The female-to-male ratio in this dataset is around 1.1.",
+    "citation": "[3]",
+    "citation_score": 0.00024201249515211587
   }
 ]

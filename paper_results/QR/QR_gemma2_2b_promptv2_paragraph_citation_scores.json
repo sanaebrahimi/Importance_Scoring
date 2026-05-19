@@ -636,5 +636,81 @@
     "paragraph": "Complete Skeleton, S: Given ad-dimensional space, the intersection of dhyperplanes is a 0-dimensional point which is called the vertex. The intersection of d\u22121hyperplanes creates a 1-dimensional line segment which is called an edge. The endpoints of an edge consist of two vertices which are called neighbors. These vertices and edges create a connected graph called Complete Skeleton (S). The details about the complete skeleton can be found in [11]. k-set: Given a set of npoints ind-dimensional space, a k-set is a subset of kpoints that can be separated by a hyperplane from the remaining points. Much is known about k-sets, their counts, as well as algorithms for their enumeration and construction, especially in lower dimensional space [11]. For our geometric mapping, consider the npoints is given by the data points in the primal space. As the optimal quantile regression hyperplane H\u2217must partition the npoints such that \u03c4n points are on one side and the remaining (1\u2212\u03c4)nlie on the other, the optimal hyperplane is a separating k-set hyperplane. We exploit these observations to design our deterministic strongly polynomial algorithm for 2(and higher) dimensions. Arrangements : Givennhyperplanes in d-dimensional space, the entire space is partitioned into anarrangement consisting of O(nd)d-dimensional convex cells. Much is known about the geometric properties of such arrangements, as well as algorithms for their construction [ 11]. Thenpoints in the primal space transform into ndual hyperplanes, creating a dissection of the dual space into an arrangement [12]. Figure 4 shows the lines in the dual space for the sample points in Figure 3. k-level of an arrangement: In an arrangement of nhyperplane, the k-level of an arrangement is a set of points psuch that the number of lines above p\u2264k\u22121and and the number of lines below p\u2264n\u2212k. The black bold lines in Figure 4 shows the 4-level of arrangement. Further details of duality, arrangements, complete skeleton graph, k-sets andk-level of arrange- ment can be found in [11].",
     "citation": "[12]",
     "citation_score": 2.533928013605914e-06
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Additionally, T. Chan [ 4] has developed a randomized incremental algorithm to perform the enumeration in O(m+nlog (n)). The pseudocode of QReg2D is presented in Appendix E (Algorithm 1). Time complexity of our algorithm with deterministic (randomized resp.) k-set enumeration is presented in Lemma 1 (Lemma 2 resp.). Both the proofs of Lemma 1 and Lemma 2 utilize the upper bound of the number ofk-set [9] and k-set enumeration techniques [4]. Lemma 1. QReg2D has a time complexity of O(n4 3log1+an), wherea>0is an arbitrarily small constant.2 Lemma 2. QReg2D with randomized k-set enumeration [ 4] has an expected time complexity of O(n4 3).2 Interestingly, as also shown in Tables 1 and 2, our k-set based algorithm for two dimensions is asymptotically better than any other existing exterior or interior point approaches in two dimensions (BRor IPM). Extending to higher dimensions is an open problem, as the corresponding problems of counting and enumerating k-sets in higher dimensions are generally challenging and open problems in computational geometry. Any breakthroughs are likely to have implications for our k-sets based algorithm for QR.",
+    "citation": "[4]",
+    "citation_score": 0.0006958413479510617
+  },
+  {
+    "section_path": [
+      "Efficiently Updating Neighbors, and the Use of k-Sets",
+      "QReg2D: Leveraging k-Sets in the Two Dimensional QR Problem"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Additionally, T. Chan [ 4] has developed a randomized incremental algorithm to perform the enumeration in O(m+nlog (n)). The pseudocode of QReg2D is presented in Appendix E (Algorithm 1). Time complexity of our algorithm with deterministic (randomized resp.) k-set enumeration is presented in Lemma 1 (Lemma 2 resp.). Both the proofs of Lemma 1 and Lemma 2 utilize the upper bound of the number ofk-set [9] and k-set enumeration techniques [4]. Lemma 1. QReg2D has a time complexity of O(n4 3log1+an), wherea>0is an arbitrarily small constant.2 Lemma 2. QReg2D with randomized k-set enumeration [ 4] has an expected time complexity of O(n4 3).2 Interestingly, as also shown in Tables 1 and 2, our k-set based algorithm for two dimensions is asymptotically better than any other existing exterior or interior point approaches in two dimensions (BRor IPM). Extending to higher dimensions is an open problem, as the corresponding problems of counting and enumerating k-sets in higher dimensions are generally challenging and open problems in computational geometry. Any breakthroughs are likely to have implications for our k-sets based algorithm for QR.",
+    "citation": "[9]",
+    "citation_score": 0.0001739603369877655
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(3) acceptPifP[A\u2032]\u2208R, otherwise reject it and try again. This approach, however, is not efficient since the probability of accepting a sample when |Sin|=O(1)is as low as1 n2. As a result, the expected cost of generating one sample for such regions is O(n2). ConstrainedSampling : Given the inefficiency of the rejection sampling approach, in the following we propose an efficient approach that only generate samples (uniformly at random) that are already inSinand, hence, no rejection is needed. Our strategy is based on weighted sampling of the dual lines, where the weight of each dual line is the number intersections it has within the search interval",
+    "citation": "(1)",
+    "citation_score": 0.00015443381738053548
+  },
+  {
+    "section_path": [
+      "RandomizedQR: An Efficient Randomized Algorithm for Quantile Regression",
+      "RandomizedQR in two dimensions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(3) acceptPifP[A\u2032]\u2208R, otherwise reject it and try again. This approach, however, is not efficient since the probability of accepting a sample when |Sin|=O(1)is as low as1 n2. As a result, the expected cost of generating one sample for such regions is O(n2). ConstrainedSampling : Given the inefficiency of the rejection sampling approach, in the following we propose an efficient approach that only generate samples (uniformly at random) that are already inSinand, hence, no rejection is needed. Our strategy is based on weighted sampling of the dual lines, where the weight of each dual line is the number intersections it has within the search interval",
+    "citation": "(3)",
+    "citation_score": 3.860845434513387e-05
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "State of Art Techniques and Tools: Quantile Regression is a well-studied research problem. In the appendix (Section B), we provide a more detailed overview of the literature, but highlight a few key works here. Two prominent classes of exact techniques to solve the QRproblem are exterior-point based [1] andinterior-point based [24] approaches. Barrodale and Robert ( BR) proposed a simplex-based exterior point technique [ 1], which moves from one exterior point (i.e., a \u201ccorner\u201d of the feasible polytope defined by the linear program) to another exterior point, in the direction of steepest gradient descent. The core idea of BRoriginates from Edgeworth\u2019s bi-variate weighted median based 1888 approach [ 13]. The run time of this algorithm is O(n2), which is still the state of the art algorithm for two dimensions (i.e., d= 2). All the exterior points based approaches are only suitable for small problem instances with around 1000points and few attributes [ 24]. Portnoy and Koenkar later proposed a primal-dual interior point method ( IPM) which finds the optimal solution by minimizing the difference between primal and dual objective cost [ 24]. This method is reasonably fast for larger input sizes in practice, but worst-case theoretical runtime complexity is O(n3.5log 1/\u03b5) where\u03b5is the desired accuracy [29]. Moreover, BRandIPMare extremely memory hungry, hence not suitable for big data problem instances under resource constraints.",
+    "citation": "[24]",
+    "citation_score": 0.003966738894370702
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "State of Art Techniques and Tools: Quantile Regression is a well-studied research problem. In the appendix (Section B), we provide a more detailed overview of the literature, but highlight a few key works here. Two prominent classes of exact techniques to solve the QRproblem are exterior-point based [1] andinterior-point based [24] approaches. Barrodale and Robert ( BR) proposed a simplex-based exterior point technique [ 1], which moves from one exterior point (i.e., a \u201ccorner\u201d of the feasible polytope defined by the linear program) to another exterior point, in the direction of steepest gradient descent. The core idea of BRoriginates from Edgeworth\u2019s bi-variate weighted median based 1888 approach [ 13]. The run time of this algorithm is O(n2), which is still the state of the art algorithm for two dimensions (i.e., d= 2). All the exterior points based approaches are only suitable for small problem instances with around 1000points and few attributes [ 24]. Portnoy and Koenkar later proposed a primal-dual interior point method ( IPM) which finds the optimal solution by minimizing the difference between primal and dual objective cost [ 24]. This method is reasonably fast for larger input sizes in practice, but worst-case theoretical runtime complexity is O(n3.5log 1/\u03b5) where\u03b5is the desired accuracy [29]. Moreover, BRandIPMare extremely memory hungry, hence not suitable for big data problem instances under resource constraints.",
+    "citation": "[1]",
+    "citation_score": 0.0009916847235926754
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "State of Art Techniques and Tools: Quantile Regression is a well-studied research problem. In the appendix (Section B), we provide a more detailed overview of the literature, but highlight a few key works here. Two prominent classes of exact techniques to solve the QRproblem are exterior-point based [1] andinterior-point based [24] approaches. Barrodale and Robert ( BR) proposed a simplex-based exterior point technique [ 1], which moves from one exterior point (i.e., a \u201ccorner\u201d of the feasible polytope defined by the linear program) to another exterior point, in the direction of steepest gradient descent. The core idea of BRoriginates from Edgeworth\u2019s bi-variate weighted median based 1888 approach [ 13]. The run time of this algorithm is O(n2), which is still the state of the art algorithm for two dimensions (i.e., d= 2). All the exterior points based approaches are only suitable for small problem instances with around 1000points and few attributes [ 24]. Portnoy and Koenkar later proposed a primal-dual interior point method ( IPM) which finds the optimal solution by minimizing the difference between primal and dual objective cost [ 24]. This method is reasonably fast for larger input sizes in practice, but worst-case theoretical runtime complexity is O(n3.5log 1/\u03b5) where\u03b5is the desired accuracy [29]. Moreover, BRandIPMare extremely memory hungry, hence not suitable for big data problem instances under resource constraints.",
+    "citation": "[13]",
+    "citation_score": 0.00024792118089816885
+  },
+  {
+    "section_path": [
+      "Quantile Regression: Challenges, and State of Art"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "State of Art Techniques and Tools: Quantile Regression is a well-studied research problem. In the appendix (Section B), we provide a more detailed overview of the literature, but highlight a few key works here. Two prominent classes of exact techniques to solve the QRproblem are exterior-point based [1] andinterior-point based [24] approaches. Barrodale and Robert ( BR) proposed a simplex-based exterior point technique [ 1], which moves from one exterior point (i.e., a \u201ccorner\u201d of the feasible polytope defined by the linear program) to another exterior point, in the direction of steepest gradient descent. The core idea of BRoriginates from Edgeworth\u2019s bi-variate weighted median based 1888 approach [ 13]. The run time of this algorithm is O(n2), which is still the state of the art algorithm for two dimensions (i.e., d= 2). All the exterior points based approaches are only suitable for small problem instances with around 1000points and few attributes [ 24]. Portnoy and Koenkar later proposed a primal-dual interior point method ( IPM) which finds the optimal solution by minimizing the difference between primal and dual objective cost [ 24]. This method is reasonably fast for larger input sizes in practice, but worst-case theoretical runtime complexity is O(n3.5log 1/\u03b5) where\u03b5is the desired accuracy [29]. Moreover, BRandIPMare extremely memory hungry, hence not suitable for big data problem instances under resource constraints.",
+    "citation": "[29]",
+    "citation_score": 0.0
   }
 ]

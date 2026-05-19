@@ -77,8 +77,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "All the concepts and techniques defined later in the paper can be easily modified to work with a data-model where the blue entities have a different set of attributes ( d1) compared to the red (d2attributes). For the sake of simplicity, our data model is defined with symmetric attributes for both the blue and red entities. Ranking functions : Each entity ti\u2208Dis associated with a ranking (aka preference or scoring) function that maps any given entity to a real valued score f:Rd\u2192R+. The ranking func- tion is used to express the preference of an entity during the matching process. As a hard criteria for matching, an entity with blue matching attribute only wants to match with an en- tity with red matching attribute and vice-versa. For instance, job recruiters ( blue) and job seekers ( red) are trying to match in a job matching scenario. The list of ranking functions Fconsists ofnranking functions corresponding to each of the entities. An entityti\u2019s ranking function is referred to as fithroughout the paper. Some widely used types of ranking functions are linear, nearest-neighbor, and monotonic [ 11]. The techniques proposed in this paper are agnostic to the choice of ranking function. In this paper, the time taken to compute a score by the ranking function is referred to as C. An important requirement for the ranking functions we consider in this paper is the masking prop- erty. That is, given a ranking function, one can tune the function not to consider masked attributes when computing the scores. Masking is usually possible (including in linear, nearest-neighbor, and monotonic functions) by setting the values of the masked attributes as zero or null across all entities. That is, given an attributeAjto mask, one can set ti[j]=0,\u2200ti\u2208D. The set of attributesMwhich are set to 0s (or nulls) are known as masked attributes. The purpose of the masking function is to generate the outcome of a subset of non-masked attributes. Please note that in case of categorical attributes, the ranking function must be able to handle null values. In later sections, we explain the importance of the masking property for explanations. Match list : As there are a large number of entities, any entity would like to see a small relevant set of entities as a potential match. Ranking functions are used to rank all the entities in the dataset belonging to the opposite matching attribute. In this work, top-kentries are shown for each entity using the rank of the entities as potential match. That is, given the ranking functionfifor an entity ti, scores are assigned to all the entities {tj\u2208D|tj[m]=\u0338ti[m]}usingfi. Those entities are then ranked and the top- kare chosen to be shown to ti. These top-kentries, known as a match list, are used to ex- press the recommendations for matching. We denote a match list byli, such that each list consists of kentities. Given an en- tityti, letfk irepresent the score for the kthranked entity using the scoring function fi. Given an entity ti,the match list can be mathematically expressed as, li={tj|fi(tj)\u2265fk iandtj[m]=\u0338ti[m]}s.t.|li|=k When a mask Mis applied to obtain the top- k, the match list is represented as li(M). Note that the value of kdepends on the application and is not restricted to a fixed value for any individual. Without loss of generality, in this paper we assume a consistent kacross all entities\u2019 ranking functions.",
-    "technical_score": 0.12,
-    "citation_score": 0.0,
+    "technical_score": 0.11399999999999999,
+    "citation_score": 0.006,
     "has_citation": true
   },
   {
@@ -301,8 +301,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "0,ifS=\u2205ortj\u2208l\u2217 i 1,iftj\u2208\u0338l\u2217 i(3)For Example 1.1 question (1), and the query PQ-NotMatch , the results are shown in Table 1. The exact algorithm generated the Shapley values 0, -0.16, 0.83, and 0.33 for the attributes Python, R, PHP, and JS respectively. As discussed earlier, this shows that PHP is the largest contributor to why Candidate t3was not in HRt20\u2019s match list. Additionally, since Python has a negative value, the candidate\u2019s Python skill would cause the individual to appear in the match list.",
-    "technical_score": 0.002821428571428571,
-    "citation_score": 0.0,
+    "technical_score": 0.0024773519163763065,
+    "citation_score": 0.0003440766550522648,
     "has_citation": true
   },
   {
@@ -539,8 +539,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Proof. We prove this theorem using Hoeffding\u2019s inequal- ity [15]. First, we prove for the four queries that each randomvariableZivaries within the range of Zi\u2208[\u2212 1,1]. The random variableZiin each of the four problems refers to the Shapley value function for the sampled permutation. We obtain the in- equality by applying Hoeffding\u2019s inequality. For the queries PQ-NotMatch andPQ-Match , the random variable is the difference between the Shapley value function when attribute Aiis added to permutation Xi.e.Zi=(v(PreX i\u222a Ai)\u2212v(PreX i)). Hence, the random variable Zican take values \u22121,0or1based on how the Shapley value function changed. For the set-similarity based problems SQ-Single andSQ-Multiple Ziis the difference between the Jaccard similarity for the random permutation v(PreX i\u222aAi)andv(PreX i). Hence,Zifor these two problems is a continuous variable between \u22121and1. As we have seen, in all four problems the random variable Zivaries between \u22121and1. Applying Hoeffding\u2019s inequality with b=1anda=\u22121 we get, P\u0010 |\u02c6Shi\u2212Shi|\u2265\u03b1\u0011 \u22642e\u2212q\u03b12 2\u2264\u03b4. Restructuring the above equation and representing qin terms of\u03b1and\u03b5we get, q\u22652 log(2/\u03b5) \u03b12 Hence, proved. \u25a1",
-    "technical_score": 0.005642857142857142,
-    "citation_score": 0.0,
+    "technical_score": 0.0053049615055603076,
+    "citation_score": 0.0003378956372968349,
     "has_citation": true
   },
   {

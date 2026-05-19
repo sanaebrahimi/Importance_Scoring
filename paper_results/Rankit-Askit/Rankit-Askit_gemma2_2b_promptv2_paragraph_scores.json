@@ -17,8 +17,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Graph Size (# of Edges)246810A verage Error Graph Degree Task based on different input sizes. The error is the absolute difference between the real degree of a node (less than 20 in this case) and the reported degree by the LLM. questions about node degrees (see Example 2). We refer to this as the Graph Degree Task. LLMs follow a sequential randomized process to generate their outputs. As a result, their inputs are received and processed as ordered sequences. In particular, when the input is lengthy, LLMs are known to pay \u201cless attention\u201d to certain regions of the input, hence, struggling with retaining information from those regions. This leads to a performance degradation over extended inputs [ 23]. For example, Fig 1 shows the significant error of GPT-3.5 Turbo for Graph Degree Task when the graph size is more than 200. On the other hand, the input of a symmetric task is an unordered bag of elements. As a result, the input elements can be freely re- ordered. This gives us the opportunity to rerank the input elements before passing it to the LLM for maximizing its accuracy \u2013 which is the research focus of this paper. Specifically, we introduce a rerank- ing mechanism that (a) learns the so-called \u201cexposure\u201d of each rank position for an LLM during the preprocessing time. Then, at the query time, it (b) assesses the relevance of each input element to the given natural language query and (c) generates a reranking of the input that puts the relevant elements in high-exposure positions.",
-    "technical_score": 0.010431818181818181,
-    "citation_score": 0.0,
+    "technical_score": 0.009910227272727272,
+    "citation_score": 0.000521590909090909,
     "has_citation": true
   },
   {
@@ -259,8 +259,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "However,computing therelevance values ischallenging since thetaskTisnotspecifiedbeforehand, andqcanbeanyquer yon I.Toaddressthisissue ,inthissection, westudy thesub-pr oblem ofestimating therelevance scoreforeach elementei\u2208I. Weutilize ahelperLLMHforestimating therelevance values. Hisasmall open-sour ceLLM that isrelativ elycheap torunand deplo y.Inourexperiments, wecompar ediffer entmodels asH, DeepSeek-Coder-v2 (16b) [43], andMistral (7b) [18]. Intherestofthissection, weexplain twometho dstoestimate therelevance scores.First, wediscuss awarm-up baseline that partitions theinput elementsIinto smaller subsets andidentifies therelevant andnon-r elevant elements within each partition. Next, wepresent ourestimation approach bymodeling theproblem asa bipartite graph.",
-    "technical_score": 0.022966507177033496,
-    "citation_score": 0.0,
+    "technical_score": 0.016586921850079747,
+    "citation_score": 0.006379585326953749,
     "has_citation": true
   },
   {
@@ -323,8 +323,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "E[\u03b5L(I,q)]\u221d1 nn\u2211\ufe02 i=1(XL(i)\u00b7Relq(ti)) (5) In other words, the inverse of the error is directly proportional to the rank utilization of the items within I. The higher utilization implies that items of greater relevance are positioned in more ex- posed locations (XL(i)). Consequently, this results in a relatively smaller output error of the LLM. In the Appendix C, we provide the details of estimating the exposuresXand a confidence bound on the estimation. Finally, a discussion of the practical details for the implementation is provided there.",
-    "technical_score": 0.02631578947368421,
-    "citation_score": 0.0,
+    "technical_score": 0.023182957393483708,
+    "citation_score": 0.003132832080200501,
     "has_citation": true
   },
   {
@@ -345,8 +345,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Report [ 9]. Finally, a discussion on the advantages and limitations of our approaches is provided in Section 6.",
-    "technical_score": 0.014868421052631576,
-    "citation_score": 0.0,
+    "technical_score": 0.010407894736842102,
+    "citation_score": 0.004460526315789473,
     "has_citation": true
   },
   {

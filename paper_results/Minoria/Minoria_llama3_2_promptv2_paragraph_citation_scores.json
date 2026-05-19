@@ -617,5 +617,15 @@
     "paragraph": "Several studies have been conducted to identify the underper- forming regions of machine learning models [ 14,33,35,43]. Thesestudies aim to detect regions and sub-spaces that present challenges for the model in making accurate predictions. SliceFinder [ 14] de- tects specific \u201cslices\u201d of data where a machine learning model un- derperforms, indicated by a significantly higher average loss on these slices compared to other parts of the dataset. Other methods build on this concept by concentrating on specific regions of the data [ 35]. Chen et al. [ 12] employ clustering approaches to identify partitions of data that are discriminated against by a classification model. They aim to discover clusters where the model\u2019s perfor- mance varies between demographic groups. The issue of identifying underrepresented groups within a sampled population is explored by Lancia et al. [ 25], who focus on detecting poorly represented groups and resampling these hard-to-sample sub-groups. Pastor et al. [ 33] also introduce a concept of pattern divergence to exam- ine a model\u2019s behavior across different sub-populations. Existing work also includes [ 31] that combines crowdsourcing and machine learning to detect uncovered groups over predetermined grouping attributes on image datasets without explicit group information. The primary distinction between our work and the existing literature is that we assume no prior information about the group- ing attributes within the dataset. In other words, we aim to mine Minoria from a collection of data points without explicit access to demographic group information over predetermined grouping attributes. Our goal is to identify the groups that are unknown, underrepresented, and underperforming for a given prediction task.",
     "citation": "[31]",
     "citation_score": 0.001879994637474945
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "MD Discretization"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "According to the problem definition, we want to report top- l high-skew directions fas candidates to find Minoria. We should sample at least ldirections from the grids to achieve this. We want our samples to span all possible directions, so we should follow a sampling technique to satisfy the diversity of directions. We follow the DPP (Determinental Point Processing) sampling schema to achieve this [ 6]. Using this approach, one can get a set ofldiverse samples from a universe of npoints inO(n\u00b7l\u03c9\u22121), where\u03c9\u22482.37is the matrix multiplication factor. In this approach, we sampleO(l)grids in time of O((\u03c0 2\u00b71 \u03b5)d\u22121\u00b7l\u03c9\u22121)and push them in a Max-Heap structure based on the skew value. We analyze each grid by popping the heap and filtering those satisfying the condition of Problem 1. If we find less than lsuch directions, we continue sampling more directions (grids).6Calculating the skew ofldirections takes an additional O(lnd)time.",
+    "citation": "[6]",
+    "citation_score": 0.0006959688321017624
   }
 ]
