@@ -290,6 +290,14 @@ def _split_paragraph_channel_scores_strict(
             else:
                 avg_t = total_val * max(0.0, avg_t) / channel_sum
                 avg_c = total_val * max(0.0, avg_c) / channel_sum
+        if has_citations and avg_c <= 0.0:
+            word_count = max(1, len(paragraph_items[pid].split()))
+            mention_count = len(mention_buckets.get(pid, []))
+            density = mention_count / word_count
+            fraction = max(0.05, min(0.30, density * 10))
+            avg_c = total_val * fraction
+            avg_t = max(0.0, total_val - avg_c)
+
         paragraph_technical[pid] = max(0.0, avg_t)
         paragraph_citation[pid]  = max(0.0, avg_c)
 

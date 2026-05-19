@@ -4095,6 +4095,14 @@ def assign_importance_scores(
                 paragraph_t = max(0.0, _t_strict.get(paragraph_name, paragraph_t))
                 paragraph_c = max(0.0, _c_strict.get(paragraph_name, 0.0))
 
+                if paragraph_c <= 0.0:
+                    total_val = max(0.0, safe_float(paragraph_total.get(paragraph_name), 0.0))
+                    word_count = max(1, len(meta["text"].split()))
+                    density = len(mentions) / word_count
+                    fraction = max(0.05, min(0.30, density * 10))
+                    paragraph_c = total_val * fraction
+                    paragraph_t = max(0.0, total_val - paragraph_c)
+
             paragraph_total_score = combine_scores(paragraph_t, paragraph_c)
             assert_close(
                 paragraph_total_score,
