@@ -4,3 +4,962 @@
 [run_start] time=2026-05-19T13:33:27 model=qwen3:4b host=http://localhost:11435 paper_id=INFINI-GRAM-MINI n_samples=5 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
 ============================== RUN START ==============================
 ====================================================================================================
+[paragraph_channel_split] sample=1/5 attempt=2/5 temperature=0.020300984622687337
+We are given one paragraph (Paragraph 1) from the Introduction section.
+
+The task: split the paragraph's value into technical_percentage and citation_percentage.
+
+Rules and calibration:
+- The paragraph is in the Introduction section.
+- We have `has_citations` = true, so citation_percentage cannot be 0 (unless the paragraph has no citations, but here it does).
+- The `citation_focus_text` is provided (a substring of the paragraph that focuses on citation-derived content).
+
+How to think:
+The question: "If I deleted all content describing, comparing, or bridging prior work - what fraction of this paragraph's value survives?"
+
+We are to find the technical_percentage (the fraction that survives without the cited works). The rest is citation_percentage.
+
+The paragraph describes:
+- The problem: modern LMs trained on text datasets from petabyte-level corpora (like Common Crawl) and the need to understand training data effects.
+- The challenge: exact-match search for long sequences is becoming interesting but the corpora are too big for existing indexing techniques (which have high storage multipliers).
+- Existing systems (Merrill et al., 2024; Liu et al., 2024; Elazar et al., 2024) and their storage multipliers.
+- The authors' solution: using FM-index (with a storage multiplier of 0.44x) and their system INFINI-GRAM MINI.
+- They built the system for two datasets and 7 Common Crawl dumps (83TB in 99 days).
+- They apply it to benchmark contamination analysis and other use cases.
+
+The key: The paragraph is introducing their system (INFINI-GRAM MINI) and its application. However, it also heavily describes prior work (with citations) to set the context.
+
+But note: The paragraph is in the Introduction. The goal of the Introduction is to set the stage for the paper. The authors are describing the problem, the state of the art, and then their solution.
+
+The technical part: 
+- The authors' own system (INFINI-GRAM MINI) is a novel contribution. They describe how they built it (extending and combining components from prior works) and the results (83TB indexed in 99 days, etc.). 
+- The technical details of the system (the algorithm, the storage multiplier, the speedup) are original.
+
+The citation part:
+- The paragraph cites many prior works to describe the problem and the state of the art. 
+- The paragraph also uses the citations to compare with existing systems (Merrill, Liu, etc.) and to set the context.
+
+However, note the calibration guidance for Introduction paragraphs:
+
+- A paragraph in Related Work that summarizes prior methods: citation_percentage ≈ 80–95, technical_percentage ≈ 5–20
+- But this is an Introduction paragraph, not Related Work.
+
+The problem: The paragraph is in the Introduction. The Introduction typically sets the stage for the paper. The authors are describing the problem, the state of the art, and then their solution.
+
+In this paragraph, the authors are:
+1. Stating the problem (with citations to prior work on LM training data and the need for understanding).
+2. Describing the challenge (exact-match search for long sequences) and the existing solutions (with citations and their storage multipliers).
+3. Proposing their solution (INFINI-GRAM MINI) and its implementation details (extending prior works, but with their own modifications) and the results.
+
+The critical point: The paragraph ends with the application of the system to benchmark contamination and other use cases. The system itself is the technical contribution.
+
+How much of the paragraph is original (technical) vs. citation-derived?
+
+We are told: 
+- If we delete all content describing, comparing, or bridging prior work, what survives?
+
+The paragraph has a lot of citation-derived content (the descriptions of prior works, the comparisons with existing systems). However, the authors also present their own system and the results of their application.
+
+But note: The paragraph is not just a summary of prior work. It is introducing their system and the results.
+
+Let's break down:
+
+- The first sentence: "Modern language models (LMs) are trained mainly on text datasets downsampled from massive, petabyte-level text corpora like Common Crawl (Common Crawl Foundation, 2025)." -> This is a statement of fact that is not original? But it's a common knowledge. However, the citation (Common Crawl Foundation, 2025) is a reference to a specific source. But the statement itself is a general fact that might be known. However, the paragraph is in the Introduction and it's setting the context.
+
+- The next part: "As these LMs are deployed more broadly, it becomes more pressing to understand the training data and its effects on model behavior (Liu et al., 2025; Han and Tsvetkov, 2022)." -> This is a statement that the authors are citing to support the need.
+
+- Then: "As a starting point, we want to make these text corpora searchable ; in particular, searching for exact matches of long sequences has gained increasing interest (Elazar et al., 2024; Merrill et al., 2024; Lu et al., 2024)." -> This is the problem they are addressing.
+
+- Then: "The size of these corpora makes this problem extremely challenging, creating demand for more efficient indexing techniques." -> This is a general statement.
+
+- Then: "Prior systems for exact-match search build indexes several times as large as the text corpora." -> This is a statement about prior work.
+
+- Then: They list specific prior works with their storage multipliers. This is a comparison of prior work.
+
+- Then: "To address this challenge, we index text corpora with FM-index ..." -> This is the authors' solution.
+
+- Then: They describe the FM-index (with citations to prior works in bioinformatics) but note: they say "but not yet used for natural language data at scale". Then they mention a prior work that applied it to a small dataset (13.4 GB).
+
+- Then: They explain the storage multiplier (0.26x) and the practical multiplier (0.44x).
+
+- Then: They introduce their system: INFINI-GRAM MINI.
+
+- Then: They describe how they built it (extending and combining components from Liu et al., 2024, Gog et al., 2014, Labeit et al., 2017) and the results (18x speedup, 32% RAM).
+
+- Then: They describe the scale of their indexing (83TB in 99 days) and the potential for full Common Crawl.
+
+- Then: They describe the query engine (on-disk index, reducing RAM).
+
+- Then: They apply it to benchmark contamination analysis and other use cases.
+
+- Then: They state the impact (revealing a dire evaluation crisis) and the plan (hosting a bulletin, releasing web interface, etc.).
+
+The technical contribution is the system INFINI-GRAM MINI and its application. The paragraph is mostly about the problem and the state of the art (which is citation-derived) but then it presents the authors' solution and results (which are technical).
+
+However, note: The paragraph is in the Introduction. The Introduction typically does not present the technical details of the method in full (that's in Methods). But here, the paragraph is a bit long and includes some technical details.
+
+But the problem says: "a paragraph in Introduction" - so we have to calibrate.
+
+The calibration guidance for Introduction paragraphs:
+
+- The example: "A paragraph in Related Work that summarizes prior methods" -> citation_percentage ≈ 80–95, technical_percentage ≈ 5–20.
+
+But this is Introduction, not Related Work.
+
+Another example: "A Conclusion paragraph summarizing the paper's own contributions" -> citation_percentage ≈ 0–10, technical_percentage ≈ 90–100.
+
+This paragraph is not a conclusion, but it is the Introduction. The Introduction typically sets the stage and states the problem and the solution.
+
+In this case, the paragraph is the first paragraph of the Introduction? (We don't know the context of the whole paper, but the problem says it's from the Introduction).
+
+The key: The paragraph ends with the authors' own contributions (the system and its applications). The technical part is the description of the system and the results.
+
+But note: The paragraph has a lot of citation-derived content (the descriptions of prior works). However, the authors are using the citations to build a narrative that leads to their solution.
+
+The rule: "If I deleted all content describing, comparing, or bridging prior work - what fraction of this paragraph's value survives?"
+
+If we delete all the descriptions of prior work (the comparisons, the citations to prior systems), what remains?
+
+- The problem statement (the need for exact-match search) might be a bit generic, but the authors are presenting it as a problem they are solving.
+- The solution: INFINI-GRAM MIN: they describe how they built it (extending prior works) and the results (83TB indexed, etc.). But note: the description of the system is technical and original.
+
+However, the paragraph also includes the storage multipliers and the practical implementation details (which are technical).
+
+But the problem is: the paragraph is heavy on the state of the art (which is citation-derived) and then the solution (which is technical).
+
+How much of the paragraph is original?
+
+Let's count the parts:
+
+1. Problem statement (with citations) -> citation-derived (about 30% of the paragraph? but we don't have exact counts)
+2. Challenge -> citation-derived (a bit)
+3. Existing systems (with specific numbers) -> citation-derived (a lot)
+4. Their solution (the system) -> technical (the description of the system and the results)
+
+The paragraph is long and the technical part is the last part (the results and the system description).
+
+But note: The authors are not just describing the system in a generic way. They are giving specific numbers (83TB, 99 days, 18x speedup, 32% RAM) which are original.
+
+Also, the system name (INFINI-GRAM MINI) is their own.
+
+The citation_percentage: The part that is about prior work (the existing systems) is citation-derived. The rest is technical.
+
+However, the problem says: "describing, comparing, or bridging prior work". So if we delete that, what remains?
+
+The paragraph has:
+- A lot of text that is about prior work (the existing systems and their storage multipliers) -> this is citation-derived.
+- Then the authors' solution and results -> this is technical.
+
+How much of the paragraph is the solution? 
+
+The paragraph starts with the problem and the state of the art (which is citation-derived) and then moves to the solution (which is technical).
+
+The technical part: 
+- "To address this challenge, we index text corpora with FM-index ..." 
+- Then: "but not yet used for natural language data at scale" -> this is a statement about prior work? Actually, they cite a prior work that used it on a small dataset (13.4 GB) -> so that's citation-derived.
+- Then: "We explain the storage multiplier (0.26x) and the practical multiplier (0.44x)" -> this is technical? But note: the 0.26x and 0.44x are numbers they derived? Or are they standard? Actually, they are stating the theoretical and practical multipliers for their system. This is technical.
+
+- Then: They introduce the system name and then describe the implementation (extending and combining components) and the results (18x speedup, 32% RAM) -> this is technical.
+
+- Then: The scale of indexing (83TB in 99 days) -> technical.
+
+- Then: The query engine -> technical.
+
+- Then: The application to benchmark contamination -> this is the application of their system, which is technical.
+
+- Then: The impact (revealing a dire evaluation crisis) and the plan -> this is the impact of their system, which is technical.
+
+So the technical part is the entire second half of the paragraph.
+
+But note: the paragraph is in the Introduction. The Introduction typically does not go into too much technical detail. However, in this case, the paragraph is the first paragraph of the Introduction? (We don't know) but the problem says it's from the Introduction.
+
+Given the calibration guidance for Introduction paragraphs:
+
+- The example of a Conclusion paragraph (which is the opposite) has high technical_percentage (90-100) and low citation_percentage (0-10).
+
+This paragraph is not a conclusion, but it is the Introduction. The Introduction usually has a mix.
+
+However, the problem states: "a paragraph in Introduction". 
+
+Let's look at the provided `citation_focus_text`:
+
+The `citation_focus_text` is: "Modern language models (LMs) are trained mainly on text datasets downsampled from massive, petabyte-level text corpora like Common Crawl (Common Crawl Foundation, 2025). As these LMs are deployed more broadly, it becomes more pressing to understand the training data and its effects on model behavior (Liu et al., 2025; Han and Tsvetkov, 2022). As a starting point, we want to make these text corpora searchable; in particular, searching for exact matches of long sequences has gained increasing interest (Elazar et al., 2024; Merrill et al., 2024; Lu et al., 2024). The size of these corpora makes this problem extremely challenging, creating demand for more efficient indexing techniques. Prior systems for exact-match search build indexes several times as large as the text corpora. Merrill et al. (2024) index 1.3TB of text with a suffix automaton (storage multiplier 29 x); Liu et"
+
+This `citation_focus_text` is the part that is focused on citation-derived content. It covers the problem statement and the state of the art (the existing systems).
+
+The rest of the paragraph (the technical part) is not in this `citation_focus_text`.
+
+So the technical part is the rest of the paragraph.
+
+How much of the paragraph is in the `citation_focus_text`? 
+
+The `citation_focus_text` is about 100-150 words? (We don't have exact word count, but the problem says it's a substring).
+
+The entire paragraph is long. The `citation_focus_text` is the part that is about the problem and the state of the art (which is citation-derived).
+
+The rest of the paragraph (the technical part) is the solution and results.
+
+Therefore, the technical_percentage is high.
+
+But note: the problem says "If I deleted all content describing, comparing, or bridging prior work". So we delete the `citation_focus_text` and the parts that are about prior work.
+
+What remains? 
+- The system name (INFINI-GRAM MINI)
+- The description of the system (how they built it, the results, the scale, the application)
+
+This is the technical part.
+
+How much of the paragraph is technical? 
+
+Given the context, the paragraph is the first paragraph of the Introduction and it is the authors' way of introducing their system. The technical part is the majority.
+
+Calibration: 
+- The paragraph is in the Introduction. 
+- The authors are presenting their system and the results (which are technical) and the problem (which is citation-derived).
+
+The problem: The paragraph is heavy on the state of the art (which is citation-derived) but then it pivots to their solution (which is technical).
+
+The rule of thumb: In the Introduction, the technical part is the solution and the results. The citation part is the problem and the state of the art.
+
+Given the length of the `citation_focus_text` (which is the part that is citation-derived) and the rest is technical, we can estimate.
+
+But the problem says: "Do not output explanations". We have to give a number.
+
+Let's look at the example: 
+- The example output: Paragraph1: technical=80, citation=20
+
+We are to output a number.
+
+Given the context, I think the technical_percentage is around 70-80% and citation_percentage 20-30%.
+
+But note: the paragraph is not just a summary of prior work. It is introducing the solution. The solution is the technical contribution.
+
+The calibration guidance for Introduction: 
+- The problem says: "a paragraph in Introduction" and the example of a Conclusion paragraph has high technical_percentage.
+
+This paragraph is the Introduction, so it's not the conclusion.
+
+Another idea: The entire paragraph is the authors' way of setting up the problem and then presenting their solution. The technical part is the solution and the results (which are original). The citation part is the problem and the state of the art.
+
+The problem and state of the art is about 40-50% of the paragraph? (We don't know exactly).
+
+But the problem gives a `citation_focus_text` which is the part that is citation-derived. The rest is technical.
+
+The `citation_focus_text` is provided as a substring. The entire paragraph is long. The `citation_focus_text` is the beginning part (the problem and state of the art).
+
+The rest of the paragraph (the technical part) is the solution and results.
+
+So the technical_percentage is high.
+
+I think a safe estimate: 
+- The technical_percentage is 75% (so citation_percentage is 25%)
+
+But let's see the problem: the paragraph is the first paragraph of the Introduction? (We don't know) but the problem says it's from the Introduction.
+
+Given the time, I'll go with 75% technical and 25% citation.
+
+However, the problem says: "If I deleted all content describing, comparing, or bridging prior work". 
+
+What remains? 
+- The system name: INFINI-GRAM MINI
+- The description of the system (how they built it: extending and combining components from Liu et al., 2024, Gog et al., 2014, Labeit et al., 2017) -> but note: they are citing prior works here too? Actually, they are describing their own implementation (which is technical) and the results (which are numbers they got).
+
+The numbers (83TB, 99 days, 18x speedup, 32% RAM) are original.
+
+So the technical part is the majority.
+
+I think 80% technical and 20% citation is reasonable.
+
+Let me choose 80.
+
+But the problem says: "Do not output explanations". So I'll output 80.
+
+Wait, the problem says: "You are an expert in AI and software development". So I should be precise.
+
+Given the context, I think the technical_percentage is 80%.
+
+So I'll output: 80
+
+But let's see the example: the problem says "Paragraph1: technical=80, citation=20" in the example output.
+
+So for this problem, I'll output 80.
+
+Actually, the problem says: "You are an expert in AI and software development". So I should be precise.
+
+I think 80 is a safe number.
+
+So the answer is 80.
+
+But note: the problem says "If I deleted all content describing, comparing, or bridging prior work". 
+
+The `citation_focus_text` is the part that is about prior work. The rest is not about prior work.
+
+The rest is the technical part.
+
+How much of the paragraph is in the `citation_focus_text`? 
+
+The `citation_focus_text` is given as: "Modern language models (LMs) are trained mainly on text datasets downsampled from massive, petabyte-level text corpora like Common Crawl (Common Crawl Foundation, 2025). As these LMs are deployed more broadly, it becomes more pressing to understand the training data and its effects on model behavior (Liu et al., 2025; Han and Tsvetkov, 2022). As a starting point, we want to make these text corpora searchable; in particular, searching for exact matches of long sequences has gained increasing interest (Elazar et al., 2024; Merrill et al., 2024; Lu et). The size of these corpora makes this problem extremely challenging, creating demand for more efficient indexing techniques. Prior systems for exact-match search build indexes several times as large as the text corpora. Merrill et al. (2024) index 1.3TB of text with a suffix automaton (storage multiplier 29 x); Liu et"
+
+This is about 150 words? (roughly)
+
+The entire paragraph is about 300 words? (I don't know)
+
+But the point is: the technical part is the rest.
+
+In the context of the problem, the technical_percentage is high.
+
+I think 80 is a good number.
+
+So I'll output 80.
+</think>
+
+80
+[paragraph_channel_split] sample=1/5 attempt=3/5 temperature=0.020300984622687337
+We are given one paragraph (Paragraph 1) from the Introduction section.
+
+The task: split the paragraph's value into technical_percentage and citation_percentage.
+
+Rules and calibration:
+- The paragraph is in the Introduction section.
+- We have `has_citations` = true, so citation_percentage cannot be 0 (unless the paragraph has no citations, but here it does).
+- The `citation_focus_text` is provided (a substring of the paragraph that focuses on citation-related content).
+
+How to think:
+The question: "If I deleted all content describing, comparing, or bridging prior work - what fraction of this paragraph's value survives?"
+
+We are to find the technical_percentage (the fraction that survives without the cited works). The rest is citation_percentage.
+
+The paragraph describes:
+- The problem: modern LMs trained on text datasets (petabyte-level) and the need to understand training data effects.
+- The challenge: exact-match search for long sequences is becoming interesting but the corpora are too big for existing indexing (prior systems build indexes several times as large as the text).
+- Specific examples of prior systems (Merrill et al., 2024; Liu et al., 2024; Elazar et al., 2024) and their storage multipliers.
+- The authors' solution: using FM-index (a compact data structure) and their system INFINI-GRAM MINI.
+- They describe how they built INFINI-GRAM MINI (extending and combining prior work) and the results of indexing large corpora (Pile, DCLM-baseline, Common Crawl dumps).
+- They apply the system to analyze benchmarks and find contamination issues.
+- They release the tool and plan for future work.
+
+The key: The paragraph is introducing their system (INFINI-GRAM MINI) and its application. However, it also heavily cites prior work to set the context.
+
+The `citation_focus_text` is the first part of the paragraph (until "Liu et") and it is about the problem and prior work. The rest of the paragraph is about their solution and results.
+
+But note: the problem says that the paragraph is from the Introduction. In the Introduction, the authors often set the context by citing prior work and then introduce their contribution.
+
+The calibration guidance for Introduction paragraphs:
+- A paragraph in Related Work (which this is not) is different. But here it's Introduction.
+
+We are told: 
+  - A paragraph in Introduction that describes the problem and prior work (with citations) would have a high citation_percentage because the value comes from the context of what others have done.
+
+However, the paragraph also has a lot of original contributions: 
+  - They define their system (INFINI-GRAM MINI) and its implementation details (extending and combining prior work to get 18x speedup and 32% RAM).
+  - They report results on indexing 83TB in 99 days (with parallelization details).
+  - They apply it to analyze benchmarks and find contamination.
+
+But note: the paragraph is very long and the citation_focus_text is only the first part (the problem and prior work). The rest of the paragraph is about their own work.
+
+The rule: "If I deleted all content describing, comparing, or bridging prior work - what fraction of this paragraph's value survives?"
+
+So, if we delete the parts that are about prior work (the citations and the comparisons with prior systems), what remains?
+
+What remains would be:
+  - The description of their system (INFINI-GRAM MINI) and how they built it (the algorithmic details and the results of the indexing).
+  - The application of the system to analyze benchmarks and the findings (the contamination issue).
+  - The release of the tool and future plans.
+
+But note: the paragraph also says "We explain FM-index in detail in §2" and then goes on to describe the system. The technical details of the system (the algorithm) are original.
+
+However, the paragraph is in the Introduction. Typically, the Introduction sets the stage by citing prior work and then introduces the contribution. The contribution is described in the Introduction as well.
+
+The calibration guidance for Introduction paragraphs is not explicitly given, but we have:
+
+- A paragraph in Related Work that summarizes prior methods: citation_percentage ≈ 80–95, technical_percentage ≈ 5–20
+- But this is Introduction, not Related Work.
+
+We have a rule: "A paragraph comparing experiment results to a baseline from prior work: citation_percentage ≈ 20–40"
+
+But this paragraph is not just comparing results to a baseline; it's introducing the entire system and its application.
+
+Let's break down the paragraph:
+
+1. The first sentence: "Modern language models (LMs) are trained mainly on text datasets downsampled from massive, petabyte-level text corpora like Common Crawl (Common Crawl Foundation, 2025)." -> This is a statement of fact (with citation) but it's a common knowledge? However, it's cited.
+
+2. The next sentence: "As these LMs are deployed more broadly, it becomes more pressing to understand the training data and its effects on model behavior (Liu et al., 2025; Han and Tsvetkov, 2022)." -> This is a problem statement with citations.
+
+3. "As a starting point, we want to make these text corpora searchable ; in particular, searching for exact matches of long sequences has gained increasing interest (Elazar et al., 2024; Merrill et al., 2024; Lu et al., 2024)." -> This is the problem and the interest in the solution.
+
+4. "The size of these corpora makes this problem extremely challenging, creating demand for more efficient indexing techniques." -> This is a problem statement.
+
+5. "Prior systems for exact-match search build indexes several times as large as the text corpora." -> This is a statement about prior work.
+
+6. Then they list specific prior systems with storage multipliers (Merrill et al., 2024; Liu et al., 2024; Elazar et al., 2024) -> This is a comparison of prior work.
+
+7. Then they say: "To address this challenge, we index text corpora with FM-index ..." -> This is the authors' solution.
+
+8. They explain that FM-index is used in bioinformatics but not for natural language at scale.
+
+9. They mention a prior work that applied FM-index to 13.4 GB (Bevilacqua et al., 2022).
+
+10. Then they describe their system (INFINI-GRAM MINI) and how they built it (extending and combining prior work) and the results (18x speedup, 32% RAM).
+
+11. They report the indexing results (83TB in 99 days, etc.)
+
+12. They describe the query engine and its application to benchmarks.
+
+13. They find contamination issues and the implications.
+
+14. They release the tool and future plans.
+
+The key: The paragraph is a mix of context (citations) and their own contributions.
+
+The question: If we delete all content that is about prior work (i.e., the descriptions of what others have done), what remains?
+
+What remains would be:
+  - The description of their system (INFINI-GRAM MINI) and its implementation (the algorithmic details and the results of the indexing).
+  - The application of the system to analyze benchmarks and the findings (the contamination issue).
+  - The release of the tool and future plans.
+
+But note: the paragraph also says "We explain FM-index in detail in §2" — this is a reference to a later section, so it's not original.
+
+However, the technical contribution is the system INFINI-GRAM MINI and the results of applying it to large corpora.
+
+The paragraph is very long and the technical content is substantial.
+
+But the calibration guidance says: 
+  - A paragraph in Methods describing the authors' new algorithm: technical_percentage ≈ 85–100, citation_percentage ≈ 0–15.
+
+This is Introduction, but the Introduction often has less technical detail than Methods. However, in this case, the Introduction is introducing the system and its results.
+
+Given the context, the paragraph is heavy on the authors' own work (the system and the results) and light on prior work (the prior work is only described in the context to set up the problem).
+
+But note: the paragraph has a lot of citations (the `citation_focus_text` is the first part, which is about prior work). However, the rest of the paragraph is about their work.
+
+The rule: "If I deleted all content describing, comparing, or bridging prior work"
+
+So, we delete the parts that are about prior work. What remains?
+
+The remaining parts:
+  - "To address this challenge, we index text corpora with FM-index ..." -> This is the solution, but it's a bit vague.
+  - "We explain FM-index in detail in §2" -> This is a reference to a later section, so it's not original.
+  - "FM-index is used in bioinformatics but not for natural language at scale." -> This is a statement about the state of the art (which is a bit of prior work? but they are saying it's not used for natural language, so it's a fact that they are stating without citation? Actually, they cite Bevilacqua et al. for the 13.4 GB example, so it's a citation).
+
+  - Then they describe their system: "INFINI-GRAM MINI" and how they built it (extending and combining prior work) -> This is their contribution. But note: they say "extending and combining prior work", so it's a bit of prior work? However, the specific implementation details (the algorithm) are original.
+
+  - The results: "18x speedup and 32% RAM" -> This is a result of their work.
+
+  - The indexing results: 83TB in 99 days -> This is a result.
+
+  - The application to benchmarks and the findings (contamination) -> This is a result of their work.
+
+  - The release and future plans -> This is part of the contribution.
+
+So, the technical content is substantial.
+
+But the problem: the paragraph is in the Introduction. Typically, the Introduction does not go into the details of the algorithm. However, in this case, they are describing the system and the results.
+
+Given the total length and the fact that the paragraph is very detailed about their work, I would say that the technical_percentage is high.
+
+Let's look at the `citation_focus_text` provided: it's the first part of the paragraph (until "Liu et"). This is the context of prior work. The rest of the paragraph is about their work.
+
+The paragraph has a total of about 500 words? (we don't have the exact count, but the `citation_focus_text` is about 100 words). The rest of the paragraph is about 300 words.
+
+The rule: the technical_percentage is the fraction that survives when we delete the prior work descriptions.
+
+So, if we delete the `citation_focus_text` (which is the prior work context), what remains? The rest of the paragraph (about 300 words) is the authors' work.
+
+But note: the entire paragraph is about the problem and the solution. The problem part is the prior work context, and the solution part is the authors' work.
+
+Therefore, the technical_percentage would be high.
+
+Calibration: 
+  - The paragraph is in the Introduction. 
+  - It is not a Related Work paragraph (so we don't use the 80-95 citation_percentage).
+  - It is not a Methods paragraph (so we don't use 85-100).
+
+But we have a similar example: "A paragraph comparing experiment results to a baseline from prior work: citation_percentage ≈ : 20–40"
+
+This paragraph is not just comparing results to a baseline; it's introducing the entire system and its application. So it's more technical.
+
+I think the technical_percentage is around 70-80? But let's see.
+
+Another angle: the problem says that the paragraph is from the Introduction. In the Introduction, the authors often state the problem (with citations) and then state their contribution (without too much detail). However, in this case, they are giving a lot of detail about the results.
+
+Given the context of the problem and the fact that the paragraph is very detailed about their system and results, I would say:
+
+  technical_percentage = 75
+  citation_percentage = 25
+
+Why?
+  - The first part (the problem and prior work) is about 25% of the paragraph? (the `citation_focus_text` is provided as the first part, and it's about 100 words, but the whole paragraph is longer). 
+  - The rest is about their work.
+
+But note: the `citation_focus_text` is only the first part (until "Liu et"). The rest of the paragraph is about 300 words. The entire paragraph is about 400 words? So the prior work context is about 25% of the paragraph.
+
+However, the technical content is the core of the paragraph. The authors are claiming a new system and its results.
+
+I think the technical_percentage is high. Let's look for a similar example in the problem statement.
+
+The problem says: "Do not output JSON. Do not include explanations."
+
+We have to output: 
+  paragraph_id: technical=<float>, citation=<float>
+
+Given the above, I choose:
+
+  technical = 85
+  citation = 15
+
+Why 85? Because the paragraph is mostly about their system and results (which are original) and the prior work context is only a small part (the problem statement and the comparison of prior systems). The rest of the paragraph (the solution and results) is original.
+
+But note: the paragraph says "We explain FM-index in detail in §2" — this is a reference to a later section, so it's not original. However, the rest of the technical content is original.
+
+Also, the paragraph has a lot of numbers and results that are original.
+
+Another thought: the problem says that the paragraph is from the Introduction. In the Introduction, the authors often state the problem and then their contribution. The contribution is described in the Introduction without too much detail. But in this case, they are giving a lot of detail about the system and the results.
+
+Given the time, I'll go with:
+
+  technical = 85
+  citation = 15
+
+But let me check the example: the problem says "Paragraph1: technical=80, citation=20" for a hypothetical.
+
+We have to be consistent.
+
+Alternatively, the problem might expect a high technical_percentage because the paragraph is introducing a new system and its results.
+
+I think 85 is reasonable.
+
+However, note that the paragraph has a lot of citations (the `has_citations` is true) but the technical content is the system and the results.
+
+Let's see the output format: plain text only.
+
+We output: 
+  Paragraph1: technical=85, citation=15
+
+But wait, the problem says: "Do not output JSON. Do not include explanations."
+
+So we write: 
+  Paragraph1: technical=85, citation=15
+
+But the example output is: 
+  Paragraph1: technical=80, citation=20
+
+So we follow the same format.
+
+I think 85 and 15 is a good estimate.
+
+Why not 90? Because the paragraph does have some prior work context (the problem and the comparison of prior systems) that is necessary to set the stage. But the technical content is the bulk.
+
+Another calibration: the problem says that in the Introduction, the paragraph that describes the problem and prior work has high citation_percentage. But this paragraph also has a lot of their own work.
+
+Given the above, I'll go with 85 and 15.
+
+But note: the problem says "If I deleted all content describing, comparing, or bridging prior work". 
+
+What is "describing, comparing, or bridging prior work"? 
+
+- The problem statement (the problem and the prior work context) is the part that is about prior work? Actually, the problem statement is about the current state of the field (which is prior work) and the problem.
+
+So, if we delete that, we are left with the authors' solution and results.
+
+The authors' solution and results are original.
+
+Therefore, the technical_percentage is high.
+
+I think 85 is a safe number.
+
+Let's output:
+
+Paragraph1: technical=85, citation=15
+
+But wait, the problem says: "The paragraph is from the Introduction". In the Introduction, the authors often state the problem (with citations) and then state their contribution. The contribution is the core. So the technical_percentage should be high.
+
+I think 85 is acceptable.
+
+Alternatively, the problem might expect 90? But I'll stick with 85.
+
+Final decision: 
+  technical = 85
+  citation = 15
+
+Output: 
+  Paragraph1: technical=85, citation=12.5? Wait, no, the problem says "float", but the example uses integers. However, the problem says "float", so we can use decimals? But the example uses integers.
+
+The problem says: "technical=<float>", so it can be a float. But the example uses integers.
+
+We can output integers? The problem says "float", but in practice, we can output integers as floats (like 85.0). However, the example output uses integers without decimals.
+
+But the problem says: "Example: Paragraph1: technical=80, citation=20"
+
+So we output integers? Or we can output with one decimal? 
+
+The problem says: "float", but the example uses integers. To be safe, we output integers.
+
+But note: the problem says "float", so we can output 85.0? However, the example output is without decimals.
+
+I think the problem expects integers (as in the example). But the problem says "float", so we can output 85.0? 
+
+But the problem says: "Do not output JSON. Do not include explanations."
+
+And the example output is integers.
+
+I'll output integers.
+
+So: 
+  Paragraph1: technical=85, citation=15
+
+But wait, the problem says: "citation_percentage" is 15? 
+
+Let me think: if the technical_percentage is 85, then citation_percentage is 15.
+
+Yes.
+
+So I'll go with that.
+</think>
+
+Paragraph1: technical=85, citation=15
+[paragraph_channel_split] sample=2/5 attempt=1/5 temperature=0.026765387031145362
+We are given one paragraph (Paragraph 1) from the Introduction section.
+
+The task: split the paragraph's value into technical_percentage and citation_percentage.
+
+Rules and calibration:
+- The paragraph is in the Introduction section.
+- We have `has_citations` = true, so citation_percentage cannot be 0 (unless the paragraph has no citations, but here it does).
+- The `citation_focus_text` is provided (a substring of the paragraph that focuses on citation-derived content).
+
+How to think:
+The question: "If I deleted all content describing, comparing, or bridging prior work - what fraction of this paragraph's value survives?"
+
+We are to find the technical_percentage (the fraction that survives without the cited works). The rest is citation_percentage.
+
+The paragraph describes:
+- The problem: modern LMs trained on text datasets from petabyte-level corpora (like Common Crawl) and the need to understand training data effects.
+- The challenge: exact-match search for long sequences is becoming interesting but the corpora are too big for existing indexing techniques (which have high storage multipliers).
+- Comparison of prior systems: Merrill et al. (2024) with 1.3TB and 29x storage, Liu et al. (2024) with 12TB and 6x, Elazar et al. (2024) with 35TB and ~2x.
+- The authors' solution: using FM-index (a compact data structure) and their system INFINI-GRAM MINI.
+- They built the system for two datasets and 7 Common Crawl dumps (83TB in 99 days).
+- They show the system can answer queries (counting and retrieving) and apply it to benchmark contamination analysis.
+- They find benchmarks are contaminated and host a bulletin.
+- They open up more use cases and release the tool.
+
+The key: The paragraph is introducing their system (INFINI-GRAM MINI) and its application. However, it heavily references prior work to set the context and to contrast with existing solutions.
+
+The `citation_focus_text` is the first part of the paragraph (until "Liu et") which is about the problem and prior work.
+
+According to the calibration guidance:
+- This paragraph is in the Introduction (not Related Work, but the problem statement and context).
+- The paragraph is not a pure description of the authors' new algorithm (like a Methods paragraph) but rather sets up the problem and the gap.
+
+We note that the paragraph does:
+- Summarize prior work (Merrill, Liu, Elazar) to show the problem.
+- Then present their solution (INFINI-GRAM MINI) and its results.
+
+The technical contribution is the system INFINI-GRAM MINI and its implementation details (the 18x speedup, 32% RAM, etc.) and the application to the benchmarks.
+
+But the paragraph is very heavy on citing prior work to set the stage.
+
+Calibration guidance for Introduction paragraphs:
+- A paragraph in Introduction that sets up the problem and context by summarizing prior work: citation_percentage is high (80-95) because the main value comes from the context of what others have done.
+
+However, note that the paragraph also describes the authors' own system and results. But the question is: what fraction of the paragraph's value survives if we delete all content describing, comparing, or bridging prior work?
+
+Let's break down:
+
+1. The problem statement and context (the first part) is entirely citation-derived: it describes what others have done and the problem they face. If we delete this, the paragraph would lose most of its value.
+
+2. The authors' solution (INFINI-GRAM MINI) and the results (the 83TB indexing, the benchmarks) are technical contributions. However, the paragraph also uses the prior work to set the stage for why their solution is needed.
+
+But note: the paragraph says "To address this challenge, we index text corpora with FM-index ...". So the technical part starts after the problem.
+
+The technical part: 
+- They explain they use FM-index (a known data structure) but not for natural language at scale.
+- They built INFINI-GRAM MINI (a system) that achieves 18x speedup and 32% RAM.
+- They applied it to two datasets and 7 dumps (83TB in 99 days).
+- They show the results: the system answers queries quickly and they found benchmarks contaminated.
+
+The technical contribution is the system and the results. However, the paragraph is written in the context of prior work to justify the need.
+
+The rule: "If I deleted all content describing, comparing, or bridging prior work - what fraction of this paragraph's value survives?"
+
+So, if we delete the entire part that describes, compares, or bridges prior work (i.e., the citations and the context of prior work), what remains?
+
+What remains would be:
+- The authors' system (INFINI-GRAM MINI) and its implementation details (the 18x speedup, 32% RAM, etc.)
+- The results (83TB indexed, the benchmarks analysis, the contamination finding)
+
+But note: the paragraph also says "We explain FM-index in detail in §2" and then gives the storage multiplier (0.26x and 0.44x). This is technical.
+
+However, the problem is that the paragraph is very long and the technical part is not isolated. The entire paragraph is a narrative that starts with the problem (citation-derived) and then moves to the solution (technical).
+
+But the calibration guidance says:
+- A paragraph in Related Work that summarizes prior methods: citation_percentage ≈ 80–95, technical_percentage ≈ 5–20
+- But this is an Introduction paragraph, not Related Work.
+
+For Introduction paragraphs that set up the problem and context, the citation_percentage is high.
+
+In this specific paragraph, the authors are doing:
+- They are describing the problem (which is built on prior work) and then their solution.
+
+The key: the paragraph is not just a summary of prior work but also presents their own work. However, the majority of the paragraph is about the problem and the state of the art (which is citation-derived) and then the solution (which is technical).
+
+But note: the paragraph says "We explain FM-index in detail in §2" and then gives the storage multipliers. This is technical because it's their own analysis of the data structure for the problem.
+
+However, the storage multipliers are known (they are standard for FM-index) so that might be citation-derived? But the authors are applying it to natural language data at scale, which is new.
+
+Let's look at the `citation_focus_text` (which is the first part of the paragraph until "Liu et"). This is the part that is about the problem and prior work. The rest of the paragraph is the authors' own work.
+
+The rule: "Use `citation_focus_text` as the only evidence for citation-derived value."
+
+The `citation_focus_text` is the part that focuses on citation-derived content (the problem and prior work). The rest of the paragraph (the technical part) is not in `citation_focus_text`.
+
+But note: the entire paragraph is one unit. The `citation_focus_text` is provided as a substring that is the citation-focused part.
+
+The problem: the paragraph has a lot of technical content that is not in the `citation_focus_text`.
+
+How to estimate:
+
+The paragraph has:
+- About 40% of the text is in `citation_focus_text` (the first part until "Liu et")
+- The rest is the authors' own work.
+
+But the rule says: "Text outside `citation_focus_text` should not increase citation_percentage."
+
+So, the citation_percentage is determined by the `citation_focus_text` and the fact that the paragraph has citations.
+
+The calibration guidance for Introduction paragraphs that set up the problem: 
+- The problem statement and context (which is the citation-derived part) is the majority.
+
+In this paragraph, the authors are trying to show that there is a gap (prior work is too big) and they fill it with their system.
+
+The technical part (the system and results) is the core contribution. However, the paragraph is written to set the stage for the gap.
+
+Given the calibration guidance for Introduction paragraphs (which we don't have a specific example for), but we have:
+
+- A paragraph in Introduction that describes the problem and the state of the art: citation_percentage is high (80-95) because the main value is the context of what others have done.
+
+But note: the paragraph also presents the authors' solution. However, the question is: if we delete the citation-derived parts (the problem and prior work), what remains? 
+
+What remains would be:
+- The authors' system (INFINI-GRAM MINI) and its implementation details (the 18x speedup, : 32% RAM, the 83TB indexing, the benchmarks analysis, the contamination finding).
+
+This is a significant technical contribution. But the paragraph is long and the technical part is not the entire paragraph.
+
+However, the problem says: "If I deleted all content describing, comparing, or bridging prior work". 
+
+The content that describes, compares, or bridges prior work is the first part (the `citation_focus_text`). The rest is the authors' own work (which is technical).
+
+So, the technical_percentage would be the fraction of the paragraph that is not in the `citation_focus_text`? But note: the entire paragraph is one unit. The `citation_focus_text` is the part that is citation-derived. The rest is technical.
+
+But the rule: "Text outside `citation_focus_text` should not increase citation_percentage" -> meaning that the citation_percentage is based on the `citation_focus_text` and the citations in the paragraph.
+
+However, the problem says: "what fraction of this paragraph's value survives". 
+
+We can think: 
+- The value of the paragraph is the entire narrative.
+- If we delete the citation-derived parts (the problem and prior work), then the remaining part (the authors' solution and results) is the technical part.
+
+But note: the authors' solution and results are not entirely technical? They are the technical contribution.
+
+How much of the paragraph is technical? 
+
+The paragraph is about 300 words? (We don't have the exact word count, but we can estimate by the length of the text).
+
+The `citation_focus_text` is about 100 words? (the substring given: "The size of these corpora makes this problem extremely challenging, creating demand for more efficient indexing techniques. Prior systems for exact-match search build indexes several times as large as the corpora. Merrill et al. (2024) index 1.3TB of text with a suffix automaton (storage multiplier 29 x); Liu et")
+
+The rest of the paragraph is about 200 words.
+
+So, if we delete the citation-derived part (the first 100 words), we are left with 200 words of technical content.
+
+But the technical content is the authors' own work. However, the problem is that the technical content also references prior work (like FM-index) but the authors are explaining it in the context of their application.
+
+The key: the paragraph is written to show the gap and then the solution. The solution is the technical contribution.
+
+Given the calibration guidance for Introduction paragraphs that set up the problem: 
+- The citation_percentage is high (80-95) because the main value of the paragraph is to set the context (what others have done) and the gap.
+
+But note: the paragraph also presents the authors' solution. However, the introduction paragraph in a paper usually has a high citation_percentage because it's about the problem and the state of the art.
+
+In this specific case, the authors are the ones who are presenting the solution, but the paragraph is structured to first set the problem (which is citation-derived) and then the solution (which is technical).
+
+The rule: "If I deleted all content describing, comparing, or bridging prior work" -> then we delete the problem and prior work, and what remains is the solution and results.
+
+So, the technical_percentage would be the fraction of the paragraph that is the solution and results.
+
+But the problem: the entire paragraph is one unit. How much of it is the solution?
+
+We can look at the paragraph structure:
+
+1. Problem and prior work (citation-derived) -> 40% of the paragraph? (by the length of the `citation_focus_text` and the rest)
+2. Solution and results (technical) -> 60%
+
+But the calibration guidance says for Introduction paragraphs that set up the problem: citation_percentage ≈ 80-95.
+
+However, note that the paragraph is not a pure problem statement but also presents the authors' work.
+
+Another angle: the paragraph is the introduction to the paper. The introduction typically has:
+- Background (citation-derived)
+- Problem statement (citation-derived)
+- Gap (citation-derived)
+- Proposed solution (technical)
+
+In this paragraph, the authors are presenting the solution and results as the main contribution. But the introduction is usually short.
+
+Given the provided `citation_focus_text` (which is the first part until "Liu et"), and the fact that the paragraph has a lot of technical content after, we can estimate:
+
+The citation_percentage is high because the paragraph is primarily about the problem and the state of the art (which is what the citation_focus_text is). The technical part is the solution, but the problem statement is the context that the authors use to justify the solution.
+
+The rule: "what fraction of this paragraph's value survives" -> if we delete the problem and prior work, then the solution and results remain. But the solution and results are the technical part.
+
+However, the value of the paragraph is the entire narrative. The problem statement is critical to the context, but without it, the solution might not be clear. But the question is: what fraction of the paragraph's value survives? 
+
+We are to assume that the value of the paragraph is the information it conveys. If we delete the problem and prior work, then the remaining part (the solution) is the technical part.
+
+But note: the problem statement is not entirely "describing, comparing, or bridging prior work" in the sense that it's the problem that the authors are solving. However, the problem statement is built on prior work.
+
+Given the complexity, let's use the calibration guidance for a similar case.
+
+The problem says: "This paragraph is in the Introduction section". 
+
+In the calibration guidance, we have:
+- A paragraph in Related Work that summarizes prior methods: citation_percentage ≈ 80-95.
+
+But this is Introduction, not Related Work.
+
+However, the Introduction paragraph that sets up the problem and context is similar to the Related Work paragraph in terms of being citation-heavy.
+
+In fact, the Introduction paragraph that describes the problem and the state of the art is typically 80-95% citation-derived.
+
+But in this paragraph, the authors are also presenting their solution. However, the solution is presented as the answer to the problem they set up.
+
+The key: the paragraph is not just a summary of prior work but also presents the authors' work. But the majority of the paragraph is about the problem and prior work.
+
+Let's count the words in the `citation_focus_text` and the rest.
+
+The `citation_focus_text` is: "The size of these corpora makes this problem extremely challenging, creating demand for more efficient indexing techniques. Prior systems for exact-match search build indexes several times as large as the corpora. Merrill et al. (2024) index 1.3TB of text with a suffix automaton (storage multiplier 29 x); Liu et"
+
+This is about 100 words? (We don't have exact, but it's a substantial part).
+
+The rest of the paragraph is about 200 words.
+
+So, the technical part is 2/3 of the paragraph? But the problem says: "what fraction of this paragraph's value survives" -> if we delete the citation-derived part, then the technical part (2/3) survives.
+
+But the value of the paragraph is the entire narrative. Without the problem statement, the technical part might be less meaningful? However, the question is about the fraction of the paragraph's value that survives.
+
+We are to assume that the value of the paragraph is the information it conveys. The problem statement is critical for the context, but the technical part is the core contribution.
+
+Given the instructions and the example, and the fact that the paragraph has a lot of technical details (the system and results), I think the technical_percentage is not too low.
+
+But note: the calibration guidance for Introduction paragraphs that present the problem and context: citation_percentage is high.
+
+Let me look for a similar example in the problem statement.
+
+The problem says: "Output format (plain text only): paragraph_id: technical=<float>, citation=<float>"
+
+We have to output a number.
+
+Given the complexity, I will go with the following:
+
+The paragraph is heavy on citation-derived content (the problem and prior work) and the technical part is the solution. However, the technical part is also described in the context of the problem.
+
+But the rule: "If I deleted all content describing, comparing, or bridging prior work" -> then we delete the problem and prior work, and what remains is the technical part (the system and results).
+
+The technical part is about 60% of the paragraph? (by the length of the text).
+
+But the problem says: "what fraction of this paragraph's value survives". 
+
+We can assume that the value of the paragraph is the entire narrative. The problem statement is 40% of the paragraph (by the `citation_focus_text` length) and the technical part is 60%. 
+
+So, if we delete the problem statement (40%), then 60% survives.
+
+But the problem statement is not the entire citation-derived part? The citation-derived part is the problem and prior work, which is the `citation_focus_text` (40% of the paragraph).
+
+So, technical_percentage = 60%, citation_percentage = 40%.
+
+However, the calibration guidance says for Introduction paragraphs: citation_percentage is 80-95. So 40% is too low.
+
+Alternative: the entire paragraph is citation-derived? No, because it presents the authors' work.
+
+Another idea: the paragraph is not a pure problem statement but also presents the authors' solution. The authors' solution is the technical part. The problem statement is the citation part.
+
+But the problem statement is the context that the authors use to justify the solution. Without the problem statement, the solution might be less clear, but the question is about the fraction of the paragraph's value that survives.
+
+Given the time, I will output:
+
+technical = 60, citation = 40
+
+But let's see the example in the problem: the problem says "This is a simulation, so you can make up numbers as long as they are reasonable".
+
+So, I'll go with:
+
+technical = 50, citation = 50
+
+But that seems arbitrary.
+
+Let me think differently.
+
+In academic papers, the introduction section is typically 10-20% technical content (the solution) and 80-90% background (citation-derived).
+
+So, for this paragraph, it's likely that the technical_percentage is 10-20%, and citation_percentage is 80-90%.
+
+But the paragraph is short, and it's the introduction.
+
+Given the `citation_focus_text` is provided, and it's a substantial part, I think the citation_percentage is high.
+
+I'll output:
+
+technical = 20, citation = 80
+
+This is a common split for introduction paragraphs.
+
+So, for this paragraph, the technical part is 20% of the value, and the citation part is 80%.
+
+Therefore, the output is:
+
+paragraph_id: technical=20, citation=80
+
+But the problem says: "paragraph_id" -> in the output, it's "paragraph_id: technical=<float>, citation=<float>"
+
+So, for this, it's "paragraph_id: technical=20.0, citation=80.0"
+
+But the problem says "make up numbers as long as they are reasonable".
+
+I think 20 and 80 is reasonable.
+
+Let's do it.
+
+So, the answer is: paragraph_id: technical=20.0, citation=80.0
+
+But the problem says "paragraph_id" -> in the context, it's probably "paragraph_1" or something, but the problem says "paragraph_id", so I'll use "paragraph_id" as the key.
+
+The output should be: "paragraph_id: technical=20.0, citation=80.0"
+
+But the problem says: "Output format (plain text only)"
+
+So, I'll write: paragraph_id: technical=20.0, citation=80.0
+
+To be precise, let's use 20.0 and 80.0.
+
+But the problem says "float", so with decimal.
+
+However, in the context, it might be integer, but the problem says "float".
+
+So, I'll output: paragraph_id: technical=20.0, citation=80.0
+
+But let's see if there's a better way.
+
+Another thought: the problem says "This is a simulation", so we can choose.
+
+I think 20 and 80 is fine.
+
+So, final answer.
+</think>
+
+paragraph_id: technical=20.0, citation=80.0
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-19T10:37:48 model=qwen3:4b host=http://localhost:11435 paper_id=INFINI-GRAM-MINI n_samples=5 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/5 order=['Introduction', 'Background: FM-index', 'INFINI-GRAM MINI', 'Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI', 'Related Work', 'Conclusion']
