@@ -33,7 +33,6 @@ from importance_score import (
     parse_score_map_from_response,
     read_pdf_text,
     safe_float,
-    sanitize_model_tag,
     split_citation_block,
     split_text_into_paragraphs,
 )
@@ -230,7 +229,7 @@ class BaselineModel(ABC):
         self,
         content_dict: Dict[str, Any],
         citations_dict: Dict[str, Any],
-        paper_id: str,
+        paper_id: str,  # noqa: ARG002
     ) -> Tuple[Dict[str, Any], Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
         records = build_section_records(content_dict, citations_dict)
         self.assign_section_scores(records, total_score=1.0, parent_path=None)
@@ -338,21 +337,60 @@ class BaselineModel(ABC):
 
 
 class LengthHeuristicBaseline(BaselineModel):
-    """Length-only section weighting with section-normalized citation density."""
-    model_tag = "length_heuristic"
+    """Length-only section weighting with paragraph-mediated citation density.
+
+    Section scores are proportional to token count. Each leaf section is split
+    into paragraphs weighted by token count + 50 * citation mentions; citations
+    inherit scores through the paragraph layer using mention density.
+    No LLM calls.
+    """
+    model_tag = "length_weighted_frequency"
+
+    def raw_section_weights(
+        self,
+        records: Sequence[SectionRecord],
+        parent_path: Optional[List[str]] = None,  # noqa: ARG002
+    ) -> Dict[str, float]:
+        return {record.name: float(max(1, record.token_count)) for record in records}
+
+    def leaf_citation_fraction(self, record: SectionRecord) -> float:
+        del record
+        return 0.45
+
+    def raw_citation_weight(self, record: SectionRecord, citation: str, mentions: int) -> float:
+        del citation
+        return float(mentions) / max(1.0, float(record.token_count))
+
+
+class UniformBaseline(BaselineModel):
+    """Uniform section and paragraph weights with raw mention-count citation scoring.
+
+    Every section at each level receives equal score regardless of length.
+    Within each leaf section, paragraphs are also weighted uniformly. Citations
+    are scored by raw mention count. No LLM calls.
+    """
+    model_tag = "citation_frequency"
 
     def raw_section_weights(
         self,
         records: Sequence[SectionRecord],
         parent_path: Optional[List[str]] = None,
     ) -> Dict[str, float]:
-        return {record.name: float(max(1, record.token_count)) for record in records}
+        del parent_path
+        return {record.name: 1.0 for record in records}
+
+    def raw_paragraph_weight(self, paragraph_text: str, mention_count: int) -> float:
+        del paragraph_text, mention_count
+        return 1.0
 
     def leaf_citation_fraction(self, record: SectionRecord) -> float:
+        del record
         return 0.45
 
     def raw_citation_weight(self, record: SectionRecord, citation: str, mentions: int) -> float:
-        return float(mentions) / max(1.0, float(record.token_count))
+        del record, citation
+        return float(mentions)
+
 
 
 class TechnicalSectionPriorBaseline(BaselineModel):
@@ -374,7 +412,7 @@ class TechnicalSectionPriorBaseline(BaselineModel):
     def raw_section_weights(
         self,
         records: Sequence[SectionRecord],
-        parent_path: Optional[List[str]] = None,
+        parent_path: Optional[List[str]] = None,  # noqa: ARG002
     ) -> Dict[str, float]:
         return {
             record.name: float(max(1, record.token_count)) * self.section_prior(record.name)
@@ -470,9 +508,11 @@ class SinglePassLLMSectionBaseline(BaselineModel):
         return {record.name: float(max(1, record.token_count)) for record in records}
 
     def leaf_citation_fraction(self, record: SectionRecord) -> float:
+        del record
         return 0.5
 
     def raw_citation_weight(self, record: SectionRecord, citation: str, mentions: int) -> float:
+        del citation
         return float(mentions) / max(1.0, float(record.token_count))
 
 
@@ -485,7 +525,15 @@ def build_baseline_model(
     debug_log_path: str = "",
 ) -> BaselineModel:
     baseline_name = baseline_name.strip().lower()
-    if baseline_name == "length_heuristic":
+    if baseline_name == "citation_frequency":
+        return UniformBaseline(
+            model=model,
+            host=host,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+        )
+    if baseline_name == "length_weighted_frequency":
         return LengthHeuristicBaseline(
             model=model,
             host=host,

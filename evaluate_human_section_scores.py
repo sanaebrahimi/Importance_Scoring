@@ -398,6 +398,35 @@ def reciprocal_rank(target: Optional[str], ranked_keys: Sequence[str]) -> float:
     return 0.0
 
 
+def dcg_at_k(relevances: Sequence[float], k: int) -> float:
+    total = 0.0
+    for idx, rel in enumerate(relevances[: max(0, k)], start=1):
+        total += (2.0**rel - 1.0) / math.log2(idx + 1.0)
+    return total
+
+
+def ndcg_at_k(relevance_by_key: Dict[str, float], ranked_keys: Sequence[str], k: int) -> float:
+    observed = [float(relevance_by_key.get(key, 0.0)) for key in ranked_keys[: max(0, k)]]
+    ideal = sorted((float(value) for value in relevance_by_key.values()), reverse=True)[: max(0, k)]
+    ideal_dcg = dcg_at_k(ideal, k)
+    if ideal_dcg <= 0.0:
+        return 0.0
+    return dcg_at_k(observed, k) / ideal_dcg
+
+
+def select_reference_important_papers(
+    payload: dict,
+    k: int,
+    reference_field: str = "auto",
+) -> List[dict]:
+    if reference_field != "auto":
+        return list(payload.get(reference_field, []) or [])
+
+    if k > 4:
+        return list(payload.get("important_papers_top_8", []) or [])
+    return list(payload.get("important_papers", []) or [])
+
+
 def citation_top_k_report(
     paper_id: str,
     important_papers: List[dict],
@@ -430,6 +459,22 @@ def citation_top_k_report(
     hit_at_k = 1.0 if overlap_count > 0 else 0.0
     mrr_rank1 = reciprocal_rank(resolved_human_keys[0] if resolved_human_keys else None, ranked_top_k_keys)
 
+    ranked_full_keys = [key for key, _ in ranked_full]
+    ranked_position = {key: idx for idx, key in enumerate(ranked_full_keys, start=1)}
+    model_ranks_for_reference = [
+        float(ranked_position.get(key, len(ranked_full_keys) + 1)) if key is not None else float(len(ranked_full_keys) + 1)
+        for key in resolved_human_keys
+    ]
+    reference_ranks = [float(idx) for idx in range(1, len(human_ranked) + 1)]
+    citation_spearman = spearman_rho(reference_ranks, model_ranks_for_reference)
+
+    relevance_by_key = {
+        key: float(len(human_ranked) - idx)
+        for idx, key in enumerate(resolved_human_keys)
+        if key is not None
+    }
+    ndcg = ndcg_at_k(relevance_by_key, ranked_top_k_keys, k)
+
     model_picked_citations = []
     for key, score in ranked_top_k:
         entry = resolver.resolve(key, paper_id=paper_id) if resolver is not None else None
@@ -458,7 +503,11 @@ def citation_top_k_report(
             "recall_at_k": recall_at_k,
             "hit_at_k": hit_at_k,
             "mrr_human_rank1_in_model_top_k": mrr_rank1,
+            "ndcg_at_k": ndcg,
+            "spearman_reference_top_k_vs_model_rank": citation_spearman,
         },
+        "reference_ranks": reference_ranks,
+        "model_ranks_for_reference": model_ranks_for_reference,
     }
 
 
@@ -467,9 +516,14 @@ def aggregate_metric_report(per_paper: List[Dict[str, Dict[str, Optional[float]]
     model_kendall = [paper["model"]["kendall_tau_b"] for paper in per_paper]
     model_l1 = [paper["model"]["l1"] for paper in per_paper]
 
-    uniform_spearman = [paper["uniform"]["spearman"] for paper in per_paper]
-    uniform_kendall = [paper["uniform"]["kendall_tau_b"] for paper in per_paper]
-    uniform_l1 = [paper["uniform"]["l1"] for paper in per_paper]
+    uniform_spearman = [paper["citation_frequency"]["spearman"] for paper in per_paper]
+    uniform_kendall = [paper["citation_frequency"]["kendall_tau_b"] for paper in per_paper]
+    uniform_l1 = [paper["citation_frequency"]["l1"] for paper in per_paper]
+
+    length_entries = [paper["length_weighted_frequency"] for paper in per_paper if paper.get("length_weighted_frequency") is not None]
+    length_spearman = [e["spearman"] for e in length_entries]
+    length_kendall = [e["kendall_tau_b"] for e in length_entries]
+    length_l1 = [e["l1"] for e in length_entries]
 
     return {
         "model": {
@@ -480,13 +534,21 @@ def aggregate_metric_report(per_paper: List[Dict[str, Dict[str, Optional[float]]
             "bootstrap_ci_kendall_tau_b": bootstrap_ci(model_kendall, n_bootstrap, seed + 1),
             "bootstrap_ci_l1": bootstrap_ci(model_l1, n_bootstrap, seed + 2),
         },
-        "uniform": {
+        "citation_frequency": {
             "mean_spearman": mean_or_none(uniform_spearman),
             "mean_kendall_tau_b": mean_or_none(uniform_kendall),
             "mean_l1": mean_or_none(uniform_l1),
             "bootstrap_ci_spearman": bootstrap_ci(uniform_spearman, n_bootstrap, seed + 3),
             "bootstrap_ci_kendall_tau_b": bootstrap_ci(uniform_kendall, n_bootstrap, seed + 4),
             "bootstrap_ci_l1": bootstrap_ci(uniform_l1, n_bootstrap, seed + 5),
+        },
+        "length_weighted_frequency": {
+            "mean_spearman": mean_or_none(length_spearman),
+            "mean_kendall_tau_b": mean_or_none(length_kendall),
+            "mean_l1": mean_or_none(length_l1),
+            "bootstrap_ci_spearman": bootstrap_ci(length_spearman, n_bootstrap, seed + 6),
+            "bootstrap_ci_kendall_tau_b": bootstrap_ci(length_kendall, n_bootstrap, seed + 7),
+            "bootstrap_ci_l1": bootstrap_ci(length_l1, n_bootstrap, seed + 8),
         },
     }
 
@@ -497,6 +559,8 @@ def aggregate_citation_report(per_paper: List[dict], n_bootstrap: int, seed: int
     recall_values = [paper["metrics"]["recall_at_k"] for paper in per_paper]
     hit_values = [paper["metrics"]["hit_at_k"] for paper in per_paper]
     mrr_values = [paper["metrics"]["mrr_human_rank1_in_model_top_k"] for paper in per_paper]
+    ndcg_values = [paper["metrics"]["ndcg_at_k"] for paper in per_paper]
+    spearman_values = [paper["metrics"]["spearman_reference_top_k_vs_model_rank"] for paper in per_paper]
 
     return {
         "mean_overlap_at_k": mean_or_none(overlap_values),
@@ -504,11 +568,15 @@ def aggregate_citation_report(per_paper: List[dict], n_bootstrap: int, seed: int
         "mean_recall_at_k": mean_or_none(recall_values),
         "mean_hit_at_k": mean_or_none(hit_values),
         "mean_mrr_human_rank1_in_model_top_k": mean_or_none(mrr_values),
+        "mean_ndcg_at_k": mean_or_none(ndcg_values),
+        "mean_spearman_reference_top_k_vs_model_rank": mean_or_none(spearman_values),
         "bootstrap_ci_overlap_at_k": bootstrap_ci(overlap_values, n_bootstrap, seed),
         "bootstrap_ci_precision_at_k": bootstrap_ci(precision_values, n_bootstrap, seed + 1),
         "bootstrap_ci_recall_at_k": bootstrap_ci(recall_values, n_bootstrap, seed + 2),
         "bootstrap_ci_hit_at_k": bootstrap_ci(hit_values, n_bootstrap, seed + 3),
         "bootstrap_ci_mrr_human_rank1_in_model_top_k": bootstrap_ci(mrr_values, n_bootstrap, seed + 4),
+        "bootstrap_ci_ndcg_at_k": bootstrap_ci(ndcg_values, n_bootstrap, seed + 5),
+        "bootstrap_ci_spearman_reference_top_k_vs_model_rank": bootstrap_ci(spearman_values, n_bootstrap, seed + 6),
     }
 
 
@@ -562,157 +630,200 @@ def main() -> None:
         action="store_true",
         help="Also evaluate top-k citation agreement using the human important_papers lists.",
     )
+    parser.add_argument(
+        "--citation-reference-field",
+        default="auto",
+        help="Annotation field to use for citation evaluation. Default 'auto' uses important_papers_top_8 when k>4 and available, otherwise important_papers.",
+    )
+    parser.add_argument(
+        "--chatgpt-annotations-file",
+        default="chatgpt_baseline_annotations.json",
+        help="Path to the ChatGPT annotation JSON file used as a second ground truth.",
+    )
     args = parser.parse_args()
 
-    annotations = load_json(Path(args.annotations_file))
     results_root = Path(args.results_root)
     citation_resolver: Optional[CitationResolver] = None
     if args.enable_citation_eval:
         citation_resolver = CitationResolver()
         citation_resolver.parse_all(results_root, Path(args.papers_dir))
 
-    per_paper_reports = []
-    per_paper_citation_reports = []
-    skipped = []
-
-    for paper_id, payload in annotations["papers"].items():
+    def _run_evaluation(annotations: dict, n_bootstrap: int, seed: int) -> Tuple[dict, Dict[str, Optional[dict]], List[dict], Dict[str, List[dict]], List[dict]]:
+        per_paper_reports: List[dict] = []
+        per_paper_citation_reports: Dict[str, List[dict]] = {"model": [], "citation_frequency": [], "length_weighted_frequency": []}
+        skipped: List[dict] = []
         suffix = f"_{args.model_tag}" if args.model_tag else ""
-        section_path = results_root / paper_id / f"{paper_id}{suffix}_section_scores.json"
-        if not section_path.exists():
-            skipped.append({
+
+        for paper_id, payload in annotations["papers"].items():
+            section_path = results_root / paper_id / f"{paper_id}{suffix}_section_scores.json"
+            if not section_path.exists():
+                skipped.append({"paper_id": paper_id, "reason": "missing_model_section_file", "path": str(section_path)})
+                continue
+
+            model_scores = extract_top_level_model_scores(load_json(section_path))
+            ref_scores = payload["top_level_scores_for_evaluation"]
+
+            overlap, ref_overlap_raw, model_overlap_raw, model_extras = align_section_score_maps(ref_scores, model_scores)
+            if len(overlap) < 2:
+                skipped.append({"paper_id": paper_id, "reason": "insufficient_overlap",
+                                 "ref_sections": sorted(ref_scores.keys()), "model_sections": sorted(model_scores.keys())})
+                continue
+
+            ref_overlap = normalize_scores(ref_overlap_raw)
+            model_overlap = normalize_scores(model_overlap_raw)
+            ordered_ref = [ref_overlap[s] for s in overlap]
+            ordered_model = [model_overlap[s] for s in overlap]
+            ordered_uniform = uniform_vector(len(overlap))
+
+            length_section_metrics: Optional[Dict[str, Optional[float]]] = None
+            length_section_path = results_root / paper_id / f"{paper_id}_length_weighted_frequency_section_scores.json"
+            if length_section_path.exists():
+                length_scores_raw = extract_top_level_model_scores(load_json(length_section_path))
+                _, _, length_overlap_raw, _ = align_section_score_maps(ref_scores, length_scores_raw)
+                if len(length_overlap_raw) >= 2:
+                    length_overlap = normalize_scores(length_overlap_raw)
+                    ordered_length = [length_overlap.get(s, 0.0) for s in overlap]
+                    length_section_metrics = metric_bundle(ordered_ref, ordered_length)
+
+            per_paper_reports.append({
                 "paper_id": paper_id,
-                "reason": "missing_model_section_file",
-                "path": str(section_path),
+                "section_file": str(section_path),
+                "aligned_sections": overlap,
+                "ref_normalized": ref_overlap,
+                "model_normalized": model_overlap,
+                "model_extra_top_level_sections": model_extras,
+                "metrics": {
+                    "model": metric_bundle(ordered_ref, ordered_model),
+                    "citation_frequency": metric_bundle(ordered_ref, ordered_uniform),
+                    "length_weighted_frequency": length_section_metrics,
+                },
             })
-            continue
 
-        model_section_json = load_json(section_path)
-        model_scores = extract_top_level_model_scores(model_section_json)
-        human_scores = payload["top_level_scores_for_evaluation"]
+            if args.enable_citation_eval:
+                ref_important = select_reference_important_papers(payload, k=max(1, args.citation_top_k),
+                                                                   reference_field=args.citation_reference_field)
+                if not ref_important:
+                    continue
+                k_val = max(1, args.citation_top_k)
+                for tag, filename in [
+                    ("model", f"{paper_id}{suffix}_citation_scores.json"),
+                    ("citation_frequency", f"{paper_id}_citation_frequency_citation_scores.json"),
+                    ("length_weighted_frequency", f"{paper_id}_length_weighted_frequency_citation_scores.json"),
+                ]:
+                    cpath = results_root / paper_id / filename
+                    if cpath.exists():
+                        per_paper_citation_reports[tag].append({
+                            "paper_id": paper_id,
+                            "citation_file": str(cpath),
+                            **citation_top_k_report(paper_id=paper_id, important_papers=ref_important,
+                                                    citation_json=load_json(cpath), resolver=citation_resolver, k=k_val),
+                        })
 
-        overlap, human_overlap_raw, model_overlap_raw, model_extras = align_section_score_maps(
-            human_scores,
-            model_scores,
-        )
-        if len(overlap) < 2:
-            skipped.append({
-                "paper_id": paper_id,
-                "reason": "insufficient_overlap",
-                "human_sections": sorted(human_scores.keys()),
-                "model_sections": sorted(model_scores.keys()),
-            })
-            continue
+        aggregate = aggregate_metric_report([p["metrics"] for p in per_paper_reports], n_bootstrap=n_bootstrap, seed=seed)
+        citation_aggregates: Dict[str, Optional[dict]] = {"model": None, "citation_frequency": None, "length_weighted_frequency": None}
+        for source in citation_aggregates:
+            if per_paper_citation_reports[source]:
+                citation_aggregates[source] = aggregate_citation_report(
+                    per_paper_citation_reports[source], n_bootstrap=n_bootstrap, seed=seed + 100)
+        return aggregate, citation_aggregates, per_paper_reports, per_paper_citation_reports, skipped
 
-        human_overlap = normalize_scores(human_overlap_raw)
-        model_overlap = normalize_scores(model_overlap_raw)
+    k = args.citation_top_k
+    n_bootstrap = max(100, args.bootstrap_samples)
 
-        ordered_human = [human_overlap[section] for section in overlap]
-        ordered_model = [model_overlap[section] for section in overlap]
-        ordered_uniform = uniform_vector(len(overlap))
+    def _print_section_metrics(label: str, agg: dict) -> None:
+        print(label)
+        print(f"  Mean Spearman: {agg['mean_spearman']}")
+        print(f"  Mean Kendall tau-b: {agg['mean_kendall_tau_b']}")
+        print(f"  Mean L1: {agg['mean_l1']}")
+        print(f"  Bootstrap CI Spearman: {agg['bootstrap_ci_spearman']}")
+        print(f"  Bootstrap CI Kendall tau-b: {agg['bootstrap_ci_kendall_tau_b']}")
+        print(f"  Bootstrap CI L1: {agg['bootstrap_ci_l1']}")
 
-        report = {
-            "paper_id": paper_id,
-            "section_file": str(section_path),
-            "aligned_sections": overlap,
-            "human_normalized": human_overlap,
-            "model_normalized": model_overlap,
-            "model_extra_top_level_sections": model_extras,
-            "metrics": {
-                "model": metric_bundle(ordered_human, ordered_model),
-                "uniform": metric_bundle(ordered_human, ordered_uniform),
-            },
-        }
-        per_paper_reports.append(report)
+    def _print_citation_metrics(label: str, agg: dict, n_papers: int) -> None:
+        print(label)
+        print(f"  Papers evaluated: {n_papers}")
+        print(f"  Mean Precision@{k}: {agg['mean_precision_at_k']}")
+        print(f"  Mean Recall@{k}: {agg['mean_recall_at_k']}")
+        print(f"  Mean Hit@{k}: {agg['mean_hit_at_k']}")
+        print(f"  Mean MRR (human rank-1 in model top-k): {agg['mean_mrr_human_rank1_in_model_top_k']}")
+        print(f"  Mean nDCG@{k}: {agg['mean_ndcg_at_k']}")
 
+    def _print_block(header: str, aggregate: dict, citation_aggregates: Dict[str, Optional[dict]],
+                     per_paper_reports: List[dict], per_paper_citation_reports: Dict[str, List[dict]],
+                     skipped: List[dict]) -> None:
+        print(f"{'=' * 60}")
+        print(header)
+        print(f"{'=' * 60}")
+        print(f"Evaluated papers: {len(per_paper_reports)}")
+        print(f"Paper IDs: {', '.join(p['paper_id'] for p in per_paper_reports)}")
+        print()
+        _print_section_metrics("Model section metrics", aggregate["model"])
+        print()
+        _print_section_metrics("Citation frequency baseline (section)", aggregate["citation_frequency"])
+        print()
+        _print_section_metrics("Length-weighted frequency baseline (section)", aggregate["length_weighted_frequency"])
         if args.enable_citation_eval:
-            suffix = f"_{args.model_tag}" if args.model_tag else ""
-            citation_path = results_root / paper_id / f"{paper_id}{suffix}_citation_scores.json"
-            if citation_path.exists() and payload.get("important_papers"):
-                citation_json = load_json(citation_path)
-                per_paper_citation_reports.append(
-                    {
-                        "paper_id": paper_id,
-                        "citation_file": str(citation_path),
-                        **citation_top_k_report(
-                            paper_id=paper_id,
-                            important_papers=payload["important_papers"],
-                            citation_json=citation_json,
-                            resolver=citation_resolver,
-                            k=max(1, args.citation_top_k),
-                        ),
-                    }
-                )
+            print()
+            print(f"--- Citation Top-{k} metrics ---")
+            for source, label in [
+                ("model", f"Model citation @{k}"),
+                ("citation_frequency", f"Citation frequency baseline citation @{k}"),
+                ("length_weighted_frequency", f"Length-weighted frequency baseline citation @{k}"),
+            ]:
+                agg = citation_aggregates[source]
+                n = len(per_paper_citation_reports[source])
+                if agg is not None:
+                    print()
+                    _print_citation_metrics(label, agg, n)
+        if skipped:
+            print()
+            print("Skipped papers")
+            for item in skipped:
+                print(f"  {item['paper_id']}: {item['reason']}")
 
-    aggregate = aggregate_metric_report(
-        [paper["metrics"] for paper in per_paper_reports],
-        n_bootstrap=max(100, args.bootstrap_samples),
-        seed=args.seed,
-    )
-    citation_aggregate = None
-    if per_paper_citation_reports:
-        citation_aggregate = aggregate_citation_report(
-            per_paper_citation_reports,
-            n_bootstrap=max(100, args.bootstrap_samples),
-            seed=args.seed + 100,
-        )
+    # --- Human annotations ---
+    human_annotations = load_json(Path(args.annotations_file))
+    h_aggregate, h_citation_agg, h_reports, h_cit_reports, h_skipped = _run_evaluation(
+        human_annotations, n_bootstrap=n_bootstrap, seed=args.seed)
+    _print_block("Ground truth: Human expert annotations", h_aggregate, h_citation_agg, h_reports, h_cit_reports, h_skipped)
+
+    # --- ChatGPT annotations ---
+    chatgpt_path = Path(args.chatgpt_annotations_file)
+    if chatgpt_path.exists():
+        print()
+        chatgpt_annotations = load_json(chatgpt_path)
+        g_aggregate, g_citation_agg, g_reports, g_cit_reports, g_skipped = _run_evaluation(
+            chatgpt_annotations, n_bootstrap=n_bootstrap, seed=args.seed + 200)
+        _print_block("Ground truth: ChatGPT annotations", g_aggregate, g_citation_agg, g_reports, g_cit_reports, g_skipped)
 
     summary = {
         "model_tag": args.model_tag,
-        "papers_evaluated": len(per_paper_reports),
-        "paper_ids": [paper["paper_id"] for paper in per_paper_reports],
-        "aggregate": aggregate,
-        "per_paper": per_paper_reports,
-        "citation_top_k": {
-            "enabled": args.enable_citation_eval,
-            "k": args.citation_top_k,
-            "papers_evaluated": len(per_paper_citation_reports),
-            "paper_ids": [paper["paper_id"] for paper in per_paper_citation_reports],
-            "aggregate": citation_aggregate,
-            "per_paper": per_paper_citation_reports,
+        "human": {
+            "papers_evaluated": len(h_reports),
+            "aggregate": h_aggregate,
+            "citation_top_k": {
+                "enabled": args.enable_citation_eval,
+                "k": k,
+                "model": {"papers_evaluated": len(h_cit_reports["model"]), "aggregate": h_citation_agg["model"]},
+                "citation_frequency": {"papers_evaluated": len(h_cit_reports["citation_frequency"]), "aggregate": h_citation_agg["citation_frequency"]},
+                "length_weighted_frequency": {"papers_evaluated": len(h_cit_reports["length_weighted_frequency"]), "aggregate": h_citation_agg["length_weighted_frequency"]},
+            },
+            "skipped": h_skipped,
         },
-        "skipped": skipped,
-        "notes": [
-            "Human and model scores are aligned on the annotated top-level section overlap only.",
-            "Both human and model vectors are renormalized over that overlap before metric computation.",
-            "Uniform baseline rank correlations are typically undefined because the baseline is a constant vector; they are reported as null when appropriate."
-        ],
     }
-
-    print(f"Evaluated papers: {summary['papers_evaluated']}")
-    print(f"Paper IDs: {', '.join(summary['paper_ids'])}")
-    print()
-    print("Model metrics")
-    print(f"  Mean Spearman: {aggregate['model']['mean_spearman']}")
-    print(f"  Mean Kendall tau-b: {aggregate['model']['mean_kendall_tau_b']}")
-    print(f"  Mean L1: {aggregate['model']['mean_l1']}")
-    print(f"  Bootstrap CI Spearman: {aggregate['model']['bootstrap_ci_spearman']}")
-    print(f"  Bootstrap CI Kendall tau-b: {aggregate['model']['bootstrap_ci_kendall_tau_b']}")
-    print(f"  Bootstrap CI L1: {aggregate['model']['bootstrap_ci_l1']}")
-    print()
-    print("Uniform baseline")
-    print(f"  Mean Spearman: {aggregate['uniform']['mean_spearman']}")
-    print(f"  Mean Kendall tau-b: {aggregate['uniform']['mean_kendall_tau_b']}")
-    print(f"  Mean L1: {aggregate['uniform']['mean_l1']}")
-    print(f"  Bootstrap CI L1: {aggregate['uniform']['bootstrap_ci_l1']}")
-
-    if citation_aggregate is not None:
-        print()
-        print(f"Citation Top-{args.citation_top_k} metrics")
-        print(f"  Papers evaluated: {len(per_paper_citation_reports)}")
-        print(f"  Mean Overlap@{args.citation_top_k}: {citation_aggregate['mean_overlap_at_k']}")
-        print(f"  Mean Precision@{args.citation_top_k}: {citation_aggregate['mean_precision_at_k']}")
-        print(f"  Mean Recall@{args.citation_top_k}: {citation_aggregate['mean_recall_at_k']}")
-        print(f"  Mean Hit@{args.citation_top_k}: {citation_aggregate['mean_hit_at_k']}")
-        print(
-            "  Mean MRR (human rank-1 in model top-k): "
-            f"{citation_aggregate['mean_mrr_human_rank1_in_model_top_k']}"
-        )
-
-    if skipped:
-        print()
-        print("Skipped papers")
-        for item in skipped:
-            print(f"  {item['paper_id']}: {item['reason']}")
+    if chatgpt_path.exists():
+        summary["chatgpt"] = {
+            "papers_evaluated": len(g_reports),
+            "aggregate": g_aggregate,
+            "citation_top_k": {
+                "enabled": args.enable_citation_eval,
+                "k": k,
+                "model": {"papers_evaluated": len(g_cit_reports["model"]), "aggregate": g_citation_agg["model"]},
+                "citation_frequency": {"papers_evaluated": len(g_cit_reports["citation_frequency"]), "aggregate": g_citation_agg["citation_frequency"]},
+                "length_weighted_frequency": {"papers_evaluated": len(g_cit_reports["length_weighted_frequency"]), "aggregate": g_citation_agg["length_weighted_frequency"]},
+            },
+            "skipped": g_skipped,
+        }
 
     if args.output_json:
         with open(args.output_json, "w", encoding="utf-8") as f:

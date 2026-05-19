@@ -60,7 +60,8 @@ def output_files_exist(prefix: Path, model_tag: str) -> bool:
 
 def default_model_tag(baseline_name: str) -> str:
     mapping = {
-        "length_heuristic": "length_heuristic",
+        "citation_frequency": "citation_frequency",
+        "length_weighted_frequency": "length_weighted_frequency",
         "technical_section_prior": "technical_section_prior",
         "single_pass_llm": "single_pass_llm",
     }
@@ -78,7 +79,7 @@ def main() -> None:
     parser.add_argument(
         "--baseline",
         required=True,
-        choices=["length_heuristic", "single_pass_llm", "technical_section_prior"],
+        choices=["citation_frequency", "length_weighted_frequency", "single_pass_llm", "technical_section_prior"],
         help="Baseline model to run across the full corpus.",
     )
     parser.add_argument("--papers-dir", default=str(DEFAULT_PAPERS_DIR), help="Directory containing PDF papers.")

@@ -15,7 +15,7 @@ def main() -> None:
     parser.add_argument(
         "--baseline",
         required=True,
-        choices=["length_heuristic", "single_pass_llm", "technical_section_prior"],
+        choices=["citation_frequency", "length_weighted_frequency", "single_pass_llm", "technical_section_prior"],
         help="Baseline model to run.",
     )
     parser.add_argument("--pdf", required=True, help="Path to the source PDF.")

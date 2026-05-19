@@ -146,6 +146,13 @@ def main() -> None:
         action="store_true",
         help="Continue running remaining papers if one paper fails.",
     )
+    parser.add_argument(
+        "--papers",
+        nargs="+",
+        default=[],
+        metavar="STEM",
+        help="Run only these paper stems (filename without .pdf). If omitted, all papers are run.",
+    )
     args = parser.parse_args()
 
     papers_dir = Path(args.papers_dir)
@@ -154,11 +161,14 @@ def main() -> None:
     vendor_dir = Path(args.vendor_dir)
     results_root.mkdir(parents=True, exist_ok=True)
     model_tag = compose_model_tag(args.model, args.model_tag, args.run_suffix)
+    paper_filter = set(args.papers)
 
     assignments = load_assignment_names(sections_file)
     manifest = []
 
     for pdf_path in sorted(papers_dir.glob("*.pdf")):
+        if paper_filter and pdf_path.stem not in paper_filter:
+            continue
         section_var = sections_var_name(pdf_path)
         if section_var not in assignments:
             raise SystemExit(

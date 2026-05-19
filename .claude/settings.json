@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m py_compile baselines/models.py baselines/run_baseline.py baselines/run_baseline_all_papers.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 evaluate_human_section_scores.py --help)",
+      "Bash(python3 evaluate_human_section_scores.py --model-tag length_heuristic --enable-citation-eval --bootstrap-samples 1000)",
+      "Bash(python3 evaluate_human_section_scores.py --model-tag technical_section_prior --enable-citation-eval --bootstrap-samples 1000)",
+      "Bash(python3 baselines/run_baseline_all_papers.py --baseline length_heuristic --model-tag length_heuristic)",
+      "Bash(python3 baselines/run_baseline_all_papers.py --baseline uniform)",
+      "Bash(python3 evaluate_human_section_scores.py --model-tag uniform --enable-citation-eval --bootstrap-samples 1000)",
+      "Bash(python3 baselines/run_baseline_all_papers.py --baseline uniform --model-tag uniform)",
+      "Bash(python3 evaluate_human_section_scores.py --model-tag llama3_2_promptv2 --enable-citation-eval --bootstrap-samples 200)",
+      "Bash(find /Users/sanaebrahimi/Desktop/Project/Importance_scoring -name \"*.tex\" 2>/dev/null)",
+      "Read(//Users/sanaebrahimi/Desktop/Project/Importance_scoring/**)",
+      "Bash(ls /Users/sanaebrahimi/Desktop/Project/Importance_scoring/)"
+    ]
+  }
+}
