@@ -1254,5 +1254,15 @@
     "paragraph": "We use four real-world datasets in our experiments. PopSim[ 69] is a large semi-synthetic dataset of 2 million individuals from Illinois, annotated with geographic and racial information. Adult[ 34] is a UCI benchmark from the 1994 U.S. Census, where the task is to pre- dict income; we use gender as the sensitive attribute (66% male, 33% female). COMPAS[ 4] includes criminal and demographic data for over 7,000 defendants, using race as the sensitive attribute across three groups: African-American (48%), Caucasian (37%), and His- panic (14%). College Admission[ 23] contains application featuresfor international students, with gender as the sensitive attribute (52% male, 47% female).",
     "citation": "[23]",
     "citation_score": 0.0008088050659497626
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setups"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We implemented the following four tasks to compare the proposed algorithms with baselines: \u2022Database Summarization for Range Queries: As illustrated in Example 1, the goal in this setting is to find a small, represen- tative sample of the database table. Given a collection of range queriesQ=q1,q2,\u00b7\u00b7\u00b7,qm, the objective is to select a small fair representative subset of tuples such that each heavy query is hit by at least one tuple from the sample. \u2022Neighborhood Hitting on Geographic Data: Given a set of geographic coordinates representing individual locations, we aim 3Github repositoryto select a small fairsubset of individuals (or facility points) such that every neighborhood has at least one selected point within the sample \u2014 effectively hitting all heavy spatial neighborhoods. As further discussed in \u00a7 7, such a data summary facilitates approximate nearest neighbor search, where the goal is to return one of the top\u2212\u03b5closest tuples in the vicinity of a query point. \u2022Rank Regret Representative: The goal of this task is to find a small subset of tuples that hit the top- lof any ranking func- tion [ 11]. A ranking function is defined as a linear combination of the dataset attributes. The top- ltuples are determined by comput- ing the dot product between each tuple and the weight vector f, followed by sorting based on the resulting scores. Our objective is to find a fairrank-regret representative of the dataset. \u2022Synthetic Data: In this setup, we construct synthetic datasets with tunable parameters such as range size m, dataset size n, VC-dimension d, and demographic distributions. The goal is to evaluate algorithms under varying geometric complexity. Algorithms: We evaluate the following set of algorithms, as in-",
+    "citation": "[11]",
+    "citation_score": 0.0013459413217901698
   }
 ]
