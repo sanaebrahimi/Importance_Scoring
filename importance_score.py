@@ -265,9 +265,77 @@ Rules:
 - In citation-heavy sections such as Related Work, if most of the paragraph's
   citation-focused sentences are in `citation_focus_text`, citation_percentage
   should usually be the majority share.
-- A paragraph with has_citations is false but located in Related Work likely
-  bridges or references prior work implicitly - keep citation_percentage = 0 per
-  the rule above, but note this as a pipeline limitation.
+
+Paragraph entries (paragraph_id -> details):
+{paragraphs_json}
+
+Output format (plain text only):
+paragraph_id: technical=<float>, citation=<float>
+
+Example:
+Paragraph1: technical=80, citation=20
+Paragraph2: technical=100, citation=0
+
+Do not output JSON. Do not include explanations.
+"""
+
+PARAGRAPH_CHANNEL_SPLIT_STRICT_SYSTEM_PROMPT = (
+"""You are an expert academic reviewer. For each paragraph, split its total score into two components:
+
+- technical_percentage: the percentage of value this paragraph contributes through the authors' own
+  original ideas — new definitions, algorithms, proofs, experimental design,
+  results, or analysis that would survive even if all cited works were removed.
+
+- citation_percentage: the percentage of value this paragraph derives from cited prior work —
+  including summarizing, comparing, contextualizing, or building upon existing
+  work. If the paragraph's main purpose is to describe what others have done,
+  most of its value is citation-derived.
+
+Return percentages, not copied numbers from the paragraph text. technical + citation must equal
+100 for each paragraph. If a paragraph has citations (has_citations is true), citation_percentage
+must be greater than 0 — a cited work always contributes some value, even if the paragraph is
+mostly technical."""
+)
+
+PARAGRAPH_CHANNEL_SPLIT_STRICT_USER_PROMPT_TEMPLATE = """Task:
+For each paragraph, split the value into technical_percentage and citation_percentage.
+
+Section context: these paragraphs are from the "{section_name}" section of the paper.
+Use this to calibrate your expectations - a paragraph in Related Work behaves
+very differently from one in Methods, even if the text looks similar.
+
+Ask yourself: "If I deleted all content describing, comparing, or bridging prior
+work - what fraction of this paragraph's value survives?" That surviving fraction
+is technical_percentage. The rest is citation_percentage.
+
+Calibration guidance:
+- A paragraph in Related Work that summarizes prior methods:
+  citation_percentage ≈ 80–95, technical_percentage ≈ 5–20
+- A paragraph in Related Work that draws a novel connection between prior works
+  and the current paper's gap:
+  citation_percentage ≈ 50–70, technical_percentage ≈ 30–50
+- A Background paragraph that defines a known concept from prior work:
+  citation_percentage ≈ 60–80
+- A Methods paragraph describing the authors' new algorithm:
+  citation_percentage ≈ 0–15, technical_percentage ≈ 85–100
+- A paragraph comparing experiment results to a baseline from prior work:
+  citation_percentage ≈ 20–40
+- A Conclusion paragraph summarizing the paper's own contributions:
+  citation_percentage ≈ 0–10, technical_percentage ≈ 90–100
+- If has_citations is false, citation_percentage = 0 and technical_percentage = 100.
+
+Rules:
+- technical + citation = 100 for every paragraph
+- Both values must be non-negative
+- Do not assign citation_percentage > 0 if has_citations is false
+- If has_citations is true, citation_percentage must be greater than 0.
+- Use `citation_focus_text` as the only evidence for citation-derived value.
+  Text outside `citation_focus_text` should not increase citation_percentage.
+- If `citation_focus_text` is empty or minimal, citation_percentage should stay low
+  even if the paragraph has citation markers elsewhere.
+- In citation-heavy sections such as Related Work, if most of the paragraph's
+  citation-focused sentences are in `citation_focus_text`, citation_percentage
+  should usually be the majority share.
 
 Paragraph entries (paragraph_id -> details):
 {paragraphs_json}
@@ -3548,6 +3616,7 @@ def split_paragraph_channel_scores(
     max_retries: int,
     snippet_limit: int,
     debug_log_path: str,
+    strict: bool = False,
 ) -> Tuple[Dict[str, float], Dict[str, float]]:
     if not paragraph_items:
         return {}, {}
@@ -3587,7 +3656,9 @@ def split_paragraph_channel_scores(
         }
         for paragraph_id in paragraph_ids
     }
-    user_prompt = PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE.format(
+    _sys_prompt  = PARAGRAPH_CHANNEL_SPLIT_STRICT_SYSTEM_PROMPT if strict else PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT
+    _tmpl        = PARAGRAPH_CHANNEL_SPLIT_STRICT_USER_PROMPT_TEMPLATE if strict else PARAGRAPH_CHANNEL_SPLIT_USER_PROMPT_TEMPLATE
+    user_prompt  = _tmpl.format(
         section_name=section_name,
         paragraphs_json=json.dumps(payload, indent=2)
     )
@@ -3604,7 +3675,7 @@ def split_paragraph_channel_scores(
                 response = client.chat(
                     model=model,
                     messages=[
-                        {"role": "system", "content": PARAGRAPH_CHANNEL_SPLIT_SYSTEM_PROMPT},
+                        {"role": "system", "content": _sys_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
                     options={"temperature": current_temp},
@@ -4005,6 +4076,25 @@ def assign_importance_scores(
             mentions = mention_buckets.get(paragraph_name, [])
             paragraph_t = max(0.0, paragraph_technical.get(paragraph_name, 0.0))
             paragraph_c = max(0.0, paragraph_citation.get(paragraph_name, 0.0))
+
+            if paragraph_c <= 0.0 and mentions:
+                _t_strict, _c_strict = split_paragraph_channel_scores(
+                    client=client,
+                    section_name=section_name,
+                    paragraph_items={paragraph_name: paragraph_items[paragraph_name]},
+                    paragraph_total_scores={paragraph_name: paragraph_total.get(paragraph_name, 0.0)},
+                    mention_buckets={paragraph_name: mentions},
+                    model=model,
+                    n_samples=max(1, n_samples),
+                    temperature=temperature,
+                    max_retries=max(1, max_retries),
+                    snippet_limit=snippet_limit,
+                    debug_log_path=debug_log_path,
+                    strict=True,
+                )
+                paragraph_t = max(0.0, _t_strict.get(paragraph_name, paragraph_t))
+                paragraph_c = max(0.0, _c_strict.get(paragraph_name, 0.0))
+
             paragraph_total_score = combine_scores(paragraph_t, paragraph_c)
             assert_close(
                 paragraph_total_score,

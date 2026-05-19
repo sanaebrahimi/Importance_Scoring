@@ -57,6 +57,245 @@ def _detect_citations_in_text(text: str, split_fn=None) -> List[str]:
     return list(dict.fromkeys(keys))
 
 
+_STRICT_SYSTEM_PROMPT = (
+"""You are an expert academic reviewer. For each paragraph, split its total score into two components:
+
+- technical_percentage: the percentage of value this paragraph contributes through the authors' own
+  original ideas — new definitions, algorithms, proofs, experimental design,
+  results, or analysis that would survive even if all cited works were removed.
+
+- citation_percentage: the percentage of value this paragraph derives from cited prior work —
+  including summarizing, comparing, contextualizing, or building upon existing
+  work. If the paragraph's main purpose is to describe what others have done,
+  most of its value is citation-derived.
+
+Return percentages, not copied numbers from the paragraph text. technical + citation must equal
+100 for each paragraph. If a paragraph has citations (has_citations is true), citation_percentage
+must be greater than 0 — a cited work always contributes some value, even if the paragraph is
+mostly technical."""
+)
+
+_STRICT_USER_PROMPT_TEMPLATE = """Task:
+For each paragraph, split the value into technical_percentage and citation_percentage.
+
+Section context: these paragraphs are from the "{section_name}" section of the paper.
+Use this to calibrate your expectations - a paragraph in Related Work behaves
+very differently from one in Methods, even if the text looks similar.
+
+Ask yourself: "If I deleted all content describing, comparing, or bridging prior
+work - what fraction of this paragraph's value survives?" That surviving fraction
+is technical_percentage. The rest is citation_percentage.
+
+Calibration guidance:
+- A paragraph in Related Work that summarizes prior methods:
+  citation_percentage ≈ 80–95, technical_percentage ≈ 5–20
+- A paragraph in Related Work that draws a novel connection between prior works
+  and the current paper's gap:
+  citation_percentage ≈ 50–70, technical_percentage ≈ 30–50
+- A Background paragraph that defines a known concept from prior work:
+  citation_percentage ≈ 60–80
+- A Methods paragraph describing the authors' new algorithm:
+  citation_percentage ≈ 0–15, technical_percentage ≈ 85–100
+- A paragraph comparing experiment results to a baseline from prior work:
+  citation_percentage ≈ 20–40
+- A Conclusion paragraph summarizing the paper's own contributions:
+  citation_percentage ≈ 0–10, technical_percentage ≈ 90–100
+- If has_citations is false, citation_percentage = 0 and technical_percentage = 100.
+
+Rules:
+- technical + citation = 100 for every paragraph
+- Both values must be non-negative
+- Do not assign citation_percentage > 0 if has_citations is false
+- If has_citations is true, citation_percentage must be greater than 0.
+- Use `citation_focus_text` as the only evidence for citation-derived value.
+  Text outside `citation_focus_text` should not increase citation_percentage.
+- If `citation_focus_text` is empty or minimal, citation_percentage should stay low
+  even if the paragraph has citation markers elsewhere.
+- In citation-heavy sections such as Related Work, if most of the paragraph's
+  citation-focused sentences are in `citation_focus_text`, citation_percentage
+  should usually be the majority share.
+
+Paragraph entries (paragraph_id -> details):
+{paragraphs_json}
+
+Output format (plain text only):
+paragraph_id: technical=<float>, citation=<float>
+
+Example:
+Paragraph1: technical=80, citation=20
+Paragraph2: technical=100, citation=0
+
+Do not output JSON. Do not include explanations.
+"""
+
+
+def _split_paragraph_channel_scores_strict(
+    client: Any,
+    section_name: str,
+    paragraph_items: Dict[str, str],
+    paragraph_total_scores: Dict[str, float],
+    mention_buckets: Dict[str, List[Tuple[str, str, str]]],
+    model: str,
+    n_samples: int,
+    temperature: float,
+    max_retries: int,
+    snippet_limit: int,
+    debug_log_path: Path,
+    is_funcs: Dict[str, Any],
+) -> Tuple[Dict[str, float], Dict[str, float]]:
+    """Channel-split using the strict prompt that enforces citation_percentage > 0 when has_citations."""
+    build_citation_focus_text   = is_funcs["build_citation_focus_text"]
+    citation_focus_ratio        = is_funcs["citation_focus_ratio"]
+    sample_temperature          = is_funcs["sample_temperature"]
+    is_citation_heavy_section_name = is_funcs["is_citation_heavy_section_name"]
+    parse_paragraph_channel_split_response = is_funcs["parse_paragraph_channel_split_response"]
+    append_debug_log            = is_funcs["append_debug_log"]
+    safe_float                  = is_funcs["safe_float"]
+
+    paragraph_ids  = list(paragraph_items.keys())
+    sample_count   = max(1, n_samples)
+
+    cleaned_totals: Dict[str, float] = {
+        pid: max(0.0, safe_float(paragraph_total_scores.get(pid), 0.0))
+        for pid in paragraph_ids
+    }
+
+    paragraph_aliases: Dict[str, str] = {}
+    for idx, pid in enumerate(paragraph_ids, start=1):
+        paragraph_aliases[pid] = pid
+        paragraph_aliases[f"p{idx}"] = pid
+        paragraph_aliases[f"paragraph {idx}"] = pid
+        paragraph_aliases[f"paragraph{idx}"] = pid
+        paragraph_aliases[str(idx)] = pid
+
+    if snippet_limit <= 0:
+        snippets = {pid: paragraph_items[pid] for pid in paragraph_ids}
+    else:
+        snippets = {pid: paragraph_items[pid][: max(80, snippet_limit)] for pid in paragraph_ids}
+
+    payload = {
+        pid: {
+            "total_score": cleaned_totals[pid],
+            "has_citations": bool(mention_buckets.get(pid)),
+            "text": snippets[pid],
+            "citation_focus_text": build_citation_focus_text(
+                paragraph_items[pid],
+                mention_buckets.get(pid, []),
+            ),
+        }
+        for pid in paragraph_ids
+    }
+    user_prompt = _STRICT_USER_PROMPT_TEMPLATE.format(
+        section_name=section_name,
+        paragraphs_json=json.dumps(payload, indent=2),
+    )
+
+    technical_samples: List[Dict[str, float]] = []
+    citation_samples: List[Dict[str, float]]  = []
+
+    for sample_idx in range(sample_count):
+        current_temp = sample_temperature(temperature, sample_idx)
+        parsed_pairs: Dict[str, Tuple[float, float]] = {}
+
+        for attempt in range(max(1, max_retries)):
+            try:
+                response = client.chat(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": _STRICT_SYSTEM_PROMPT},
+                        {"role": "user",   "content": user_prompt},
+                    ],
+                    options={"temperature": current_temp},
+                )
+                raw_response = response.message.content if getattr(response, "message", None) else ""
+            except Exception:
+                raw_response = ""
+
+            append_debug_log(
+                str(debug_log_path),
+                (
+                    f"[strict_channel_split] sample={sample_idx + 1}/{sample_count} "
+                    f"attempt={attempt + 1}/{max(1, max_retries)} "
+                    f"temperature={current_temp}\n{raw_response}\n"
+                ),
+            )
+            parsed_pairs = parse_paragraph_channel_split_response(
+                raw_response, paragraph_ids, alias_to_id=paragraph_aliases,
+            )
+            if len(parsed_pairs) == len(paragraph_ids):
+                break
+
+        sample_technical: Dict[str, float] = {}
+        sample_citation:  Dict[str, float] = {}
+        for pid in paragraph_ids:
+            total_val    = cleaned_totals.get(pid, 0.0)
+            mentions     = mention_buckets.get(pid, [])
+            has_citations = bool(mentions)
+            focus_ratio  = citation_focus_ratio(paragraph_items[pid], mentions)
+
+            if pid in parsed_pairs:
+                t_raw, c_raw = parsed_pairs[pid]
+            else:
+                fallback_ratio = min(0.4, max(0.1, 0.12 * len(mentions))) if has_citations else 0.0
+                t_raw = 1.0 - fallback_ratio
+                c_raw = fallback_ratio
+
+            t_raw = max(0.0, t_raw)
+            c_raw = max(0.0, c_raw)
+
+            if not has_citations:
+                t_val, c_val = total_val, 0.0
+            else:
+                channel_sum = t_raw + c_raw
+                if channel_sum <= 0.0:
+                    t_val, c_val = total_val, 0.0
+                else:
+                    t_val = total_val * (t_raw / channel_sum)
+                    c_val = total_val * (c_raw / channel_sum)
+
+                if is_citation_heavy_section_name(section_name):
+                    min_citation_ratio = 0.0
+                    if focus_ratio >= 0.60:
+                        min_citation_ratio = 0.60
+                    elif focus_ratio >= 0.40:
+                        min_citation_ratio = 0.50
+                    elif focus_ratio >= 0.25:
+                        min_citation_ratio = 0.35
+                    if min_citation_ratio > 0.0:
+                        min_citation_value = total_val * min_citation_ratio
+                        if c_val < min_citation_value:
+                            c_val = min_citation_value
+                            t_val = max(0.0, total_val - c_val)
+
+            sample_technical[pid] = max(0.0, t_val)
+            sample_citation[pid]  = max(0.0, c_val)
+
+        technical_samples.append(sample_technical)
+        citation_samples.append(sample_citation)
+
+    paragraph_technical: Dict[str, float] = {}
+    paragraph_citation:  Dict[str, float] = {}
+    effective_samples = max(1, len(technical_samples))
+    for pid in paragraph_ids:
+        avg_t = sum(s[pid] for s in technical_samples) / effective_samples
+        avg_c = sum(s[pid] for s in citation_samples)  / effective_samples
+        total_val    = cleaned_totals.get(pid, 0.0)
+        has_citations = bool(mention_buckets.get(pid))
+        if not has_citations:
+            avg_t, avg_c = total_val, 0.0
+        else:
+            channel_sum = max(0.0, avg_t) + max(0.0, avg_c)
+            if channel_sum <= 0.0:
+                avg_t, avg_c = total_val, 0.0
+            else:
+                avg_t = total_val * max(0.0, avg_t) / channel_sum
+                avg_c = total_val * max(0.0, avg_c) / channel_sum
+        paragraph_technical[pid] = max(0.0, avg_t)
+        paragraph_citation[pid]  = max(0.0, avg_c)
+
+    return paragraph_technical, paragraph_citation
+
+
 DEFAULT_PAPERS_DIR   = Path("papers")
 DEFAULT_SECTIONS_FILE = Path("papers_section_titles.txt")
 DEFAULT_RESULTS_ROOT  = Path("paper_results")
@@ -175,7 +414,6 @@ def patch_paper(
     load_sections_from_file      = is_funcs["load_sections_from_file"]
     extract_citations_by_section = is_funcs["extract_citations_by_section"]
     split_text_into_paragraphs   = is_funcs["split_text_into_paragraphs"]
-    split_paragraph_channel_scores         = is_funcs["split_paragraph_channel_scores"]
     allocate_citation_scores_for_paragraph = is_funcs["allocate_citation_scores_for_paragraph"]
     estimate_direct_allocation_tokens      = is_funcs["estimate_direct_allocation_tokens"]
 
@@ -283,7 +521,7 @@ def patch_paper(
         threshold    = paragraph_direct_max_tokens if paragraph_direct_max_tokens > 0 else 7000
         eff_snip     = max(60, snippet_limit) if est_tokens > threshold else 0
 
-        paragraph_technical, paragraph_citation = split_paragraph_channel_scores(
+        paragraph_technical, paragraph_citation = _split_paragraph_channel_scores_strict(
             client=client,
             section_name=section_name,
             paragraph_items=paragraph_items,
@@ -294,7 +532,8 @@ def patch_paper(
             temperature=temperature,
             max_retries=max_retries,
             snippet_limit=eff_snip,
-            debug_log_path=str(debug_log_path),
+            debug_log_path=debug_log_path,
+            is_funcs=is_funcs,
         )
 
         for para_name in patch_names:
@@ -447,9 +686,14 @@ def main() -> None:
         "load_sections_from_file":       _is.load_sections_from_file,
         "extract_citations_by_section":  _is.extract_citations_by_section,
         "split_text_into_paragraphs":    _is.split_text_into_paragraphs,
-        "split_paragraph_channel_scores":         _is.split_paragraph_channel_scores,
-        "allocate_citation_scores_for_paragraph": _is.allocate_citation_scores_for_paragraph,
-        "estimate_direct_allocation_tokens":      _is.estimate_direct_allocation_tokens,
+        "allocate_citation_scores_for_paragraph":  _is.allocate_citation_scores_for_paragraph,
+        "estimate_direct_allocation_tokens":       _is.estimate_direct_allocation_tokens,
+        "build_citation_focus_text":               _is.build_citation_focus_text,
+        "citation_focus_ratio":                    _is.citation_focus_ratio,
+        "sample_temperature":                      _is.sample_temperature,
+        "is_citation_heavy_section_name":          _is.is_citation_heavy_section_name,
+        "parse_paragraph_channel_split_response":  _is.parse_paragraph_channel_split_response,
+        "append_debug_log":                        _is.append_debug_log,
     }
 
     n_papers = n_patched = 0
