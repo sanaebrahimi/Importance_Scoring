@@ -573,18 +573,22 @@ def patch_paper(
             }
 
             paragraph_id = f"{paper_id}::{' > '.join(section_path)}::p{para_idx}"
-            citation_split = allocate_citation_scores_for_paragraph(
-                client=client,
-                paragraph_id=paragraph_id,
-                paragraph_text=para_text,
-                citation_to_context=citation_to_context,
-                total_score=new_c,
-                model=model,
-                n_samples=n_samples,
-                temperature=temperature,
-                max_retries=max_retries,
-                debug_log_path=str(debug_log_path),
-            )
+            try:
+                citation_split = allocate_citation_scores_for_paragraph(
+                    client=client,
+                    paragraph_id=paragraph_id,
+                    paragraph_text=para_text,
+                    citation_to_context=citation_to_context,
+                    total_score=new_c,
+                    model=model,
+                    n_samples=n_samples,
+                    temperature=temperature,
+                    max_retries=max_retries,
+                    debug_log_path=str(debug_log_path),
+                )
+            except ValueError as exc:
+                print(f"    [alloc_fail] {section_path} para={para_idx}: {exc}")
+                continue
 
             # Update paragraph_scores entries
             for list_idx in para_index_map.get((section_path_tuple, para_idx), []):
