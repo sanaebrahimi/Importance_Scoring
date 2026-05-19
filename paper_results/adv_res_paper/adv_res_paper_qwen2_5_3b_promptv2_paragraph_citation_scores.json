@@ -278,5 +278,114 @@
     "paragraph": "Datasets. We evaluate the effectiveness of our proposed framework across five benchmark datasets: MMLU (Hendrycks et al., 2020), MATH (Hendrycks et al., 2021), GSM8K (Cobbe et al., 2021), HumanEval (Chen et al., 2021), and Research Questions (Rosset et al., 2024). Specifi- cally, we use high school mathematics and statistics questions from the MMLU dataset, which are re- ferred to as MMLU-MS, to assess the performance of the model in multiple-choice question answering. The MATH and GSM8K datasets are employed to evaluate mathematical reasoning capabilities, while HumanEval is used to assess coding proficiency. The Researchy Questions dataset consists of non- factoid questions derived from real-world search engine queries, characterized by their subjective nature and absence of a singularly correct answer. In this context, a human judge or an external judge must carefully evaluate agent responses, determin- ing correctness based on provided instructions and contextual information. E.1 Collaboration Setup Our primary experiments involve a team of five agents, comprising two faithful agents and three adversarial agents explicitly instructed to introduce subtle inaccuracies in their responses without re- vealing their adversarial nature. We employ con- sistent prompts across various tasks, adapting only the task-specific details. Our analysis primarily explores two main communication structures: a Stochastic Interaction Architecture (SIA) , Stan- dalone Agent Architecture (SAA) and a Credibility- ordered Chain. E.1.1 Standalone Agent Architecture (SAA) In SAA every agent receives the same question Q and produces an answer without any communica-tion. The resulting communication graph is edge- less: G= (A,\u2205). We aggregate the set of agent answers R={x1, . . . , x |R|}using the centroid- based ensemble method of (Ebrahimi et al., 2024). Letv(x)be the embedding of answer xand let wi\u221dCrS(i)be the credibility weight of agent i. The credibility-weighted centroid is vc=1 |R||R|\u2211\ufe02 i=1wiv(xi), and the final answer is the one whose embedding is closest (cosine distance d) to that centroid: x\u22c6= arg min x\u2208Rd(\ufe01 v(x),vc)\ufe01 . Finally, we calculate each agent\u2019s Contribution Score (CSc)\u2014derived from the Shapley value as described in\u00a75.1\u2014and, from these, obtain the Cred- ibility Scores (CrS) for the entire set of responses. E.1.2 Stochastic Interaction Architecture (SIA) SIA adds a sparse, random communication graph Gtthat is resampled for every query. For each ques- tion we draw mundirected edges from the(\ufe01N 2)\ufe01 possible pairs with replacment ( N= 5, m= 6in our experiments), typically creating six links. Con- nected agents exchange their current answers and may revise them, producing diverse topologies such as trees, rings, and other sparse structures\u2014while avoiding full information saturation that would oth- erwise aid adversaries. E.1.3 Credibility-ordered Chain To further test our hypothesis within a specific, stable structure, we introduce the chain-based ar- chitecture. In the chain architecture agents are sorted in descending order of their credibility score in the beginning of the experiment. Communica- tion in this structure only occurs between adjacent agents. Positioning the most reliable agents ear- lier in the chain limits the influence of adversaries further down the chain. Although the communica- tion pattern remains fixed, CrS values continue to be updated throughout the interactions within the chain. E.2 Why Three Architectures? SAA provides a lower bound on performance\u2014no interactions means no adversarial persua- sion\u2014while SIA explores the hard regime where adversaries may form majorities and hijack discussions by persuading other agents. The credibility -ordered chain tests our hypothesis in a stable yet asymmetric structure. Experiments in \u00a76 demonstrate that CSc/CrS significantly improve robustness across all three settings.",
     "citation": "(Ebrahimi et al., 2024)",
     "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Agent Roles. In a multi-agent LLM system all team members may be assigned to the same task (Liu et al., 2023; Liang et al., 2023a), or they may have different roles aligned with their specific expertise or subtasks (Zhang et al., 2024a; Qian et al., 2024). Another important consideration is the agents\u2019 adaptability: whether they can learn, adapt, or modify their strategies over time by up- dating internal parameters. These aspects have been explored in varying degrees across existing research. For instance, Alfonso et al. (Amayuelas et al., 2024) demonstrated that models could be influenced to alter their behavior in ways that ulti- mately degrade overall system performance. Such interference may occur through direct manipulation of agents\u2019 individual contributions or deceptive communication tactics (Amayuelas et al., 2024). Further details about incentives and adversarial be- havior of LLM agents is discussed in Appendix B. Therefore, establishing robust mechanisms to mitigate adversarial threats is essential to main- taining the integrity and reliability of multi-agent collaborations. A major benefit of our systems is therobustness against adversarial agents . Specif- ically, allocating the agents with credibility scores, our system gradually penalizes the agents with ad- versarial behaviors (see Section 5). In Section 6, we demonstrate that our system can tolerate even more than half of the agents being adversary.",
+    "citation": "(Liu et al., 2023)",
+    "citation_score": 0.011596089527094922
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Agent Roles. In a multi-agent LLM system all team members may be assigned to the same task (Liu et al., 2023; Liang et al., 2023a), or they may have different roles aligned with their specific expertise or subtasks (Zhang et al., 2024a; Qian et al., 2024). Another important consideration is the agents\u2019 adaptability: whether they can learn, adapt, or modify their strategies over time by up- dating internal parameters. These aspects have been explored in varying degrees across existing research. For instance, Alfonso et al. (Amayuelas et al., 2024) demonstrated that models could be influenced to alter their behavior in ways that ulti- mately degrade overall system performance. Such interference may occur through direct manipulation of agents\u2019 individual contributions or deceptive communication tactics (Amayuelas et al., 2024). Further details about incentives and adversarial be- havior of LLM agents is discussed in Appendix B. Therefore, establishing robust mechanisms to mitigate adversarial threats is essential to main- taining the integrity and reliability of multi-agent collaborations. A major benefit of our systems is therobustness against adversarial agents . Specif- ically, allocating the agents with credibility scores, our system gradually penalizes the agents with ad- versarial behaviors (see Section 5). In Section 6, we demonstrate that our system can tolerate even more than half of the agents being adversary.",
+    "citation": "(Liang et al., 2023a)",
+    "citation_score": 0.009886474411710939
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Agent Roles. In a multi-agent LLM system all team members may be assigned to the same task (Liu et al., 2023; Liang et al., 2023a), or they may have different roles aligned with their specific expertise or subtasks (Zhang et al., 2024a; Qian et al., 2024). Another important consideration is the agents\u2019 adaptability: whether they can learn, adapt, or modify their strategies over time by up- dating internal parameters. These aspects have been explored in varying degrees across existing research. For instance, Alfonso et al. (Amayuelas et al., 2024) demonstrated that models could be influenced to alter their behavior in ways that ulti- mately degrade overall system performance. Such interference may occur through direct manipulation of agents\u2019 individual contributions or deceptive communication tactics (Amayuelas et al., 2024). Further details about incentives and adversarial be- havior of LLM agents is discussed in Appendix B. Therefore, establishing robust mechanisms to mitigate adversarial threats is essential to main- taining the integrity and reliability of multi-agent collaborations. A major benefit of our systems is therobustness against adversarial agents . Specif- ically, allocating the agents with credibility scores, our system gradually penalizes the agents with ad- versarial behaviors (see Section 5). In Section 6, we demonstrate that our system can tolerate even more than half of the agents being adversary.",
+    "citation": "(Zhang et al., 2024a)",
+    "citation_score": 0.005252584106349618
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Agent Roles. In a multi-agent LLM system all team members may be assigned to the same task (Liu et al., 2023; Liang et al., 2023a), or they may have different roles aligned with their specific expertise or subtasks (Zhang et al., 2024a; Qian et al., 2024). Another important consideration is the agents\u2019 adaptability: whether they can learn, adapt, or modify their strategies over time by up- dating internal parameters. These aspects have been explored in varying degrees across existing research. For instance, Alfonso et al. (Amayuelas et al., 2024) demonstrated that models could be influenced to alter their behavior in ways that ulti- mately degrade overall system performance. Such interference may occur through direct manipulation of agents\u2019 individual contributions or deceptive communication tactics (Amayuelas et al., 2024). Further details about incentives and adversarial be- havior of LLM agents is discussed in Appendix B. Therefore, establishing robust mechanisms to mitigate adversarial threats is essential to main- taining the integrity and reliability of multi-agent collaborations. A major benefit of our systems is therobustness against adversarial agents . Specif- ically, allocating the agents with credibility scores, our system gradually penalizes the agents with ad- versarial behaviors (see Section 5). In Section 6, we demonstrate that our system can tolerate even more than half of the agents being adversary.",
+    "citation": "(Qian et al., 2024)",
+    "citation_score": 0.0035429689909656304
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Agent Roles. In a multi-agent LLM system all team members may be assigned to the same task (Liu et al., 2023; Liang et al., 2023a), or they may have different roles aligned with their specific expertise or subtasks (Zhang et al., 2024a; Qian et al., 2024). Another important consideration is the agents\u2019 adaptability: whether they can learn, adapt, or modify their strategies over time by up- dating internal parameters. These aspects have been explored in varying degrees across existing research. For instance, Alfonso et al. (Amayuelas et al., 2024) demonstrated that models could be influenced to alter their behavior in ways that ulti- mately degrade overall system performance. Such interference may occur through direct manipulation of agents\u2019 individual contributions or deceptive communication tactics (Amayuelas et al., 2024). Further details about incentives and adversarial be- havior of LLM agents is discussed in Appendix B. Therefore, establishing robust mechanisms to mitigate adversarial threats is essential to main- taining the integrity and reliability of multi-agent collaborations. A major benefit of our systems is therobustness against adversarial agents . Specif- ically, allocating the agents with credibility scores, our system gradually penalizes the agents with ad- versarial behaviors (see Section 5). In Section 6, we demonstrate that our system can tolerate even more than half of the agents being adversary.",
+    "citation": "(Amayuelas et al., 2024)",
+    "citation_score": 0.002512654416258591
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Communication Structure (Topology). The topology of a multi-agent system defines the ar- rangement and interconnections among agents, ef- fectively determining which agents can directly communicate. This structure can be conceptual- ized as a graph, where each node represents an agent, and each edge represents a direct communi- cation link between two agents. Previous research has investigated various topological arrangements from (a) no connection to (b) fully-connected struc- cal, and (f) randomly-connected networks (Wang et al., 2024; Huang et al., 2024; Qian et al., 2024; Liu et al., 2023). The choice of topology signifi- cantly impacts both scalability and robustness of the multi-agent system. For example, fully con- nected topologies facilitate rapid consensus due to their direct communication paths, yet they exhibit vulnerability when faced with adversarial agents or limited network resources (Amayuelas et al., 2024). Conversely, sparse topologies, such as ring or chain structures, lower communication overhead but might be more susceptible to localized adver- sarial influence, potentially compromising subsets of agents (Shoham and Leyton-Brown, 2008).Our system is flexible to the choice of communi- cation structures: we assume each agent first drafts a candidate solution ( local inference ). Then, during thepeer interaction phase, the agents optionally exchange information according to the communica- tion graph prescribed by the topology.",
+    "citation": "(Amayuelas et al., 2024)",
+    "citation_score": 0.002239468713332773
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Communication Structure (Topology). The topology of a multi-agent system defines the ar- rangement and interconnections among agents, ef- fectively determining which agents can directly communicate. This structure can be conceptual- ized as a graph, where each node represents an agent, and each edge represents a direct communi- cation link between two agents. Previous research has investigated various topological arrangements from (a) no connection to (b) fully-connected struc- cal, and (f) randomly-connected networks (Wang et al., 2024; Huang et al., 2024; Qian et al., 2024; Liu et al., 2023). The choice of topology signifi- cantly impacts both scalability and robustness of the multi-agent system. For example, fully con- nected topologies facilitate rapid consensus due to their direct communication paths, yet they exhibit vulnerability when faced with adversarial agents or limited network resources (Amayuelas et al., 2024). Conversely, sparse topologies, such as ring or chain structures, lower communication overhead but might be more susceptible to localized adver- sarial influence, potentially compromising subsets of agents (Shoham and Leyton-Brown, 2008).Our system is flexible to the choice of communi- cation structures: we assume each agent first drafts a candidate solution ( local inference ). Then, during thepeer interaction phase, the agents optionally exchange information according to the communica- tion graph prescribed by the topology.",
+    "citation": "(Wang et al., 2024)",
+    "citation_score": 0.0012796964076187281
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Communication Structure (Topology). The topology of a multi-agent system defines the ar- rangement and interconnections among agents, ef- fectively determining which agents can directly communicate. This structure can be conceptual- ized as a graph, where each node represents an agent, and each edge represents a direct communi- cation link between two agents. Previous research has investigated various topological arrangements from (a) no connection to (b) fully-connected struc- cal, and (f) randomly-connected networks (Wang et al., 2024; Huang et al., 2024; Qian et al., 2024; Liu et al., 2023). The choice of topology signifi- cantly impacts both scalability and robustness of the multi-agent system. For example, fully con- nected topologies facilitate rapid consensus due to their direct communication paths, yet they exhibit vulnerability when faced with adversarial agents or limited network resources (Amayuelas et al., 2024). Conversely, sparse topologies, such as ring or chain structures, lower communication overhead but might be more susceptible to localized adver- sarial influence, potentially compromising subsets of agents (Shoham and Leyton-Brown, 2008).Our system is flexible to the choice of communi- cation structures: we assume each agent first drafts a candidate solution ( local inference ). Then, during thepeer interaction phase, the agents optionally exchange information according to the communica- tion graph prescribed by the topology.",
+    "citation": "(Huang et al., 2024)",
+    "citation_score": 0.0006398482038093641
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Communication Structure (Topology). The topology of a multi-agent system defines the ar- rangement and interconnections among agents, ef- fectively determining which agents can directly communicate. This structure can be conceptual- ized as a graph, where each node represents an agent, and each edge represents a direct communi- cation link between two agents. Previous research has investigated various topological arrangements from (a) no connection to (b) fully-connected struc- cal, and (f) randomly-connected networks (Wang et al., 2024; Huang et al., 2024; Qian et al., 2024; Liu et al., 2023). The choice of topology signifi- cantly impacts both scalability and robustness of the multi-agent system. For example, fully con- nected topologies facilitate rapid consensus due to their direct communication paths, yet they exhibit vulnerability when faced with adversarial agents or limited network resources (Amayuelas et al., 2024). Conversely, sparse topologies, such as ring or chain structures, lower communication overhead but might be more susceptible to localized adver- sarial influence, potentially compromising subsets of agents (Shoham and Leyton-Brown, 2008).Our system is flexible to the choice of communi- cation structures: we assume each agent first drafts a candidate solution ( local inference ). Then, during thepeer interaction phase, the agents optionally exchange information according to the communica- tion graph prescribed by the topology.",
+    "citation": "(Qian et al., 2024)",
+    "citation_score": 0.0006398482038093641
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Communication Structure (Topology). The topology of a multi-agent system defines the ar- rangement and interconnections among agents, ef- fectively determining which agents can directly communicate. This structure can be conceptual- ized as a graph, where each node represents an agent, and each edge represents a direct communi- cation link between two agents. Previous research has investigated various topological arrangements from (a) no connection to (b) fully-connected struc- cal, and (f) randomly-connected networks (Wang et al., 2024; Huang et al., 2024; Qian et al., 2024; Liu et al., 2023). The choice of topology signifi- cantly impacts both scalability and robustness of the multi-agent system. For example, fully con- nected topologies facilitate rapid consensus due to their direct communication paths, yet they exhibit vulnerability when faced with adversarial agents or limited network resources (Amayuelas et al., 2024). Conversely, sparse topologies, such as ring or chain structures, lower communication overhead but might be more susceptible to localized adver- sarial influence, potentially compromising subsets of agents (Shoham and Leyton-Brown, 2008).Our system is flexible to the choice of communi- cation structures: we assume each agent first drafts a candidate solution ( local inference ). Then, during thepeer interaction phase, the agents optionally exchange information according to the communica- tion graph prescribed by the topology.",
+    "citation": "(Liu et al., 2023)",
+    "citation_score": 0.0007064990583728395
+  },
+  {
+    "section_path": [
+      "Team of Agents"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Communication Structure (Topology). The topology of a multi-agent system defines the ar- rangement and interconnections among agents, ef- fectively determining which agents can directly communicate. This structure can be conceptual- ized as a graph, where each node represents an agent, and each edge represents a direct communi- cation link between two agents. Previous research has investigated various topological arrangements from (a) no connection to (b) fully-connected struc- cal, and (f) randomly-connected networks (Wang et al., 2024; Huang et al., 2024; Qian et al., 2024; Liu et al., 2023). The choice of topology signifi- cantly impacts both scalability and robustness of the multi-agent system. For example, fully con- nected topologies facilitate rapid consensus due to their direct communication paths, yet they exhibit vulnerability when faced with adversarial agents or limited network resources (Amayuelas et al., 2024). Conversely, sparse topologies, such as ring or chain structures, lower communication overhead but might be more susceptible to localized adver- sarial influence, potentially compromising subsets of agents (Shoham and Leyton-Brown, 2008).Our system is flexible to the choice of communi- cation structures: we assume each agent first drafts a candidate solution ( local inference ). Then, during thepeer interaction phase, the agents optionally exchange information according to the communica- tion graph prescribed by the topology.",
+    "citation": "(Shoham and Leyton-Brown, 2008)",
+    "citation_score": 0.0008264705965870953
+  },
+  {
+    "section_path": [
+      "Experiment Results",
+      "Collaboration Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Standalone Agent Architecture (SAA). Each agent responds independently without any peer interaction. Finally a centroid -based aggregation (Ebrahimi et al., 2024) is used to select the team\u2019s 1The implementation details are provided in Appendix E. answer by choosing the nearest response to the centroid of all outputs as discussed in Section 4.",
+    "citation": "(Ebrahimi et al., 2024)",
+    "citation_score": 0.0053523634353747854
   }
 ]

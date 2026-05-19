@@ -558,5 +558,24 @@
     "paragraph": "Incremental and Online Algorithm. Incremental, anytime, and online algorithms are all designed to operate under constrained en- vironment, but each targets a different type of limitation. Incremen- tal algorithms[ 39] focus on efficiently updating their output as new data arrives, avoiding the need to recompute results from scratch. These algorithms are especially useful in dynamic or streaming en- vironments where data evolves over time. Online algorithms[ 1], on the other hand, process inputs sequentially and make irrevocable decisions at each step without knowledge of future inputs. In con- trast, we focus on a subclass of anytime algorithms that generates effective output even after reading only a small portion of the data, and progressively improve as more data is processed. lines on Synthetic Dataset7 Conclusion and Future Work We present a computational framework designed to find AFDs in anytime fashion within a relation that generalizes to multiple error measures. We formalize two core sub-problems: maximum and min- imum error estimates, which calculate the upper and lower bounds of an AFD\u2019s error based on data that is read . We systematically analyze the bound estimation problems and propose a suite of algo- rithms. We present exact and approximate lattice based algorithms for finding anytime AFDs using these bounds. We are the first to design solutions with anytime behavior. We conduct experiments to demonstrate the effectiveness of these algorithms under different data organization strategies and provide practical guidelines. An interesting area of future work could consider partial/full marginals which are known apriori, but could have errors in them. Another interesting direction could be to design approximate, but faster approaches based on Dynamic Programming or other tech- niques to estimate the lower/upper bounds of g1,g2andg3errors, which can be readily plugged into our framework.",
     "citation": "[1]",
     "citation_score": 0.001388888888888889
+  },
+  {
+    "section_path": [
+      "Anytime AFD Algorithms",
+      "Exact Algorithms"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kAFD Algo) starts at level lof the lattice considering all nodes at that level. Since\u0000d\u22121 l\u0001is likely to be larger than k, it just has to find the top- kfrom there. Since only a subset of the data is read, ESCA needs to determine the correct top- kranked order. ESCA constructs a directed graph Gwith\u0000d\u22121 l\u0001no of nodes (could be represented using Hasse diagram [ 12]), and the edges represent the partial order between every pair of AFDs. The nodes of the graph are the AFDs and a directed edge from vertex (X\u2192Z) to vertex(Y\u2192Z)indicates that X\u2192Zhas lower error than Y\u2192Z. Initially, when no data is read, there are no edges in the graph. Edges are added as more data is read, and the order between AFDs could be established. As a simple optimization, if any vertex (AFD) in the graph has more than kincoming edges, it is already dominated by kother AFDs and thus it is eliminated from Gas it cannot be part of the solution. This ensures a precision of 1 as no false positives are added to the set of AFDs.",
+    "citation": "[12]",
+    "citation_score": 0.011638896009570193
+  },
+  {
+    "section_path": [
+      "A Intractability Results under Certain Assumptions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proof. We prove theNP harness by a reduction from Subset Sum [ 15]. For this reduction, we transform Subset Sum to the deci- sion instance of g3error when 0records are read. The Subset Sum problem consists of a set of numbers Sand a targetT. In our instance of the g3problem, let the domain mXofX be set to|S|and the domain of Zset to 2(i.e.mZ=2). The marginals forX,MX Abe set toS, i.e. the first element of Sis the marginal for the first category of Xand so forth. For Z, let the marginals, MZ Abe set toT, and(I\u0301|S| i=1S[i])\u2212Trespectively. The target for ourg3error problem is set to 0. The idea behind this process is that if there exists a subset in Sthat adds up to T, there must exist an unseen joint distribution frequency matrix which has an error of 0, i.e. there must exist an unseen joint distribution frequency matrix which has no violations. The proofs for error measures g1andg2are similar to the one presented above, with the only difference being the change in error- functions (g2andg3). \u25a1 The above proof relies solely on standard computational com- plexity theory. However, if we treat the database itself as part of the input, the aforementioned reduction from Subset Sum no longer applies, since the frequency values are bounded by the database sizeN. In this case, Subset Sum can be solved in polynomial time using dynamic programming.",
+    "citation": "[15]",
+    "citation_score": 0.007012685185185185
   }
 ]

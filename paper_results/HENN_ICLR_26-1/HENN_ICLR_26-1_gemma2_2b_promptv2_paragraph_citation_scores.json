@@ -1265,5 +1265,14 @@
     "paragraph": "Following Proposition 2 and Theorem 1, one can find an \u03b5-net of sizem\u03b5=O(d \u03b5log1 \u03b5), for the ring range space, for a given value \u03b5. The construction details of \u03b5-net are provided in Section 6. Hereafter, whenever we refer to an \u03b5-net of a point set, we mean an \u03b5-net with respect to the range space of rings defined on that point set. The Value of \u03b5.To satisfy the HENN property, each layer Li+1 must form an \u03b5-net of the preceding layer Li. We define a function E:N\u2192(0,1)that specifies the value of \u03b5for a layer of size n. In other words,Li+1is anE(|Li|)-net ofLi. For the graph to be HENN, the required value of \u03b5is \u03b5=E(|Li|)=E(n)=\u0398(\ufe02dlogn n)\ufe02 , (1) wheren=|Li|.",
     "citation": "(1)",
     "citation_score": 2.542220175791475e-05
+  },
+  {
+    "section_path": [
+      "Parallelization"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "HNSW also uses a parallelization to enhance preprocessing [ 46], where each input point is processed independently. For each point, a random level is assigned, and the point is inserted into the corre- sponding layers. This results in a total construction time of O(nlogn), which can be reduced to O(nlogn p)under parallel execution with p cores. For HENN, the construction begins by sampling a subset of sizen 2mfor the first layerL1, and recursively building higher lay- ers. Each layerLirequires constructing a navigation graph, the complexity of which depends on the chosen method. For instance, NSW-based graph construction requires O(|Li|log|Li|)time on theith layer. Excluding graph construction, the sampling phase alone can be executed in O(nlogn p)time usingpcores.",
+    "citation": "[46]",
+    "citation_score": 0.00017396305721807865
   }
 ]

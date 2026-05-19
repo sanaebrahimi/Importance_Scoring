@@ -547,5 +547,25 @@
     "paragraph": "Runtime. The running time of the Ray-sweeping algorithm on the Chicago Crime dataset in our settings was 8seconds. This time was 3.74seconds for College-admission dataset. 7.1.3 Comparison with Baselines. We utilized two clustering tech- niques as baselines: k-means [ 28] and Affinity Propagation [ 23]. The resulting clusters were analyzed to identify potential candi- dates for the underrepresented demographic groups (Minoria). We employed k-means with various values of kand utilized Affinity Propagation with a carefully adjusted preference parameter to control the number of clusters and avoid excessive clustering. Avisualization of the k-means clusters on College-admission dataset is provided in Figure 5c. The ratio of minority groups within each cluster in k-means for various datasets is presented in Table 4. As reflected in the table, unlike the region discovered using our methods (tail of skews), the ratios of minority groups within each cluster are not signifi- cantly different from the whole dataset (last row). As a result, these clusters are not good candidates for identifying underrepresented groups within the data. Furthermore, the number of points in each cluster is significantly larger compared to the regions we identified, making it more challenging to detect and analyze minority groups within such clusters. In contrast, the regions we discovered are more compact and therefore more efficient for mining underrepre- sented groups, offering a practical and focused approach to this task. Table 5 compares the results for various values of k, all yielding consistent results. The results of applying Affinity Propagation clustering are pre- sented in Figure 7b. Similar challenges persist, including an ex- cessive number of clusters, requiring all clusters to be examined. Furthermore, the cluster ratios do not significantly differ from those observed in the entire dataset.",
     "citation": "[23]",
     "citation_score": 1.9022182118956317e-05
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "MD Discretization"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "In our technical report [ 16], we analyze the error bounds of the discretization approaches and provide the following negative result: letf\u2032be a direction with a cosine similarity of (at least) cos(\u03b1)with the best direction f\u2217. An upper-bound on skew ratio f\u2032 f\u2217depends on the dataset topology. As a result, when discretizing the directions with \u03b5-angle spacing, the error bound on the skew value depends on the topological characteristics of the dataset . Still, we guarantee that for each direction fin the top-lhigh-skew local optima (Refer to Problem Definition 1), we evaluate a direction f\u2032 such thatcos(f\u2032,f)\u2265\u03b5.",
+    "citation": "[16]",
+    "citation_score": 0.00021398601398601392
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "MD Discretization"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "According to the problem definition, we want to report top- l high-skew directions fas candidates to find Minoria. We should sample at least ldirections from the grids to achieve this. We want our samples to span all possible directions, so we should follow a sampling technique to satisfy the diversity of directions. We follow the DPP (Determinental Point Processing) sampling schema to achieve this [ 6]. Using this approach, one can get a set ofldiverse samples from a universe of npoints inO(n\u00b7l\u03c9\u22121), where\u03c9\u22482.37is the matrix multiplication factor. In this approach, we sampleO(l)grids in time of O((\u03c0 2\u00b71 \u03b5)d\u22121\u00b7l\u03c9\u22121)and push them in a Max-Heap structure based on the skew value. We analyze each grid by popping the heap and filtering those satisfying the condition of Problem 1. If we find less than lsuch directions, we continue sampling more directions (grids).6Calculating the skew ofldirections takes an additional O(lnd)time.",
+    "citation": "[6]",
+    "citation_score": 0.0001300699300699301
   }
 ]

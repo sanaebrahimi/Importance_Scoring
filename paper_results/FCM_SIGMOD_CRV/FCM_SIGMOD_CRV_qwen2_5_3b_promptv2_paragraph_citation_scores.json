@@ -1169,5 +1169,33 @@
     "paragraph": "We use five sufficiently-large benchmark datasets for our experiments: NYC Bus [ 82]:The NYC Bus Dataset originates from the MTA real-time data stream, capturing detailed information about buses across NYC. Collected at approximately 10-minute intervals, each record includes a bus\u2019s location, route, stop, and other operational details, along with its scheduled arrival time from the MTA timetable. This dataset contains approximately 27 million records, from which we sample 10% to form our stream. We construct the stream by combining the bus line attribute, PublishedLineName , with the bus ID attribute, VehicleRef , resulting in 53,622 distinct element types. Each element type belongs to one of two groups corresponding to the MTA\u2019s bus subsidiaries:NYCTorMTABC. DDoS [ 69]:This dataset was compiled from several public IDS datasets, including CSE-CIC- IDS2018-AWS, CICIDS2017, and the CIC DoS 2016 dataset. It contains approximately 13 million records, each labeled as either a DDoS request or benign. To create the stream, we sample 20% of the records and use the Src IP attribute as the element type, resulting in 23,211 distinct element types. Each element belongs to one of two groups:BenignorDDoS. Reddit-Twitter [ 53]:This dataset contains approximately 12 million text records, each associated with a source. We preprocess the dataset by retaining only records from eitherRedditorTwitter. The text is cleaned by removing stopwords and lemmatizing tokens, with each token associated with its source. We also deduplicate the data, ensuring that each word is linked to a single source using majority selection. This process results in a stream of 35 million words, each belonging to one of two groups:RedditorTwitter. Census [ 59]:This dataset contains a one percent sample of thePublic Use Microdata Samples person records derived from the complete 1990 census dataset. It includes around 2.5 million records with 68 categorical attributes. We use this dataset for experiments involving arbitrarily defined groups. Entity types are defined by concatenating the values of iYearsch ,dIndustry , and the",
     "citation": "[59]",
     "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Fair-Count-Min using Group-Aware Semi-Uniform Hashing",
+      "Negative Result: Row Partitioning Baseline"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "179:10 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Letdg1anddg2=d\u2212d g1be the number of rows allocated to the groups g1and g2. Then, we can find the proper values ofd g1andd g2that achieve fairness by solving the following equation: E(n g1,dg1,w)=E(n g2,dg2,w)(7) However, there is a major issue that makes this approach unlikely to work: unlike w, which is a relatively large number, dis a small constant (usually on the order of tens). As a result, there are only a small, constant number of choices for dg1\u2208[d] . In practice, this makes it unlikely that dis divisible such that Equation 7 is satisfied. We shall verify this negative result in our experiments in Section 6.",
+    "citation": "(7)",
+    "citation_score": 0.000457997749509168
+  },
+  {
+    "section_path": [
+      "Price of Fairness: Randomness vs. Uniformity"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:35 LFCM=\u2211\ufe02 g\u2208GNg(\ufe02ng wg\u22121)\ufe02 =\u2211\ufe02 g\u2208GNg(\ufe03ng wg)\ufe03 \u2212\u2211\ufe02 g\u2208GNg=\u2211\ufe02 g\u2208GNg(\ufe03ng wg)\ufe03 \u2212N =(\ufe02n w)\ufe02\u2211\ufe02 g\u2208GNg\u2212N//sinceng wg=n w,\u2200g\u2208G =N(\ufe02n w)\ufe02 \u2212N=N(\ufe02n w\u22121)\ufe02 (16) Finally, combining Equations 9, 15, and 16, we get, PoF=LFCM\u2212LCM=N(\ufe02n w\u22121)\ufe02 \u2212N(\ufe02n w\u22121)\ufe02 =0(17) That is, the PoF is zero ford=1, when a uniform hashing scheme is used. C.2 PoFd=1vs.d>1 Table 2 provides our experiment results on synthetic datasets with two groups and different group sizes, providing a comparison of CM and FCM with respect to additive errors and the price of fairness across differentn g1values ford=1andd=5.",
+    "citation": "(16)",
+    "citation_score": 0.0007360226091722059
+  },
+  {
+    "section_path": [
+      "Price of Fairness: Randomness vs. Uniformity"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Fair-Count-Min: Frequency Estimation under Equal Group-wise Approximation Factor 179:35 LFCM=\u2211\ufe02 g\u2208GNg(\ufe02ng wg\u22121)\ufe02 =\u2211\ufe02 g\u2208GNg(\ufe03ng wg)\ufe03 \u2212\u2211\ufe02 g\u2208GNg=\u2211\ufe02 g\u2208GNg(\ufe03ng wg)\ufe03 \u2212N =(\ufe02n w)\ufe02\u2211\ufe02 g\u2208GNg\u2212N//sinceng wg=n w,\u2200g\u2208G =N(\ufe02n w)\ufe02 \u2212N=N(\ufe02n w\u22121)\ufe02 (16) Finally, combining Equations 9, 15, and 16, we get, PoF=LFCM\u2212LCM=N(\ufe02n w\u22121)\ufe02 \u2212N(\ufe02n w\u22121)\ufe02 =0(17) That is, the PoF is zero ford=1, when a uniform hashing scheme is used. C.2 PoFd=1vs.d>1 Table 2 provides our experiment results on synthetic datasets with two groups and different group sizes, providing a comparison of CM and FCM with respect to additive errors and the price of fairness across differentn g1values ford=1andd=5.",
+    "citation": "(17)",
+    "citation_score": 0.0002453408697240686
   }
 ]

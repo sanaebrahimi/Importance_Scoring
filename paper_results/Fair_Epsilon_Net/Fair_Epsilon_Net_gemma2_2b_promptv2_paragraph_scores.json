@@ -520,8 +520,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Algorithm. Construct the instance of the LP (3). Use an LP solver to solve the LP (3). Let\u03b5be the value of variable \u03b5 \u0304in the optimum LP solution and wibe the value of the variable w \u0304ifor everypi\u2208Xin the optimum LP solution. Let w\u20d7={w1,...,wn}be the vector of all points\u2019 weights. We run the algorithm from Theorem 7 on (X,R) with DP constraints T, parameter \u03b5, assuming that each point pi\u2208Xhas weightwi. LetSbe the weighted fair \u03b5-net returned by the algorithm from Theorem 7.",
-    "technical_score": 0.02419646624891529,
-    "citation_score": 0.0,
+    "technical_score": 0.021002532704058472,
+    "citation_score": 0.0031939335448568176,
     "has_citation": true
   },
   {
@@ -633,8 +633,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "\u2022\u03b5-net: As a set of baselines, for finding a standard (unfair) \u03b5-net, we consider Sampling ,Discrepancy , and Sketch-and-Merge (SM) \u2013 See \u00a7 3.4In all the reports, \" Sampling \" refers to the baseline unfair\u03b5-net construction. \u2022Fair\u03b5-net: For fair\u03b5-nets, we use Fair Monte-Carlo (FMC) algo- rithm and Fair Sketch-and-Merge (FSM) as introduced in \u00a7 4. \u2022Hitting Set: For standard (unfair) hitting sets, we employ the Geometric LP (GLP) algorithm as a baseline, where LP relaxation is used to solve the geometric hitting set problem. \u2022Fair Hitting Set: For the fair hitting set, we use the fair version, Fair Geometric LP (FGLP) as introduced in \u00a7 5. Measuring (un)fairness: Fairness constraints are enforced based on either demographic parity (DP) or custom-ratios (CR) fairness. We evaluate fairness in the final results by considering two mea- sures:l2-norm andl\u221e-norm. AssumeN\u2286Xis the output of one of the algorithms and C={c1,c2,\u00b7\u00b7\u00b7,ck}are the colors (demographic groups). The l2-norm fairness calculates the l2distance of colors in Nversus the desired constraint vector T: F2(N,T)=\u2225\ufe01\u2225\ufe01\u2225\ufe01\u2225\ufe01(\ufe03|Nc1| |N|,...,|Nck| |N|)\ufe03 \u2212T\u2225\ufe01\u2225\ufe01\u2225\ufe01\u2225\ufe01 2=\u231c\u20d3\u23b7\u2211\ufe02 i\u2264k(\ufe03|Nci| |N|\u2212\u03c4i)\ufe032 (4) We also define l\u221e-norm fairness:F\u221e(N,T)=maxi\u2264k|\ufe01|\ufe01|\ufe01|Nci| |N|\u2212\u03c4i|\ufe01|\ufe01|\ufe01. Similarly, we define F0as anl0-based unfairness measure that counts the number of groups not satisfying their target ratio5: F0(N,T)=1 kk\u2211\ufe02 i=1I(\ufe03|Nci| |N|=\u0338\u03c4i)\ufe03 . Usingl-norm distances to measure unfairness is a standard ap- proach in the fairness and resource allocation literature [ 19,57,96]. As we will see in the experiments, our methods achieve almost zero-unfairness in most settings.6Byzero-unfairness , we mean that the value ofF2,F\u221eandF0is exactly 0. One can verify that this cor- responds to the best achievable fairness level under most commonly used unfairness metrics. 4Whenever we don\u2019t mention \"Fair\" in the name of an algorithm, we mean the baseline unfair version. We sometimes refer to unfair algorithms as \"Standard\". 5In our experiments, the indicator function Ichecks equality up to three digits after the decimal point and the final unfairness value is normalized between 0 and 1. 6When finding a fair sample is feasible.",
-    "technical_score": 0.01298198991133862,
-    "citation_score": 0.0,
+    "technical_score": 0.012203070516658303,
+    "citation_score": 0.0007789193946803171,
     "has_citation": true
   },
   {
@@ -655,8 +655,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "=0.2 =0.4 =0.63 =0.65 =0.66 Epsilon () 0.0000.0050.0100.0150.0200.0250.0300.0350.040Unfairness () 23.43\u00d77.96\u00d712.09\u00d7 7.11\u00d7 5.48\u00d7PopSim Dataset Sampling () FMC () Sampling (0) FMC (0) 0.00.20.40.60.81.0 Unfairness (0) pling on the PopSim dataset vs. the value of \u03b5. = 0.2 = 0.4 = 0.63 = 0.65 = 0.66 Value of 2004006008001000Average Size \u00d70.67 \u00d70.67 \u00d70.67\u00d70.67\u00d70.67Average -net Size Sampling FMCFigure 6: Average size of output \u03b5-net for the PopSim dataset according to DP constraint. m0.0000.0050.0100.0150.0200.0250.030Fairness (2) Fairness vs. m FMC FSM SamplingFigure 7: Fairness comparison on Synthetic Sampling task. mis the number of 2D ranges. sampling algorithms for the dataset summarization task. Dataset Sampling Time (s) FMC Time (s) Adults 2.1244 2.2044 ( 1.03\u00d7) COMPAS 2.4343 2.5470 ( 1.05\u00d7) Admissions 0.0032 0.0038 ( 1.19\u00d7) Datasets: We use four real-world datasets in our experiments. PopSim [ 69], Adult [ 34], COMPAS [ 4], and College Admissions [ 23]. We also use a synthetic dataset with axis-aligned rectangles in 2D and half-spaces in higher dimensions. A detailed description of these datasets is provided in the technical report [ 32]. PopSim [ 69] includes 2 million individual records annotated with racial informa- tion. The Adult [ 34] dataset contains approximately 50K records, each described by multiple demographic and employment attributes. The COMPAS [ 4] dataset comprises around 7,000 defendant records, with race used as the sensitive attribute.",
-    "technical_score": 0.0026160181181538785,
-    "citation_score": 0.0,
+    "technical_score": 0.002302095943975413,
+    "citation_score": 0.0003139221741784654,
     "has_citation": true
   },
   {
