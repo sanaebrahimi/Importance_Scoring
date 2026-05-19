@@ -1237,5 +1237,24 @@
     "paragraph": "We use four real-world datasets in our experiments. PopSim[ 69] is a large semi-synthetic dataset of 2 million individuals from Illinois, annotated with geographic and racial information. Adult[ 34] is a UCI benchmark from the 1994 U.S. Census, where the task is to pre- dict income; we use gender as the sensitive attribute (66% male, 33% female). COMPAS[ 4] includes criminal and demographic data for over 7,000 defendants, using race as the sensitive attribute across three groups: African-American (48%), Caucasian (37%), and His- panic (14%). College Admission[ 23] contains application featuresfor international students, with gender as the sensitive attribute (52% male, 47% female).",
     "citation": "[23]",
     "citation_score": 0.0011615518141640025
+  },
+  {
+    "section_path": [
+      "Fair Geometric Hitting Set"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Proof. See the Technical Report [32] for the proof. \u25a1 LetM(x,y)be the running time to solve an LP with O(x)vari- ables andO(y)constraints. Lemma 21. Our algorithm has a time complexity of O(n\u00b7m+ M(n,m+k)).",
+    "citation": "[32]",
+    "citation_score": 0.0031896833642814145
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experiment Results"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Database Summarization for Range Queries . For this task, we use three datasets: Adult, COMPAS, and College Admission. For each dataset, we generate a collection of range queries that must be hit by the output sample. These ranges are constructed as hyper-rectangles in the feature space. For each attribute, we select a threshold to partition the data into two groups, resulting in up to 2d hyper-rectangles ( dis the number of features). We then compute an \u03b5-net over the data points to hit these ranges for varying values of \u03b5. Figure 4 illustrates the fairness (F\u221eandF0) of the FMC algorithm compared to the baseline (unfair) sampling approach under CR con- straints. In the CR setting, the goal is to match a target ratio Tof demographic groups in the output. FMC successfully enforces the desired ratio with zero unfairness, while the baseline approach fails to do so. Notably, as the target ratio for the minority group increases (towards the left side of x-axis), the standard algorithm struggles even more to satisfy the fairness constraint. In these cases, the standard sampling might not even pick any point from the minor Adults COMPAS Admissions Datasets01000200030004000Average Size2408.02888.0 368.03890.54331.0 551.0Average Size of -nets Sampling FMCFigure 8: Comparing the average size of \u03b5-net produced by standard and fair algorithms for dataset summarization task. group, which results in higher average values of F\u221e. The average output size of each method is also reported in Figure 8, where we can observe that the fair variants of the algorithms achieve zero un- fairness while introducing a relatively small increase in the output size. Table 3 reports the average running time of both algorithms across the three datasets. The results show that the FMC algorithm shows only a minimal overhead compared to the standard sampling approach. Additional experimental results are presented in the tech- nical report [ 32], where we compare the fairness metrics of these methods across varying values of \u03b5(Figure 17). Consistent trends in the improvement of fairness achieved by FMC can be observed. Similar results were also observed on F2fairness.",
+    "citation": "[32]",
+    "citation_score": 0.0003289998856368449
   }
 ]

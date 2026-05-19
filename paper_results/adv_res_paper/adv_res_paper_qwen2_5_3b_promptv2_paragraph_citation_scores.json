@@ -387,5 +387,26 @@
     "paragraph": "Standalone Agent Architecture (SAA). Each agent responds independently without any peer interaction. Finally a centroid -based aggregation (Ebrahimi et al., 2024) is used to select the team\u2019s 1The implementation details are provided in Appendix E. answer by choosing the nearest response to the centroid of all outputs as discussed in Section 4.",
     "citation": "(Ebrahimi et al., 2024)",
     "citation_score": 0.0053523634353747854
+  },
+  {
+    "section_path": [
+      "Experiment Results",
+      "Experiments Setting"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Compared Methods. For comparison, we imple- ment three baseline methods: single-agent response generation, naive coordination, majority voting, and similarity-based ensemble approaches. In the similarity -based ensemble of (Li et al., 2024a), each answer is compared with every other answer, and the one with the largest total pairwise sim- ilarity is selected as the final response. In the single-agent baseline scenario, the final team re- sponse is selected from one of the faithful agents, randomly designated as the coordinator, after com- pleting multi-agent communication. All reported experimental results represent the final output pro- duced after comprehensive internal communication among agents. Finally, the naive coordination uses the same LLM coordinator, but it produces the final answer without receiving the agents\u2019 credibility.",
+    "citation": "(Li et al., 2024a)",
+    "citation_score": 0.0019793230022853493
+  },
+  {
+    "section_path": [
+      "Experiment Results",
+      "Insights from Experimental Observations",
+      "Credibility Scores Drive Consistent Gains"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Table 2 presents results for Standalone Agent Architecture (SAA), which features no inter-agent interactions and utilizes a centroid-based aggrega- tor inspired by (Ebrahimi et al., 2024) as the coordi- nator. Our findings reveal consistent improvements in the number of correct responses. Specifically, in mathematical reasoning tasks such as GSM8K and MATH, the use of CrS coordination enhances the rate of fully correct responses (r= 1.0). This improvement occurs primarily by reducing the par- tially correct responses (0.5\u2264r <1.0), achieved through assigning higher weights to answers from more credible agents.",
+    "citation": "(Ebrahimi et al., 2024)",
+    "citation_score": 0.00017220625567279614
   }
 ]

@@ -193,8 +193,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "In many cases, Dropout improved the runtime efficiency com- pared to the standard training process on the same architecture. However, there are scenarios in which training under Dropout requires more training iterations and eventually hurts the run- time. One can observe that due to the randomness in sampling with a fixed probability (usually p=1/2), there is a risk of drop- ping nodes that significantly affect the output values. Ba and Frey [6]addressed this issue by proposing Adaptive-Dropout , which uses a data-dependent distribution that is an approximation of the Bayesian posterior distribution over the model architecture and updates the sampling ratio adaptively w.r.t the current net- work. This method avoids randomly dropping significant nodes in the model.",
-    "technical_score": 0.004772727272727273,
-    "citation_score": 0.0,
+    "technical_score": 0.004364801864801865,
+    "citation_score": 0.000407925407925408,
     "has_citation": true
   },
   {
@@ -541,8 +541,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "ALSH-approx . Before discussing our efficiency results from ALSH-approx , let us emphasize that ALSH-approx is a scal- able algorithm that significantly benefits from parallelization [50]. During training, the hash table construction, computing hashsignature, querying hash tables, and updating weight vectors by sparse weight gradients are parallelized, which makes the algorithm fast with parallel processing using multiple processing units. We refer interested readers to the details and results of Spring and Shrivastava [50]. ALSH-approx needs to reconstruct the hash tables after a set of weight updates. Following the original implementation ofALSH-approx , in our experiments, for the first 10000 train- ing data points, we reconstruct hash tables every 100 images. Then gradually, we expand the set to avoid time-consuming table reconstructions and update the tables every 1000 images. This helps with directing the gradient and decreasing the redundancy in the dataset. Table 3 shows that ALSH-approx exhibits slower performance compared to all other methods in the statistic set- ting. Also, in models with additional hidden layers, we can see an increase in training time as shown in Figure 8 that is larger than other methods on the same network structure. This is consis- tent with the results presented by Spring and Shrivastava [50], where it is shown that the runtime significantly drops with par- allelization. Evidently, as shown by Spring and Shrivastava [50], parallelization has no impact on the accuracy of ALSH-approx . In other words, the accuracy scalability results of ALSH-approx discussed in the previous section are independent of paralleliza- tion.",
-    "technical_score": 0.0032702326325658023,
-    "citation_score": 0.0,
+    "technical_score": 0.002751148087714088,
+    "citation_score": 0.0005190845448517146,
     "has_citation": true
   },
   {
@@ -673,8 +673,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "We observed that backpropagation generally took significantly longer than the feedforward step (Tables 3 and 4). Fortunately, backpropagation optimization can significantly improve train- ing time [ 22,53]; introducing approximation only during the backpropagation step has the potential to significantly reduce training time. Nevertheless, designing scalable sampling-based algorithms that introduce approximation on both feedforward and backpropagation in DNNs on CPU machines remains an open research direction.",
-    "technical_score": 0.003196100709395916,
-    "citation_score": 0.0,
+    "technical_score": 0.0022372704965771414,
+    "citation_score": 0.0009588302128187748,
     "has_citation": true
   },
   {

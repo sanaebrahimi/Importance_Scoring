@@ -1138,5 +1138,33 @@
     "paragraph": "MC-approx (\u00a79.3, Tab. 4)Mini-Batch SGD Our primary objective is to identify methods that deliver per- formance nearly comparable to standard training in terms of accuracy while ensuring faster execution on our CPU system across various settings. Our results, presented in Section 9.3 and Table 4, indicate that MC-approx surpasses other methods in mini-batch settings. In stochastic environments, the effective method varies with the network depth. The experimental evalua- 12\u201cOpen problem\u201d refers to settings where existing sampling-based algorithms failed; further research is needed to design algorithms for those settings.tion by Spring and Shrivastava [50] confirms that ALSH-approx scales effectively using parallel computing with multi-processors up to 26processors, for up to four layers. Therefore, we believe ALSH-approx performs optimally up to four layers under such conditions.",
     "citation": "[50]",
     "citation_score": 0.00038527397260273966
+  },
+  {
+    "section_path": [
+      "THEORETICAL ANALYSIS"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Base case. Whenk=1: a1 j=n\u2211\ufe01 i=1xiW1 i,j=\u2211\ufe01 l\u2208\u2191k jxlW1 l,j+\u2211\ufe01 i\u2208\u0338\u2191k jxiW1 i,j= \u0304a1 j+1 c \u0304a1 j= \u0304a1 jc+1 c Inductive step. Assumingak\u22121 j= \u0304ak\u22121 j\u0010 c+1 c\u0011k\u22121 : ak j=n\u2211\ufe01 i=1ak\u22121 iWk\u22121 i,j=n\u2211\ufe01 i=1( \u0304ak\u22121 i+ek\u22121 i)Wk\u22121 i,j(8) =\u2211\ufe01 l\u2208\u2191k j \u0304ak\u22121 lWk\u22121 l,j+\u2211\ufe01 i\u2208\u0338\u2191k j \u0304ak\u22121 iWk\u22121 i,j+n\u2211\ufe01 i=1ek\u22121 iWk\u22121 i,j = \u0304ak j+1 c \u0304ak j+n\u2211\ufe01 i=1ek\u22121 iWk\u22121 i,j=c+1 c \u0304ak j+n\u2211\ufe01 i=1ek\u22121 iWk\u22121 i,j LetA=I\u0301n i=1ek\u22121 iWk\u22121 i,j. We have ek\u22121 i=ak\u22121 i\u2212 \u0304ak\u22121 i=ak\u22121 i\u2212ak\u22121 i\u0010c c+1\u0011k\u22121 =ak\u22121 i\u0012 1\u2212\u0010c c+1\u0011k\u22121\u0013 .Thus, A=n\u2211\ufe01 i=1ek\u22121 iWk\u22121 i,j=n\u2211\ufe01 i=1ak\u22121 i\u0012 1\u2212\u0010c c+1\u0011k\u22121\u0013 Wk\u22121 i,j =\u0012 1\u2212\u0010c c+1\u0011k\u22121\u0013n\u2211\ufe01 i=1ak\u22121 iWk\u22121 i,j=\u0012 1\u2212\u0010c c+1\u0011k\u22121\u0013 ak j. Now, plugging Aback into Equation 8, we get: ak j=c+1 c \u0304ak j+A=c+1 c \u0304ak j+\u0012 1\u2212\u0010c c+1\u0011k\u22121\u0013 ak j =\u21d2ak j\u0012 1\u2212\u0012 1\u2212\u0010c c+1\u0011k\u22121\u0013\u0013 =c+1 c \u0304ak j=\u21d2ak j= \u0304ak j\u0010c+1 c\u0011k \u25a1 Theorem 7.2 proves that the estimation error increases ex- ponentially with the number of layers. As a result, due to the sharp increase in the estimation error, ALSH-approx does not scale to DNNs. To better observe this, suppose c=5(i.e., the weighted sum for the active nodes is five times that of the inactive nodes). Then, using Theorem 7.2, the error-to-estimate ratios for different numbers of layers are as follows. k 1 2 3 4 5 6 ek j/ \u0304ak j0.2 0.44 0.72 1.07 1.48 1.98 From the above table, it is evident that as soon as the depth of the network gets larger than 3, the estimation error dominates the estimation value. This is consistent with our experiment results, where ALSH-approx failed to scale with more than 3 hidden layers.",
+    "citation": "(8)",
+    "citation_score": 0.0008675799086757992
+  },
+  {
+    "section_path": [
+      "THEORETICAL ANALYSIS"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "As explained in \u00a75.2 and \u00a76.1, sampling-based approaches seek to speed up the training of DNNs by skipping a large number of computations and approximating matrix multiplications. In this section we provide negative theoretical results for scalabil- ity against the feedforward approximation. At a high level, we show that small estimation errors in the initial layers get prop- agated and compounded in subsequent layers. Adelman et al . [1]already observed the low performance of MC-approx when the feedforward step is approximated and therefore only applied approximation during backpropagation for MLPs. As such, we focus on ALSH-approx for our analysis. First, let us introduce the following notation, which we will use throughout this section. \u2022 \u0304ak j: the estimation of ak jbyALSH-approx . \u2022ek j=ak j\u2212 \u0304ak j: the activation value estimation error. \u2022\u2191k j: the set of active nodes for nk j. Lemma 7.1. Letfbe a linear activation function such that a= f(z)=z. Assuming the active nodes are detected exactly, the estimation error for the node nk jbyALSH-approx is as follows. ek j=\uf8f1\uf8f4\uf8f4\uf8f4\uf8f4 \uf8f2 \uf8f4\uf8f4\uf8f4\uf8f4\uf8f3I\u0301 i\u2208\u0338\u21911 jxiW1 i,jifk=1 ek\u22121Wk :,j+I\u0301 i\u2208\u0338\u2191k j \u0304ak\u22121 iW1 i,jotherwise Proof. We want to show that the estimation error for the nodenk jbyALSH-approx is as follows. ek j=\uf8f1\uf8f4\uf8f4 \uf8f2 \uf8f4\uf8f4\uf8f3I\u0301 i\u2208\u0338\u21911 jxiW1 i,jifk=1 ek\u22121Wk :,j+I\u0301 i\u2208\u0338\u2191k j \u0304ak\u22121 iW1 i,jotherwise First, fork=1: a1 j=n\u2211\ufe01 i=1xiW1 i,j=\u2211\ufe01 l\u2208\u2191k jxlW1 l,j+\u2211\ufe01 i\u2208\u0338\u2191k jxiW1 i,j= \u0304a1 j+\u2211\ufe01 i\u2208\u0338\u2191k jxiW1 i,j =\u21d2e1 j=a1 j\u2212 \u0304a1 j=\u2211\ufe01 i\u2208\u0338\u2191k jxiW1 i,j189",
+    "citation": "[1]",
+    "citation_score": 0.0026027397260273972
+  },
+  {
+    "section_path": [
+      "EXPERIMENT SETUP",
+      "Datasets"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We obtained similar results across different datasets. For brevity, we provide a detailed discussion only using the results on the MNIST dataset, but extensive results for other datasets are pro- vided in our technical report [17].",
+    "citation": "[17]",
+    "citation_score": 0.0020872745180862667
   }
 ]

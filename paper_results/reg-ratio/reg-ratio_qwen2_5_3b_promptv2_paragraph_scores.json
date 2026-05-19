@@ -17,8 +17,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "ISBN 978-1-4503-4197-4/17/05. . . $15.00 DOI: http://dx.doi.org/10.1145/3035918.3035932floor area [29], or finding the best NBA player based on a linear combination of his performance criteria such as points and assists, are a few examples of this class of ranking function. A critical observation is that if the tuples are viewed as points in a high-dimensional space, the convex hull is the subset of points that can be used to find the maxima for any linear ranking func- tion [5,8]. However, in some real world applications such a convex hull can be overwhelmingly large, and therefore its performance is greatly reduced because many tuples have to be examined during query processing [15]. The size of such a set is highly correlated with the number of attributes, i.e., the number of convex hull tuples radically increases with the number of attributes/dimensions. Even in the case of two-dimensional database, the number of convex hull tuples might also be large. As has been studied in [13], the \u201ccur- vature\u201d of the shape of a region within which the database tuples are distributed greatly affects the number of convex hull tuples. As the curvature increases the number of convex hull tuples increases. For example, when npoints are uniformly distributed inside a con- vex polygon with ksides, the expected number of the convex hull points isO(klogn), while this value is O(n1 3)when points are uniformly distributed inside a circle. Consequently, it is of interest to develop a set limited to r<<n tuples (where ris an input parameter). Given such a reduced set, for a given ranking function, we can identify the maximum of the reduced set and return it as the query answer. One can observe a tradeoff between the size of the set and the accuracy of query answers (i.e., how the result might differ from the real maximum over the entire table). The task then is to design the most accurate set, i.e., the subset of rtuples for which the \u201cuser dissatisfaction\u201d over all possible ranking functions is minimized. Prior works on convex hull discovery in high-dimensions, such as [1,16], focus on designing efficient approximate algorithms with small approximate ratios. Thus, their goal is to discover a set that is as similar to the real convex hull as possible, rather than resolving the problem of a large convex hull, and usually find a super-set of the convex hull. There has also been work, such as [4,26], on reduc- ing the skyline [2] (the maxima representative that applies to more general monotonic ranking functions rather than just linear func- tions) size. However, their objective in ranking the skyline tuples is not minimizing the user dissatisfaction on maxima queries. For example, [4] relaxes the notion of domination to \u201ck \u0000domination\u201d in order to increase the chance domination and reduce the skyline. The problem investigated in our paper, which we call the Regret- ratio Minimizing Set (RRMS) problem, has been studied in prior papers.",
-    "technical_score": 0.01987057425742574,
-    "citation_score": 0.0,
+    "technical_score": 0.015373119178584521,
+    "citation_score": 0.0044974550788412174,
     "has_citation": true
   },
   {
@@ -394,8 +394,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "(6) Applying this discretization policy, the total number of selected functions (jFj) is: jFj= ( + 1)m\u00001(7) Algorithm 3 shows the pseudo-code of the DISCRETIZE algo- rithm, that partitions the ranking function space based on and se- lectsF. For example, when m= 3 and = 3, we have =\u0019=6 according to (6). Figure 7 shows the three-dimensional function space discretization based on . Algorithm 3 DISCRETIZE 1:Input: Control Parameter , Number of attributes m 2:Output: Discretized functions F 3:F=fg, =\u0019",
-    "technical_score": 0.008981751677086746,
-    "citation_score": 0.0,
+    "technical_score": 0.0062872261739607225,
+    "citation_score": 0.0026945255031260236,
     "has_citation": true
   },
   {
@@ -512,8 +512,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "To make the HD-RRMS Algorithm practical, we solve the set- cover instances approximately using the well-known greedy ap- proximate algorithm for set-cover [7]. Since this algorithm guar- antees a logfactor in the approximate-ratio, applying it adds an- other level of approximation and increases the set size to up torlog(jFj) =rmlog( )(rather thanr) tuples, while maintaining the distance from the optimal regret ratio in the bound provided in Theorem 4. Alternatively, one can find a new value (r0) for set- cover size such that r0=r mlog( ). In this way, we can make sure that the set size will not be more than r. However, the distance from the optimal solution may become larger than what provided in Theorem 4. Applying the greedy approximate set-cover reduces the running time to: log(n m):(n m+ (min(2 m;n): m)) \u00142n mlog(n m) (15) Given the importance of the choice of in Equation 15, we eval- uate the impact of the discretization control parameter ( ) in \u00a7 6.3 (Figures 24, 25, and 26). On examining the experiment results, it turns out even though increasing the value increases the running time significantly, the improvement on the quality of results drops quickly. In our experiments, choosing between 4 and 6 seemed to be appropriate.",
-    "technical_score": 5.471663921193622e-05,
-    "citation_score": 0.0,
+    "technical_score": 4.94554239030962e-05,
+    "citation_score": 5.261215308840021e-06,
     "has_citation": true
   },
   {

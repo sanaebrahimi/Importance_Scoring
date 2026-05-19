@@ -1302,5 +1302,23 @@
     "paragraph": "Thus, the CDF of Ton the discrete grid {tk}k\u22651is FT(tk):=Pr(T\u2264tk)=(\ufe01FK(k))\ufe01L, k =1,2,..., withFT(t0):=0. From this, we can derive the probability mass function of the running-time distribution of HENN: Pr(T=tk)=(\ufe01FK(k))\ufe01L\u2212(\ufe01FK(k\u22121))\ufe01L. (3) Result. Based on the above, Theorem 4 provides a probability distribution for the running time of the HENN structure, expressed in terms of the properties of the underlying proximity graph. Since each proximity graph induces its own distribution over the random variableK, graphs whose distributions place more mass on smaller values ofK(e.g., those with smaller medians) correspondingly yield better average running times. See the following empirical evaluation. F.1 Empirical Results In this subsection, we present empirical results to validate the pre- ceding discussion. We begin by examining the distribution of K across different proximity graphs. Then, using equation 3 (derived from Theorem 4), we compute the corresponding distribution of the HENN running time. Finally, we compare these theoretical pre- dictions with empirical measurements to confirm that the observed running times of HENN align with these insights. In our experi- ments, we report the expected running time and compare it across different proximity graph constructions.",
     "citation": "(3)",
     "citation_score": 0.003146311575728515
+  },
+  {
+    "section_path": [
+      "B Dynamic Setting"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Delete(x) :Deletion begins at layer L1, where the point xis removed if present. If the size of a layer falls below a critical thresh- old (as discussed in [ 22]), the layer must be resampled. Following resampling, the HENN structure is rebuilt from that layer up to the root, which incurs a cost of O(nlogn)in the worst case. However, since such rebuilding occurs infrequently, only when the layer size drops significantly (e.g., m\u03b5<c0nfor a constant c0), the amortized cost remains O(logn).",
+    "citation": "[22]",
+    "citation_score": 0.0010510856394961255
+  },
+  {
+    "section_path": [
+      "Parallelization"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "HNSW also uses a parallelization to enhance preprocessing [ 46], where each input point is processed independently. For each point, a random level is assigned, and the point is inserted into the corre- sponding layers. This results in a total construction time of O(nlogn), which can be reduced to O(nlogn p)under parallel execution with p cores. For HENN, the construction begins by sampling a subset of sizen 2mfor the first layerL1, and recursively building higher lay- ers. Each layerLirequires constructing a navigation graph, the complexity of which depends on the chosen method. For instance, NSW-based graph construction requires O(|Li|log|Li|)time on theith layer. Excluding graph construction, the sampling phase alone can be executed in O(nlogn p)time usingpcores.",
+    "citation": "[46]",
+    "citation_score": 0.001972441751213663
   }
 ]

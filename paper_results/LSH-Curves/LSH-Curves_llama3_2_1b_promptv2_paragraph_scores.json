@@ -7,7 +7,8 @@
     "paragraph_index": 1,
     "paragraph": "We study nearest-neighbor searching for polygonal curves u nder the discrete Fre\u0301chet distance or the dynamic time warping distance. This problem has vario us applications in machine learning, information retrieval and classification where t he recorded instances are curves. Dynamic time warping has shown to be useful for classificatio n of various types of data: sur- (ECG) frames [14], and vessel trajectories [30]. Originall y conceived for speech recognition, it is now being deployed as universal similarity measure for time series in the field of data mining. The Fre\u0301chet distance is considered a useful similar ity measure for trajectories of Indyk and Motwani [19, 13] introduced the idea that hashing c ould enable faster nearest- neighbor searching in high-dimensional Euclidean spaces u sing a hashing scheme where near points are more likely to collide than far ones. They showed t hat such an approach can be used for the ( c, r)-near neighbor problem which is defined as follows. Preprocess a set S \u2217Driemel has been supported by NWO Veni project \u201cClustering t ime series and trajectories (10019853)\u201d . Silvestri has been supported by the European Research Counc il project \u201cScalable Similarity Search\u201d (no. 614331) and by MIUR of Italy under project AMANDA.",
     "technical_score": 0.0021790221625357965,
-    "citation_score": 0.04140142108818013
+    "citation_score": 0.04140142108818013,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -17,7 +18,8 @@
     "paragraph_index": 2,
     "paragraph": "2 Locality-sensitive hashing of curves ofnpoints into a data structure that answers queries in the foll owing way: if there exists a point p\u2208Sthat lies within distance rfrom the query point q, then the data structure reports a point p\u2032\u2208Sthat lies within distance crfrom q. In this paper, we study such locality-sensitive hashing schemes for the space of curves .",
     "technical_score": 0.02777826120272539,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -27,7 +29,8 @@
     "paragraph_index": 1,
     "paragraph": "In 2002, Indyk gave a deterministic and approximate near-ne ighbor data structure for the discrete Fre\u0301chet distance [17]. This data structure is to da te the only result known for this task and represents the state of the art. The data struct ure achieves approximation factor O(logm+ log log n), where mis the maximum length of a curve and nis the max- imum number of elements in the data structure. Further, the d ata structures uses space in O/parenleftBig |X|\u221am(m\u221amn)2/parenrightBig , where |X|is the size of the domain on which the curves are defined. The query time is O/parenleftbig mO(1)logn/parenrightbig . The data structure precomputes all answers to queries with curves of length\u221am, leading to a very high space consumption.1 In the group of lpdistances, the Fre\u0301chet distance most resembles the l\u221e-distance, which is notoriously hard to embed into a low-dimensional lp-space, see also the discussion by Indyk in [15]. Indyk\u2019s data structure for the discrete Fre\u0301chet dis tance is in fact an extension of his data structure for the l\u221e-distance [15]. Any subset of ld \u221ecan be embedded into the Fre\u0301chet metric2[18]. This embedding implies that, unless the strong expone ntial-time hypothesis fails, there exists no data structure for near-neighbor sea rching under the discrete Fre\u0301chet distance that achieves preprocessing time in O/parenleftbig n2\u2212\u03b5polym/parenrightbig , query time in O/parenleftbig n1\u2212\u03b5polym/parenrightbig for any \u03b5 >0, and approximation factor c <3. (see Appendix A for details). This suggests that the problem becomes hard for long curves, i.e., m\u2208\u03c9(logn). Recently, Backurs and Sidiropoulos showed how to embed finite subsets of the Hau sdorff distance into l\u221e using constant distortion and constant dimension of the hos t space [2]. However, for the Fre\u0301chet distance, no non-trivial embeddings are known, see also the discussion in [18]. It is possible to embed any finite metric space into lp, for example, using the embedding due to Bourgain [25]. However, the high cost of computing the embed ding makes it unfit for use in a nearest-neighbor data structure. Another known approach t o proximity searching in metric spaces is to exploit a low doubling-dimension [1, 12]. Howev er, the doubling dimension of the Fre\u0301chet distance is infinite, even if the metric space is r estricted to curves of constant length [9]. Recently Bartal et al. [3] gave lower bounds for embedding doubling spaces. Their result implies that a metric embedding of the Fre\u0301chet distan ce into an lp-space would have at least super-constant distortion. However, as noted earl ier, it is not even known how to obtain such an embedding. In general, there is little known in terms of data structures for the Fre\u0301chet distance. The authors are aware of the following few results which were developed for the classic (continuous) Fre\u0301chet distance. De Berg, Cook and Gudmundss on [7] study range counting queries for the set of subcurves that lie within distance rto a query line segment. Their data structure uses a partition tree to store compressed subcurv es. For any parameter n\u2264s\u2264n2, the space used by the data structure is in O(spoly log n). The queries are computed in time 1Indyk also claims (without proof) a slightly different bound using a trade-off parameter t\u22652: approx- imation factor O((log m+ log log n)(t\u22121)), space O/parenleftBig/parenleftbig m2|X|/parenrightbigtm1/t n2t/parenrightBig and query time ( m+ log n)O(t). The space bound decreases at the cost of approximation and qu ery time as soon as t <logm; however, the trade-off disappear for larger values of tsince all bounds increase in tas soon as t\u2265logm. 2In particular, one can use 3 dvertices to express each d-dimensional vector as a curve on a real line.",
     "technical_score": 0.0009730732425469266,
-    "citation_score": 0.018488391608391604
+    "citation_score": 0.018488391608391604,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -37,7 +40,8 @@
     "paragraph_index": 2,
     "paragraph": "A.",
     "technical_score": 0.004865366212734633,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -47,7 +51,8 @@
     "paragraph_index": 3,
     "paragraph": "Driemel and F. Silvestri 3 inO/parenleftBig n\u221aspoly log n/parenrightBig and uses a constant approximation factor. However, the data structure does not support more complex query curves than line segment s. A second data structure is due to Driemel and Har-Peled [8]. This data structure answ ers queries for the Fre\u0301chet distance of a subcurve to a query curve (the subcurve is speci fied in the query). If the queries are line segments, an approximation factor of (1+ \u03b5) can be achieved with logarithmic query time and linear space. Unlike the l\u221e-metric, which can be evaluated in time that is linear in the dimension, evaluating a single Fre\u0301chet distance is be lieved to take time that is at least roughly quadratic in the complexity of the curves (the number of vertices) in the worst case [4]. The high time complexity can be credited to the fact that the distance measure optimizes over all possible monotone alignments of the two i nput sequences. Computing the discrete Fre\u0301chet distance, as well as dynamic time warpi ng, can be solved via dynamic programming. In both cases, the naive linear scan leads to O(nm2) query time for finding the nearest neighbor. For dynamic time warping (DTW) no data structures exist that give provable guarantees, however there exist many heuristics, see the work of Rakthanmanon et al. [26] (and references therein). Since DTW does not satisfy th e triangle inequality, it cannot be embedded into an lp-space.",
     "technical_score": 0.00165908987854251,
-    "citation_score": 0.0007735932278248066
+    "citation_score": 0.0007735932278248066,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -57,7 +62,8 @@
     "paragraph_index": 1,
     "paragraph": "Our first result is a basic LSH scheme for the discrete Fre\u0301chet distance, which leads to a very efficient LSH with approximation factor that is linear in the number of curve vertices. The scheme is described in Section 3 and it is surprisingly si mple: We snap the curves to a randomly shifted grid and remove consecutive duplicate ve rtices. It turns out that this simple scheme alleviates the alignment problem which sets t he Fre\u0301chet distance computation apart from the l\u221e-distance. Next, we show in Section 4 that it is even possible to get constant approximation, at the cost of a lower collision pro bability for near curves. The second scheme randomly perturbs the vertices of the input cu rves independently and snaps the vertices to a fixed grid instead of a randomly shifted grid . It is natural to ask if there exists an LSH scheme exhibiting a full-spectrum trade-off be tween collision probability and approximation. We positively answer to this question in Sec tion 5, with a scheme based on a random partition of the input curves, inspired by Indyk\u2019s d ata structure [17], followed by the application of the basic scheme to each subsequence inde pendently.3 All the LSH schemes achieve zero false-positives, meaning t hat no collisions happen between far curves. When applied to solve the ( c, r)-near neighbor problem, we obtain the results summarized in Table 1 (see also Section 2.3). It is in teresting to compare our bounds with the state of the art. The basic scheme of Theorem 7 provid es a data structure using almost linear space and O(mlogn) query time by allowing a linear approximation c=O(m). This query time always beats the trivial exact solution of sc anning all input curves for each query, which needs O/parenleftbig nm2/parenrightbig time. In comparison, Indyk\u2019s result [17] provides a better approximation when m= \u03a9(log log n) but it uses exponential space and slightly higher query time. More generally, when curves are short m=o(logn), our basic result provides a good alternative to Indyk\u2019s result due to the improved space . In the particular case where m\u2264\u03b1 4dlognfor some fixed \u03b1 >0, we can answer queries using a constant approximation factor in O(n\u03b1log2n) time and using O(n1+\u03b1logn) space, using Theorem 9. When curves 3Indeed, in Theorem 10, the collision probability for near cu rves is bounded by 2\u22123MforK=M(using Stirlings approximation for the binomial coefficient), howe ver when summarizing our bounds we use the simplified bound from Corollary 11.",
     "technical_score": 0.00292645020242915,
-    "citation_score": 0.05560255384615384
+    "citation_score": 0.05560255384615384,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -67,7 +73,8 @@
     "paragraph_index": 2,
     "paragraph": "4 Locality-sensitive hashing of curves Table 1 Our approximate near-neighbor data structure results for t he discrete Fre\u0301chet distance in comparison with the result by Indyk, assuming d=O(1) for simplicity. The first four rows refer to the standard discrete Fre\u0301chet distance dF, while the last two rows dw,aFanddw,sFrefer to the anchored and speed constraints respectively. The input consists of npolygonal curves in I Rd, each of complexity at most m. The corresponding query results are achieved with high pro bability. The parameters k\u22651 and l\u22651 trade-off space/query time and approximation, and paramet erw constrains the possible alignments. The first entry in bi-cr iteria ( \u00b7,\u00b7) denotes the distance approx- imation, while the second is the alignment approximation. Space Query time Approximation Reference dFO/parenleftbig |X|\u221am(m\u221amn)2/parenrightbig O/parenleftbig mO(1)logn/parenrightbig O(logm+ log log n) [17] O(nlogn+nm) O(mlogn) O(m) Thm. 7 O(24mdnlogn+nm) O(24mdmlogn) O(1) Thm. 9 O(22kmk\u22121nlogn+nm) O(22kmklogn) O(m/k) Cor. 11 dw,aFO/parenleftBig/parenleftbig\u221a 2w/parenrightbig2m/lnlogn+nm/parenrightBig O/parenleftBig/parenleftbig\u221a 2w/parenrightbig2m/lmlogn/parenrightBig bi-criteria/parenleftBig 4d3 2l,2l\u22122/parenrightBig Thm. 14 dw,sFO/parenleftBig/parenleftbig\u221a 2wl/parenrightbig2m/lnlogn+nm/parenrightBig O/parenleftBig/parenleftbig\u221a 2wl/parenrightbig2m/lmlogn/parenrightBig bi-criteria/parenleftBig 4d3 2l, l/parenrightBig Thm. 17 have constant complexity, the basic LSH gives the first efficie nt data structure with constant approximation. We then address LSH for the discrete Fre\u0301chet distance under a lignment constraints in Section 6. It is natural to constrain the alignments between the vertices of a curve: this preserves important characteristics of the input curves an d it also reduces the actual time to compute the distance between curves (see e.g., [27, 21]). We target the anchored and bounded speed constraints that require, respectively, a ve rtex to be aligned with at most w vertices or to be aligned with vertices whose indices differ b y at most w/2, for a suitable parameter w\u22651 (for formal definitions see Section 2.2). Our scheme provid es the first data structures for the ( c, r)-near neighbor problem with alignment constraints. Furth er, they exhibit a bi-criteria approximation: it is possible to redu ce space and query time with a weaker approximation on the distance but also on the alignme nt parameter w. Bounds are summarized in Table 1. In Section 7, we study which one of our schemes work for DTW. We show that the basic LSH applies to DTW with the same linear approximation, space and query bounds of the discrete Fre\u0301chet distance. In contrast, the techniques to i mprove the approximation factor under the Fre\u0301chet distance do not provide improvements for D TW. The LSH schemes for constrained distances also yields linear approximation fo r DTW distance, but maintains the trade-off between space/query time and the approximation on the alignment parameter w. We remark that a data structure for the ( c, r)-approximate near neighbor problem can be used as a building block for solving the c-approximate nearest neighbor problem. We refer to [28] for more details.",
     "technical_score": 0.003964868016194332,
-    "citation_score": 0.0004405408906882591
+    "citation_score": 0.0004405408906882591,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -77,7 +84,8 @@
     "paragraph_index": 1,
     "paragraph": "Atime series (ortrajectory )4is a series ( p1, t1), . . . , (pm, tm) of measurements piof a signal taken at times ti. We assume 0 = t1< t 2< . . . < t m= 1 and mis finite. A time series 4Usually, these are referred to as time series when d= 1 and trajectories when d >1.",
     "technical_score": 0.006750882373900445,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -87,7 +95,8 @@
     "paragraph_index": 2,
     "paragraph": "A.",
     "technical_score": 9.758136293949068e-05,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -97,7 +106,8 @@
     "paragraph_index": 3,
     "paragraph": "Driemel and F. Silvestri 5 may be viewed as a continuous function P: [0,1]\u2192I Rdby linearly interpolating p1, . . . , p m in order of ti,i= 1, . . . m . We obtain a polygonal curve with vertices p1=P(t1), . . . , p m= P(tm) and segments between piandpi+1called edges pipi+1={xpi+(1\u2212x)pi+1|x\u2208[0,1]}. We will simply refer to Pas acurve . We denote the space of all curves in I Rdwith \u2206d. We now recall the definitions of discrete Fre\u0301chet distance an d of the dynamic time warping distance between two curves. To this end we define the concept of traversal. Given two polygonal curves P=p1, . . . , p m1andQ=q1, . . . , q m2, atraversal T={(i1, j1),(i2, j2), . . . , (il, jl)} is a sequence of pairs of indices referring to a pairing of vertices from the two curves with the following properties: (i)i1= 1, j1= 1, il=m1, and jl=m2 (ii)\u2200(ik, jk)\u2208T: (ik+1\u2212ik)\u2208 {0,1} \u2227(jk+1\u2212jk)\u2208 {0,1}. (iii) \u2200(ik, jk)\u2208T: (ik+1\u2212ik) + (jk+1\u2212jk)\u22651. Intuitively, one can think of the traversal as a prescribed s chedule for simultaneously tra- versing the two curves, starting at the first vertex of each cu rve, in every step the traversal advances by one vertex, either on one of the curves, or on both curves simultaneously, finally the traversal has to end at the last vertices of the two curves . We consider the maximum distance of two vertices paired by a t raversal as the cost incurred by this traversal. Let Tbe the set of possible traversals for two curves PandQ, then the Fre\u0301chet distance corresponds to the minimal cost of a traversal of the two curves. Likewise, if we define the cost of a traversal as the sum of dist ances between paired vertices, then the traversal with minimum cost corresponds to the dyna mic time warping distance. \u25eeDefinition 1. LetTbe the set of possible traversals for two curves PandQ. The discrete Fre\u0301chet distance dF(P, Q) between curves PandQis defined as dF(P, Q) = min T\u2208Tmax (ik,jk)\u2208T/bar\u2308blpik\u2212qjk/bar\u2308bl. \u25eeDefinition 2. LetTbe the set of possible traversals for two curves PandQ. The dynamic time warping (DTW) distance dDTW(P, Q) between curves PandQis defined as dDTW(P, Q) = min T\u2208T/summationdisplay (ik,jk)\u2208T/bar\u2308blpik\u2212qjk/bar\u2308bl. The discrete Fre\u0301chet distance satisfies the triangle inequa lity and is a pseudo-metric. This is not true for the DTW distance, since it does not satisf y the triangle inequality. We refer to a traversal realizing the distance of two curves a s an optimal traversal . We can interpret a traversal as the edges of a bipartite graph wh ere the nodes are the vertices of the two curves and the edges connect the pairs. The followi ng simple lemma holds for all distance measures. As a consequence, we assume in the pap er that an optimal traversal consists of disconnected stars, that we call components . \u25eeLemma 3. For any two curves P=p1, . . . , p m1andQ=q1, . . . , q m2, there always exists an optimal traversal Twith the following two properties: (i)Tconsists of at most m= min {m1, m2}disconnected components. (ii) Each component is a star, i.e., all edges of this compone nt share a common vertex.",
     "technical_score": 7.082141667767358e-05,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -107,7 +117,8 @@
     "paragraph_index": 4,
     "paragraph": "Proof. The first part is immediate, since we can charge each componen t to a vertex of the shorter curve that is contained in it. To see the second part o f the claim, assume for the sake",
     "technical_score": 0.0027348061768896637,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -117,7 +128,8 @@
     "paragraph_index": 5,
     "paragraph": "6 Locality-sensitive hashing of curves of contradiction that an optimal traversal has the pairs ( i, j),(i, j+ 1)( i+ 1, j+ 1) for some i, j(or the symmetric configuration ( i, j),(i+1, j)(i+1, j+1)). In this case, the middle pair (i, j+ 1) can be removed without increasing the cost and without in validating the traversal properties. We can apply this reasoning repeatedly until ea ch component is a star. \u25ed",
     "technical_score": 0.004510266933673988,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -127,7 +139,8 @@
     "paragraph_index": 1,
     "paragraph": "Anchored distances. A traversal Tis said w-anchored traversal if each vertex is paired with a vertex at distance at most w/2 (for simplicity we assume wto be even): namely, |i\u2212j| \u2264w/2 for each ( i, j)\u2208T. Parameter wis called the width of the traversal. Such a traversal exists only if |m1\u2212m2| \u2264w/2, otherwise there would be unpaired vertices (e.g., the las t vertex of the longest curve). For two curves PandQwith lengths satisfying |m1\u2212m2| \u2264w/2, we define the w-anchored discrete Fre\u0301chet distance dw,aF(P, Q) and w-anchored DTW distance dw,aDTW (P, Q) as in Definitions 1 and 2 where Tis defined as the set of all possible w- anchored traversals.",
     "technical_score": 0.006461308094798402,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -137,7 +150,8 @@
     "paragraph_index": 2,
     "paragraph": "Speed-constrained distances. A traversal Tis aw-speed traversal if each vertex is aligned with at most wvertices of the other curve: in other terms, the bipartite gr aph representing the traversal has degree at most w. Parameter wis called the speed of the traversal. (We overload the meaning of wsince the width and speed parameters play a similar role in ou r algorithms.) Note that a w-anchored traversal is a ( w+ 1)-speed traversal, but the opposite is not necessary true. A w-speed traversal exists only if 1 /w\u2264m1/m2\u2264w. For two curves PandQwith lengths satisfying 1 /w\u2264m1/m2\u2264w, we defined the w-speed discrete Fre\u0301chet distance dw,sF(P, Q) and w-speed DTW distance dw,sDTW (P, Q) as in Definitions 1 and 2 where Tis defined as the set of all possible w-speed traversals.",
     "technical_score": 0.005932505386272702,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -147,7 +161,8 @@
     "paragraph_index": 1,
     "paragraph": "We use the notion of asymmetric locality-sensitive hashing (see, e.g. [29]), defined as follows: \u25eeDefinition 4. LetSbe the set of curves in I Rdand let d:S \u00d7 S \u2192 I R+be a distance measure defined on them. Given real values r >0,c >1, 0\u2264\u03b11\u22641 and 0 \u2264\u03b12\u22641 with \u03b11> \u03b1 2, a family Hof pairs of hash functions ( h1, h2) is called ( r, c, \u03b1 1, \u03b12)-sensitive if for any two curves P, Q \u2208 S (ii) if d(P, Q)> cr, then P r(h1,h2)\u2208H(h1(P) =h2(Q))\u2264\u03b12. When h1=h2, we have the traditional definition of (symmetric) locality -sensitive hashing. The above scheme is asymmetric in the sense that there are two different schemes and the guarantees only hold for curves PandQwhere Pwas hashed using the first scheme and Q was hashed using the second scheme. This is useful, e.g., if t he application of the LSH is a nearest neighbor data structure, where comparisons only n eed to be done between input objects and query objects. The results reported in Table 1 follow by applying the standa rd framework for solving the ( c, r)-near neighbor problem with an ( r, c, \u03b1 1, \u03b12)-sensitive hashing scheme H. For the sake of completeness, we sketch this process here.5A new family H\u2032of hashing is construc- ted by concatenating k= max {1,log\u03b12(1/n)}hash functions from H, so that the collision 5We observe that the LSH schemes presented in this paper have l ong hash values (curves or array of curves). However, they can be shortened with traditional hashing (i.e., by mapping each value in [0, O(n)]), that allows for a more efficient search in the hash tables g enerated by the LSH. This technique increases \u03b12by an additive O(1/n) term.",
     "technical_score": 0.0003842470699930818,
-    "citation_score": 0.007300694329868554
+    "citation_score": 0.007300694329868554,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -157,7 +172,8 @@
     "paragraph_index": 2,
     "paragraph": "A.",
     "technical_score": 0.004239316944398612,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -167,7 +183,8 @@
     "paragraph_index": 3,
     "paragraph": "Driemel and F. Silvestri 7 probability of far points is at most 1 /n. Then, each point in Sis inserted into L= (1/\u03b11)k hash tables, each corresponding to a different randomly chos en hash function from H\u2032. For a query point q, the algorithm searches among all points that collide with qin the Lhash tables and stops as soon as a cr-near neighbor is found. When \u03b12>0, the data structure requires O/parenleftbig n1+\u03c1+nm/parenrightbig memory words and query time O(\u0393n\u03c1), where \u0393 = \u03a9( m) is the time required for computing the distance between two curves and\u03c1= log \u03b11/log\u03b12. When \u03b12= 0, the data structure requires O(n/\u03b1 1) memory words and query time O(m/\u03b1 1). Note that in this case the query time does not include \u0393: the algori thm does not need to compute distances between qand points in the buckets since there are no false positives. For a given query, the data structures returns an approximate cr-near neighbor with constant probabil- ity. In order to obtain high probability (i.e., at least 1 \u22121/n) we repeat the above process logntimes, leading to log ndifferent data structures. This increases space and query ti me by a O(logn) term.",
     "technical_score": 0.004010644702831156,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -177,7 +194,8 @@
     "paragraph_index": 1,
     "paragraph": "We first present the basic LSH scheme in Section 3.1, and then i n Section 3.2 we analyze its correctness and performance for the discrete Fre\u0301chet di stance. The basic LSH has an approximation factor that is linear in the number of vertice s that a curve can have.",
     "technical_score": 0.1067229916897507,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -187,7 +205,8 @@
     "paragraph_index": 1,
     "paragraph": "We use a randomly shifted grid in our hashing scheme. Let the c anonical d-dimensional grid of resolution \u03b4be defined as an evenly spaced point set in I Rd, as follows: (x1, . . . , x d)\u2208I Rd| \u22001\u2264i\u2264d\u2203j\u2208I N : xi=j\u00b7\u03b4/bracerightBig .",
     "technical_score": 0.016899522347832603,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -197,7 +216,8 @@
     "paragraph_index": 2,
     "paragraph": "Consider a family of such grids parametrized by a shift t: /hatwideGt \u03b4={p+t|p\u2208G\u03b4}.",
     "technical_score": 0.012298402834967933,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -207,7 +227,8 @@
     "paragraph_index": 3,
     "paragraph": "Choosing tuniformly at random from the half-open hypercube [0 , \u03b4)dwe obtain a family of randomly shifted grids. Let P\u2208\u2206dbe a polygonal curve with vertices p1, . . . , p mand let ht \u03b4: \u2206d\u2192\u2206dbe a hash function. The curve ht \u03b4(P) is defined as the result of the following two-stage construction. (i) We snap the curve to the grid /hatwideGt \u03b4. More precisely, we replace each vertex piwith its closest grid point p\u2032 i= arg minq\u2208/hatwideGt \u03b4/bar\u2308blpi\u2212q/bar\u2308blto obtain the curve P\u2032. (ii) We remove consecutive duplicates in P\u2032. That is, we remove the vertex p\u2032 iif it is identical to p\u2032 i\u22121.",
     "technical_score": 0.01308954555663697,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -217,7 +238,8 @@
     "paragraph_index": 4,
     "paragraph": "\u03b4be the family of hash functions ht \u03b4constructed this way.",
     "technical_score": 0.007233304883831201,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -227,7 +249,8 @@
     "paragraph_index": 1,
     "paragraph": "\u25eeLemma 5. LetP, Q \u2208\u2206dbe two curves with m1andm2points, respectively, and let m= min {m1, m2}. For any \u03b4 >0, it holds that \u03b4/parenleftbig ht \u22651\u2212/parenleftbigg \u03b4/parenrightbigg .",
     "technical_score": 0.015542239981642843,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -237,7 +260,8 @@
     "paragraph_index": 2,
     "paragraph": "Proof. We bound the probability that PandQdo not hash to the same sequence. To this end, consider an optimal traversal TofPandQwith respect to the discrete Fre\u0301chet distance. By Lemma 3, we can assume that |T| \u2264mand each component is a star. Let l denote the number of components of T. For 1 \u2264k\u2264ldenote with Ekthe event that not all vertices of the k-th component are snapped to the same grid point. This happen s only if at least one pair of vertices is separated in at least one dime nsion by the random shift t. Since the component is a star, there exists a vertex vof either PorQ, such that vis involved in all pairs of Tin the k-th component. Therefore, all vertices in this component have distance at most dF(P, Q) tov. Since tis uniformly distributed in [0 , \u03b4)d, the probability that any pair is separated along any fixed dimension is 2 dF(P, Q)/\u03b4. As a consequence, event Ekhappens with probability at most 2 d\u00b7dF(P, Q)/\u03b4. By a union bound over the lcomponents in T, we have that the probability of PandQ not being hashed to the same sequence is bounded by",
     "technical_score": 0.0011698460201236553,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -247,7 +271,8 @@
     "paragraph_index": 3,
     "paragraph": "\uf8ed/uniondisplay 1\u2264k\u2264lEk\uf8f6 \uf8f8\u2264/summationdisplay 1\u2264k\u2264lP r(Ek) = 2 dm\u00b7dF(P, Q) \u03b4 and the lemma follows. \u25ed \u25eeLemma 6. For any value of \u03b4and for any P, Q \u2208\u2206d, if there exists a value of t\u2208[0, \u03b4)d such that ht",
     "technical_score": 0.0006684834400706603,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -257,7 +282,8 @@
     "paragraph_index": 4,
     "paragraph": "\u03b4(Q), then it holds that dF(P, Q)\u2264\u221a d\u00b7\u03b4.",
     "technical_score": 0.00017485803358379537,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -267,7 +293,8 @@
     "paragraph_index": 5,
     "paragraph": "Proof. In the case that ht \u03b4(Q), it holds that dF(ht curve to the randomly shifted grid changes the position of ea ch vertex by at most\u221a d 2\u00b7\u03b4. Therefore, it holds that dF(P, ht d 2\u00b7\u03b4and similarily dF(Q, ht d triangle inequality, dF(P, Q)\u2264dF/parenleftbig ht +dF/parenleftbig ht +dF/parenleftbig ht",
     "technical_score": 0.00017485803358379537,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -277,7 +304,8 @@
     "paragraph_index": 6,
     "paragraph": "\u2264\u221a d\u00b7\u03b4. \u25ed The next theorem follows by plugging in the bounds of Lemmas 5 and 6. \u25eeTheorem 7. LetP, Q \u2208\u2206dbe two curves with m1andm2points, respectively, and let m= min {m1, m2},\u03b4= 4dmr andc= 4d3 (i) if dF(P, Q)< r, then P rHL \u03b4(ht",
     "technical_score": 0.0020994558039719178,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -287,7 +315,8 @@
     "paragraph_index": 7,
     "paragraph": "2; (ii) if dF(P, Q)> cr, then P rHL \u03b4(ht \u03b4(Q)) = 0 .",
     "technical_score": 0.010131702138570944,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -297,7 +326,8 @@
     "paragraph_index": 8,
     "paragraph": "Proof. The first claim follows by plugging in the bounds of Lemma 5: ht >1\u2212/parenleftbigg \u03b4/parenrightbigg 2.",
     "technical_score": 0.005013625800529952,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -307,7 +337,8 @@
     "paragraph_index": 1,
     "paragraph": "In the previous section we analyzed a very efficient LSH with li near approximation factor. On the other end of the spectrum, we can also design an LSH with constant approximation factor, but higher running time. Conceptually, the easiest way to do this is to randomly and independently perturb the vertices of each curve and snap th em to a fixed grid.",
     "technical_score": 0.009116757545411866,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -317,7 +348,8 @@
     "paragraph_index": 2,
     "paragraph": "A.",
     "technical_score": 0.0003963807628439943,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -327,7 +359,8 @@
     "paragraph_index": 3,
     "paragraph": "Driemel and F. Silvestri 9",
     "technical_score": 4.780351999898571e-05,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -337,7 +370,8 @@
     "paragraph_index": 1,
     "paragraph": "The described scheme is asymmetric. We assume that we have tw o types of curves, which we call input curves and query curves. Consider an input curv eP=p1, . . . , p m, and let G\u03b4 be the canonical d-dimensional grid of resolution \u03b4defined in the previous section. Let tP= t1, . . . , t mbe a sequence of independent random variables which are unif ormly distributed in/bracketleftbig \u2212\u03b4 2,\u03b4 2/bracketrightbigd. We perturb the vertices of P: Let P\u2032=p\u2032 1, . . . , p\u2032 mbe the perturbed curve with p\u2032 i=pi+ti. We snap the curve P\u2032to the grid G\u03b4. More precisely, we replace each vertex p\u2032 i with its closest grid point p\u2032\u2032 i= arg minq\u2208G\u03b4/bar\u2308blp\u2032 i\u2212q/bar\u2308blto obtain the curve P\u2032\u2032. In the next step we remove consecutive duplicates in P\u2032\u2032. That is, we remove the vertex p\u2032\u2032 iif it is identical top\u2032\u2032 i\u22121. We define htP \u03b4(P) to be the result of this algorithm.",
     "technical_score": 0.0032092686437455876,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -347,7 +381,8 @@
     "paragraph_index": 2,
     "paragraph": "For a query curve Q, the hash function is the same. However, a different random se quence tQis used for randomly perturbing the curve. We let HC \u03b4denote the LSH scheme defined this way: namely, HC \u03b4contains all pairs ( htP \u03b4, htQ \u03b4), where vectors tPandtQconsist of entries independent and identically distributed in/bracketleftbig \u2212\u03b4 2,\u03b4 2/bracketrightbigd.",
     "technical_score": 0.0038729104882950414,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -357,7 +392,8 @@
     "paragraph_index": 1,
     "paragraph": "\u25eeLemma 8. LetP, Q \u2208\u2206dbe two curves with m1andm2points, respectively. Let m= min{m1, m2}and let M= max {m1, m2}. For any \u03b4 >0, it holds that \u03b4/parenleftBig htP",
     "technical_score": 6.974873387615772e-05,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -367,7 +403,8 @@
     "paragraph_index": 2,
     "paragraph": "\u2265/parenleftbigg1 2/parenrightbiggdm \u00b7/parenleftbigg1",
     "technical_score": 0.00041849240325694624,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -377,7 +414,8 @@
     "paragraph_index": 3,
     "paragraph": "\u03b4/parenrightbiggdM In particular, if \u03b4 >4dF(P, Q), then the probability is strictly lower bounded by 2\u22122d(m1+m2).",
     "technical_score": 0.00046499155917438474,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -387,7 +425,8 @@
     "paragraph_index": 4,
     "paragraph": "Proof. Note that for dF(P, Q)\u2265\u03b4 andQdo not hash to the same sequence. To this end, consider an opti mal traversal Tof PandQwith respect to the discrete Fre\u0301chet distance. By Lemma 3, we can assume that |T| \u2264m1+m2and each component is a star. Let ldenote the number of components of are snapped to the same grid point. Assume that the center of t hek-th star is a vertex piofPand that the other vertices of the component are vertices qj, . . . , q j+ckofQ. The analysis for the case where the center is a vertex of Qis analogous. There must be a grid point in either one of the two intervals to the left and to the r ight of pi:Il= [pi\u2212\u03b4 2, pi) andIr= [pi, pi+\u03b4 2). We analyze the case that there is a grid point in Ir, the other case is analogous. Let Xibe the event that p\u2032 i\u2208Ir. Since tPis uniformly random in/bracketleftbig \u2212\u03b4 2,\u03b4 2/bracketrightbigm1, it holds that P r(Xi)\u22651 j\u2208Ir. Ifqjwas in pi\u2019s component, then there are two cases.",
     "technical_score": 0.000581239448967981,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -397,7 +436,8 @@
     "paragraph_index": 5,
     "paragraph": "Either qjlies in Ilor in Ir. In the first case, we have 2\u2212 |pi\u2212qj| \u03b4\u22651",
     "technical_score": 9.299831183487695e-05,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -407,7 +447,8 @@
     "paragraph_index": 6,
     "paragraph": "\u03b4, and in the second case we have P r(Yi)\u22651 in the k-th component snap to the same grid point",
     "technical_score": 0.0001859966236697539,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -417,7 +458,8 @@
     "paragraph_index": 7,
     "paragraph": "\u2265P r(Xi\u2229Yj\u2229 \u00b7 \u00b7 \u00b7 \u2229 Yj+ck)\u22651 2\u00b7/parenleftbigg1",
     "technical_score": 0.00020924620162847312,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -427,7 +469,8 @@
     "paragraph_index": 8,
     "paragraph": "\u03b4/parenrightbiggck If all components are preserved, then the two curves will has h to the same sequence, therefore htP",
     "technical_score": 0.00023249577958719237,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -437,7 +480,8 @@
     "paragraph_index": 9,
     "paragraph": "\uf8ed/intersectiondisplay 1\u2264k\u2264lEk\uf8f6 \uf8f8\u2265/productdisplay 1\u2264k\u2264lP r/parenleftbig",
     "technical_score": 0.00027899493550463087,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -447,7 +491,8 @@
     "paragraph_index": 10,
     "paragraph": "\u2265/productdisplay 1\u2264k\u2264l1 2/parenleftbigg1",
     "technical_score": 0.0002557453575459116,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -457,7 +502,8 @@
     "paragraph_index": 11,
     "paragraph": "\u03b4/parenrightbiggck \u2265/parenleftbigg1 2/parenrightbiggl/parenleftbigg1 \u03b4/parenrightbiggm1+m2\u2212l .",
     "technical_score": 0.00034874366938078853,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -467,7 +513,8 @@
     "paragraph_index": 12,
     "paragraph": "The last inequality follows since/parenleftBig/summationtext 1\u2264k\u2264lck/parenrightBig =m1+m2\u2212l. Indeed, each center of a component can be charged to this component and the remainin g vertices make up the sum of the leaves of all components. The lemma is now implied f ord= 1 observing that l\u2264min{m1, m2}, as implied by Lemma 3. We get the lemma for general dby observing that the dimensions are independent. \u25ed The following result then holds. \u25eeTheorem 9. LetP, Q \u2208\u2206dbe two curves with m1andm2points, respectively, and let \u03b4= 4drandc= 4d3/2. It holds that (i) if dF(P, Q)< r, then P rHC \u03b4/parenleftBig htP",
     "technical_score": 0.00041849240325694624,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -477,7 +524,8 @@
     "paragraph_index": 13,
     "paragraph": ">/parenleftbig1 2/parenrightbig2d(m1+m2); (ii) if dF(P, Q)> cr, then P rHC \u03b4/parenleftBig htP = 0.",
     "technical_score": 0.00046499155917438474,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -487,7 +535,8 @@
     "paragraph_index": 14,
     "paragraph": "Proof. The theorem follows by plugging in the bounds of Lemma 8 and by using same arguments as in the proof of Lemma 6. \u25ed",
     "technical_score": 0.000581239448967981,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -497,7 +546,8 @@
     "paragraph_index": 1,
     "paragraph": "In the previous two sections we have seen schemes with linear and constant approximations. We now suggest a scheme exhibiting a trade-off between the col lision probability of near points and the approximation factor. The basic idea is to ran domly partition the input curves and to concatenate the outcome of the basic LSH (Secti on 3) applied to the different parts of the curves.",
     "technical_score": 0.06262137337804344,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -507,7 +557,8 @@
     "paragraph_index": 1,
     "paragraph": "The scheme is asymmetric. Again, we assume that we have two ty pes of curves, which we call input and query curves. The difference in how they are han dled lies in the way we create the partition. For an input curve P=p1, . . . , p m, we randomly sample a partition into K subsequences. To this end, we denote a partition of Pwith \u03a6s(P) =/parenleftBig /hatwideP1, . . . , /hatwidePK/parenrightBig where the subsequences are defined by a monotone sequence s\u2208[m]K\u22121as follows. /hatwideP1=p1, . . . , p s1; \u22001< i < K :/hatwidePi=psi\u22121, . . . , p si; /hatwidePK=psK\u22121, . . . , p m. There are at most/parenleftbigm+K\u22121 K\u22121/parenrightbig ways to partition a curve of length min this way. We denote with PKthe family of all valid partitions for a given m. Let t=t1, . . . , t Kbe a sequence of independent random values evenly distributed in [0 , \u03b4)d. Once we have partitioned the input curve PintoK(overlapping) subsequences, we apply the basic LSH to each i ndividual subsequence and concatenate the resulting curves: gt,s \u03b4,K(P) =ht1 \u03b4/parenleftBig /hatwideP1/parenrightBig \u2295ht2 \u03b4/parenleftBig /hatwideP2/parenrightBig \u2295 \u00b7 \u00b7 \u00b7 \u2295 htK \u03b4/parenleftBig /hatwidePK/parenrightBig .",
     "technical_score": 0.014019361717429688,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -517,7 +568,8 @@
     "paragraph_index": 2,
     "paragraph": "A.",
     "technical_score": 0.0015577068574921882,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -527,7 +579,8 @@
     "paragraph_index": 3,
     "paragraph": "Driemel and F. Silvestri 11 A query curve Q=q1, . . . , q mis subdivided into Kequal-sized subsequences (determin- istically), where the last subsequence may be shorter and tw o consecutive sequences overlap by one element. We denote with \u03a6\u2217(Q) this partitioning into equal-sized subsequences. For query curves, we define gt,\u2217 \u03b4,K(Q) to be the resulting curve given by applying the basic LSH to each individual subsequence and concatenating the resul ting curves. For any given \u03b4 >0 and K\u22651, we denote with HT \u03b4,Kthe family of asymmetric hash functions created this way: that is, HT \u03b4,Kconsists of tuples ( gt,s \u03b4,K, gt,\u2217 \u03b4,K) where the entries of tare independently and identically distributed in [0 , \u03b4)dand \u03a6s(P) is uniformly chosen at random from PK.",
     "technical_score": 7.827476958898244e-05,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -537,7 +590,8 @@
     "paragraph_index": 1,
     "paragraph": "We have the following theorem which generalizes Theorem 7. U sing the parameter Kwe get a tradeoff between approximation factor and query time. \u25eeTheorem 10. LetP, Q \u2208 S be two curves with m1andm2points, respectively, and let M= max {m1, m2}. Let K\u22651be a given integer and let \u03b4= 4dr\u00b7/ceilingleftbigM andc= 4d3 2\u00b7/ceilingleftbigM",
     "technical_score": 0.021618778895969352,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -547,7 +601,8 @@
     "paragraph_index": 2,
     "paragraph": "\u2265/parenleftbig1 2/parenrightbigK\u00b7/parenleftbigM+K\u22121 K\u22121/parenrightbig\u22121; (ii) if dF(P, Q)> cr, then P rHT gt,s \u03b4,K(P) =gt,\u2217 = 0.",
     "technical_score": 0.0003521071440185459,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -557,7 +612,8 @@
     "paragraph_index": 3,
     "paragraph": "\uf8ed2dm\u2032\u00b7dF/parenleftBig /hatwidePi,/hatwideQi/parenrightBig \u03b4\uf8f6 \uf8f8\u22651\u2212/parenleftbigg \u03b4/parenrightbigg \u22651",
     "technical_score": 0.000929839952514811,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -567,7 +623,8 @@
     "paragraph_index": 4,
     "paragraph": "Note that we can assume m\u2032\u2264/ceilingleftbigM in the above inequality, since m\u2032is the length of the shorter of the two subsequences in the lemma. By constructio n, the length of /hatwideQiwill be at most/ceilingleftbigM .",
     "technical_score": 0.0003521071440185459,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -577,7 +634,8 @@
     "paragraph_index": 5,
     "paragraph": "Since the values tiare chosen pairwise independent, we have gt,s \u03b4,K(P) =gt,\u2217",
     "technical_score": 0.015574819204623079,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -587,7 +645,8 @@
     "paragraph_index": 6,
     "paragraph": "\u2265\uf8eb \uf8ed/productdisplay 1\u2264i\u2264KP r(Ei|E)\uf8f6 \uf8f8\u00b7P r(E)\u2265/parenleftbigg1 2/parenrightbiggK \u00b71",
     "technical_score": 0.007671179608247187,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -597,7 +656,8 @@
     "paragraph_index": 7,
     "paragraph": ", the first part of the claim follows.",
     "technical_score": 0.0003521071440185459,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -607,7 +667,8 @@
     "paragraph_index": 8,
     "paragraph": "As for the second part of the claim, we can use Lemma 6 applied t o the subsequences. If there exists a partition of P, and there exist t=t1, . . . , t K, such that for all 0 \u2264i\u2264K hti \u03b4/parenleftBig /hatwidePi/parenrightBig =hti \u03b4/parenleftBig /hatwideQi/parenrightBig , then it holds by Lemma 6 that dF/parenleftBig /hatwidePi,/hatwideQi/parenrightBig \u2264\u221a d\u00b7\u03b4.In this case, we can combine the traversals of the subsequences to a traversal of the entire curves. This combined traversal has the same cost, therefore it follows that dF(P, Q)\u2264\u221a d\u00b7\u03b4.Consequently, if dF(P, Q)> cr =4d3 d\u00b7\u03b4, then it cannot happen that gt,s",
     "technical_score": 0.005811499703217566,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -617,7 +678,8 @@
     "paragraph_index": 9,
     "paragraph": "\u03b4(Q) for any combination of t=t1, . . . , t Kand s. \u25ed \u25eeCorollary 11. LetP, Q \u2208 S be two curves with m1andm2points, respectively, and let M= max {m1, m2}. Let K\u22651be a given integer and let \u03b4= 4dr\u00b7/ceilingleftbigM andc= 4d3 2\u00b7/ceilingleftbigM",
     "technical_score": 0.01394759928772216,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -627,7 +689,8 @@
     "paragraph_index": 10,
     "paragraph": ">/parenleftbig1 4/parenrightbigK\u00b7/parenleftbig1 M/parenrightbigK\u22121; (ii) if dF(P, Q)> cr, then P rHT gt,s \u03b4,K(P) =gt,\u2217 = 0.",
     "technical_score": 0.00348689982193054,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -637,7 +700,8 @@
     "paragraph_index": 11,
     "paragraph": "Proof. The result just follows from the previous Theorem 10 by obser ving that/parenleftbigM+K\u22121 1/(2M)k\u22121. \u25ed",
     "technical_score": 0.0003521071440185459,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -647,7 +711,8 @@
     "paragraph_index": 1,
     "paragraph": "We now focus on LSH for discrete Fre\u0301chet distance with constr aints on the alignment. We first target the w-anchored distance in Section 6.1, and then the w-speed distance in Sec- tion 6.2. As in the previous sections, the schemes are asymme tric and consist of a partitioning of the curve into subsequences and on the application of the b asic LSH scheme to each sub- sequence. However, the partitions are different since they l everage on random processes on both input and query curves, consecutive subsequences do no t overlap, and the constraints are exploited. We let l\u22651 denote an arbitrary given integer that allows to trade-off t he collision probability of near curves with a bi-criteria app roximation on the distance and on the anchored alignment.",
     "technical_score": 0.02012829858579968,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -657,7 +722,8 @@
     "paragraph_index": 1,
     "paragraph": "We observe that the final hash value is not a curve as in previou s sections, but an array of curves. Equality between two curves then holds only if the tw o hash values have the same length and coincide in each position (i.e., the hash values ( (a, b),(c)) and (( a),(b, c)) do not collide, but they collide if their are considered as a single curve ( a, b, c )). This enforces the alignment constraint.",
     "technical_score": 0.0011691875216800478,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -667,7 +733,8 @@
     "paragraph_index": 2,
     "paragraph": "The hash process of a query curve Qis the same: however, a different random sequence rQis used to partition the curve, while the same sequence tof random shifts is kept. Due to the different random bits in rQthe proposed LSH scheme is asymmetric. We let HA w,\u03b4,l denote the hash family consisting of all possible pairs of ha sh functions/parenleftBig gt,rP w,\u03b4,l, gt,rQ w,\u03b4,l/parenrightBig .",
     "technical_score": 0.00043844532063001785,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -677,7 +744,8 @@
     "paragraph_index": 3,
     "paragraph": "The next Theorem 14 shows that the scheme has a bi-criteria ap proximation: In addition to the distance approximation c, the scheme has also an approximation on the alignment. As an example, we observe that two curves with a w-anchored distance larger than crcan still collide if they have a w+ 2(l\u22121)-anchored distance lower than cr. In order to prove the theorem, we introduce the two following lemmas. \u25eeLemma 12. LetP, Q \u2208 S be two curves with m1andm2points, respectively and let m= min {m1, m2}. Let wbe the traversal width, l\u22651be an arbitrary integer, \u03b4= 4drl. If dw,aF(P, Q)< r, then P rHA w,\u03b4,l/parenleftBig gt,rP w,\u03b4,l(P) =gt,rQ w,\u03b4,l(Q)/parenrightBig >/parenleftbig 1/\u221a 2w/parenrightbig2m/l.",
     "technical_score": 0.0010230390814700415,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -687,7 +755,8 @@
     "paragraph_index": 4,
     "paragraph": "Proof. LetTbe an optimal w-anchored traversal of PandQ, and let c1, . . . c vdenote the vnon-overlapping components, and let \u03c0iand\u03b3idenote the indexes of the components containing piandqi, respectively. The two curves collide when the following tw o events happen for every 1 \u2264i\u2264 \u2308m/l\u2309:",
     "technical_score": 0.00029229688042001195,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -697,7 +766,8 @@
     "paragraph_index": 5,
     "paragraph": "Event E1,i:sP,i=MP,iandsQ,i=MQ,i, where MP,iandMQ,iare the indexes of the rightmost vertices of PandQinc\u03c0il\u22121andc\u03b3il\u22121.",
     "technical_score": 0.00014614844021000598,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -707,7 +777,8 @@
     "paragraph_index": 6,
     "paragraph": "Event E2,i:the hash values of the i-th subsequences of PandQare the same (i.e., hti \u03b4/parenleftBig /hatwidePi/parenrightBig =hti \u03b4/parenleftBig /hatwideQi/parenrightBig ).",
     "technical_score": 6.709265964769924e-05,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -717,7 +788,8 @@
     "paragraph_index": 7,
     "paragraph": "Intuitively, the first event guarantees that the components ofTare not cut by the random partition, while the second event requires the basic LSH to w ork on each subsequence. We show by induction that event Ej=/intersectiontextj i=1(E1,i\u2229E2,i) (i.e., both events hold for the first j subsequences) happens with probability at least 1 /(\u221a 2w)2j, for 1 \u2264j < K =\u2308m/l\u2309.",
     "technical_score": 0.0007307422010500296,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -727,7 +799,8 @@
     "paragraph_index": 8,
     "paragraph": "Assume j= 1. By definition of w-anchored traversal, we have il\u2264MP,1, MQ,1\u2264il+w/2. Event E1,1happens with probability 1 /w2, that is when the random shift moves the final indexes of /hatwidePiand /hatwideQiinMP,iandMQ,1, respectively. Conditioning on E1,1, event E2,1holds with probability at least 1 /2: indeed by Lemma 5 we have that P r(E2,1|E1,1)\u22651\u2212\uf8eb \uf8ed2dl\u00b7dF/parenleftBig /hatwidePi,/hatwideQi/parenrightBig \u03b4\uf8f6 \uf8f8\u22651\u2212/parenleftbigg 2dl\u00b7dw,aF(P, Q) \u03b4/parenrightbigg \u22651 2.",
     "technical_score": 0.0013153359618900537,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -737,7 +810,8 @@
     "paragraph_index": 9,
     "paragraph": "Therefore, event E1happens with probability 1 /(2w2). Suppose now that Ej\u22121holds with probability 1 /(\u221a",
     "technical_score": 0.0005845937608400239,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -747,7 +821,8 @@
     "paragraph_index": 10,
     "paragraph": "MP,j\u22121andMQ,j\u22121are the last indexes in segments /hatwidePj\u22121and/hatwideQj\u22121, we have P r(E1,j|Ej\u22121) = 1/w2by mimic the argument with j= 1. Further, we have that P r(E2,j|E1,j)\u22651/2. There- foreP r(Ej|Ej\u22121) =P r(E1,j|Ej\u22121)\u2217P r(E2,j|E1,j)\u22651/(\u221a 2w)2j.",
     "technical_score": 0.0008768906412600357,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -757,7 +832,8 @@
     "paragraph_index": 11,
     "paragraph": "When j=K, we have that P r(E1,K|EK\u22121) = 1 since the end points of /hatwidePKand /hatwideQK are fixed on pm1andQm2. By the inductive assumption, the shortest sequence betwee n/hatwidePK and /hatwideQKcontains less than x=mmod lvertices. Then, we have P r(E2,K|E1,K)\u22651\u2212\uf8eb \uf8ed2dx\u00b7dF/parenleftBig /hatwidePi,/hatwideQi/parenrightBig \u03b4\uf8f6 \uf8f8\u22651\u2212x 2 x/l.",
     "technical_score": 0.0011691875216800478,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -767,7 +843,8 @@
     "paragraph_index": 12,
     "paragraph": "Since K=\u2308m/l\u2309andx=mmod l, the two curves PandQcollide with probability",
     "technical_score": 0.001461484402100061,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -777,7 +854,8 @@
     "paragraph_index": 13,
     "paragraph": "\u25eeLemma 13. LetP, Q \u2208 S be two curves with m1andm2points, respectively and let m= min {m1, m2}. Let wbe the traversal width, l\u22651be an arbitrary integer, \u03b4= 4drl, andc= 4d3 2l. Ifd(w+2(l\u22121)),aF(P, Q)> cr, then P rHA w,\u03b4,l/parenleftBig gt,rP w,\u03b4,l(P) =gt,rQ w,\u03b4,l(Q)/parenrightBig = 0.",
     "technical_score": 0.0012814604956162107,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -787,7 +865,8 @@
     "paragraph_index": 14,
     "paragraph": "Proof. By hypothesis, the two curves PandQhave wl-anchored Fre\u0301chet distance larger than cr, which implies there cannot be a wl-anchored traversal with cost smaller than or equal to cr. Assume that PandQcollide under the described hashing scheme; then both curves have been split into Ksubsequence and the hash values of /hatwidePiand /hatwideQi, for each 1\u2264i\u2264Kcollide. By Lemma 6, there exists a traversal of cost at most\u221a d\u03b4between /hatwidePi and /hatwideQi, for each i. Moreover, this traversal is a w+ 2(l\u22121)-anchored traversal since the partitioning guarantees that the indexes of vertices in /hatwidePiand/hatwideQidiffer by at most w/2+l\u22121. This however implies that there exist a w+ 2(l\u22121)-traversal of PandQof cost at most\u221a d\u03b4=cr, which is a contradiction. Therefore, two curves with ( w+ 2(l\u22121))-anchored discrete Fre\u0301chet distance cannot collide. \u25ed \u25eeTheorem 14. LetP, Q \u2208 S be two curves with m1andm2points, respectively and let m= min {m1, m2}. Let l\u22651be an arbitrary integer, \u03b4= 4drl, and c= 4d3",
     "technical_score": 0.0014014764332721096,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -797,7 +876,8 @@
     "paragraph_index": 15,
     "paragraph": "Proof. The theorem follows from Lemmas 12 and 13. \u25ed",
     "technical_score": 0.0014614844021000593,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -807,7 +887,8 @@
     "paragraph_index": 1,
     "paragraph": "Consider an input curve P=p1, . . . , p mand let rP=rP,1, rP,2, . . . , r P,mandt=t1, t2, . . . t m denote sequences of independent and identically distribut ed random variables in [1 , wl] and [0, \u03b4)drespectively. We random partition curve Pinto non overlapping subsequences of length given by the random sequence rp. Specifically, let \u03a6s(P) =/parenleftBig /hatwideP1, . . . , /hatwidePK/parenrightBig denote a partition of Pwith m/(wl)\u2264K\u2264mand let s\u2208[m]K+1be the vector denoting the initial and final indexes of a subsequence, that is /hatwidePi=psi\u22121+1, . . . , p si. Then, ssatisfies the following conditions : (i) s0= 0 and sK=m, (ii) for 1 \u2264i\u2264K,si\u2212si\u22121=rp,1, which implies that si=/summationtexti j=1rp,1. Once we have partitioned curve PintoKsubsequences, we continue as in the w-anchored LSH by applying the basic LSH to each subsequence u sing the random shifts given by sequence t. For a query curve Q, the hash process is the same, but a different random sequence rQis used to partition the curve. We let HS w,\u03b4,l denote the hash family consisting of all possible pairs of hash functio ns/parenleftBig gt,rP w,\u03b4,l, gt,rQ w,\u03b4,l/parenrightBig .",
     "technical_score": 0.02280647633006349,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -817,7 +898,8 @@
     "paragraph_index": 2,
     "paragraph": "The following Theorem 17 shows that the scheme has a bi-crite ria approximation (note that the alignment approximation in point ( ii) differs from the one for the anchored distance). Its proof depends on the next two lemmas.",
     "technical_score": 0.004604036160692225,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -827,7 +909,8 @@
     "paragraph_index": 3,
     "paragraph": "\u25eeLemma 15. LetP, Q \u2208 S be two curves with m1andm2points, respectively and let m= min {m1, m2}. Let wbe the traversal width, l\u22651be an arbitrary integer, \u03b4= 4drl. If dw,sF(P, Q)< r, then P rHS w,\u03b4,l/parenleftBig gt,rP w,\u03b4,l(P) =gt,rQ w,\u03b4,l(Q)/parenrightBig >/parenleftbig 1/\u221a 2wl/parenrightbig2m/l.",
     "technical_score": 0.00098092371312101,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -837,7 +920,8 @@
     "paragraph_index": 4,
     "paragraph": "Proof. LetTbe an optimal w-speed traversal of PandQ, and let c1, . . . c vdenote the v non-overlapping components. As for the anchored version, t he two curves collide when the following two events happen for every 1 \u2264i\u2264 \u2308v/l\u2309(note a different definition for event",
     "technical_score": 0.0008068795611498376,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -847,7 +931,8 @@
     "paragraph_index": 5,
     "paragraph": "Event E1,i:all nodes of PandQin components cil+1, . . . , c (i+1)lare contained in the i-th subsequence of PandQ; Event E2,i:the hash values of the i-th subsequences of PandQare the same (i.e., hti \u03b4/parenleftBig /hatwidePi/parenrightBig =hti \u03b4/parenleftBig /hatwideQi/parenrightBig ).",
     "technical_score": 0.0005413242625435618,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -857,7 +942,8 @@
     "paragraph_index": 6,
     "paragraph": "The proof continues as in Lemma 12, where the only difference i s in the probability of event E1,i. Indeed, we have that event E1,1happens with probability 1 /(wl)2, that is when P1 andQ1contain only the at most wlnodes of PandQin the first lcomponents. The same probability holds for E1,i, conditioning on E1,i\u22121. \u25ed \u25eeLemma 16. LetP, Q \u2208 S be two curves with m1andm2points, respectively and let m= min {m1, m2}. Let wbe the traversal width, l\u22651be an arbitrary integer, \u03b4= 4drl, andc= 4d3 2l. Ifdwl,sF(P, Q)> cr, then P rHS w,\u03b4,l/parenleftBig gt,rP w,\u03b4,l(P) =gt,rQ w,\u03b4,l(Q)/parenrightBig = 0.",
     "technical_score": 0.00015093595037646672,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -867,7 +953,8 @@
     "paragraph_index": 7,
     "paragraph": "Proof. By hypothesis, the two curves PandQhave wl-speed discrte Fre\u0301chet distance larger than cr, which implies there cannot be wl-speed traversal with cost smaller than or equal tocr. Assume that PandQcollide under the described hashing scheme; then both curve s have been split into Ksubsequence and the hash values of PiandQi, for each 1 \u2264i\u2264K collide. By Lemma 6, there exists a traversal of cost at most\u221a d\u03b4between PiandQi, for each i. Moreover, this traversal is a wl-traversal since each subsequence contains at most wlnodes. This however implies that there exist a wl-speed traversal of PandQof cost at most\u221a d\u03b4=cr, which is a contradiction. Therefore, two curves with wl-speed Fre\u0301chet distance cannot collide. \u25ed \u25eeTheorem 17. LetP, Q \u2208 S two curves with m1andm2points, respectively and let m= min {m1, m2}. Let l\u22651be an arbitrary integer, \u03b4= 4drl, and c= 4d3",
     "technical_score": 0.00015093595037646672,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -877,7 +964,8 @@
     "paragraph_index": 8,
     "paragraph": "Proof. The proof follows from Lemmas 15 and 16. \u25ed",
     "technical_score": 0.00015093595037646672,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -887,7 +975,8 @@
     "paragraph_index": 1,
     "paragraph": "All our schemes can be applied to DTW without any algorithmic change, and in this section we analyze some of them. We first investigate in Section 7.1 th e basic scheme in Section 3.1 for this distance. Then, we provide a few insights on DTW with constrained alignments in Section 7.2. We do not analyze the techniques proposed in Sec tions 4 and 5 since they have the same linear approximation of the basic LSH, and\u2014in contr ast to our previous results for the Fre\u0301chet distance\u2014do not provide a sublinear approxi mation for DTW.",
     "technical_score": 0.06373016928285627,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -897,7 +986,8 @@
     "paragraph_index": 2,
     "paragraph": "16 Locality-sensitive hashing of curves",
     "technical_score": 0.01653452754693752,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -907,7 +997,8 @@
     "paragraph_index": 1,
     "paragraph": "\u25eeLemma 18. LetP, Q \u2208\u2206dbe two curves with m1andm2points, respectively. For any \u03b4\u22650, it holds that \u03b4/parenleftbig ht",
     "technical_score": 0.005682058750479802,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -917,7 +1008,8 @@
     "paragraph_index": 2,
     "paragraph": "\u22651\u2212/parenleftbigg d\u00b7dDTW(P, Q) \u03b4/parenrightbigg .",
     "technical_score": 0.0027369538513582837,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -927,7 +1019,8 @@
     "paragraph_index": 3,
     "paragraph": "Proof. LetTbe an optimal traversal of PandQwith respect to their DTW distance. Letl=|T|and denote with dkthe distance /bar\u2308blpik\u2212qjk/bar\u2308blfor 1 \u2264k\u2264l. We have that dDTW(P, Q) =/summationtext 1\u2264k\u2264ldk.",
     "technical_score": 0.0013780322467303074,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -937,7 +1030,8 @@
     "paragraph_index": 4,
     "paragraph": "Now, we bound the probability that pikandqjkfor some fixed ( ik, jk)\u2208Tare not snapped to the same grid point. As in the proof of Lemma 5, two p oints are separated, if and only if they are separated in at least one of their coordin ate dimensions. Denote with Ekthe event that the pair is separated by the random shift t, where tis uniformly distributed in [0 , \u03b4)d. By a union bound over the pairs in T, we have that the probability of PandQnot being hashed to the same curve is bounded by",
     "technical_score": 0.0007463480496721494,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -947,7 +1041,8 @@
     "paragraph_index": 5,
     "paragraph": "\uf8ed/uniondisplay 1\u2264k\u2264lEk\uf8f6 \uf8f8\u2264/summationdisplay 1\u2264k\u2264lP r(Ek)\u2264/summationdisplay 1\u2264k\u2264ld\u00b7/bar\u2308blpik\u2212qjk/bar\u2308bl \u03b4=/summationdisplay 1\u2264k\u2264ld\u00b7dk \u03b4=d\u00b7dDTW(P, Q) \u03b4 and the lemma follows. \u25ed \u25eeLemma 19. LetP, Q \u2208\u2206dbe two curves with m1andm2points, respectively, and let M= max {m1, m2}and\u03b4\u22650. If there exists a value of t\u2208[0, \u03b4)dsuch that ht then it holds that dDTW(P, Q)\u22642M\u221a d\u00b7\u03b4.",
     "technical_score": 0.0035767890961796766,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -957,7 +1052,8 @@
     "paragraph_index": 6,
     "paragraph": "Proof. The DTW distance does not satisfy the triangle inequality, h owever we can use a similar argument as in the proof of Lemma 6. Assume that ht r. Finally, Tpairs /hatwidep(a) rwith /hatwideq(b) r, for each r. The resulting traversal Tcan also be applied to the original curves PandQ. By the construction of/hatwidePand /hatwideQ, any two paired vertices have distance at most\u221a d\u00b7\u03b4, since they snapped to the same grid point. It follows that dDTW(P, Q) = min (ik,jk)\u2208T\u2032/bar\u2308blpik\u2212qjk/bar\u2308bl \u2264/summationdisplay (ik,jk)\u2208T/bar\u2308blpik\u2212qjk/bar\u2308bl \u2264/summationdisplay (ik,jk)\u2208T\u221a d\u03b4, where the last step can be obtained by observing that |T| \u2264m1+m2\u22642M. \u25ed \u25eeTheorem 20. LetP, Q \u2208\u2206dbe two curves with m1andm2points, respectively, and let M= max {m1, m2},\u03b4= 2drand let c= 4d3 2M. (i) if dDTW(P, Q)< r, then P rHL \u03b4(ht",
     "technical_score": 0.0035406338273374274,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -967,7 +1063,8 @@
     "paragraph_index": 7,
     "paragraph": "2; (ii) if dDTW(P, Q)> cr, then P rHL \u03b4(ht \u03b4(Q)) = 0 .",
     "technical_score": 0.004708449010942085,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -977,7 +1074,8 @@
     "paragraph_index": 8,
     "paragraph": "Proof. The proof follows by plugging in the bounds of \u03b4in Lemmas 18 and 19. \u25ed",
     "technical_score": 0.007729996478472934,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -987,7 +1085,8 @@
     "paragraph_index": 1,
     "paragraph": "The schemes in Section 6 for w-anchored/speed traversals automatically apply to DTW distance, with the same collision probabilities stated in T heorems 14 and 17. However, the approximation factor is 4 d3/2(m1+m2), where m1andm2are curve lengths. The claim follows by mimicking the proofs for the Fre\u0301chet distance and use the bounds in Theorem 20. We provide the analysis only for the w-anchored DTW distance, being the one for w-speed DTW essentially the same. \u25eeLemma 21. LetP, Q \u2208 S be two curves with m1andm2points, respectively and let m= min {m1, m2}. Let wbe the traversal width, l\u22651be an arbitrary integer, \u03b4= 2dr. If dw,aDTW (P, Q)< r, then P rHA w,\u03b4,l/parenleftBig gt,rP w,\u03b4,l(P) =gt,rQ w,\u03b4,l(Q)/parenrightBig >/parenleftbig 1/\u221a 2w/parenrightbig2m/l.",
     "technical_score": 0.034940230206248375,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -997,7 +1096,8 @@
     "paragraph_index": 2,
     "paragraph": "Proof. The proof mimics the one for the w-anchored Fre\u0301chet distance in Lemma 12. The only difference is in the value of \u03b4required to get P r(E2,i|E1,i)\u22651/2, since, by Lemma 18, the hash values of the i-th subsequences of PandQcollide with probability at least 1 \u2212/parenleftbigg d\u00b7dF/parenleftbig/hatwidePi,/hatwideQi/parenrightbig \u03b4/parenrightbigg , which is independent of the number of components. \u25ed \u25eeLemma 22. LetP, Q \u2208 S be two curves with m1andm2points, respectively. Let wbe the traversal width, l\u22651be an arbitrary integer, \u03b4= 2dr, and c= 4d3 2(m1+m2). If d(w+2(l\u22121)),aDTW (P, Q)> cr, then P rHA w,\u03b4,l/parenleftBig gt,rP w,\u03b4,l(P) =gt,rQ w,\u03b4,l(Q)/parenrightBig = 0.",
     "technical_score": 0.003882247800694265,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -1007,7 +1107,8 @@
     "paragraph_index": 3,
     "paragraph": "Proof. The proof is almost the same of the one for Lemma 13 and the only difference is in the approximation provided by the basic LSH. Indeed, by Lemm a 6, there exists a traversal of cost at most\u221a d2Mi\u03b4between /hatwidePiand /hatwideQifor each i, where Midenote the length of the longest sequence. However, we have/summationtextK i=1Mi\u2264m1+m2and\u03b4= 2dr. Therefore the final approximation is c= 4d3/2(m1+m2). \u25ed \u25eeTheorem 23. LetP, Q \u2208 S be two curves with m1andm2points, respectively, and let m= min {m1, m2}. Let l\u22651be an arbitrary integer, \u03b4= 2dr, and c= 4d3 2(m1+m2).",
     "technical_score": 0.03105798240555412,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -1017,7 +1118,8 @@
     "paragraph_index": 4,
     "paragraph": "Proof. The theorem follows from Lemmas 21 and 22. \u25ed",
     "technical_score": 0.00035114931357279624,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -1026,7 +1128,8 @@
     "paragraph_index": 1,
     "paragraph": "To the best of our knowledge, this is the first paper providing LSH schemes for curves. When applied to the near neighbor problem, our techniques improv e the state of the art for the discrete Fre\u0301chet distance [17] under different settings, an d provide the first data structure with theoretical guarantees for DTW. The methods presented are simple enough that they may be practical. We do not know if our bounds are tight. It wou ld be interesting to know if lower bounds can be obtained for the studied problem and/or t o improve the upper bounds. All of the presented LSH schemes exhibit the property that no collisions happen between far points (i.e., \u03b12= 0). An open question is to understand if it is possible to sli ghtly increase this collision probability (say \u03b12= 1/n) to get a better approximation factor. Another interesting direction would be to reduce space by ex ploiting the independence in the approach described in Section 4.1, or by using a multipro be approach [24]. Finally, we remark that our results only partially extend to DTW. As such , it is still open to get a",
     "technical_score": 0.0004944178628389156,
-    "citation_score": 0.009393939393939395
+    "citation_score": 0.009393939393939395,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -1035,7 +1138,8 @@
     "paragraph_index": 2,
     "paragraph": "18 Locality-sensitive hashing of curves sublinear approximation for DTW. We hope that our work inspi res further work in one of these directions. Acknowledgements The authors would like to thank Rasmus Pagh and the anonymous reviewers for useful comments. This research was initiated at the Dagstuhl Seminar 16101 \"Data Structures and Advanced Models of Computation on Big D ata, 2016\".",
     "technical_score": 0.021690590111642746,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -1044,7 +1148,8 @@
     "paragraph_index": 1,
     "paragraph": "There is a trivial reduction from the orthogonal vectors pro blem to the problem of finding a close pair under the l\u221edistance up to approximation c < 3 [16]. Since l\u221eembeds isometrically into the Fre\u0301chet distance (while preserving the dimension up to a constant factor), this implies a conditional time lower bound for the near-neighbor problem under the Fre\u0301chet distance. In detail, the orthogonal vectors pro blem can be stated as follows. Given two sets of vectors A, B \u2282 {0,1}dwith |A|=|B|=n, does there exist a pair a\u2208A andb\u2208Bsuch that aandbare orthogonal? The orthogonal vectors conjecture, which c an be related to the strong exponential time hypothesis, state s that for no \u03b5 >0, there exists an algorithm for the orthogonal vectors problem that runs in ti meO/parenleftbig n2\u2212\u03b5polyd/parenrightbig ifd >log2n.",
     "technical_score": 0.005338192520775623,
-    "citation_score": 0.10142565789473684
+    "citation_score": 0.10142565789473684,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -1053,6 +1158,7 @@
     "paragraph_index": 2,
     "paragraph": "This conjecture implies that there exists no data structure for exact near-neighbor searching under the discrete Fre\u0301chet distance that achieves both prep rocessing time in O/parenleftbig n2\u2212\u03b5polym/parenrightbig and query time in O/parenleftbig n1\u2212\u03b5polym/parenrightbig for any \u03b5 >0. Indeed, if such a data structure would exist, then we could solve an instance of orthogonal vectors by stor ingAin this data structure and performing a query with each of the vectors of B.",
     "technical_score": 0.05258518005540166,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   }
 ]

@@ -35,8 +35,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Analytical Insights and Decision Support. Many analytics and business decision-making tasks require understanding how key metrics behave across different rank positions or percentiles, rather than focusing solely on top- kresults. Examples include boundary analysis in targeted advertising, percentile-based customer analyt- ics, and sensitivity analysis around decision cut-offs [ 32,48,89,101]. Such tasks require efficient access to arbitrary quantiles and narrow rank intervals, which RAR supports without exhaustive scanning.",
-    "technical_score": 0.01079375946981397,
-    "citation_score": 0.0,
+    "technical_score": 0.007555631628869779,
+    "citation_score": 0.003238127840944191,
     "has_citation": true
   },
   {
@@ -550,8 +550,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Analytical Insights for Business Decision Support . In many business and decision-support applications, stakeholders are inter- ested in advanced analytics (e.g., income distribution, demographic distribution, shopping behavior) for not only in the top-ranked cus- tomers, or the ones in their close vicinity, but in understanding how key analytics look across different rank positions or percentiles of a scoring function [ 32,48,89,101]. Examples include analyzing income or demographic distributions across distance bands froma retail location, studying customer engagement at different rel- evance thresholds, or evaluating how small changes in targeting criteria affect the selected population. Consider a targeted advertising scenario in which a business defines its audience using a distance-based or machine-generated ranking function \u2013 for instance, customers ranked by proximity to a store or by predicted likelihood of conversion. While traditional systems efficiently retrieve the top-k customers, business decisions often hinge on understanding boundary cases: customers near a cut- off who are just included or excluded under a given targeting policy. These boundary regions are especially important for evaluating trade-offs, fairness, and return on investment. Supporting such analyses requires efficient access to records at arbitrary quantiles or rank positions (e.g., \u201cthe 90th-percentile customer according to this scoring function\u201d), as well as the ability to explore narrow rank intervals around these positions. Nai\u0308ve ap- proaches based on sampling or top-k retrieval are ineffective, since points at the same rank or distance may be widely dispersed in the feature space and cannot be approximated by local neighborhoods. Random-access ranked retrieval enables this form of fine-grained analytical exploration by allowing analysts to directly probe specific rank positions and score bands without exhaustively scanning the dataset. As a result, it provides a powerful primitive for interactive business analytics, sensitivity analysis, and decision support in large-scale, high-dimensional settings.",
-    "technical_score": 0.01656855008002846,
-    "citation_score": 0.0,
+    "technical_score": 0.014306631980365872,
+    "citation_score": 0.0022619180996625884,
     "has_citation": true
   },
   {
@@ -560,8 +560,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Efficient Database Queries over Derived Attributes . Modern database systems routinely support queries over derived attributes , i.e., attributes that are not explicitly stored in the database but are computed on-the-fly as part of a query [ 46,64]. Such derived at- tributes are commonly expressed as functions over existing columns and are treated as first-class citizens in query predicates, projections, and orderings. For example, consider the following SQL query: SELECT Name, YEAR(Today_Date) - YEAR(Birth_Date) AS Age FROM Employees WHERE Age BETWEEN 25 AND 30; Here, Ageis not a stored attribute but is defined by the query itself as a function of Birth_Date . Conceptually, this corresponds to introducing a new attribute whose value is computed per tuple and then used for filtering or ranking. From a ranked-retrieval perspective, derived attributes naturally induce query-dependent scoring functions that combine existing attributes through arithmetic or functional transformations. Sup- porting efficient access to tuples based on such derived attributes poses a fundamental challenge. Since derived attributes do not exist at indexing time, traditional indexing techniques cannot be applied directly, and a nai\u0308ve solution requires computing the derived value for all tuples. This is particularly expensive when users wish to explore arbitrary rank positions or specific rank ranges. Also in spreadsheet applications [ 68,83], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explic- itly enumerating preceding entries. By treating derived attributes as scoring functions defined at query time, RAR enables efficient access to arbitrary rank positions without fully materializing or sorting the entire result set. This makes RAR a natural foundation for supporting interactive and scalable database queries over derived attributes, extending classical database functionality with modern rank-aware access patterns.",
-    "technical_score": 0.008047581467442395,
-    "citation_score": 0.0,
+    "technical_score": 0.006937570230553789,
+    "citation_score": 0.0011100112368886063,
     "has_citation": true
   },
   {
@@ -570,8 +570,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Individually Fair Decision Boundaries . In many decision-making scenarios, the objective is not merely to retrieve items at a fixed rank, but to identify the cut-off points in a ranked list as the decision boundaries [ 6,15,66,74]. To minimize individual unfairness (i.e., to produce different outputs for similar inputs), the cut-off points should indicate meaningful transitions between the classes. In other words, the gap at the boundary should be wide. A tangible example arises in educational assessment, where instructors must determine grade boundaries (e.g., between an A and a B) based on student scores. Rather than enforcing a predefined percentile or absolute threshold, instructors often examine the score distribution around a target rank (e.g., the 90th percentile) to identify natural breaks that separate performance tiers. Similarly, drawing fair decision boundaries in score-based data-driven systems (e.g., for loan appli- cations) requires exploring a band (range) of valid cut-off points to maximize the decision-boundary gap [6]. Random-access ranked retrieval enables principled gap discovery by supporting direct, localized inspection of ranked items around candidate cut-off points. This capability allows decision makers to efficiently retrieve entities within the decision boundary candidates\u2019 range and to set the cut-off point responsibly.",
-    "technical_score": 0.004733871451436704,
-    "citation_score": 0.0,
+    "technical_score": 0.003520058258760626,
+    "citation_score": 0.0012138131926760778,
     "has_citation": true
   },
   {
@@ -640,8 +640,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Note that the term \u2225q\u22252 2is still needed to obtain the exact same value as the d(p,q)2term in Equation 5. But, as the term \u2225q\u22252 2is independent of p, and is missing for all pi\u2208D as part of the compu- tation off, there is no change in ranking. That is, while the scores for all points inDare offset by\u2225q\u22252 2, the ranking between points does not change. Hence, the transformation suffices to answer any l2norm based RAS query using a transformed RAR query with rank set to 1. A visual representation of this lifting transformation is shown in Figure 2. \u25a1 D.2 Cosine Distance: Proof of Lemma 2 Proof. For a query q, the cosine distance is given by, d(p,q)=1\u2212q\u22a4p \u2225q\u22252\u00b7\u2225p\u22252. (7) The numerator of the Equation 7, q\u22a4p, can be interpreted as a dot product between the linear function qandp. Therefore, d(p,q)=1\u2212(\ufe03q \u2225q\u22252)\ufe03\u22a4p \u2225p\u22252 =1+d\u2211\ufe02 j=1\u2212q[j] \u2225q\u22252p \u2225p\u22252 Removing the constant term from the scoring function, the rank- ing generated by Equation 8 is the same as Equation 7. figure shows an example of running KthLevel for i=3. The result of this query is the point D. Algorithm 1 KthLevel-Query(f,i) Input: The scoring function fand the order i Output: Thei-th highest scored point according to f:p(i) 1:Leveli\u2190preprocessed data structure \u22b2Get thei-th level 2:face\u2190Intersection(f,Level i) \u22b2Get the intersection 3:h\u2190The hyperplane corresponding to face in arrangement",
-    "technical_score": 0.003164931198960539,
-    "citation_score": 0.0,
+    "technical_score": 0.0022154518392723775,
+    "citation_score": 0.0009494793596881617,
     "has_citation": true
   },
   {
@@ -780,8 +780,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Query Answering . Letm=|N\u03b5|denote the size of the \u03b5-sample built during the preprocessing, where m\u226an.9We take the follow- ing steps to answer the query: (Step i: Thresholding ) During the query phase , given a query pair (f,i), we begin by solving the 1-RAR problem on the \u03b5-sampleN\u03b5. Specifically, we identify the il-th andiu-th ranked points in N\u03b5 with respect to the scoring function f, where: il=\u230a\ufe03 m(\ufe03i n\u2212\u03b5)\ufe03\u230b\ufe03 , iu=\u2308\ufe03 m(\ufe03i n+\u03b5)\ufe03\u2309\ufe03 , (1) andm=|N\u03b5|. This step can be done by sorting the points in N\u03b5 according to scoref, or by using linear-time-in- mbaseline median- finding algorithms, such as median-of-medians. These two points serve as score-based thresholds that are guaranteed to bound the score of the i-th ranked point in the full dataset D, as stated in the following lemma. Lemma 4. LetN\u03b5be an\u03b5-sample of the dataset Dfor some\u03b5>0. Then, for any linear scoring function f, the score of the i-th ranked pointp(i)inDis bounded as scoref(ql)\u2264scoref(p(i))\u2264scoref(qu), whereqlandquare theil-th andiu-th ranked points in N\u03b5underf, i.e.,qj=rank\u22121 N\u03b5,f(ij),forj\u2208{l,u}.",
-    "technical_score": 0.002518342950278473,
-    "citation_score": 0.0,
+    "technical_score": 0.0023666355436351913,
+    "citation_score": 0.0001517074066432815,
     "has_citation": true
   },
   {
@@ -800,8 +800,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "See Appendix G for proof. \u25a1 (Step ii: SRR) Next, we compute the score thresholds correspond- ing to the boundary points identified in the previous step: l=scoref(ql), u=scoref(qu). (2) Using these values, we define the stripe range Sf,l,u. We then solve an instance of the SRR problem on the dataset Dusing this stripe range. The result is a subset of points within the score in- terval[l,u], which we denote by Do. This set contains the i-th ranked point p(i), sinceN\u03b5is an\u03b5-sample. Note that this set is a 8The Big-Oh notations in our guarantees hide constants that are polynomially depen- dent on the dimension d. Consistent with the prior literature [ 2], our focus is on the exponential dependence on d. 9This comes from Theorem 3, while noting that the VC-dimension of stripe ranges is \u03b4=d+1.conformal set for rank i, hence providing a solution to the relaxed |Do|-RAR problem. (Step iii: Range Counting) We define the half-space Huas, Hu={p\u2208D|p\u22a4f\u2265u}, (3) Hucontains all points in Dwhose score under fis at leastu. We then apply a half-space range counting algorithm in two dimensions to compute the number of points lying within Hu[71]. (Step iv: Final Selection) In the final step, we sort the points in the candidate setDoin descending order according to the scoring function scoref. Let|Hu|denote the number of points in Dwhose score is greater than or equal to u, as computed in the previous step. We then return the (i\u2212|Hu|)-th point in the sorted list as the exact answer to the RAR query. A pseudo-code of Eps2D is shown in Algorithm 2 in Appendix K. The analysis of the space and time complexity of Eps2D algorithm is also provided in Appendix F. The result can be summarized in the following theorem: Theorem 5. TheEps2D algorithm solves the exact RAR problem in 2D using linear space in nandO(n2/3logn)query time.10 6.2 EpsRange :\u03b5-sampling in Higher Dimensions Now, we present the generalization of the Eps2D algorithm to higher dimensions ( d\u22652), referred to as the EpsRange algorithm. The preprocessing phase remains unchanged: we compute an \u03b5-sample N\u03b5of the datasetD, of sizem, for a chosen parameter \u03b5. We know thatm\u226an, because the VC-dim of stripe ranges is \u03b4=d+1[50]. During query time, the algorithm proceeds similarly to Eps2D . In Step i, we find the il-th andiu-th points inN\u03b5according to the scoring function f. In Step ii, we solve a high-dimensional instance of the SRRproblem. The resulting set Docontains candidate points fromDthat lie between the scores of the il-th andiu-th ranked points in the sample. This set is a conformal set for the relaxed problem|Do|-RAR . To obtain the exact solution, we proceed to Step iii, where we perform a high-dimensional range counting query to determine the exact rank of each point in Do. Finally, in Step iv, we sort the candidates in Doand return the point with exact ranki, completing the solution to the RAR selection problem.",
-    "technical_score": 0.0013741643039190754,
-    "citation_score": 0.0,
+    "technical_score": 0.0012642311596055495,
+    "citation_score": 0.00010993314431352605,
     "has_citation": true
   },
   {
@@ -820,8 +820,8 @@
     ],
     "paragraph_index": 7,
     "paragraph": "Datasets . For the ranked retrieval, we use synthetic and real-world datasets. The synthetic dataset is generated from a Zipfian distri- bution. Our real-world datasets include US Used Cars [75] (3M records, 66 columns), FIFA 2023 [63] (300K records, 54 columns), andUS Flights [94] (5M records, 31 columns). For the similarity search setting, we evaluate our methods on five popular benchmark datasets from ann-benchmarks.com :SIFT-128-Euclidean [58] (1M vectors,l2),Fashion-MNIST-784-Euclidean [99] (60K vectors, l2), GIST-960-Euclidean [58] (1M vectors, l2),GloVe-100-Angular [80] (1M vectors, cosine), and GloVe-25-Angular [80] (1M vectors, co- sine).13More details of the datasets are provided in Appendix M.1. 7.1 Stripe Range Retrieval For the SRRproblem, we compare against classical and widely used range searching indices, including KD-Tree [ 16], R-Tree [ 49], and Partition Tree [ 71], and Ball Trees [ 77]. Our proposed hierarchical index is abbreviated as Hierarchical . As a baseline, we also include a simple linear search approach, denoted as Exhaustive . To apply the baseline range searching indices to stripe range queries, we traverse the tree top-down, pruning subtrees whose corresponding hyperrectangles do not intersect the query stripe (see Algorithm 4). More experiments on SRR problem is provided in Appendix M.2. 7.1.1 Synthetic Dataset. We begin by evaluating the performance of the algorithms on synthetic datasets.",
-    "technical_score": 0.0010253527232868974,
-    "citation_score": 0.0,
+    "technical_score": 0.0007177469063008282,
+    "citation_score": 0.0003076058169860692,
     "has_citation": true
   },
   {
@@ -870,8 +870,8 @@
     ],
     "paragraph_index": 12,
     "paragraph": "Accuracy of the Output . In all the settings, the output is guaran- teed to have a recall of 100% , reporting all the points in the range. on\u03ba-RAR problem vs dataset size and \u03b5. In the right plot, n=10000 and\u03ba=\u03b5n. 7.2 Random-Access Ranked Retrieval We include the Threshold Algorithm (TA) and Fagin\u2019s algorithm [ 44] as baseline methods for retrieving top-K elements.14Additionally, we consider a simple search baseline, referred to as Exhaustive , which computes all the scores and extracts the i-th ranked element. Our proposed algorithms ( EpsRange andEpsHier ) are used for the\u03ba-RAR problem while the KthLevel algorithm solves the exact 1-RAR problem in 2D (see Appendix M.3). 7.2.1 Synthetic Dataset. Effect of Dimension and value of i. Figure 7 (left) presents the query time of algorithms as a function of dimension d. Asdin- creases, both Fagin andTAalgorithms exhibit poor scalability for random-access queries. Among the proposed methods, EpsHier consistently outperforms EpsRange , particularly when the d>8. The performance degradation of EpsRange in higher dimensions is because of its reliance on Partition Tree index [ 72], which suffers from the curse of dimensionality. Figure 7 (right) illustrates the im- pact of varying the value of iin the RAR query on the runtime. The TAalgorithm shows increasing query time as igrows, since it must retrieve all the top- iitems. In contrast, the runtime of EpsRange remains relatively stable, as it depends primarily on the position of the stripe rather than the value of i. The EpsHier method also shows a moderate increase in runtime for larger i, which can be because of the relative location of the stripes with respect to the dataset. The marginal stripes (smaller values of i) intersect with fewer balls in the hierarchical structure proposed in Section 6.3, and the pruning is more effective in this case.",
-    "technical_score": 0.000753203028507945,
-    "citation_score": 0.0,
+    "technical_score": 0.0006786284712299306,
+    "citation_score": 7.457455727801435e-05,
     "has_citation": true
   },
   {
@@ -1020,8 +1020,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Query Time . During the query time, Algorithm 1 finds the inter- section of the i-th level with the vector of the function f. Given that the total number of faces in each level i\u2208[n]is bounded by O(nd), identifying this intersection using a state-of-the-art algorithm for point location on the arrangement of hyperplanes is in O(logn), ignoring the constant factors that depend on d[73].",
-    "technical_score": 0.0011776102006219452,
-    "citation_score": 0.0,
+    "technical_score": 0.0009936086067747663,
+    "citation_score": 0.00018400159384717894,
     "has_citation": true
   },
   {
@@ -1200,8 +1200,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Summing over all layers, the total runtime becomes: \u2211\ufe02 lTl=\u2211\ufe02 ld\u00b7n rl\u00b7n rl\u22121=\u2211\ufe02 ldn2 r2l\u22121=O(dn2), again assuming r=O(1). For computing the smallest enclosing ball of each area, we use Welzl\u2019s algorithm, which runs in linear time with respect to the number of points [98].",
-    "technical_score": 0.012095427153768094,
-    "citation_score": 0.0,
+    "technical_score": 0.008466799007637665,
+    "citation_score": 0.003628628146130428,
     "has_citation": true
   },
   {

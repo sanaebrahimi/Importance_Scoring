@@ -71,8 +71,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "See App. \u00a7A for more details. 3 I NFINI -GRAM MINI We develop INFINI -GRAM MINI as a scalable and efficient implementation of FM-index on natural 2zeroth-order entropy measures the unigram probability distribution of individual symbols (i.e. UTF-8 characters).24946 language data. For indexing, INFINI -GRAM MINI achieves 18 \u00d7speedup and reduces RAM usage by 3.2\u00d7compared to the previous best existing imple- mentation in SDSL . This paves way for indexing petabyte-level text corpora with reasonable time and compute. For querying, we extended the im- plementation in SDSL to work with indexes stored on disk, allowing us to query large indexes on ma- chines with limited RAM. In contrast to the original infini-gram which tok- enizes the text, we construct the index directly on raw UTF-8 bytes, which saves tokenization time and allows more flexibility when querying. Tok- enization is a technique to reduce index size, but since FM-index is already a compressed index, to- kenization would not be helpful here. 3.1 Index Construction Optimizing the indexing steps. We use a paral- lelized implementation of each indexing step. For building SA and BWT, we adapt from the parallel implementation in Liu et al. (2024). For building the wavelet tree, we use the parallel implemen- tation in Labeit et al. (2017). For sampling SA and creating a sampled version of ISA, we par- allelized the implementation in SDSL . All these steps were single-threaded in SDSL , and by paral- lelizing them we achieve significant speedup. We measured the time and peak RAM usage for indexing an 8.7 GB corpus (a single file from DCLM-baseline) using implementation of SDSL and INFINI -GRAM MINI . Their implementation re- quired 5,847 seconds and 74,807 MB of peak RAM, whereas INFINI -GRAM MINI completed indexing in 324 seconds (18 \u00d7speedup) and peak RAM of 23,742 MB (3.2 \u00d7reduction).",
-    "technical_score": 0.004343840694525604,
-    "citation_score": 0.0,
+    "technical_score": 0.004213525473689837,
+    "citation_score": 0.00013031522083576814,
     "has_citation": true
   },
   {
@@ -293,8 +293,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "We classify an entry into three contamination levels using the same thresholds with different nam- ings as Touvron et al. (2023):",
-    "technical_score": 0.001956026527573749,
-    "citation_score": 0.0,
+    "technical_score": 0.0013692185693016242,
+    "citation_score": 0.0005868079582721247,
     "has_citation": true
   },
   {

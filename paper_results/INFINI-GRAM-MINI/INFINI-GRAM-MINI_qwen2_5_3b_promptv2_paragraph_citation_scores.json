@@ -448,5 +448,15 @@
     "paragraph": "Magenta text is the mapping of answers. sive text corpus, and we show its scalability to a petabyte-scale corpus. We showcase INFINI -GRAM MINI \u2019s application on benchmark contamination analysis at scale. Limitations Although INFINI -GRAM MINI shows significant im- provements on text compression rate, document retrieval latency remains higher than a canoni- cal suffix array. For example, reconstructing a 3000-character document takes 1.8 seconds on Pile and 4.5 seconds on DCLM-baseline, compared to millisecond-level retrieval in system like Infini- gram (Liu et al., 2024). This is a trade-off with INFINI -GRAM MINI \u2019s compression rate: INFINI - GRAM MINI does not store the original text in a contiguous block. To retrieve a document, we need to reconstruct it character-by-character, leading to a large number of reads in random addresses. These process takes long time since the entire index is kept on disk at inference time. The high latency can potentially be reduced using techniques like disk page prefetching. Identifying co-occurrences of multiple patterns is inefficient with the FM-index, since mapping every match from the suffix array range back toits position in original text takes very long time thus making this operation impractical. In contrast, the original infini-gram supports this operation effi- ciently. INFINI -GRAM MINI only supports exact-match searches. As a result, our benchmark contami- nation analysis is limited to case-sensitive exact matching, which may fail to detect contamination of instances with minor textual discrepancies. As the text corpora may contain biased or toxic content, document retrieval output may contain content that can be perceived as ethically problem- atic, and may contain sensitive information. The output of INFINI -GRAM MINI does not reflect au- thors\u2019 views.",
     "citation": "(Liu et al., 2024)",
     "citation_score": 0.020633661167342218
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We classify an entry into three contamination levels using the same thresholds with different nam- ings as Touvron et al. (2023):",
+    "citation": "(Touvron et al., 2023)",
+    "citation_score": 0.0012904525061902662
   }
 ]

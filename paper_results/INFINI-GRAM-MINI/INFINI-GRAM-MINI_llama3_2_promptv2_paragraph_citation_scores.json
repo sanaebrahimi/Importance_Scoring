@@ -428,5 +428,35 @@
     "paragraph": "Magenta text is the mapping of answers. sive text corpus, and we show its scalability to a petabyte-scale corpus. We showcase INFINI -GRAM MINI \u2019s application on benchmark contamination analysis at scale. Limitations Although INFINI -GRAM MINI shows significant im- provements on text compression rate, document retrieval latency remains higher than a canoni- cal suffix array. For example, reconstructing a 3000-character document takes 1.8 seconds on Pile and 4.5 seconds on DCLM-baseline, compared to millisecond-level retrieval in system like Infini- gram (Liu et al., 2024). This is a trade-off with INFINI -GRAM MINI \u2019s compression rate: INFINI - GRAM MINI does not store the original text in a contiguous block. To retrieve a document, we need to reconstruct it character-by-character, leading to a large number of reads in random addresses. These process takes long time since the entire index is kept on disk at inference time. The high latency can potentially be reduced using techniques like disk page prefetching. Identifying co-occurrences of multiple patterns is inefficient with the FM-index, since mapping every match from the suffix array range back toits position in original text takes very long time thus making this operation impractical. In contrast, the original infini-gram supports this operation effi- ciently. INFINI -GRAM MINI only supports exact-match searches. As a result, our benchmark contami- nation analysis is limited to case-sensitive exact matching, which may fail to detect contamination of instances with minor textual discrepancies. As the text corpora may contain biased or toxic content, document retrieval output may contain content that can be perceived as ethically problem- atic, and may contain sensitive information. The output of INFINI -GRAM MINI does not reflect au- thors\u2019 views.",
     "citation": "(Liu et al., 2024)",
     "citation_score": 0.001284468775344688
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "See App. \u00a7A for more details. 3 I NFINI -GRAM MINI We develop INFINI -GRAM MINI as a scalable and efficient implementation of FM-index on natural 2zeroth-order entropy measures the unigram probability distribution of individual symbols (i.e. UTF-8 characters).24946 language data. For indexing, INFINI -GRAM MINI achieves 18 \u00d7speedup and reduces RAM usage by 3.2\u00d7compared to the previous best existing imple- mentation in SDSL . This paves way for indexing petabyte-level text corpora with reasonable time and compute. For querying, we extended the im- plementation in SDSL to work with indexes stored on disk, allowing us to query large indexes on ma- chines with limited RAM. In contrast to the original infini-gram which tok- enizes the text, we construct the index directly on raw UTF-8 bytes, which saves tokenization time and allows more flexibility when querying. Tok- enization is a technique to reduce index size, but since FM-index is already a compressed index, to- kenization would not be helpful here. 3.1 Index Construction Optimizing the indexing steps. We use a paral- lelized implementation of each indexing step. For building SA and BWT, we adapt from the parallel implementation in Liu et al. (2024). For building the wavelet tree, we use the parallel implemen- tation in Labeit et al. (2017). For sampling SA and creating a sampled version of ISA, we par- allelized the implementation in SDSL . All these steps were single-threaded in SDSL , and by paral- lelizing them we achieve significant speedup. We measured the time and peak RAM usage for indexing an 8.7 GB corpus (a single file from DCLM-baseline) using implementation of SDSL and INFINI -GRAM MINI . Their implementation re- quired 5,847 seconds and 74,807 MB of peak RAM, whereas INFINI -GRAM MINI completed indexing in 324 seconds (18 \u00d7speedup) and peak RAM of 23,742 MB (3.2 \u00d7reduction).",
+    "citation": "(Liu et al., 2024)",
+    "citation_score": 3.909456625073044e-05
+  },
+  {
+    "section_path": [
+      "Background: FM-index",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "See App. \u00a7A for more details. 3 I NFINI -GRAM MINI We develop INFINI -GRAM MINI as a scalable and efficient implementation of FM-index on natural 2zeroth-order entropy measures the unigram probability distribution of individual symbols (i.e. UTF-8 characters).24946 language data. For indexing, INFINI -GRAM MINI achieves 18 \u00d7speedup and reduces RAM usage by 3.2\u00d7compared to the previous best existing imple- mentation in SDSL . This paves way for indexing petabyte-level text corpora with reasonable time and compute. For querying, we extended the im- plementation in SDSL to work with indexes stored on disk, allowing us to query large indexes on ma- chines with limited RAM. In contrast to the original infini-gram which tok- enizes the text, we construct the index directly on raw UTF-8 bytes, which saves tokenization time and allows more flexibility when querying. Tok- enization is a technique to reduce index size, but since FM-index is already a compressed index, to- kenization would not be helpful here. 3.1 Index Construction Optimizing the indexing steps. We use a paral- lelized implementation of each indexing step. For building SA and BWT, we adapt from the parallel implementation in Liu et al. (2024). For building the wavelet tree, we use the parallel implemen- tation in Labeit et al. (2017). For sampling SA and creating a sampled version of ISA, we par- allelized the implementation in SDSL . All these steps were single-threaded in SDSL , and by paral- lelizing them we achieve significant speedup. We measured the time and peak RAM usage for indexing an 8.7 GB corpus (a single file from DCLM-baseline) using implementation of SDSL and INFINI -GRAM MINI . Their implementation re- quired 5,847 seconds and 74,807 MB of peak RAM, whereas INFINI -GRAM MINI completed indexing in 324 seconds (18 \u00d7speedup) and peak RAM of 23,742 MB (3.2 \u00d7reduction).",
+    "citation": "(Labeit et al., 2017)",
+    "citation_score": 9.12206545850377e-05
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We classify an entry into three contamination levels using the same thresholds with different nam- ings as Touvron et al. (2023):",
+    "citation": "(Touvron et al., 2023)",
+    "citation_score": 0.0005868079582721247
   }
 ]
