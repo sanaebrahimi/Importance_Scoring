@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections import defaultdict
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
@@ -1018,6 +1018,78 @@ class ResearchGapDetector:
 
 
 # ---------------------------------------------------------------------------
+# Corpus Contribution  (eq. corpus_contribution)
+# ---------------------------------------------------------------------------
+
+class CorpusContributionAnalyzer:
+    """
+    Corpus-level technical contribution score.
+
+        σ_P(p) = σ_tech(p) + Σ_{q ∈ C(p)}  W(q,p) · σ_P(q)
+
+    where C(p) is the set of corpus papers that directly cite p and W(q,p)
+    is the citation-importance weight q assigns to p.  Equivalent to the
+    path-product expansion
+
+        σ_P(p) = σ_tech(p)
+                 + Σ_{paths a→…→p}  σ_tech(a) · Π_{(u,v) on path} W(u,v)
+
+    so p accumulates σ_tech(a) of every upstream corpus paper a, discounted
+    by the product of edge weights along every path from a to p.
+
+    Computed in one topological-order pass (Kahn's algorithm).  Nodes in
+    exceptional cycles retain only the score propagated from their acyclic
+    predecessors and emit a warning.
+    """
+
+    def __init__(self, graph: CitationGraph) -> None:
+        self.graph = graph
+
+    def compute(self) -> Dict[str, float]:
+        """Return {paper_id: σ_P(paper_id)} for every corpus paper."""
+        corpus = self.graph.corpus_nodes()
+
+        # Corpus-only edges: in_edges[p] = [(q, w), …], out_refs[q] = [p, …]
+        in_edges: Dict[str, List[Tuple[str, float]]] = defaultdict(list)
+        out_refs: Dict[str, List[str]] = defaultdict(list)
+        for (q, p), w in self.graph.edges().items():
+            if q in corpus and p in corpus:
+                in_edges[p].append((q, w))
+                out_refs[q].append(p)
+
+        # Kahn's topological sort: q is processed before p whenever q cites p
+        in_deg: Dict[str, int] = {p: len(in_edges[p]) for p in corpus}
+        queue: deque = deque(p for p in corpus if in_deg[p] == 0)
+
+        scores: Dict[str, float] = {
+            p: self.graph.papers[p].originality_score() for p in corpus
+        }
+
+        processed: Set[str] = set()
+        while queue:
+            q = queue.popleft()
+            processed.add(q)
+            sq = scores[q]
+            for p in out_refs[q]:
+                scores[p] += self.graph.weight(q, p) * sq
+                in_deg[p] -= 1
+                if in_deg[p] == 0:
+                    queue.append(p)
+
+        unprocessed = corpus - processed
+        if unprocessed:
+            print(
+                f"[CorpusContributionAnalyzer] Warning: {len(unprocessed)} node(s) "
+                f"in a cycle; scores are partial: {sorted(unprocessed)}"
+            )
+
+        return scores
+
+    def top_k(self, k: int = 10) -> List[Tuple[str, float]]:
+        return sorted(self.compute().items(), key=lambda x: x[1], reverse=True)[:k]
+
+
+# ---------------------------------------------------------------------------
 # Main Framework
 # ---------------------------------------------------------------------------
 
@@ -1026,19 +1098,21 @@ class KnowledgeDiscoveryFramework:
     Unified entry point for all analyses in the knowledge-discovery framework.
 
     Sections 3–5 of the framework paper are accessible via sub-analyzers:
-      .pagerank         → PageRankAnalyzer       (§3.1)
-      .influence        → InfluenceAnalyzer       (§3.2)
-      .communities      → CommunityDetector       (§3.3)
-      .temporal         → TemporalAnalyzer         (§3.4)
-      .section_citations→ SectionCitationAnalyzer  (§4.1–4.2, 4.4)
-      .originality      → OriginalityAnalyzer      (§4.3)
-      .foundational     → FoundationalWorkAnalyzer (§5.2)
-      .research_gaps    → ResearchGapDetector      (§5.3)
+      .pagerank            → PageRankAnalyzer            (§3.1)
+      .corpus_contribution → CorpusContributionAnalyzer  (§3.1 / eq. corpus_contribution)
+      .influence           → InfluenceAnalyzer            (§3.2)
+      .communities         → CommunityDetector            (§3.3)
+      .temporal            → TemporalAnalyzer             (§3.4)
+      .section_citations   → SectionCitationAnalyzer     (§4.1–4.2, 4.4)
+      .originality         → OriginalityAnalyzer         (§4.3)
+      .foundational        → FoundationalWorkAnalyzer    (§5.2)
+      .research_gaps       → ResearchGapDetector         (§5.3)
     """
 
     def __init__(self, graph: CitationGraph) -> None:
         self.graph = graph
         self.pagerank = PageRankAnalyzer(graph)
+        self.corpus_contribution = CorpusContributionAnalyzer(graph)
         self.influence = InfluenceAnalyzer(graph)
         self.communities = CommunityDetector(graph)
         self.temporal = TemporalAnalyzer(graph)

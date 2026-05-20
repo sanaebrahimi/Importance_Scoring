@@ -2772,7 +2772,7 @@ def query_pair_probability(
         response = client.chat(
             model=model,
             messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-            options={"temperature": temperature},
+            options={"temperature": temperature, "think": False},
         )
         raw_response = response.message.content if getattr(response, "message", None) else ""
         append_debug_log(
@@ -2857,7 +2857,7 @@ def direct_allocate_scores(
         response = client.chat(
             model=model,
             messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-            options={"temperature": temperature},
+            options={"temperature": temperature, "think": False},
         )
         raw_response = response.message.content if getattr(response, "message", None) else ""
         append_debug_log(
@@ -3253,7 +3253,7 @@ def direct_allocate_citation_scores(
                 {"role": "system", "content": CITATION_SPLIT_SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
             ],
-            options={"temperature": temperature},
+            options={"temperature": temperature, "think": False},
         )
         raw_response = response.message.content if getattr(response, "message", None) else ""
         append_debug_log(
@@ -3678,7 +3678,7 @@ def split_paragraph_channel_scores(
                         {"role": "system", "content": _sys_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
-                    options={"temperature": current_temp},
+                    options={"temperature": current_temp, "think": False},
                 )
                 raw_response = response.message.content if getattr(response, "message", None) else ""
             except Exception as exc:
