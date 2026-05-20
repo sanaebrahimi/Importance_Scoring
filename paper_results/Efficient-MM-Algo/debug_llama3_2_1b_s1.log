@@ -1,0 +1,749 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-19T17:32:33 model=llama3.2:1b host=http://localhost:11434 paper_id=Efficient-MM-Algo n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Preliminaries', 'Preprocessing: Index Construction', 'Inference Time: Vector-to-Matrix Multiplication', 'Experiments', 'Conclusion', 'Background', 'Related Work', 'Proofs', 'Discussion', 'Experiments Details', 'Extended Experiment Results']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 10
+5: 70
+6: 30
+7: 85
+8: 15
+9: 75
+10: 35
+11: 95
+12: 5
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_compressed estimated_tokens=1857 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=1/5
+1: 20
+2: 30
+3: 50
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.008250879551073578
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/5
+0.099
+3: 0.245
+4: 0.146
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=2/5
+0.12: 1
+0.04: 2
+0.01: 3
+0.03: 4
+[citation_split] paragraph_id=Introduction::p2 sample=1 attempt=1/5
+0.011803278688524592
+3: 20
+4: 18.5
+6: 17.5
+7: 16.5
+9: 15.5
+[citation_split] paragraph_id=Introduction::p2 sample=1 attempt=2/5
+1: 23
+2: 17
+3: 15
+4: 12
+5: 10
+6: 8
+7: 6
+8: 4
+9: 2
+[all_together_subsections_item_order] parent=Preliminaries sample=1/1 order=['[Section Lead-in]', 'Notation', 'Problem Formulation', 'Solution Overview']
+[all_together_subsections] parent=Preliminaries sample=1 attempt=1/5
+1: 34
+3: 66
+4: 21
+[all_together_subsections] parent=Preliminaries sample=1 attempt=2/5
+1: 43
+2: 31
+3: 26
+4: 21
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=821 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.026765387031145362
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=60, citation=80
+Paragraph7: technical=85, citation=0
+[paragraph_scoring] parent=Notation::paragraphs method=channel_full_parent estimated_tokens=1078 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0026081649788824842
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=40, citation=60
+Paragraph4: technical=10, citation=90
+Paragraph5: technical=0, citation=100
+[paragraph_scoring] parent=Problem Formulation::paragraphs method=channel_full_parent estimated_tokens=1131 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Problem Formulation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Problem Formulation::paragraphs sample=1 attempt=1/5
+1: 34.6
+2: 25.4
+3: 17.2
+4: 12.2
+5: 9.8
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0008939165831421103
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[paragraph_scoring] parent=Solution Overview::paragraphs method=channel_compressed estimated_tokens=1296 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Solution Overview::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Solution Overview::paragraphs sample=1 attempt=1/5
+0.12000000000000004
+1: 30
+2: 20
+3: 10
+4: 5
+5: 15
+6: 25
+7: 45
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.015160658643100872
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=60, citation=40
+Paragraph5: technical=90, citation=10
+Paragraph6: technical=100, citation=0
+Paragraph7: technical=80, citation=20
+[all_together_subsections_item_order] parent=Preprocessing: Index Construction sample=1/1 order=['[Section Lead-in]', 'Step 1: Column Blocking', 'Step 2: Row Permutation', 'Step 3: Segmentation', 'Preprocessing Algorithm']
+[all_together_subsections] parent=Preprocessing: Index Construction sample=1 attempt=1/5
+1: 80
+2: 30
+3: 90
+4: 70
+5: 50
+6: 20
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=1100 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.005965129520599455
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+[paragraph_scoring] parent=Step 1: Column Blocking::paragraphs method=channel_full_parent estimated_tokens=1004 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Step 1: Column Blocking::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Step 1: Column Blocking::paragraphs sample=1 attempt=1/5
+1: 34.6
+3: 25.4
+2: 17.8
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0163482444180965
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_scoring] parent=Step 2: Row Permutation::paragraphs method=channel_full_parent estimated_tokens=1118 threshold=1200 paragraphs=4 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Step 2: Row Permutation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Step 2: Row Permutation::paragraphs sample=1 attempt=1/5
+1: 34.6
+2: 25.4
+3: 17.9
+4: 16.7
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01767797051627726
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+[paragraph_scoring] parent=Step 3: Segmentation::paragraphs method=channel_compressed estimated_tokens=1970 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Step 3: Segmentation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Step 3: Segmentation::paragraphs sample=1 attempt=1/5
+1: 80
+2: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0001949627903418305
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[all_together_subsections_item_order] parent=Preprocessing Algorithm sample=1/1 order=['[Section Lead-in]', 'Complexity Analysis']
+[all_together_subsections] parent=Preprocessing Algorithm sample=1 attempt=1/5
+0.24609375
+1: 30
+2: 70
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=780 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020944181849646804
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=60, citation=80
+[paragraph_scoring] parent=Complexity Analysis::paragraphs method=channel_full_parent estimated_tokens=673 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.010207515495539755
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=100
+[all_together_subsections_item_order] parent=Inference Time: Vector-to-Matrix Multiplication sample=1/1 order=['[Section Lead-in]', 'Segmented Sum Computation', 'RSR', 'RSR++']
+[all_together_subsections] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 attempt=1/5
+1: 80
+2: 20
+3: 70
+4: 30
+5: 50
+6: 90
+7: 10
+8: 60
+9: 40
+10: 80
+11: 25
+12: 55
+13: 35
+14: 45
+15: 75
+16: 85
+17: 95
+18: 70
+19: 30
+20: 50
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=712 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.028716392166203433
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=60, citation=80
+Paragraph7: technical=50, citation=70
+Paragraph8: technical=95, citation=5
+[paragraph_scoring] parent=Segmented Sum Computation::paragraphs method=channel_compressed estimated_tokens=1676 threshold=1200 paragraphs=6 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Segmented Sum Computation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6']
+[all_together_paragraphs] parent=Segmented Sum Computation::paragraphs sample=1 attempt=1/5
+1: 90
+3: 10
+4: 5
+5: 25
+6: 20
+[all_together_paragraphs] parent=Segmented Sum Computation::paragraphs sample=1 attempt=2/5
+1: 90
+2: 10
+3: 80
+4: 70
+5: 60
+6: 50
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.002782375301404437
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=30, citation=70
+Paragraph4: technical=20, citation=40
+Paragraph5: technical=90, citation=10
+Paragraph6: technical=100, citation=0
+[all_together_subsections_item_order] parent=RSR sample=1/1 order=['[Section Lead-in]', 'Complexity Analysis', 'The optimal k']
+[all_together_subsections] parent=RSR sample=1 attempt=1/5
+1: 80
+2: 20
+3: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=950 threshold=1200 paragraphs=4 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+0.3
+1: 30
+2: 20
+3: 50
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.018111780941006732
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=0
+[paragraph_scoring] parent=Complexity Analysis::paragraphs method=channel_full_parent estimated_tokens=766 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Complexity Analysis::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Complexity Analysis::paragraphs sample=1 attempt=1/5
+0.3: Paragraph 1
+0.4: Paragraph 2
+[all_together_paragraphs] parent=Complexity Analysis::paragraphs sample=1 attempt=2/5
+1: 92
+2: 8
+3: 0
+4: 2
+5: 95
+6: 5
+7: 85
+8: 20
+9: 75
+10: 30
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.021891953600814536
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[paragraph_scoring] parent=The optimal k::paragraphs method=channel_full_parent estimated_tokens=828 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=The optimal k::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=The optimal k::paragraphs sample=1 attempt=1/5
+0.25
+1: 20
+Paragraph 1
+Section/subsection name: Paragraph 1\nContent:\nWhile we could prove Theorem 4.3 by choosing k= log(n log(n)), this choice might not be optimal, i.e., it may not minimize the run-time of the algorithm.
+
+0.5
+2: 30
+Paragraph 2
+Section/subsection name: Paragraph 2\nContent:\nThe optimal value of kcan be found using Equation 6. kopt= argmin k\u2208[log(log( n))]n k(n+k2k) (6) To find the optimal value of kbased on Equation 6, we apply abinary search onkin the range [1,log(n)\u2212log(log( n))]. In Appendix F.1, we run experiments to find the optimal value of kand to evaluate the impact of varying it.
+
+0
+1: 15
+Paragraph 1
+Section/subsection name: Paragraph 1\nContent:\nWhile we could prove Theorem 4.3 by choosing k= log(n log(n)), this choice might not be optimal, i.e., it may not minimize the run-time of the algorithm.
+
+0.25
+2: 35
+Paragraph 2
+Section/subsection name: Paragraph 2\nContent:\nThe optimal value of kcan be found using Equation 6. kopt= argmin k\u2208[log(log( n))]n k(n+k2k) (6) To find the optimal value of kbased on Equation 6, we apply abinary search onkin the range [1,log(n)\u2212log(log( n))]. In Appendix F.1, we run experiments to find the optimal value of kand to evaluate the impact of varying it.
+
+0
+1: 10
+Paragraph 1
+Section/subsection name: Paragraph 1\nContent:\nWhile we could prove Theorem 4.3 by choosing k= log(n log(n)), this choice might not be optimal, i.e., it may not minimize the run-time of the algorithm.
+
+0.25
+2: 40
+Paragraph 2
+Section/subsection name: Paragraph 2\nContent:\nThe optimal value of kcan be found using Equation 6. kopt= argmin k\u2208[log(log( n))]n k(n+k2k) (6) To find the optimal value of kbased on Equation 6, we apply abinary search onkin the range [1,log(n)\u2212log(log( n))]. In Appendix F.1, we run experiments to find the optimal value of kand to evaluate the impact of varying it.
+
+0
+1: 5
+Paragraph 1
+Section/subsection name: Paragraph 1\nContent:\nWhile we could prove Theorem 4.3 by choosing k= log(n log(n)), this choice might not be optimal, i.e., it may not minimize the run-time of the algorithm.
+
+0.25
+2: 45
+Paragraph 2
+Section/subsection name: Paragraph 2\nContent:\nThe optimal value of kcan be found using Equation 6. kopt= argmin k\u2208[log(log( n))]n k(n+k2k) (6) To find the optimal value of kbased on Equation 6, we apply abinary search onkin the range [1,log(n)\u2212log(log( n))]. In Appendix F.1, we run experiments to find the optimal value of kand to evaluate the impact of varying it.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.029193472919381118
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[all_together_subsections_item_order] parent=RSR++ sample=1/1 order=['[Section Lead-in]', 'Complexity Analysis', 'The optimal k']
+[all_together_subsections] parent=RSR++ sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 10
+5: 70
+6: 30
+7: 50
+8: 60
+9: 40
+10: 50
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1211 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 90
+2: 10
+3: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024882139927589846
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_scoring] parent=Complexity Analysis::paragraphs method=channel_full_parent estimated_tokens=921 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Complexity Analysis::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Complexity Analysis::paragraphs sample=1 attempt=1/5
+0.25
+1: 30
+2: 20
+3: 50
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025851207009323317
+Paragraph1: technical=95, citation=5
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+[paragraph_scoring] parent=The optimal k::paragraphs method=channel_compressed estimated_tokens=5945 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=The optimal k::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=The optimal k::paragraphs sample=1 attempt=1/5
+1: 80
+2: 70
+3: 90
+4: 85
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.021137155086447704
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+[citation_split] paragraph_id=Inference Time: Vector-to-Matrix Multiplication > RSR++ > The optimal k::p3 sample=1 attempt=1/5
+3.2255923541514574e-05 : 0.000006
+96.9 (5.24x) : 0.00144
+336.7 (4.92x) : 0.00336
+391.8 (4.99x) : 0.00401
+326.4 (4.99x) : 0.00256
+68.578.5 : 0.000136
+65.4 : 0.000134
+17.6 : 0.000143
+18.520.8 : 0.000145
+[citation_split] paragraph_id=Inference Time: Vector-to-Matrix Multiplication > RSR++ > The optimal k::p3 sample=1 attempt=2/5
+1: 10
+2: 20
+3: 30
+4: 25
+5: 15
+6: 35
+7: 45
+8: 40
+9: 28
+10: 38
+[all_together_subsections_item_order] parent=Experiments sample=1/1 order=['[Section Lead-in]', 'Matrix Multiplication Using NumPy']
+[all_together_subsections] parent=Experiments sample=1 attempt=1/5
+1: 93
+2: 7
+3: 4
+4: 0.77
+5: 24
+6: 17.84
+7: 25.19
+8: 17.84
+9: 17.84
+10: 17.84
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1845 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 80
+2: 20
+3: 10
+4: 5
+5: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0023937593077088246
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=60, citation=40
+Paragraph5: technical=80, citation=20
+[paragraph_scoring] parent=Matrix Multiplication Using NumPy::paragraphs method=channel_compressed estimated_tokens=1934 threshold=1200 paragraphs=6 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Matrix Multiplication Using NumPy::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6']
+[all_together_paragraphs] parent=Matrix Multiplication Using NumPy::paragraphs sample=1 attempt=1/5
+1: 80
+2: 20
+3: 10
+4: 5
+5: 15
+6: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0030300428822918734
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=30, citation=70
+Paragraph4: technical=40, citation=60
+Paragraph5: technical=90, citation=10
+Paragraph6: technical=100, citation=0
+[paragraph_scoring] parent=Conclusion::paragraphs method=channel_full_parent estimated_tokens=1017 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Conclusion::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Conclusion::paragraphs sample=1 attempt=1/5
+1: 92.0
+2: 8.0
+3: 7.0
+4: 5.0
+5: 4.0
+6: 3.0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019070533327932005
+Paragraph1: technical=60, citation=40
+Paragraph2: technical=90, citation=10
+[paragraph_scoring] parent=Background::paragraphs method=channel_compressed estimated_tokens=1311 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.010944965369102527
+Paragraph1: technical=60, citation=40
+Paragraph2: technical=90, citation=10
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_compressed estimated_tokens=1261 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=1/5
+0.3333333333333333: Paragraph 1
+0.166666667: Paragraph 2
+0.5: Paragraph 3
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=2/5
+1: 43
+2: 26
+3: 32
+4: 21
+5: 38
+6: 45
+7: 55
+8: 59
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0062852109231446305
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=1/5
+0.0099
+3: 0.08333333333333333
+4: 0.06666666666666667
+5: 0.0588235294117647
+6: 0.041666666666666668
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=2/5
+1: 0.09375
+2: 0.09375
+3: 0.09375
+4: 0.09375
+5: 0.09375
+6: 0.09375
+[citation_split] paragraph_id=Related Work::p2 sample=1 attempt=1/5
+0.245
+3: 25.4
+2: 20
+1: 15.6
+4: 9.5
+[citation_split] paragraph_id=Related Work::p3 sample=1 attempt=1/5
+0.245
+3: 23.5
+4: 20.8
+6: 14.7
+1: 12.9
+2: 11.1
+5: 10.2
+[all_together_subsections_item_order] parent=Proofs sample=1/1 order=['[Section Lead-in]', 'Parallelization']
+[all_together_subsections] parent=Proofs sample=1 attempt=1/5
+1: 80
+2: 20
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=2547 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 30
+3: 20
+4: 10
+5: 15
+6: 25
+7: 35
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=2/5
+1: 67
+2: 33
+3: 25
+4: 12
+5: 18
+6: 8
+7: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.021873803938510475
+Section Lead-in:
+Paragraph 1: technical=5, citation=95
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+Paragraph 7: technical=80, citation=20
+
+Related Work:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+Paragraph 7: technical=80, citation=20
+
+Methods:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+Paragraph 7: technical=80, citation=20
+
+Background:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+
+Methods:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+
+Conclusion:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+
+Related Work:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+
+Methods:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+
+Background:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+
+Methods:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+
+Conclusion:
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=90, citation=10
+Paragraph 6: technical=100, citation=0
+[paragraph_scoring] parent=Parallelization::paragraphs method=channel_compressed estimated_tokens=1716 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Parallelization::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Parallelization::paragraphs sample=1 attempt=1/5
+1: 67
+2: 23
+3: 56
+4: 21
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011383663252729433
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+[all_together_subsections_item_order] parent=Discussion sample=1/1 order=['[Section Lead-in]', 'Advantages', 'Limitations', 'Generalization']
+[all_together_subsections] parent=Discussion sample=1 attempt=1/5
+1: 30
+3: 25
+4: 20
+[all_together_subsections] parent=Discussion sample=1 attempt=2/5
+1: 43
+2: 27
+3: 26
+4: 41
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=642 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019199992795622785
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+Paragraph7: technical=100, citation=0
+[paragraph_scoring] parent=Advantages::paragraphs method=channel_full_parent estimated_tokens=1185 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.016708492313239388
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=60, citation=40
+Paragraph7: technical=55, citation=45
+Paragraph8: technical=50, citation=35
+[paragraph_scoring] parent=Limitations::paragraphs method=channel_full_parent estimated_tokens=882 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020538427529696236
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=60, citation=80
+[paragraph_scoring] parent=Generalization::paragraphs method=channel_full_parent estimated_tokens=814 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025285557605694287
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+Paragraph6: technical=100, citation=0
+[all_together_subsections_item_order] parent=Experiments Details sample=1/1 order=['Synthetic Dataset', 'PyTorch Implementation Details: CPU Experiments', 'PyTorch Implementation Details: GPU Experiments']
+[all_together_subsections] parent=Experiments Details sample=1 attempt=1/5
+1: 20
+2: 30
+3: 50
+[paragraph_scoring] parent=Synthetic Dataset::paragraphs method=channel_full_parent estimated_tokens=780 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006871442158923131
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=60, citation=40
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=80, citation=20
+Paragraph7: technical=0, citation=100
+[paragraph_scoring] parent=PyTorch Implementation Details: CPU Experiments::paragraphs method=channel_compressed estimated_tokens=1283 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=PyTorch Implementation Details: CPU Experiments::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=PyTorch Implementation Details: CPU Experiments::paragraphs sample=1 attempt=1/5
+1: 20
+2: 30
+3: 50
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.009463591441772458
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[paragraph_scoring] parent=PyTorch Implementation Details: GPU Experiments::paragraphs method=channel_full_parent estimated_tokens=1199 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=PyTorch Implementation Details: GPU Experiments::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=PyTorch Implementation Details: GPU Experiments::paragraphs sample=1 attempt=1/5
+0: 20
+3: 10
+1: 30
+2: 50
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006329485307589794
+Paragraph1: technical=60, citation=40
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=95, citation=5
+[all_together_subsections_item_order] parent=Extended Experiment Results sample=1/1 order=['Parameter k Optimization', 'RSR vs. RSR++ on Native Implementation', 'Matrix Multiplication Using NumPy: Inference Time', 'Performance evaluation on GPU']
+[all_together_subsections] parent=Extended Experiment Results sample=1 attempt=1/5
+1: 34
+2: 26
+3: 45
+4: 29
+[paragraph_scoring] parent=Parameter k Optimization::paragraphs method=channel_full_parent estimated_tokens=1144 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.026291028794180066
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=60, citation=40
+Paragraph7: technical=55, citation=35
+Paragraph8: technical=50, citation=25
+Paragraph9: technical=45, citation=15
+Paragraph10: technical=40, citation=0
+[paragraph_scoring] parent=RSR vs. RSR++ on Native Implementation::paragraphs method=channel_full_parent estimated_tokens=625 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.009440336423954337
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+Paragraph7: technical=100, citation=0
+[paragraph_scoring] parent=Matrix Multiplication Using NumPy: Inference Time::paragraphs method=channel_compressed estimated_tokens=1577 threshold=1200 paragraphs=6 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Matrix Multiplication Using NumPy: Inference Time::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6']
+[all_together_paragraphs] parent=Matrix Multiplication Using NumPy: Inference Time::paragraphs sample=1 attempt=1/5
+1: 90
+3: 10
+4: 5
+5: 25
+6: 20
+[all_together_paragraphs] parent=Matrix Multiplication Using NumPy: Inference Time::paragraphs sample=1 attempt=2/5
+1: 43
+2: 23
+3: 21
+4: 17
+5: 15
+6: 12
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011868957031819928
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=30, citation=70
+Paragraph4: technical=20, citation=80
+Paragraph5: technical=90, citation=10
+Paragraph6: technical=100, citation=0
+[paragraph_scoring] parent=Performance evaluation on GPU::paragraphs method=channel_full_parent estimated_tokens=943 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Performance evaluation on GPU::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Performance evaluation on GPU::paragraphs sample=1 attempt=1/5
+1: 85
+2: 10
+3: 5
+4: 0
+5: 0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.013765555577621963
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10

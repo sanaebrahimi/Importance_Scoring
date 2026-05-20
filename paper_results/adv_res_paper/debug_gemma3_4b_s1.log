@@ -1,0 +1,367 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-19T19:12:49 model=gemma3:4b host=http://localhost:11434 paper_id=adv_res_paper n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'System Overview', 'Team of Agents', 'CrS-Aware Aggregation', 'Learning Credibility Scores On-The-Fly', 'Experiment Results', 'Conclusion', 'Limitations', 'Related Work', 'Incentives and Adversarially-behaving Agents', 'Coordination Mechanisms', 'Reward Calculation', 'Experiments Setting Details', 'Extended Experiment Results']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 75
+2: 15
+3: 10
+4: 85
+5: 15
+6: 90
+7: 10
+8: 95
+9: 5
+10: 90
+11: 10
+12: 80
+13: 20
+14: 90
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_full_parent estimated_tokens=555 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0007503226566800081
+Paragraph 1: technical=90.0, citation=10.0
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/5
+1: 25
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[paragraph_scoring] parent=System Overview::paragraphs method=channel_compressed estimated_tokens=1886 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=System Overview::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=System Overview::paragraphs sample=1 attempt=1/5
+1: 25
+2: 35
+3: 15
+4: 10
+5: 5
+6: 5
+7: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.02209413642492037
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=100, citation=0
+Paragraph 4: technical=100, citation=0
+Paragraph 5: technical=100, citation=0
+Paragraph 6: technical=100, citation=0
+Paragraph 7: technical=100, citation=0
+[paragraph_scoring] parent=Team of Agents::paragraphs method=channel_compressed estimated_tokens=1415 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Team of Agents::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Team of Agents::paragraphs sample=1 attempt=1/5
+1: 35
+2: 45
+3: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.026765387031145362
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=95, citation=5
+Paragraph 3: technical=90, citation=10
+[citation_split] paragraph_id=Team of Agents::p2 sample=1 attempt=1/5
+1: 35
+2: 15
+3: 25
+4: 25
+[citation_split] paragraph_id=Team of Agents::p2 sample=1 attempt=2/5
+1: 30
+2: 15
+3: 25
+4: 15
+5: 15
+[citation_split] paragraph_id=Team of Agents::p3 sample=1 attempt=1/5
+1: 30
+2: 25
+3: 20
+4: 15
+5: 10
+6: 10
+[paragraph_scoring] parent=CrS-Aware Aggregation::paragraphs method=channel_compressed estimated_tokens=1299 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=CrS-Aware Aggregation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=CrS-Aware Aggregation::paragraphs sample=1 attempt=1/5
+1: 25
+2: 35
+3: 30
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0065591392441081
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=95, citation=5
+Paragraph 3: technical=100, citation=0
+Paragraph 4: technical=70, citation=30
+[all_together_subsections_item_order] parent=Learning Credibility Scores On-The-Fly sample=1/1 order=['[Section Lead-in]', 'Calculating the agent contributions', 'Updating the CrS values']
+[all_together_subsections] parent=Learning Credibility Scores On-The-Fly sample=1 attempt=1/5
+1: 35
+2: 45
+3: 20
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=1067 threshold=1200 paragraphs=4 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 25
+2: 35
+3: 30
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.005965129520599455
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=100, citation=0
+Paragraph 4: technical=100, citation=0
+[paragraph_scoring] parent=Calculating the agent contributions::paragraphs method=channel_compressed estimated_tokens=1931 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Calculating the agent contributions::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Calculating the agent contributions::paragraphs sample=1 attempt=1/5
+1: 25
+2: 35
+3: 20
+4: 15
+5: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0163482444180965
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=95, citation=5
+Paragraph 3: technical=100, citation=0
+Paragraph 4: technical=90, citation=10
+Paragraph 5: technical=100, citation=0
+[paragraph_scoring] parent=Updating the CrS values::paragraphs method=channel_full_parent estimated_tokens=935 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Updating the CrS values::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Updating the CrS values::paragraphs sample=1 attempt=1/5
+1: 70
+2: 30
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01767797051627726
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=100, citation=0
+[all_together_subsections_item_order] parent=Experiment Results sample=1/1 order=['Experiments Setting', 'Collaboration Setup', 'Insights from Experimental Observations']
+[all_together_subsections] parent=Experiment Results sample=1 attempt=1/5
+1: 65
+2: 35
+3: 70
+4: 30
+5: 80
+6: 20
+7: 75
+8: 25
+9: 85
+10: 15
+11: 90
+12: 10
+13: 78
+14: 22
+15: 82
+16: 18
+17: 88
+18: 12
+19: 94
+20: 6
+21: 72
+22: 28
+23: 84
+24: 16
+25: 86
+26: 14
+27: 92
+28: 8
+29: 74
+30: 26
+31: 80
+32: 20
+33: 85
+34: 15
+35: 89
+36: 11
+37: 76
+38: 24
+39: 82
+40: 18
+41: 87
+42: 13
+43: 79
+44: 21
+45: 81
+46: 19
+47: 83
+48: 17
+49: 85
+50: 15
+[paragraph_scoring] parent=Experiments Setting::paragraphs method=channel_full_parent estimated_tokens=1014 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Experiments Setting::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Experiments Setting::paragraphs sample=1 attempt=1/5
+1: 35
+2: 65
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024174577554984235
+Paragraph 1: technical=95.0, citation=5.0
+Paragraph 2: technical=97.0, citation=3.0
+[citation_split] paragraph_id=Experiment Results > Experiments Setting::p1 sample=1 attempt=1/5
+1: 25
+2: 15
+3: 15
+4: 15
+5: 10
+6: 5
+7: 5
+8: 5
+9: 5
+[paragraph_scoring] parent=Collaboration Setup::paragraphs method=channel_compressed estimated_tokens=1436 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Collaboration Setup::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Collaboration Setup::paragraphs sample=1 attempt=1/5
+1: 35
+2: 30
+3: 35
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0046643849943534465
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=60, citation=40
+Paragraph 3: technical=100, citation=0
+[all_together_subsections_item_order] parent=Insights from Experimental Observations sample=1/1 order=['Credibility Scores Drive Consistent Gains', 'Reasoning vs Multi-Choice Tasks', 'Model Capacity Matters But Only With Coordination', 'Judge-Computed CrS Imitates the Shapley Value', 'Judge Alters the Outcome', 'Topology and Link Density', 'Adversary Proportion']
+[all_together_subsections] parent=Insights from Experimental Observations sample=1 attempt=1/5
+1: 65
+2: 25
+3: 8
+4: 5
+5: 12
+6: 30
+7: 4
+[paragraph_scoring] parent=Credibility Scores Drive Consistent Gains::paragraphs method=channel_full_parent estimated_tokens=1168 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Credibility Scores Drive Consistent Gains::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Credibility Scores Drive Consistent Gains::paragraphs sample=1 attempt=1/5
+1: 55
+2: 45
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.002782375301404437
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=95, citation=5
+[paragraph_scoring] parent=Reasoning vs Multi-Choice Tasks::paragraphs method=channel_compressed estimated_tokens=1942 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.00290149130500392
+Paragraph 1: technical=85.00, citation=15.00
+[paragraph_scoring] parent=Model Capacity Matters But Only With Coordination::paragraphs method=channel_full_parent estimated_tokens=1006 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Model Capacity Matters But Only With Coordination::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Model Capacity Matters But Only With Coordination::paragraphs sample=1 attempt=1/5
+1: 70
+2: 30
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.018111780941006732
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=100, citation=0
+[paragraph_scoring] parent=Judge-Computed CrS Imitates the Shapley Value::paragraphs method=channel_full_parent estimated_tokens=1008 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024213848198231407
+Paragraph 1: technical=95.00, citation=5.00
+[paragraph_scoring] parent=Judge Alters the Outcome::paragraphs method=channel_compressed estimated_tokens=1388 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Judge Alters the Outcome::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Judge Alters the Outcome::paragraphs sample=1 attempt=1/5
+1: 45
+2: 55
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01608684274364102
+Paragraph 1: technical=95.0, citation=5.0
+Paragraph 2: technical=100.0, citation=0.0
+[paragraph_scoring] parent=Topology and Link Density::paragraphs method=channel_compressed estimated_tokens=1504 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.029193472919381118
+Paragraph 1: technical=95.0, citation=5.0
+[paragraph_scoring] parent=Adversary Proportion::paragraphs method=channel_full_parent estimated_tokens=1133 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011356031316250605
+Paragraph 1: technical=90.0, citation=10.0
+[paragraph_scoring] parent=Conclusion::paragraphs method=channel_full_parent estimated_tokens=805 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01656121893819681
+Paragraph 1: technical=100, citation=0
+[paragraph_scoring] parent=Limitations::paragraphs method=channel_compressed estimated_tokens=1866 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Limitations::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Limitations::paragraphs sample=1 attempt=1/5
+1: 35
+2: 30
+3: 20
+4: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01855559257092738
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=100, citation=0
+Paragraph 4: technical=95.0, citation=5.0
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_full_parent estimated_tokens=555 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025851207009323317
+Paragraph 1: technical=65.0, citation=35.0
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=1/5
+1: 35
+2: 25
+3: 15
+4: 15
+5: 10
+6: 5
+7: 5
+8: 5
+9: 5
+10: 5
+11: 10
+12: 5
+13: 10
+14: 10
+15: 10
+16: 5
+17: 5
+18: 10
+19: 5
+[paragraph_scoring] parent=Incentives and Adversarially-behaving Agents::paragraphs method=channel_compressed estimated_tokens=1601 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.021137155086447704
+Paragraph 1: technical=85.00, citation=15.00
+[paragraph_scoring] parent=Coordination Mechanisms::paragraphs method=channel_full_parent estimated_tokens=588 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Coordination Mechanisms::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Coordination Mechanisms::paragraphs sample=1 attempt=1/5
+1: 50
+2: 50
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006836948269546406
+Paragraph 1: technical=95.0, citation=5.0
+Paragraph 2: technical=90.0, citation=10.0
+[citation_split] paragraph_id=Coordination Mechanisms::p1 sample=1 attempt=1/5
+1: 40
+2: 40
+3: 20
+[citation_split] paragraph_id=Coordination Mechanisms::p2 sample=1 attempt=1/5
+2: 30
+3: 25
+4: 20
+5: 15
+1: 10
+8: 10
+[citation_split] paragraph_id=Coordination Mechanisms::p2 sample=1 attempt=2/5
+1: 25
+2: 20
+3: 15
+4: 10
+5: 10
+6: 5
+7: 5
+8: 10
+[paragraph_scoring] parent=Reward Calculation::paragraphs method=channel_compressed estimated_tokens=1273 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Reward Calculation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Reward Calculation::paragraphs sample=1 attempt=1/5
+1: 55
+2: 45
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0030300428822918734
+Paragraph 1: technical=75, citation=25
+Paragraph 2: technical=95, citation=5
+[paragraph_scoring] parent=Experiments Setting Details::paragraphs method=channel_full_parent estimated_tokens=1071 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Experiments Setting Details::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Experiments Setting Details::paragraphs sample=1 attempt=1/5
+1: 35
+2: 65
+3: 0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019070533327932005
+Paragraph 1: technical=100, citation=0
+Paragraph 2: technical=85, citation=15
+Paragraph 3: technical=95, citation=5
+[citation_split] paragraph_id=Experiments Setting Details::p2 sample=1 attempt=1/5
+1: 35
+2: 25
+3: 30
+4: 10
+[citation_split] paragraph_id=Experiments Setting Details::p3 sample=1 attempt=1/5
+1: 40
+2: 30
+3: 15
+4: 10
+5: 5
+[citation_split] paragraph_id=Experiments Setting Details::p3 sample=1 attempt=2/5
+1: 35
+2: 25
+3: 15
+4: 15
+5: 5
+6: 5
+[paragraph_scoring] parent=Extended Experiment Results::paragraphs method=channel_compressed estimated_tokens=2169 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Extended Experiment Results::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Extended Experiment Results::paragraphs sample=1 attempt=1/5
+1: 75
+2: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0080093346614734
+Paragraph 1: technical=97, citation=3
+Paragraph 2: technical=100, citation=0

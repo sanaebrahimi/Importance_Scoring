@@ -1,0 +1,641 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-19T17:48:17 model=llama3.2 host=http://localhost:11434 paper_id=Fairness-Expo-Rankings n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Related Work', 'A Framework for Ranking under Fairness Constraints', 'Constructing Group Fairness Constraints', 'Discussion', 'Conclusions']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 80
+2: 20
+[all_together_top] parent=Whole Paper sample=1 attempt=2/5
+1: 60
+2: 40
+[all_together_top] parent=Whole Paper sample=1 attempt=3/5
+1: 60
+2: 40
+[all_together_top] parent=Whole Paper sample=1 attempt=4/5
+1: 60
+2: 40
+[all_together_top] parent=Whole Paper sample=1 attempt=5/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_top_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_relaxed_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Related Work', 'A Framework for Ranking under Fairness Constraints', 'Constructing Group Fairness Constraints', 'Discussion', 'Conclusions']
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=1/5
+1: 80
+2: 20
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=2/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=3/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=4/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=5/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_top_relaxed_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_heuristic_fallback] parent=Whole Paper strict_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'. relaxed_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'.
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_compressed estimated_tokens=5535 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=1/5
+1: 45
+2: 5
+3: 50
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006696322144464683
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=100, citation=0
+
+Paragraph 3: 
+technical=70, citation=30
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.006696322144464683
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=100, citation=0
+
+Paragraph 3: 
+technical=70, citation=30
+[paragraph_channel_split] sample=1/1 attempt=3/5 temperature=0.006696322144464683
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=100, citation=0
+
+Paragraph 3: 
+technical=70, citation=30
+[paragraph_channel_split] sample=1/1 attempt=4/5 temperature=0.006696322144464683
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=100, citation=0
+
+Paragraph 3: 
+technical=70, citation=30
+[paragraph_channel_split] sample=1/1 attempt=5/5 temperature=0.006696322144464683
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=100, citation=0
+
+Paragraph 3: 
+technical=70, citation=30
+[citation_split] paragraph_id=Introduction::p3 sample=1 attempt=1/5
+50: 20
+28: 30
+14: 15
+5: 3
+19: 2
+13: 0
+16: 0
+26: 0
+[all_together_subsections_item_order] parent=Related Work sample=1/1 order=['[Section Lead-in]', 'Algorithmic Fairness', 'Fairness in Rankings', 'Information Diversity in Retrieval']
+[all_together_subsections] parent=Related Work sample=1 attempt=1/5
+1: 45
+2: 30
+3: 25
+4: 0
+[all_together_subsections_reject] parent=Related Work sample=1 attempt=1/5 reason=zero_child_not_allowed
+[all_together_subsections] parent=Related Work sample=1 attempt=2/5
+1: 40
+2: 30
+3: 15
+4: 15
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=795 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.026765387031145362
+Paragraph1: technical=40, citation=60
+[paragraph_scoring] parent=Algorithmic Fairness::paragraphs method=channel_compressed estimated_tokens=1469 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0026081649788824842
+Paragraph1: technical=70, citation=30
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=50, citation=50
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=80, citation=20
+Paragraph6: technical=95, citation=5
+[citation_split] paragraph_id=Related Work > Algorithmic Fairness::p1 sample=1 attempt=1/5
+20: 6
+12: 24
+6: 22
+37: 4
+15: 4
+[citation_split] paragraph_id=Related Work > Algorithmic Fairness::p1 sample=1 attempt=2/5
+1: 20
+2: 40
+3: 15
+4: 5
+5: 10
+6: 5
+7: 5
+8: 0
+9: 0
+10: 0
+11: 0
+[paragraph_scoring] parent=Fairness in Rankings::paragraphs method=channel_compressed estimated_tokens=1752 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Fairness in Rankings::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Fairness in Rankings::paragraphs sample=1 attempt=1/5
+1: 45
+2: 25
+3: 30
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0065591392441081
+Paragraph 1: technical=70, citation=30
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=40, citation=60
+[citation_split] paragraph_id=Related Work > Fairness in Rankings::p1 sample=1 attempt=1/5
+32: 25
+34: 30
+8: 20
+1: 5
+[citation_split] paragraph_id=Related Work > Fairness in Rankings::p3 sample=1 attempt=1/5
+3: 80
+4: 20
+[paragraph_scoring] parent=Information Diversity in Retrieval::paragraphs method=channel_full_parent estimated_tokens=1129 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.005965129520599455
+Paragraph1: technical=70, citation=30
+Paragraph2: technical=85, citation=15
+[citation_split] paragraph_id=Related Work > Information Diversity in Retrieval::p1 sample=1 attempt=1/5
+24: 25
+7: 20
+10: 15
+25: 20
+[all_together_subsections_item_order] parent=A Framework for Ranking under Fairness Constraints sample=1/1 order=['[Section Lead-in]', 'Utility of a Ranking', 'Probabilistic Rankings', 'Optimizing Fair Rankings via Linear Programming', 'Sampling Rankings', 'Summary of Algorithm']
+[all_together_subsections] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=1/5
+Here is the output:
+
+1: 50
+2: 30
+3: 20
+[all_together_subsections] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=2/5
+1: 60
+2: 40
+3: 0
+4: 0
+5: 0
+[all_together_subsections] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=3/5
+1: 60
+2: 40
+3: 0
+4: 0
+5: 0
+[all_together_subsections] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=4/5
+1: 60
+2: 40
+3: 0
+4: 0
+5: 0
+[all_together_subsections] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=5/5
+1: 60
+2: 40
+3: 0
+4: 0
+5: 0
+[all_together_subsections_error] parent=A Framework for Ranking under Fairness Constraints sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_subsections_sample_skip] parent=A Framework for Ranking under Fairness Constraints sample=1/1 reason=Model failed to produce complete child scores for parent 'A Framework for Ranking under Fairness Constraints' after 5 retries.
+[all_together_subsections_compressed_retry] parent=A Framework for Ranking under Fairness Constraints reason=no_complete_samples retry_snippet_limit=180
+[all_together_subsections_compressed_retry_item_order] parent=A Framework for Ranking under Fairness Constraints sample=1/1 order=['[Section Lead-in]', 'Utility of a Ranking', 'Probabilistic Rankings', 'Optimizing Fair Rankings via Linear Programming', 'Sampling Rankings', 'Summary of Algorithm']
+[all_together_subsections_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=1/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=1/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=2/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=2/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=3/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=3/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=4/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=4/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=5/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=5/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_error] parent=A Framework for Ranking under Fairness Constraints sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_subsections_compressed_retry_sample_skip] parent=A Framework for Ranking under Fairness Constraints sample=1/1 reason=Model failed to produce complete child scores for parent 'A Framework for Ranking under Fairness Constraints' after 5 retries.
+[all_together_subsections_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints reason=no_complete_samples retry_snippet_limit=120
+[all_together_subsections_compressed_retry_compressed_retry_item_order] parent=A Framework for Ranking under Fairness Constraints sample=1/1 order=['[Section Lead-in]', 'Utility of a Ranking', 'Probabilistic Rankings', 'Optimizing Fair Rankings via Linear Programming', 'Sampling Rankings', 'Summary of Algorithm']
+[all_together_subsections_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=1/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=1/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=2/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=2/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=3/5
+1: 25
+2: 20
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=3/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=4/5
+1: 25
+2: 30
+3: 20
+4: 15
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=4/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=5/5
+1: 25
+2: 20
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=5/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry_error] parent=A Framework for Ranking under Fairness Constraints sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_subsections_compressed_retry_compressed_retry_sample_skip] parent=A Framework for Ranking under Fairness Constraints sample=1/1 reason=Model failed to produce complete child scores for parent 'A Framework for Ranking under Fairness Constraints' after 5 retries.
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints reason=no_complete_samples retry_snippet_limit=80
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_item_order] parent=A Framework for Ranking under Fairness Constraints sample=1/1 order=['[Section Lead-in]', 'Utility of a Ranking', 'Probabilistic Rankings', 'Optimizing Fair Rankings via Linear Programming', 'Sampling Rankings', 'Summary of Algorithm']
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=1/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=1/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=2/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=2/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=3/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=3/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=4/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=4/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=5/5
+1: 20
+2: 25
+3: 15
+4: 30
+5: 10
+6: 0
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_reject] parent=A Framework for Ranking under Fairness Constraints sample=1 attempt=5/5 reason=zero_child_not_allowed
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_error] parent=A Framework for Ranking under Fairness Constraints sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_sample_skip] parent=A Framework for Ranking under Fairness Constraints sample=1/1 reason=Model failed to produce complete child scores for parent 'A Framework for Ranking under Fairness Constraints' after 5 retries.
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_chunked_retry] parent=A Framework for Ranking under Fairness Constraints reason=no_complete_samples items=6 chunk_size=3 snippet_limit=80
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_chunks_item_order] parent=A Framework for Ranking under Fairness Constraints::chunks sample=1/1 order=['Chunk 1', 'Chunk 2']
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_chunks] parent=A Framework for Ranking under Fairness Constraints::chunks sample=1 attempt=1/5
+1: 70
+2: 30
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_within_chunk_item_order] parent=A Framework for Ranking under Fairness Constraints::Chunk 1 sample=1/1 order=['[Section Lead-in]', 'Utility of a Ranking', 'Probabilistic Rankings']
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_within_chunk] parent=A Framework for Ranking under Fairness Constraints::Chunk 1 sample=1 attempt=1/5
+1: 20
+2: 25
+3: 55
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_within_chunk_item_order] parent=A Framework for Ranking under Fairness Constraints::Chunk 2 sample=1/1 order=['Optimizing Fair Rankings via Linear Programming', 'Sampling Rankings', 'Summary of Algorithm']
+[all_together_subsections_compressed_retry_compressed_retry_compressed_retry_within_chunk] parent=A Framework for Ranking under Fairness Constraints::Chunk 2 sample=1 attempt=1/5
+1: 70
+2: 15
+3: 15
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1474 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.010207515495539755
+Paragraph1: technical=40, citation=60
+Paragraph2: technical=85, citation=15
+[paragraph_scoring] parent=Utility of a Ranking::paragraphs method=channel_compressed estimated_tokens=1793 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0046643849943534465
+Paragraph1: technical=70, citation=30
+Paragraph2: technical=95, citation=5
+[citation_split] paragraph_id=A Framework for Ranking under Fairness Constraints > Utility of a Ranking::p1 sample=1 attempt=1/5
+20: 10
+28: 30
+1: 40
+[paragraph_scoring] parent=Probabilistic Rankings::paragraphs method=channel_full_parent estimated_tokens=560 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.010097836353378803
+Paragraph1: technical=70, citation=30
+Paragraph2: technical=95, citation=5
+[citation_split] paragraph_id=A Framework for Ranking under Fairness Constraints > Probabilistic Rankings::p1 sample=1 attempt=1/5
+1: 20
+2: 80
+[paragraph_scoring] parent=Optimizing Fair Rankings via Linear Programming::paragraphs method=channel_compressed estimated_tokens=1523 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Optimizing Fair Rankings via Linear Programming::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Optimizing Fair Rankings via Linear Programming::paragraphs sample=1 attempt=1/5
+1: 45
+2: 20
+3: 35
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025424830990423794
+Paragraph 1: technical=40, citation=60
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=50, citation=50
+[paragraph_scoring] parent=Sampling Rankings::paragraphs method=channel_compressed estimated_tokens=1328 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Sampling Rankings::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Sampling Rankings::paragraphs sample=1 attempt=1/5
+1: 70
+2: 30
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024213848198231407
+Paragraph 1: technical=10, citation=90
+Paragraph 2: technical=95, citation=5
+[citation_split] paragraph_id=A Framework for Ranking under Fairness Constraints > Sampling Rankings::p2 sample=1 attempt=1/5
+4: 25
+22: 20
+9: 30
+11: 25
+[paragraph_scoring] parent=Summary of Algorithm::paragraphs method=channel_full_parent estimated_tokens=1075 threshold=1200 paragraphs=4 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Summary of Algorithm::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Summary of Algorithm::paragraphs sample=1 attempt=1/5
+1: 30
+2: 25
+3: 20
+4: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.029193472919381118
+Paragraph 1: technical=90, citation=10
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=95, citation=5
+Paragraph 4: technical=100, citation=0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011356031316250605
+Paragraph 2:
+technical=90, citation=10
+
+Paragraph 3:
+technical=0, citation=100
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.011356031316250605
+Paragraph 2:
+technical=90, citation=10
+
+Paragraph 3:
+technical=0, citation=100
+[paragraph_channel_split] sample=1/1 attempt=3/5 temperature=0.011356031316250605
+Paragraph 2:
+technical=90, citation=10
+
+Paragraph 3:
+technical=0, citation=100
+[paragraph_channel_split] sample=1/1 attempt=4/5 temperature=0.011356031316250605
+Paragraph 2:
+technical=90, citation=10
+
+Paragraph 3:
+technical=0, citation=100
+[paragraph_channel_split] sample=1/1 attempt=5/5 temperature=0.011356031316250605
+Paragraph 2:
+technical=90, citation=10
+
+Paragraph 3:
+technical=0, citation=100
+[citation_split] paragraph_id=A Framework for Ranking under Fairness Constraints > Summary of Algorithm::p2 sample=1 attempt=1/5
+1: 80
+2: 20
+[all_together_subsections_item_order] parent=Constructing Group Fairness Constraints sample=1/1 order=['[Section Lead-in]', 'Demographic Parity Constraints', 'Disparate Treatment Constraints', 'Disparate Impact Constraints']
+[all_together_subsections] parent=Constructing Group Fairness Constraints sample=1 attempt=1/5
+1: 50
+2: 25
+3: 15
+4: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=2199 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 70
+2: 30
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025851207009323317
+Paragraph 1: technical=70, citation=30
+Paragraph 2: technical=100, citation=0
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > [Section Lead-in]::p1 sample=1 attempt=1/5
+20.17%
+2: 80%
+
+Explanation:
+
+- Citation "2" introduces a method the paragraph builds upon, as it mentions an actual position-bias value that can be estimated through an intervention experiment, which is relevant to the paragraph's discussion of exposure and fairness constraints.
+
+- Citation "1" provides key comparison or baseline, as it defines exposure for a document under a probabilistic ranking, which is crucial to understanding how the framework formulates fairness constraints.
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > [Section Lead-in]::p1 sample=1 attempt=2/5
+20: 5
+18: 40
+3: 55
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.021137155086447704
+Paragraph 2: technical=70, citation=30
+[paragraph_scoring] parent=Demographic Parity Constraints::paragraphs method=channel_compressed estimated_tokens=1445 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Demographic Parity Constraints::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Demographic Parity Constraints::paragraphs sample=1 attempt=1/5
+1: 30
+2: 20
+3: 25
+4: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006836948269546406
+Paragraph 1: technical=70, citation=30
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=40, citation=60
+Paragraph 4: technical=20, citation=80
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > Demographic Parity Constraints::p1 sample=1 attempt=1/5
+20: 15
+6: 30
+5: 55
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > Demographic Parity Constraints::p3 sample=1 attempt=1/5
+3: 20
+6: 30
+37: 10
+12: 20
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > Demographic Parity Constraints::p3 sample=1 attempt=2/5
+1: 20
+2: 30
+3: 50
+[paragraph_scoring] parent=Disparate Treatment Constraints::paragraphs method=channel_compressed estimated_tokens=2216 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Disparate Treatment Constraints::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Disparate Treatment Constraints::paragraphs sample=1 attempt=1/5
+1: 85
+2: 5
+3: 0
+4: 0
+5: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0030300428822918734
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=100, citation=0
+
+Paragraph 3:
+technical=90, citation=10
+
+Paragraph 4:
+technical=90, citation=10
+
+Paragraph 5:
+technical=80, citation=20
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.0030300428822918734
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=100, citation=0
+
+Paragraph 3:
+technical=90, citation=10
+
+Paragraph 4:
+technical=90, citation=10
+
+Paragraph 5:
+technical=80, citation=20
+[paragraph_channel_split] sample=1/1 attempt=3/5 temperature=0.0030300428822918734
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=100, citation=0
+
+Paragraph 3:
+technical=90, citation=10
+
+Paragraph 4:
+technical=90, citation=10
+
+Paragraph 5:
+technical=80, citation=20
+[paragraph_channel_split] sample=1/1 attempt=4/5 temperature=0.0030300428822918734
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=100, citation=0
+
+Paragraph 3:
+technical=90, citation=10
+
+Paragraph 4:
+technical=90, citation=10
+
+Paragraph 5:
+technical=80, citation=20
+[paragraph_channel_split] sample=1/1 attempt=5/5 temperature=0.0030300428822918734
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=100, citation=0
+
+Paragraph 3:
+technical=90, citation=10
+
+Paragraph 4:
+technical=90, citation=10
+
+Paragraph 5:
+technical=80, citation=20
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > Disparate Treatment Constraints::p5 sample=1 attempt=1/5
+20: 30
+1: 50
+3: 20
+[paragraph_scoring] parent=Disparate Impact Constraints::paragraphs method=channel_compressed estimated_tokens=1628 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Disparate Impact Constraints::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Disparate Impact Constraints::paragraphs sample=1 attempt=1/5
+1: 85
+2: 5
+3: 0
+4: 0
+5: 0
+6: 10
+7: 0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.010944965369102527
+Paragraph 1: technical=70, citation=30
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=100, citation=0
+Paragraph 4: technical=100, citation=0
+Paragraph 5: technical=100, citation=0
+Paragraph 6: technical=100, citation=0
+Paragraph 7: technical=100, citation=0
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > Disparate Impact Constraints::p1 sample=1 attempt=1/5
+1: 80
+2: 15
+3: 5
+[citation_split] paragraph_id=Constructing Group Fairness Constraints > Disparate Impact Constraints::p1 sample=1 attempt=2/5
+1: 20
+2: 40
+3: 30
+4: 10
+[paragraph_scoring] parent=Discussion::paragraphs method=channel_compressed estimated_tokens=2923 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Discussion::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Discussion::paragraphs sample=1 attempt=1/5
+1: 70
+2: 15
+3: 5
+4: 0
+5: 0
+6: 10
+7: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0080093346614734
+Paragraph1: technical=83, citation=17
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=5, citation=95
+Paragraph4: technical=5, citation=95
+Paragraph5: technical=5, citation=95
+Paragraph6: technical=100, citation=0
+Paragraph7: technical=98, citation=2
+[citation_split] paragraph_id=Discussion::p1 sample=1 attempt=1/5
+20: 5
+18: 35
+3: 60
+[paragraph_scoring] parent=Conclusions::paragraphs method=channel_full_parent estimated_tokens=885 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019441061557397804
+Paragraph1: technical=70, citation=30

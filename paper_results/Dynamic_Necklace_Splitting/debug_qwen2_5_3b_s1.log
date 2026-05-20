@@ -1,0 +1,477 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-19T21:29:17 model=qwen2.5:3b host=http://localhost:11434 paper_id=Dynamic_Necklace_Splitting n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Offline Algorithm', 'Relocation with Two Colors', 'Batch Relocation with Two Colors', 'Relocation with Multiple Colors and High Cut Density', 'Insertion and Deletion', 'Approximate Necklace Splitting', 'A Offline Algorithm is Optimal', 'B NP-completeness of MinNodeMaxFlow', 'Correctness and Time Complexity of ApproxStatic']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+95: 10
+35: 85
+70: 25
+55: 45
+80: 15
+60: 30
+40: 60
+20: 80
+50: 50
+[all_together_top] parent=Whole Paper sample=1 attempt=2/5
+95->85->70->60->20
+[all_together_top] parent=Whole Paper sample=1 attempt=3/5
+95->85->70->60->20
+[all_together_top] parent=Whole Paper sample=1 attempt=4/5
+95->85->70->60->20
+[all_together_top] parent=Whole Paper sample=1 attempt=5/5
+95->85->70->60->20
+[all_together_top_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+[all_together_top_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_relaxed_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Offline Algorithm', 'Relocation with Two Colors', 'Batch Relocation with Two Colors', 'Relocation with Multiple Colors and High Cut Density', 'Insertion and Deletion', 'Approximate Necklace Splitting', 'A Offline Algorithm is Optimal', 'B NP-completeness of MinNodeMaxFlow', 'Correctness and Time Complexity of ApproxStatic']
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=1/5
+95: 30
+5: 70
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=2/5
+95->85->70->60->20
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=3/5
+95->85->70->60->20
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=4/5
+95->85->70->60->20
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=5/5
+95->85->70->60->20
+[all_together_top_relaxed_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+[all_together_top_relaxed_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_heuristic_fallback] parent=Whole Paper strict_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'. relaxed_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'.
+[all_together_subsections_item_order] parent=Introduction sample=1/1 order=['[Section Lead-in]', 'Problem Setup', 'Contributions', 'Data Structures', 'Related Work', 'Applications']
+[all_together_subsections] parent=Introduction sample=1 attempt=1/5
+1: 75
+2: 10
+3: 8
+4: 9
+5: 7
+6: 12
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=709 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006696322144464683
+Paragraph1: technical=20, citation=80
+[paragraph_scoring] parent=Problem Setup::paragraphs method=channel_compressed estimated_tokens=1530 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Problem Setup::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Problem Setup::paragraphs sample=1 attempt=1/5
+1: 75.3891831145932
+2: 24.6108168854068
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020300984622687337
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Contributions::paragraphs method=channel_compressed estimated_tokens=1277 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Contributions::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Contributions::paragraphs sample=1 attempt=1/5
+1: 35.71
+2: 18.57
+3: 29.09
+4: 11.43
+5: 5.23
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0026081649788824842
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+Paragraph4: technical=100, citation=0
+Paragraph5: technical=100, citation=0
+[paragraph_scoring] parent=Data Structures::paragraphs method=channel_compressed estimated_tokens=1805 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Data Structures::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Data Structures::paragraphs sample=1 attempt=1/5
+5: 37.8
+1: 19.2
+4: 19.2
+3: 11.2
+5: 3.2
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0008939165831421103
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+Paragraph4: technical=100, citation=0
+Paragraph5: technical=100, citation=0
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_full_parent estimated_tokens=1173 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=1/5
+1: 95.8
+2: 4.2
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.015160658643100872
+Paragraph1: technical=65, citation=35
+Paragraph2: technical=100, citation=0
+[citation_split] paragraph_id=Introduction > Related Work::p1 sample=1 attempt=1/5
+30: 1
+50: 1
+70: 1
+90: 1
+10: 1
+20: 1
+30: 1
+50: 1
+[citation_split] paragraph_id=Introduction > Related Work::p1 sample=1 attempt=2/5
+1: 25
+2: 25
+3: 20
+4: 10
+5: 10
+6: 7
+7: 0
+8: 0
+9: 0
+[all_together_subsections_item_order] parent=Applications sample=1/1 order=['[Section Lead-in]', 'Fair Hash Maps', 'Load-Balancing', 'Bucketization']
+[all_together_subsections] parent=Applications sample=1 attempt=1/5
+2: 58.57142857142857
+3: 29.09090909090909
+4: 12.337846153846153
+[all_together_subsections] parent=Applications sample=1 attempt=2/5
+2: 45
+3: 30
+4: 25
+[all_together_subsections] parent=Applications sample=1 attempt=3/5
+2: 45
+3: 30
+4: 25
+[all_together_subsections] parent=Applications sample=1 attempt=4/5
+2: 45
+3: 30
+4: 25
+[all_together_subsections] parent=Applications sample=1 attempt=5/5
+2: 45
+3: 30
+4: 25
+[all_together_subsections_error] parent=Applications sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4']
+[all_together_subsections_sample_skip] parent=Applications sample=1/1 reason=Model failed to produce complete child scores for parent 'Applications' after 5 retries.
+[all_together_subsections_compressed_retry] parent=Applications reason=no_complete_samples retry_snippet_limit=180
+[all_together_subsections_compressed_retry_item_order] parent=Applications sample=1/1 order=['[Section Lead-in]', 'Fair Hash Maps', 'Load-Balancing', 'Bucketization']
+[all_together_subsections_compressed_retry] parent=Applications sample=1 attempt=1/5
+Fair Hash Maps: 85
+Section Lead-in: 10
+Load-Balancing: 3
+Bucketization: 7
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=608 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0163482444180965
+Paragraph1: technical=80, citation=20
+[paragraph_scoring] parent=Fair Hash Maps::paragraphs method=channel_compressed estimated_tokens=1272 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006613218661220901
+Paragraph1: technical=65, citation=35
+[citation_split] paragraph_id=Introduction > Applications > Fair Hash Maps::p1 sample=1 attempt=1/5
+1: 35
+2: 35
+3: 30
+[paragraph_scoring] parent=Load-Balancing::paragraphs method=channel_full_parent estimated_tokens=952 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0242829137003348
+Paragraph1: technical=75, citation=25
+[paragraph_scoring] parent=Bucketization::paragraphs method=channel_full_parent estimated_tokens=1031 threshold=1200 paragraphs=5 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Bucketization::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Bucketization::paragraphs sample=1 attempt=1/5
+1: 85.71%
+3: 8.57%
+4: 5.71%
+5: 0.00%
+[all_together_paragraphs] parent=Bucketization::paragraphs sample=1 attempt=2/5
+1: 85
+3: 7
+4: 6
+2: 5
+5: 7
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024174577554984235
+Paragraph1: technical=75, citation=25
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+Paragraph4: technical=100, citation=0
+Paragraph5: technical=100, citation=0
+[citation_split] paragraph_id=Introduction > Applications > Bucketization::p1 sample=1 attempt=1/5
+1: 35
+2: 35
+3: 30
+[paragraph_scoring] parent=Offline Algorithm::paragraphs method=channel_compressed estimated_tokens=1621 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Offline Algorithm::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Offline Algorithm::paragraphs sample=1 attempt=1/5
+1: 75
+3: 15
+2: 5
+4: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0046643849943534465
+Paragraph1: technical=75, citation=25
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+Paragraph4: technical=100, citation=0
+[citation_split] paragraph_id=Offline Algorithm::p1 sample=1 attempt=1/5
+19: 85
+2: 15
+[all_together_subsections_item_order] parent=Relocation with Two Colors sample=1/1 order=['[Section Lead-in]', 'Adjacent Indices', 'Nonadjacent Indices']
+[all_together_subsections] parent=Relocation with Two Colors sample=1 attempt=1/5
+Adjacent Indices: 50
+Nonadjacent Indices: 50
+[all_together_subsections] parent=Relocation with Two Colors sample=1 attempt=2/5
+1: 33
+2: 34
+3: 33
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=592 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.002782375301404437
+Paragraph1: technical=100, citation=0
+[paragraph_scoring] parent=Adjacent Indices::paragraphs method=channel_full_parent estimated_tokens=872 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.00290149130500392
+Paragraph1: technical=100, citation=0
+[paragraph_scoring] parent=Nonadjacent Indices::paragraphs method=channel_full_parent estimated_tokens=874 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025424830990423794
+Paragraph1: technical=100, citation=0
+[paragraph_scoring] parent=Batch Relocation with Two Colors::paragraphs method=channel_compressed estimated_tokens=5753 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Batch Relocation with Two Colors::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Batch Relocation with Two Colors::paragraphs sample=1 attempt=1/5
+1: 35
+2: 15
+3: 20
+4: 5
+5: 5
+6: 10
+7: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024213848198231407
+Paragraph1: technical=35, citation=65
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=80, citation=20
+Paragraph7: technical=85, citation=15
+[all_together_subsections_item_order] parent=Relocation with Multiple Colors and High Cut Density sample=1/1 order=['[Section Lead-in]', 'Adjacent Indices', 'Nonadjacent Indices']
+[all_together_subsections] parent=Relocation with Multiple Colors and High Cut Density sample=1 attempt=1/5
+1: 35
+2: 35
+3: 30
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=970 threshold=1200 paragraphs=5 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+50: 38.79
+1: 28.57
+4: 10.71
+3: 6.82
+5: 15.12
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.029193472919381118
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+Paragraph4: technical=100, citation=0
+Paragraph5: technical=100, citation=0
+[paragraph_scoring] parent=Adjacent Indices::paragraphs method=channel_compressed estimated_tokens=1718 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Adjacent Indices::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Adjacent Indices::paragraphs sample=1 attempt=1/5
+1: 38
+2: 62
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01656121893819681
+Paragraph1: technical=0, citation=100
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Nonadjacent Indices::paragraphs method=channel_compressed estimated_tokens=1782 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Nonadjacent Indices::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Nonadjacent Indices::paragraphs sample=1 attempt=1/5
+1: 38
+2: 62
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01855559257092738
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Insertion and Deletion::paragraphs method=channel_compressed estimated_tokens=2288 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Insertion and Deletion::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Insertion and Deletion::paragraphs sample=1 attempt=1/5
+1: 85.37
+3: 0.99
+4: 0.01
+5: 10.66
+6: 0.02
+7: 3.48
+[all_together_paragraphs] parent=Insertion and Deletion::paragraphs sample=1 attempt=2/5
+1: 92
+3: 1
+4: 1
+5: 4
+6: 2
+7: 2
+[all_together_paragraphs] parent=Insertion and Deletion::paragraphs sample=1 attempt=3/5
+1: 92
+3: 1
+4: 1
+5: 4
+6: 2
+7: 2
+[all_together_paragraphs] parent=Insertion and Deletion::paragraphs sample=1 attempt=4/5
+1: 92
+3: 1
+4: 1
+5: 4
+6: 2
+7: 2
+[all_together_paragraphs] parent=Insertion and Deletion::paragraphs sample=1 attempt=5/5
+1: 92
+3: 1
+4: 1
+5: 4
+6: 2
+7: 2
+[all_together_paragraphs_error] parent=Insertion and Deletion::paragraphs sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7']
+[all_together_paragraphs_sample_skip] parent=Insertion and Deletion::paragraphs sample=1/1 reason=Model failed to produce complete child scores for parent 'Insertion and Deletion::paragraphs' after 5 retries.
+[all_together_paragraphs_compressed_retry] parent=Insertion and Deletion::paragraphs reason=no_complete_samples retry_snippet_limit=120
+[all_together_paragraphs_compressed_retry_item_order] parent=Insertion and Deletion::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=1/5
+50: 38.9
+70: 31.1
+1: 15.9
+4: 6.5
+3: 2.4
+5: 1.4
+6: 0.8
+2: 0.3
+[all_together_paragraphs_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=2/5
+50: 49
+30: 30
+[all_together_paragraphs_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=3/5
+50: 49
+30: 30
+[all_together_paragraphs_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=4/5
+50: 49
+30: 30
+[all_together_paragraphs_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=5/5
+50: 49
+30: 30
+[all_together_paragraphs_compressed_retry_error] parent=Insertion and Deletion::paragraphs sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7']
+[all_together_paragraphs_compressed_retry_sample_skip] parent=Insertion and Deletion::paragraphs sample=1/1 reason=Model failed to produce complete child scores for parent 'Insertion and Deletion::paragraphs' after 5 retries.
+[all_together_paragraphs_compressed_retry_compressed_retry] parent=Insertion and Deletion::paragraphs reason=no_complete_samples retry_snippet_limit=80
+[all_together_paragraphs_compressed_retry_compressed_retry_item_order] parent=Insertion and Deletion::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs_compressed_retry_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=1/5
+50: 38.9
+70: 31.1
+40: 15.9
+60: 9.1
+20: 3.9
+[all_together_paragraphs_compressed_retry_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=2/5
+50: 49
+60: 37
+10: 13
+[all_together_paragraphs_compressed_retry_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=3/5
+50: 49
+60: 30
+70: 20
+[all_together_paragraphs_compressed_retry_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=4/5
+50: 49
+60: 30
+70: 20
+[all_together_paragraphs_compressed_retry_compressed_retry] parent=Insertion and Deletion::paragraphs sample=1 attempt=5/5
+50: 49
+60: 30
+70: 20
+[all_together_paragraphs_compressed_retry_compressed_retry_error] parent=Insertion and Deletion::paragraphs sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7']
+[all_together_paragraphs_compressed_retry_compressed_retry_sample_skip] parent=Insertion and Deletion::paragraphs sample=1/1 reason=Model failed to produce complete child scores for parent 'Insertion and Deletion::paragraphs' after 5 retries.
+[all_together_paragraphs_compressed_retry_compressed_retry_chunked_retry] parent=Insertion and Deletion::paragraphs reason=no_complete_samples items=7 chunk_size=3 snippet_limit=80
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_item_order] parent=Insertion and Deletion::paragraphs::chunks sample=1/1 order=['Chunk 1', 'Chunk 2', 'Chunk 3']
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks] parent=Insertion and Deletion::paragraphs::chunks sample=1 attempt=1/5
+Chunk 1: 85
+Chunk 3: 15
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks] parent=Insertion and Deletion::paragraphs::chunks sample=1 attempt=2/5
+Chunk 1: 85
+Chunk 2: 15
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks] parent=Insertion and Deletion::paragraphs::chunks sample=1 attempt=3/5
+Chunk 1: 85
+Chunk 2: 15
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks] parent=Insertion and Deletion::paragraphs::chunks sample=1 attempt=4/5
+Chunk 1: 85
+Chunk 2: 15
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks] parent=Insertion and Deletion::paragraphs::chunks sample=1 attempt=5/5
+Chunk 1: 85
+Chunk 2: 15
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_error] parent=Insertion and Deletion::paragraphs::chunks sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3']
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_sample_skip] parent=Insertion and Deletion::paragraphs::chunks sample=1/1 reason=Model failed to produce complete child scores for parent 'Insertion and Deletion::paragraphs::chunks' after 5 retries.
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_chunked_retry] parent=Insertion and Deletion::paragraphs::chunks reason=no_complete_samples items=3 chunk_size=2 snippet_limit=80
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_chunks_item_order] parent=Insertion and Deletion::paragraphs::chunks::chunks sample=1/1 order=['Chunk 1', 'Chunk 2']
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_chunks] parent=Insertion and Deletion::paragraphs::chunks::chunks sample=1 attempt=1/5
+Chunk 1: 91.89
+Chunk 2: 8.11
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_within_chunk_item_order] parent=Insertion and Deletion::paragraphs::chunks::Chunk 1 sample=1/1 order=['Chunk 1', 'Chunk 2']
+[all_together_paragraphs_compressed_retry_compressed_retry_chunks_within_chunk] parent=Insertion and Deletion::paragraphs::chunks::Chunk 1 sample=1 attempt=1/5
+Chunk 1: 83.7205649367504
+Chunk 2: 16.2794350632496
+[all_together_paragraphs_compressed_retry_compressed_retry_within_chunk_item_order] parent=Insertion and Deletion::paragraphs::Chunk 1 sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs_compressed_retry_compressed_retry_within_chunk] parent=Insertion and Deletion::paragraphs::Chunk 1 sample=1 attempt=1/5
+35: 35
+Paragraph 1: 35
+Paragraph 2: 30
+Paragraph 3: 30
+[all_together_paragraphs_compressed_retry_compressed_retry_within_chunk_item_order] parent=Insertion and Deletion::paragraphs::Chunk 2 sample=1/1 order=['Paragraph 4', 'Paragraph 5', 'Paragraph 6']
+[all_together_paragraphs_compressed_retry_compressed_retry_within_chunk] parent=Insertion and Deletion::paragraphs::Chunk 2 sample=1 attempt=1/5
+35: 35
+50: 50
+[all_together_paragraphs_compressed_retry_compressed_retry_within_chunk] parent=Insertion and Deletion::paragraphs::Chunk 2 sample=1 attempt=2/5
+3: 98
+1: 2
+[all_together_paragraphs_compressed_retry_compressed_retry_within_chunk] parent=Insertion and Deletion::paragraphs::Chunk 2 sample=1 attempt=3/5
+3: 98.5
+1: 0.2
+4: 0.3
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0030300428822918734
+Paragraph1: technical=75, citation=25
+Paragraph2: technical=0, citation=100
+Paragraph3: technical=0, citation=100
+Paragraph4: technical=0, citation=100
+Paragraph5: technical=0, citation=100
+Paragraph6: technical=0, citation=100
+Paragraph7: technical=0, citation=100
+[all_together_subsections_item_order] parent=Approximate Necklace Splitting sample=1/1 order=['[Section Lead-in]', 'Static Setting', 'Dynamic Setting']
+[all_together_subsections] parent=Approximate Necklace Splitting sample=1 attempt=1/5
+1: 75
+2: 15
+3: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=678 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019070533327932005
+Paragraph1: technical=85, citation=15
+[paragraph_scoring] parent=Static Setting::paragraphs method=channel_compressed estimated_tokens=1297 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Static Setting::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Static Setting::paragraphs sample=1 attempt=1/5
+30: 35
+1: 25
+2: 15
+3: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011105429013506479
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+[paragraph_scoring] parent=Dynamic Setting::paragraphs method=channel_compressed estimated_tokens=1591 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Dynamic Setting::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Dynamic Setting::paragraphs sample=1 attempt=1/5
+1: 95.87
+2: 0.36
+3: 0.07
+4: 0.03
+5: 0.91
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0080093346614734
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+Paragraph4: technical=100, citation=0
+Paragraph5: technical=100, citation=0
+[paragraph_scoring] parent=A Offline Algorithm is Optimal::paragraphs method=channel_full_parent estimated_tokens=1168 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=A Offline Algorithm is Optimal::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=A Offline Algorithm is Optimal::paragraphs sample=1 attempt=1/5
+1: 85
+2: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019441061557397804
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=B NP-completeness of MinNodeMaxFlow::paragraphs method=channel_compressed estimated_tokens=1592 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=B NP-completeness of MinNodeMaxFlow::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=B NP-completeness of MinNodeMaxFlow::paragraphs sample=1 attempt=1/5
+1: 84.00223320322639
+2: 0
+3: 0
+4: 0
+5: 15.99776679677361
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0051341594459429095
+Paragraph1: technical=100, citation=0
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+Paragraph4: technical=100, citation=0
+Paragraph5: technical=100, citation=0
+[paragraph_scoring] parent=Correctness and Time Complexity of ApproxStatic::paragraphs method=channel_compressed estimated_tokens=3176 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Correctness and Time Complexity of ApproxStatic::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Correctness and Time Complexity of ApproxStatic::paragraphs sample=1 attempt=1/5
+1: 35
+2: 25
+3: 30
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0049020748128578515
+Paragraph1: technical=75, citation=25
+Paragraph2: technical=0, citation=0
+Paragraph3: technical=80, citation=20
+Paragraph4: technical=90, citation=10

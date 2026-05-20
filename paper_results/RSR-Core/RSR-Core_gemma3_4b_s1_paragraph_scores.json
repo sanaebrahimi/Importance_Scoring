@@ -1,0 +1,119 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Inference is a critical stage in neural networks, particularly for large language models (LLMs), where it dominates both energy consumption and resource allocation [ 7,12]. A key computational bottleneck during inference is matrix\u2013vector multiplication Mv, where the matrix Mrepresents fixed model weights after training and the vector vcorresponds to input activations generated during execution. Improving the efficiency of matrix\u2013vector multiplication therefore directly translates into faster and more resource-efficient neural model inference. Efficient matrix\u2013vector multiplication is also central to many data management and retrieval workloads beyond neural infer- ence [ 1,3]. For example, vector database systems compute inner products between a query vector and indexed data points for near- est neighbor retrieval, where the indexed dataset can be viewed as a matrix and the query as the input vector [ 4]. Similarly, ranking over tabular datasets applies user-defined weight vectors to attribute 1https://github.com/UIC-InDeXLab/RSR-core columns to compute scores for sorting and filtering, where the table rows form the matrix and the weight vector defines the ranking function [9, 10]. One common approach to accelerating matrix\u2013vector multipli- cation, specifically in model inference, is low-bit quantization of weight matrices [ 6,11]. In low-bit quantized LLMs, matrices are represented using binary or ternary values while activation vectors remain in higher precision, enabling specialized hardware-efficient implementations that reduce computation cost during inference. Orthogonal to hardware-aware quantization approaches, algo- rithmic methods aim to further accelerate matrix\u2013vector multiplica- tion. In particular,Redundant Segment Reduction (RSR)[ 2] reduces the computational cost of low-bit matrix\u2013vector multiplication by a logarithmic factor by exploiting redundancy in matrix structure.arXiv:2603.27462v1 [cs.DS] 29 Mar 2026",
+    "technical_score": 0.17038636363636359,
+    "citation_score": 0.018931818181818175
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Mohsen Dehghankar and Abolfazl Asudeh Specifically, identical column patterns2contribute identical partial results and can therefore be aggregated before multiplication, re- ducing the total number of required operationswithout affecting inference accuracy. However, existing implementations of RSR op- erate at the application level and cannot be efficiently integrated into hardware kernel-level execution, limiting their practical per- formance benefits in real inference systems. In this work, we address this gap by providing a kernel-level implementation of the RSR algorithm and enabling its deployment in practical inference pipelines. To the best of our knowledge, this is the first implementation of RSR optimized for both CPU and CUDA inference environments. We presentRSR-core, a high-performance engine implement- ing RSR as optimized CPU and CUDA kernels for efficient low- bit matrix\u2013vector multiplication. RSR-core provides a production- ready Python interface integrated with HuggingFace workflows [ 5], enabling users to preprocess quantized models once and execute accelerated inference efficiently through an end-to-end workflow. We benchmark RSR-core against widely used hardware-optimized matrix multiplication implementations provided by the PyTorch [ 8] backend and used within the HuggingFace inference interface, as well as BitNet [ 11]. Experimental results show substantial perfor- mance improvements, achieving up to62 \u00d7speedup on CPU and up to1 .9\u00d7speedup on CUDA for popular ternary LLM inference workloads compared to PyTorch bfloat16 computation, while pre- serving exact inference accuracy.",
+    "technical_score": 0.07707954545454544,
+    "citation_score": 0.004056818181818182
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We consider matrix\u2013vector multiplication M\u00b7v, where Mis a binary matrix with entries in {0,1}or a ternary matrix with entries in {\u22121,0,+1}. The matrix corresponds to quantized model weights and remains fixed after preprocessing, while the vector vrepresents input activations arriving during inference, as discussed in the Introduction section. The goal is to accelerate this multiplication in practical inference pipelines while preserving exact computation. algorithm [ 2] consists of two phases: an offline preprocessing ap- plied once to the matrix M, followed by a fast online multiplication phase applied repeatedly during inference. Duringpreprocessing, RSR splits the matrix into horizontal blocks of krows and identifies identical column segments within each block, grouping columns that share the same bit pattern. The preprocessing stage produces auxiliary data structures\u2014including column permutations, group boundaries, and scatter indices\u2014that enable efficient reuse of inter- mediate results during inference. Duringinference, given an input vector v, RSR aggregates vector entries corresponding to identical column segments before multiplication and distributes contribu- tions only once per unique segment. This reduces the number of arithmetic operations required for computing M\u00b7v while preserving exact multiplication results without sacrificing the space usage.",
+    "technical_score": 0.05674242424242424,
+    "citation_score": 0.006304713804713805
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "System Architecture"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "RSR-core is an optimized RSR execution engine using a layered architecture illustrated in Figure 1. At its core, the system provides 2In the original paper, the multiplication v\u00b7M is considered instead of Mv, and therefore rows (rather than columns) are grouped together.kernel-level implementations of RSR multiplication on both CPU (C kernels) and CUDA (GPU kernels). These kernels are exposed through intermediate multiplier abstractions and integrated into a Python interface that supports end-to-end preprocessing and inference workflows.",
+    "technical_score": 0.11033249158249156,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "System Architecture"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The architecture enables users to preprocess quantized models once and reuse the generated artifacts across repeated inference calls. The full source code is publicly available at this repository.",
+    "technical_score": 0.04728535353535353,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "Kernels Implementation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While the RSR algorithm is conceptually straightforward, a direct Python implementation does not yield practical speedups due to interpreter overhead, general-purpose sorting, and inefficient mem- ory access patterns during the gather, aggregate, and scatter phases. RSR-core therefore provides native kernel implementations in C (CPU) and CUDA (GPU) for both binary (1-bit) and ternary (1.58-bit) matrices. A key design choice spans all backends: preprocessing usescounting sortover the discrete pattern space (2kbuckets for binary,4kfor ternary), achieving O(n+buckets) complexity per block instead of O(nlogn) from comparison-based sorting. Meta- data is uniformly shrunk to compact types\u2014permutation indices and group boundaries stored as 16-bit integers, and scatter targets encoded as fixed-size bitmasks rather than variable-length index arrays\u2014reducing bandwidth pressure in the inference hot path. On the CPU, the C kernels fuse the gather and aggregate phases into a single pass over the input vector, accumulating partial sums directly without materializing intermediate arrays. The binary ker- nel uses scalar-unrolled loads with software prefetch hints, which outperforms hardware vector gather instructions on the random- access pattern inherent to RSR. For ternary matrices, where each group must scatter both a positive and a negative contribution, the kernel replaces variable-length signed scatter lists with two com- pact bitmasks per group and iterates their set bits directly, making the per-group scatter cost independent of how many output rows are active. All CPU kernels are parallelized across row blocks. For end-to-end model inference on CPU, RSR-core further fuses activation quantization with the RSR matrix-vector multiply into a single native call, and batches sibling linear layers that share the same input vector (e.g., Wq,Wk,Wv) into one combined operation. This eliminates repeated Python dispatch and redundant quantiza- tion, and exposes a larger pool of row blocks to distribute across cores\u2014a layer of optimization that contributes substantially to the observed wall-clock speedups beyond the kernel itself. On CUDA, each row block is assigned to one thread block, and warps within a block process groups in parallel. Each group\u2019s meta- data is packed into a single 64-bit word encoding the permutation range, length, and scatter masks, so the kernel loads one value per group and begins work immediately. Permutation indices are sorted within each group during preprocessing, which does not affect the computed sum but improves cache locality on the gather reads. Per-warp shared-memory partial buffers avoid contention on output writes, and zero-contribution groups are dropped during preprocessing to eliminate useless work. Compile-time specializa- tions on kallow the compiler to fully unroll scatter loops for each supported block height3. 3See the code repository for more technical implementation detail.",
+    "technical_score": 0.08038510101010099,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "Kernels Implementation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "RSR-core: A High-Performance Engine for Low-Bit Matrix-Vector Multiplication and CPU. Matrix is binary while vector isfloat32.",
+    "technical_score": 0.014185606060606058,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "Multipliers"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "On top of the kernel implementations, RSR-core provides a set of Python classes called Multiplier . These classes encapsulate multiplier-specific logic, including both RSR-based multiplication and baseline multipliers such as BitNet. Each multiplier exposes two primary operations: preprocessing and multiplication. The preprocessing stage operates on a given low-bit matrix and produces reusable artifacts that encode segment-level structure for efficient inference-time execution. The multiplication stage then uses these artifacts together with an input vector vto compute the exact matrix\u2013vector productM\u00b7v.4",
+    "technical_score": 0.09457070707070706,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "Integration"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "RSR-core provides an interface for executing inference with ternary large language models and integrates directly with models available through the HuggingFace model hub5. Models that use ternary (BitLinear) layers, such as BitNet [ 11] and its variants, can be used with RSR-core without modifying existing inference pipelines6. Users apply preprocessing once to a selected model downloaded from the HuggingFace model hub. The generated preprocessing artifacts are stored locally, with at most the same space usage as the models themselves, and reused for subsequent inference executions. During inference, users can interact with the model through stan- dard prompting workflows and obtain responses using accelerated matrix\u2013vector multiplication provided by RSR-core (see demonstra- tion section).",
+    "technical_score": 0.058397411616161604,
+    "citation_score": 0.0030735479797979796
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "Integration"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "RSR-core also includes a lightweight user interface that simplifies model selection, preprocessing management, storage monitoring of generated artifacts, and interactive prompting of the models. Integration with PyTorch-based inference pipelines is provided through a custom PyTorch module called RSRLinear , which re- places ternary linear layers with RSR-enabled implementations. Any system using PyTorchfor neural network inference can incor- porate RSR-core through this module with minimal changes.",
+    "technical_score": 0.03309974747474747,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "System Overview",
+      "Benchmarking Results"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "To evaluate the performance of RSR-core, we compare multiplica- tion time against baseline implementations provided by PyTorch, which already use hardware-optimized kernels on both CPU and 4Note that preprocessing is required only for RSR-based multipliers. 5https://huggingface.co/models gingFace PyTorchbfloat16 Model HF (Tok/s) RSR (Tok/s) Speed-up CPU Falcon3-10B-1.58b 0.211.3 62.0x Llama3-8B-1.58b 0.213.4 53.8x BitNet-2B-4T-bf16 2.128.8 13.9x BitNet-2B-4T 14.229.3 2.1x CUDA Falcon3-10B-1.58b 25.247.4 1.9x Llama3-8B-1.58b 31.959.3 1.9x BitNet-2B-4T-bf16 33.157.4 1.7x BitNet-2B-4T 41.657.1 1.4x CUDA platforms. We also compare against BitNet [ 11] as an addi- tional baseline for low-bit matrix multiplication. The results (Fig- ure 2) show substantial speedups for matrix\u2013vector multiplication on both CPU and CUDA. We further evaluate end-to-end LLM inference performance during the decoding (token generation) phase and compare against HuggingFace PyTorch inference on both CPU and CUDA platforms. The results (Table 1) demonstrate significant improvements in token generation throughput using RSR-core. Additional benchmarking results are available in the project repository.",
+    "technical_score": 0.05359006734006734,
+    "citation_score": 0.009457070707070707
+  },
+  {
+    "section_path": [
+      "Demonstration Scenarios"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "During the demonstration, participants interact with RSR-core through an integrated web-based interface that supports model preprocessing, accelerated inference, and kernel-level performance exploration workflows. Scenario 1: Model Onboarding.Participants search for a ternary model on the HuggingFace Hub, select it, and configure RSR prepro- cessing parameters including the block height k, multiplier version, and target device. Upon launching preprocessing, the UI displays real-time progress as each layer is processed. Once complete, the model appears in the model list with metadata such as size, layer count, and selected k. RSR preprocessing is a one-time cost; the UI makes it accessible to non-experts. Figure 3a illustrates the prepro- cessing interface. Scenario 2: Side-by-Side Inference.Participants select a pre- processed model, enter a prompt, and run text generation with both the RSR backend and the HuggingFace bfloat16 baseline. The UI displays the generated text alongside performance metrics\u2014tokens per second, generation latency, and model load time\u2014and computes the end-to-end speedup factor. This scenario demonstrates RSR\u2019s practical acceleration on real LLM inference. Figure 3b shows the inference comparison interface. Scenario 3: Kernel-Level Exploration.Participants navigate to the Matvec Benchmark tab, enter custom matrix shapes (e.g., matching a specific model\u2019s weight dimensions), select a range of kvalues and bit-width (1-bit or 1.58-bit), and launch kernel-level micro-benchmarks. The UI produces a bar chart comparing RSR against FP32 and BF16 baselines at the best kper shape, and a line chart showing how RSR latency varies across kvalues. Participants can explore the parameter sensitivity of RSR on the demonstration hardware, validating that redundancy structure varies across shapes. Figure 3c illustrates the kernel-level benchmarking interface. Scenario 4: Cross-Configuration Comparison.Participants switch between CPU and CUDA using the device selector and com- pare pre-computed shape benchmark results across bit-widths (1-bit vs. 1.58-bit). The Best K tab reveals how the optimal block height shifts across devices and matrix shapes, demonstrating that RSR\u2019s advantage is hardware-dependent. The dashboard enables rapid exploration across configurations without re-running experiments. Figure 3d shows the cross-configuration comparison interface.",
+    "technical_score": 0.16212121212121217,
+    "citation_score": 0.0
+  }
+]

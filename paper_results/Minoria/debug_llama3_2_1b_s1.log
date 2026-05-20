@@ -1,0 +1,726 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-19T17:35:59 model=llama3.2:1b host=http://localhost:11434 paper_id=Minoria n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Preliminaries', 'Geometric Interpretation', 'Minoria Mining in 2D', 'Generalized Ray-sweeping for Higher Dimensions', 'Practical Heuristics', 'Experiments', 'Related Work', 'Discussion', 'Conclusion']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 10
+5: 70
+6: 30
+7: 50
+8: 60
+9: 40
+10: 100
+[all_together_subsections_item_order] parent=Introduction sample=1/1 order=['[Section Lead-in]', 'Technical Contributions']
+[all_together_subsections] parent=Introduction sample=1 attempt=1/5
+1: 30
+2: 20
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=2770 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 20
+2: 80
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006696322144464683
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[citation_split] paragraph_id=Introduction > [Section Lead-in]::p1 sample=1 attempt=1/5
+0.0137
+4: 0.0025
+6: 0.0018
+9: 0.0009
+10: 0.0003
+[citation_split] paragraph_id=Introduction > [Section Lead-in]::p1 sample=1 attempt=2/5
+1: 23
+2: 18
+3: 15
+4: 12
+5: 8
+6: 7
+7: 6
+8: 5
+9: 4
+10: 3
+[paragraph_scoring] parent=Technical Contributions::paragraphs method=channel_compressed estimated_tokens=2229 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Technical Contributions::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Technical Contributions::paragraphs sample=1 attempt=1/5
+1: 30
+3: 25
+4: 20
+[all_together_paragraphs] parent=Technical Contributions::paragraphs sample=1 attempt=2/5
+1: 43
+2: 26
+3: 21
+4: 12
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.026765387031145362
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+[all_together_subsections_item_order] parent=Preliminaries sample=1/1 order=['[Section Lead-in]', 'Problem Definition']
+[all_together_subsections] parent=Preliminaries sample=1 attempt=1/5
+1: 30
+2: 70
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1343 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+0.3
+1: 30
+2: 25
+3: 35
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0008939165831421103
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+[paragraph_scoring] parent=Problem Definition::paragraphs method=channel_compressed estimated_tokens=2095 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Problem Definition::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Problem Definition::paragraphs sample=1 attempt=1/5
+1: 80
+2: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.015160658643100872
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[citation_split] paragraph_id=Preliminaries > Problem Definition::p1 sample=1 attempt=1/5
+0.23
+3
+0.45
+0.12
+0.55
+0.01
+0.38
+0.68
+0.02
+0.56
+0.04
+0.98
+0.15
+0.49
+0.07
+0.85
+[citation_split] paragraph_id=Preliminaries > Problem Definition::p1 sample=1 attempt=2/5
+0: 85
+3: 10
+6: 5
+7: 5
+11: 15
+12: 20
+14: 25
+16: 30
+18: 40
+19: 45
+21: 35
+22: 50
+23: 55
+[all_together_subsections_item_order] parent=Geometric Interpretation sample=1/1 order=['[Section Lead-in]', 'Dual-Space Transformation', 'Median Region']
+[all_together_subsections] parent=Geometric Interpretation sample=1 attempt=1/5
+1: 30
+2: 70
+[all_together_subsections] parent=Geometric Interpretation sample=1 attempt=2/5
+1: 60
+2: 40
+3: 90
+4: 70
+5: 80
+6: 50
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=771 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019496533133385695
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_scoring] parent=Dual-Space Transformation::paragraphs method=channel_full_parent estimated_tokens=723 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Dual-Space Transformation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Dual-Space Transformation::paragraphs sample=1 attempt=1/5
+0.245
+3: 90
+1: 55
+2: 30
+3: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006613218661220901
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+[citation_split] paragraph_id=Geometric Interpretation > Dual-Space Transformation::p3 sample=1 attempt=1/5
+3: 24.5
+4: 12.5
+1: 9.0
+2: 6.8
+[paragraph_scoring] parent=Median Region::paragraphs method=channel_compressed estimated_tokens=3013 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Median Region::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Median Region::paragraphs sample=1 attempt=1/5
+1: 93.0
+2: 27.5
+3: 42.8
+4: 18.2
+5: 81.7
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0001949627903418305
+Section context: These paragraphs are from the "Median Region" section of the paper.
+
+Technical_percentage: 5-20
+ Citation_percentage: 30-50
+
+Paragraph entries (paragraph_id -> details):
+{
+  "Paragraph 1": {
+    "total_score": 0.027388345137505276,
+    "has_citations": false,
+    "text": "A key concept that helps us to solve Problem 1 efficiently is the computational geometry notion of k-th level of arrangement [21]. Consider the dual hyperplanes H={d(t1),\u00b7\u00b7\u00b7,d(tn)}. The dissection of the dual space with the hyperplanes is called the arrangement",
+    "citation_focus_text": ""
+  },
+  "Paragraph 2": {
+    "total_score": 0.00809870420732683,
+    "has_citations": false,
+    "text": "0.000.250.500.751.001.251.501.752.000.000.250.500.751.001.251.501.752.00 t1 t2t3rf(a) Primal space: [t2,t1,t3]shown as points, along with their projection on the ray rf. 0.000.250.500.751.001.251.501.752.000.000.250.500.751.001.251.501.752.00 d(t1)d(t2)d(t3)rf(b) Dual space: The intersection of dual hyperplanes of the points with a ray rf. 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2nd Level of Arrangement(c) 2nd level of arrangements in the dual space high- lighted as the orange line segments. the arrangement in the first quadrant. The order of projection in Fig. 2a is the reverse of the intersection of dual hyperplanes with rf ([d(t3),d(t1),d(t2)]) in Fig. 2b.",
+    "citation_focus_text": ""
+  },
+  "Paragraph 3": {
+    "total_score": 0.012604528729948663,
+    "has_citations": true,
+    "text": "In Fig. 2c, the dotted blue lines indicate the boundaries of the median regions (the change in the line segment indicates a change in the median (2nd point) of Df). AofH, which we simply call the arrangement. The intersection of \u03b4\u2208[d]hyperplanes inHforms a (d\u2212\u03b4)-face of the arrangement. In particular, the intersection of dhyperplanes is a (0)-face (a point), referred to as a vertex of the arrangement, while the (1)-faces (line segments) connecting two vertices are called the edges . We call two vertices that share an edge as neighbors . Please refer to [ 21] for more details about the arrangement. Now consider the origin-anchored ray rf\u20d7in the dual space and the intersections of the dual hyperplanes with it. Based on Lemma 1, thek-th closest intersection to the origin specifies the tuple with thek-th largest value in Df. We define the universe of all such intersection points for all vectors fas thek-th level of arrangement, referred asAk. InR2, we showAkas the ordered list of the vertices (the intersection points) of the k-th level, in counter-clock-wise (fromx-axis toy) or clock-wise.",
+    "citation_focus_text": "AofH, which we simply call the arrangement. In particular, the intersection of dhyperplanes is a (0)-face (a point), referred to as a vertex of the arrangement, while the (1)-faces (line segments) connecting two vertices are called the edges . Please refer to [ 21] for more details about the arrangement."
+  },
+  "Paragraph 4": {
+    "total_score": 0.0053598696935763,
+    "has_citations": false,
+    "text": "For example, Fig. 2c shows (in orange) the 2nd level of an ar- rangement of 3 (toy) tuples in the dual space in R2. In this example, A2=\u27e80,\u00d71,2,\u00d71,3,\u03c0 2\u27e9, where\u00d7i,jis the intersection between d(ti) andd(tj). One can see that the k-th level is a chain of line segments forming a non-convex shape. In addition, the set of top- ktuples in each line segment is fixed and is different from the neighboring line segments. Moreover, whenk=n 2, thek-th level of the arrangement tracks the median for any possible direction f. Specifically, the intersection ofAn 2with a rayrf\u20d7is a line segment, specifying the median ofDf. Evidently, the median of all rays intersecting with the same line segment inAn 2is the same. Following this observation, we define the notion of median regions as follows. Definition 1 (Median Region). A median region is the range of raysrf\u20d7, for which the median of the projection Dfis the same. The partitioning of the origin-anchored rays in the dual space according to the(d\u22121)-dimensional simplexes (line-segments in 2D) ofAn 2provides the set of all median regions. Specifically, in 2D each median region is a range that begins/ends at the beginning/end of each line segment (e.g., see Fig. 2c). Moreover, since within every median region, no dual hyperplane intersects with the median simplex, the set of tuples with projection values being larger (resp. smaller) than the median does not change.",
+    "citation_focus_text": ""
+  },
+  "Paragraph 5": {
+    "total_score": 0.024060513954130978,
+    "has_citations": false,
+    "text": "For example, in Fig. 2c,consider the median region between the x-axis and the first (bottom) blue ray. d(t2)is the median line-segment. The intersection of d(t3) with any ray in this region remains below the median (closer to the origin). Similarly, the intersection of d(t1)above the median. Using these observations, one can write a linear program for every median region to find the maximum skew within a median region. Instead, we introduce Theorem 2 as a key observation that enables a more efficient algorithm in Section 4. Let \u03bc(D) be the vector in Rdthat contains the mean of D, i.e.,\u03bc(D)=1 n\u2211\ufe01n i=1ti. We defineqi=ti\u2212\u03bc(D). In other words, qi\u2019s are the mean-normalized tuples ofD. LetQbe ad\u00d7nmatrix where each column of Qisq\u22a4 i. For a unit vector f, lettmfbe the median ofDafter projection on f. In other words, t\u22a4mffis the median ofDf. Theorem 2 helps us to find the high skew direction vector f\u2217efficiently4: Theorem 2. For a given median region with median tmf, the max skew direction f\u2217either falls in the boundaries of this median region or it is equal to(QQ\u22a4)\u22121qmf |(QQ\u22a4)\u22121qmf|.",
+    "citation_focus_text": ""
+  }
+}
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.0001949627903418305
+Section context: These paragraphs are from the "Median Region" section of the paper.
+
+Technical_percentage: 5-20
+ Citation_percentage: 30-50
+
+Paragraph1: technical=80, citation=20
+ Paragraph2: technical=100, citation=0
+ Paragraph3: technical=85, citation=15
+ Paragraph4: technical=90, citation=10
+ Paragraph5: technical=95, citation=5
+[all_together_subsections_item_order] parent=Minoria Mining in 2D sample=1/1 order=['[Section Lead-in]', 'Enumerating the k-th Level', 'The Warm-up Algorithm', 'The Ray-sweeping Algorithm']
+[all_together_subsections] parent=Minoria Mining in 2D sample=1 attempt=1/5
+1: 20
+2: 30
+3: 10
+4: 50
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1706 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020944181849646804
+Paragraph1: technical=5.00, citation=95.00
+Paragraph2: technical=30.00, citation=70.00
+Paragraph3: technical=85.00, citation=15.00
+Paragraph4: technical=90.00, citation=10.00
+Paragraph5: technical=100.00, citation=0.00
+[paragraph_scoring] parent=Enumerating the k-th Level::paragraphs method=channel_full_parent estimated_tokens=906 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Enumerating the k-th Level::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Enumerating the k-th Level::paragraphs sample=1 attempt=1/5
+1: 90
+2: 10
+3: 80
+4: 5
+5: 95
+6: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0046643849943534465
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[citation_split] paragraph_id=Minoria Mining in 2D > Enumerating the k-th Level::p2 sample=1 attempt=1/5
+0.01 -> 0.02
+0.03 -> 0.04
+0.05 -> 0.06
+0.07 -> 0.08
+0.09 -> 0.10
+1.00 -> 0.12
+2.00 -> 0.15
+3.00 -> 0.18
+4.00 -> 0.21
+5.00 -> 0.24
+6.00 -> 0.26
+7.00 -> 0.28
+8.00 -> 0.30
+[citation_split] paragraph_id=Minoria Mining in 2D > Enumerating the k-th Level::p2 sample=1 attempt=2/5
+0.01
+3: 99.99
+1: 90.12
+2: 9.88
+[paragraph_scoring] parent=The Warm-up Algorithm::paragraphs method=channel_compressed estimated_tokens=1398 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=The Warm-up Algorithm::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=The Warm-up Algorithm::paragraphs sample=1 attempt=1/5
+1: 80
+3: 10
+4: 5
+5: 15
+[all_together_paragraphs] parent=The Warm-up Algorithm::paragraphs sample=1 attempt=2/5
+1: 67
+2: 23
+3: 4
+4: 5
+5: 21
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.002782375301404437
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=60, citation=40
+Paragraph5: technical=70, citation=30
+[paragraph_scoring] parent=The Ray-sweeping Algorithm::paragraphs method=channel_compressed estimated_tokens=1624 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=The Ray-sweeping Algorithm::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=The Ray-sweeping Algorithm::paragraphs sample=1 attempt=1/5
+1: 30
+3: 20
+4: 50
+[all_together_paragraphs] parent=The Ray-sweeping Algorithm::paragraphs sample=1 attempt=2/5
+1: 67
+2: 33
+3: 5
+4: 21
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025424830990423794
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=80, citation=20
+[citation_split] paragraph_id=Minoria Mining in 2D > The Ray-sweeping Algorithm::p1 sample=1 attempt=1/5
+0.25 -> 0.25 (citation directly supports the paragraph's claim)
+0.10 -> 0.10 (citation provides key comparison or baseline)
+0.05 -> 0.05 (citation introduces a method the paragraph builds upon)
+[citation_split] paragraph_id=Minoria Mining in 2D > The Ray-sweeping Algorithm::p1 sample=1 attempt=2/5
+0.25: 1
+0.15: 2
+0.10: 3
+[all_together_subsections_item_order] parent=Generalized Ray-sweeping for Higher Dimensions sample=1/1 order=['[Section Lead-in]', 'Generalized Ray-sweeping Algorithm', 'Constant-time skew-value update process']
+[all_together_subsections] parent=Generalized Ray-sweeping for Higher Dimensions sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 10
+5: 70
+6: 30
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=675 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+0.25
+3.0
+50
+30
+20
+10
+5
+0
+80
+15
+75
+90
+35
+60
+85
+40
+55
+65
+70
+95
+45
+0
+1
+2
+3
+4
+5
+6
+7
+8
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=2/5
+0: 34
+1: 66
+2: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01608684274364102
+Paragraph1: technical=60, citation=40
+Paragraph2: technical=90, citation=10
+[paragraph_scoring] parent=Generalized Ray-sweeping Algorithm::paragraphs method=channel_compressed estimated_tokens=2348 threshold=1200 paragraphs=11 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Generalized Ray-sweeping Algorithm::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 8', 'Paragraph 9', 'Paragraph 10', 'Paragraph 11']
+[all_together_paragraphs] parent=Generalized Ray-sweeping Algorithm::paragraphs sample=1 attempt=1/5
+1: 67
+3: 33
+4: 17
+5: 0
+6: 25
+7: 50
+8: 12
+9: 38
+10: 23
+11: 56
+[all_together_paragraphs] parent=Generalized Ray-sweeping Algorithm::paragraphs sample=1 attempt=2/5
+1: 67
+2: 23
+3: 4
+4: 5
+5: 0
+6: 33
+7: 34
+8: 25
+9: 42
+10: 11
+11: 56
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011356031316250605
+Section context: these paragraphs are from the "Generalized Ray-sweeping Algorithm" section of the paper.
+
+Technical_percentage: 5-20
+ Citation_percentage: 30-50
+
+Paragraph1: technical=80, citation=20
+ Paragraph2: technical=100, citation=0
+ Paragraph3: technical=90, citation=10
+ Paragraph4: technical=60, citation=40
+ Paragraph5: technical=85, citation=15
+ Paragraph6: technical=95, citation=5
+ Paragraph7: technical=100, citation=0
+ Paragraph8: technical=70, citation=30
+ Paragraph9: technical=90, citation=10
+ Paragraph10: technical=80, citation=20
+ Paragraph11: technical=85, citation=15
+[citation_split] paragraph_id=Generalized Ray-sweeping for Higher Dimensions > Generalized Ray-sweeping Algorithm::p1 sample=1 attempt=1/5
+0.23
+3.42
+5.15
+8.91
+[citation_split] paragraph_id=Generalized Ray-sweeping for Higher Dimensions > Generalized Ray-sweeping Algorithm::p1 sample=1 attempt=2/5
+0.15: 1
+0.10: 2
+0.05: 3
+[paragraph_scoring] parent=Constant-time skew-value update process::paragraphs method=channel_full_parent estimated_tokens=1072 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Constant-time skew-value update process::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Constant-time skew-value update process::paragraphs sample=1 attempt=1/5
+1: 34.6
+2: 25.4
+3: 23.1
+4: 20.9
+5: 18.7
+6: 16.3
+7: 14.8
+8: 12.2
+9: 10.0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01855559257092738
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[citation_split] paragraph_id=Generalized Ray-sweeping for Higher Dimensions > Constant-time skew-value update process::p1 sample=1 attempt=1/5
+0.03302727272727273
+(1) -> 60
+(2) -> 40
+[all_together_subsections_item_order] parent=Practical Heuristics sample=1/1 order=['[Section Lead-in]', 'MD Discretization', 'Exploration and Exploitation (E&E)', 'Focused Exploration']
+[all_together_subsections] parent=Practical Heuristics sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 10
+5: 70
+6: 30
+7: 85
+8: 15
+9: 75
+10: 35
+11: 95
+12: 25
+13: 65
+14: 40
+15: 80
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=689 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.021137155086447704
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=50, citation=30
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=60, citation=40
+Paragraph7: technical=80, citation=20
+Paragraph8: technical=95, citation=5
+[paragraph_scoring] parent=MD Discretization::paragraphs method=channel_compressed estimated_tokens=2183 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=MD Discretization::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=MD Discretization::paragraphs sample=1 attempt=1/5
+1: 93.0
+2: 27.0
+3: 4.0
+4: 23.0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006836948269546406
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+[paragraph_scoring] parent=Exploration and Exploitation (E&E)::paragraphs method=channel_compressed estimated_tokens=1309 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Exploration and Exploitation (E&E)::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Exploration and Exploitation (E&E)::paragraphs sample=1 attempt=1/5
+0.25
+1: 30
+2: 20
+3: 10
+4: 5
+5: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0023937593077088246
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[citation_split] paragraph_id=Practical Heuristics > Exploration and Exploitation (E&E)::p2 sample=1 attempt=1/5
+0.25 -> 25%
+0.20 -> 20%
+0.15 -> 15%
+0.10 -> 10%
+0.05 -> 5%
+[citation_split] paragraph_id=Practical Heuristics > Exploration and Exploitation (E&E)::p2 sample=1 attempt=2/5
+0.25
+0.33
+0.02
+0.42
+0.18
+0.55
+0.08
+0.01
+0.65
+0.36
+0.49
+0.04
+0.58
+0.07
+0.38
+0.61
+[citation_split] paragraph_id=Practical Heuristics > Exploration and Exploitation (E&E)::p2 sample=1 attempt=3/5
+0.25
+0.33
+0.02
+0.42
+0.18
+0.55
+0.08
+0.01
+0.36
+0.49
+0.11
+0.58
+0.04
+0.68
+0.23
+0.72
+[citation_split] paragraph_id=Practical Heuristics > Exploration and Exploitation (E&E)::p2 sample=1 attempt=4/5
+0.25
+0.33
+0.02
+0.42
+0.18
+0.55
+0.08
+0.01
+0.36
+0.49
+0.11
+0.58
+0.04
+0.68
+0.23
+0.72
+[citation_split] paragraph_id=Practical Heuristics > Exploration and Exploitation (E&E)::p2 sample=1 attempt=5/5
+0.25: 3
+0.15: 1
+0.10: 2
+0.05: 1
+0.01: 1
+[citation_split_error] paragraph_id=Practical Heuristics > Exploration and Exploitation (E&E)::p2 sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2']
+[citation_split_sample_skip] paragraph_id=Practical Heuristics > Exploration and Exploitation (E&E)::p2 sample=1/1 reason=Model failed to produce complete citation scores for paragraph 'Practical Heuristics > Exploration and Exploitation (E&E)::p2' after 5 retries.
+[citation_split_unresolved] paragraph_id=Minoria::Practical Heuristics > Exploration and Exploitation (E&E)::p2 reason=Model failed to produce any complete citation-score sample for paragraph 'Practical Heuristics > Exploration and Exploitation (E&E)::p2'.
+[paragraph_scoring] parent=Focused Exploration::paragraphs method=channel_compressed estimated_tokens=1344 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Focused Exploration::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Focused Exploration::paragraphs sample=1 attempt=1/5
+0.24514571428571429
+1: 45
+2: 30
+3: 20
+4: 15
+5: 10
+6: 5
+7: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.008339208093302764
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=30, citation=70
+Paragraph4: technical=20, citation=80
+Paragraph5: technical=0, citation=100
+Paragraph6: technical=90, citation=10
+Paragraph7: technical=40, citation=60
+[all_together_subsections_item_order] parent=Experiments sample=1/1 order=['[Section Lead-in]', '2D Experiments', 'Higher-dimensional Experiments']
+[all_together_subsections] parent=Experiments sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 70
+5: 85
+6: 95
+7: 75
+8: 60
+9: 50
+10: 40
+11: 30
+12: 25
+13: 35
+14: 45
+15: 55
+16: 65
+17: 80
+18: 85
+19: 90
+20: 95
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=741 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.010944965369102527
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=70, citation=30
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=50, citation=70
+Paragraph7: technical=80, citation=20
+Paragraph8: technical=95, citation=0
+[paragraph_scoring] parent=2D Experiments::paragraphs method=channel_compressed estimated_tokens=4379 threshold=1200 paragraphs=9 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=2D Experiments::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 8', 'Paragraph 9']
+[all_together_paragraphs] parent=2D Experiments::paragraphs sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 10
+5: 70
+6: 30
+7: 50
+8: 60
+9: 40
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0062852109231446305
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=80, citation=20
+Paragraph7: technical=60, citation=40
+Paragraph8: technical=95, citation=5
+Paragraph9: technical=70, citation=30
+[citation_split] paragraph_id=Experiments > 2D Experiments::p3 sample=1 attempt=1/5
+0.23
+0.04
+0.01
+0.00
+0.08
+0.05
+0.02
+0.06
+0.09
+0.11
+0.07
+0.03
+0.12
+0.18
+0.19
+0.20
+[citation_split] paragraph_id=Experiments > 2D Experiments::p3 sample=1 attempt=2/5
+0.15: 1
+0.10: 2
+0.05: 3
+0.00: 4
+[citation_split] paragraph_id=Experiments > 2D Experiments::p8 sample=1 attempt=1/5
+0.00015948963317384372
+3: 50
+4: 30
+1: 20
+2: 10
+[paragraph_scoring] parent=Higher-dimensional Experiments::paragraphs method=channel_compressed estimated_tokens=5727 threshold=1200 paragraphs=9 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Higher-dimensional Experiments::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 8', 'Paragraph 9']
+[all_together_paragraphs] parent=Higher-dimensional Experiments::paragraphs sample=1 attempt=1/5
+1: 80
+2: 70
+3: 90
+4: 95
+5: 10
+6: 85
+7: 25
+8: 75
+9: 30
+10: 60
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.018273930170009646
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=20, citation=80
+Paragraph7: technical=40, citation=60
+Paragraph8: technical=50, citation=30
+Paragraph9: technical=70, citation=40
+[citation_split] paragraph_id=Experiments > Higher-dimensional Experiments::p1 sample=1 attempt=1/5
+0.245
+3: 20
+4: 15
+1: 10
+6: 5
+7: 8
+[citation_split] paragraph_id=Experiments > Higher-dimensional Experiments::p1 sample=1 attempt=2/5
+0.23: 1
+0.11: 2
+0.04: 3
+0.01: 4
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_compressed estimated_tokens=1671 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=1/5
+1: 20
+2: 30
+3: 50
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0049020748128578515
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=1/5
+0.25 -> 0.25
+0.05 -> 0.05
+0.15 -> 0.15
+0.10 -> 0.10
+0.00 -> 0.00
+1: 0.20
+2: 0.30
+3: 0.35
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=2/5
+0.15: 1
+0.10: 2
+0.05: 3
+0.00: 4
+[citation_split] paragraph_id=Related Work::p2 sample=1 attempt=1/5
+0.25
+3: 20
+4: 15
+6: 10
+7: 5
+[citation_split] paragraph_id=Related Work::p2 sample=1 attempt=2/5
+1: 0.12
+2: 0.25
+3: 0.38
+4: 0.09
+5: 0.43
+6: 0.01
+7: 0.55
+[paragraph_scoring] parent=Discussion::paragraphs method=channel_compressed estimated_tokens=1466 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019199992795622785
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=70, citation=30
+Paragraph5: technical=80, citation=20
+Paragraph6: technical=60, citation=40
+Paragraph7: technical=0, citation=0
+[paragraph_scoring] parent=Conclusion::paragraphs method=channel_full_parent estimated_tokens=910 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.016708492313239388
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+Paragraph6: technical=60, citation=80
+Paragraph7: technical=85, citation=0

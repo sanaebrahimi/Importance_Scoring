@@ -1,0 +1,400 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The research community increasingly recognizes long-context modeling as a crucial capability for next-generation large language models, driven by diverse real-world applications ranging from in-depth reasoning (DeepSeek-AI, 2025; Zelik- man et al., 2022), repository-level code genera- tion (Zhang et al., 2023a; Zhang et al.) and multi- turn autonomous agent systems (Park et al., 2023). Recent breakthroughs, including OpenAI\u2019s o-series GeneralLongBenchReasoning0.00.10.20.30.40.5ScorePerformanceonBenchmarks FullAttention NSA DecodeForwardBackward1.03.05.07.09.011.013.0SpeedupRatio11.6\u00d7 9.0\u00d7 6.0\u00d7SpeedonStagesFigure 1: Comparison of performance and efficiency be- tween Full Attention model and our NSA. Left: Despite being sparse, NSA surpasses Full Attention baseline on average across general benchmarks, long-context tasks, and reasoning evaluation. Right: For 64k-length sequence processing, NSA achieves substantial com- putational speedup compared to Full Attention in all stages: decoding, forward, and backward propagation. models, DeepSeek-R1 (DeepSeek-AI, 2025), and Gemini 1.5 Pro (Google et al., 2024), enabling models to process entire codebases, lengthy docu- ments, maintain coherent multi-turn conversations over thousands of tokens, and perform complex rea- soning across long-range dependencies. However, the high complexity (Zaheer et al., 2020) of Atten- tion (Vaswani et al., 2017) mechanisms emerges as a critical latency bottleneck as sequence length increases. Theoretical estimates indicate that at- tention computation with softmax architectures ac- counts for 70\u201380% of total latency when decoding 64k-length contexts, underscoring the urgent need for more efficient attention mechanisms. A natural approach to efficient long-context mod- eling is to take advantage of the inherent sparsity of softmax attention (Ge et al., 2023; Jiang et al., 2023), where selectively computing critical query- key pairs can significantly reduce computational overhead while preserving performance. Recent ad- vances demonstrate this potential through diverse23078 strategies: KV-cache eviction methods (Zhang et al., 2023b; Li et al., 2024; Zhou et al., 2024), blockwise KV-cache selection methods (Tang et al., 2024; Xiao et al., 2024a; Gao et al., 2024), and sam- pling, clustering or hashing-based selection meth- ods (Chen et al., 2024b; Liu et al., 2024; Desai et al., 2024). More related sparse attention meth- ods are introduced in Appendix A. Despite these promising strategies, existing sparse attention meth- ods often fall short in practical deployments. Many approaches fail to achieve speedups comparable to their theoretical gains; moreover, most methods lack effective training-time support to fully exploit the sparsity patterns of attention. To address these limitations, the deployment of effective sparse attention must tackle two key chal- lenges: (1) Hardware-aligned inference speedup : Converting theoretical computation reductions into actual speed improvements requires hardware- friendly algorithm design during both prefilling and decoding stages to mitigate memory access and hardware scheduling bottlenecks; (2) Training- aware algorithm design : Enabling end-to-end com- putation with trainable operators to reduce training costs while maintaining model performance. These requirements are crucial for real-world applications to achieve fast long-context inference or training. When considering both aspects, existing methods still exhibit a noticeable gap. To achieve more effective and efficient sparse attention, we present NSA, a Natively trainable Sparse Attention architecture that integrates hi- erarchical token modeling. As shown in Fig- ure 2, NSA reduces per-query computation by organizing keys and values into temporal blocks and processing them through three attention paths: compressed coarse-grained tokens, selectively re- tained fine-grained tokens, and sliding windows for local contextual information. Then we im- plement specialized kernel to maximize its prac- tical efficiency. NSA introduces two core innova- tions corresponding to the key requirements above: (1) Hardware-aligned system speedup: Optimize blockwise sparse attention for Tensor Core utiliza- tion and memory access, ensuring balanced arith- metic intensity. (2) Training-aware design: Enable stable end-to-end training through efficient algo- rithms and backward operators. This optimization enables NSA to support both efficient deployment and end-to-end training. We evaluate NSA through comprehensive ex- periments on real-world language corpora. Pre-training on a 27B-parameter transformer backbone with 260B tokens, we assess NSA\u2019s performance across general language evaluations, long-context evaluations, and chain-of-thought reasoning evalua- tion. We further compare the kernel speed on A100 GPUs with optimized Triton (Tillet et al., 2019) im- plementations. Experimental results demonstrate that NSA achieves comparable or superior perfor- mance to Full Fttention baseline, while outperform- ing existing sparse attention approaches. Addi- tionally, NSA delivers substantial speedups across decoding, forward, and backward stages compared to vanilla Full Attention, with the speedup ratio increasing for longer sequences. These results val- idate that our hierarchical sparse attention design effectively balances model capability and computa- tional efficiency.",
+    "technical_score": 0.140625,
+    "citation_score": 0.046875
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Our technical approach spans algorithm design and kernel optimization. In the following subsections, we first introduce the background of our method- ology. Then we present the overall framework of NSA, followed by its key algorithmic components.",
+    "technical_score": 0.04222222222222223,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Finally, we detail our hardware-optimized kernel design that maximizes practical efficiency.",
+    "technical_score": 0.010555555555555558,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Background"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Attention Mechanism is widely used in language modeling where each query token qtcomputes relevance scores against all preceding keys k:tto generate a weighted sum of values v:t. Formally, for an input sequence of length t, the attention operation is defined as: ot= Attn ( qt,k:t,v:t) (1) where Attn denotes the attention function: Attn ( qt,k:t,v:t) =/summationtextt i=1\u03b1t,ivi/summationtextt j=1\u03b1t,j, \u03b1t,i=eq\u22a4 tki\u221a dk. (2) Here, \u03b1t,irepresents the attention weight between qtandki, and dkis the feature dimension of keys. As sequence length increases, attention computa- tion becomes increasingly dominant in the over- all computational cost, presenting significant chal- lenges for long-context processing. Arithmetic Intensity is the ratio of compute operations to memory accesses. It intrinsically shapes algorithm optimization on hardware. Each GPU has a critical arithmetic intensity determined23079",
+    "technical_score": 0.013194444444444444,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Background"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "ConcatTop-n SelectionCompressionSelectionCompress Compressed AttentionSliding Attention SlidingCompressed Attention Mask Sliding Attention MaskSelected AttentionSplit to Continuous Blocks Attention ScoreActivated TokenQuery TokenIgnored TokenEvicted TokenNative Sparse Attention Mechanism attention branches: For a given query, preceding keys and values are processed into compressed attention for coarse-grained patterns, selected attention for important token blocks, and sliding attention for local context. Right: Visualization of different attention patterns produced by each branch. Green areas indicate regions where attention scores need to be computed, while white areas represent regions that can be skipped. by its peak compute capability and memory band- width, calculated as the ratio of these two hardware limits. For computation tasks, arithmetic inten- sity above this critical threshold becomes compute- bound (limited by GPU FLOPS), while below it becomes memory-bound (limited by memory band- width). Specifically for causal self-attention mechanism, during training and prefilling phases, batched ma- trix multiplications and attention computations ex- hibit high arithmetic intensity, making these stages compute-bound on modern accelerators. In con- trast, auto-regressive decoding becomes memory- bandwidth constrained because it generates one token per forward pass while requiring loading the entire key-value cache, resulting in low arithmetic intensity. This leads to different optimization goals \u2014 reducing computation cost during training and prefilling, while reducing memory access during decoding.",
+    "technical_score": 0.030787037037037047,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Overall Framework"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "To leverage the potential of attention with natural sparse pattern, we propose replacing the original key-value pairs k:t,v:tin Equation 1 with a more compact and information-dense set of representa- tion key-value pairs \u0303Kt, \u0303Vtgiven each query qt.",
+    "technical_score": 0.021111111111111115,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Overall Framework"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Specifically, we formally define the optimized at- tention output as follows: \u0303Kt=fK(qt,k:t,v:t), \u0303Vt=fV(qt,k:t,v:t)(3) o\u2217 t= Attn/parenleft\uf8ecig qt, \u0303Kt, \u0303Vt/parenright\uf8ecig (4) where \u0303Kt, \u0303Vtare dynamically constructed based on the current query qtand the contextual memoryk:t,v:t. We can design various mapping strategies to get different categories of \u0303Kc t, and combine them as follows: o\u2217 t=/summationdisplay t\u00b7Attn(qt, \u0303Kc t). (5) As illustrated in Figure 2, NSA have three mapping strategies C={cmp,slc,win}, representing com- pression, selection, and sliding window for keys and values. gc t\u2208[0,1]is the gate score for cor- responding strategy c, derived from input features via an MLP and sigmoid activation. Let Ntdenote the total number of remapped keys/values: t]. (6) We maintain a high sparsity by ensuring Nt\u226at.",
+    "technical_score": 0.005277777777777779,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we introduce the design of our remapping strategies fKandfV: token compres- sion, token selection, and sliding window.",
+    "technical_score": 0.0047979797979797985,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Compression"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "By aggregating sequential blocks of keys or values into block-level representations, we obtain com- pressed keys and values that capture the informa- tion of the entire block. Formally, the compressed key representation \u0303Kcmp tis calculated by: fcmp K(k:t) =/braceleftbigg \u03c6(kid+1:id+l)/vextendsingle/vextendsingle/vextendsingle/vextendsingle1\u2264i\u2264/floorleftbiggt\u2212l d/floorrightbigg/bracerightbigg (7) where lis the block length, dis the sliding stride between adjacent blocks, and \u03c6is a learnable MLP with intra-block position encoding to map keys23080 in a block to a single compressed key. \u0303Kcmp t\u2208 Rdk\u00d7\u230at\u2212l d\u230bis tensor composed by compresion keys. Usually, we adopt d < l to mitigate information fragmentation. An analogous formulation holds for the compressed value representation \u0303Vcmp t. Com- pressed representations capture coarser-grained higher-level semantic information and reduce com- putational burden of attention.",
+    "technical_score": 0.007996632996632998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Selection"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Using only compressed keys, values might lose im- portant fine-grained information, motivating us to selectively preserve individual keys, values. Below we describe our efficient token selection mecha- nism that identifies and preserves the most relevant tokens with low computational overhead.",
+    "technical_score": 0.0007381507381507383,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Selection"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Blockwise Selection. Our selection strategy pro- cesses key and value sequences in spacial continu- ous blocks, motivated by two key factors: hardware efficiency considerations and inherent distribution patterns of attention scores. Blockwise selection is crucial to achieve efficient computation on modern GPUs. That is because modern GPU architectures exhibit significantly higher throughput for contin- uous block accesses compared to random index- based reads. Also, blockwise computation enables optimal utilization of Tensor Cores. This archi- tectural characteristic has established blockwise memory access and computation as a fundamental principle in high-performance attention implemen- tations, as exemplified by FlashAttention\u2019s block- based design. Blockwise selection follows the inher- ent distribution patterns of attention scores. Prior works (Jiang et al., 2024) have shown that attention scores often exhibit spatial continuity, suggesting that neighboring keys tend to share similar impor- tance levels. Our visualization in Appendix F also shows this spatial continuous pattern.",
+    "technical_score": 0.001168738668738669,
+    "citation_score": 6.151256151256154e-05
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Selection"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "To implement blockwise selection, we first di- vide key, value sequences into selection blocks. To identify the most important blocks for attention computation, we need to assign importance scores to each block. Below we present our method for computing these block-level importance scores. block importance scores could introduce significant overhead. Fortunately, the attention computation of compression tokens produces intermediate atten- tion scores that we can leverage to induce selection block importance scores, formulated as: pcmp t= Softmax/parenleft\uf8ecig qT t/parenright\uf8ecig (8)where pcmp t\u2208R\u230at\u2212l d\u230bis the attention scores be- tween qtand compression keys \u0303Kcmp t. Let l\u2032de- note the selection block size. When compression blocks and selection blocks share the same block- ing scheme, i.e., l\u2032=l=d, we can directly ob- tain the selection block importance scores pslc tby pslc t=pcmp tstraightforwardly. For cases where the blocking schemes differ, we derive the impor- tance scores for selection blocks according to their spatial relationship. Given d|landd|l\u2032, we have: pslc t[j] =l\u2032 d\u22121/summationdisplay m=0l d\u22121/summationdisplay n=0pcmp t/bracketleftbiggl\u2032 dj\u2212m\u2212n/bracketrightbigg ,(9) where [\u00b7]denotes the indexing operator for access- ing vector element. For models employing GQA or MQA where key-value caches are shared across query heads, consistent block selection across these heads has to be ensured to minimize KV cache load- ing during decoding. The shared importance scores across heads in a group are formally defined as: pslc",
+    "technical_score": 0.00024605024605024614,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Selection"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "This aggregation ensures consistent block selection across heads within the same group.",
+    "technical_score": 0.00024605024605024614,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Selection"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Top-nnnBlock Selection. After obtaining the se- lection block importance scores, We retain tokens within the top- nsparse blocks ranked by block importance scores, formulated as:",
+    "technical_score": 0.00024605024605024614,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Selection"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "It={i|rank(pslc t\u2032[i])\u2264n} (11)",
+    "technical_score": 0.00024605024605024614,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Token Selection"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "{kil\u2032+1:(i+1)l\u2032|i\u2208 It}/bracketrightbig , (12) where rank (\u00b7)denotes the ranking position in de- scending order, with rank = 1 corresponding to the highest score, Itis the set of selected blocks\u2019 indices, Catdenotes the concatenation operation. t\u2208Rdk\u00d7nl\u2032is tensor composed by compresion keys. An analogous formulation applies to the fine- grained value \u0303Vslc t. The selected keys and values then participate in the attention computation with qtas defined in Equation 5.",
+    "technical_score": 0.00024605024605024614,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Algorithm Design",
+      "Sliding Window"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In attention mechanisms, local patterns typically adapt faster and can dominate the learning pro- cess, potentially preventing the model from effec- tively learning from compression and selection to-23081 kens. To address this issue, we introduce a ded- icated sliding window branch that explicitly han- dles local context, allowing other branches (com- pression and selection) to focus on learning their respective features without being shortcutted by local patterns. Specifically, we maintain recent tokens \u0303Kwin t=kt\u2212w:t, \u0303Vwin t=vt\u2212w:tin a win- doww, and isolate attention computations of dif- ferent information sources (compression tokens, and selected tokens, sliding window) into separate branches. These branch outputs are then aggre- gated through a learned gating mechanism. To further prevent shortcut learning across attention branches with marginal computational overhead, we provide independent keys and values for three branches. This architectural design enables sta- ble learning by preventing gradient interference between local and long-range pattern recognition, while introducing minimal overhead. After obtaining all three categories of keys and values ( \u0303Kcmp t, \u0303Vcmp t; \u0303Kslc t, \u0303Vslc t; and \u0303Kwin t, \u0303Vwin t), we compute the final attention output following Equation 5. Together with the compression, selec- tion, and sliding window mechanisms described above, this forms the complete algorithmic frame- work of NSA.",
+    "technical_score": 0.0015993265993265997,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Kernel Design"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "To achieve FlashAttention-level speedup during the training and prefilling, we implement hardware- aligned sparse attention kernels upon Triton. Given MHA is memory-intensive and inefficient for de- coding, we focus on architectures with shared KV caches like GQA and MQA following the current state-of-the-art LLMs. While compression and sliding window attention computations are read- ily compatible with existing FlashAttention-2 ker- nels, we introduce the specialized kernel design for sparse selection attention. Figure 3 illustrates the forward pass implementation. If we were to follow FlashAttention\u2019s strategy of loading tempo- rally continuous query blocks into SRAM, it would result in inefficient memory access since queries within a block may require disjoint KV blocks. To address this, our key optimization lies in a different query grouping strategy: for each position on the query sequence, we load all query heads within a GQA group (they share the same sparse KV blocks) into SRAM. The proposed kernel architecture is characterized by the following key features:",
+    "technical_score": 0.013128473863281458,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Kernel Design"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Grid LoopFigure 3: Kernel design for NSA. The kernel loads queries by GQA groups (Grid Loop), fetches corre- sponding sparse KV blocks (Inner Loop), and performs attention computation on SRAM. Green blocks indicate data on SRAM, while blue indicates data on HBM. ner loop, load all heads\u2019 queries Q\u2208R[h,dk] in the group at position tand their shared sparse key/value block indices It. quentially load continuous key/value blocks indexed by Itinto SRAM as K\u2208 R[Bk,dk], V\u2208R[Bk,dv]to minimize memory loading, where Bkis the kernel block size satisfying Bk|l\u2032. length (proportional to the selected block count n) remains nearly identical for different query blocks, we put query/output loops in Triton\u2019s grid scheduler to simplify and opti- mize the kernel.",
+    "technical_score": 0.004376157954427153,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Kernel Design"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "This design achieves near-optimal arithmetic in- tensity by (1) eliminating redundant KV transfers through group-wise sharing, and (2) balancing com- pute workloads of GPU streaming multiprocessors.",
+    "technical_score": 8.796077488398577e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluate NSA through three lenses: (1) general benchmarks performance, (2) long-context bench- marks performance, and (3) chain-of-thought rea- soning performance, comparing against Full Atten- tion baseline and state-of-the-art sparse attention methods. We defer the efficiency analysis of our sparse computation paradigm to Section 4, where23082",
+    "technical_score": 0.034999999999999996,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "ModelMMLU MMLU-PRO CMMLU BBH GSM8K MATH DROP MBPP HumanEvalAvg. across knowledge (MMLU, MMLU-PRO, CMMLU), reasoning (BBH, GSM8K, MATH, DROP), and coding (MBPP, HumanEval) tasks. NSA achieves superior average performance on most benchmarks despite high sparsity.",
+    "technical_score": 0.058333333333333334,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "ModelSQA MQA Synthetic CodeAvg. MFQA-en MFQA-zh Qasper HPQ 2Wiki GovRpt Dur PassR-en PassR-zh LCC document QA, multi-document QA, synthetic and code task categories. NSA outperformed most of the baselines including Full Attention. we provides detailed discussions on training and inference speed.",
+    "technical_score": 0.023333333333333334,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Pretraining Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Following the common practice in state-of-the-art LLMs, our experiments adopt a backbone combin- of-Experts (MoE), featuring 27Btotal parameters with3Bactive parameters. We chose this architec- ture as it achieves an effective trade-off between computation cost and model performance. More details about our framework are provided in Ap- pendix C. For NSA, we set compression block size l= 32 , sliding stride d= 16 , selected block size l\u2032= 64 , selected block count n= 16 (includ- ing fixed activating the 1 inital block and 2 local blocks), and sliding window size w= 512 . Both Full Attention and sparse attention models are pre- trained on 270Btokens of 8k-length texts, followed by continued training and supervised fine-tuning on32k-length texts with YaRN (Peng et al., 2024) to achieve long-context adaptation. Both models are trained to full convergence to ensure fair com- parison. We provide the loss curve in Appendix D.",
+    "technical_score": 0.025000000000000005,
+    "citation_score": 0.025000000000000005
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Baselines Methods"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In addition to comparing with Full Attention base- line, we evaluate several state-of-the-art inference- stage sparse attention methods: H2O (Zhang et al., 2023b), infLLM (Xiao et al., 2024a), Quest (Tanget al., 2024), and Exact-Top, which first computes full attention score and select the top- nscores keys corresponding to each query and then calculates attention on these positions. These methods span diverse sparse attention paradigms, including KV- cache eviction, query-aware selection, and exact top-nsparse selection.",
+    "technical_score": 0.009375000000000001,
+    "citation_score": 0.0031250000000000006
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Baselines Methods"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "For general evaluation, where most samples have lengths within the local context window of sparse attention baselines, these methods are effectively equivalent to Full Attention. Therefore, we present only the comparison results between NSA and Full Attention baseline in this setting. In the long- context evaluation, we conduct comparisons across all baseline methods, with the sparsity of all sparse attention methods set to the same to ensure a fair comparison. For chain-of-thought reasoning eval- uation, which requires long-text supervised fine- tuning, we also limit our comparison to Full At- tention, as most sparse attention baselines do not support training.",
+    "technical_score": 0.0041666666666666675,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Performance Comparison"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "General Evaluation. We evaluated the pretrained NSA and Full Attention baseline, on a com- prehensive suite of benchmarks spanning knowl- edge, reasoning, and coding capabilities, includ- ing MMLU (Hendrycks et al., 2020), MMLU- PRO (Wang et al., 2024), CMMLU (Li et al., 2023), BBH (Suzgun et al., 2022), GSM8K (Cobbe23083",
+    "technical_score": 0.018181818181818184,
+    "citation_score": 0.018181818181818184
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Performance Comparison"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1 K 8K 15K 22K 29K 36K 43K 50K 57K 64K ContextLength 0",
+    "technical_score": 0.006060606060606062,
+    "citation_score": 0.006060606060606062
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Performance Comparison"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "100 DepthPercent(%) NeedleinAHaystack27BNSA64kContext 0.0 0.2 0.4 0.6 0.8 1.0Figure 4: Needle-in-a-Haystack retrieval accuracy across context positions with 64k context length. NSA achieves perfect accuracy through its hierarchical sparse attention design. et al., 2021), MATH (Hendrycks et al., 2020), DROP (Dua et al., 2019), MBPP (Austin et al., 2021), and HumanEval (Chen et al., 2021). The results are shown in Table 1. Despite its spar- sity, NSA achieves superior overall performance, outperforming all baselines including Full Atten- tion on 7 out of 9 metrics. This indicates that al- though NSA may not fully leverage its efficiency advantages on shorter sequences, it shows strong performance. Notably, NSA demonstrates signifi- cant gains in reasoning-related benchmarks (DROP: +0.042, GSM8K: +0.034), suggesting that our pre- training helps models to develop specialized atten- tion mechanisms. This sparse attention pretraining mechanism force model to focus on the most im- portant information, potentially enhancing perfor- mance by filtering out noise from irrelevant atten- tion pathways. The consistent performance across diverse evaluations also validates NSA\u2019s robustness as a general-purpose architecture.",
+    "technical_score": 0.003030303030303031,
+    "citation_score": 0.003030303030303031
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Performance Comparison"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Long-Context Evaluation. As shown in Fig- ure 4, NSA achieves perfect retrieval accuracy across all positions in 64k-context needle-in-a- haystack (Kamradt, 2023) test. This performance stems from our hierarchical sparse attention de- sign, which combines compression tokens for ef- ficient global context scanning, and selection to- kens for precise local information retrieval. The coarse-grained compression identifies relevant con- text blocks at low computational cost, while the token-level attention on selected token ensures the preservation of critical fine-grained information. This design enables NSA to maintain both global awareness and local precision. We also evaluate NSA on LongBench (Bai et al., 2023) against state-of-the-art sparse attention meth-Generation Token Limit 8192 16384 Full Attention-R 0.046 0.092 NSA-R 0.121 0.146 pervised fine-tuning. Our NSA-R demonstrates better performance than Full Attention-R at both 8k and 16k sequence lengths Context Length 8192 16384 65536 Full Attention 8192 16384 65536 NSA 2048 2560 5632 Expected Speedup 4\u00d7 6.4\u00d7 11.6\u00d7 of tokens) per attention operation during decoding. Due to the low arithmetic intensity and memory-bound na- ture of decoding, the expected speedup is approximately linear with the volume of memory access. ods and Full Attention baseline. To ensure consis- tent sparsity, we set the token activated by each query in all sparse attention baselines to 2560 to- kens, which corresponds to the average number of tokens activated in NSA when handling 32k se- quence lengths. Following StreamLLM (Xiao et al., 2023), this token budget includes the leading 128 tokens and 512 local tokens. We exclude certain subsets from LongBench due to their low scores across all models, which may not provide mean- ingful comparisons. As shown in Table 2, NSA achieves the highest average score 0.469, outper- forming all baselines (+0.032 over Full Attention and +0.046 over Exact-Top). This improvement arises from two key innovations: (1) our native sparse attention design, which enables end-to-end optimization of sparse patterns during pretrain- ing, facilitates synchronized adaptation between the sparse attention module and other model com- ponents; and (2) the hierarchical sparse attention mechanism achieves an balance between local and global information processing. Notably, NSA demonstrates exceptional perfor- mance on tasks requiring complex reasoning over long contexts, achieving +0.087 and +0.051 im- provements over Full Attention on multi-hop QA tasks (HPQ and 2Wiki), exceeding the performance of baselines on code understanding (LCC: +0.069), and outperforming other methods on passage re- trieval (PassR-en: +0.075). These results validate NSA\u2019s capability to handle diverse long-context challenges, with its natively pretrained sparse at-23084",
+    "technical_score": 0.003030303030303031,
+    "citation_score": 0.003030303030303031
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Performance Comparison"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "8 k 16k 32k 64k02004006008001000Time (ms) 2.1 \u00d7 3.8 \u00d7 6.3 \u00d7 9.0 \u00d7Forward Time Comparison FlashAttention- 2 Sparse Attention Kernel Compression and Window Attention Speedup Ratio 8k 16k 32k 64k05001000150020002500 1.1 \u00d72.0 \u00d7 3.4 \u00d7 6.0 \u00d7Backward Time Comparison 9.0",
+    "technical_score": 0.012121212121212125,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Performance Comparison"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Triton-based FlashAttention-2 kernel. Our implemen- tation significantly reduces latency across all context lengths, with the improvement becoming more pro- nounced as input length increases. tention providing additional benefits in learning task-optimal patterns.",
+    "technical_score": 0.02424242424242425,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Performance Comparison"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Chain-of-Thought Reasoning Evaluation. To evaluate NSA\u2019s compatibility with advanced down- stream training paradigms, we investigate its ca- pacity to acquire chain-of-thought mathematical reasoning abilities via post-training. Given the limited effectiveness of reinforcement learning on smaller-scale models, we employ knowledge distil- lation from DeepSeek-R1, conducting supervised fine-tuning (SFT) with 10B tokens of 32k-length mathematical reasoning traces. This produces two comparable models: Full Attention-R (Full Atten- tion baseline) and NSA-R (our sparse variant). We assess both models on the challenging American Invitational Mathematics Examination (AIME 24) benchmark. We use a sampling temperature of 0.7 and a top- pvalue of 0.95 to generate 16 responses for each question and obtain the average score. To validate the impact of reasoning depth, we conduct experiments with two generation context limits: 8k and 16k, measuring whether extended reasoning chains improve accuracy. Example comparisons of model predictions are provided in Appendix G. As shown in Table 3, NSA-R achieves signifi- cantly higher accuracy than Full Attention-R under the 8k context setting (+0.075), with this advantage persisting at 16k contexts (+0.054). These results validate the pretrained sparse attention enable ef- ficient capture of long-range logical dependencies critical for complex mathematical derivations.",
+    "technical_score": 0.03636363636363637,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiency Analysis",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluate the computational efficiency of NSA against Full Attention on an 8-GPU A100 system.For both methods, we configure the model with GQA group g= 4, head per group h= 16 , query/key dimension dk= 192 , and value dimen- siondv= 128 . The hyperparameters for NSA are kept consistent with Section 3.",
+    "technical_score": 0.056249999999999994,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiency Analysis",
+      "Training Speed"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We compare the Triton-based implementations of our NSA attention and Full Attention with Triton- based FlashAttention-2 to ensure fair speed com- parison across the same backend. As shown in Figure 5, our NSA achieve progressively greater speedups as context length increases, up to 9.0 \u00d7 forward and 6.0 \u00d7backward speedup at 64k context-length. Notably, the speed advantage be- comes more pronounced with longer sequences.",
+    "technical_score": 0.0703125,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiency Analysis",
+      "Training Speed"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "This speedup stems from our hardware-aligned al- gorithm design to maximize the efficiency of sparse attention architecture: (1) The Blockwise memory access pattern maximizes Tensor Core utilization,",
+    "technical_score": 0.014062499999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiency Analysis",
+      "Training Speed"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "(2) The delicate loop scheduling in the kernel elim- inates redundant KV transfers.",
+    "technical_score": 0.009375000000000001,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Efficiency Analysis",
+      "Decoding Speed"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The decoding speed of Attention is primarily de- termined by the memory access bottleneck, which is closely tied to the amount of KV cache loading. In each decoding step, Our NSA just needs to load at most/floorleftbigs\u2212l d/floorrightbig compression tokens, nl\u2032selected to- kens, and wneighbor tokens, where sis the cached sequence length. As shown in Table 4, our method exhibits a significant reduction in latency as the decoding length increases, achieving up to 11.6 \u00d7 speedup at 64k context-length. This advantage in memory access efficiency also amplifies with longer sequences.",
+    "technical_score": 0.037500000000000006,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We present NSA, a hardware-aware sparse atten- tion architecture for efficient long-context model- ing. By integrating hierarchical token compres- sion with block selection within a trainable archi- tecture, we achieve faster training and inference while matching or surpassing Full Attention perfor- mance. Our approach demonstrates that hardware- aligned sparse attention can rival Full Attention im- plementations in efficiency and performance. NSA advances the state-of-the-art through: superior base model performance, exceptional long-context performance, and improved reasoning ability, all while achieving significant reductions in compu- tational latency. We present NSA, a hardware-23085 aligned sparse attention architecture for efficient long-context modeling. By integrating hierarchi- cal token compression with blockwise token selec- tion within a trainable architecture, our architecture achieves accelerated training and inference while maintaining Full Attention performance. NSA ad- vances the state-of-the-art by demonstrating gen- eral benchmark performance matches full-attention baselines, exceeding modeling capability in long- context evaluations, and enhanced reasoning abil- ity, all accompanied by measurable reductions in computational latency. Limitations In this work, we focus on sparsity within atten- tion maps of a single layer. Exploring cross-layer sparsity remains an intriguing avenue for future research. Also, our Triton-based implementation, while introducing some abstraction overhead com- pared to native CUDA kernels, offers opportunities for further hardware optimization.",
+    "technical_score": 0.15000000000000002,
+    "citation_score": 0.0
+  }
+]

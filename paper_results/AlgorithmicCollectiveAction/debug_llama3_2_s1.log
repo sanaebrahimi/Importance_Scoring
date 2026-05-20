@@ -1,0 +1,465 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-19T17:44:53 model=llama3.2 host=http://localhost:11434 paper_id=AlgorithmicCollectiveAction n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Problem Formulation', 'Collective Action in Classification', 'Collective Action in Risk Minimization', 'Experiments', 'Discussion']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 80
+2: 20
+[all_together_top] parent=Whole Paper sample=1 attempt=2/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top] parent=Whole Paper sample=1 attempt=3/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top] parent=Whole Paper sample=1 attempt=4/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top] parent=Whole Paper sample=1 attempt=5/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_top_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_relaxed_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Problem Formulation', 'Collective Action in Classification', 'Collective Action in Risk Minimization', 'Experiments', 'Discussion']
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=1/5
+1: 80
+2: 20
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=2/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=3/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=4/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=5/5
+1: 60
+2: 40
+3: 0
+4: 0
+[all_together_top_relaxed_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6']
+[all_together_top_relaxed_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_heuristic_fallback] parent=Whole Paper strict_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'. relaxed_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'.
+[all_together_subsections_item_order] parent=Introduction sample=1/1 order=['[Section Lead-in]', 'Our Contribution', 'Related Work']
+[all_together_subsections] parent=Introduction sample=1 attempt=1/5
+1: 50
+2: 30
+3: 20
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=2240 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 45
+2: 55
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.02209413642492037
+Paragraph1: technical=40, citation=60
+Paragraph2: technical=100, citation=0
+[citation_split] paragraph_id=Introduction > [Section Lead-in]::p1 sample=1 attempt=1/5
+20: 5
+4: 15
+6: 10
+8: 30
+9: 20
+[citation_split] paragraph_id=Introduction > [Section Lead-in]::p1 sample=1 attempt=2/5
+1: 20
+2: 40
+3: 30
+4: 5
+5: 2
+6: 3
+7: 0
+8: 0
+9: 0
+[paragraph_scoring] parent=Our Contribution::paragraphs method=channel_compressed estimated_tokens=1978 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Our Contribution::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Our Contribution::paragraphs sample=1 attempt=1/5
+1: 20
+2: 45
+3: 35
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0026081649788824842
+Paragraph 1: technical=0, citation=100
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=0, citation=100
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_compressed estimated_tokens=2167 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=1/5
+1: 70
+2: 30
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0008939165831421103
+Paragraph1: technical=70, citation=30
+Paragraph2: technical=100, citation=0
+[citation_split] paragraph_id=Introduction > Related Work::p1 sample=1 attempt=1/5
+20: 5
+3: 10
+4: 8
+6: 12
+7: 5
+9: 15
+11: 8
+13: 5
+14: 5
+16: 5
+17: 5
+18: 2
+19: 2
+1: 20
+[citation_split] paragraph_id=Introduction > Related Work::p1 sample=1 attempt=2/5
+1: 25
+2: 40
+3: 15
+4: 10
+5: 5
+6: 3
+7: 2
+8: 5
+9: 0
+10: 0
+11: 0
+12: 0
+13: 0
+14: 0
+15: 0
+16: 0
+17: 0
+18: 5
+19: 0
+20: 0
+21: 0
+22: 0
+[paragraph_scoring] parent=Problem Formulation::paragraphs method=channel_compressed estimated_tokens=2060 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Problem Formulation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Problem Formulation::paragraphs sample=1 attempt=1/5
+1: 45
+2: 55
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0007960790905159087
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.0007960790905159087
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=3/5 temperature=0.0007960790905159087
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=4/5 temperature=0.0007960790905159087
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=5/5 temperature=0.0007960790905159087
+Paragraph 1:
+technical=70, citation=30
+
+Paragraph 2:
+technical=95, citation=5
+[all_together_subsections_item_order] parent=Collective Action in Classification sample=1/1 order=['[Section Lead-in]', 'Planting a Signal', 'Erasing a Signal']
+[all_together_subsections] parent=Collective Action in Classification sample=1 attempt=1/5
+1: 50
+2: 45
+3: 55
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=923 threshold=1200 paragraphs=4 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 45
+2: 30
+3: 15
+4: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0163482444180965
+Paragraph 1: technical=10, citation=90
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=5, citation=95
+Paragraph 4: technical=5, citation=95
+[paragraph_scoring] parent=Planting a Signal::paragraphs method=channel_compressed estimated_tokens=3524 threshold=1200 paragraphs=14 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Planting a Signal::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7', 'Paragraph 8', 'Paragraph 9', 'Paragraph 10', 'Paragraph 11', 'Paragraph 12', 'Paragraph 13', 'Paragraph 14']
+[all_together_paragraphs] parent=Planting a Signal::paragraphs sample=1 attempt=1/5
+1: 25
+2: 20
+3: 15
+4: 10
+5: 5
+6: 5
+7: 30
+8: 0
+9: 0
+10: 0
+11: 40
+12: 35
+13: 20
+14: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01767797051627726
+Paragraph 1: 
+technical=0, citation=100
+
+Paragraph 2: 
+technical=100, citation=0
+
+Paragraph 3: 
+technical=0, citation=100
+
+Paragraph 4: 
+technical=60, citation=40
+
+Paragraph 5: 
+technical=80, citation=20
+
+Paragraph 6: 
+technical=30, citation=70
+
+Paragraph 7: 
+technical=50, citation=50
+
+Paragraph 8: 
+technical=0, citation=100
+
+Paragraph 9: 
+technical=0, citation=100
+
+Paragraph 10: 
+technical=0, citation=100
+
+Paragraph 11: 
+technical=30, citation=70
+
+Paragraph 12: 
+technical=40, citation=60
+
+Paragraph 13: 
+technical=80, citation=20
+
+Paragraph 14: 
+technical=80, citation=20
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.01767797051627726
+Paragraph 1: technical=0, citation=100
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=0, citation=100
+Paragraph 4: technical=60, citation=40
+Paragraph 5: technical=80, citation=20
+Paragraph 6: technical=30, citation=70
+Paragraph 7: technical=50, citation=50
+Paragraph 8: technical=0, citation=100
+Paragraph 9: technical=0, citation=100
+Paragraph 10: technical=0, citation=100
+Paragraph 11: technical=40, citation=60
+Paragraph 12: technical=30, citation=70
+Paragraph 13: technical=80, citation=20
+Paragraph 14: technical=80, citation=20
+[paragraph_scoring] parent=Erasing a Signal::paragraphs method=channel_full_parent estimated_tokens=1096 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Erasing a Signal::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Erasing a Signal::paragraphs sample=1 attempt=1/5
+1: 45
+2: 55
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0001949627903418305
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.0001949627903418305
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=3/5 temperature=0.0001949627903418305
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=4/5 temperature=0.0001949627903418305
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=95, citation=5
+[paragraph_channel_split] sample=1/1 attempt=5/5 temperature=0.0001949627903418305
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=95, citation=5
+[all_together_subsections_item_order] parent=Collective Action in Risk Minimization sample=1/1 order=['[Section Lead-in]', 'Convex Risk Minimization', 'Gradient-Based Learning']
+[all_together_subsections] parent=Collective Action in Risk Minimization sample=1 attempt=1/5
+Here is the output:
+
+1: 80
+2: 20
+3: 0
+[all_together_subsections_reject] parent=Collective Action in Risk Minimization sample=1 attempt=1/5 reason=zero_child_not_allowed
+[all_together_subsections] parent=Collective Action in Risk Minimization sample=1 attempt=2/5
+1: 60
+2: 40
+3: 0
+[all_together_subsections_reject] parent=Collective Action in Risk Minimization sample=1 attempt=2/5 reason=zero_child_not_allowed
+[all_together_subsections] parent=Collective Action in Risk Minimization sample=1 attempt=3/5
+1: 60
+2: 40
+3: 0
+[all_together_subsections_reject] parent=Collective Action in Risk Minimization sample=1 attempt=3/5 reason=zero_child_not_allowed
+[all_together_subsections] parent=Collective Action in Risk Minimization sample=1 attempt=4/5
+1: 60
+2: 40
+3: 0
+[all_together_subsections_reject] parent=Collective Action in Risk Minimization sample=1 attempt=4/5 reason=zero_child_not_allowed
+[all_together_subsections] parent=Collective Action in Risk Minimization sample=1 attempt=5/5
+1: 60
+2: 40
+3: 0
+[all_together_subsections_reject] parent=Collective Action in Risk Minimization sample=1 attempt=5/5 reason=zero_child_not_allowed
+[all_together_subsections_error] parent=Collective Action in Risk Minimization sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3']
+[all_together_subsections_sample_skip] parent=Collective Action in Risk Minimization sample=1/1 reason=Model failed to produce complete child scores for parent 'Collective Action in Risk Minimization' after 5 retries.
+[all_together_subsections_compressed_retry] parent=Collective Action in Risk Minimization reason=no_complete_samples retry_snippet_limit=180
+[all_together_subsections_compressed_retry_item_order] parent=Collective Action in Risk Minimization sample=1/1 order=['[Section Lead-in]', 'Convex Risk Minimization', 'Gradient-Based Learning']
+[all_together_subsections_compressed_retry] parent=Collective Action in Risk Minimization sample=1 attempt=1/5
+1: 45
+2: 30
+3: 25
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=919 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.010207515495539755
+Paragraph1: technical=40, citation=60
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Convex Risk Minimization::paragraphs method=channel_compressed estimated_tokens=2874 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Convex Risk Minimization::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Convex Risk Minimization::paragraphs sample=1 attempt=1/5
+1: 20
+2: 55
+3: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.028716392166203433
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=85, citation=15
+
+Paragraph 3: 
+technical=13, citation=87
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.028716392166203433
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=85, citation=15
+
+Paragraph 3: 
+technical=13, citation=87
+[paragraph_channel_split] sample=1/1 attempt=3/5 temperature=0.028716392166203433
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=85, citation=15
+
+Paragraph 3: 
+technical=13, citation=87
+[paragraph_channel_split] sample=1/1 attempt=4/5 temperature=0.028716392166203433
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=85, citation=15
+
+Paragraph 3: 
+technical=13, citation=87
+[paragraph_channel_split] sample=1/1 attempt=5/5 temperature=0.028716392166203433
+Paragraph 1: 
+technical=10, citation=90
+
+Paragraph 2: 
+technical=85, citation=15
+
+Paragraph 3: 
+technical=13, citation=87
+[paragraph_scoring] parent=Gradient-Based Learning::paragraphs method=channel_compressed estimated_tokens=1654 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Gradient-Based Learning::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Gradient-Based Learning::paragraphs sample=1 attempt=1/5
+1: 30
+2: 20
+3: 25
+4: 15
+5: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.002782375301404437
+Paragraph 1: technical=5, citation=95
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=20, citation=80
+Paragraph 5: technical=90, citation=10
+[all_together_subsections_item_order] parent=Experiments sample=1/1 order=['[Section Lead-in]', 'Experimental Setup', 'Experimental Findings']
+[all_together_subsections] parent=Experiments sample=1 attempt=1/5
+1: 45
+2: 25
+3: 30
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1593 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 70
+2: 25
+3: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.018111780941006732
+Paragraph 1: 
+technical=70, citation=30
+
+Paragraph 2: 
+technical=100, citation=0
+
+Paragraph 3: 
+technical=5, citation=95
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.018111780941006732
+Paragraph 1: technical=70, citation=30
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=5, citation=95
+[paragraph_scoring] parent=Experimental Setup::paragraphs method=channel_full_parent estimated_tokens=910 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024213848198231407
+Paragraph1: technical=40, citation=60
+[paragraph_scoring] parent=Experimental Findings::paragraphs method=channel_compressed estimated_tokens=2000 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Experimental Findings::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Experimental Findings::paragraphs sample=1 attempt=1/5
+1: 45
+2: 20
+3: 15
+4: 10
+5: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01608684274364102
+Paragraph1: technical=70, citation=30
+Paragraph2: technical=100, citation=0
+Paragraph3: technical=50, citation=50
+Paragraph4: technical=10, citation=90
+Paragraph5: technical=80, citation=20
+[paragraph_scoring] parent=Discussion::paragraphs method=channel_compressed estimated_tokens=2025 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Discussion::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=Discussion::paragraphs sample=1 attempt=1/5
+1: 45
+2: 20
+3: 15
+4: 10
+5: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011356031316250605
+Paragraph 1: technical=70, citation=30
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=50, citation=50
+Paragraph 4: technical=100, citation=0
+Paragraph 5: technical=80, citation=20

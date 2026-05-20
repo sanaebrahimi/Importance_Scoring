@@ -1,0 +1,929 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-20T09:33:21 model=llama3.2:1b host=http://localhost:11434 paper_id=Native-Sparse-Attention n_samples=3 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/3 order=['Introduction', 'Methodology', 'Experiments', 'Efficiency Analysis', 'Conclusion']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 70
+5: 85
+[all_together_top_item_order] parent=Whole Paper sample=2/3 order=['Introduction', 'Methodology', 'Experiments', 'Efficiency Analysis', 'Conclusion']
+[all_together_top] parent=Whole Paper sample=2 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 70
+5: 85
+[all_together_top_item_order] parent=Whole Paper sample=3/3 order=['Introduction', 'Methodology', 'Experiments', 'Efficiency Analysis', 'Conclusion']
+[all_together_top] parent=Whole Paper sample=3 attempt=1/5
+1: 80
+2: 20
+3: 90
+4: 70
+5: 85
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_compressed estimated_tokens=3271 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.006696322144464683
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.02209413642492037
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.020300984622687337
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/5
+0.21065217391304347
+3: 20.9
+6: 14.5
+8: 12.7
+11: 10.4
+13: 9.1
+15: 8.2
+17: 7.5
+19: 6.8
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=2/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=3/5
+0: 71.9
+1: 28.1
+2: 18.5
+3: 12.6
+4: 8.7
+5: 6.2
+6: 4.8
+7: 3.4
+8: 2.9
+9: 2.3
+10: 2.1
+11: 1.9
+12: 1.8
+13: 1.7
+14: 1.5
+15: 1.4
+16: 1.3
+17: 1.2
+[citation_split] paragraph_id=Introduction::p1 sample=2 attempt=1/5
+0.21065217391304347
+3: 20.9
+6: 14.5
+8: 12.7
+11: 10.4
+13: 9.1
+15: 8.2
+17: 7.5
+19: 6.8
+[citation_split] paragraph_id=Introduction::p1 sample=2 attempt=2/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split] paragraph_id=Introduction::p1 sample=2 attempt=3/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split] paragraph_id=Introduction::p1 sample=2 attempt=4/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split] paragraph_id=Introduction::p1 sample=2 attempt=5/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split_error] paragraph_id=Introduction::p1 sample=2 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18']
+[citation_split_sample_skip] paragraph_id=Introduction::p1 sample=2/3 reason=Model failed to produce complete citation scores for paragraph 'Introduction::p1' after 5 retries.
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=1/5
+0.21065217391304347
+3: 20.9
+6: 14.5
+8: 12.7
+11: 10.4
+13: 9.1
+15: 8.2
+17: 7.5
+19: 6.8
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=2/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=3/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=4/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split] paragraph_id=Introduction::p1 sample=3 attempt=5/5
+0: 85.1
+2: 10.8
+4: 5.6
+6: 3.7
+9: 3.4
+11: 3.2
+13: 2.9
+15: 2.7
+17: 2.5
+[citation_split_error] paragraph_id=Introduction::p1 sample=3 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18']
+[citation_split_sample_skip] paragraph_id=Introduction::p1 sample=3/3 reason=Model failed to produce complete citation scores for paragraph 'Introduction::p1' after 5 retries.
+[all_together_subsections_item_order] parent=Methodology sample=1/3 order=['[Section Lead-in]', 'Background', 'Overall Framework', 'Algorithm Design', 'Kernel Design']
+[all_together_subsections] parent=Methodology sample=1 attempt=1/5
+1: 80
+5: 90
+3: 70
+4: 50
+[all_together_subsections] parent=Methodology sample=1 attempt=2/5
+1: 80
+2: 20
+3: 50
+4: 30
+5: 70
+[all_together_subsections_item_order] parent=Methodology sample=2/3 order=['[Section Lead-in]', 'Background', 'Overall Framework', 'Algorithm Design', 'Kernel Design']
+[all_together_subsections] parent=Methodology sample=2 attempt=1/5
+1: 80
+5: 90
+3: 70
+4: 50
+[all_together_subsections] parent=Methodology sample=2 attempt=2/5
+1: 80
+2: 20
+3: 50
+4: 30
+5: 70
+[all_together_subsections_item_order] parent=Methodology sample=3/3 order=['[Section Lead-in]', 'Background', 'Overall Framework', 'Algorithm Design', 'Kernel Design']
+[all_together_subsections] parent=Methodology sample=3 attempt=1/5
+1: 80
+5: 90
+3: 70
+4: 50
+[all_together_subsections] parent=Methodology sample=3 attempt=2/5
+1: 80
+2: 20
+3: 50
+4: 30
+5: 70
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=760 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+0.25
+3: 75
+1: 30
+2: 20
+3: 15
+4: 10
+5: 5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=2 attempt=1/5
+0.25
+3: 75
+1: 30
+2: 20
+3: 15
+4: 10
+5: 5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=3 attempt=1/5
+0.25
+3: 75
+1: 30
+2: 20
+3: 15
+4: 10
+5: 5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.0163482444180965
+Paragraph1: technical=85, citation=5
+Paragraph2: technical=90, citation=10
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.006613218661220901
+Paragraph1: technical=85, citation=5
+Paragraph2: technical=90, citation=10
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.01767797051627726
+Paragraph1: technical=85, citation=5
+Paragraph2: technical=90, citation=10
+[paragraph_scoring] parent=Background::paragraphs method=channel_compressed estimated_tokens=1864 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=Background::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Background::paragraphs sample=1 attempt=1/5
+1: 93
+2: 7
+3: 0.08
+4: 0.02
+5: 0.01
+6: 0.005
+[all_together_paragraphs_item_order] parent=Background::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Background::paragraphs sample=2 attempt=1/5
+1: 93
+2: 7
+3: 0.08
+4: 0.02
+5: 0.01
+6: 0.005
+[all_together_paragraphs_item_order] parent=Background::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Background::paragraphs sample=3 attempt=1/5
+1: 93
+2: 7
+3: 0.08
+4: 0.02
+5: 0.01
+6: 0.005
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.020944181849646804
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.010207515495539755
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.0046643849943534465
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[paragraph_scoring] parent=Overall Framework::paragraphs method=channel_full_parent estimated_tokens=1148 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=Overall Framework::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Overall Framework::paragraphs sample=1 attempt=1/5
+1: 34.6
+2: 25.4
+3: 23.1
+4: 20.5
+5: 17.9
+6: 15.6
+[all_together_paragraphs_item_order] parent=Overall Framework::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Overall Framework::paragraphs sample=2 attempt=1/5
+1: 34.6
+2: 25.4
+3: 23.1
+4: 20.5
+5: 17.9
+6: 15.7
+[all_together_paragraphs_item_order] parent=Overall Framework::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Overall Framework::paragraphs sample=3 attempt=1/5
+1: 34.6
+2: 25.4
+3: 23.1
+4: 20.5
+5: 17.9
+6: 15.6
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.00290149130500392
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.025424830990423794
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.018111780941006732
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+[all_together_subsections_item_order] parent=Algorithm Design sample=1/3 order=['[Section Lead-in]', 'Token Compression', 'Token Selection', 'Sliding Window']
+[all_together_subsections] parent=Algorithm Design sample=1 attempt=1/5
+1: 80
+3: 70
+4: 90
+2: 30
+5: 50
+6: 20
+7: 10
+[all_together_subsections_item_order] parent=Algorithm Design sample=2/3 order=['[Section Lead-in]', 'Token Compression', 'Token Selection', 'Sliding Window']
+[all_together_subsections] parent=Algorithm Design sample=2 attempt=1/5
+1: 80
+2: 20
+3: 70
+4: 10
+[all_together_subsections_item_order] parent=Algorithm Design sample=3/3 order=['[Section Lead-in]', 'Token Compression', 'Token Selection', 'Sliding Window']
+[all_together_subsections] parent=Algorithm Design sample=3 attempt=1/5
+1: 80
+3: 70
+4: 90
+2: 30
+5: 50
+6: 20
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=630 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.029193472919381118
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+Paragraph7: technical=100, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.011356031316250605
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+Paragraph7: technical=100, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.01656121893819681
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+Paragraph7: technical=100, citation=0
+[paragraph_scoring] parent=Token Compression::paragraphs method=channel_full_parent estimated_tokens=1041 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.024882139927589846
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.01855559257092738
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.025851207009323317
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_scoring] parent=Token Selection::paragraphs method=channel_compressed estimated_tokens=2630 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=Token Selection::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Token Selection::paragraphs sample=1 attempt=1/5
+0.25
+3
+4
+5
+6: 20
+7: 80
+[all_together_paragraphs] parent=Token Selection::paragraphs sample=1 attempt=2/5
+1: 85
+2: 10
+3: 5
+4: 0
+5: 20
+6: 30
+7: 45
+[all_together_paragraphs_item_order] parent=Token Selection::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Token Selection::paragraphs sample=2 attempt=1/5
+0.25
+3
+4
+6
+7
+[all_together_paragraphs] parent=Token Selection::paragraphs sample=2 attempt=2/5
+1: 85
+2: 10
+3: 5
+4: 0
+5: 20
+6: 30
+7: 45
+[all_together_paragraphs_item_order] parent=Token Selection::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Token Selection::paragraphs sample=3 attempt=1/5
+0.25
+3
+4
+5
+6: 20
+7: 80
+[all_together_paragraphs] parent=Token Selection::paragraphs sample=3 attempt=2/5
+1: 85
+2: 10
+3: 5
+4: 0
+5: 20
+6: 30
+7: 45
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.006836948269546406
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=0, citation=100
+Paragraph6: technical=20, citation=80
+Paragraph7: technical=100, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.008681638908063215
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=0, citation=100
+Paragraph6: technical=20, citation=80
+Paragraph7: technical=100, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.0023937593077088246
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=0, citation=100
+Paragraph6: technical=20, citation=80
+Paragraph7: technical=100, citation=0
+[paragraph_scoring] parent=Sliding Window::paragraphs method=channel_compressed estimated_tokens=1294 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.006983726590830905
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=60, citation=40
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.0030300428822918734
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=60, citation=40
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.008339208093302764
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=60, citation=40
+[paragraph_scoring] parent=Kernel Design::paragraphs method=channel_compressed estimated_tokens=1645 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=Kernel Design::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Kernel Design::paragraphs sample=1 attempt=1/5
+1: 23.0
+2: 45.0
+3: 32.0
+[all_together_paragraphs_item_order] parent=Kernel Design::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Kernel Design::paragraphs sample=2 attempt=1/5
+1: 23.0
+2: 45.0
+3: 32.0
+[all_together_paragraphs_item_order] parent=Kernel Design::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Kernel Design::paragraphs sample=3 attempt=1/5
+1: 23.0
+2: 45.0
+3: 32.0
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.0062852109231446305
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.0080093346614734
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.028099637631374817
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[all_together_subsections_item_order] parent=Experiments sample=1/3 order=['[Section Lead-in]', 'Pretraining Setup', 'Baselines Methods', 'Performance Comparison']
+[all_together_subsections] parent=Experiments sample=1 attempt=1/5
+1: 80
+2: 70
+3: 90
+4: 85
+[all_together_subsections_item_order] parent=Experiments sample=2/3 order=['[Section Lead-in]', 'Pretraining Setup', 'Baselines Methods', 'Performance Comparison']
+[all_together_subsections] parent=Experiments sample=2 attempt=1/5
+1: 80
+2: 70
+3: 90
+4: 85
+[all_together_subsections_item_order] parent=Experiments sample=3/3 order=['[Section Lead-in]', 'Pretraining Setup', 'Baselines Methods', 'Performance Comparison']
+[all_together_subsections] parent=Experiments sample=3 attempt=1/5
+1: 80
+2: 70
+3: 90
+4: 85
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=1075 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+0.25
+3
+1: 30
+2: 20
+3: 50
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=2 attempt=1/5
+0.25
+3
+1: 30
+2: 20
+3: 50
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=3 attempt=1/5
+0.25
+3
+1: 30
+2: 20
+3: 50
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.029685700519097857
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.019199992795622785
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.016708492313239388
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_scoring] parent=Pretraining Setup::paragraphs method=channel_full_parent estimated_tokens=1028 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.020538427529696236
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=70, citation=30
+Paragraph6: technical=60, citation=40
+Paragraph7: technical=50, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.025285557605694287
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.023279997346387343
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_scoring] parent=Baselines Methods::paragraphs method=channel_full_parent estimated_tokens=1190 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=Baselines Methods::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Baselines Methods::paragraphs sample=1 attempt=1/5
+0.09489814533292795
+1: 67
+2: 33
+3: 9
+4: 5
+5: 4
+6: 3
+[all_together_paragraphs_item_order] parent=Baselines Methods::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Baselines Methods::paragraphs sample=2 attempt=1/5
+0.09489814533292795
+1: 67
+2: 33
+3: 9
+4: 5
+5: 4
+6: 3
+[all_together_paragraphs_item_order] parent=Baselines Methods::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Baselines Methods::paragraphs sample=3 attempt=1/5
+0.09489814533292795
+1: 67
+2: 33
+3: 9
+4: 5
+5: 4
+6: 3
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.008032226279271082
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.006329485307589794
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.028287291430051632
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=90, citation=10
+[citation_split] paragraph_id=Experiments > Baselines Methods::p1 sample=1 attempt=1/5
+0.25: 3
+0.15: 2
+0.10: 1
+0.05: 1
+[citation_split] paragraph_id=Experiments > Baselines Methods::p1 sample=1 attempt=2/5
+0.15: 1
+0.10: 2
+0.05: 3
+[citation_split] paragraph_id=Experiments > Baselines Methods::p1 sample=2 attempt=1/5
+0.25: 3
+0.15: 2
+0.10: 1
+0.05: 1
+[citation_split] paragraph_id=Experiments > Baselines Methods::p1 sample=2 attempt=2/5
+0.15: 1
+0.10: 2
+0.05: 3
+[citation_split] paragraph_id=Experiments > Baselines Methods::p1 sample=3 attempt=1/5
+0.25: 3
+0.15: 2
+0.10: 1
+0.05: 1
+[citation_split] paragraph_id=Experiments > Baselines Methods::p1 sample=3 attempt=2/5
+0.15: 1
+0.10: 2
+0.05: 3
+[paragraph_scoring] parent=Performance Comparison::paragraphs method=channel_compressed estimated_tokens=1910 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=Performance Comparison::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Performance Comparison::paragraphs sample=1 attempt=1/5
+1: 80
+5: 20
+6: 70
+7: 10
+[all_together_paragraphs] parent=Performance Comparison::paragraphs sample=1 attempt=2/5
+1: 85
+2: 10
+3: 5
+4: 0
+5: 20
+6: 95
+7: 15
+[all_together_paragraphs_item_order] parent=Performance Comparison::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Performance Comparison::paragraphs sample=2 attempt=1/5
+1: 80
+5: 70
+6: 90
+7: 50
+[all_together_paragraphs] parent=Performance Comparison::paragraphs sample=2 attempt=2/5
+1: 85
+2: 10
+3: 5
+4: 0
+5: 20
+6: 95
+7: 15
+[all_together_paragraphs_item_order] parent=Performance Comparison::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Performance Comparison::paragraphs sample=3 attempt=1/5
+1: 80
+5: 70
+6: 90
+7: 50
+[all_together_paragraphs] parent=Performance Comparison::paragraphs sample=3 attempt=2/5
+1: 85
+2: 10
+3: 5
+4: 0
+5: 20
+6: 95
+7: 15
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.007946404994941574
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=30, citation=70
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=0, citation=0
+Paragraph6: technical=40, citation=60
+Paragraph7: technical=50, citation=20
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.007398825230819504
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=0, citation=0
+Paragraph6: technical=40, citation=60
+Paragraph7: technical=80, citation=20
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.016841044024894523
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=0, citation=0
+Paragraph6: technical=100, citation=0
+Paragraph7: technical=80, citation=20
+[citation_split] paragraph_id=Experiments > Performance Comparison::p1 sample=1 attempt=1/5
+0.23
+3: 27
+1: 21
+2: 17
+3: 15
+[citation_split] paragraph_id=Experiments > Performance Comparison::p1 sample=2 attempt=1/5
+0.23
+3: 27
+1: 21
+2: 17
+3: 15
+[citation_split] paragraph_id=Experiments > Performance Comparison::p1 sample=3 attempt=1/5
+0.23
+3: 27
+1: 20
+2: 15
+3: 12
+[citation_split] paragraph_id=Experiments > Performance Comparison::p3 sample=1 attempt=1/5
+0.245
+3: 20
+4: 15
+1: 10
+2: 5
+[citation_split] paragraph_id=Experiments > Performance Comparison::p3 sample=2 attempt=1/5
+0.245
+3: 20
+4: 15
+1: 10
+2: 5
+[citation_split] paragraph_id=Experiments > Performance Comparison::p3 sample=3 attempt=1/5
+0.245
+3: 20
+4: 15
+1: 10
+2: 5
+[citation_split] paragraph_id=Experiments > Performance Comparison::p4 sample=1 attempt=1/5
+0.01
+3: 20
+4: 15
+1: 55
+5: 10
+[citation_split] paragraph_id=Experiments > Performance Comparison::p4 sample=1 attempt=2/5
+0.02 : 2
+0.04 : 1
+0.11 : 3
+[citation_split] paragraph_id=Experiments > Performance Comparison::p4 sample=2 attempt=1/5
+0.01
+3: 20
+4: 15
+1: 55
+5: 10
+[citation_split] paragraph_id=Experiments > Performance Comparison::p4 sample=2 attempt=2/5
+0.02 : 2
+0.04 : 1
+0.11 : 3
+[citation_split] paragraph_id=Experiments > Performance Comparison::p4 sample=3 attempt=1/5
+0.01
+3: 20
+4: 15
+1: 55
+5: 10
+[citation_split] paragraph_id=Experiments > Performance Comparison::p4 sample=3 attempt=2/5
+0.02 : 2
+0.04 : 1
+0.11 : 3
+[all_together_subsections_item_order] parent=Efficiency Analysis sample=1/3 order=['[Section Lead-in]', 'Training Speed', 'Decoding Speed']
+[all_together_subsections] parent=Efficiency Analysis sample=1 attempt=1/5
+1: 85
+2: 10
+3: 5
+4: 20
+5: 25
+6: 30
+7: 35
+8: 45
+9: 50
+10: 55
+11: 60
+12: 65
+13: 70
+14: 75
+15: 80
+16: 85
+[all_together_subsections_item_order] parent=Efficiency Analysis sample=2/3 order=['[Section Lead-in]', 'Training Speed', 'Decoding Speed']
+[all_together_subsections] parent=Efficiency Analysis sample=2 attempt=1/5
+1: 85
+2: 10
+3: 5
+4: 20
+5: 15
+6: 30
+7: 55
+8: 25
+[all_together_subsections_item_order] parent=Efficiency Analysis sample=3/3 order=['[Section Lead-in]', 'Training Speed', 'Decoding Speed']
+[all_together_subsections] parent=Efficiency Analysis sample=3 attempt=1/5
+1: 85
+2: 10
+3: 5
+4: 20
+5: 15
+6: 30
+7: 55
+8: 25
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=713 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.01266479900399052
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.0019058311845587138
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.011448578595196102
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+[paragraph_scoring] parent=Training Speed::paragraphs method=channel_full_parent estimated_tokens=975 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=3 max_retries=5
+[all_together_paragraphs_item_order] parent=Training Speed::paragraphs sample=1/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Training Speed::paragraphs sample=1 attempt=1/5
+0.3: Paragraph 1
+0.4: Paragraph 2
+0.7: Paragraph 3
+[all_together_paragraphs] parent=Training Speed::paragraphs sample=1 attempt=2/5
+1: 43
+2: 23
+3: 44
+[all_together_paragraphs_item_order] parent=Training Speed::paragraphs sample=2/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Training Speed::paragraphs sample=2 attempt=1/5
+0.3: Paragraph 1
+0.4: Paragraph 2
+0.7: Paragraph 3
+[all_together_paragraphs] parent=Training Speed::paragraphs sample=2 attempt=2/5
+1: 43
+2: 27
+3: 30
+[all_together_paragraphs_item_order] parent=Training Speed::paragraphs sample=3/3 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Training Speed::paragraphs sample=3 attempt=1/5
+0.3: Paragraph 1
+0.4: Paragraph 2
+0.7: Paragraph 3
+[all_together_paragraphs] parent=Training Speed::paragraphs sample=3 attempt=2/5
+1: 43
+2: 27
+3: 30
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.02582339106703494
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.00034443065828458906
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.021621654580805838
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+[paragraph_scoring] parent=Decoding Speed::paragraphs method=channel_full_parent estimated_tokens=855 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.020451311070797243
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=0, citation=0
+Paragraph6: technical=100, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.016109109912263855
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+Paragraph7: technical=100, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.008004755698576282
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=85, citation=15
+Paragraph3: technical=90, citation=10
+Paragraph4: technical=80, citation=20
+Paragraph5: technical=60, citation=40
+Paragraph6: technical=70, citation=30
+Paragraph7: technical=100, citation=0
+[paragraph_scoring] parent=Conclusion::paragraphs method=channel_compressed estimated_tokens=1366 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=3 max_retries=5
+[paragraph_channel_split] sample=1/3 attempt=1/5 temperature=0.01922885395739424
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+[paragraph_channel_split] sample=2/3 attempt=1/5 temperature=0.003346565207876293
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
+[paragraph_channel_split] sample=3/3 attempt=1/5 temperature=0.013042957520073149
+Paragraph1: technical=5, citation=95
+Paragraph2: technical=30, citation=70
+Paragraph3: technical=85, citation=15
+Paragraph4: technical=90, citation=10
+Paragraph5: technical=100, citation=0
