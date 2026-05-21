@@ -3040,61 +3040,73 @@ def all_together_allocate_scores(
                     for item_name in chunk_names
                 )
 
-            chunk_scores = all_together_allocate_scores(
-                client=client,
-                item_to_content=chunk_to_content,
-                total_score=total_score,
-                parent_name=f"{parent_name}::chunks",
-                model=model,
-                n_samples=n_samples,
-                temperature=temperature,
-                max_retries=max_retries,
-                debug_log_path=debug_log_path,
-                snippet_limit=compressed_limit,
-                log_tag=f"{log_tag}_chunks",
-            )
-
-            final_scores: Dict[str, float] = {}
-            for chunk_key, chunk_names in chunk_to_items.items():
-                nested_items = {item_name: item_to_content[item_name] for item_name in chunk_names}
-                nested_scores = all_together_allocate_scores(
+            try:
+                chunk_scores = all_together_allocate_scores(
                     client=client,
-                    item_to_content=nested_items,
-                    total_score=chunk_scores[chunk_key],
-                    parent_name=f"{parent_name}::{chunk_key}",
+                    item_to_content=chunk_to_content,
+                    total_score=total_score,
+                    parent_name=f"{parent_name}::chunks",
                     model=model,
                     n_samples=n_samples,
                     temperature=temperature,
                     max_retries=max_retries,
                     debug_log_path=debug_log_path,
                     snippet_limit=compressed_limit,
-                    log_tag=f"{log_tag}_within_chunk",
+                    log_tag=f"{log_tag}_chunks",
                 )
-                final_scores.update(nested_scores)
 
-            return apply_minimum_positive_floor(final_scores, total_score, min_fraction=0.005)
+                final_scores: Dict[str, float] = {}
+                for chunk_key, chunk_names in chunk_to_items.items():
+                    nested_items = {item_name: item_to_content[item_name] for item_name in chunk_names}
+                    nested_scores = all_together_allocate_scores(
+                        client=client,
+                        item_to_content=nested_items,
+                        total_score=chunk_scores[chunk_key],
+                        parent_name=f"{parent_name}::{chunk_key}",
+                        model=model,
+                        n_samples=n_samples,
+                        temperature=temperature,
+                        max_retries=max_retries,
+                        debug_log_path=debug_log_path,
+                        snippet_limit=compressed_limit,
+                        log_tag=f"{log_tag}_within_chunk",
+                    )
+                    final_scores.update(nested_scores)
+
+                return apply_minimum_positive_floor(final_scores, total_score, min_fraction=0.005)
+            except ValueError:
+                pass
 
         if len(items) == 2:
             append_debug_log(
                 debug_log_path,
                 f"[{log_tag}_pairwise_retry] parent={parent_name} reason=no_complete_samples",
             )
-            return pairwise_allocate_scores(
-                client=client,
-                item_to_content=item_to_content,
-                total_score=total_score,
-                parent_name=parent_name,
-                model=model,
-                n_samples=n_samples,
-                temperature=temperature,
-                max_retries=max_retries,
-                debug_log_path=debug_log_path,
-            )
+            try:
+                return pairwise_allocate_scores(
+                    client=client,
+                    item_to_content=item_to_content,
+                    total_score=total_score,
+                    parent_name=parent_name,
+                    model=model,
+                    n_samples=n_samples,
+                    temperature=temperature,
+                    max_retries=max_retries,
+                    debug_log_path=debug_log_path,
+                )
+            except ValueError:
+                pass
 
-        raise ValueError(
-            f"Model failed to produce any complete child-score sample for parent '{parent_name}' "
-            f"after compression retries."
+        append_debug_log(
+            debug_log_path,
+            f"[{log_tag}_length_fallback] parent={parent_name} reason=all_retries_exhausted items={items}",
         )
+        lengths = {
+            item: max(1, len(flatten_content_to_text(item_to_content[item], limit=None).split()))
+            for item in items
+        }
+        total_len = max(1, sum(lengths.values()))
+        return {item: total_score * (lengths[item] / total_len) for item in items}
 
     averaged = {item: 0.0 for item in items}
     for dist in sample_distributions:

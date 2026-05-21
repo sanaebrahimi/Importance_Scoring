@@ -499,7 +499,7 @@ class CitationGraph:
                 # and [2] in paper B map to their respective works.
                 # Skip unresolved citations — don't create raw-key nodes like "[8]".
                 target = paper_map.get(cit_str)
-                if target is None:
+                if target is None or target == paper_id:
                     continue
                 self._weights[(paper_id, target)] += score
                 self._out_weights[paper_id] += score
@@ -1025,17 +1025,11 @@ class CorpusContributionAnalyzer:
     """
     Corpus-level technical contribution score.
 
-        σ_P(p) = σ_tech(p) + Σ_{q ∈ C(p)}  W(q,p) · σ_P(q)
+        σ_P(p) = σ_tech(p) · (1 + Σ_{paths a→…→p} Π_{(u,v) on path} W(u,v))
 
-    where C(p) is the set of corpus papers that directly cite p and W(q,p)
-    is the citation-importance weight q assigns to p.  Equivalent to the
-    path-product expansion
-
-        σ_P(p) = σ_tech(p)
-                 + Σ_{paths a→…→p}  σ_tech(a) · Π_{(u,v) on path} W(u,v)
-
-    so p accumulates σ_tech(a) of every upstream corpus paper a, discounted
-    by the product of edge weights along every path from a to p.
+    Each paper starts with 1 unit of mass.  Mass propagates along citation
+    edges; the corpus-level score of p is its technical fraction multiplied
+    by the total mass accumulated at p.
 
     Computed in one topological-order pass (Kahn's algorithm).  Nodes in
     exceptional cycles retain only the score propagated from their acyclic
@@ -1061,17 +1055,18 @@ class CorpusContributionAnalyzer:
         in_deg: Dict[str, int] = {p: len(in_edges[p]) for p in corpus}
         queue: deque = deque(p for p in corpus if in_deg[p] == 0)
 
-        scores: Dict[str, float] = {
-            p: self.graph.papers[p].originality_score() for p in corpus
-        }
+        # mass starts at 1 for every paper; scores = σ_tech(p) * mass(p)
+        mass: Dict[str, float] = {p: 1.0 for p in corpus}
+        scores: Dict[str, float] = {}
 
         processed: Set[str] = set()
         while queue:
             q = queue.popleft()
             processed.add(q)
-            sq = scores[q]
+            mq = mass[q]
+            scores[q] = self.graph.papers[q].originality_score() * mq
             for p in out_refs[q]:
-                scores[p] += self.graph.weight(q, p) * sq
+                mass[p] += self.graph.weight(q, p) * mq
                 in_deg[p] -= 1
                 if in_deg[p] == 0:
                     queue.append(p)
@@ -1082,6 +1077,9 @@ class CorpusContributionAnalyzer:
                 f"[CorpusContributionAnalyzer] Warning: {len(unprocessed)} node(s) "
                 f"in a cycle; scores are partial: {sorted(unprocessed)}"
             )
+            # finalise cycle nodes with whatever mass they accumulated
+            for p in unprocessed:
+                scores[p] = self.graph.papers[p].originality_score() * mass[p]
 
         return scores
 

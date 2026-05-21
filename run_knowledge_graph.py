@@ -138,9 +138,23 @@ def main() -> None:
         print(f"  {rank:>2}. {score:.6f}  {label}")
 
     # ------------------------------------------------------------------ #
-    # Step 6 – Seminal works (influence propagation)                      #
+    # Step 6 – Contribution Analyzer                                      #
     # ------------------------------------------------------------------ #
-    header("STEP 6 — Seminal Works  (Influence Propagation)")
+    header("STEP 6 — Contribution Analyzer")
+
+    print(f"\n  σ_P(p) = σ_tech(p) · (1 + Σ_{{paths a→p}} Π_{{edges}} W(u,v))\n")
+    contrib_scores = fw.corpus_contribution.compute()
+    top_contrib = sorted(contrib_scores.items(), key=lambda x: x[1], reverse=True)
+    print(f"  {'Paper':<35} {'σ_P':>10}  {'σ_tech':>10}")
+    print(f"  {'-'*35} {'-'*10}  {'-'*10}")
+    for pid, score in top_contrib:
+        orig = fw.graph.papers[pid].originality_score()
+        print(f"  {pid:<35} {score:>10.4f}  {orig:>10.4f}")
+
+    # ------------------------------------------------------------------ #
+    # Step 7 – Seminal works (influence propagation)                      #
+    # ------------------------------------------------------------------ #
+    header("STEP 7 — Seminal Works  (Influence Propagation)")
 
     print(
         f"\n  Top cited works by total downstream influence "
@@ -161,9 +175,9 @@ def main() -> None:
         print(f"  {rank:>2}. {score:.6f}  {label}")
 
     # ------------------------------------------------------------------ #
-    # Step 7 – Section-level citation roles                               #
+    # Step 8 – Section-level citation roles                               #
     # ------------------------------------------------------------------ #
-    header("STEP 7 — Citation Roles  (Technical vs Rhetorical)")
+    header("STEP 8 — Citation Roles  (Technical vs Rhetorical)")
 
     print(f"\n  For each corpus paper: top citations and their role.\n")
     for pid, paper in fw.graph.papers.items():
@@ -181,9 +195,9 @@ def main() -> None:
         print()
 
     # ------------------------------------------------------------------ #
-    # Step 8 – Foundational vs Peripheral                                 #
+    # Step 9 – Foundational vs Peripheral                                 #
     # ------------------------------------------------------------------ #
-    header("STEP 8 — Foundational vs Peripheral Works")
+    header("STEP 9 — Foundational vs Peripheral Works")
 
     print(f"\n  Top-{args.top_k} works by foundational score "
           f"(cited in methods/experiments):\n")
@@ -205,9 +219,9 @@ def main() -> None:
         )
 
     # ------------------------------------------------------------------ #
-    # Step 9 – Community detection                                        #
+    # Step 10 – Community detection                                       #
     # ------------------------------------------------------------------ #
-    header("STEP 9 — Community Detection")
+    header("STEP 10 — Community Detection")
 
     partition = fw.communities.detect(restrict_to_corpus=True)
     q_score   = fw.communities.modularity(partition)
@@ -221,9 +235,9 @@ def main() -> None:
         print(f"  Community {cid}: {', '.join(members)}")
 
     # ------------------------------------------------------------------ #
-    # Step 10 – Research gap                                              #
+    # Step 11 – Research gap                                              #
     # ------------------------------------------------------------------ #
-    header("STEP 10 — Research Gap Score  (Gap(C, t))")
+    header("STEP 11 — Research Gap Score  (Gap(C, t))")
 
     all_papers = list(fw.graph.papers.keys())
     gap_full   = fw.research_gaps.gap_score(all_papers)

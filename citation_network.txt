@@ -1,0 +1,228 @@
+
+============================================================
+  STEP 1 — Citation Resolver
+============================================================
+
+
+CitationResolver(resolved=1323, canonical_ids=985)
+
+
+============================================================
+  STEP 2 — Build Citation Graph
+============================================================
+
+CitationGraph(corpus=29, nodes=971, edges=1125)
+
+============================================================
+  STEP 3 — Corpus Summary
+============================================================
+
+  Corpus papers   : 29
+  Total nodes     : 971
+  Total edges     : 1125
+  Total weight    : 3.4811
+  Avg originality : 0.8305
+
+--- Per-paper breakdown ---
+  Paper                               Originality  Cit. Import.  # Citations
+  ----------------------------------- -----------  ------------  -----------
+  AFD                                      0.9003        0.0997           48
+  AlgorithmicCollectiveAction              0.9173        0.0827           35
+  Dynamic_Necklace_Splitting               0.9591        0.0409           17
+  Efficient-MM-Algo                        0.9394        0.0606           28
+  FCM_SIGMOD_CRV                           0.7967        0.2033          111
+  FairSetCover                             0.8661        0.1339           52
+  Fair_Epsilon_Net                         0.8640        0.1360           83
+  Fairness-Expo-Rankings                   0.8246        0.1754           37
+  Fast-Monte-Carlo                         0.7903        0.2097           83
+  HENN_ICLR_26-1                           0.8483        0.1517           72
+  INFINI-GRAM-MINI                         0.8542        0.1458           25
+  LSH-Curves                               0.8852        0.1148           24
+  Minoria                                  0.8159        0.1841           49
+  Native-Sparse-Attention                  0.8751        0.1249           31
+  QR                                       0.9038        0.0962           34
+  RRR                                      0.8857        0.1143           57
+  RSR-Core                                 0.8878        0.1122           12
+  Random_access_Retrieval-5                0.8587        0.1413          107
+  Rankit-Askit                             0.8823        0.1177           23
+  adv_res_paper                            0.8379        0.1621           41
+  axolotl                                  0.8451        0.1549           46
+  fairRQ                                   0.8826        0.1174           73
+  mm-mlp                                   0.7969        0.2031           72
+  ranked-ret                               0.8205        0.1795           57
+  reg-ratio                                0.8111        0.1889           44
+  requal                                   0.8353        0.1647           23
+  shapley                                  0.8684        0.1316           65
+  unf-prms                                 0.8314        0.1686           57
+
+============================================================
+  STEP 4 — Originality Ranking  (Orig(p) = Σ S_tech)
+============================================================
+
+  Papers ranked by original technical content (higher = more original):
+
+  1. Dynamic_Necklace_Splitting          0.9591  ████████████████████████████
+  2. Efficient-MM-Algo                   0.9394  ████████████████████████████
+  3. AlgorithmicCollectiveAction         0.9173  ███████████████████████████
+  4. QR                                  0.9038  ███████████████████████████
+  5. AFD                                 0.9003  ███████████████████████████
+  6. RSR-Core                            0.8878  ██████████████████████████
+  7. RRR                                 0.8857  ██████████████████████████
+  8. LSH-Curves                          0.8852  ██████████████████████████
+  9. fairRQ                              0.8826  ██████████████████████████
+  10. Rankit-Askit                        0.8823  ██████████████████████████
+  11. Native-Sparse-Attention             0.8751  ██████████████████████████
+  12. shapley                             0.8684  ██████████████████████████
+  13. FairSetCover                        0.8661  █████████████████████████
+  14. Fair_Epsilon_Net                    0.8640  █████████████████████████
+  15. Random_access_Retrieval-5           0.8587  █████████████████████████
+  16. INFINI-GRAM-MINI                    0.8542  █████████████████████████
+  17. HENN_ICLR_26-1                      0.8483  █████████████████████████
+  18. axolotl                             0.8451  █████████████████████████
+  19. adv_res_paper                       0.8379  █████████████████████████
+  20. requal                              0.8353  █████████████████████████
+  21. unf-prms                            0.8314  ████████████████████████
+  22. Fairness-Expo-Rankings              0.8246  ████████████████████████
+  23. ranked-ret                          0.8205  ████████████████████████
+  24. Minoria                             0.8159  ████████████████████████
+  25. reg-ratio                           0.8111  ████████████████████████
+  26. mm-mlp                              0.7969  ███████████████████████
+  27. FCM_SIGMOD_CRV                      0.7967  ███████████████████████
+  28. Fast-Monte-Carlo                    0.7903  ███████████████████████
+  29. Power-Duality                       0.0000  
+
+============================================================
+  STEP 5 — Importance-Weighted PageRank
+============================================================
+
+  Top-10 cited works by Normalized Reference Score:
+
+   1. 0.088341  Efficient-MM-Algo
+   2. 0.072303  edelsbrunner (1987)  Algorithms in combinatorial geometry , v
+   3. 0.064417  nanongkai (2010)  Regret-minimizing representative databas
+   4. 0.059787  su (2023)  One embedder, any task: Instruction-ﬁnet
+   5. 0.058879  barocas (2023)  Fairness and machine learning: Limitatio
+   6. 0.053243  bolukbasi (2016)  Man is to computer programmer as woman i
+   7. 0.051017  may (2019)  On measuring social biases in sentence e
+   8. 0.048687  roberts (1973)  An improved algorithm for discrete l1lin
+   9. 0.044439  muthukrishnan (2005)  An improved data stream summary: the cou
+  10. 0.042336  manzini (2000)  Opportunistic data structures with appli
+
+============================================================
+  STEP 6 — Contribution Analyzer
+============================================================
+
+  σ_P(p) = σ_tech(p) · (1 + Σ_{paths a→p} Π_{edges} W(u,v))
+
+  Paper                                      σ_P      σ_tech
+  ----------------------------------- ----------  ----------
+  Efficient-MM-Algo                       1.0224      0.9394
+  Dynamic_Necklace_Splitting              0.9591      0.9591
+  AlgorithmicCollectiveAction             0.9173      0.9173
+  QR                                      0.9038      0.9038
+  AFD                                     0.9003      0.9003
+  RRR                                     0.8953      0.8857
+  RSR-Core                                0.8878      0.8878
+  LSH-Curves                              0.8852      0.8852
+  fairRQ                                  0.8826      0.8826
+  Rankit-Askit                            0.8823      0.8823
+  Native-Sparse-Attention                 0.8751      0.8751
+  shapley                                 0.8684      0.8684
+  FairSetCover                            0.8661      0.8661
+  Fair_Epsilon_Net                        0.8640      0.8640
+  Random_access_Retrieval-5               0.8587      0.8587
+  INFINI-GRAM-MINI                        0.8542      0.8542
+  HENN_ICLR_26-1                          0.8483      0.8483
+  axolotl                                 0.8451      0.8451
+  requal                                  0.8388      0.8353
+  adv_res_paper                           0.8379      0.8379
+  unf-prms                                0.8314      0.8314
+  Fairness-Expo-Rankings                  0.8248      0.8246
+  ranked-ret                              0.8205      0.8205
+  Minoria                                 0.8159      0.8159
+  reg-ratio                               0.8111      0.8111
+  mm-mlp                                  0.7969      0.7969
+  FCM_SIGMOD_CRV                          0.7967      0.7967
+  Fast-Monte-Carlo                        0.7903      0.7903
+  Power-Duality                           0.0000      0.0000
+
+
+
+============================================================
+  STEP 7 — Community Detection
+============================================================
+
+  Weighted modularity Q = 0.0181
+  19 communities detected:
+
+  Community 0: Random_access_Retrieval-5, ranked-ret, Power-Duality
+  Community 1: Efficient-MM-Algo, RSR-Core
+  Community 2: unf-prms
+  Community 3: Minoria, RRR, FCM_SIGMOD_CRV, Rankit-Askit, Fair_Epsilon_Net, Fairness-Expo-Rankings
+  Community 4: LSH-Curves
+  Community 5: reg-ratio
+  Community 6: FairSetCover
+  Community 7: AFD
+  Community 8: Native-Sparse-Attention
+  Community 9: HENN_ICLR_26-1
+  Community 10: mm-mlp
+  Community 11: Fast-Monte-Carlo
+  Community 12: requal, axolotl, adv_res_paper
+  Community 13: AlgorithmicCollectiveAction
+  Community 14: INFINI-GRAM-MINI
+  Community 15: shapley
+  Community 16: fairRQ
+  Community 17: QR
+  Community 18: Dynamic_Necklace_Splitting
+
+============================================================
+  STEP 8 — Research Gap Score  (Gap(C, t))
+============================================================
+
+  Full-corpus gap score: 24.0838
+  (positive = technically original work not yet adopted as a dependency by other papers in the corpus)
+
+  Per-paper gap score (cluster = single paper):
+
+  Paper                                Gap score  Originality
+  ----------------------------------- ----------  -----------
+  AFD                                     0.9003       0.9003
+  AlgorithmicCollectiveAction             0.9173       0.9173
+  Dynamic_Necklace_Splitting              0.9591       0.9591
+  Efficient-MM-Algo                       0.8510       0.9394
+  FCM_SIGMOD_CRV                          0.7967       0.7967
+  FairSetCover                            0.8661       0.8661
+  Fair_Epsilon_Net                        0.8640       0.8640
+  Fairness-Expo-Rankings                  0.8245       0.8246
+  Fast-Monte-Carlo                        0.7903       0.7903
+  HENN_ICLR_26-1                          0.8483       0.8483
+  INFINI-GRAM-MINI                        0.8542       0.8542
+  LSH-Curves                              0.8852       0.8852
+  Minoria                                 0.8159       0.8159
+  Native-Sparse-Attention                 0.8751       0.8751
+  Power-Duality                          -0.0232       0.0000
+  QR                                      0.9038       0.9038
+  RRR                                     0.8748       0.8857
+  RSR-Core                                0.8878       0.8878
+  Random_access_Retrieval-5               0.8587       0.8587
+  Rankit-Askit                            0.8823       0.8823
+  adv_res_paper                           0.8379       0.8379
+  axolotl                                 0.8451       0.8451
+  fairRQ                                  0.8826       0.8826
+  mm-mlp                                  0.7969       0.7969
+  ranked-ret                              0.8205       0.8205
+  reg-ratio                               0.8111       0.8111
+  requal                                  0.8311       0.8353
+  shapley                                 0.8684       0.8684
+  unf-prms                                0.8314       0.8314
+
+============================================================
+  DONE
+============================================================
+
+
+
+
+Attention is all you Need
+
+
