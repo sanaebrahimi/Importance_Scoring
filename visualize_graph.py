@@ -8,7 +8,7 @@ browser-side filters such as:
 
 Usage:
     python3 visualize_graph.py
-    python3 visualize_graph.py --top-k 30 --min-weight 0.002
+    python3 visualize_graph.py --top-k 40 --min-weight 0.005
     python3 visualize_graph.py --model-tag llama3_2 --top-k 40 --min-weight 0.005
     python3 visualize_graph.py --load-mappings citation_mappings.json --output graph.html
 """
@@ -16,6 +16,7 @@ Usage:
 import argparse
 import colorsys
 import json
+import os
 import re
 from pathlib import Path
 from typing import Optional, Union
@@ -251,7 +252,13 @@ def build_graph_payload(
     }
 
 
-def render_html(payloads_by_model: dict, default_model_key: str, default_top_k: int, default_min_weight: float) -> str:
+def render_html(
+    payloads_by_model: dict,
+    default_model_key: str,
+    default_top_k: int,
+    default_min_weight: float,
+    vis_asset_dir: str,
+) -> str:
     payloads_json = json.dumps(payloads_by_model, ensure_ascii=False)
     default_state_json = json.dumps(
         {
@@ -268,8 +275,8 @@ def render_html(payloads_by_model: dict, default_model_key: str, default_top_k: 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title}</title>
-  <link rel="stylesheet" href="lib/vis-9.1.2/vis-network.css">
-  <script src="lib/vis-9.1.2/vis-network.min.js"></script>
+  <link rel="stylesheet" href="{vis_asset_dir}/vis-network.css">
+  <script src="{vis_asset_dir}/vis-network.min.js"></script>
   <style>
     :root {{
       --bg: #07111f;
@@ -932,6 +939,13 @@ def main() -> None:
         help="Optional model tag for selecting tagged score files (e.g. llama3_2).",
     )
     parser.add_argument(
+        "--exclude-papers",
+        nargs="+",
+        default=[],
+        metavar="PAPER_ID",
+        help="Optional paper ids to exclude from citation resolution and graph construction.",
+    )
+    parser.add_argument(
         "--load-mappings",
         default="",
         help="Load pre-saved citation_mappings.json",
@@ -944,14 +958,14 @@ def main() -> None:
     parser.add_argument(
         "--top-k",
         type=int,
-        default=20,
-        help="Initial number of top external cited works to show (default 20)",
+        default=40,
+        help="Initial number of top external cited works to show (default 40)",
     )
     parser.add_argument(
         "--min-weight",
         type=float,
-        default=0.001,
-        help="Initial minimum edge weight to display (default 0.001)",
+        default=0.005,
+        help="Initial minimum edge weight to display (default 0.005)",
     )
     parser.add_argument(
         "--output",
@@ -959,17 +973,18 @@ def main() -> None:
         help="Output HTML file (default graph.html)",
     )
     args = parser.parse_args()
+    excluded = {paper.strip() for paper in args.exclude_papers if paper.strip()}
 
     if args.load_mappings and Path(args.load_mappings).exists():
         print(f"Loading mappings from {args.load_mappings} ...")
         resolver = CitationResolver.load(args.load_mappings)
-        resolver.parse_all(args.results, args.papers)
+        resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
     else:
         print("Parsing PDFs to resolve citations ...")
         resolver = CitationResolver()
-        resolver.parse_all(args.results, args.papers)
+        resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
 
-    resolver.register_corpus_papers(args.results, args.papers)
+    resolver.register_corpus_papers(args.results, args.papers, exclude_papers=excluded)
 
     if args.save_mappings:
         resolver.save(args.save_mappings)
@@ -989,6 +1004,7 @@ def main() -> None:
             args.results,
             citation_mappings=mappings,
             model_tag=model_tag,
+            exclude_papers=excluded,
         )
         payload = build_graph_payload(fw, resolver, model_tag=model_tag)
         payloads_by_model[_model_storage_key(model_tag)] = payload
@@ -999,12 +1015,15 @@ def main() -> None:
 
     default_payload = payloads_by_model[default_model_key]
     output_path = Path(args.output)
+    vis_asset_root = Path("lib") / "vis-9.1.2"
+    vis_asset_dir = os.path.relpath(vis_asset_root, output_path.parent if output_path.parent != Path("") else Path("."))
     output_path.write_text(
         render_html(
             payloads_by_model,
             default_model_key=default_model_key,
             default_top_k=args.top_k,
             default_min_weight=args.min_weight,
+            vis_asset_dir=vis_asset_dir,
         ),
         encoding="utf-8",
     )

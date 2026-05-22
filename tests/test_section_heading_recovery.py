@@ -173,7 +173,11 @@ class SectionHeadingRecoveryTests(unittest.TestCase):
         self.assertNotIn("Liu et al. (2024)", infini_keys)
 
     def test_kan_kolmogorov_filters_shapes_and_equation_numbers(self) -> None:
-        kan_text = read_pdf_text(str(ROOT / "papers" / "Case 1" / "kan-kolmogorov.pdf"))
+        kan_pdf = ROOT / "papers" / "Case 1" / "kan-kolmogorov.pdf"
+        if not kan_pdf.exists():
+            self.skipTest(f"missing local test fixture: {kan_pdf}")
+
+        kan_text = read_pdf_text(str(kan_pdf))
         self.assertEqual(detect_dominant_citation_style(kan_text), "author_year")
 
         kan_sections = load_sections_from_file(

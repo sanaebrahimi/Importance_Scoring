@@ -41,6 +41,13 @@ def main() -> None:
         default="",
         help="Optional model tag for selecting tagged score files during graph analysis (e.g. llama3_2).",
     )
+    parser.add_argument(
+        "--exclude-papers",
+        nargs="+",
+        default=[],
+        metavar="PAPER_ID",
+        help="Optional paper ids to exclude from citation resolution and graph construction.",
+    )
     parser.add_argument("--save-mappings", default="",
                         help="Save resolved citation mappings to this JSON file")
     parser.add_argument("--load-mappings", default="",
@@ -51,6 +58,7 @@ def main() -> None:
     parser.add_argument("--influence-depth",  type=int,   default=3)
     parser.add_argument("--influence-decay",  type=float, default=0.5)
     args = parser.parse_args()
+    excluded = {paper.strip() for paper in args.exclude_papers if paper.strip()}
 
     # ------------------------------------------------------------------ #
     # Step 1 – Citation resolver                                          #
@@ -60,12 +68,12 @@ def main() -> None:
     if args.load_mappings and Path(args.load_mappings).exists():
         print(f"Loading pre-saved mappings from {args.load_mappings}")
         resolver = CitationResolver.load(args.load_mappings)
-        resolver.parse_all(args.results, args.papers)
+        resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
     else:
         resolver = CitationResolver()
-        resolver.parse_all(args.results, args.papers)
+        resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
 
-    resolver.register_corpus_papers(args.results, args.papers)
+    resolver.register_corpus_papers(args.results, args.papers, exclude_papers=excluded)
 
     if args.save_mappings:
         resolver.save(args.save_mappings)
@@ -87,6 +95,7 @@ def main() -> None:
         args.results,
         citation_mappings=mappings,
         model_tag=args.model_tag,
+        exclude_papers=excluded,
     )
     print(f"\n{fw.graph}")
 
@@ -142,7 +151,10 @@ def main() -> None:
     # ------------------------------------------------------------------ #
     header("STEP 6 — Contribution Analyzer")
 
-    print(f"\n  σ_P(p) = σ_tech(p) · (1 + Σ_{{paths a→p}} Π_{{edges}} W(u,v))\n")
+    print(
+        "\n  Corpus-level total score:\n"
+        "  σ_P(p) = σ_tech(p) · (1 + Σ_{paths a→p} Π_{edges} W(u,v))\n"
+    )
     contrib_scores = fw.corpus_contribution.compute()
     top_contrib = sorted(contrib_scores.items(), key=lambda x: x[1], reverse=True)
     print(f"  {'Paper':<35} {'σ_P':>10}  {'σ_tech':>10}")
@@ -153,18 +165,19 @@ def main() -> None:
 
     subheader("Normalized Influence Score  I_P(p)")
     print(
-        f"\n  σ_{{P\\p}}(p) = σ_P(p) − σ_tech(p)          (external contribution mass)\n"
-        f"  I_P(p)     = σ_{{P\\p}}(p) / Σ_{{p'}} σ_{{P\\p'}}(p')  (share of cross-paper influence)\n"
+        "\n  Propagated cross-paper mass:\n"
+        "  π_P(p) = σ_tech(p) · Σ_{paths a→p} Π_{edges} W(u,v)\n"
+        "  I_P(p) = π_P(p) / Σ_{p'} π_P(p')  (share of propagated cross-paper influence)\n"
     )
     norm_influence = fw.corpus_contribution.normalized_influence()
-    ext_contrib    = fw.corpus_contribution.external_contribution()
+    propagated_mass = fw.corpus_contribution.propagated_influence_mass()
     top_influence  = sorted(norm_influence.items(), key=lambda x: x[1], reverse=True)
-    col1 = "σ_{P\\p}(p)"
+    col1 = "π_P(p)"
     print(f"  {'Paper':<35} {col1:>12}  {'I_P(p)':>10}")
     print(f"  {'-'*35} {'-'*12}  {'-'*10}")
     for pid, inf_score in top_influence:
-        ext = ext_contrib[pid]
-        print(f"  {pid:<35} {ext:>12.4f}  {inf_score:>10.4f}")
+        propagated = propagated_mass[pid]
+        print(f"  {pid:<35} {propagated:>12.4f}  {inf_score:>10.4f}")
 
     # ------------------------------------------------------------------ #
     # Step 7 – Seminal works (influence propagation)                      #

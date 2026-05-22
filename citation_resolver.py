@@ -572,20 +572,46 @@ class CitationResolver:
         # paper_id → {model_tag: file_path}
         self._paper_model_citation_files: Dict[str, Dict[str, str]] = defaultdict(dict)
 
+    def _apply_exclusions(self, exclude_papers: set[str]) -> None:
+        if not exclude_papers:
+            return
+
+        for paper_id in list(exclude_papers):
+            title = self._corpus_titles.pop(paper_id, None)
+            if title:
+                normalized = _normalize_title_key(title)
+                if normalized in self._title_to_paper_ids:
+                    self._title_to_paper_ids[normalized] = [
+                        existing_id
+                        for existing_id in self._title_to_paper_ids[normalized]
+                        if existing_id != paper_id
+                    ]
+                    if not self._title_to_paper_ids[normalized]:
+                        del self._title_to_paper_ids[normalized]
+            self._paper_model_citation_scores.pop(paper_id, None)
+            self._paper_model_citation_files.pop(paper_id, None)
+            for key in [raw_key for raw_key in self._raw_map if raw_key[0] == paper_id]:
+                del self._raw_map[key]
+
     def register_corpus_papers(
         self,
         results_dir: str | Path,
         papers_dir: str | Path,
         pdf_ext: str = ".pdf",
+        exclude_papers: Optional[set[str]] = None,
     ) -> "CitationResolver":
         """Index corpus paper titles so resolved citations can collapse onto corpus nodes."""
         results_path = Path(results_dir)
         papers_path = Path(papers_dir)
+        excluded = {paper.strip() for paper in (exclude_papers or set()) if paper.strip()}
+        self._apply_exclusions(excluded)
 
         for paper_dir in sorted(results_path.iterdir()):
             if not paper_dir.is_dir() or paper_dir.name.startswith("."):
                 continue
             paper_id = paper_dir.name
+            if paper_id in excluded:
+                continue
             if paper_id in self._corpus_titles:
                 continue
             pdf_path = papers_path / f"{paper_id}{pdf_ext}"
@@ -685,6 +711,7 @@ class CitationResolver:
         results_dir: str | Path,
         papers_dir: str | Path,
         pdf_ext: str = ".pdf",
+        exclude_papers: Optional[set[str]] = None,
     ) -> "CitationResolver":
         """
         Auto-discover all papers: match each paper subdirectory in results_dir
@@ -697,12 +724,16 @@ class CitationResolver:
         """
         results_path = Path(results_dir)
         papers_path  = Path(papers_dir)
-        self.register_corpus_papers(results_dir, papers_dir, pdf_ext=pdf_ext)
+        excluded = {paper.strip() for paper in (exclude_papers or set()) if paper.strip()}
+        self._apply_exclusions(excluded)
+        self.register_corpus_papers(results_dir, papers_dir, pdf_ext=pdf_ext, exclude_papers=excluded)
 
         for paper_dir in sorted(results_path.iterdir()):
             if not paper_dir.is_dir() or paper_dir.name.startswith("."):
                 continue
             paper_id = paper_dir.name
+            if paper_id in excluded:
+                continue
             pdf_path = papers_path / f"{paper_id}{pdf_ext}"
             if not pdf_path.exists():
                 print(f"[CitationResolver] No PDF found for {paper_id}, skipping.")

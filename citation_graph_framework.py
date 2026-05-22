@@ -455,6 +455,7 @@ class CitationGraph:
         citation_mappings: Optional[Dict[str, Dict[str, str]]] = None,
         pub_dates: Optional[Dict[str, int]] = None,
         model_tag: str = "",
+        exclude_papers: Optional[Set[str]] = None,
     ) -> "CitationGraph":
         """
         Load every paper subdirectory under results_dir and build the graph.
@@ -467,10 +468,13 @@ class CitationGraph:
         """
         path = Path(results_dir)
         graph = cls()
+        excluded = {paper.strip() for paper in (exclude_papers or set()) if paper.strip()}
         for paper_dir in sorted(path.iterdir()):
             if not paper_dir.is_dir() or paper_dir.name.startswith("."):
                 continue
             paper_id = paper_dir.name
+            if paper_id in excluded:
+                continue
             paper = Paper(
                 paper_id,
                 paper_dir,
@@ -1033,19 +1037,24 @@ class CorpusContributionAnalyzer:
     edges; the corpus-level score of p is its technical fraction multiplied
     by the total mass accumulated at p.
 
-    External contribution mass
-    --------------------------
-    To isolate the credit that p receives from *other* articles (removing the
-    self-retained technical term):
+    Propagated influence mass
+    -------------------------
+    Let
 
-        σ_{P\p}(p) = σ_P(p) − σ_tech(p)
+        M(p) = 1 + Σ_{paths a→…→p} Π_{(u,v) on path} W(u,v)
+
+    be the total multiplicative mass accumulated at p. The cross-paper
+    propagated term is then:
+
+        π_P(p) = σ_tech(p) · (M(p) − 1)
+               = σ_tech(p) · Σ_{paths a→…→p} Π_{(u,v) on path} W(u,v)
 
     Normalized influence score
     --------------------------
-    The fraction of all cross-paper influence mass in the corpus attributed
+    The fraction of all propagated cross-paper mass in the corpus attributed
     to article p:
 
-        I_P(p) = σ_{P\p}(p) / Σ_{p'∈P} σ_{P\p'}(p')
+        I_P(p) = π_P(p) / Σ_{p'∈P} π_P(p')
 
     Computed in one topological-order pass (Kahn's algorithm).  Nodes in
     exceptional cycles retain only the score propagated from their acyclic
@@ -1100,21 +1109,34 @@ class CorpusContributionAnalyzer:
         scores, _ = self._compute_with_mass()
         return scores
 
-    def external_contribution(self) -> Dict[str, float]:
-        """Return {paper_id: σ_{P\\p}(p) = σ_P(p) − σ_tech(p)}."""
-        scores, _ = self._compute_with_mass()
+    def propagated_influence_mass(self) -> Dict[str, float]:
+        """
+        Return {paper_id: π_P(p)} where
+
+            π_P(p) = σ_tech(p) · Σ_{paths a→…→p} Π W(u,v).
+        """
+        _, mass = self._compute_with_mass()
         return {
-            p: scores[p] - self.graph.papers[p].originality_score()
-            for p in scores
+            p: self.graph.papers[p].originality_score() * max(0.0, mass[p] - 1.0)
+            for p in mass
         }
+
+    def external_contribution(self) -> Dict[str, float]:
+        """
+        Backward-compatible alias for propagated cross-paper mass.
+
+        Historically this was implemented as σ_P(p) − σ_tech(p), which is
+        algebraically equivalent to π_P(p) under the mass definition above.
+        """
+        return self.propagated_influence_mass()
 
     def normalized_influence(self) -> Dict[str, float]:
         """Return {paper_id: I_P(p)} — each paper's share of total cross-paper influence mass."""
-        ext = self.external_contribution()
-        total = sum(ext.values())
+        propagated = self.propagated_influence_mass()
+        total = sum(propagated.values())
         if total == 0:
-            return {p: 0.0 for p in ext}
-        return {p: v / total for p, v in ext.items()}
+            return {p: 0.0 for p in propagated}
+        return {p: v / total for p, v in propagated.items()}
 
     def top_k(self, k: int = 10) -> List[Tuple[str, float]]:
         """Top-k by corpus-level score σ_P(p)."""
@@ -1164,9 +1186,16 @@ class KnowledgeDiscoveryFramework:
         citation_mappings: Optional[Dict[str, Dict[str, str]]] = None,
         pub_dates: Optional[Dict[str, int]] = None,
         model_tag: str = "",
+        exclude_papers: Optional[Set[str]] = None,
     ) -> "KnowledgeDiscoveryFramework":
         """Build the framework from a directory of importance-scoring results."""
-        graph = CitationGraph.from_results_dir(results_dir, citation_mappings, pub_dates, model_tag=model_tag)
+        graph = CitationGraph.from_results_dir(
+            results_dir,
+            citation_mappings,
+            pub_dates,
+            model_tag=model_tag,
+            exclude_papers=exclude_papers,
+        )
         return cls(graph)
 
     def summary(self) -> Dict:
