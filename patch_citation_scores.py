@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Minimal citation regex kept at module level so --dry-run works without PyPDF2.
 _NUMERIC_BRACKET = r"\[(?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\]"
 _NUMERIC_PAREN   = r"\((?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\)"
-_AUTHOR_YEAR     = r"\([A-Z][^)]*\d{4}[a-z]?\)"
+_AUTHOR_YEAR     = r"\([A-Z][^()]*\d{4}[a-z]?\)"
 _NARRATIVE_AY    = (
     r"(?:"
     r"[A-Z][a-zA-Z\-']+(?:\s+[A-Z][a-zA-Z\-']+)*\s+et\s+al\.\s*\(\d{4}[a-z]?\)"   # Author et al. (year)

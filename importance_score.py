@@ -399,7 +399,7 @@ PROMPT_CATALOG = {
     "subsection_title_recovery_user_prompt_template": SUBSECTION_TITLE_RECOVERY_USER_PROMPT_TEMPLATE,
 }
 
-AUTHOR_YEAR_CITATION_PATTERN = r"\([A-Z][^)]*\d{4}[a-z]?\)"
+AUTHOR_YEAR_CITATION_PATTERN = r"\([A-Z][^()]*\d{4}[a-z]?\)"
 AUTHOR_NAME_TOKEN_PATTERN = r"[A-Z][A-Za-z`'’\-]*"
 AUTHOR_NAME_CONTINUATION_PATTERN = r"[A-Za-z`'’\-]+"
 AUTHOR_NAME_PHRASE_PATTERN = (
@@ -445,6 +445,8 @@ MONTH_NAME_PATTERN = (
 )
 
 CITATION_STYLE_NUMERIC = "numeric"
+CITATION_STYLE_NUMERIC_BRACKET = "numeric_bracket"
+CITATION_STYLE_NUMERIC_PAREN = "numeric_paren"
 CITATION_STYLE_AUTHOR_YEAR = "author_year"
 
 
@@ -773,12 +775,14 @@ def classify_citation_block(
         citation_block,
     ):
         return CITATION_STYLE_AUTHOR_YEAR
-    if re.fullmatch(NUMERIC_BRACKET_CITATION_PATTERN, citation_block) or re.fullmatch(
-        NUMERIC_PAREN_CITATION_PATTERN, citation_block
-    ):
+    if re.fullmatch(NUMERIC_BRACKET_CITATION_PATTERN, citation_block):
         if is_math_like_numeric_citation(citation_block, prefix_text=prefix_text, suffix_text=suffix_text):
             return None
-        return CITATION_STYLE_NUMERIC
+        return CITATION_STYLE_NUMERIC_BRACKET
+    if re.fullmatch(NUMERIC_PAREN_CITATION_PATTERN, citation_block):
+        if is_math_like_numeric_citation(citation_block, prefix_text=prefix_text, suffix_text=suffix_text):
+            return None
+        return CITATION_STYLE_NUMERIC_PAREN
     return None
 
 
@@ -802,7 +806,8 @@ def is_weak_numeric_paren_style_signal(citation_block: str) -> bool:
 
 
 def detect_dominant_citation_style(text: str) -> str:
-    numeric_count = 0
+    numeric_bracket_count = 0
+    numeric_paren_count = 0
     author_year_count = 0
 
     for match in re.finditer(CITATION_BLOCK_PATTERN, text or ""):
@@ -814,16 +819,21 @@ def detect_dominant_citation_style(text: str) -> str:
             prefix_text=prefix_text,
             suffix_text=suffix_text,
         )
-        if citation_style == CITATION_STYLE_NUMERIC:
+        if citation_style == CITATION_STYLE_NUMERIC_BRACKET:
+            numeric_bracket_count += 1
+        elif citation_style == CITATION_STYLE_NUMERIC_PAREN:
             if is_weak_numeric_paren_style_signal(citation_block):
                 continue
-            numeric_count += 1
+            numeric_paren_count += 1
         elif citation_style == CITATION_STYLE_AUTHOR_YEAR:
             author_year_count += 1
 
+    numeric_count = numeric_bracket_count + numeric_paren_count
     if author_year_count > numeric_count:
         return CITATION_STYLE_AUTHOR_YEAR
-    return CITATION_STYLE_NUMERIC
+    if numeric_bracket_count >= numeric_paren_count:
+        return CITATION_STYLE_NUMERIC_BRACKET
+    return CITATION_STYLE_NUMERIC_PAREN
 
 
 def is_back_matter_heading(text: str) -> bool:
@@ -3839,7 +3849,10 @@ def split_citation_block(citation_block: str) -> List[str]:
     if is_numeric_container:
         raw_parts = re.split(r"\s*[;,]\s*", inner)
     elif ";" in inner:
-        raw_parts = inner.split(";")
+        all_semicolon_parts = inner.split(";")
+        raw_parts = [p for p in all_semicolon_parts if re.search(r"\d{4}", p)]
+        if not raw_parts:
+            raw_parts = all_semicolon_parts
     elif left_delim == "[" and right_delim == "]" and "," in inner:
         raw_parts = inner.split(",")
     else:
