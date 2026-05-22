@@ -443,6 +443,56 @@ MONTH_NAME_PATTERN = (
     r"jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|"
     r"aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?"
 )
+NUMERIC_CITATION_CONTEXT_TERMS = (
+    "shape",
+    "hidden",
+    "layer",
+    "layers",
+    "grid",
+    "kan",
+    "mlp",
+    "neuron",
+    "neurons",
+    "width",
+    "batch",
+    "dataset",
+    "train",
+    "training",
+    "test",
+    "accuracy",
+    "loss",
+    "error",
+    "optimizer",
+    "step",
+    "steps",
+    "size",
+    "architecture",
+    "parameter",
+    "parameters",
+    "tensor",
+    "embedding",
+    "channel",
+    "channels",
+)
+AUTHOR_YEAR_LEAD_IN_TOKENS = {
+    "a",
+    "an",
+    "and",
+    "by",
+    "cf",
+    "eg",
+    "e.g.",
+    "for",
+    "from",
+    "in",
+    "of",
+    "on",
+    "see",
+    "the",
+    "using",
+    "via",
+    "with",
+}
 
 CITATION_STYLE_NUMERIC = "numeric"
 CITATION_STYLE_NUMERIC_BRACKET = "numeric_bracket"
@@ -457,6 +507,46 @@ def normalize_author_year_authors(authors: str) -> str:
     normalized = re.sub(r"\s*([&])\s*", r" \1 ", normalized)
     normalized = re.sub(r"\s+([`'’])", r"\1", normalized)
     normalized = re.sub(r"\s+", " ", normalized).strip()
+    normalized = trim_author_year_lead_in(normalized)
+    return normalized
+
+
+def trim_author_year_lead_in(authors: str) -> str:
+    normalized = re.sub(r"\s+", " ", authors or "").strip(" ,;:")
+    if not normalized:
+        return normalized
+
+    tokens = normalized.split()
+    while tokens and tokens[0].lower().strip(".,;:") in AUTHOR_YEAR_LEAD_IN_TOKENS:
+        tokens.pop(0)
+    normalized = " ".join(tokens).strip()
+    if not normalized:
+        return normalized
+
+    et_al_match = re.search(r"\bet al\.", normalized, flags=re.IGNORECASE)
+    if et_al_match:
+        prefix = normalized[: et_al_match.start()].strip()
+        prefix_tokens = prefix.split()
+        if len(prefix_tokens) > 1:
+            prefix = prefix_tokens[-1]
+        normalized = f"{prefix} et al."
+        return normalized.strip()
+
+    pair_match = re.search(r"\s(?:&|and)\s", normalized)
+    if pair_match:
+        left, right = re.split(r"\s(?:&|and)\s", normalized, maxsplit=1)
+        left_tokens = left.strip().split()
+        right_tokens = right.strip().split()
+        if len(left_tokens) > 2:
+            left = left_tokens[-1]
+        else:
+            left = " ".join(left_tokens)
+        if len(right_tokens) > 2:
+            right = right_tokens[-1]
+        else:
+            right = " ".join(right_tokens)
+        return f"{left} & {right}".strip()
+
     return normalized
 
 
@@ -761,6 +851,29 @@ def is_math_like_numeric_citation(
     joined = f"{prefix} {normalize_for_match(citation_block)} {suffix}".strip().lower()
     if any(token in joined for token in ("probability", "reward", "score", "interval", "range")) and len(numbers) <= 2:
         return True
+
+    has_shape_context = any(term in joined for term in NUMERIC_CITATION_CONTEXT_TERMS)
+    is_bracket_block = citation_block.startswith("[") and citation_block.endswith("]")
+    inner_block = citation_block[1:-1] if is_bracket_block else citation_block[1:-1] if citation_block.startswith("(") and citation_block.endswith(")") else citation_block
+
+    if is_bracket_block:
+        comma_only = "," in inner_block and ";" not in inner_block and "-" not in inner_block and "–" not in inner_block
+        if comma_only:
+            # Filter tensor shapes / architecture tuples such as [784,100,10] or [2,2,1].
+            if max(numbers, default=0) >= 50:
+                return True
+            if len(numbers) >= 3 and (numbers.count(1) >= 1 or has_shape_context):
+                return True
+            if len(numbers) >= 2 and has_shape_context and all(number <= 20 for number in numbers):
+                return True
+
+    if citation_block.startswith("(") and citation_block.endswith(")"):
+        if len(numbers) == 1 and numbers[0] >= 1000:
+            return True
+        if len(numbers) == 1 and has_shape_context:
+            return True
+        if any(token in joined for token in ("equation", "figure", "table", "observation", "dataset", "batch size")):
+            return True
 
     return False
 
@@ -2080,6 +2193,10 @@ def combine_scores(technical_score: float, citation_score: float) -> float:
     return max(0.0, safe_float(technical_score, 0.0)) + max(0.0, safe_float(citation_score, 0.0))
 
 
+def citation_fallback_token_count(text: str) -> int:
+    return max(1, len(re.findall(r"[A-Za-z0-9_]+", text or "")))
+
+
 def assert_close(actual: float, expected: float, context: str, tol: float = 1e-8) -> None:
     if abs(actual - expected) > tol:
         print(
@@ -2602,6 +2719,92 @@ def split_into_sentences(text: str) -> List[str]:
     if not normalized:
         return []
     return [s.strip() for s in re.split(r"(?<=[.!?])\s+", normalized) if s.strip()]
+
+
+def allocate_leaf_citation_scores_length_fallback(
+    paragraph_items: Dict[str, str],
+    mention_buckets: Dict[str, List[Tuple[str, str, str]]],
+    section_score: float,
+    citation_fraction: float = 0.45,
+) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], Dict[str, Dict[str, float]]]:
+    """Fallback leaf citation allocation mirroring the length-based baseline."""
+    paragraph_names = list(paragraph_items.keys())
+    paragraph_raw = {
+        paragraph_name: float(citation_fallback_token_count(paragraph_items[paragraph_name]))
+        + 50.0 * len(mention_buckets.get(paragraph_name, []))
+        for paragraph_name in paragraph_names
+    }
+    paragraph_total = normalize_distribution(paragraph_raw, section_score)
+
+    global_mentions: Dict[str, int] = {}
+    for paragraph_mentions in mention_buckets.values():
+        for citation, _, _ in paragraph_mentions:
+            global_mentions[citation] = global_mentions.get(citation, 0) + 1
+
+    if not global_mentions:
+        return (
+            paragraph_total,
+            {paragraph_name: paragraph_total[paragraph_name] for paragraph_name in paragraph_names},
+            {paragraph_name: 0.0 for paragraph_name in paragraph_names},
+            {paragraph_name: {} for paragraph_name in paragraph_names},
+        )
+
+    section_token_total = citation_fallback_token_count(" ".join(paragraph_items.values()))
+    section_citation_score = max(0.0, safe_float(section_score, 0.0)) * max(0.0, min(0.95, citation_fraction))
+    citation_raw = {
+        citation: float(mentions) / float(section_token_total)
+        for citation, mentions in global_mentions.items()
+        if mentions > 0
+    }
+    citation_budget = normalize_distribution(citation_raw, section_citation_score) if citation_raw else {}
+
+    paragraph_technical: Dict[str, float] = {}
+    paragraph_citation: Dict[str, float] = {}
+    paragraph_citation_allocations: Dict[str, Dict[str, float]] = {}
+
+    for paragraph_name in paragraph_names:
+        mention_counter: Dict[str, int] = {}
+        for citation, _, _ in mention_buckets.get(paragraph_name, []):
+            mention_counter[citation] = mention_counter.get(citation, 0) + 1
+
+        local_raw = {
+            citation: float(count) * citation_budget.get(citation, 0.0)
+            for citation, count in mention_counter.items()
+            if citation_budget.get(citation, 0.0) > 0.0
+        }
+        if local_raw:
+            target_local_total = min(
+                paragraph_total[paragraph_name] * max(0.0, min(0.95, citation_fraction)),
+                sum(local_raw.values()),
+            )
+            alloc = normalize_distribution(local_raw, target_local_total)
+        else:
+            alloc = {}
+
+        paragraph_citation_score = sum(alloc.values())
+        if paragraph_citation_score > paragraph_total[paragraph_name]:
+            scale = paragraph_total[paragraph_name] / max(paragraph_citation_score, 1e-12)
+            alloc = {citation: value * scale for citation, value in alloc.items()}
+            paragraph_citation_score = sum(alloc.values())
+
+        paragraph_citation_allocations[paragraph_name] = alloc
+        paragraph_citation[paragraph_name] = max(0.0, paragraph_citation_score)
+        paragraph_technical[paragraph_name] = max(0.0, paragraph_total[paragraph_name] - paragraph_citation_score)
+
+    return paragraph_total, paragraph_technical, paragraph_citation, paragraph_citation_allocations
+
+
+def allocate_paragraph_citation_scores_length_fallback(
+    mentions: List[Tuple[str, str, str]],
+    total_score: float,
+) -> Dict[str, float]:
+    citation_counts: Dict[str, int] = {}
+    for citation, _, _ in mentions:
+        citation_counts[citation] = citation_counts.get(citation, 0) + 1
+    if not citation_counts:
+        return {}
+    raw = {citation: float(count) for citation, count in citation_counts.items() if count > 0}
+    return normalize_distribution(raw, total_score)
 
 
 def is_citation_heavy_section_name(section_name: str) -> bool:
@@ -4100,6 +4303,26 @@ def assign_importance_scores(
             snippet_limit=snippet_limit,
             debug_log_path=debug_log_path,
         )
+        fallback_paragraph_allocations: Dict[str, Dict[str, float]] = {}
+        total_mentions = sum(len(mentions) for mentions in mention_buckets.values())
+        if total_mentions > 0 and sum(max(0.0, value) for value in paragraph_citation.values()) <= 0.0:
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[citation_leaf_length_fallback] section={' > '.join(section_path)} "
+                    f"reason=zero_final_citation_score mentions={total_mentions} section_score={section_score:.6f}"
+                ),
+            )
+            (
+                paragraph_total,
+                paragraph_technical,
+                paragraph_citation,
+                fallback_paragraph_allocations,
+            ) = allocate_leaf_citation_scores_length_fallback(
+                paragraph_items=paragraph_items,
+                mention_buckets=mention_buckets,
+                section_score=section_score,
+            )
 
         for paragraph_name in paragraph_names:
             meta = paragraph_meta[paragraph_name]
@@ -4157,38 +4380,46 @@ def assign_importance_scores(
             if paragraph_c <= 0.0:
                 continue
 
-            citation_contexts: Dict[str, List[str]] = {}
-            for citation, _, context in mentions:
-                citation_contexts.setdefault(citation, []).append(normalize_for_match(str(context)))
+            if paragraph_name in fallback_paragraph_allocations and fallback_paragraph_allocations[paragraph_name]:
+                citation_split = fallback_paragraph_allocations[paragraph_name]
+            else:
+                citation_contexts: Dict[str, List[str]] = {}
+                for citation, _, context in mentions:
+                    citation_contexts.setdefault(citation, []).append(normalize_for_match(str(context)))
 
-            citation_to_context: Dict[str, str] = {}
-            for citation, contexts in citation_contexts.items():
-                unique_contexts = [ctx for ctx in dict.fromkeys(contexts) if ctx]
-                context_blob = " ".join(unique_contexts)[:700]
-                citation_to_context[citation] = context_blob if context_blob else meta["text"][:700]
+                citation_to_context: Dict[str, str] = {}
+                for citation, contexts in citation_contexts.items():
+                    unique_contexts = [ctx for ctx in dict.fromkeys(contexts) if ctx]
+                    context_blob = " ".join(unique_contexts)[:700]
+                    citation_to_context[citation] = context_blob if context_blob else meta["text"][:700]
 
-            try:
-                citation_split = allocate_citation_scores_for_paragraph(
-                    client=client,
-                    paragraph_id=f"{' > '.join(section_path)}::p{meta['paragraph_index']}",
-                    paragraph_text=meta["text"],
-                    citation_to_context=citation_to_context,
-                    total_score=paragraph_c,
-                    model=model,
-                    n_samples=max(1, n_samples),
-                    temperature=temperature,
-                    max_retries=max(1, max_retries),
-                    debug_log_path=debug_log_path,
-                )
-            except ValueError as exc:
-                append_debug_log(
-                    debug_log_path,
-                    (
-                        f"[citation_split_unresolved] paragraph_id={internal_paragraph_id} "
-                        f"reason={exc}"
-                    ),
-                )
-                continue
+                try:
+                    citation_split = allocate_citation_scores_for_paragraph(
+                        client=client,
+                        paragraph_id=f"{' > '.join(section_path)}::p{meta['paragraph_index']}",
+                        paragraph_text=meta["text"],
+                        citation_to_context=citation_to_context,
+                        total_score=paragraph_c,
+                        model=model,
+                        n_samples=max(1, n_samples),
+                        temperature=temperature,
+                        max_retries=max(1, max_retries),
+                        debug_log_path=debug_log_path,
+                    )
+                except ValueError as exc:
+                    append_debug_log(
+                        debug_log_path,
+                        (
+                            f"[citation_split_unresolved] paragraph_id={internal_paragraph_id} "
+                            f"reason={exc} fallback=length_based"
+                        ),
+                    )
+                    citation_split = allocate_paragraph_citation_scores_length_fallback(
+                        mentions=mentions,
+                        total_score=paragraph_c,
+                    )
+                    if not citation_split:
+                        continue
             split_total = sum(citation_split.values())
             assert_close(split_total, paragraph_c, f"citation split for {internal_paragraph_id}")
 

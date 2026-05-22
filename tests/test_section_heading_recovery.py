@@ -16,6 +16,8 @@ sys.modules.setdefault("ollama", ollama)
 
 from importance_score import (  # noqa: E402
     SECTION_LEAD_IN_NODE,
+    allocate_leaf_citation_scores_length_fallback,
+    allocate_paragraph_citation_scores_length_fallback,
     detect_dominant_citation_style,
     extract_citations_by_section,
     find_heading_line_offsets_global,
@@ -169,6 +171,64 @@ class SectionHeadingRecoveryTests(unittest.TestCase):
         self.assertNotIn("Elazar et al. (2024)", infini_keys)
         self.assertNotIn("Gog et al. (2014)", infini_keys)
         self.assertNotIn("Liu et al. (2024)", infini_keys)
+
+    def test_kan_kolmogorov_filters_shapes_and_equation_numbers(self) -> None:
+        kan_text = read_pdf_text(str(ROOT / "papers" / "Case 1" / "kan-kolmogorov.pdf"))
+        self.assertEqual(detect_dominant_citation_style(kan_text), "author_year")
+
+        kan_sections = load_sections_from_file(
+            str(ROOT / "papers" / "Case 1" / "case1_section_titles.txt"),
+            "KAN_KOLMOGOROV_SECTIONS",
+        )
+        kan_citations, _ = extract_citations_by_section(kan_text, kan_sections)
+        kan_keys = flatten_citation_keys(kan_citations)
+
+        self.assertIn("(Haykin, 1994)", kan_keys)
+        self.assertIn("(Cybenko, 1989)", kan_keys)
+        self.assertIn("(Hornik et al., 1989)", kan_keys)
+        self.assertNotIn("(1)", kan_keys)
+        self.assertNotIn("(60000)", kan_keys)
+        self.assertNotIn("[784,100,10]", kan_keys)
+        self.assertNotIn("[2,2,1]", kan_keys)
+
+    def test_length_based_citation_fallback_preserves_positive_citation_mass(self) -> None:
+        paragraph_items = {
+            "Paragraph 1": "Alpha beta gamma. Prior work by Smith is discussed here.",
+            "Paragraph 2": "More detailed technical discussion citing both Smith and Jones.",
+        }
+        mention_buckets = {
+            "Paragraph 1": [("(Smith, 2020)", "(Smith, 2020)", "Prior work by Smith is discussed here.")],
+            "Paragraph 2": [
+                ("(Smith, 2020)", "(Smith, 2020)", "citing both Smith and Jones."),
+                ("(Jones, 2021)", "(Jones, 2021)", "citing both Smith and Jones."),
+            ],
+        }
+
+        paragraph_total, paragraph_technical, paragraph_citation, paragraph_allocations = (
+            allocate_leaf_citation_scores_length_fallback(
+                paragraph_items=paragraph_items,
+                mention_buckets=mention_buckets,
+                section_score=1.0,
+            )
+        )
+
+        self.assertAlmostEqual(sum(paragraph_total.values()), 1.0, places=8)
+        self.assertGreater(sum(paragraph_citation.values()), 0.0)
+        self.assertIn("(Smith, 2020)", paragraph_allocations["Paragraph 1"])
+        self.assertIn("(Jones, 2021)", paragraph_allocations["Paragraph 2"])
+        self.assertAlmostEqual(
+            paragraph_technical["Paragraph 1"] + paragraph_citation["Paragraph 1"],
+            paragraph_total["Paragraph 1"],
+            places=8,
+        )
+
+        local_fallback = allocate_paragraph_citation_scores_length_fallback(
+            mention_buckets["Paragraph 2"],
+            total_score=0.2,
+        )
+        self.assertAlmostEqual(sum(local_fallback.values()), 0.2, places=8)
+        self.assertGreater(local_fallback["(Smith, 2020)"], 0.0)
+        self.assertGreater(local_fallback["(Jones, 2021)"], 0.0)
 
 
 if __name__ == "__main__":
