@@ -1,0 +1,838 @@
+[
+  {
+    "section_path": [
+      "Introduction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Specifying the scope of use of a dataset is an important step before sharing it [ 41]. Particularly, it is known that data-driven models are not reliable and may be unfair towards the groups that are not well represented in their (training) dataset [ 36,37]. Therefore, it is im- portant to identify the potential groups that are under-represented \u2217This work was supported in part by the National Science Foundation, Grant No. 2348919 and 2107290. This work is licensed under the Creative Commons BY-NC-ND 4.0 International License. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to view a copy of this license. For any use beyond those covered by this license, obtain permission by emailing info@vldb.org. Copyright is held by the owner/author(s). Publication rights licensed to the VLDB Endowment. doi:10.14778/3718057.3718072and for which the models under-perform . However, data in practice often misses to include demographic information of entities. Even in cases where some demographic information are available, many others may be missing that is necessary for identifying representa- tion bias [ 38]. To further motivate this problem, let us consider the following example: Example 1. A data-sharing platform (e.g., Chicago Open Data Portal [2]) would like to responsibly specify the under-represented andunder-performing groups in their shared data in order to limit their scope of use. However, their datasets either do not include grouping attributes (such as race) or only contain some of those. Moreover, targeting a comprehensive audit, they do not want to limit their scope to a small set of predefined groups. Instead, they want to be proactive in their detection process, even for the groups they might have missed to consider. For some cases such as image datasets, when a small and prede- termined set of grouping attributes (e.g., gender ) are missing, one may be able to use techniques such as crowdsourcing to identify under-represented groups based on those attributes [ 31]. Our prob- lem, however, is that the grouping attributes are not predetermined. In other words, we consider an unknown unknown situation where not only do we lack access to the grouping attributes but we also do not know the groups of interest. To address this problem, we introduce the problem of mining the potential groups that are under-represented and under-performing, when the grouping attributes are unknown. We refer to this prob- lem as Minoria mining . To the best of our knowledge, this paper isthe first to introduce and study the Minoria mining problem . In simple terms, the main question we want to answer in this paper is, \u201care there regions in data-space, representing potential groups that are (a) under-represented, for which (b) the model under-performs ?\u201d For instance, aligned with Example 1, our experi- ments on a Crimes dataset (\u00a7 7.1.1) identified North-side Chicago as under-represented and under-performing. This information helps the model developers and data owners such as Chicago Open Data Portal to proactively identify a potential issue, decide if it is socially concerning, and limit the dataset\u2019s scope-of-use accordingly. Similar to any other data mining problem, multiple approaches may come to mind for addressing this problem. For example, one can adapt a clustering technique (such as k-means clustering [ 28] or subspace and projective clustering [ 24,29,32]) to cluster the data into potential groups. However, as we shall show in our experi- ments (\u00a7 7.1.2) such an approach fails to identify under-represented groups, simply because there are not enough instances from those groups in the dataset. This is a well-known drawback of the clus- tering methods, that their performance degrades substantially for",
+    "technical_score": 0.006299999999999999,
+    "citation_score": 0.006299999999999999
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Height$20k$30k$40kSalarygenderFigure 1: Toy example: Minoria mining using high-skew projections. Instead, in this paper, we propose a novel approach that involves identifying high-skew projections of data along a specific direction in the feature space. Before outlining our technical contributions, we acknowledge that our approach is only one of the possible solu- tions for Minoria mining. There may be other complementary and equally effective techniques that address this problem. We hope that this paper will pave the way for future research to explore alternative approaches.",
+    "technical_score": 0.0234,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Contributions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We propose a Minoria mining approach that assists its users to mine unknown, under-represented, and under-performing groups as combinations of other features .",
+    "technical_score": 0.0168,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Contributions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Consider projecting data on a combination1of features, such that (i) the projected data is highly skewed (hence its tail indicating an under-represented group candidate) and (ii) the prediction loss at the tail is high. Our mining task is to discover such cases and return the under-performing samples (e.g., the misclassified samples) in the tail to the human expert for further investigation to verify if those represent a socially-valid group.",
+    "technical_score": 0.025199999999999997,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Contributions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "To better explain our approach, let us consider a toy example of abasketball dataset with several observation features X, including height and salary , and one target attribute ( y)performance-score , where the goal is to predict yusingX. Let the (height, salary) val- ues be as shown in Fig. 1. Our system discovers the black vector as a combination of height and salary , where the projection of values on it are highly skewed. That is, after orthogonally projecting each point on the black vector, the distribution of the projected values is highly skewed. In this example, the projections are specified with dashed line, while the point in the head and tail of the distribution colored in red and blue, respectively. The points in the tail are con- sidered as a potential groups that are under-represented. Next, we observe that the prediction performance is significantly less for this potential group. We then report the misclassified samples on the tail as a potential Minoria to the user for further investigation. In this example, the discovered group represents (mostly) the female athletes that are not well-represented in the dataset.",
+    "technical_score": 0.020999999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Technical Contributions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Summary of contributions . In this paper, we introduce and for- malize the Minoria mining problem. We propose an approach for the problem based on the high-skew projections in the feature space that reflect performance-disparities at the projection tail. It turns combination\u201d.out that finding such projections is challenging as it requires iden- tifying the median of each projection. To address this challenge, we utilize computational geometry notions such as duality, k-th level of arrangement, and the arrangement skeleton, and define the concept of median regions [ 21]. We prove the sufficient condi- tions for finding the maximum skew within each median region, which enables developing an efficient Ray-sweeping algorithm for a constant number of dimensions. Our Ray-sweeping algorithm hasthe same time complexity as of the k-th level of arrangement enumeration. This algorithm, however, suffers from the curse of dimensionality. Therefore, we propose practical solutions such as search-space discretization and smart exploration of the search space for large-scale high-dimensional settings. Besides theoretical guarantees, our experiments on multiple datasets confirm the va- lidity of our proposal and the performance of our algorithms. For example, our experiments on a Chicago crime dataset discovered an under-preforming high-skew projection that (mostly) reflects thewhite group.",
+    "technical_score": 0.010499999999999999,
+    "citation_score": 0.010499999999999999
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Notations . We use{.}nto show a set of size n, and[n]for the set of integers{1,\u00b7\u00b7\u00b7,n}. We also show the inner product of two vectorstandfast\u22a4f.",
+    "technical_score": 0.00914516129032258,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Data Model . We consider a dataset D={ti}nas a collection of nsample points (aka tuples). Each sample ti\u2208D is defined as a tupleti=\u27e8X,y\u27e9.X=\u27e8x1,\u00b7\u00b7\u00b7,xd\u27e9, is ad-dimensional vector of Real values that corresponds with a set of observation attributes, also known as features. The observation attributes are used for prediction. For each sample ti\u2208D, we use\u27e8ti,1,\u00b7\u00b7\u00b7,ti,d\u27e9, to show its features. The dataset also contains a target attribute (aka label) y.2The datasetDis used to train a model h\u03b8(X)that predicts y using the observation attributes.",
+    "technical_score": 0.021338709677419354,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Group Membership . We consider a universe of (demographic) groups such as male,female ,Black ,White , etc., to which a subset of points belong to. For a group g, we useDg=g\u2229D to specify the set of points that belong to it and D!g=D\\Dgas the points that do not belong to it. A grouping (aka, sensitive) attribute separates the group gfrom the others. For example, the grouping attribute gender separates the female individuals (Df) from others (D!f). We assume the dataset does not include the grouping attributes . Moreover, the set of grouping attributes of interest is not predetermined . In other words, not only do we not know the grouping information, we do not also know what groups we should consider.",
+    "technical_score": 0.030483870967741935,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Minoria Mining . Our objective is to mine the unknown, under- represented, and underperforming minority groups (referred to as Minoria). Specifically, given a dataset D, identify groupings of D intoDgandD!gsuch that the following conditions hold3: (a)gis under-represented in the dataset, i.e., |Dg|\u226a|D| . 2The extension of our solutions for datasets with more than one target attribute is straightforward by solving the problem separately for each attribute yk. 3Note that, slightly abusing the notation, we also use gfor the group candidates. A discovered group candidate may or may not express a socially valid group. (b)Predictions based on Dare not accurate for g. Formally, let h\u03b8be the optimal model that minimizes the expected loss E[LD(\u03b8)]onD. Then, for a given performance-disparity thresh- old\u03c4,E[LDg(\u03b8)]\u2212E[LD(\u03b8)]\u2265\u03c4. We combine Xto form proxy attributes that identify Minoria. For- mally, we would like to find projections of points in DfromRdto Rsuch that the projection (almost) separates DgfromD!g. Further- more, to satisfy condition (a), we are interested in finding projec- tions with high skew onD, indicating an under-represented group candidate at the tail of the projection. Having identified such a group candidate g, we return the under- performing samples in g(the tail of a high-skew projection) to the human expert for further investigation. Without loss of generality, we focus on linear projections in this paper and use Pearson\u2019s median skewness [19] for computing the skew on a projection. The Pearson\u2019s median skewness of a set of valuesV={vi}n, wherevi\u2208Ris computed as:",
+    "technical_score": 0.019814516129032254,
+    "citation_score": 0.019814516129032254
+  },
+  {
+    "section_path": [
+      "Preliminaries",
+      "Problem Definition"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03c3(V)(1) deviation of V. For a unit vector f, we defineDfas the projection of all points on f:Df={t\u22a4 if|ti\u2208D} (2) Then, the unit vectorf\u2217with the highest skew is defined as f\u2217=arg maxf\u22a4f=1,f\u2208Rdskew(Df). Since we would like to identify the Minoria candidates for further investigation, instead of returning the global optimum, i.e., the max- skew projection, we are interested in finding a top- lhigh-skew optima. Putting everything together, we define the Minoria mining problem as follows: Problem 1 (Minoria Mining). Given a datasetDofnsamples, each containing a d-dimensional observation vector Xand a target attributey, and the performance-disparity threshold \u03c4, find the unit vectors{f1,\u00b7\u00b7\u00b7,fl}as {f1,\u00b7\u00b7\u00b7,fl}= top-l f\u22a4f=1,f\u2208Rdskew(Df) such that for all i\u2208[l],E[LDgi(\u03b8)]\u2212E[LD(\u03b8)]\u2265\u03c4. top-lrefers to the top llocal optima (for a small constant l) with the maxi- mum skew,\u03b8is the parameter of the model h\u03b8that minimizes the expected loss onD, and giis thep-percentile tail ofDfi. \u25a1 Addressing Problem 1 is challenging as it requires identifying the median of each possible projection while there are infinite possible projections defined using different vectors f. To tackle this challenge, we provide a geometric dual transformation of Din the next section that helps us design our efficient algorithm in \u00a7 4.",
+    "technical_score": 0.0367983870967742,
+    "citation_score": 0.0367983870967742
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we present the geometric interpretation of data that forms the foundation of our solutions in later sections. First, in Section 3.1, we provide a notion of duality [ 21], where samples are presented as hyperplanes in a geometric space and prove some valuable characteristics of this transformation. We then consider the arrangement [ 21] of dual hyperplanes to identify high-skew projections efficiently.",
+    "technical_score": 0.016129032258064516,
+    "citation_score": 0.016129032258064516
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Dual-Space Transformation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "2,\u221a",
+    "technical_score": 0.009032258064516128,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Dual-Space Transformation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "2\u27e9.",
+    "technical_score": 0.013548387096774193,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Dual-Space Transformation"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "As shown in Fig. 2a, the projected points on fare ordered as{t2,t1,t3}. One can confirm that the reverse ordering of the dual-line intersections with rf\u20d7in Fig. 2b is also the same.",
+    "technical_score": 0.0,
+    "citation_score": 0.02258064516129032
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Median Region"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "A key concept that helps us to solve Problem 1 efficiently is the computational geometry notion of k-th level of arrangement [21]. Consider the dual hyperplanes H={d(t1),\u00b7\u00b7\u00b7,d(tn)}. The dissec- tion of the dual space with the hyperplanes is called the arrangement",
+    "technical_score": 0.015483870967741935,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Median Region"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "0.000.250.500.751.001.251.501.752.000.000.250.500.751.001.251.501.752.00 t1 t2t3rf(a) Primal space: [t2,t1,t3]shown as points, along with their projection on the ray rf. 0.000.250.500.751.001.251.501.752.000.000.250.500.751.001.251.501.752.00 d(t1)d(t2)d(t3)rf(b) Dual space: The intersection of dual hyperplanes of the points with a ray rf. 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.000.000.250.500.751.001.251.501.752.002nd Level of Arrangement(c) 2nd level of arrangements in the dual space high- lighted as the orange line segments. the arrangement in the first quadrant. The order of projection in Fig. 2a is the reverse of the intersection of dual hyperplanes with rf ([d(t3),d(t1),d(t2)]) in Fig. 2b.",
+    "technical_score": 0.01032258064516129,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Median Region"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "In Fig. 2c, the dotted blue lines indicate the boundaries of the median regions (the change in the line segment indicates a change in the median (2nd point) of Df). AofH, which we simply call the arrangement. The intersection of \u03b4\u2208[d]hyperplanes inHforms a (d\u2212\u03b4)-face of the arrangement. In particular, the intersection of dhyperplanes is a (0)-face (a point), referred to as a vertex of the arrangement, while the (1)-faces (line segments) connecting two vertices are called the edges . We call two vertices that share an edge as neighbors . Please refer to [ 21] for more details about the arrangement. Now consider the origin-anchored ray rf\u20d7in the dual space and the intersections of the dual hyperplanes with it. Based on Lemma 1, thek-th closest intersection to the origin specifies the tuple with thek-th largest value in Df. We define the universe of all such intersection points for all vectors fas thek-th level of arrangement, referred asAk. InR2, we showAkas the ordered list of the vertices (the intersection points) of the k-th level, in counter-clock-wise (fromx-axis toy) or clock-wise.",
+    "technical_score": 0.005161290322580645,
+    "citation_score": 0.005161290322580645
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Median Region"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "For example, Fig. 2c shows (in orange) the 2nd level of an ar- rangement of 3 (toy) tuples in the dual space in R2. In this example, A2=\u27e80,\u00d71,2,\u00d71,3,\u03c0 2\u27e9, where\u00d7i,jis the intersection between d(ti) andd(tj). One can see that the k-th level is a chain of line segments forming a non-convex shape. In addition, the set of top- ktuples in each line segment is fixed and is different from the neighboring line segments. Moreover, whenk=n 2, thek-th level of the arrangement tracks the median for any possible direction f. Specifically, the inter- section ofAn 2with a rayrf\u20d7is a line segment, specifying the median ofDf. Evidently, the median of all rays intersecting with the same line segment inAn 2is the same. Following this observation, we define the notion of median regions as follows. Definition 1 (Median Region). A median region is the range of raysrf\u20d7, for which the median of the projection Dfis the same. The partitioning of the origin-anchored rays in the dual space according to the(d\u22121)-dimensional simplexes (line-segments in 2D) ofAn 2provides the set of all median regions. Specifically, in 2D each median region is a range that begins/ends at the beginning/end of each line segment (e.g., see Fig. 2c). Moreover, since within every median region, no dual hyperplane intersects with the median simplex, the set of tuples with projection values being larger (resp. smaller) than the median does not change.",
+    "technical_score": 0.005161290322580645,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Geometric Interpretation",
+      "Median Region"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "For example, in Fig. 2c,consider the median region between the x-axis and the first (bottom) blue ray. d(t2)is the median line-segment. The intersection of d(t3) with any ray in this region remains below the median (closer to the origin). Similarly, the intersection of d(t1)above the median. Using these observations, one can write a linear program for every median region to find the maximum skew within a median region. Instead, we introduce Theorem 2 as a key observation that enables a more efficient algorithm in Section 4. Let \u03bc(D) be the vector in Rdthat contains the mean of D, i.e.,\u03bc(D)=1 n\u2211\ufe01n i=1ti. We defineqi=ti\u2212\u03bc(D). In other words, qi\u2019s are the mean-normalized tuples ofD. LetQbe ad\u00d7nmatrix where each column of Qisq\u22a4 i. For a unit vector f, lettmfbe the median ofDafter projection on f. In other words, t\u22a4mffis the median ofDf. Theorem 2 helps us to find the high skew direction vector f\u2217efficiently4: Theorem 2. For a given median region with median tmf, the max skew direction f\u2217either falls in the boundaries of this median region or it is equal to(QQ\u22a4)\u22121qmf |(QQ\u22a4)\u22121qmf|.",
+    "technical_score": 0.01032258064516129,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we start by studying the problem in R2\u2013 referred to as the 2D case. Before providing the technical details, we would like to clarify that in the 2D case, Dcan have more than two observation attributes (used for prediction). However, the projection directions are considered with respect to a pair of observation attributes called attributes of interest. For example, in our experiments in \u00a7 7, we uselongitude and latitude as the attributes of interest for Minoria mining in a crime dataset. Recall that our goal is to find a set of high-skew directions. Let H={d(ti)|ti\u2208D} be the set of dual hyper-planes in the dual space and letEbe an oracle that returns An 2(the ordered list of vertices in then 2-th level of arrangement of H) inTenum time. GivenAn 2, we can iterate through the neighboring median re- gions by iterating through the elements (vertices) of this ordered list. Based on Theorem 2, within each median region, the high-skew direction is either at the boundary points (two vertices of the line 4Due to the space limitations, the proof is provided in the technical report [16]. segment) or at a specific direction, which can be calculated in O(d). Since this time is dominated by the time taken to calculate the skew value of the directions corresponding to the boundary points, we can ignore it while analyzing the complexity of our algorithm. In the second phase of our algorithm, we should iterate through the neighboring median regions and calculate the skew value of the directions of the boundaries of these regions. We want to return the top-lhigh-skew directions as the Minoria candidates. In order to do that, we use a Max-Heap data structure to push these directions based on their skew value. We define Tskew as the running time of this phase. In the end, we pop the top- ldirections from the heap, evaluate the model on the tail of these directions, and check the error on the tail to see if it represents an under-represented group candidate. A visualization of this approach is provided in Figure 3. LetTpopbe the time complexity of the final step. Then, the overall time complexity of the algorithm is T=Tenum+Tskew+Tpop. Having discussed the overall description of the 2D solution, let us next explain the oracle Efor enumeratingAn 2.",
+    "technical_score": 0.012096774193548387,
+    "citation_score": 0.012096774193548387
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "Enumerating the k-th Level"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Our efficient algorithm (\u00a7 4.3) takes An 2, then 2-th level in an or- dered list, as the input. The k-th level of arrangement in R2has a complexity (the number of its vertices) of m=O(n.k1 3)[17].",
+    "technical_score": 0.004354838709677419,
+    "citation_score": 0.004354838709677419
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "Enumerating the k-th Level"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "There are efficient deterministic and randomized algorithms for enumerating the k-th level. The SOTA deterministic algorithm is by Timothy Chan [ 10]. It enumeratesAkas an ordered list in O(nlogm+mlog1+\u03b1n), where\u03b1is a small positive constant, nis the number of hyperplanes, and mis the number of vertices in the k-th level of arrangement. The randomized incremental algorithm performs this traversal in O(m+nlogn)[11].",
+    "technical_score": 0.014225806451612902,
+    "citation_score": 0.006096774193548387
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Warm-up Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "So far, we outlined the key steps in our algorithmic framework. Following these steps, the Warm-up algorithm5first enumerates along a specified direction. Finally, it identifies and retrieves the top skewed elements.",
+    "technical_score": 0.006048387096774193,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Warm-up Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Complexity Analysis. The Warm-up algorithm conducts the three aforementioned steps separately. In the first step, it trans- forms the dataset into the dual hyperplanes and calls the oracle O(nlog(nk1 3)+nk1 istic algorithm, or Tenum =O(nk1 3+nlogn)=O(n4 the randomized incremental algorithm (note that k=n 2here).",
+    "technical_score": 0.008064516129032256,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Warm-up Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "In the second step, for each vertex in An 2, it calculates the skew value and adds it to a max-heap. Calculating the skew requires calculating the mean, median, and standard deviation of points projected on the direction fand takesO(n). Inserting into a max- heap using a Fibonacci heap takes a constant time. As a result,",
+    "technical_score": 0.0030241935483870967,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Warm-up Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "3). In the third step, the Warm-up algo- rithm pops the high skew directions from the heap and calculates the model\u2019s loss on the tail of each direction. Popping from a max- heap takes an amortized time of O(logn). Calculating the model accuracy would take O(n). Hence, assuming that the number of 5Please find the pseudo-code of the Warm-up algorithm in the technical report [16].directions evaluated before returning the top- lis a small constant, Tpop=O(nlogn).",
+    "technical_score": 0.0010080645161290324,
+    "citation_score": 0.0010080645161290324
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Warm-up Algorithm"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "As a result, the time complexity of 2DWarm-up is dominated by Tskew and is equal to T=Tenum+Tskew+Tpop=O(n7 3).",
+    "technical_score": 0.005040322580645161,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The Warm-up algorithm is super-quadratic and not efficient. There- fore, in this section, we propose the Ray-sweeping algorithm that hasthe same time complexity as of the enumeration of An ilar to the Warm-up algorithm, the Ray-sweeping algorithm also follows the three steps of (1) enumerating An 2, followed by (2) com- puting the medians and (3) identifying the high-skew projections. However, unlike Warm-up, it leverages our earlier observation to compute medians more efficiently by sweeping a ray counterclock- wise from the x-axis to the y-axis. At a high level, it maintains some aggregates while sweeping over An 2, which enables updating the skew values in constant time.",
+    "technical_score": 0.002032258064516129,
+    "citation_score": 0.004741935483870968
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The key observation is that while moving between two neigh- boring median regions, the set of dual lines above/below the median changes by only one element . As a result, using the pre-calculated values for the previous vertex, we can calculate the skew value of the current vertex in constant time (except for the very first vertex in the list). Please Refer to \u00a7 5.2 for more details about the constant-time skew-value update process. Moreover, when visiting a new vertex inAn 2, the new median can be found in constant time simply because each vertex is the intersection of the medians of the two neighboring median regions. The pseudo-code of this approach is provided in Algorithm 1. A visualization of this algorithm on a toy example is provided in Figure 3.",
+    "technical_score": 0.005806451612903226,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Complexity Analysis. Steps one and three of the Ray-sweeping algorithm are similar to the Warm-up Algorithm. For the second part, we calculate each skew value in a constant time. As a result, the running time of the second step is Tskew =O(nk1 3).",
+    "technical_score": 0.004838709677419355,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Minoria Mining in 2D",
+      "The Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Consequently, the time complexity of the Ray-sweeping algorithm is no longer dominated by step two. Therefore, the time complexity of Ray-sweeping is equal to the time taken for enumerating the n 2-th level of the arrangement \u2013 i.e., O(n4",
+    "technical_score": 0.0019354838709677422,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "the deterministic and randomized algorithms, respectively.",
+    "technical_score": 0.0017204301075268815,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In this section, we extend our Ray-sweeping algorithm to the gen- eral setting, where d>2is a small constant.",
+    "technical_score": 0.015483870967741932,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For ease of explanation, we explain the Ray-sweeping algorithm in the first quadrant of Rd, where all values are positive. When d=3, thek-th level of the arrangement of nhyperplanes has a complexity of the O(n.k3 2)[39], while its complexity is bounded byO(n\u230a\ufe01d 2\u230b\ufe01 k\u2308\ufe01d 2\u2309\ufe01 )in general settings [ 5]. As a result, setting k=n 2, (each being is the intersection of d\u22121hyperplanes) when d>3. The SOTA algorithm for enumerating the vertices of the k-th level of the arrangement while following the neighboring vertices is a randomized algorithm proposed by Agarwal et al. [ 4], with time",
+    "technical_score": 0.0003655913978494623,
+    "citation_score": 0.0014623655913978493
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "X-axis0.000.250.500.751.001.251.501.752.00Y-axisPrimal and Dual Space (0.2, 0.8) (0.8, 0.2) (0.6, 1.2) (1.0, 0.6) (1.4, 0.4)(a) An example of 5points and their dual lines in the same plane.",
+    "technical_score": 0.0018279569892473116,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "X-axis0.000.250.500.751.001.251.501.752.00Y-axiskth Level of arrangement (k=2) kth level(b) Thek-th level of arrangement for k=n 2, representing the median points.",
+    "technical_score": 0.0018279569892473116,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "X-axis0.000.250.500.751.001.251.501.752.00Y-axis Region 0Region 1Region 2Region 3Region 4Region 5Median Regions kth level Region Boundaries(c) The median regions and their bound- aries for a ray starting from the origin.",
+    "technical_score": 0.0018279569892473116,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "X-axis0.000.250.500.751.001.251.501.752.00Y-axis Region 0Region 1Region 2Region 3Ray Sweeping kth level",
+    "technical_score": 0.0018279569892473116,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Ray \u20d7rf(d) Sweeping a ray ( rf\u20d7) fromx-axis to y-axis counterclockwise.",
+    "technical_score": 0.004021505376344086,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "2-the level of arrangements for the dual lines. (c): Each median region is a line segment in this arrangement. The line segment represents the median point for any direction in this region. (d): The algorithm sweeps a ray from the x-axis to the y-axis for each region, calculates the skew value in this region efficiently, and pushes this value into a heap. In the end, the best directions, in terms of their skew, are extracted from the heap.",
+    "technical_score": 0.006032258064516128,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "2=E(H) \u22b2The graph of the k-level skeleton (vertices and edges). 4:Heap\u2190[] \u22b2Initialize a max heap.",
+    "technical_score": 0.004021505376344086,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "6:f\u2190v/||v|| 7:skew =GetSkew(D,f) \u22b2Use the aggregated values to compute the skew in constant time. 8:Heap.push(\u27e8f,skew\u27e9) 9: whileOutput size is less that ldo 10:f\u2190Heap.pop() 11:T\u2190p-tail(f) 12: ifLT(\u03b8)\u2212LD(\u03b8)>\u03c4thenOutput.append(f) 13: returnOutput complexity of O(n\u230a\ufe01d 2\u230b\ufe01 k\u2308\ufe01d 2\u2309\ufe01 ). Therefore, setting k=n 2, enumerating",
+    "technical_score": 0.004021505376344086,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "2 in general setting takes O(nd).",
+    "technical_score": 0.002010752688172043,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Generalized Ray-sweeping Algorithm"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "2, we can follow the same aggregation process as the 2D space and calculate the skew value of each neigh- boring vertex in time O(d). As a result, Tskew =O(dnd). Hence, given thatTenum =O(nd), the time complexity of the Ray-sweeping algorithm in the general setting is bounded by O(dnd). The pseudo-code of the Ray-sweeping algorithm is provided in Algorithm 1. The algorithm first constructs the graph of k-th level of arrangements, aka the k-th level skeleton of the arrangement. In the skeleton graph, the vertices of Akare the nodes, while the edges are between the neighboring vertices. Please refer to Chapter its Eulerian tour. After constructing the skeleton, the Ray-sweeping algorithm visits its vertices in a depth-first-search manner in O(nd).",
+    "technical_score": 0.002193548387096776,
+    "citation_score": 0.005118279569892477
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Constant-time skew-value update process"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we propose an aggregation method to update the skew of a direction corresponding to a vertex in the k-th level of arrangements in constant time with respect to n. Remember the Ray-sweeping algorithm explained in Section 4.3. We make a pass overAn 2, which is an ordered list of neighboring vertices in the k-th level of arrangement.Let[v1,v2,..,vm]be this ordered list of vertices we visit one after the other. In other words, at each iteration i\u2208[m], we explore the direction fi=vi |vi|. Refer to Algorithm 1 for the details. Let skewi=skew(fi)=3(\u03bci\u2212\u03bdi) \u03c3i, where\u03bci,\u03bdi, and\u03c3iare the mean, median, and the standard deviation in the iteration i. The mean \u03bci",
+    "technical_score": 0.001612903225806451,
+    "citation_score": 0.001612903225806451
+  },
+  {
+    "section_path": [
+      "Generalized Ray-sweeping for Higher Dimensions",
+      "Constant-time skew-value update process"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "WhereT\u2032=T\u22a4Tis ad\u00d7dmatrix, which can be calculated in the pre-processing step and stored. Then the matrix multipli- cationf\u22a4T\u2032fcan be calculated in O(d). As a result, skewican be calculated in O(d)\u2013 constant time with respect to n.",
+    "technical_score": 0.003763440860215054,
+    "citation_score": 0.003763440860215054
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The generalized Ray-sweeping algorithm suffers from the curse of dimensionality [21]. Therefore, in this section, we propose practical solutions based on search-space discretization (\u00a7 6.1) and smart exploration of the projection space (\u00a7 6.2 and 6.3).",
+    "technical_score": 0.003870967741935483,
+    "citation_score": 0.015483870967741932
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "MD Discretization"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Search-space discretization is common for addressing the curse of dimensionality. Following this idea, we propose two approaches to discretize the space of all possible directions finRdand find the high-skew projections in the discretized space. Our first strategy is uniform discretization, where the continuous space of all directions fis partitioned into equal-size grids, and uniformly distributed samples are taken from the grid. The second strategy works by incrementally building a set of ldirections using Quadratic Pro- gramming (QP), where the constraints of the QP are adjusted to enforce exploring the directions farthest from each other. we only focus on the positive partition of Rd. Using the Polar coordinate system, we can uniquely specify each unit vector fin this space by d\u22121angels{\u03b11,\u03b12,\u00b7\u00b7\u00b7,\u03b1d\u22121}betweenfand the positive direction of xiaxes (i\u2208 [d\u22121]). Here\u03b1i\u2208 [0,\u03c0 other words, fcomes from an(d\u22121)-dimensional space spanned by(d\u22121)independent angels. Now, we can grid-partitioning this space by dividing each angle into equi-size \u03b5-length intervals. As a result, the total number of grid-cells would be (\u03c0 2\u00b71 \u03b5)d\u22121.",
+    "technical_score": 0.0026881720430107525,
+    "citation_score": 0.0026881720430107525
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "MD Discretization"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "According to the problem definition, we want to report top- l high-skew directions fas candidates to find Minoria. We should sample at least ldirections from the grids to achieve this. We want our samples to span all possible directions, so we should follow a sampling technique to satisfy the diversity of directions. We follow the DPP (Determinental Point Processing) sampling schema to achieve this [ 6]. Using this approach, one can get a set ofldiverse samples from a universe of npoints inO(n\u00b7l\u03c9\u22121), where\u03c9\u22482.37is the matrix multiplication factor. In this approach, we sampleO(l)grids in time of O((\u03c0 2\u00b71 \u03b5)d\u22121\u00b7l\u03c9\u22121)and push them in a Max-Heap structure based on the skew value. We analyze each grid by popping the heap and filtering those satisfying the condition of Problem 1. If we find less than lsuch directions, we continue sampling more directions (grids).6Calculating the skew ofldirections takes an additional O(lnd)time.",
+    "technical_score": 0.003456221198156682,
+    "citation_score": 0.003456221198156682
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "MD Discretization"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "\u03b5\u00b7log1 \u03b5). As a result, solving the QP ltimes to get ldirections will result in O(l\u00b7d3.67\u00b7logd\u00b71 \u03b5\u00b7log1 \u03b5). Calculating the skew on theldirections will take O(l\u00b7n\u00b7d)time. The first part will be the dominant one in terms of time complexity.",
+    "technical_score": 0.003072196620583717,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "MD Discretization"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "In our technical report [ 16], we analyze the error bounds of the discretization approaches and provide the following negative result: letf\u2032be a direction with a cosine similarity of (at least) cos(\u03b1)with the best direction f\u2217. An upper-bound on skew ratio f\u2032 f\u2217depends on the dataset topology. As a result, when discretizing the directions with \u03b5-angle spacing, the error bound on the skew value depends on the topological characteristics of the dataset . Still, we guarantee that for each direction fin the top-lhigh-skew local optima (Refer to Problem Definition 1), we evaluate a direction f\u2032 such thatcos(f\u2032,f)\u2265\u03b5.",
+    "technical_score": 0.0,
+    "citation_score": 0.0007680491551459292
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Exploration and Exploitation (E&E)"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The E&E heuristic views the problem as a reinforcement learning instance and adapts the exploration-exploitation techniques for finding a set of high-skew directions. In particular, our goal is to select the next direction to evaluate sequentially to balance the explore-exploit trade-off. That is, starting with a small set of ran- domly selected directions, at each iteration, we either explore the space of possible directions or exploit the best possible directions found so far.",
+    "technical_score": 0.004838709677419354,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Exploration and Exploitation (E&E)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Without loss of generality, we adapt the epsilon-greedy ap- proach [ 42]. Define\u03b5\u22641as the exploration probability. We flip a coin with probability \u03b5in each iteration and choose to explore or exploit based on this trial result. Let f\u2032be the best-known solution with the maximum skew so far while considering a hyper-parameter \u03c4\u2032for the cosine similarity of the exploitation phase. During each exploration step, we draw random directions in the space of all possible directions. On the other hand, during the exploitation, we select the best-known direction f\u2032and select a random direc- tion from the space of possible direction in the \u03c4-vicinity of f\u2032, defined as{f(s)|cos(f\u2032,f(s))\u2264\u03c4\u2032}. This problem can be reduced to the problem of sampling uniformly from the surface of a unit d-dimensional spherical cone with the center f\u2032and the angular radius of\u03c4. We use the sampling approach proposed in [8].",
+    "technical_score": 0.009032258064516128,
+    "citation_score": 0.002258064516129032
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Focused Exploration"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "sional cases where d\u226b2, the search space becomes huge, making it unlikely to find near-optimal directions. Therefore, instead, we first identify the under-performing regions with the hope of reduc- ing the search space significantly. To do so, we use the model h\u03b8, trained onD, to find a subset S\u2282D , which we call the error region , for whichh\u03b8under-performs. Formally, the expected loss of the model inSis significantly higher compared to D\\S. After finding the error region, we focus on the directions that separate the error region Sfrom other pointsD\\S. In other words, we would like to find fsuch that after projecting Don it, the error",
+    "technical_score": 0.004032258064516129,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Focused Exploration"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1:procedure SmartExplore (D,h\u03b8,K,K\u2032)\u22b2h\u03b8is the trained model on D.",
+    "technical_score": 0.0016129032258064516,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Focused Exploration"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "2:Dsorted\u2190sort(D,L\u03b8)\u22b2SortsDbased on the loss function L\u03b8 (descending).",
+    "technical_score": 0.002419354838709677,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Focused Exploration"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "3:S\u2190FirstKportion ofDsorted \u22b2Sis the error region. 4:DS\u2190sample(S) \u22b2Down sample the error region uniformly.",
+    "technical_score": 0.0016129032258064516,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Focused Exploration"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "6:Heap\u2190[] \u22b2Initialize a max heap.",
+    "technical_score": 0.0008064516129032258,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Focused Exploration"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "7: forall vectorsv\u2208{s\u2212t|s\u2208DS,t\u2208D!S}do 8:f\u2190v/||v|| 9:skew =GetSkew(D,f) 10:Heap.push(\u27e8f,skew\u27e9)",
+    "technical_score": 0.0008064516129032258,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Practical Heuristics",
+      "Focused Exploration"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Many implementation details are deferred to \u00a7 7 for ease of explanation. A simplified pseudo-code of this approach is given in Algorithm 2. Based on our experiments, this approach works well in practice on large-scale high-dimensional settings.",
+    "technical_score": 0.0016129032258064516,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Having presented our algorithms in this section, we evaluate them experimentally for the 2D case and higher dimensions. We analyze our algorithms in each section and their effectiveness in finding the high-skew directions and candidate Minoria. The algorithms are implemented using Python, and the experiments are conducted on a workstation with Ubuntu 18.0 OS.",
+    "technical_score": 0.04722580645161291,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Chicago Crimes dataset are presented in these two plots (the plots show a smaller sample of the dataset points). In the first plot, the output of the binary classification model is presented with green and blue lines. The red line shows the direction fwith the highest projection skew. The orange region shows the tail region.",
+    "technical_score": 0.0174910394265233,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Hyper-parameters. In this problem, we first took a sample of size 1000 from the dataset and ran the Ray-sweeping algorithm on the two dimensions, Latitude and Longitude, to find the top high-skew directions with a minimum cosine similarity threshold cos(\u03c0 12). We picked the top- 3high-skew directions. After selecting the top directions, we checked the tails of these directions in the original dataset (containing more than 1,400,000 rows). Running the Ray-sweeping algorithm in a sample of size 1000 takes around 15 seconds in the specified system configuration. To search the entire space of directions, we first normalized the points to lie in the positive direction of the R2space. In addition to running the Ray-sweeping from the x-axis to the y-axis, we also explored the negative scoped directions. To investigate the negative scoped directions, we transformed the points (x,y)in this space to(y,A\u2212x)for a large value A.7This helps us run Ray-sweeping\u2019s second pass on the transformed space to cover all negative directions.",
+    "technical_score": 0.013992831541218638,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Results. The top- 2high-skew directions are shown in Fig 4. As we can see, the first two high-skew directions are along the north side to the south side of Chicago. We select 0.01,0.001, and 0.0001 percentile of the points in the tail of the high-skew projected points. The tails of the high-skew directions are presented using the or- ange regions. Evidently, in both cases, the tails correspond to the North-side Chicago . To provide some background about the city, Chicago is one of the most segregated cities in the US, with the vast majority of its north side being White .8We refer the curious reader to [ 18,30] for more details. North-side is under-represented in the dataset for many reasons, such as predictive policing [15]. At the same time, the f1-score significantly decreases on the tail of the projection, illustrating that predictions based on the crime dataset are not accurate for this group. To provide more details about these directions, we provide the tail-performance for different percentiles for these two directions in Tables 1 and 2. As illustrated in the tables, although the accuracy shows only a slight variation, there is a significant decrease in the F1-score on the tails in both cases. 7This can be viewed as rotating the points 90 degrees counter-clock-wise and renor- malizing them. 8Please note that north-side being a Minoria (i.e., under-represented and under- performing) in the Crimes dataset is irrespective of its segregated nature.",
+    "technical_score": 0.00524731182795699,
+    "citation_score": 0.012243727598566309
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Percentile Accuracy F1-score 1 0.87 0.72 0.1 0.87 0.62 0.01 0.89 0.68 0.001 0.85 0.40 0.0001 0.87 0.30 skew direction (skew = 0.20). The tail is calculated on the entire dataset. Percentile Accuracy F1-score 1 0.87 0.72 0.1 0.87 0.62 0.01 0.89 0.68 0.001 0.79 0.32 0.0001 0.81 0.18 skew direction (skew = 0.16). The tail is calculated on the entire dataset. This indicates a pronounced class imbalance in the tail distribution, which is attributable to the demographic group imbalance. 7.1.2 College Admissions. The College-admission dataset [ 3] con- tains details about a group of students who sent applications to US universities. This dataset has 400 rows and 7 columns indicating the features of the submitted applications (like GRE, GPA, Gender/Race, etc.). The female-to-male ratio in this dataset is around 1.1.",
+    "technical_score": 0.00524731182795699,
+    "citation_score": 0.00524731182795699
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Prediction Task. The prediction target is whether an application will result in an admission. We used a Logistic Regression model for this binary classification task. It gives us an accuracy of 0.70 and an f1-score of 0.36. We removed the sensitive attribute Gender from the dataset while training this classification model and never used Gender in any implementation steps.",
+    "technical_score": 0.006996415770609319,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Hyper-parameters. We run the 2D Ray-sweeping algorithm on the two columns GRE and GPA. We followed the same process explained for the Chicago crime dataset and investigated the tail of the highest-skew direction.",
+    "technical_score": 0.006996415770609319,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Results. In Fig 5a, we provide a visualization of GRE and GPA values from this dataset. The red line shows the highest skew direc- tion. Fig 5b visualizes the tail of this high-skew direction (percentile p=0.1). As we can see in Table 3, the ratio of the Female group is significantly larger in the 0.1,0.08, and 0.04percentiles compared to the whole dataset (1.1). The accuracy decreases up to %10 per- cent when concentrating on the tail of this direction. In this case, the Female group is not under-represented in the dataset because the ratio is almost 1.0. However, it is an under-performing and unknown minority group.",
+    "technical_score": 0.006996415770609319,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Runtime. The running time of the Ray-sweeping algorithm on the Chicago Crime dataset in our settings was 8seconds. This time was 3.74seconds for College-admission dataset. 7.1.3 Comparison with Baselines. We utilized two clustering tech- niques as baselines: k-means [ 28] and Affinity Propagation [ 23]. The resulting clusters were analyzed to identify potential candi- dates for the underrepresented demographic groups (Minoria). We employed k-means with various values of kand utilized Affinity Propagation with a carefully adjusted preference parameter to control the number of clusters and avoid excessive clustering. Avisualization of the k-means clusters on College-admission dataset is provided in Figure 5c. The ratio of minority groups within each cluster in k-means for various datasets is presented in Table 4. As reflected in the table, unlike the region discovered using our methods (tail of skews), the ratios of minority groups within each cluster are not signifi- cantly different from the whole dataset (last row). As a result, these clusters are not good candidates for identifying underrepresented groups within the data. Furthermore, the number of points in each cluster is significantly larger compared to the regions we identified, making it more challenging to detect and analyze minority groups within such clusters. In contrast, the regions we discovered are more compact and therefore more efficient for mining underrepre- sented groups, offering a practical and focused approach to this task. Table 5 compares the results for various values of k, all yielding consistent results. The results of applying Affinity Propagation clustering are pre- sented in Figure 7b. Similar challenges persist, including an ex- cessive number of clusters, requiring all clusters to be examined. Furthermore, the cluster ratios do not significantly differ from those observed in the entire dataset.",
+    "technical_score": 0.0034982078853046596,
+    "citation_score": 0.0034982078853046596
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "2D Experiments"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Runtime. The average run-time of k-means on the College ad- mission dataset in our setting is 0.003milliseconds. This value for the Affinity Propagation method is 0.13seconds. Even though the running time is smaller for clustering methods compared to the Ray-sweeping algorithm, their output clusters are not valid for solving the Minoria Mining problem defined in this work.",
+    "technical_score": 0.006996415770609319,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we evaluate the higher-dimensional methods pro- posed in \u00a7 6. As reflected in our negative result on the error-bound of the discretization approaches [ 16], their effectiveness depends on the dataset topology. Besides, their running time significantly in- creases by the number of dimensions. Our experiments verify these findings: we found discretization slow and less effective. There- fore, in the following we focus on the more practical approaches based on the search space exploration. Comparing the E&E method (\u00a7 6.2) and the focused exploration approach (\u00a7 6.3), our experiments found the latter (focused exploration) significantly more effective for Minoria mining. Therefore, in the following, we first present our results for this approach and then present our extended experiment results for the E&E approach and highlight some of its drawbacks. 7.2.1 Focused Exploration. We ran experiments on three real-world datasets. The Adult Income Dataset [ 20] consists of demographic information for individuals, from the 1994 Census database. The dataset is primarily used to predict whether a person earns more than $50,000 per year based on various attributes (14 columns and 48,842 rows). Gender is the sensitive attribute in this dataset. The COMPAS dataset [ 7] contains data used to evaluate the effective- ness and fairness of the COMPAS recidivism prediction algorithm. This dataset includes criminal history, jail and prison time, demo- graphics, and COMPAS risk scores for defendants from Broward County, Florida (52 columns and 18,316 rows). Race is the sensitive attribute in this dataset. The last dataset is the Diabetes dataset [ 40]. This is a well-known dataset used for binary classification tasks in the medical domain. It was collected by the National Institute of Diabetes and Digestive and Kidney Diseases and is available",
+    "technical_score": 0.002053295932678822,
+    "citation_score": 0.002053295932678822
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "0.0 0.2 0.4 0.6 0.8 1.0 Normalized GRE0.00.20.40.60.81.0Normalized GPADirection f Admitted Not Admitted(a) Visualization of GRE and GPA points for the College-admission dataset and the highest skew direction found by the Ray-sweeping algorithm. 0.0 0.2 0.4 0.6 0.8 1.0 Normalized GRE0.00.20.40.60.81.0Normalized GPA Direction f Arrested Not Arrested(b) The 0.1\u2212tail of the highest skew on the College-admission dataset. 0.0 0.2 0.4 0.6 0.8 1.0 Normalized GRE0.00.20.40.60.81.0Normalized GPA(c) The result of running k-means ( k=5) cluster- ing on College-admission dataset.",
+    "technical_score": 0.00273772791023843,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Percen- Accu- F1 Female/Male tile racy score ratio on Tail 1.00 0.70 0.36 1.10 0.50 0.68 0.42 1.12 0.20 0.67 0.48 0.80 0.10 0.61 0.34 2.00 0.08 0.64 0.42 1.81 direction (skew = 0.07) on College-admission dataset. The bolded values show a high ratio of minor groups in the tail.Cluster Female/Male ID Size ratio 0 92 0.95 1 72 0.94 2 108 1.11 3 45 1.50 4 83 1.24 Total 400 1.10 ters of k-means clustering in detect- ing the unknown minority groups on College-admission dataset with k=5.k Max Size Maximum F/M ratio 2 201 1.26 3 136 1.20 4 104 1.20 5 108 1.50 6 90 1.44 7 93 1.50 Total 400 1.10 dataset. Col 2 shows the max Female to Male ratio on the output clusters. through the UCI Machine Learning Repository (47 columns and 101,766 rows). Gender is the sensitive attribute in this dataset.",
+    "technical_score": 0.00273772791023843,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Prediction Task. For the Adult income dataset, we trained a Logis- tic Regression classifier to predict an individual\u2019s income (whether it is more than $50,000 or not) with an accuracy of 0.82 on the training data. For the COMPAS dataset, we trained a simple MLP (Multi-Layer Perceptron) classifier to predict the recidivism score of the individuals (Low, Medium, or High) with an accuracy of 0.71 on the training data. For the Diabetes dataset, we trained an MLP classifier to predict whether a patient is readmitted with an accuracy of 0.70 on the training data. We removed the sensitive attributes from these datasets before training the model, and we never used the information about sensitive attributes in any of our implementations. We only used the sensitive attributes to detect the effectiveness of final high-skew directions in finding Minoria.",
+    "technical_score": 0.002053295932678822,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Results. In these experiments, we hide the sensitive attribute containing the under-performing minority group and check if our mining experiments can discover it. To do so, we solved Problem 1 while setting l=5. For the Adults and Diabetes datasets, we con- sidered female as the minor demographic group. For the COMPAS dataset, we considered the race Caucasian (white ) as the minor de- mographic group. The result of running the algorithm on the three datasets is shown in Fig 6. For the Adults dataset in Fig 6a, three of the five high-skew directions successfully show the Female group as the Minoria. This is because when focusing on the high error points in the tail of these directions, the ratio of Female points increases significantly. In addition, we can see that the ratio of the Female group in the tail of these high-skew directions is largerthan this ratio for the whole dataset. This shows that our model did not perform well on the minor group. For the COMPAS dataset in Fig 6b, two of the high-skew directions show the Race Caucasian as the Minoria. The red line is the high-skew direction that shows the model is significantly under-performing on this minor group. For the Diabetes dataset 6c, all the high-skew directions show that we have more error in the regions where the ratio of the minor group is larger than this ratio in the whole dataset. However, it is not easy for a human expert to detect this minor group as problematic because the ratio of this group is almost less than 0.3 in the high error subset of the tail. For the Diabetes dataset (Fig 6c), the tail skewed directions tend to show the problematic points as minor groups. As we focus on the top high error points of the tail of each direction, the ratio of the minor group increases. However, since this ratio is not large enough (less than 0.5), showing the points to a human supervisor may not determine the exact problematic feature in this region.",
+    "technical_score": 0.001368863955119215,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Runtime. The running time of Focused Exploration in our set- tings was 112seconds on Adults dataset, 24seconds on COMPAS, and213seconds on Diabetes dataset. 7.2.2 Comparison with Baseline. In this subsection, similar to sub- section 7.1.3, we compare the results with two clustering algorithms: k-means and Affinity Propagation. Tables 6 and 8 show the ratio of minorities on the output clusters of k-means with k=5. Same results as Section 7.1.3 is observed here. The result of comparing different values kis shown in Tables 7 and 9. Applying Affinity Prop- agation will also result in clusters which are not good candidates for Minoria mining (Figure 7a).",
+    "technical_score": 0.0006844319775596075,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Runtime. The running time of k-means clustering on Adults and COMPAS datasets was 0.12and 0.33seconds, respectively. This running time for Affinity Propagation method was 14and 20.2 seconds on Adults and COMPAS datasets. Even though the running time is smaller for clustering methods, their output clusters are not valid for solving the Minoria Mining problem defined in this work. 7.2.3 Extended Experiments: the E&E method. In this section, we present our experiment results for the E&E method discussed in \u00a7 6.2 on a synthetic dataset. We aim to evaluate the E&E method infinding the high-skew directions of a high-dimensional dataset in different scenarios on the demographic groups. We also mention some observed drawbacks of this method. We synthesized a dataset to explore the effectiveness of the E&E approach in finding high- skew directions. This dataset combines two normal distributions on Rd(here, we used d=20) with a total of 20,000 points. Each normal distribution plays the role of a demographic group (for example, male and female groups). The mean and the standard deviation of these two normal distributions are selected in a way that we can explore different scenarios in terms of how well the demographic groups can be separated linearly. After that, we down-sampled one of the regular groups to play the role of an under-represented group in the data. We removed any demographic information from this dataset and ran the E&E algorithm to find the high-skew directions.",
+    "technical_score": 0.0006844319775596075,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Implementation. We started from 6 different random directions with an exploration probability of 0.4 ( \u03b5=0.4); otherwise, we exploited the best-found directions. Refer to \u00a7 6.2 for more details. We ran 10,000 iterations of E&E on this synthesized dataset. The running time, on average, was almost equal to 1 minute in the specified system configuration in the previous experiments.",
+    "technical_score": 0.0006844319775596075,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Higher-dimensional Experiments"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Results. First, we explored a case when the demographic groups are well-separated linearly. This means there can be a linear classi- fier to classify these groups with an accuracy of more than %80. In this case, the E&E algorithm successfully finds the high-skew direc- tions that separate the minor group from the major one. In Fig 8, the top- 3high-skew directions are found by this method. The plots show the histogram of the projected points on the high-skew direc- tionf. In this case, by picking each direction\u2019s tail, we successfully target the minor group (red points). However, consider a case when the two demographic groups are hard to separate linearly (Fig 9). The top- 3high-skew directions do not help find the demographic groups in this case. The red points are almost overlapped with the major blue points. As a result, reporting the tail of this skew to a human expert does not help him to detect a Minoria. The second challenge while using the E&E approach is the curse of dimensionality. It is hard to find the best highest-skew direction f\u2217in a high-dimensional case (where d=20). As a result, it will take a long time for this method to converge when the size of a dataset is large (it took 1 minute for a dataset of size 20,000).",
+    "technical_score": 0.0006844319775596075,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Addressing representation biases in datasets is a well-studied issue in the literature. Existing methods study the detection and resolu- tion of representation bias for discrete and continuous data with various modalities [ 38]. The literature also includes statistical and classical methods for identifying patterns and gaps corresponding to empty spaces within the dataset [22, 26, 27].",
+    "technical_score": 0.006451612903225807,
+    "citation_score": 0.009677419354838708
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Several studies have been conducted to identify the underper- forming regions of machine learning models [ 14,33,35,43]. Thesestudies aim to detect regions and sub-spaces that present challenges for the model in making accurate predictions. SliceFinder [ 14] de- tects specific \u201cslices\u201d of data where a machine learning model un- derperforms, indicated by a significantly higher average loss on these slices compared to other parts of the dataset. Other methods build on this concept by concentrating on specific regions of the data [ 35]. Chen et al. [ 12] employ clustering approaches to identify partitions of data that are discriminated against by a classification model. They aim to discover clusters where the model\u2019s perfor- mance varies between demographic groups. The issue of identifying underrepresented groups within a sampled population is explored by Lancia et al. [ 25], who focus on detecting poorly represented groups and resampling these hard-to-sample sub-groups. Pastor et al. [ 33] also introduce a concept of pattern divergence to exam- ine a model\u2019s behavior across different sub-populations. Existing work also includes [ 31] that combines crowdsourcing and machine learning to detect uncovered groups over predetermined grouping attributes on image datasets without explicit group information. The primary distinction between our work and the existing literature is that we assume no prior information about the group- ing attributes within the dataset. In other words, we aim to mine Minoria from a collection of data points without explicit access to demographic group information over predetermined grouping attributes. Our goal is to identify the groups that are unknown, underrepresented, and underperforming for a given prediction task.",
+    "technical_score": 0.01935483870967742,
+    "citation_score": 0.029032258064516127
+  },
+  {
+    "section_path": [
+      "Discussion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we discuss some aspects of our proposed approach and highlight its limitations. In general, our methods is limited to groups that are (almost) linearly separable. If the groups are linearly separable, the high- skewed direction found by our algorithms corresponds to a linear classification. In cases where linear separation is not feasible, one can consider introducing new features as polynomial combinations of existing features. Not all the group candidates identified as the under-represented and under-performing regions in the data space are socially valid. Discovering such regions is intended to help model developers and data owners identify potential issues, decide if those are socially concerning, and proactively limit the scope of use of their datasets. Our approach is only one of the possible solutions for Minoria mining. Finding alternative approaches requires extensive future research. Still, our experiments verified that clustering failed to identify the under-represented and under-represented groups. Selecting appropriate columns from a dataset to perform Ray- sweeping is a critical practical decision. For instance, in our exper- iments, we utilized the Latitude and Longitude columns from the Chicago Crime dataset and the (GRE, GRA) pair from the College Admission dataset. One potential direction for column selection is identifying the most influential features for black-box machine learning models. Techniques such as feature importance measures or Shapley values can be employed to score each column, allowing the selection of the most impactful features for this algorithm. In higher dimensions, the curse of dimensionality introduces significant challenges. To address this, we developed heuristics aimed at exploring and exploiting these spaces more effectively.",
+    "technical_score": 0.06451612903225806,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we introduced, formalized, and studied the problem of mining the unknown, underrepresented, and underperforming mi- nority groups (Minoria). Making the connection to computational geometry concepts, we proposed efficient algorithms and practical solutions for finding high-skew projections as the combination of data features that reflect high-performance disparities at their tail. The scope of our proposed techniques is limited to the cases where the Minoria are linearly separable from the rest of the data. Extend- ing our work to the more general class of non-linear projections, as well as developing alternative Minoria mining approaches, is an interesting direction for future work.",
+    "technical_score": 0.06451612903225806,
+    "citation_score": 0.0
+  }
+]

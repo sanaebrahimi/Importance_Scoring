@@ -1,0 +1,80 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-21T17:09:51 model=qwen3:1.7b host=http://localhost:11434 paper_id=RSR-Core n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'System Overview', 'Demonstration Scenarios']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 60
+2: 30
+3: 10
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_compressed estimated_tokens=1401 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=1/5
+1: 25
+2: 75
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.008250879551073578
+Paragraph1: technical=50, citation=50  
+Paragraph2: technical=100, citation=0
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/5
+1: 30
+2: 30
+3: 40
+4: 20
+5: 10
+6: 10
+7: 10
+8: 10
+9: 10
+10: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.02209413642492037
+Paragraph2: technical=100, citation=0
+[citation_split] paragraph_id=Introduction::p2 sample=1 attempt=1/5
+1: 60
+2: 30
+3: 10
+[all_together_subsections_item_order] parent=System Overview sample=1/1 order=['[Section Lead-in]', 'System Architecture', 'Kernels Implementation', 'Multipliers', 'Integration', 'Benchmarking Results']
+[all_together_subsections] parent=System Overview sample=1 attempt=1/5
+1: 35
+2: 25
+3: 20
+4: 15
+5: 10
+6: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1259 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0026081649788824842
+Paragraph1: technical=50, citation=50
+[paragraph_scoring] parent=System Architecture::paragraphs method=channel_full_parent estimated_tokens=963 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=System Architecture::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=System Architecture::paragraphs sample=1 attempt=1/5
+1: 30
+2: 70
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0008939165831421103
+Paragraph1: technical=0, citation=100  
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Kernels Implementation::paragraphs method=channel_compressed estimated_tokens=2138 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Kernels Implementation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Kernels Implementation::paragraphs sample=1 attempt=1/5
+1: 35
+2: 65
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.015160658643100872
+Paragraph1: technical=0, citation=100  
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Multipliers::paragraphs method=channel_full_parent estimated_tokens=866 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0007960790905159087
+Paragraph1: technical=20, citation=80
+[paragraph_scoring] parent=Integration::paragraphs method=channel_compressed estimated_tokens=1241 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Integration::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Integration::paragraphs sample=1 attempt=1/5
+1: 30
+2: 70
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019496533133385695
+Paragraph1: technical=50, citation=50  
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Benchmarking Results::paragraphs method=channel_full_parent estimated_tokens=1157 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0163482444180965
+Paragraph1: technical=50, citation=50
+[paragraph_scoring] parent=Demonstration Scenarios::paragraphs method=channel_compressed estimated_tokens=1772 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006613218661220901
+Paragraph1: technical=20, citation=80

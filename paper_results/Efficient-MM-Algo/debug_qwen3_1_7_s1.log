@@ -1,0 +1,537 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-21T17:04:45 model=qwen3:1.7b host=http://localhost:11434 paper_id=Efficient-MM-Algo n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Preliminaries', 'Preprocessing: Index Construction', 'Inference Time: Vector-to-Matrix Multiplication', 'Experiments', 'Conclusion', 'Background', 'Related Work', 'Proofs', 'Discussion', 'Experiments Details', 'Extended Experiment Results']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 60
+2: 40
+[all_together_top] parent=Whole Paper sample=1 attempt=2/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top] parent=Whole Paper sample=1 attempt=3/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top] parent=Whole Paper sample=1 attempt=4/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top] parent=Whole Paper sample=1 attempt=5/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+[all_together_top_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_relaxed_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Preliminaries', 'Preprocessing: Index Construction', 'Inference Time: Vector-to-Matrix Multiplication', 'Experiments', 'Conclusion', 'Background', 'Related Work', 'Proofs', 'Discussion', 'Experiments Details', 'Extended Experiment Results']
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=1/5
+1: 60
+2: 40
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=2/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=3/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=4/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top_relaxed] parent=Whole Paper sample=1 attempt=5/5
+1: 24
+2: 24
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+8: 10
+[all_together_top_relaxed_error] parent=Whole Paper sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+[all_together_top_relaxed_sample_skip] parent=Whole Paper sample=1/1 reason=Model failed to produce complete child scores for parent 'Whole Paper' after 5 retries.
+[all_together_top_heuristic_fallback] parent=Whole Paper strict_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'. relaxed_reason=Model failed to produce any complete direct-allocation sample for parent 'Whole Paper'.
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_compressed estimated_tokens=1857 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Introduction::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Introduction::paragraphs sample=1 attempt=1/5
+1: 30
+2: 70
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006696322144464683
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/5
+1: 60
+2: 30
+3: 10
+4: 0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020300984622687337
+Paragraph2: technical=100, citation=0
+[citation_split] paragraph_id=Introduction::p2 sample=1 attempt=1/5
+1: 40
+2: 20
+3: 10
+4: 10
+5: 10
+6: 5
+7: 5
+8: 5
+9: 5
+[all_together_subsections_item_order] parent=Preliminaries sample=1/1 order=['[Section Lead-in]', 'Notation', 'Problem Formulation', 'Solution Overview']
+[all_together_subsections] parent=Preliminaries sample=1 attempt=1/5
+1: 30
+2: 25
+3: 25
+4: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=821 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.012657654590558112
+Paragraph1: technical=100, citation=0
+[paragraph_scoring] parent=Notation::paragraphs method=channel_full_parent estimated_tokens=1078 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0008939165831421103
+Paragraph1: technical=20, citation=80
+[paragraph_scoring] parent=Problem Formulation::paragraphs method=channel_full_parent estimated_tokens=1131 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Problem Formulation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Problem Formulation::paragraphs sample=1 attempt=1/5
+1: 20
+2: 80
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.015160658643100872
+Paragraph1: technical=0, citation=100  
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Solution Overview::paragraphs method=channel_compressed estimated_tokens=1296 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Solution Overview::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Solution Overview::paragraphs sample=1 attempt=1/5
+1: 15
+2: 10
+3: 10
+4: 10
+5: 15
+6: 10
+7: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.005965129520599455
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=20, citation=80  
+Paragraph4: technical=20, citation=80  
+Paragraph5: technical=100, citation=0  
+Paragraph6: technical=100, citation=0  
+Paragraph7: technical=100, citation=0
+[all_together_subsections_item_order] parent=Preprocessing: Index Construction sample=1/1 order=['[Section Lead-in]', 'Step 1: Column Blocking', 'Step 2: Row Permutation', 'Step 3: Segmentation', 'Preprocessing Algorithm']
+[all_together_subsections] parent=Preprocessing: Index Construction sample=1 attempt=1/5
+1: 30
+2: 30
+3: 20
+4: 20
+5: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=1100 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0163482444180965
+Paragraph1: technical=20, citation=80
+[paragraph_scoring] parent=Step 1: Column Blocking::paragraphs method=channel_full_parent estimated_tokens=1004 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Step 1: Column Blocking::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Step 1: Column Blocking::paragraphs sample=1 attempt=1/5
+1: 25
+2: 25
+3: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01767797051627726
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=100, citation=0
+[paragraph_scoring] parent=Step 2: Row Permutation::paragraphs method=channel_full_parent estimated_tokens=1118 threshold=1200 paragraphs=4 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Step 2: Row Permutation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Step 2: Row Permutation::paragraphs sample=1 attempt=1/5
+1: 10
+2: 5
+3: 55
+4: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0001949627903418305
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=100, citation=0  
+Paragraph4: technical=100, citation=0
+[paragraph_scoring] parent=Step 3: Segmentation::paragraphs method=channel_compressed estimated_tokens=1970 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Step 3: Segmentation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Step 3: Segmentation::paragraphs sample=1 attempt=1/5
+1: 35
+2: 65
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020944181849646804
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0
+[all_together_subsections_item_order] parent=Preprocessing Algorithm sample=1/1 order=['[Section Lead-in]', 'Complexity Analysis']
+[all_together_subsections] parent=Preprocessing Algorithm sample=1 attempt=1/5
+1: 60
+2: 40
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=780 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0046643849943534465
+Paragraph1: technical=0, citation=100
+[paragraph_scoring] parent=Complexity Analysis::paragraphs method=channel_full_parent estimated_tokens=673 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.028716392166203433
+Paragraph1: technical=100, citation=0
+[all_together_subsections_item_order] parent=Inference Time: Vector-to-Matrix Multiplication sample=1/1 order=['[Section Lead-in]', 'Segmented Sum Computation', 'RSR', 'RSR++']
+[all_together_subsections] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 attempt=1/5
+1: 60
+2: 40
+[all_together_subsections] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 attempt=2/5
+1: 60
+2: 40
+[all_together_subsections] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 attempt=3/5
+1: 60
+2: 40
+[all_together_subsections] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 attempt=4/5
+1: 60
+2: 40
+[all_together_subsections] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 attempt=5/5
+1: 60
+2: 40
+[all_together_subsections_error] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3', '4']
+[all_together_subsections_sample_skip] parent=Inference Time: Vector-to-Matrix Multiplication sample=1/1 reason=Model failed to produce complete child scores for parent 'Inference Time: Vector-to-Matrix Multiplication' after 5 retries.
+[all_together_subsections_compressed_retry] parent=Inference Time: Vector-to-Matrix Multiplication reason=no_complete_samples retry_snippet_limit=180
+[all_together_subsections_compressed_retry_item_order] parent=Inference Time: Vector-to-Matrix Multiplication sample=1/1 order=['[Section Lead-in]', 'Segmented Sum Computation', 'RSR', 'RSR++']
+[all_together_subsections_compressed_retry] parent=Inference Time: Vector-to-Matrix Multiplication sample=1 attempt=1/5
+1: 20
+2: 50
+3: 15
+4: 15
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=712 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.00290149130500392
+paragraph_id: technical=100, citation=0
+[paragraph_channel_split] sample=1/1 attempt=2/5 temperature=0.00290149130500392
+paragraph_id: technical=100, citation=0
+[paragraph_channel_split] sample=1/1 attempt=3/5 temperature=0.00290149130500392
+paragraph_id: technical=100, citation=0
+[paragraph_channel_split] sample=1/1 attempt=4/5 temperature=0.00290149130500392
+paragraph_id: technical=100, citation=0
+[paragraph_channel_split] sample=1/1 attempt=5/5 temperature=0.00290149130500392
+paragraph_id: technical=100, citation=0
+[paragraph_scoring] parent=Segmented Sum Computation::paragraphs method=channel_compressed estimated_tokens=1676 threshold=1200 paragraphs=6 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Segmented Sum Computation::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6']
+[all_together_paragraphs] parent=Segmented Sum Computation::paragraphs sample=1 attempt=1/5
+1: 30
+2: 20
+3: 20
+4: 15
+5: 10
+6: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.018111780941006732
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=100, citation=0  
+Paragraph4: technical=100, citation=0  
+Paragraph5: technical=100, citation=0  
+Paragraph6: technical=100, citation=0
+[all_together_subsections_item_order] parent=RSR sample=1/1 order=['[Section Lead-in]', 'Complexity Analysis', 'The optimal k']
+[all_together_subsections] parent=RSR sample=1 attempt=1/5
+1: 30
+2: 60
+3: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=950 threshold=1200 paragraphs=4 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 30
+2: 30
+3: 20
+4: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01608684274364102
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=20, citation=80  
+Paragraph4: technical=20, citation=80
+[paragraph_scoring] parent=Complexity Analysis::paragraphs method=channel_full_parent estimated_tokens=766 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Complexity Analysis::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Complexity Analysis::paragraphs sample=1 attempt=1/5
+1: 8
+2: 92
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011356031316250605
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=The optimal k::paragraphs method=channel_full_parent estimated_tokens=828 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=The optimal k::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=The optimal k::paragraphs sample=1 attempt=1/5
+1: 50
+2: 50
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024882139927589846
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0
+[all_together_subsections_item_order] parent=RSR++ sample=1/1 order=['[Section Lead-in]', 'Complexity Analysis', 'The optimal k']
+[all_together_subsections] parent=RSR++ sample=1 attempt=1/5
+1: 60
+2: 40
+[all_together_subsections] parent=RSR++ sample=1 attempt=2/5
+1: 60
+2: 40
+[all_together_subsections] parent=RSR++ sample=1 attempt=3/5
+1: 60
+2: 40
+[all_together_subsections] parent=RSR++ sample=1 attempt=4/5
+1: 60
+2: 40
+[all_together_subsections] parent=RSR++ sample=1 attempt=5/5
+1: 60
+2: 40
+[all_together_subsections_error] parent=RSR++ sample=1 reason=incomplete_or_invalid_model_scores expected_ids=['1', '2', '3']
+[all_together_subsections_sample_skip] parent=RSR++ sample=1/1 reason=Model failed to produce complete child scores for parent 'RSR++' after 5 retries.
+[all_together_subsections_compressed_retry] parent=RSR++ reason=no_complete_samples retry_snippet_limit=180
+[all_together_subsections_compressed_retry_item_order] parent=RSR++ sample=1/1 order=['[Section Lead-in]', 'Complexity Analysis', 'The optimal k']
+[all_together_subsections_compressed_retry] parent=RSR++ sample=1 attempt=1/5
+1: 20
+2: 50
+3: 30
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1211 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 30
+2: 50
+3: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.021137155086447704
+Paragraph1: technical=0, citation=100  
+Paragraph2: technical=0, citation=100  
+Paragraph3: technical=0, citation=100
+[paragraph_scoring] parent=Complexity Analysis::paragraphs method=channel_full_parent estimated_tokens=921 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Complexity Analysis::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Complexity Analysis::paragraphs sample=1 attempt=1/5
+1: 60
+2: 30
+3: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006836948269546406
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=100, citation=0
+[paragraph_scoring] parent=The optimal k::paragraphs method=channel_compressed estimated_tokens=5945 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=The optimal k::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=The optimal k::paragraphs sample=1 attempt=1/5
+1: 60
+2: 30
+3: 10
+4: 0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0023937593077088246
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=50, citation=50  
+Paragraph4: technical=100, citation=0
+[citation_split] paragraph_id=Inference Time: Vector-to-Matrix Multiplication > RSR++ > The optimal k::p3 sample=1 attempt=1/5
+1: 60
+2: 30
+3: 10
+[all_together_subsections_item_order] parent=Experiments sample=1/1 order=['[Section Lead-in]', 'Matrix Multiplication Using NumPy']
+[all_together_subsections] parent=Experiments sample=1 attempt=1/5
+1: 35
+2: 65
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=1845 threshold=1200 paragraphs=5 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 30
+2: 70
+3: 0
+4: 0
+5: 0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019070533327932005
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=100, citation=0  
+Paragraph4: technical=100, citation=0  
+Paragraph5: technical=100, citation=0
+[paragraph_scoring] parent=Matrix Multiplication Using NumPy::paragraphs method=channel_compressed estimated_tokens=1934 threshold=1200 paragraphs=6 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Matrix Multiplication Using NumPy::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6']
+[all_together_paragraphs] parent=Matrix Multiplication Using NumPy::paragraphs sample=1 attempt=1/5
+1: 20
+2: 30
+3: 10
+4: 20
+5: 15
+6: 15
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011105429013506479
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=20, citation=80  
+Paragraph4: technical=20, citation=80  
+Paragraph5: technical=100, citation=0  
+Paragraph6: technical=20, citation=80
+[paragraph_scoring] parent=Conclusion::paragraphs method=channel_full_parent estimated_tokens=1017 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Conclusion::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Conclusion::paragraphs sample=1 attempt=1/5
+1: 30
+2: 70
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0080093346614734
+Paragraph1: technical=100, citation=0  
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Background::paragraphs method=channel_compressed estimated_tokens=1311 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.028099637631374817
+Paragraph1: technical=20, citation=80
+[paragraph_scoring] parent=Related Work::paragraphs method=channel_compressed estimated_tokens=1261 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Related Work::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Related Work::paragraphs sample=1 attempt=1/5
+1: 25
+2: 25
+3: 50
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.018273930170009646
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=30, citation=70
+[citation_split] paragraph_id=Related Work::p1 sample=1 attempt=1/5
+1: 30
+2: 25
+3: 15
+4: 10
+5: 5
+6: 5
+[citation_split] paragraph_id=Related Work::p2 sample=1 attempt=1/5
+1: 60
+2: 30
+3: 5
+4: 3
+[citation_split] paragraph_id=Related Work::p3 sample=1 attempt=1/5
+1: 30
+2: 20
+3: 10
+4: 10
+5: 10
+6: 30
+[all_together_subsections_item_order] parent=Proofs sample=1/1 order=['[Section Lead-in]', 'Parallelization']
+[all_together_subsections] parent=Proofs sample=1 attempt=1/5
+1: 60
+2: 40
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_compressed estimated_tokens=2547 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 35
+2: 45
+3: 10
+4: 10
+5: 10
+6: 10
+7: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019199992795622785
+Paragraph1: technical=100, citation=0  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=100, citation=0  
+Paragraph4: technical=100, citation=0  
+Paragraph5: technical=100, citation=0  
+Paragraph6: technical=100, citation=0  
+Paragraph7: technical=100, citation=0
+[paragraph_scoring] parent=Parallelization::paragraphs method=channel_compressed estimated_tokens=1716 threshold=1200 paragraphs=4 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Parallelization::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4']
+[all_together_paragraphs] parent=Parallelization::paragraphs sample=1 attempt=1/5
+1: 25
+2: 30
+3: 25
+4: 20
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020538427529696236
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=20, citation=80  
+Paragraph4: technical=20, citation=80
+[all_together_subsections_item_order] parent=Discussion sample=1/1 order=['[Section Lead-in]', 'Advantages', 'Limitations', 'Generalization']
+[all_together_subsections] parent=Discussion sample=1 attempt=1/5
+1: 25
+2: 50
+3: 15
+4: 10
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=642 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.023279997346387343
+Paragraph1: technical=100, citation=0
+[paragraph_scoring] parent=Advantages::paragraphs method=channel_full_parent estimated_tokens=1185 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006871442158923131
+Paragraph1: technical=0, citation=100
+[paragraph_scoring] parent=Limitations::paragraphs method=channel_full_parent estimated_tokens=882 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0009630073171211328
+Paragraph1: technical=0, citation=100
+[paragraph_scoring] parent=Generalization::paragraphs method=channel_full_parent estimated_tokens=814 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.009463591441772458
+Paragraph1: technical=20, citation=80
+[all_together_subsections_item_order] parent=Experiments Details sample=1/1 order=['Synthetic Dataset', 'PyTorch Implementation Details: CPU Experiments', 'PyTorch Implementation Details: GPU Experiments']
+[all_together_subsections] parent=Experiments Details sample=1 attempt=1/5
+1: 25
+2: 50
+3: 25
+[paragraph_scoring] parent=Synthetic Dataset::paragraphs method=channel_full_parent estimated_tokens=780 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.006329485307589794
+Paragraph1: technical=20, citation=80
+[paragraph_scoring] parent=PyTorch Implementation Details: CPU Experiments::paragraphs method=channel_compressed estimated_tokens=1283 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=PyTorch Implementation Details: CPU Experiments::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=PyTorch Implementation Details: CPU Experiments::paragraphs sample=1 attempt=1/5
+1: 5
+2: 95
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.026291028794180066
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=PyTorch Implementation Details: GPU Experiments::paragraphs method=channel_full_parent estimated_tokens=1199 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=PyTorch Implementation Details: GPU Experiments::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=PyTorch Implementation Details: GPU Experiments::paragraphs sample=1 attempt=1/5
+1: 20
+2: 70
+3: 10
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0196631599588464
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=20, citation=80
+[all_together_subsections_item_order] parent=Extended Experiment Results sample=1/1 order=['Parameter k Optimization', 'RSR vs. RSR++ on Native Implementation', 'Matrix Multiplication Using NumPy: Inference Time', 'Performance evaluation on GPU']
+[all_together_subsections] parent=Extended Experiment Results sample=1 attempt=1/5
+1: 35
+2: 25
+3: 20
+4: 20
+[paragraph_scoring] parent=Parameter k Optimization::paragraphs method=channel_full_parent estimated_tokens=1144 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.027436427692216304
+Paragraph1: technical=0, citation=100
+[paragraph_scoring] parent=RSR vs. RSR++ on Native Implementation::paragraphs method=channel_full_parent estimated_tokens=625 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.013765555577621963
+Paragraph1: technical=20, citation=80
+[paragraph_scoring] parent=Matrix Multiplication Using NumPy: Inference Time::paragraphs method=channel_compressed estimated_tokens=1577 threshold=1200 paragraphs=6 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Matrix Multiplication Using NumPy: Inference Time::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6']
+[all_together_paragraphs] parent=Matrix Multiplication Using NumPy: Inference Time::paragraphs sample=1 attempt=1/5
+1: 15
+2: 35
+3: 10
+4: 20
+5: 20
+6: 5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.007398825230819504
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0  
+Paragraph3: technical=20, citation=80  
+Paragraph4: technical=20, citation=80  
+Paragraph5: technical=100, citation=0  
+Paragraph6: technical=20, citation=80
+[paragraph_scoring] parent=Performance evaluation on GPU::paragraphs method=channel_full_parent estimated_tokens=943 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Performance evaluation on GPU::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Performance evaluation on GPU::paragraphs sample=1 attempt=1/5
+1: 20
+2: 80
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.007882248255688057
+Paragraph1: technical=20, citation=80  
+Paragraph2: technical=100, citation=0

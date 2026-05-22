@@ -1,0 +1,1018 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "technical_score": 0.011313527070720248,
+    "citation_score": 0.011313527070720248
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03b5-samples, and extend it to high-dimensional settings by combining it with the stripe-range searching. This approach offers an efficient solution for finding a conformal set for an arbitrary rank position. Finally, combining our approach with range counting, we extend it for the exact version ( DAR problem). Efficiently finding the tuples within a narrow stripe range is fundamental in the development of our \u03b5-sampling based solution. We formulate this as the problem of stripe range retrieval ( SRR), with a focus on developing efficient algorithms for the challenging narrow ranges that only contain a small number of tuples. Inspired by the Hierarchical Navigable Small World graphs for approximate nearest neighbor problems [ 19,35], our practical and scalable algorithm constructs a hierarchical sampling structure for stripe range searching, maintaining the neighborhood regions of points in the hierarchy using smallest enclosing balls. Theoretically, we show the near-optimal efficiency of our al- gorithms up to a logarithmic factor. Besides, we conduct exten- sive experiments on real-world and synthetic datasets to evaluate the performance of our algorithms in practice and compare them against the existing baselines. Our experiments confirm the effi- ciency and scalability of our proposed algorithms. In particular, the \u03b5-sampling algorithm, when combined with the hierarchical struc- ture, achieves the best scalability with respect to both dimension and dataset size in terms of query time and index size, whereas the baseline methods are mostly affected by the curse of dimensionality.",
+    "technical_score": 0.0266472270261142,
+    "citation_score": 0.00244469972716644
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Summary of Contributions. \u2022(Section 2) We introduce and formalize the problems of (i) direct-access ranked retrieval ( DAR ), (ii) conformal set ranked retrieval ( CSR), and (iii) stripe range retrieval ( SRR). \u2022(Section 4) We provide a lower bound on the DAR problem as well as proving the near-optimality of our algorithms up to a logarithmic factor (discussed in Appendix A in this Technical Report). \u2022(Section 5) We propose an algorithm based on the geo- metric concepts of duality and the arrangement of hyper- planes that offers a logarithmic query time, suitable for low-dimensional settings, especially when d=2. \u2022(Section 6) We propose several algorithms with linear space usage based on \u03b5-sampling combined with range searching to offer efficient solutions for the CSR andDAR problems. \u2022(Section 6.3) We propose a practical solution for the stripe range retrieval problem ( SRR), based on hierarchical ran- dom sampling and keeping track of the proximity of points. This solution also enables a practical algorithm for the CSR problem, scalable to large-scale settings, where we have to deal with narrow stripe ranges. \u2022(Section 7) We conduct comprehensive experiments to demon- strate the practical performance of our algorithms across different settings on synthetic and real-world scenarios. In addition, the background concepts relevant to our algorithms are reviewed in Section 3, the related work is discussed in Section 8, and the final remarks are provided in Section 9.",
+    "technical_score": 0.012929745223680284,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Data Model. We consider a dataset D={p1,p2,\u00b7\u00b7\u00b7,pn}consist- ing ofnpoints in Rd, where each point p\u2208D hasdreal-valued dataset contain 16 points and the query asks for (i=8)-th point with the scoring function shown in red. (Left) First, we find the bounds by solving DAR on the\u03b5-sample. (Right) Finding the landuvalues, we solve the SRR problem on the stripe range. (scoring) attributes, aka. features, used for ranking.1Ascoring func- tionscore :Rd\u2192Rassigns a real-valued score to each point in the dataset.2In this work, we focus on linear scoring functions , where the score is defined as a weighted sum of the features. Specifically, given a weight vector f\u2208Rd, the score assigned to a point pis computed as the dot product3:scoref(p)=f\u22a4p=\u2211\ufe01d j=1f[j]p[j].",
+    "technical_score": 0.012997669485255348,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We may directly call fas the scoring function. Figure 1 (left) pro- vides a toy example of a dataset Dwithn=16points and two attributesxandy. Let the red origin-anchored vector in the figure representf. The perpendicular projection of each point pon the vectorfshows scoref(p).",
+    "technical_score": 0.03032789546559581,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Direct-Access Ranked Retrieval (DAR)"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Our main problem in this paper is to efficiently find the point at a specific rank i. ordinal descriptive attributes that are not used for ranking. In this paper, we use the terms attribute and feature interchangeably to refer to the scoring attributes. 2We use the terms scoring function and ranking function interchangeably. 3We assume that the scoring vector fis normalized, i.e.,\u2225f\u2225=1.",
+    "technical_score": 0.009387205739351085,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Direct-Access Ranked Retrieval (DAR)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Therefore, inspired by the machine learning concept of confor- mal predictions [ 4,45], we introduce a \u201crelaxed\u201d version of Prob- lem 1, where instead of returning one point p(i), we return a small set that contains p(i)\u2013 referred as the conformal set for ranki.",
+    "technical_score": 0.020907867328554687,
+    "citation_score": 0.020907867328554687
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Stripe Range Retrieval (SRR)"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While addressing our main problems (Problem 1 and Problem 2), we also address a side problem that finds all points that fall in a stripe range. The solution to this problem helps us in developing efficient solutions for our main problems. Formally, we define a stripe range as follows.",
+    "technical_score": 0.0035448189505241858,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Stripe Range Retrieval (SRR)"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Stripe Range. Astripe rangeSf,l,uis defined by a scoring function f\u2208Rdand two real-valued boundaries l,u\u2208Rsuch thatl\u2264u. It corresponds to the universe of all points x\u2208Rdwhose scores based onflies within the interval [l,u], i.e., Sf,l,u={x\u2208Rd|l\u2264scoref(x)\u2264u}.",
+    "technical_score": 0.008271244217889766,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Formal Definitions",
+      "Stripe Range Retrieval (SRR)"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Given a stripe range query, we aim to return the set of points in Dthat fall inside the given stripe range. For example, in Figure 1, the stripe range query is highlighted between the two blue lines, and the points within this query should be returned. Problem 3 (Stripe Range Retrieval (SRR)). Given a datasetD and a query consisting of a stripe rangeSf,l,u, return all points in Dthat lie within this range, i.e., Do=Sf,l,u\u2229D .",
+    "technical_score": 0.011816063168413953,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we summarize the key concepts and definitions used in the subsequent discussions. We assume a range space (D,R), whereDis the dataset, and Ris a collection of geometric ranges defined overD, such as all possible balls, half-spaces, or other regions in Rd. is a fundamental combinatorial measure of complexity for a range space. Formally, the VC-dimension is the size of the largest subset C\u2286D such that every subset of Ccan be realized as the intersection ofCwith some range in R. A low VC-dimension implies that the range space has limited expressive power, which in turn allows for efficient sampling-based approximations (see [ 27] for more details).",
+    "technical_score": 0.005027176887821819,
+    "citation_score": 0.007540765331732728
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03b5-Samples. An\u03b5-sample (or \u03b5-approximation) of a range space (D,R)is a subsetN\u2286D such that, for every range R\u2208R, the proportion of points in Ris approximately preserved in N. More formally,Nis an\u03b5-sample if for all R\u2208R,|\ufe01|\ufe01|\ufe01|\ufe01|R\u2229D| |N||\ufe01|\ufe01|\ufe01|\ufe01\u2264\u03b5.",
+    "technical_score": 0.018851913329331817,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "For more details on \u03b5-sampling, we refer the reader to [27]. We use the following foundational theorem on \u03b5-samples as a key tool in deriving our theoretical guarantees:",
+    "technical_score": 0.0031419855548886367,
+    "citation_score": 0.0031419855548886367
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Theorem 1 ( \u03b5-sample theorem [ 50]).Let(D,R)be a range space of VC-dimension \u03b4. Then for any \u03b5,\u03c6\u2208(0,1), a random sampleS\u2286D of sizeO(\ufe02 \u03b4 \u03b52log\u03b4 \u03b5+\u03b4 \u03b52log\u03b4 \u03c6)\ufe02 is an\u03b5-sample of(D,R)with probability at least 1\u2212\u03c6.",
+    "technical_score": 0.012567942219554547,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "\u25a1 \u03b5-Sample Construction. In addition to random sampling, which provides a probabilistic method for constructing \u03b5-samples, there also exist deterministic approaches based on discrepancy theory [ 12, 27]. These methods can achieve near-linear runtime while ensuring the desired approximation guarantees.",
+    "technical_score": 0.0062839711097772725,
+    "citation_score": 0.0062839711097772725
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we provide a high-level overview of our proposed algorithms, with a summary of their theoretical guarantees. The baseline approach for answering the DAR queries uses the extension of the classic divide and conquer (D&C) median finding algorithm, which, instead of the median, finds the element at posi- tioni[7,16]. To do so, it first makes a linear pass over D, and for each pointp, computes scoref(p). Then, using the D&C algorithm, it finds rank\u22121 f(i)inO(n).",
+    "technical_score": 0.004630802618244676,
+    "citation_score": 0.018523210472978703
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Instead, our algorithms, summarized in Table 1, provide more ef- ficient solutions by preprocessing the data and constructing proper data structures.",
+    "technical_score": 0.023154013091223377,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "KthLevel .We begin by introducing an algorithm that leverages the construction of the level of the arrangement of hyperplanes to solve the exact DAR problem (see Section 5.1 for detailed defini- tions). This method offers highly efficient logarithmic query time, but it is not practical for high-dimensional settings as it suffers from the curse of dimensionality and has an exponential space com- plexity. Therefore, our subsequent algorithms based on \u03b5-samples aim at maintaining a linear space complexity. \u03b5-sampling. In the simpler two-dimensional case, where the datasetDconsists of points in the plane. During preprocessing, we compute an \u03b5-sample of the dataset, denoted by N\u03b5. Given a scoring function fand a target rank i, we approximately solve the DAR problem on the smaller set N\u03b5, rather than the full dataset D. From this approximate solution, we derive a stripe range con- taining the true i-th ranked point. By solving an instance of range searching ( SRR) we find this exact point. We refer to this algorithm asEps2D . A visual representation of this approach is shown in Figure 1 (left and right).",
+    "technical_score": 0.023154013091223377,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "For higher-dimensional settings, we follow a similar generalized strategy ( EpsRange ). However, unlike in 2D, standard range search- ing algorithms do not perform well in high-dimensional datasets. To overcome this, we propose a practical algorithm to solve the intermediate SRR problem with hierarchical sampling ( EpsHier ).",
+    "technical_score": 0.023154013091223377,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Lower Bounds and Optimality. A discussion on the lower bounds and optimality of our algorithms is provided in the technical report. In the following sections, we describe the two classes of algo- rithms separately: (i) those based on constructing the k-th level of arrangements , and (ii) those based on \u03b5-sampling .",
+    "technical_score": 0.023154013091223377,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we present an algorithm for solving the DAR prob- lem using the computational geometric concepts of duality and arrangement of hyperplanes [ 14,22]. At a high level, building the arrangement of dual hyperplanes of the tuples, our approach, named",
+    "technical_score": 0.0012630924445177446,
+    "citation_score": 0.0050523697780709784
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "KthLevel Following the levels of arrangement d\u22652 O(nd) O(logn) DAR Eps2D \u03b5-sampling in 2D d=2 O(n) O(n2/3logn) DAR EpsRange \u03b5-sampling + Range Searching d\u22652 O(n)O(max{n1\u22121/d,1 \u03b52log1",
+    "technical_score": 0.008841647111624213,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "O(max{n1\u22121/d,n2/3logn}) DAR EpsHier \u03b5-sampling + Hierarchical Sampling d\u22652 O(n) Worst-caseO(n); Practically Efficient CSR KthLevel , keeps track of different levels of the arrangement , which are used at the query time for efficient answering of DAR queries, i.e., finding the tuple at a given rank position i. This algorithm achieves a logarithmic query time , but at a cost of a space complexity exponential to the number of attributes d.",
+    "technical_score": 0.00505236977807098,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "We begin by introducing key concepts from computational ge- ometry, and then describe our algorithm in detail.",
+    "technical_score": 0.00505236977807098,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "Preliminaries"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "maps points to hyperplanes and vice versa. This transformation is well-defined and preserves intersection relationships [ 14,22]. Formally, the dual of a point p\u2208Rdis defined as: dual(p):={\ufe02 x\u2208Rd|x\u22a4p=1}\ufe02 .",
+    "technical_score": 0.002105154074196242,
+    "citation_score": 0.008420616296784969
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "Preliminaries"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In other words, the transformation dual(\u00b7)maps a point in the primal space to a hyperplane in the dual space . This hyperplane is represented by the equation: h:d\u2211\ufe02 i=1p[i]\u00b7xi=1.",
+    "technical_score": 0.010525770370981211,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "Preliminaries"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "We refer to the original input domain as the primal space , and the space of dual hyperplanes as the dual space . Figure 2 provides a visual illustration of this transformation. The left figure shows the primal space, while the middle figure shows the dual hyperplanes in the dual space. The following key observation follows from this duality. A formal proof can be found in [22]. planesH={dual(p) |p\u2208 D} .Hdefines a dissection of Rd into connected convex cells, called the arrangement of the hyper- planes [22].",
+    "technical_score": 0.0031577311112943635,
+    "citation_score": 0.007368039259686847
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "Preliminaries"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "To simplify the explanations, let d=2. Sweep a ray fcoun- terclockwise from the x-axis to the y-axis. At each orientation of f, the ray intersects all dual hyperplanes (dual lines) in H. These dent on the dimension d. Consistent with the prior literature [ 1], our focus is on the exponential dependence on d.intersection points can be sorted by their distance from the origin. Thek-th level is the locus of points that lie on the k-th closest dual line intersected by f, as the direction of fvaries continuously [ 22]. In generald-dimensional space, consider a ray foriginating at the origin and sweeping over all directions on the unit sphere Sd\u22121. For each direction f, the ray intersects the hyperplanes in Hin up tondistinct points, which can again be ordered by increasing distance from the origin. The k-th level is the set of all such k-th intersection points across all directions f\u2208Sd\u22121. Figure 2 illustrates the first and second levels of the arrangement inR2, shown in orange and green, respectively.",
+    "technical_score": 0.005262885185490606,
+    "citation_score": 0.005262885185490606
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "KthLevel Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we formally present our algorithm, KthLevel . We begin by describing the preprocessing phase, followed by a dis- cussion of the query phase , and conclude with a theoretical analysis of the algorithm\u2019s performance. The overall structure of the algo- rithm applies uniformly across dimensions d\u22652; however, for the purpose of analysis, we distinguish between the planar case ( d=2) and the general higher-dimensional case ( d>2). 5.2.1 Preprocessing. During the preprocessing phase, we construct the arrangement of the dual hyperplanes induced by the point set D, and the levels of the arrangement for all 1\u2264k\u2264n. We assume access to an oracle Kthat, for a given i, returns an efficient data structure representing the i-th level of the arrangement [ 22]. By calling this oracle for each i\u2208 [n], we obtain the complete set of structures needed for query processing. Each such structure allows constant-time access to the hyperplanes intersecting on each face of the arrangement, as well as the points in the primal space corresponding to those hyperplanes [22]. 5.2.2 Query Phase. In the query phase, we are given a scoring func- tionfand a ranki, and the goal is to retrieve the point p(i), which is thei-th highest-ranked point with respect to f. By Lemma 2, the intersection of the i-th level of arrangement of dual hyper-planes withfcorresponds with the desired point p(i). Algorithm 1 shows the pseudo-code of our process for finding this intersection. Consider the 3rd level of the arrangement highlighted (in orange) in the Figure 2 (right figure). In 2D, the k-th level is a non-convex chain of line segments, each belonging to a dual line. Now, let the query function be f2, whilei=3. Our objective is to find p(3)=rank\u22121 f2(3). The line segment in the 3rd level that intersects with the vector of f2isdual(D). Hence, the point p(3)=Din this example. Note that applying a binary search on the endpoints of the line segments of the 3rd level, one can find the intersection of any function fwith any level iin a time logarithmic to the number of line segments.",
+    "technical_score": 0.007578554667106465,
+    "citation_score": 0.007578554667106465
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "KthLevel Algorithm"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Efficient Direct-Access Ranked Retrieval figure shows an example of running KthLevel for i=3. The result of this query is the point D. Algorithm 1 KthLevel-Query(f,i) Input: The scoring function fand the order i Output: Thei-th highest scored point according to f:p(i) 1:Leveli\u2190preprocessed data structure \u22b2Get thei-th level 2:face\u2190Intersection(f,Level i) \u22b2Get the intersection 3:h\u2190The hyperplane corresponding to face in arrangement",
+    "technical_score": 0.020209479112283907,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "KthLevel Algorithm"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "5:returnp(i) From the above example, observe that the k-th level is a chain of line segments. Similarly, for a general d\u22652, thek-th level is a chain of(d\u22121)-faces.5Each function f, in such cases, is an origin-anchored vector that intersects one of the faces of each leveli,\u2200i\u2208 [n]. Projecting the endpoints of these faces on the surface of the unit sphere Sd\u22121forms an arrangement in the (d\u22121)- dimensional space. For example, when d=3, eachk-th level is a chain of plane segments, and their projection onto the unit ball (centered at the origin) is an arrangement of lines. Now, consider the intersection point of the query function fwith the unit sphere Sd\u22121. Finding the face segment of a level iwith a functionfis equivalent to finding the cell of the arrangement on the surface of the sphere that intersects with f. This problem is known as point location on the arrangement of hyperplanes [ 38]. Line 2 of Algorithm 1 uses a state-of-art point-location algorithm for finding the intersection of fwith thei-th level.",
+    "technical_score": 0.007578554667106465,
+    "citation_score": 0.007578554667106465
+  },
+  {
+    "section_path": [
+      "Algorithm Based on k-th level of arrangement",
+      "Analysis of KthLevel Algorithm"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "an arrangement of nlines in the plane is O(nk1/3)[20]. Hence, considering an arbitrary level i=O(n), the complexity of the i-th level isO(n4/3). The total preprocessing time to construct all levels of the arrangement is O(n2), where each individual level can be built inO(nlogn+nk)time [ 24]. In 3D, the complexity of the k- th level isO(nk3/2)[47]. As a result, the complexity of each level i\u2208[n]is bounded by O(n5/2). The complexity of the arrangement section ofd\u2212d\u2032hyperplanes. For example, 0-faces are vertices (points), 1-faces are edges (segments or lines), and so on.in the general d-dimensional setting is O(nd), and the total time required to construct it is also O(nd)[2, 22]. intersection of the i-th level with the vector of the function f. Given that the total number of faces in each level i\u2208[n]is bounded by O(nd), identifying this intersection using a state-of-the-art algo- rithm for point location on the arrangement of hyperplanes is in O(logn), ignoring the constant factors that depend on d[38].",
+    "technical_score": 0.016841232593569937,
+    "citation_score": 0.016841232593569937
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In theory, the solution based on constructing the arrangement of dual hyperplanes provides a logarithmic time for answering theDAR queries. It, however, is not practical especially when the number of ranking attributes is not small ( \u22653), since the size of the arrangement (hence, the space complexity) increases exponentially withd. Therefore, in this section, we propose practical solutions that keep the space complexity linear, i.e., O(n). Our algorithms are based on the computational geometric concept of \u03b5-samples [ 27] (also introduced in Section 3).",
+    "technical_score": 0.0021653013334589914,
+    "citation_score": 0.0021653013334589914
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "In the following, we start by discussing the two-dimensional Eps2D algorithm, then, we will generalize our solution to the higher dimensions, and propose practical methods to solve the intermedi- ateSRR problem (Problem 3).",
+    "technical_score": 0.01732241066767193,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we discuss our solution based on \u03b5-samples in 2D, called Eps2D .",
+    "technical_score": 0.011041017871658608,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Preprocessing. During the preprocessing phase, the algorithm computes an \u03b5-sample of the dataset D, where the ranges are stripe ranges . We denote this \u03b5-sample byN\u03b5, for a given parameter \u03b5(see Section 3 for background).",
+    "technical_score": 0.008832814297326887,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Query Answering. Letm=|N\u03b5|denote the size of the \u03b5-sample build during the preprocessing time. Note that m\u226an.6 Step i: Thresholding. During the query phase , given a query pair (f,i), we begin by solving the DAR problem on the \u03b5-sampleN\u03b5. Specifically, we identify the il-th andiu-th ranked points in N\u03b5 6See Theorem 1, while noting the VC-dimension of stripe ranges is \u03b4=d+1.",
+    "technical_score": 0.002403787319486817,
+    "citation_score": 0.005608837078802573
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Efficient Direct-Access Ranked Retrieval Space Complexity. All operations use data structures with linear space requirements. Thus, the total space usage is linear in input.",
+    "technical_score": 0.00580442082395767,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Query Time Complexity. To analyze the runtime precisely, we bound the size of the result set Doas follows: Lemma 4. The size of the result set DoisO(\u03b5n).",
+    "technical_score": 0.004416407148663443,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "\u25a1 Proof. The result setDoconsists of the points in the dataset Dthat lie between the il-th andiu-th ranked points in the sample N\u03b5. Define the corresponding score interval as the stripe range: S={x\u2208Rd|f\u22a4ql\u2264f\u22a4x\u2264f\u22a4qu}.",
+    "technical_score": 0.004416407148663443,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Then,|Do|=|S\u2229D| . SinceN\u03b5is an\u03b5-sample ofDfor stripe ranges, we have (with high probability): |\ufe01|\ufe01|\ufe01|\ufe01|S\u2229N\u03b5| |N\u03b5|\u2212|Do| |D||\ufe01|\ufe01|\ufe01|\ufe01\u2264\u03b5. From Equation 1, we know that |S\u2229N\u03b5|=|iu\u2212il|\u22642m\u03b5+2. Hence:|\ufe01|\ufe01|\ufe01|\ufe01|S\u2229N\u03b5| m\u2212|Do| n|\ufe01|\ufe01|\ufe01|\ufe01\u2264\u03b5 =\u21d2|Do| n\u22642m\u03b5+2 m+\u03b5 =\u21d2|Do|=O(\u03b5n).",
+    "technical_score": 0.004416407148663443,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "\u25a1 Observation. In 2D, the size of the \u03b5-sample satisfies (see Sec- tion 3): m=O(\ufe031 \u03b52log1 \u03b5)\ufe03 .",
+    "technical_score": 0.003596217249625947,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Eps2D: -sampling in 2D"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Total Runtime. Combining all steps, the total runtime is: T(Eps2D)=O(\ufe02 m+\u221an+|Do|log|Do|)\ufe02 . Using|Do|=O(\u03b5n)and choosing \u03b5=n\u22121/3(which minimizes the overall runtime), we get: T(Eps2D)=O(\ufe02 n2/3logn)\ufe02 . Theorem 5. TheEps2D algorithm solves the exact DAR problem in 2D using linear space and O(n2/3logn)query time.",
+    "technical_score": 0.0028769737997007576,
+    "citation_score": 0.0007192434499251894
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Next, we present the generalization of the Eps2D algorithm to higher dimensions ( d\u22652), referred to as the EpsRange algorithm. The preprocessing phase remains unchanged: we compute an \u03b5- sampleN\u03b5of the datasetD, of sizem, for a chosen parameter \u03b5. We know that m\u226an, because the VC-dimension of stripe ranges is\u03b4=d+1[27].",
+    "technical_score": 0.005413253333647478,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "During query time, the algorithm proceeds similarly to Eps2D . In Step i, we find the il-th andiu-th points inN\u03b5according to the scoring function f. In Step ii, we solve a high-dimensional instance of the SRRproblem. The resulting set Docontains candidate points fromDthat lie between the scores of the il-th andiu-th ranked points in the sample. This set is a conformal set for Problem 2. To obtain the exact solution, we proceed to Step iii, where we perform a high-dimensional range counting query to determine the exact rankof each point inDo. Finally, in Step iv, we sort the candidates in Doand return the point with exact rank i, completing the solution to the DAR selection problem.",
+    "technical_score": 0.006315462222588725,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "6.2.1 Analysis. The analysis is similar to Eps2D , however, the time complexity of the algorithm depends on the specific range counting and simplex range searching we use at steps ii and iii. Step i takesO(m)for finding the thresholds in the \u03b5-sample. Step ii requires solving the SRR problem. Following the simplex range searching algorithms, we can solve this problem in O(n1\u22121/d+|Do|) withO(n)space [37].",
+    "technical_score": 0.001804417777882493,
+    "citation_score": 0.001804417777882493
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "To report the exact response to DAR , i.e.,p(i), we proceed to steps iii and iv. In step iii, we solve an instance of range counting inddimensions, which takes O(n1\u22121/d)[37] time and linear space. Finally, in step iv, we sort Do, which takes O(|Do|log|Do|).",
+    "technical_score": 0.0005413253333647479,
+    "citation_score": 0.001263092444517745
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Space Complexity. The space complexity of this algorithm is linear to the input size, since all the structures used require linear space.",
+    "technical_score": 0.0009022088889412465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Time Complexity for the CSR problem. The total query time of the algorithm for finding the conformal set is: T(EpsRange CSR)=O(m+n1\u22121/d) The size of\u03b5-samplemisO(d \u03b52logd of stripe range is \u03b4=d+1[27,28]. This gives us the following query time: T(EpsRange CSR)=O(max{n1\u22121/d,d \u03b52logd \u03b5})=\u03a9(n1\u22121/d).",
+    "technical_score": 0.0009022088889412465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "The output is a set Dowith sizeO(\u03b5n), guaranteed to contain p(i)(see Lemma 4). Note that the final time also depends on the choice of parameter \u03b5, which determines the size of output Do.",
+    "technical_score": 0.0009022088889412465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Time Complexity for the DAR problem. The exact version also includes the steps iii and iv: T(EpsRange Exact)=O(m+n1\u22121/d+|Do|log|Do|).",
+    "technical_score": 0.0009022088889412465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "EpsRange: -sampling in Higher Dimensions"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Based on Lemma 4, we have |Do|=O(\u03b5n). As a result, by choos- ing\u03b5=n\u22121/3, we get the following runtime: T(EpsRange Exact)=O(max{n1\u22121/d,dn2/3logn}) Theorem 6. TheEpsRange algorithm solves the relaxed version of DAR problem with linear space usage and O(max{n1\u22121/d,d \u03b52logd \u03b5}) time. The exact version can also be solved with the same space usage andO(max{n1\u22121/d,dn2/3logn})time.",
+    "technical_score": 0.0009022088889412465,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "As observed in the previous section, the main bottleneck in the runtime of the EpsRange algorithm lies in the range searching subroutines used to solve the SRRproblem. These subroutines often suffer from the curse of dimensionality, particularly for general simplices, such as non-orthogonal half-spaces within stripe ranges. Even algorithms with theoretical sublinear time guarantees tend to perform poorly in practice [ 37], with a runtime comparable data structure built during the preprocessing. (Middle) An example of running a query on top of this structure, the green points are all the points scanned during the query phase. (Right) Flat view of the structure and the areas. to or worse than a naive linear scan over the entire dataset (see experiments in Section 7).",
+    "technical_score": 0.0024170805582798033,
+    "citation_score": 0.0006042701395699508
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "To address this limitation, we propose a practical algorithm for solving the SRR problem, where the ranges are stripes in d dimensions. We empirically show that augmenting EpsRange with this solution leads to significant performance improvements on real-world high-dimensional datasets (called EpsHier algorithm). We present a hierarchical data structure for solving the stripe range searching problem. We begin with a high-level overview of the structure, followed by a description of the preprocessing step , and conclude with the details of the query phase of the algorithm. structed in the solution of the DAR problem correspond to narrow regions, especially for small choices of \u03b5. To exploit this, we construct a hierarchical data structure over the input point set that enables efficient pruning of irrelevant points when answering such range queries.",
+    "technical_score": 0.0015106753489248774,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The core idea is to organize the points in a hierarchy that pre- serves spatial proximity, inspired by similar structures used in nearest neighbor search [ 19,28,35,42]. Each point in the hierarchy maintains a list of neighbors, and during preprocessing, we compute and store an enclosing ball around each such neighborhood.7 During query processing, we employ a simple yet effective heuris- tic: if the stripe intersects the enclosing ball of a node, we explore the node; otherwise, we safely prune it. This significantly reduces the number of points examined during query time.",
+    "technical_score": 0.0001510675348924878,
+    "citation_score": 0.00010071168992832521
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Empirical results demonstrate that for the narrow stripe ranges used in the DAR problem, this approach leads to a fast algorithm by eliminating many unnecessary explorations. See Figure 3 (middle), which illustrates the points explored during an example query. 6.3.2 Preprocessing.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Layers. Given the input dataset D, we construct a hierarchical graphG(D) on top of it. The graph consists of Llayers built via recursive random sampling.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "We define the base layer as the dataset itself:",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Input: The datasetDand the exponential decay rate r Output: The hierarchical graph G(D) which contains a list of layersL, neighboring relations N, and enclosing balls of nodes B. 1:L\u2190\u230alogrn\u230b \u22b2Number of layers 2:Ll\u2190[],\u2200l\u2264L \u22b2Placeholder for the layers",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "16:N\u2190{Nl(p)|\u2200l\u2264L,p\u2208Ll} 17:B\u2190{Bl(p)|\u2200l\u2264L,p\u2208Ll} 18:return(L,N,B) \u22b2layers, edges, and enclosing balls Each subsequent layer Llis formed by randomly sampling rpoints from the previous layer Ll\u22121, whereris a hyper- parameter known as the exponential decay rate .",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Thus, the size of each layer satisfies: r,\u22001\u2264l\u2264L Edges. Once the layerLlis sampled, each point in Llserves as a centroid for partitioning the points in the layer below, Ll\u22121. Specif- ically, each point p\u2208Ll\u22121is connected to its nearest neighbor in Ll, forming a directed edge from the centroid c\u2217top, where c\u2217=arg min c\u2208Ll||p\u2212c||2. (4)",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "This procedure creates a layered structure, where each level induces a graph by connecting lower-layer points to their nearest centroids in the current layer (see Figure 3, left, where each level illustrates the induced graph).",
+    "technical_score": 0.0001258896124104065,
+    "citation_score": 0.0001258896124104065
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "For every node pin the graphG(D) , letNl(p)denote the set of its neighbors at layer Ll. For example, in Figure 3 (left), the root node has three red neighbors at layer 1 and five black neighbors at layer 0.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "Area of Nodes. For each node pin layerlof the graphG(D) , we associate a set called the area of the node, denoted by Al(p). The area captures the set of points from the base layer that are hierarchically covered by this node.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "The definition is recursive. For the base layer, we set: A0(p)={p}.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "For any node pin layerl>0, the area is defined as: whereNl\u22121(p)denotes the neighbors (i.e., children) of pin layer l\u22121.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "In other words, the area of a node at layer lis the union of the areas of all its children in the layer below.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "As illustrated in Figure 3, we represent the area of each node using the smallest enclosing circle, shown with dotted lines.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Enclosing Balls. For each node pat layerl, we defineBl(p)as thesmallest enclosing ball that covers the area Al(p). These balls are later used during query time to enable efficient pruning of nodes when searching within a stripe range:",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "Construction Algorithm. To construct the hierarchical graph G(D) , we employ a bottom-up recursive approach. Starting from the base layer, we iteratively sample a subset of points to form the next layer. At each level, we connect nodes in the current layer to their nearest centroids in the layer above, thereby forming directed edges. After establishing the connections, we compute and update the area sets and corresponding enclosing balls for the newly constructed layer. The full preprocessing procedure is detailed in Algorithm 3.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "Analysis. The total space usage for storing the hierarchical lay- ers is linear to the input, since the size of each layer decreases exponentially: \u2211\ufe02 rl=O(n), assumingr=O(1).",
+    "technical_score": 0.0001258896124104065,
+    "citation_score": 0.0001258896124104065
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "The runtime of Algorithm 3 is dominated by the forloop at line 6, where the layers are constructed, and edges and area sets are updated. At each layer l, we sample|Ll|points. Then, for each point inLl\u22121, we compute its nearest neighbor in Ll. The time complexity at the layer lis: Tl=O(d\u00b7|Ll|\u00b7|Ll\u22121|).",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 21,
+    "paragraph": "Summing over all layers, the total runtime becomes:Algorithm 4 Hierarchical-Sampling-Query (G(D),Sf,l,u) Input: The preprocessed graph G(D) and the query stripe range Sf,l,u.",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 22,
+    "paragraph": "Output: The set of pointsDo=Sf,l,u\u2229D. 1:Do\u2190\u2205 \u22b2Placeholder for result",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 23,
+    "paragraph": "3:forcurr_layer fromLto1do \u22b2top-down 4:tmp\u2190\u2205 \u22b2Placeholder for new candidates 5: foreach pointp\u2208Candidates do 6: ifBcurr _layer(p)\u2229Sf,l,u=\u0338\u2205then 7: tmp\u2190tmp\u222aNcurr _layer(p)\u22b2Explore the area 8:candidates\u2190tmp 9:forp\u2208candidates do 10: ifp\u2208Sf,l,uthen",
+    "technical_score": 0.00022156571784231547,
+    "citation_score": 3.021350697849756e-05
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 24,
+    "paragraph": "12:returnDo \u2211\ufe02 lTl=\u2211\ufe02 ld\u00b7n rl\u00b7n rl\u22121=\u2211\ufe02 ldn2 r2l\u22121=O(dn2), again assuming r=O(1).",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 25,
+    "paragraph": "For computing the smallest enclosing ball of each area, we use Welzl\u2019s algorithm, which runs in linear time with respect to the number of points [51].",
+    "technical_score": 0.00022156571784231547,
+    "citation_score": 3.021350697849756e-05
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 26,
+    "paragraph": "Theorem 7. The preprocessing phase of the hierarchical sampling algorithm takes O(dn2)time and uses linear space. 6.3.3 Query Time. Given a stripe range Sf,l,u, the goal is to report all points in the intersection Sf,l,u\u2229D. The query process begins at the top of the hierarchy, starting from layer LL. At each layer l, we examine whether the enclosing ball Bl(p)of each pointp\u2208Llintersects the stripe Sf,l,u. If there is no inter- section, the corresponding node is pruned from further exploration. Otherwise, we proceed to explore its neighbors in the next lower layer, denoted by Nl\u22121(p).",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "-sampling Approach",
+      "Stripe Range Searching with Hierarchical Sampling"
+    ],
+    "paragraph_index": 27,
+    "paragraph": "The full query procedure is provided in Algorithm 4. A visual illustration of this process is shown in Figure 3 (middle).",
+    "technical_score": 0.000251779224820813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We conducted our experiments on a server running Ubuntu 20.04, equipped with 123 GB of RAM and a 64-core processor. Our code and other artifacts are available on this GitHub repository. 7.1.1 Datasets. We use both synthetic and real-world datasets for our evaluation. The synthetic datasets are generated using the Zipfian distribution, with variations in dimensionality, dataset size, and distribution parameters. The Zipfian distribution is particularly challenging for range searching due to its inherent skewness and is commonly observed in many real-world scenarios. It allows us to evaluate the algorithms under non-uniform workloads. For our real-world experiments, we use two datasets: the US Used Cars dataset [ 40] and the FIFA 2023 dataset [ 33]. The US Used Cars dataset contains approximately 3 million entries with 66 attributes, while the FIFA 2023 dataset comprises around 300,000 records with 54 attributes. The task in both datasets is to retrieve the items (cars or FIFA teams) that fall within a specified ranking window, as defined by the DAR problem. 7.1.2 Baselines and Methods. We evaluate our methods on all the SRR,DAR , and CSR problems.8For the SRR problem, we compare against classical and widely used range searching indices, including KD-Tree [ 5], R-Tree [ 26], and Partition Tree [ 36]. Our proposed method, referred to as Hierarchical Sampling (abbreviated as Hier- archical ), is included in the reports. As a baseline, we also include a simple exhaustive search approach, denoted as Exhaustive . To apply KD-Tree and R-Tree structures to stripe queries, we traverse the tree top-down, pruning subtrees whose corresponding hyperrectangles do not intersect the query stripe (similar to Algorithm 4). For the DAR andCSR problems, we include the Threshold Algo- rithm (TA) and Fagin\u2019s algorithm [ 25] as baseline methods. Addi- tionally, we consider a simple exhaustive baseline, referred to as Exhaustive , which computes the score for all points, sorts them according to the scoring function, and returns the i-th ranked el- ement. Our proposed algorithms are EpsRange andEpsHier , and are used for the CSR problem.9We also include KthLevel , the algo- rithm based on arrangement construction for our low-dimensional experiments. We begin by presenting experiments on the intermediate SRR problem to evaluate the core range searching component (sec- tion 7.2). We then proceed to the end-to-end evaluation of the fullDAR problem (section 7.3).",
+    "technical_score": 0.040071866397229934,
+    "citation_score": 0.040071866397229934
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "of the algorithms on synthetic datasets.",
+    "technical_score": 0.00797430240983656,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Effect of Stripe Width. For these experiments, the scoring func- tionfis sampled uniformly from the unit hypersphere in Rd. We vary the stripeSf,l,u by adjusting its width, i.e., the number of points it contains. Figure 4 presents the query time performance across different dimensionalities das a function of stripe width. We observe that both KD-Tree andR-Tree methods fail to scale effectively to high-dimensional settings, and thus we exclude them from experiments with d\u226532. The proposed Hierarchical Sampling method achieves up to a 16\u00d7speedup over Exhaustive search, par- ticularly in narrow stripe queries. Such narrow stripes frequently arise when solving the DAR andCSR problems, indicating that this method is also helpful for DAR problem. While the Partition Tree also shows a fast query time in low-dimensional spaces, its performance degrades with increasing dimensionality.",
+    "technical_score": 0.019935756024591394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Effect of Dataset Size. Figure 5 illustrates the impact of increasing the dataset size non the query time performance of the algorithms, for both low- and high-dimensional settings. As observed, the Hier- archical Sampling method consistently outperforms the baselines with a significant speedup.",
+    "technical_score": 0.00797430240983656,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "8 We may use DAR andCSR interchangeably in this section. the conformal set contains less than 20 points.Preprocessing (Indexing) Phase. All methods evaluated involve a preprocessing phase in which an index structure is constructed. Fig- ure 6 (left) shows the memory usage of these indices as a function of the dataset size n, while the right plot illustrates the corresponding preprocessing time. As shown, the space overhead of Hierarchical Sampling is comparable to that of KD-Tree andR-Tree , both of which are commonly used in existing systems. Moreover, the space usage grows linearly with the dataset size n. The time required to build the Hierarchical Sampling index is also on par with that of thePartition Tree andR-Tree . including the US Used Cars dataset as an example of a large-scale dataset, and the FIFA 2023 dataset. The results are presented in Figure 7. As shown, Hierarchical Sampling significantly outper- forms both Exhaustive search and the Partition Tree method. In this experiment, multiple random scoring functions are sampled uniformly from the unit hypersphere.",
+    "technical_score": 0.00020035434804714351,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Stripe Range Retrieval"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Accuracy of the Output. In all the settings, the output is guaran- teed to have a recall of 100% , reporting all the points in the range.",
+    "technical_score": 0.00398715120491828,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "7.3.1 Synthetic Dataset. Effect of Dimension and value of i.Figure 8 (left) presents the query time of various algorithms as a function of data dimensional- ity. As the dimensionality increases, both Fagin andTAalgorithms exhibit poor scalability for the DAR queries. Between the proposed methods, EpsHier consistently outperforms EpsRange , particularly when the dimensionality exceeds 8. The performance degradation ofEpsRange in higher dimensions is because of its reliance on Partition Tree -based range searching [ 37], which suffers from the curse of dimensionality. Figure 8 (right) illustrates the impact of varying the value of i in the DAR query on the runtime performance. The TAalgorithm shows increasing query time as igrows, since it must retrieve the top-iitems. In contrast, the runtime of EpsRange remains relatively stable, as it depends primarily on the position of the stripe rather than the value of i. The EpsHier method also shows a moderate increase in runtime for larger i, which can be because of the relative location of the stripes with respect to the dataset. The marginal stripes (smaller values of i) intersect with fewer balls in the hierar- chical structure proposed in Section 6.3, and the pruning is more effective in this case. In contrast, stripes that are relatively in the middle require more balls to be explored, because they intersect with more balls, and as a result, the pruning is less effective. Effect of Dataset Size and \u03b5.Figure 9 (left) shows the effect of dataset size on the query time of the algorithms. We observe signif- icant speedups achieved by both EpsRange andEpsHier compared to the baseline methods. Figure 9 (right) illustrates the impact of varying the parameter \u03b5. As expected, this parameter influences the size of the output set in theCSR problem. Increasing the value of \u03b5results in a larger output set, whereas smaller values of \u03b5require searching over a larger \u03b5-sample during the initial phase of the algorithm. Both extremes lead to increased query times. The most efficient performance is",
+    "technical_score": 0.0038141442374985766,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Efficient Direct-Access Ranked Retrieval",
+    "technical_score": 0.002724388741070411,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "The higher-dimensional and larger cases do not contain KD-tree and R-tree as these methods do not scale well. the dataset size for d=8. range width. The scoring functions are sampled uniformly at random from a hypersphere. typically achieved for a moderate value of \u03b5, which may serve as a reasonable default when the user does not specify a preference.",
+    "technical_score": 0.0016346332446422467,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "KthLevel Algorithm. We conducted experiments to evaluate the performance of the KthLevel algorithm on smaller datasets in 2D. As shown in Figure 10, the KthLevel algorithm achieves substantial speedups. However, this improvement comes at the cost of increased siondand the rank i. Here,\u03b5=1 16for EpsRange and EpsHier. size and\u03b5. In the right plot, n=10000 and the size of returned conformal set is \u03b5\u00b7n. index size, as it stores the k-th level of the arrangement for all values ofk.",
+    "technical_score": 0.0016346332446422467,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "2 D. Generally, KthLevel does not scale well with dimension dand sizen. Here, EpsRange in 2D is equivalent to Eps2D algorithm.",
+    "technical_score": 0.000887372332805791,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Real Datasets. Figure 12 presents the results of running the al- gorithms on the US Used Cars dataset, evaluating performance across different values of \u03b5(left) and different values of i(right). Figure 11 shows the corresponding results on the FIFA 2023 dataset.",
+    "technical_score": 0.000887372332805791,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "In both cases, we observe significant speedups achieved by EpsHier , followed by EpsRange , showing their effectiveness in real-world scenarios. and rankion FIFA 2023 dataset. rankion US Used Cars Dataset.",
+    "technical_score": 0.000887372332805791,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Direct-Access and Conformal Set Retrieval"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Accuracy of the Output. In all the experiments, the returned set is guaranteed to have the p(i), so the recall is always 100%.",
+    "technical_score": 0.000887372332805791,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we briefly review the relevant literature, including prior work on top- kretrieval, direct access queries in databases, and range searching.",
+    "technical_score": 0.020687592357888453,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "technical_score": 0.013791728238592302,
+    "citation_score": 0.020687592357888453
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Direct Access Queries in Databases. Recent work in database the- ory has explored the notion of direct access to query answers, aim- ing to support efficient access to the i-th ranked tuple withoutmaterializing the full result [ 9,23,49]. One line of research intro- duces ranked enumeration for database queries, where tuples can be accessed according to a predefined ranking attribute with prov- able delay guarantees [ 49]. Other work extends this to conjunctive queries with aggregation, designing algorithms that enable access to top-ranked answers without fully evaluating the query [ 23]. Further studies investigate structural conditions, such as bounded treewidth, under which ranked direct access remains tractable [ 9]. Our paper has a different objective. Specifically, rather than as- suming a predefined ordering, we consider a ranking function as part of the user query . As a result, the proposed algorithms for direct- access queries cannot be adapted to our setting.",
+    "technical_score": 0.00137917282385923,
+    "citation_score": 0.00551669129543692
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "technical_score": 0.0027583456477184598,
+    "citation_score": 0.004137518471577691
+  },
+  {
+    "section_path": [
+      "conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we introduced and studied the problem of Direct Access Ranked Retrieval ( DAR ) and its relaxed variant, Conformal Set Ranked Retrieval ( CSR). We first proposed an algorithm based on geometric arrangements with logarithmic query time but an ex- ponential space complexity to the number of dimensions. Next, we proposed our space-efficient algorithms based on \u03b5-samples. Specif- ically, providing a hierarchical sampling-based data structure for efficient stripe-range retrieval, we developed a practical algorithm for the CSR problem that scales to hundreds of dimensions. Our focus in this paper was on static settings, where the dataset does not change. Extending the scope of our problem to dynamic settings with insert, delete, and update operations is an important next step for future work. Moreover, it would be interesting to study the problem under non-linear ranking functions.",
+    "technical_score": 0.06302561210132208,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we analyze the complexity of the DAR problem and show the near-optimality of our proposed algorithms. Specifically, the well-studied half-space range counting problem [ 1,11] reduces to our problem. Hence, the complexity of the state-of-the-art algo- rithms for half-space range counting provides a lower bound for theDAR problem.",
+    "technical_score": 0.01697813465151607,
+    "citation_score": 0.01697813465151607
+  },
+  {
+    "section_path": [
+      "A Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The half-space range counting problem is defined as follows: given a point set in Rdand a query half-space H, determine the number of points lying within H.",
+    "technical_score": 0.022637512868688092,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Now, these are the two important observations:",
+    "technical_score": 0.011318756434344046,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Observation 1. If the algorithm uses linear space, i.e., m=O(n), then the query time cannot be faster than O(n1\u22121 d)up to logarith- mic factors.",
+    "technical_score": 0.022637512868688092,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Observation 2. If the algorithm uses exponential space, i.e., m= 2\u0398(d), then the lower bound becomes \u03a9(logn). In fact, our exact algorithm KthLevel has logarithmic query time but requires ex- ponential space, which matches this bound. Note that querying KthLevelntimes is equivalent to sorting all nelements, which takes\u03a9(nlogn)time.",
+    "technical_score": 0.011318756434344046,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "A Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Conclusion. These results demonstrate that our algorithms for theDAR problem are optimal up to logarithmic factors, given the space-time trade-offs imposed by known lower bounds.",
+    "technical_score": 0.011318756434344046,
+    "citation_score": 0.0
+  }
+]

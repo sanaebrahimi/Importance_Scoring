@@ -1,0 +1,234 @@
+
+====================================================================================================
+============================== RUN START ==============================
+[run_start] time=2026-05-21T11:02:57 model=phi3:medium host=http://localhost:11434 paper_id=Native-Sparse-Attention n_samples=1 temperature=0.0 sample_temperature_jitter=0.03 seed=42 max_retries=5 paragraph_direct_max_tokens=1200 paragraph_compressed_snippet_limit=8000
+============================== RUN START ==============================
+====================================================================================================
+[all_together_top_item_order] parent=Whole Paper sample=1/1 order=['Introduction', 'Methodology', 'Experiments', 'Efficiency Analysis', 'Conclusion']
+[all_together_top] parent=Whole Paper sample=1 attempt=1/5
+1: 35%
+2: 25%
+3: 20%
+4: 15%
+5: 10%
+[paragraph_scoring] parent=Introduction::paragraphs method=channel_compressed estimated_tokens=3271 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0007503226566800081
+Paragraph 1: technical=35, citation=65
+[citation_split] paragraph_id=Introduction::p1 sample=1 attempt=1/5
+1: 35
+2: 35
+3: 15
+4: 10
+5: 5
+6: 5
+7: 5
+8: 5
+9: 5
+10: 5
+11: 5
+12: 5
+13: 5
+14: 5
+15: 5
+16: 5
+17: 5
+18: 5
+[all_together_subsections_item_order] parent=Methodology sample=1/1 order=['[Section Lead-in]', 'Background', 'Overall Framework', 'Algorithm Design', 'Kernel Design']
+[all_together_subsections] parent=Methodology sample=1 attempt=1/5
+35%
+25%
+20%
+15%
+20%
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=760 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 57
+2: 43
+
+Explanation (not part of the required plain text response): Paragraph 1 introduces both the methodology and key algorithmic components, which are central to the scientific contribution. Paragraph 2 focuses on hardware-optimized kernel design for practical efficiency, a significant but slightly less core aspect compared to the foundational methods and algorithms presented in Paragraph 1.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020300984622687337
+Paragraph1: technical=95, citation=5
+Paragraph2: technical=100, citation=0
+[paragraph_scoring] parent=Background::paragraphs method=channel_compressed estimated_tokens=1864 threshold=1200 paragraphs=2 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Background::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Background::paragraphs sample=1 attempt=1/5
+50: Paragraph 1
+50: Paragraph 2
+[all_together_paragraphs] parent=Background::paragraphs sample=1 attempt=2/5
+Paragraph 1: 45%
+Paragraph 2: 55%
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0026081649788824842
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=100, citation=0
+[paragraph_scoring] parent=Overall Framework::paragraphs method=channel_full_parent estimated_tokens=1148 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Overall Framework::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Overall Framework::paragraphs sample=1 attempt=1/5
+50
+50
+
+Both paragraphs contribute equally to the main scientific contribution of the paper, as they both introduce and define key concepts that are central to the proposed framework. Paragraph 1 introduces the idea of replacing original key-value pairs with a more compact set, while Paragraph 2 provides the formal definition and details on how this is achieved through various mapping strategies.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0008939165831421103
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=100, citation=0
+[all_together_subsections_item_order] parent=Algorithm Design sample=1/1 order=['[Section Lead-in]', 'Token Compression', 'Token Selection', 'Sliding Window']
+[all_together_subsections] parent=Algorithm Design sample=1 attempt=1/5
+3: 50
+4: 50
+[all_together_subsections] parent=Algorithm Design sample=1 attempt=2/5
+2: 45
+3: 35
+4: 25
+[all_together_subsections] parent=Algorithm Design sample=1 attempt=3/5
+Parent: 35%
+Child 2: 45%
+Child 3: 10%
+Child 4: 45%
+
+The percentages are based on the length of each excerpt and their relevance to the overall topic, which in this case is a description of different mechanisms within an attention mechanism. The longest section (Parent) provides foundational information about why blockwise selection is important for efficiency reasons, so it gets 35%. Child 2 explains the token selection process with detailed methodology and its importance score computation, making it slightly more complex than Parent but less than Child 4 which introduces an additional mechanism to handle local context. Therefore, I've assigned a higher percentage of 40% to Child 2. The Sliding Window section (Child 4) is the most detailed with specific implementation details and its role in preventing shortcut learning, thus it gets the highest percentage at 45%.
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=630 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.015160658643100872
+Paragraph1: technical=95, citation=5
+[paragraph_scoring] parent=Token Compression::paragraphs method=channel_full_parent estimated_tokens=1041 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0007960790905159087
+Paragraph 1: technical=95, citation=5
+[paragraph_scoring] parent=Token Selection::paragraphs method=channel_compressed estimated_tokens=2630 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Token Selection::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Token Selection::paragraphs sample=1 attempt=1/5
+1: 35
+2: 25
+3: 20
+4: 5
+5: 7
+6: 8
+7: 0
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.019496533133385695
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=30, citation=70
+Paragraph 3: technical=85, citation=15
+Paragraph 4: technical=100, citation=0
+Paragraph 5: technical=60, citation=40
+Paragraph 6: technical=90, citation=10
+Paragraph 7: technical=95, citation=5
+[paragraph_scoring] parent=Sliding Window::paragraphs method=channel_compressed estimated_tokens=1294 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0163482444180965
+Paragraph 1: technical=95, citation=5
+[paragraph_scoring] parent=Kernel Design::paragraphs method=channel_compressed estimated_tokens=1645 threshold=1200 paragraphs=3 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Kernel Design::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Kernel Design::paragraphs sample=1 attempt=1/5
+1: 50
+2: 30
+3: 20
+
+These percentages reflect the relative importance of each paragraph in contributing to the main scientific contribution, with Paragraph 1 being the most significant as it introduces the core concept and strategy for achieving FlashAttention-level speedup.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01767797051627726
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=100, citation=0
+[all_together_subsections_item_order] parent=Experiments sample=1/1 order=['[Section Lead-in]', 'Pretraining Setup', 'Baselines Methods', 'Performance Comparison']
+[all_together_subsections] parent=Experiments sample=1 attempt=1/5
+3: 50
+4: 50
+[all_together_subsections] parent=Experiments sample=1 attempt=2/5
+1: 35%
+2: 45%
+3: 20%
+4: 60%
+
+The percentages are assigned based on the importance and detail provided in each section of the text, with a higher percentage indicating greater significance to the overall content.
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=1075 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=[Section Lead-in]::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=[Section Lead-in]::paragraphs sample=1 attempt=1/5
+1: 35
+2: 45
+3: 20
+
+These percentages reflect the relative importance of each paragraph in contributing to the main scientific contribution of the parent segment, with Paragraph 2 being slightly more important due to its detailed performance metrics across various benchmarks.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024174577554984235
+Paragraph 1: technical=5, citation=95
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=100, citation=0
+[paragraph_scoring] parent=Pretraining Setup::paragraphs method=channel_full_parent estimated_tokens=1028 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.020944181849646804
+Paragraph1: technical=45, citation=55
+[paragraph_scoring] parent=Baselines Methods::paragraphs method=channel_full_parent estimated_tokens=1190 threshold=1200 paragraphs=2 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Baselines Methods::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2']
+[all_together_paragraphs] parent=Baselines Methods::paragraphs sample=1 attempt=1/5
+1: 75
+2: 25
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.0046643849943534465
+Paragraph 1: technical=35, citation=65
+Paragraph 2: technical=100, citation=0
+[citation_split] paragraph_id=Experiments > Baselines Methods::p1 sample=1 attempt=1/5
+1: 50
+2: 30
+3: 20
+
+Explanation: The citation (Zhang et al., 2023b) is given the highest share as it directly supports the paragraph's claim and provides a key comparison or baseline. The citations (Xiao et al., 2024a) and (Tanget al., 2024) are also important but slightly less so, with the latter being mentioned briefly in relation to Exact-Top.
+[paragraph_scoring] parent=Performance Comparison::paragraphs method=channel_compressed estimated_tokens=1910 threshold=1200 paragraphs=7 snippet_limit=8000 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Performance Comparison::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3', 'Paragraph 4', 'Paragraph 5', 'Paragraph 6', 'Paragraph 7']
+[all_together_paragraphs] parent=Performance Comparison::paragraphs sample=1 attempt=1/5
+1: 35
+2: 5
+3: 0
+4: 0
+5: 25
+6: 15
+7: 20
+
+The percentages sum to 100 and reflect the importance of each child segment in contributing to the main scientific contribution.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.002782375301404437
+Paragraph 1: technical=35, citation=65
+Paragraph 2: technical=100, citation=0
+Paragraph 3: technical=40, citation=60
+Paragraph 4: technical=70, citation=30
+Paragraph 5: technical=100, citation=0
+Paragraph 6: technical=90, citation=10
+Paragraph 7: technical=85, citation=15
+[citation_split] paragraph_id=Experiments > Performance Comparison::p1 sample=1 attempt=1/5
+1: 50
+2: 30
+3: 20
+
+Explanation: The citation (Hendrycks et al., 2020) is given the highest percentage because it directly supports the paragraph's claim about evaluating pretrained NSA and Full Attention baseline on a comprehensive suite of benchmarks. It introduces MMLU, which is one of the key benchmarks mentioned in the context. The citation (Wang et al., 2024) provides important information about MMLU-PRO, another significant benchmark that builds upon MMLU and thus supports the paragraph's claims. Lastly, the citation (Li et al., 2023) introduces CMMLU as a method the paragraph builds upon but is mentioned less prominently than the other two citations in the context of supporting the main claim or providing key comparisons/baselines.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.025424830990423794
+Paragraph 2: technical=5, citation=95
+[citation_split] paragraph_id=Experiments > Performance Comparison::p3 sample=1 attempt=1/5
+1: 35
+2: 25
+3: 20
+4: 20
+
+Explanation: The citation (Hendrycks et al., 2020) is given a higher share because it provides key comparisons and baselines for the paragraph's claims. Citation (Dua et al., 2019) also contributes to these comparisons but slightly less so, hence its lower percentage. Citations (Austin et al., 2021) and (Chen et al., 2021) are given equal shares as they both introduce methods that the paragraph builds upon and mentions in relation to performance metrics.
+[citation_split] paragraph_id=Experiments > Performance Comparison::p4 sample=1 attempt=1/5
+1: 50
+2: 30
+3: 20
+[all_together_subsections_item_order] parent=Efficiency Analysis sample=1/1 order=['[Section Lead-in]', 'Training Speed', 'Decoding Speed']
+[all_together_subsections] parent=Efficiency Analysis sample=1 attempt=1/5
+1: 35
+2: 45
+3: 20
+
+These percentages reflect the relative importance of each child segment in contributing to the main scientific contribution of the parent segment "Efficiency Analysis." The Training Speed section (id=2) is given a higher percentage because it provides detailed experimental findings and analysis that demonstrate the efficiency gains of NSA over Full Attention, which are central to the paper's contributions. The Decoding Speed section (id=3), while still important for showing performance improvements in decoding tasks, contributes less directly to the core scientific contribution compared to Training Speed. Lastly, the Section Lead-in (id=1) provides necessary context and setup details but does not contain substantial content that advances the main scientific argument; therefore, it receives the lowest percentage.
+[paragraph_scoring] parent=[Section Lead-in]::paragraphs method=channel_full_parent estimated_tokens=713 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01608684274364102
+Paragraph1: technical=95, citation=5
+[paragraph_scoring] parent=Training Speed::paragraphs method=channel_full_parent estimated_tokens=975 threshold=1200 paragraphs=3 snippet_limit=0 n_samples=1 max_retries=5
+[all_together_paragraphs_item_order] parent=Training Speed::paragraphs sample=1/1 order=['Paragraph 1', 'Paragraph 2', 'Paragraph 3']
+[all_together_paragraphs] parent=Training Speed::paragraphs sample=1 attempt=1/5
+1: 50
+2: 30
+3: 20
+
+These percentages reflect the relative importance of each paragraph in contributing to the main scientific contribution, with Paragraph 1 being most significant as it presents the core findings and comparisons.
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.011356031316250605
+Paragraph 1: technical=95, citation=5
+Paragraph 2: technical=100, citation=0
+Paragraph3: technical=100, citation=0
+[paragraph_scoring] parent=Decoding Speed::paragraphs method=channel_full_parent estimated_tokens=855 threshold=1200 paragraphs=1 snippet_limit=0 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.01656121893819681
+Paragraph1: technical=95, citation=5
+[paragraph_scoring] parent=Conclusion::paragraphs method=channel_compressed estimated_tokens=1366 threshold=1200 paragraphs=1 snippet_limit=8000 n_samples=1 max_retries=5
+[paragraph_channel_split] sample=1/1 attempt=1/5 temperature=0.024882139927589846
+Paragraph1: technical=95, citation=5
