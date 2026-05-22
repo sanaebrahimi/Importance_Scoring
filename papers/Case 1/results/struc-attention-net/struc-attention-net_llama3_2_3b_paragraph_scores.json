@@ -6,7 +6,8 @@
     "paragraph_index": 1,
     "paragraph": "Attention networks are now a standard part of the deep learning toolkit, contributing to impressive results in neural machine translation (Bahdanau et al., 2015; Luong et al., 2015), image captioning (Xu et al., 2015), speech recognition (Chorowski et al., 2015; Chan et al., 2015), question answering (Hermann et al., 2015; Sukhbaatar et al., 2015), and algorithm-learning (Graves et al., 2014; Vinyals et al., 2015), among many other applications (see Cho et al. (2015) for a comprehensive review). This approach alleviates the bottleneck of compressing a source into a fixed-dimensional vector by equipping a model with variable-length memory (Weston et al., 2014; Graves et al., 2014; 2016), thereby providing random access into the source as needed. Attention is implemented as a hidden layer which computes a categorical distribution (or hierarchy of categorical distributions) to make a soft-selection over source elements. Noting the empirical effectiveness of attention networks, we also observe that the standard attention- based architecture does not directly model any structural dependencies that may exist among the source elements, and instead relies completely on the hidden layers of the network. While one might argue that these structural dependencies can be learned implicitly by a deep model with enough data, in practice, it may be useful to provide a structural bias. Modeling structural dependencies at the final, output layer has been shown to be important in many deep learning applications, most notably in seminal work on graph transformers (LeCun et al., 1998), key work on NLP (Collobert et al., 2011), and in many other areas (Peng et al., 2009; Do & Arti \u0301eres, 2010; Jaderberg et al., 2014; Chen et al., 2015; Durrett & Klein, 2015; Lample et al., 2016, inter alia ). In this work, we consider applications which may require structural dependencies at the attention layer, and develop internal structured layers for modeling these directly. This approach generalizes categorical soft-selection attention layers by specifying possible structural dependencies in a soft \u0003Equal contribution. 1arXiv:1702.00887v3 [cs.CL] 16 Feb 2017",
     "technical_score": 0.025872796192181486,
-    "citation_score": 0.038809194288272224
+    "citation_score": 0.038809194288272224,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -15,7 +16,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 manner. Key applications will be the development of an attention function that segments the source input into subsequences and one that takes into account the latent recursive structure (i.e. parse tree) of a source sentence. Our approach views the attention mechanism as a graphical model over a set of latent variables. The standard attention network can be seen as an expectation of an annotation function with respect to a single latent variable whose categorical distribution is parameterized to be a function of the source. In the general case we can specify a graphical model over multiple latent variables whose edges encode the desired structure. Computing forward attention requires performing inference to obtain the expectation of the annotation function, i.e. the context vector . This expectation is computed over an exponentially-sized set of structures (through the machinery of graphical models/structured pre- diction), hence the name structured attention network. Notably each step of this process (including inference) is differentiable, so the model can be trained end-to-end without having to resort to deep policy gradient methods (Schulman et al., 2015). The differentiability of inference algorithms over graphical models has previously been noted by various researchers (Li & Eisner, 2009; Domke, 2011; Stoyanov et al., 2011; Stoyanov & Eisner, 2012; Gormley et al., 2015), primarily outside the area of deep learning. For example, Gormley et al. (2015) treat an entire graphical model as a differentiable circuit and backpropagate risk through variational inference (loopy belief propagation) for minimium risk training of dependency parsers. Our contribution is to combine these ideas to produce structured internal attention layers within deep networks, noting that these approaches allow us to use the resulting marginals to create new features, as long as we do so a differentiable way. We focus on two classes of structured attention: linear-chain conditional random fields (CRFs) (Laf- ferty et al., 2001) and first-order graph-based dependency parsers (Eisner, 1996). The initial work of Bahdanau et al. (2015) was particularly interesting in the context of machine translation, as the model was able to implicitly learn an alignment model as a hidden layer , effectively embedding inference into a neural network. In similar vein, under our framework the model has the capacity to learn a segmenter as a hidden layer or a parser as a hidden layer , without ever having to see a segmented sentence or a parse tree. Our experiments apply this approach to a difficult synthetic re- ordering task, as well as to machine translation, question answering, and natural language inference. We find that models trained with structured attention outperform standard attention models. Analy- sis of learned representations further reveal that interesting structures emerge as an internal layer of the model. All code is available at http://github.com/harvardnlp/struct-attn .",
     "technical_score": 0.020236222736027674,
-    "citation_score": 0.007484630327023934
+    "citation_score": 0.007484630327023934,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -24,7 +26,8 @@
     "paragraph_index": 1,
     "paragraph": "A standard neural network consist of a series of non-linear transformation layers, where each layer produces a fixed-dimensional hidden representation. For tasks with large input spaces, this paradigm makes it hard to control the interaction between components. For example in machine translation, the source consists of an entire sentence, and the output is a prediction for each word in the translated sentence. Utilizing a standard network leads to an information bottleneck, where one hidden layer must encode the entire source sentence. Attention provides an alternative approach.1An attention network maintains a set of hidden representations that scale with the size of the source. The model uses an internal inference step to perform a soft-selection over these representations. This method allows the model to maintain a variable-length memory and has shown to be crucially important for scaling systems for many tasks. Formally, let x= [x1;:::;xn]represent a sequence of inputs, let qbe a query, and let zbe a categorical latent variable with sample space f1;:::;ngthat encodes the desired selection among these inputs. Our aim is to produce a contextcbased on the sequence and the query. To do so, we assume access to an attention distribution z\u0018p(zjx;q), where we condition pon the inputs xand a queryq. The context over a sequence is defined as expectation, c=Ez\u0018p(zjx;q)[f(x;z)]where f(x;z)is an annotation function . Attention of this form can be applied over any type of input, however, we will primarily be concerned with \u201cdeep\u201d networks, where both the annotation function 1Another line of work involves marginalizing over latent variables (e.g. latent alignments) for sequence-to- sequence transduction (Kong et al., 2016; Lu et al., 2016; Yu et al., 2016; 2017).",
     "technical_score": 0.031047355430617797,
-    "citation_score": 0.01330600947026477
+    "citation_score": 0.01330600947026477,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -33,7 +36,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 and attention distribution are parameterized with neural networks, and the context produced is a vector fed to a downstream network. For example, consider the case of attention-based neural machine translation (Bahdanau et al., 2015). Here the sequence of inputs [x1;:::;xn]are the hidden states of a recurrent neural network (RNN), running over the words in the source sentence, qis the RNN hidden state of the target decoder (i.e. vector representation of the query q), andzrepresents the source position to be attended to for translation. The attention distribution pis simplyp(z=ijx;q) = softmax( \u0012i)where\u00122Rn is a parameterized potential typically based on a neural network, e.g. \u0012i= MLP([ xi;q]). The annotation function is defined to simply return the selected hidden state, f(x;z) =xz. The context vector can then be computed using a simple sum, c=Ez\u0018p(zjx;q)[f(x;z)] =nX i=1p(z=ijx;q)xi (1) Other tasks such as question answering use attention in a similar manner, for instance by replacing source [x1;:::;xn]with a set of potential facts and qwith a representation of the question. In summary we interpret the attention mechanism as taking the expectation of an annotation function f(x;z)with respect to a latent variable z\u0018p, wherepis parameterized to be function of xandq.",
     "technical_score": 0.027104834106094884,
-    "citation_score": 0.027104834106094884
+    "citation_score": 0.027104834106094884,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -43,7 +47,8 @@
     "paragraph_index": 1,
     "paragraph": "Attention networks simulate selection from a set using a soft model. In this work we consider gener- alizing selection to types of attention, such as selecting chunks, segmenting inputs, or even attending to latent subtrees. One interpretation of this attention is as using soft-selection that considers all pos- sible structures over the input, of which there may be exponentially many possibilities. Of course, this expectation can no longer be computed using a simple sum, and we need to incorporate the machinery of inference directly into our neural network.",
     "technical_score": 0.007737198099376179,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -53,7 +58,8 @@
     "paragraph_index": 2,
     "paragraph": "Define a structured attention model as being an attention model where zis now a vector of discrete latent variables [z1;:::;zm]and the attention distribution is p(zjx;q)is defined as a conditional random field (CRF), specifying the independence structure of the zvariables. Formally, we assume an undirected graph structure with mvertices. The CRF is parameterized with clique (log-)potentials \u0012C(zC)2R, where thezCindicates the subset of zgiven by clique C. Under this definition, the attention probability is defined as, p(zjx;q;\u0012) = softmax(P C\u0012C(zC)), where for symmetry we usesoftmax in a general sense, i.e. softmax(g(z)) =1 Zexp(g(z))whereZ=P z0exp(g(z0))is the implied partition function. In practice we use a neural CRF, where \u0012comes from a deep model overx;q.",
     "technical_score": 0.013926956578877122,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -63,7 +69,8 @@
     "paragraph_index": 3,
     "paragraph": "In structured attention, we also assume that the annotation function ffactors (at least) into clique annotation functions f(x;z) =P CfC(x;zC). Under standard conditions on the conditional inde- pendence structure, inference techniques from graphical models can be used to compute the forward- pass expectations and the context: c=Ez\u0018p(zjx;q)[f(x;z)] =X CEz\u0018p(zCjx;q)[fC(x;zC)]",
     "technical_score": 0.009284637719251414,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -73,7 +80,8 @@
     "paragraph_index": 1,
     "paragraph": "Suppose instead of soft-selecting a single input, we wanted to explicitly model the selection of con- tiguous subsequences. We could naively apply categorical attention over all subsequences, or hope the model learns a multi-modal distribution to combine neighboring words. Structured attention provides an alternate approach. Concretely, let m=n, definezto be a random vector z= [z1;:::;zn]withzi2f0;1g, and define our annotation function to be, f(x;z) =Pn i=1fi(x;zi)wherefi(x;zi) = 1fzi= 1gxi. The explicit expectation is then, Ez1;:::;zn[f(x;z)] =nX i=1p(zi= 1jx;q)xi (2) (b) A Bernoulli (sigmoid) attention network, (c) A linear-chain structured attention model for segmentation. The input and query are denoted with xandqrespectively. Equation (2) is similar to equation (1)\u2014both are a linear combination of the input representations where the scalar is between [0;1]and represents how much attention should be focused on each input. However, (2) is fundamentally different in two ways: (i) it allows for multiple inputs (or no inputs) to be selected for a given query; (ii) we can incorporate structural dependencies across the zi\u2019s. For instance, we can model the distribution over zwith a linear-chain CRF with pairwise edges, p(z1;:::;znjx;q) = softmax n\u00001X i=1\u0012i;i+1(zi;zi+1)! (3) where\u0012k;lis the pairwise potential for zi=kandzi+1=l. This model is shown in Figure 1c. Compare this model to the standard attention in Figure 1a, or to a simple Bernoulli (sigmoid) selec- tion method, p(zi= 1jx;q) = sigmoid( \u0012i), shown in Figure 1b. All three of these methods can use potentials from the same neural network or RNN that takes xandqas inputs. In the case of the linear-chain CRF in (3), the marginal distribution p(zi= 1jx)can be calculated efficiently in linear-time for all iusing message-passing, i.e. the forward-backward algorithm. These marginals allow us to calculate (2), and in doing so we implicitly sum over an exponentially-sized set of structures (i.e. all binary sequences of length n) through dynamic programming. We refer to this type of attention layer as a segmentation attention layer. Note that the forward-backward algorithm is being used as parameterized pooling (as opposed to output computation), and can be thought of as generalizing the standard attention softmax. Crucially this generalization from vector softmax to forward-backward is just a series of differentiable steps,2 and we can compute gradients of its output (marginals) with respect to its input (potentials). This will allow the structured attention model to be trained end-to-end as part of a deep model.",
     "technical_score": 0.04642318859625707,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -83,7 +91,8 @@
     "paragraph_index": 1,
     "paragraph": "This same approach can be used for more involved structural dependencies. One popular structure for natural language tasks is a dependency tree, which enforces a structural bias on the recursive dependencies common in many languages. In particular a dependency tree enforces that each word in a source sentence is assigned exactly one parent word ( head word ), and that these assignments do not cross (projective structure). Employing this bias encourages the system to make a soft-selection based on learned syntactic dependencies, without requiring linguistic annotations or a pipelined decision. A dependency parser can be partially formalized as a graphical model with the following cliques (Smith & Eisner, 2008): latent variables zij2f0;1gfor alli6=j, which indicates that the i-th word is the parent of the j-th word (i.e. xi!xj); and a special global constraint that rules out configurations of zij\u2019s that violate parsing constraints (e.g. one head, projectivity). The parameters to the graph-based CRF dependency parser are the potentials \u0012ij, which reflect the score of selecting xias the parent of xj. The probability of a parse tree zgiven the sentence 2As are other dynamic programming algorithms for inference in graphical models, such as (loopy and non- loopy) belief propagation.",
     "technical_score": 0.008124058004344988,
-    "citation_score": 0.0034817391447192806
+    "citation_score": 0.0034817391447192806,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -93,7 +102,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 procedure FORWARD BACKWARD (\u0012) [0;hti] 0 [n+ 1;hti] 0 fori= 1;:::;n ;c2Cdo [i;c] L y [i\u00001;y] \u0012i\u00001;i(y;c) fori=n;:::; 1;c2Cdo [i;c] L y [i+ 1;y] \u0012i;i+1(c;y) A [n+ 1;hti] fori= 1;:::;n ;c2Cdo p(zi=cjx) exp( [i;c] [i;c]",
     "technical_score": 0.009671497624220224,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -103,7 +113,8 @@
     "paragraph_index": 3,
     "paragraph": "\u0000A) returnpprocedure BACKPROP FORWARD BACKWARD (\u0012;p;rL p) rL logp logrL p",
     "technical_score": 0.007737198099376179,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -113,7 +124,8 @@
     "paragraph_index": 4,
     "paragraph": "\u0000A rL logp logrL p",
     "technical_score": 0.005802898574532134,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -123,7 +135,8 @@
     "paragraph_index": 5,
     "paragraph": "\u0000A ^ [0;hti] 0 ^ [n+ 1;hti] 0 fori=n;::: 1;c2Cdo ^ [i;c] rL [i;c]\bL y\u0012i;i+1(c;y) ^ [i+ 1;y] fori= 1;:::;n ;c2Cdo ^ [i;c] rL [i;c]\bL y\u0012i\u00001;i(y;c) ^ [i\u00001;y] fori= 1;:::;n ;y;c2Cdo rL \u0012i\u00001;i(y;c) signexp(^ [i;y] [i+ 1;c] \b [i;y] ^ [i+ 1;c] \b [i;y] [i+ 1;c] \u0000A) returnrL \u0012 probabilities pfrom potentials \u0012(forward-backward algorithm); (right) backpropagation of loss gradients with respect to the marginals rL p.Cdenotes the state space and htiis the special start/stop state. Backpropagation uses the identityrL logp=p rL pto calculaterL \u0012=rL logprlogp \u0012, where is the element-wise multiplication. Typically the forward-backward with marginals is performed in the log-space semifield R[f\u00061g with binary operations\b= logadd and = + for numerical precision. However, backpropagation requires working with the log of negative values (since rL pcould be negative), so we extend to a field [R[f\u00061g ]\u0002f+;\u0000gwith special +/\u0000log-space operations. Binary operations applied to vectors are implied to be element-wise. The signexp function is defined as signexp(la) =saexp(la). See Section 3.3 and Table 1 for more details. x= [x1;:::;xn]is, p(zjx;q) = softmax0 @ 1fzis validgX i6=j1fzij= 1g\u0012ij1 A (4) wherezis represented as a vector of zij\u2019s for alli6=j. It is possible to calculate the marginal probability of each edge p(zij= 1jx;q)for alli;jinO(n3)time using the inside-outside algorithm (Baker, 1979) on the data structures of Eisner (1996). The parsing contraints ensure that each word has exactly one head (i.e.Pn i=1zij= 1). Therefore if we want to utilize the soft-head selection of a position j, the context vector is defined as: fj(x;z) =nX i=11fzij= 1gxi cj=Ez[fj(x;z)] =nX i=1p(zij= 1jx;q)xi Note that in this case the annotation function has the subscript jto produce a context vector for each word in the sentence. Similar types of attention can be applied for other tree properties (e.g. soft-children). We refer to this type of attention layer as a syntactic attention layer.",
     "technical_score": 0.001547439619875236,
-    "citation_score": 0.002321159429812854
+    "citation_score": 0.002321159429812854,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -133,7 +146,8 @@
     "paragraph_index": 1,
     "paragraph": "Graphical models of this form have been widely used as the final layer of deep models. Our contri- bution is to argue that these networks can be added within deep networks in place of simple attention layers. The whole model can then be trained end-to-end. The main complication in utilizing this approach within the network itself is the need to backprop- agate the gradients through an inference algorithm as part of the structured attention network. Past work has demonstrated the techniques necessary for this approach (see Stoyanov et al. (2011)), but to our knowledge it is very rarely employed. Consider the case of the simple linear-chain CRF layer from equation (3). Figure 2 (left) shows the standard forward-backward algorithm for computing the marginals p(zi= 1jx;q;\u0012). If we treat the forward-backward algorithm as a neural network layer, its input are the potentials \u0012, and its output",
     "technical_score": 0.008124058004344988,
-    "citation_score": 0.0034817391447192806
+    "citation_score": 0.0034817391447192806,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -143,7 +157,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 after the forward pass are these marginals.3To backpropagate a loss through this layer we need to compute the gradient of the loss Lwith respect to \u0012,rL \u0012, as a function of the gradient of the loss with respect to the marginals, rL p.4As the forward-backward algorithm consists of differentiable steps, this function can be derived using reverse-mode automatic differentiation of the forward-backward algorithm itself. Note that this reverse-mode algorithm conveniently has a parallel structure to the forward version, and can also be implemented using dynamic programming. \b sasbla+bsa+bla\u0001bsa\u0001b + +la+ log(1 +d) + la+lb + +\u0000la+ log(1\u0000d) + la+lb\u0000 \u0000 +la+ log(1\u0000d)\u0000la+lb\u0000 \u0000 \u0000la+ log(1 +d)\u0000la+lb + ner (2009)). Each real number ais represented as a pair (la;sa)wherela= logjajandsa= sign(a). Therefore a=saexp(la). For the above we let d= exp(lb\u0000la)and assumejaj>jbj.However, in practice, one cannot simply use current off-the-shelf tools for this task. For one, efficiency is quite important for these models and so the benefits of hand- optimizing the reverse-mode implementa- tion still outweighs simplicity of automatic differentiation. Secondly, numerical pre- cision becomes a major issue for struc- tured attention networks. For computing the forward-pass and the marginals, it is im- portant to use the standard log-space semi- field over R[f\u00061g with binary opera- tions (\b= logadd; = +) to avoid un- derflow of probabilities. For computing the backward-pass, we need to remain in log- space, but also handle log of negative values (since rL pcould be negative). This requires extending to the signed log-space semifield over [R[f\u00061g ]\u0002f+;\u0000gwith special +/\u0000operations. Ta- ble 1, based on Li & Eisner (2009), demonstrates how to handle this issue, and Figure 2 (right) describes backpropagation through the forward-backward algorithm. For dependency parsing, the forward pass can be computed using the inside-outside implementation of Eisner\u2019s algorithm (Eis- ner, 1996). Similarly, the backpropagation parallels the inside-outside structure. Forward/backward pass through the inside-outside algorithm is described in Appendix B.",
     "technical_score": 0.0257261836804258,
-    "citation_score": 0.0013540096673908318
+    "citation_score": 0.0013540096673908318,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -153,7 +168,8 @@
     "paragraph_index": 1,
     "paragraph": "We experiment with three instantiations of structured attention networks on four different tasks: (a) a simple, synthetic tree manipulation task using the syntactic attention layer, (b) machine translation with segmentation attention (i.e. two-state linear-chain CRF), (c) question answering using an n- state linear-chain CRF for multi-step inference over nfacts, and (",
     "technical_score": 0.041002221775038095,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -163,7 +179,8 @@
     "paragraph_index": 1,
     "paragraph": "The first set of experiments look at a tree-transduction task. These experiments use synthetic data to explore a failure case of soft-selection attention models. The task is to learn to convert a random formula given in prefix notation to one in infix notation, e.g., (\u0003( + ( + 15 7 ) 1 8 ) ( + 19 0 11 ) ) )( ( 15 + 7 ) + 1 + 8 ) \u0003( 19 + 0 + 11 ) The alphabet consists of symbols f(;);+;\u0003g, numbers between 0and20, and a special root symbol $. This task is used as a preliminary task to see if the model is able to learn the implicit tree structure on the source side. The model itself is an encoder-decoder model, where the encoder is defined below and the decoder is an LSTM. See Appendix A.2 for the full model. 3Confusingly, \u201cforward\u201d in this case is different than in the forward -backward algorithm, as the marginals themselves are the output. However the two uses of the term are actually quite related. The forward-backward algorithm can be interpreted as a forward and backpropagation pass on the log partition function. See Eisner (2016) for further details (appropriately titled \u201cInside-Outside and Forward-Backward Algorithms Are Just Backprop\u201d). As such our full approach can be seen as computing second-order information. This interpretation is central to Li & Eisner (2009). 4In general we usera bto denote the Jacobian of awith respect to b.",
     "technical_score": 0.0452049495069795,
-    "citation_score": 0.0193735497887055
+    "citation_score": 0.0193735497887055,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -173,7 +190,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 attention models on the tree transduction task. $is the special root symbol. Each row delineates the distribution over the parents (i.e. each row sums to one). The attention distribution obtained from the parsing marginals are more able to capture the tree structure\u2014e.g. the attention weights of closing parentheses are generally placed on the opening parentheses (though not necessarily on a single parenthesis). Training uses 15K prefix-infix pairs where the maximum nesting depth is set to be between 2-4(the above example has depth 3), with 5K pairs in each depth bucket. The number of expressions in each parenthesis is limited to be at most 4. Test uses 1K unseen sequences with depth between 2-6(note specifically deeper than train), with 200sequences for each depth. The performance is measured as the average proportion of correct target tokens produced until the first failure (as in Grefenstette et al. (2015)). For experiments we try using different forms of self-attention over embedding-only encoders. Let xjbe an embedding for each source symbol; our three variants of the source representation ^xjare: (a)no atten , just symbol embeddings by themselves, i.e. ^xj=xj; (b) simple attention, symbol embeddings and soft-pairing for each symbol, i.e. ^xj= [xj;cj]where cj=Pn i=1softmax(\u0012ij)xi is calculated using soft-selection; (c) structured attention, symbol embeddings and soft-parent, i.e. ^xj= [xj;cj]where cj=Pn i=1p(zij= 1jx)xiis calculated using parsing marginals, obtained from the syntactic attention layer. None of these models use an explicit query value\u2014the potentials come from running a bidirectional LSTM over the source, producing hidden vectors hi, and then computing \u0012ij= tanh( s>tanh(W1hi+W2hj+b)) where s;b;W1;W2are parameters (see Appendix A.1). Depth No Atten Simple Structured 2 7:6 87:4 99:2 3 4:1 49:6 87:0 4 2:8 23:3 64:5 5 2:1 15:0 30:8 6 1:5 8:5 18:2 ure %) of models on the tree-transduction task.The source representation [^x1;:::; ^xn]are attended over using the standard attention mechanism at each decoding step by an LSTM decoder.5Additionally, symbol embedding parameters are shared between the parsing LSTM and the source encoder. Results Table 2 has the results for the task. Note that this task is fairly difficult as the encoder is quite simple. The baseline model (unsurprisingly) performs poorly as it has no information about the source order- ing. The simple attention model performs better, but is significantly outperformed by the structured model with a tree structure bias. We hypothesize that the model is partially reconstructing the arithmetic tree. Figure 3 shows the attention distribution for the simple/structured models on the same source sequence, which indicates that the structured model is able to learn boundaries (i.e. parentheses). 5Thus there are two attention mechanisms at work under this setup. First, structured attention over the source only to obtain soft-parents for each symbol (i.e. self-attention). Second, standard softmax alignment attention over the source representations during decoding.",
     "technical_score": 0.017528449808828783,
-    "citation_score": 0.0009225499899383571
+    "citation_score": 0.0009225499899383571,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -183,7 +201,8 @@
     "paragraph_index": 3,
     "paragraph": "Published as a conference paper at ICLR 2017",
     "technical_score": 0.009225499899383571,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -193,7 +212,8 @@
     "paragraph_index": 1,
     "paragraph": "hi =1 \u0015nX i=1p(zi= 1jx;q) The normalization term is not ideal but we found it to be helpful for stable training.6\u0015is a hyperparameter (we use \u0015= 2) and we further add an l2penalty of 0:005on the pairwise potentials b. These values were found via grid search on the validation set. Simple Sigmoid Structured CHAR 12:6 13:1 14:6 WORD 14:1 13:8 14:3 sured by BLEU (higher is better) on character- to-word and word-to-word Japanese-English translation for the three different models.Results Results for the translation task on the test set are given in Table 3. Sigmoid attention outper- forms simple (softmax) attention on the character-to- word task, potentially because it is able to learn many- to-one alignments. On the word-to-word task, the op- posite is true, with simple attention outperforming sig- moid attention. Structured attention outperforms both models on both tasks, although improvements on the word-to-word task are modest and unlikely to be sta- tistically significant. For further analysis, Figure 4 shows a visualization of the different attention mechanisms on the character-to-word setup. The simple model generally focuses attention heavily on a single character. In contrast, the sigmoid and structured models are able to spread their attention distribution on contiguous subsequences. The structured attention learns additional parameters (i.e. b) to smooth out this type of attention. 6With standard expectation (i.e. cj=Pn i=1p(zi= 1jx;q)hi) we empirically observed the marginals to quickly saturate. We tried various strategies to overcome this, such as putting an l2penalty on the unary potentials and initializing with a pretrained sigmoid attention model, but simply normalizing the marginals proved to be the most effective. However, this changes the interpretation of the context vector as the expectation of an annotation function in this case.",
     "technical_score": 0.0163598864882402,
-    "citation_score": 0.0051662799436547995
+    "citation_score": 0.0051662799436547995,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -203,7 +223,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 structured (bottom left) attention models over the ground truth sentence on the character-to-word translation task. Manually-annotated alignments are shown in bottom right. Each row delineates the attention weights over the source sentence at each step of decoding. The sigmoid/structured attention models are able learn an implicit segmentation model and focus on multiple characters at each time step.",
     "technical_score": 0.009225499899383571,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -213,7 +234,8 @@
     "paragraph_index": 1,
     "paragraph": "Our third experiment is on question answering (QA) with the linear-chain CRF attention layer for inference over multiple facts. We use the bAbI dataset (Weston et al., 2015), where the input is a set of sentences/facts paired with a question, and the answer is a single token. For many of the tasks the model has to attend to multiple supporting facts to arrive at the correct answer (see Figure 5 for an example), and existing approaches use multiple \u2018hops\u2019 to greedily attend to different facts. We experiment with employing structured attention to perform inference in a non-greedy way. As the ground truth supporting facts are given in the dataset, we are able to assess the model\u2019s inference accuracy.",
     "technical_score": 0.014071962513193073,
-    "citation_score": 0.0019189039790717826
+    "citation_score": 0.0019189039790717826,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -223,7 +245,8 @@
     "paragraph_index": 2,
     "paragraph": "The baseline (simple) attention model is the End-To-End Memory Network (Sukhbaatar et al.,",
     "technical_score": 0.004510244395254191,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -233,7 +256,8 @@
     "paragraph_index": 1,
     "paragraph": "syntactic tree attention. These experiments are not intended to boost the state-of-the-art for these tasks but to test whether these methods can be trained effectively in an end-to-end fashion, can yield improvements over standard selection-based attention, and can learn plausible latent structures. All model architectures, hyperparameters, and training details are further described in Appendix A. 4.1 T REE TRANSDUCTION The first set of experiments look at a tree-transduction task. These experiments use synthetic data to explore a failure case of soft-selection attention models. The task is to learn to convert a random formula given in prefix notation to one in infix notation, e.g., (\u0003( + ( + 15 7 ) 1 8 ) ( + 19 0 11 ) ) )( ( 15 + 7 ) + 1 + 8 ) \u0003( 19 + 0 + 11 ) The alphabet consists of symbols f(;);+;\u0003g, numbers between 0and20, and a special root symbol $. This task is used as a preliminary task to see if the model is able to learn the implicit tree structure on the source side. The model itself is an encoder-decoder model, where the encoder is defined below and the decoder is an LSTM. See Appendix A.2 for the full model. 3Confusingly, \u201cforward\u201d in this case is different than in the forward -backward algorithm, as the marginals themselves are the output. However the two uses of the term are actually quite related. The forward-backward algorithm can be interpreted as a forward and backpropagation pass on the log partition function. See Eisner (2016) for further details (appropriately titled \u201cInside-Outside and Forward-Backward Algorithms Are Just Backprop\u201d). As such our full approach can be seen as computing second-order information. This interpretation is central to Li & Eisner (2009). 4In general we usera bto denote the Jacobian of awith respect to b.",
     "technical_score": 0.010045544334884332,
-    "citation_score": 0.004305233286379001
+    "citation_score": 0.004305233286379001,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -243,7 +267,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 attention models on the tree transduction task. $is the special root symbol. Each row delineates the distribution over the parents (i.e. each row sums to one). The attention distribution obtained from the parsing marginals are more able to capture the tree structure\u2014e.g. the attention weights of closing parentheses are generally placed on the opening parentheses (though not necessarily on a single parenthesis). Training uses 15K prefix-infix pairs where the maximum nesting depth is set to be between 2-4(the above example has depth 3), with 5K pairs in each depth bucket. The number of expressions in each parenthesis is limited to be at most 4. Test uses 1K unseen sequences with depth between 2-6(note specifically deeper than train), with 200sequences for each depth. The performance is measured as the average proportion of correct target tokens produced until the first failure (as in Grefenstette et al. (2015)). For experiments we try using different forms of self-attention over embedding-only encoders. Let xjbe an embedding for each source symbol; our three variants of the source representation ^xjare: (a)no atten , just symbol embeddings by themselves, i.e. ^xj=xj; (b) simple attention, symbol embeddings and soft-pairing for each symbol, i.e. ^xj= [xj;cj]where cj=Pn i=1softmax(\u0012ij)xi is calculated using soft-selection; (c) structured attention, symbol embeddings and soft-parent, i.e. ^xj= [xj;cj]where cj=Pn i=1p(zij= 1jx)xiis calculated using parsing marginals, obtained from the syntactic attention layer. None of these models use an explicit query value\u2014the potentials come from running a bidirectional LSTM over the source, producing hidden vectors hi, and then computing \u0012ij= tanh( s>tanh(W1hi+W2hj+b)) where s;b;W1;W2are parameters (see Appendix A.1). Depth No Atten Simple Structured 2 7:6 87:4 99:2 3 4:1 49:6 87:0 4 2:8 23:3 64:5 5 2:1 15:0 30:8 6 1:5 8:5 18:2 ure %) of models on the tree-transduction task.The source representation [^x1;:::; ^xn]are attended over using the standard attention mechanism at each decoding step by an LSTM decoder.5Additionally, symbol embedding parameters are shared between the parsing LSTM and the source encoder. Results Table 2 has the results for the task. Note that this task is fairly difficult as the encoder is quite simple. The baseline model (unsurprisingly) performs poorly as it has no information about the source order- ing. The simple attention model performs better, but is significantly outperformed by the structured model with a tree structure bias. We hypothesize that the model is partially reconstructing the arithmetic tree. Figure 3 shows the attention distribution for the simple/structured models on the same source sequence, which indicates that the structured model is able to learn boundaries (i.e. parentheses). 5Thus there are two attention mechanisms at work under this setup. First, structured attention over the source only to obtain soft-parents for each symbol (i.e. self-attention). Second, standard softmax alignment attention over the source representations during decoding. hi =1 \u0015nX i=1p(zi= 1jx;q) The normalization term is not ideal but we found it to be helpful for stable training.6\u0015is a hyperparameter (we use \u0015= 2) and we further add an l2penalty of 0:005on the pairwise potentials b. These values were found via grid search on the validation set. Simple Sigmoid Structured CHAR 12:6 13:1 14:6 WORD 14:1 13:8 14:3 sured by BLEU (higher is better) on character- to-word and word-to-word Japanese-English translation for the three different models.Results Results for the translation task on the test set are given in Table 3. Sigmoid attention outper- forms simple (softmax) attention on the character-to- word task, potentially because it is able to learn many- to-one alignments. On the word-to-word task, the op- posite is true, with simple attention outperforming sig- moid attention. Structured attention outperforms both models on both tasks, although improvements on the word-to-word task are modest and unlikely to be sta- tistically significant. For further analysis, Figure 4 shows a visualization of the different attention mechanisms on the character-to-word setup. The simple model generally focuses attention heavily on a single character. In contrast, the sigmoid and structured models are able to spread their attention distribution on contiguous subsequences. The structured attention learns additional parameters (i.e. b) to smooth out this type of attention. 6With standard expectation (i.e. cj=Pn i=1p(zi= 1jx;q)hi) we empirically observed the marginals to quickly saturate. We tried various strategies to overcome this, such as putting an l2penalty on the unary potentials and initializing with a pretrained sigmoid attention model, but simply normalizing the marginals proved to be the most effective. However, this changes the interpretation of the context vector as the expectation of an annotation function in this case.",
     "technical_score": 0.004149424843633856,
-    "citation_score": 0.0003608195516203353
+    "citation_score": 0.0003608195516203353,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -253,7 +278,8 @@
     "paragraph_index": 3,
     "paragraph": "Published as a conference paper at ICLR 2017 structured (bottom left) attention models over the ground truth sentence on the character-to-word translation task. Manually-annotated alignments are shown in bottom right. Each row delineates the attention weights over the source sentence at each step of decoding. The sigmoid/structured attention models are able learn an implicit segmentation model and focus on multiple characters at each time step. 4.3 Q UESTION ANSWERING Our third experiment is on question answering (QA) with the linear-chain CRF attention layer for inference over multiple facts. We use the bAbI dataset (Weston et al., 2015), where the input is a set of sentences/facts paired with a question, and the answer is a single token. For many of the tasks the model has to attend to multiple supporting facts to arrive at the correct answer (see Figure 5 for an example), and existing approaches use multiple \u2018hops\u2019 to greedily attend to different facts. We experiment with employing structured attention to perform inference in a non-greedy way. As the ground truth supporting facts are given in the dataset, we are able to assess the model\u2019s inference accuracy. The baseline (simple) attention model is the End-To-End Memory Network (Sukhbaatar et al.,",
     "technical_score": 0.001082458654861006,
-    "citation_score": 0.0005576302161405184
+    "citation_score": 0.0005576302161405184,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -262,7 +288,8 @@
     "paragraph_index": 1,
     "paragraph": "This work outlines structured attention networks, which incorporate graphical models to generalize simple attention, and describes the technical machinery and computational techniques for backprop- agating through models of this form. We implement two classes of structured attention layers: a linear-chain CRF (for neural machine translation and question answering) and a more complicated first-order dependency parser (for tree transduction and natural language inference). Experiments show that this method can learn interesting structural properties and improve on top of standard mod- els. Structured attention could also be a way of learning latent labelers or parsers through attention on other tasks.",
     "technical_score": 0.06680643452334507,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -271,7 +298,8 @@
     "paragraph_index": 2,
     "paragraph": "It should be noted that the additional complexity in computing the attention distribution increases run-time\u2014for example, structured attention was approximately 5\u0002slower to train than simple at- tention for the neural machine translation experiments, even though both attention layers have the same asymptotic run-time (i.e.",
     "technical_score": 0.014315664540716797,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -280,7 +308,8 @@
     "paragraph_index": 3,
     "paragraph": "O(n)).",
     "technical_score": 0.004771888180238933,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -289,7 +318,8 @@
     "paragraph_index": 4,
     "paragraph": "Embedding differentiable inference (and more generally, differentiable algorithms ) into deep mod- els is an exciting area of research. While we have focused on models that admit (tractable) exact inference, similar technique can be used to embed approximate inference methods. Many optimiza- tion algorithms (e.g. gradient descent, LBFGS) are also differentiable (Domke, 2012; Maclaurin et al., 2015), and have been used as output layers for structured prediction in energy-based models (Belanger & McCallum, 2016; Wang et al., 2016). Incorporating them as internal neural network layers is an interesting avenue for future work.",
     "technical_score": 0.008112209906406187,
-    "citation_score": 0.00143156645407168
+    "citation_score": 0.00143156645407168,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -299,7 +329,8 @@
     "paragraph_index": 1,
     "paragraph": "The syntactic attention layer (for tree transduction and natural language inference) is similar to the first-order graph-based dependency parser of Kipperwasser & Goldberg (2016). Given an input sen- tence [x1;:::;xn]and the corresponding word vectors [x1;:::;xn], we use a bidirectional LSTM to get the hidden states for each time step i2[1;:::;n ], hfwd i= LSTM( xi;hfwd i\u00001) hbwd i= LSTM( xi;hbwd i+1) hi= [hfwd i;hbwd i] where the forward and backward LSTMs have their own parameters. The score for xi!xj(i.e.xi is the parent of xj), is given by an MLP \u0012ij= tanh( s>tanh(W1hi+W2hj+b)) These scores are used as input to the inside-outside algorithm (see Appendix B) to obtain the prob- ability of each word\u2019s parent p(zij= 1jx), which is used to obtain the soft-parent cjfor each word xj. In the non-structured case we simply have p(zij= 1jx) = softmax( \u0012ij).",
     "technical_score": 0.01450847847424425,
-    "citation_score": 0.021762717711366373
+    "citation_score": 0.021762717711366373,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -309,7 +340,8 @@
     "paragraph_index": 1,
     "paragraph": "Let[x1;:::;xn];[y1;:::;ym]be the sequence of source/target symbols, with the associated embed- dings [x1;:::;xn];[y1;:::;ym]withxi;yj2Rl. In the simplest baseline model we take the source representation to be the matrix of the symbol embeddings. The decoder is a one-layer LSTM which produces the hidden states h0 j= LSTM( yj;h0 j\u00001), with h0 j2Rl. The hidden states are combined with the input representation via a bilinear map W2Rl\u0002lto produce the attention distribution used to obtain the vector mi, which is combined with the decoder hidden state as follows, i=expxiWh0 jPn k=1expxkWh0 jmi=nX i=1 ixi^hj= tanh( U[mi;h0 j]) Here we have W2Rl\u0002landU2R2l\u0002l. Finally, ^hjis used to to obtain a distribution over the next symbolyj+1, p(yj+1jx1;:::;xn;y1;:::;yj) = softmax( V^hj+b) For structured/simple models, the j-th source representation are respectively ^xi=\" xi;nX k=1p(zki= 1jx)xk# ^xi=\" xi;nX k=1softmax(\u0012ki)xk# where\u0012ijcomes from the bidirectional LSTM described in A.1. Then iandmichanged accord- ingly, i=exp^xiWh0 jPn k=1exp^xkWh0 jmi=nX i=1 i^xi Note that in this case we have W2R2l\u0002landU2R3l\u0002l. We usel= 50 in all our experiments. The forward/backward LSTMs for the parsing LSTM are also 50-dimensional. Symbol embeddings are shared between the encoder and the parsing LSTMs. Additional training details include: batch size of 20; training for 13epochs with a learning rate of1:0, which starts decaying by half after epoch 9(or the epoch at which performance does not improve on validation, whichever comes first); parameter initialization over a uniform distribution U[\u00000:1;0:1]; gradient normalization at 1(i.e. renormalize the gradients to have norm 1if thel2 norm exceeds 1). Decoding is done with beam search (beam size = 5).",
     "technical_score": 0.016322038283524784,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -319,7 +351,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017",
     "technical_score": 0.03808475599489116,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -329,7 +362,8 @@
     "paragraph_index": 1,
     "paragraph": "The baseline NMT system is from Luong et al. (2015). Let [x1;:::;xn];[y1;:::;ym]be the source/target sentence, with the associated word embeddings [x1;:::;xn];[y1;:::;ym]. The en- coder is an LSTM over the source sentence, which produces the hidden states [h1;:::;hn]where hi= LSTM( xi;hi\u00001) andhi2Rl. The decoder is another LSTM which produces the hidden states h0 j2Rl. In the simple attention case with categorical attention, the hidden states are combined with the input representation via a bilinear map W2Rl\u0002land this distribution is used to obtain the context vector at the j-th time step, \u0012i=hiWh0 j cj=nX i=1softmax(\u0012i)hi The Bernoulli attention network has the same \u0012ibut instead uses a sigmoid to obtain the weights of the linear combination, i.e., cj=nX i=1sigmoid(\u0012i)hi And finally, the structured attention model uses a bilinear map to parameterize one of the unary potentials \u0012i(k) =\u001ahiWh0 j; k = 1 0; k = 0 \u0012i;i+1(zi;zi+1) =\u0012i(zi) +\u0012i+1(zi+1) +bzi;zi+1 where bare the pairwise potentials. These potentials are used as inputs to the forward-backward algorithm to obtain the marginals p(zi= 1jx;q), which are further normalized to obtain the context vector cj=nX i=1p(zi= 1jx;q) hi =1 \u0015nX ip(zi= 1jx;q) We use\u0015= 2and also add an l2penalty of 0:005on the pairwise potentials b. The context vector is then combined with the decoder hidden state ^hj= tanh( U[cj;h0 j]) and^hjis used to obtain the distribution over the next target word yj+1 p(yj+1jx1;:::;xn;y1;:::yj) = softmax( V^hj+b) The encoder/decoder LSTMs have 2layers and 500hidden units (i.e. l= 500 ). Additional training details include: batch size of 128; training for 30epochs with a learning rate of 1:0, which starts decaying by half after the first epoch at which performance does not improve on validation; dropout with probability 0:3; parameter initialization over a uniform distribution U[\u00000:1;0:1]; gradient normalization at 1. We generate target translations with beam search (beam size= 5), and evaluate with multi-bleu.perl from Moses.9",
     "technical_score": 0.015959326321668674,
-    "citation_score": 0.002176271771136637
+    "citation_score": 0.002176271771136637,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -339,7 +373,8 @@
     "paragraph_index": 1,
     "paragraph": "Our baseline model (MemN2N) is implemented following the same architecture as described in Sukhbaatar et al. (2015). In particular, let x= [x1;:::;xn]represent the sequence of nfacts with the associated embeddings [x1;:::;xn]and let qbe the embedding of the query q. The embeddings 9https://github.com/moses-smt/mosesdecoder/blob/master/scripts/generic/ multi-bleu.perl",
     "technical_score": 0.006051244563632703,
-    "citation_score": 0.0025933905272711587
+    "citation_score": 0.0025933905272711587,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -349,7 +384,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 are obtained by simply adding the word embeddings in each sentence or query. The full model with Khops is as follows: p(zk=ijx;q) = softmax(( xk i)>qk) ck=nX i=1p(zk=ijx;q)ok i qk+1=qk+ck p(yjx;q) = softmax( W(qK+cK)) wherep(yjx;q)is the distribution over the answer vocabulary. At each layer, fxk igandfok igare computed using embedding matrices XkandOk. We use the adjacent weight tying scheme from the paper so that Xk+1=Ok;WT=OK.X1is also used to compute the query embedding at the first hop. For k= 1we have xk i=xi;qk=q;ck=0. For both the Unary and the Binary CRF models, the same input fact and query representations are computed (i.e. same embedding matrices with weight tying scheme). For the unary model, the potentials are parameterized as \u0012k(i) = (xk i)>qk and for the binary model we compute pairwise potentials as \u0012k;k+1(i;j) = (xk i)>qk+ (xk i)>xk+1 j+ (xk+1 j)>qk+1 Theqk\u2019s are updated simply with a linear mapping, i.e. qk+1=Qqk In the case of the Binary CRF, to discourage the model from selecting the same fact again we additionally set \u0012k;k+1(i;i) =\u00001 for alli2f1;:::;ng. Given these potentials, we compute the marginalsp(zk=i;zk+1=jjx;q)using the forward-backward algorithm, which is then used to compute the context vector: c=X z1;:::;zKp(z1;:::;zKjx;q)f(x;z)f(x;z) =KX k=1fk(x;zk)fk(x;zk) =ok zk Note that if f(x;z)factors over the components of z(as is the case above) then computing conly requires evaluating the marginals p(zkjx;q). Finally, given the context vector the prediction is made in a similar fashion to MemN2N: p(yjx;q) = softmax( W(qK+c)) Other training setup is similar to Sukhbaatar et al. (2015): we use stochastic gradient descent with learning rate 0:01, which is divided by 2every 25epochs until 100epochs are reached. Capacity of the memory is limited to 25sentences. The embedding vectors are of size 20and gradients are renormalized if the norm exceeds 40. All models implement position encoding ,temporal encoding , andlinear start from the original paper. For linear start, the softmax(\u0001)function in the attention layer is removed at the beginning and re-inserted after 20epochs for MemN2N, while for the CRF models we apply a log(softmax(\u0001))layer on the qkafter20epochs. Each model is trained separately for each task.",
     "technical_score": 0.017630823945888892,
-    "citation_score": 0.0009279381024152048
+    "citation_score": 0.0009279381024152048,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -359,7 +395,8 @@
     "paragraph_index": 1,
     "paragraph": "Our baseline model/setup is essentially the same as that of Parikh et al. (2016). Let [x1;:::;xn];[y1;:::;ym]be the premise/hypothesis, with the corresponding input representations [x1;:::;xn];[y1;:::;ym]. The input representations are obtained by a linear transformation of the300-dimensional pretrained GloVe embeddings (Pennington et al., 2014) after normalizing the GloVe embeddings to have unit norm.10The pretrained embeddings remain fixed but the linear layer 10We use the GloVe embeddings pretrained over the 840billion word Common Crawl, publicly available at http://nlp.stanford.edu/projects/glove/",
     "technical_score": 0.011561443784163383,
-    "citation_score": 0.002040254785440597
+    "citation_score": 0.002040254785440597,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -369,7 +406,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 (which is also 300-dimensional) is trained. Words not in the pretrained vocabulary are hashed to one of100Gaussian embeddings with mean 0and standard deviation 1. We concatenate each input representation with a convex combination of the other sentence\u2019s input representations (essentially performing inter-sentence attention), where the weights are determined through a dot product followed by a softmax, eij=f(xi)>f(yj)\u0016xi=2 4xi;mX j=1expeijPm k=1expeikyj3 5\u0016yj=\" yj;nX i=1expeijPn k=1expekjxi# Heref(\u0001)is an MLP. The new representations are fed through another MLP g(\u0001), summed, combined with the final MLP h(\u0001)and fed through a softmax layer to obtain a distribution over the labels l, \u0016x=nX i=1g(\u0016xi) \u0016y=mX j=1g(\u0016yj) p(ljx1;:::;xn;y1;:::;ym) = softmax( Vh([\u0016x;\u0016y]) +b) All the MLPs have 2-layers, 300 ReLU units, and dropout probability of 0:2. For structured/simple models, we first employ the bidirectional parsing LSTM (see A.1) to obtain the scores \u0012ij. In the structured case each word representation is simply concatenated with its soft-parent ^xi=\" xi;nX k=1p(zki= 1jx)xk# and^xi(and analogously ^yj) is used as the input to the above model. In the simple case (which closely corresponds to the intra-sentence attention model of Parikh et al. (2016)), we have ^xi=\" xi;nX k=1exp\u0012kiPn l=1exp\u0012lixk# The word embeddings for the parsing LSTMs are also initialized with GloVe, and the parsing layer is shared between the two sentences. The forward/backward LSTMs for the parsing layer are 100- dimensional. Additional training details include: batch size of 32; training for 100epochs with Adagrad (Duchi et al., 2011) where the global learning rate is 0:05and sum of gradient squared is initialized to 0:1; parameter intialization over a Gaussian distribution with mean 0and standard deviation 0:01; gradient normalization at 5. In the pretrained scenario, pretraining is done with Adam (Kingma & Ba, 2015) with learning rate equal to 0:01, and 1= 0:9, 2= 0:999.",
     "technical_score": 0.030150431829288837,
-    "citation_score": 0.001586864833120465
+    "citation_score": 0.001586864833120465,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -378,7 +416,8 @@
     "paragraph_index": 1,
     "paragraph": "Figure 6 shows the procedure for obtaining the parsing marginals from the input potentials. This corresponds to running the inside-outside version of Eisner\u2019s algorithm (Eisner, 1996). The inter- mediate data structures used during the dynamic programming algorithm are the (log) inside tables , and the (log) outside tables . Both ; are of sizen\u0002n\u00022\u00022, wherenis the sentence length. First two dimensions encode the start/end index of the span (i.e. subtree). The third dimension encodes whether the root of the subtree is the left ( L) or right (R) index of the span. The fourth dimension indicates if the span is complete ( 1) or incomplete ( 0). We can calculate the marginal distribution of each word\u2019s parent (for all words) in O(n3)using this algorithm. Backward pass through the inside-outside algorithm is slightly more involved, but still takes O(n3) time. Figure 7 illustrates the backward procedure, which receives the gradient of the loss Lwith respect to the marginals, rL p, and computes the gradient of the loss with respect to the potentials rL \u0012. The computations must be performed in the signed log-space semifield to handle log of negative values. See section 3.3 and Table 1 for more details.",
     "technical_score": 0.0700290350268379,
-    "citation_score": 0.03001244358293053
+    "citation_score": 0.03001244358293053,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -387,7 +426,8 @@
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at ICLR 2017 procedure INSIDE OUTSIDE (\u0012) ; \u00001 .Initialize log of inside ( ), outside ( ) tables fori= 1;:::;n do [i;i;L; 1] 0 [i;i;R; 1] 0 [1;n;R; 1] 0 fork= 1;:::;n do .Inside step fors= 1;:::;n\u0000kdo t s+k [s;t;R; 0] L u2[s;t\u00001] [s;u;R; 1] [u+ 1;t;L; 1] \u0012st [s;t;L; 0] L u2[s;t\u00001] [s;u;R; 1] [u+ 1;t;L; 1] \u0012ts [s;t;R; 1] L u2[s+1;t] [s;u;R; 0] [u;t;R; 1] [s;t;L; 1] L u2[s;t\u00001] [s;u;L; 1] [u;t;L; 0] fork=n;:::; 1do .Outside step fors= 1;:::;n\u0000kdo t s+k foru=s+ 1;:::;t do [s;u;R; 0] \b [s;t;R; 1] [u;t;R; 1] [u;t;R; 1] \b [s;t;R; 1] [s;u;R; 0] ifs>1then foru=s;:::;t\u00001do [s;u;L; 1] \b [s;t;L; 1] [u;t;L; 0] [u;t;L; 0] \b [s;t;L; 1] [s;u;L; 1] foru=s;:::;t\u00001do [s;u;R; 1] \b [s;t;R; 0] [u+ 1;t;L; 1] \u0012st [u+ 1;t;L; 1] \b [s;t;R; 0] [s;u;R; 1] \u0012st ifs>1then foru=s;:::;t\u00001do [s;u;R; 1] \b [s;t;L; 0] [u+ 1;t;L; 1] \u0012ts [u+ 1;t;L; 1] \b [s;t;L; 0] [s;u;R; 1] \u0012ts A [1;n;R; 1] .Log partition fors= 1;:::;n\u00001do .Compute marginals. Note that p[s;t] =p(zst= 1jx) fort=s+ 1;:::;n do p[s;t] exp( [s;t;R; 0] [s;t;R; 0] \u0000A) ifs>1then p[t;s] exp( [s;t;L; 0] [s;t;L; 0] \u0000A) returnp algorithm (Baker, 1979) on the data structures of Eisner (1996). We assume the special root symbol is the first element of the sequence, and that the sentence length is n. Calculations are performed in log-space semifield with\b= logadd and = + for numerical precision. a;b cmeansa candb c.a \bbmeans a a\bb.",
     "technical_score": 0.01517870709941314,
-    "citation_score": 0.022768060649119713
+    "citation_score": 0.022768060649119713,
+    "has_citation": true
   },
   {
     "section_path": [
@@ -396,7 +436,8 @@
     "paragraph_index": 3,
     "paragraph": "Published as a conference paper at ICLR 2017 procedure BACKPROP INSIDE OUTSIDE (\u0012;p;rL p) fors;t= 1;:::;n ;s6=tdo .Backpropagation uses the identity rL \u0012= (p rL p)rlogp \u0012 \u000e[s;t] logp[s;t] logrL p[s;t] .\u000e= log(p rL p) rL ;rL ;logrL \u0012 \u00001 .Initialize inside (rL ), outside (rL ) gradients, and log of rL \u0012 fors= 1;:::;n\u00001do .Backpropagate \u000etorL andrL fort=s+ 1;:::;n do rL [s;t;R; 0];rL [s;t;R; 0] \u000e[s;t] rL [1;n;R; 1] \b\u0000\u000e[s;t] ifs>1then rL [s;t;L; 0];rL [s;t;L; 0] \u000e[t;s] rL [1;n;R; 1] \b\u0000\u000e[s;t] fork= 1;:::;n do .Backpropagate through outside step fors= 1;:::;n\u0000kdo t s+k \u0017 rL [s;t;R; 0] [s;t;R; 0] .\u0017; are temporary values foru=t;:::;n do rL [s;u;R; 1];rL [t;u;R; 1] \b\u0017 [s;u;R; 1] [t;u;R; 1] ifs>1then \u0017 rL [s;t;L; 0] [s;t;L; 0] foru= 1;:::;s do rL [u;t;L; 1];rL [u;s;L; 1] \b\u0017 [u;t;L; 1] [u;s;L; 1] \u0017 rL [s;t;L; 1] [s;t;L; 1] foru=t;:::;n do rL [s;u;L; 1];rL [t;u;L; 0] \b\u0017 [s;u;L; 1] [t;u;L; 1] foru= 1;:::;s\u00001do [u;t;R; 0] [u;s\u00001;R;1] \u0012ut rL [u;t;R; 0];rL [u;s\u00001;R;1];logrL \u0012[u;t] \b\u0017 [u;t;L; 0] [u;s\u00001;R;1] \u0012tu rL [u;t;L; 0];rL [u;s\u00001;R;1];logrL \u0012[t;u] \b\u0017",
     "technical_score": 0.018973383874266427,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -405,7 +446,8 @@
     "paragraph_index": 4,
     "paragraph": "\u0017 rL [s;t;R; 1] [s;t;R; 1] foru= 1;:::;s do rL [u;t;R; 1];rL [u;s;R; 0] \b\u0017 [u;t;R; 1] [u;s;R; 0] foru=t+ 1;:::;n do [s;u;R; 0] [t+ 1;u;L; 1] \u0012su rL [s;u;R; 0];rL [t+ 1;u;L; 1];logrL \u0012[s;u] \b\u0017 [s;u;L; 0] [t+ 1;u;L; 1] \u0012us rL [s;u;L; 0];rL [t+ 1;u;L; 1];logrL \u0012[u;s] \b\u0017 fork=n;:::; 1do .Backpropagate through inside step fors= 1;:::;n\u0000kdo t s+k \u0017 rL [s;t;R; 1] [s;t;R; 1] foru=s+ 1;:::;t do rL [u;t;R; 0];rL [u;t;R; 1] \b\u0017 [s;u;R; 0] [u;t;R; 1] ifs>1then \u0017 rL [s;t;L; 1] [s;t;L; 1] foru=s;:::;t\u00001do rL [s;u;L; 1];rL [u;t;L; 0] \b\u0017 [s;u;L; 1] [u;t;L; 0] \u0017 rL [s;t;L; 0] [s;t;L; 0] foru=s;:::;t\u00001do [s;u;R; 1] [u+ 1;t;L; 1] \u0012ts rL [s;u;R; 1];rL [u+ 1;t;L; 1];logrL \u0012[t;s] \b\u0017",
     "technical_score": 0.00862426539739383,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   },
   {
     "section_path": [
@@ -414,6 +456,7 @@
     "paragraph_index": 5,
     "paragraph": "\u0017 rL [s;t;R; 0] [s;t;R; 0] foru=s;:::;t\u00001do [s;u;R; 1] [u+ 1;t;L; 1] \u0012st rL [s;u;R; 1];rL [u+ 1;t;L; 1];logrL \u0012[s;t] \b\u0017 return signexp logrL \u0012 .Exponentiate log gradient, multiply by sign, and return rL \u0012 input potentials.ra bdenotes the Jacobian of awith respect to b(sorL \u0012is the gradient with respect to \u0012). a;b \bcmeansa a\bcandb b\bc.",
     "technical_score": 0.006899412317915065,
-    "citation_score": 0.0
+    "citation_score": 0.0,
+    "has_citation": false
   }
 ]
