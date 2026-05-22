@@ -1,0 +1,701 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Mikolov et al., 2010)",
+    "citation_score": 0.0021461877583155353
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Arisoy et al., 2012)",
+    "citation_score": 0.003988424918734914
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Rush et al., 2015)",
+    "citation_score": 0.0016476346434736715
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Filippova et al., 2015)",
+    "citation_score": 0.0006505284137899421
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Serban et al., 2015)",
+    "citation_score": 0.0011490815286318067
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Vinyals & Le, 2015)",
+    "citation_score": 0.0004985531148418645
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Mikolov & Zweig, 2012)",
+    "citation_score": 0.0004225654653678257
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Sutskever et al., 2014)",
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Cho et al., 2014)",
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Kalch-brenner et al., 2014)",
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Srivastava et al., 2015a)",
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Mikolov et al., 2011)",
+    "citation_score": 0.003143293987999265
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Mikolov, 2012)",
+    "citation_score": 0.0026447408731574
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Chelba et al., 2013)",
+    "citation_score": 0.001994212459367458
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Williams et al., 2015)",
+    "citation_score": 0.0015716469939996325
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Ji et al., 2015a)",
+    "citation_score": 0.000997106229683729
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Shazeer et al., 2015)",
+    "citation_score": 0.0004225654653678257
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) is a task central to Natural Language Processing (NLP) and Language Understanding. Models which can accurately place distributions over sen- tences not only encode complexities of language such as grammatical structure, but also distill a fair amount of in- formation about the knowledge that a corpora may con- tain. Indeed, models that are able to assign a low probabil- ity to sentences that are grammatically correct but unlikely may help other tasks in fundamental language understand- ing like question answering, machine translation, or text summarization. LMs have played a key role in traditional NLP tasks such as speech recognition (Mikolov et al., 2010; Arisoy et al., 2012), machine translation (Schwenk et al., 2012; Vaswani et al.), or text summarization (Rush et al., 2015; Filippova et al., 2015). Often (although not always), training betterlanguage models improves the underlying metrics of the downstream task (such as word error rate for speech recog- nition, or BLEU score for translation), which makes the task of training better LMs valuable by itself. Further, when trained on vast amounts of data, language models compactly extract knowledge encoded in the train- ing data. For example, when trained on movie subti- tles (Serban et al., 2015; Vinyals & Le, 2015), these lan- guage models are able to generate basic answers to ques- tions about object colors, facts about people, etc. Lastly, recently proposed sequence-to-sequence models employ conditional language models (Mikolov & Zweig, 2012) as their key component to solve diverse tasks like machine translation (Sutskever et al., 2014; Cho et al., 2014; Kalch- brenner et al., 2014) or video generation (Srivastava et al., 2015a). Deep Learning and Recurrent Neural Networks (RNNs) have fueled language modeling research in the past years as it allowed researchers to explore many tasks for which the strong conditional independence assumptions are unre- alistic. Despite the fact that simpler models, such as N- grams, only use a short history of previous words to predict the next word, they are still a key component to high qual- ity, low perplexity LMs. Indeed, most recent work on large scale LM has shown that RNNs are great in combination with N-grams, as they may have different strengths that complement N-gram models, but worse when considered in isolation (Mikolov et al., 2011; Mikolov, 2012; Chelba et al., 2013; Williams et al., 2015; Ji et al., 2015a; Shazeer et al., 2015). We believe that, despite much work being devoted to small data sets like the Penn Tree Bank (PTB) (Marcus et al., 1993), research on larger tasks is very relevant as overfit- ting is not the main limitation in current language model- ing, but is the main characteristic of the PTB task. Results on larger corpora usually show better what matters as many ideas work well on small data sets but fail to improve onarXiv:1602.02410v2 [cs.CL] 11 Feb 2016",
+    "citation": "(Marcus et al., 1993)",
+    "citation_score": 0.0003799382473701941
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling Figure 1. A high-level diagram of the models presented in this pa- per. (a) is a standard LSTM LM. (b) represents an LM where both input and Softmax embeddings have been replaced by a character CNN. In (c) we replace the Softmax by a next character prediction LSTM network. larger data sets. Further, given current hardware trends and vast amounts of text available on the Web, it is much more straightforward to tackle large scale modeling than it used to be. Thus, we hope that our work will help and motivate researchers to work on traditional LM beyond PTB \u2013 for this purpose, we will open-source our models and training recipes. We focused on a well known, large scale LM benchmark: the One Billion Word Benchmark data set (Chelba et al., 2013). This data set is much larger than PTB (one thou- sand fold, 800k word vocabulary and 1B words training data) and far more challenging. Similar to Imagenet (Deng et al., 2009), which helped advance computer vision, we believe that releasing and working on large data sets and models with clear benchmarks will help advance Language Modeling. The contributions of our work are as follows: \u000fWe explored, extended and tried to unify some of the current research on large scale LM. \u000fSpecifically, we designed a Softmax loss which is based on character level CNNs, is efficient to train, and is as precise as a full Softmax which has orders of magnitude more parameters. \u000fOur study yielded significant improvements to the state-of-the-art on a well known, large scale LM task: from 51.3 down to 30.0 perplexity for single models whilst reducing the number of parameters by a factor of 20.\u000fWe show that an ensemble of a number of different models can bring down perplexity on this task to 23.7, a large improvement compared to current state-of-art. \u000fWe share the model and recipes in order to help and motivate further research in this area. In Section 2 we review important concepts and previous work on language modeling. Section 3 presents our contri- butions to the field of neural language modeling, emphasiz- ing large scale recurrent neural network training. Sections 4 and 5 aim at exhaustively describing our experience and understanding throughout the project, as well as emplacing our work relative to other known approaches.",
+    "citation": "(Chelba et al., 2013)",
+    "citation_score": 0.0026084835974911646
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling Figure 1. A high-level diagram of the models presented in this pa- per. (a) is a standard LSTM LM. (b) represents an LM where both input and Softmax embeddings have been replaced by a character CNN. In (c) we replace the Softmax by a next character prediction LSTM network. larger data sets. Further, given current hardware trends and vast amounts of text available on the Web, it is much more straightforward to tackle large scale modeling than it used to be. Thus, we hope that our work will help and motivate researchers to work on traditional LM beyond PTB \u2013 for this purpose, we will open-source our models and training recipes. We focused on a well known, large scale LM benchmark: the One Billion Word Benchmark data set (Chelba et al., 2013). This data set is much larger than PTB (one thou- sand fold, 800k word vocabulary and 1B words training data) and far more challenging. Similar to Imagenet (Deng et al., 2009), which helped advance computer vision, we believe that releasing and working on large data sets and models with clear benchmarks will help advance Language Modeling. The contributions of our work are as follows: \u000fWe explored, extended and tried to unify some of the current research on large scale LM. \u000fSpecifically, we designed a Softmax loss which is based on character level CNNs, is efficient to train, and is as precise as a full Softmax which has orders of magnitude more parameters. \u000fOur study yielded significant improvements to the state-of-the-art on a well known, large scale LM task: from 51.3 down to 30.0 perplexity for single models whilst reducing the number of parameters by a factor of 20.\u000fWe show that an ensemble of a number of different models can bring down perplexity on this task to 23.7, a large improvement compared to current state-of-art. \u000fWe share the model and recipes in order to help and motivate further research in this area. In Section 2 we review important concepts and previous work on language modeling. Section 3 presents our contri- butions to the field of neural language modeling, emphasiz- ing large scale recurrent neural network training. Sections 4 and 5 aim at exhaustively describing our experience and understanding throughout the project, as well as emplacing our work relative to other known approaches.",
+    "citation": "(Deng et al., 2009)",
+    "citation_score": 0.002032190709673349
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section we describe previous work relevant to the approaches discussed in this paper. A more detailed dis- cussion on language modeling research is provided in (Mikolov, 2012).",
+    "citation": "(Mikolov, 2012)",
+    "citation_score": 0.02348744955415152
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Kneser & Ney, 1995)",
+    "citation_score": 0.0021528523214243383
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Bengio et al., 2006)",
+    "citation_score": 0.004305704642848677
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Hochreiter & Schmidhuber, 1997)",
+    "citation_score": 0.0016146392410682536
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Gers et al., 2000)",
+    "citation_score": 0.000987768764779969
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Mikolov et al., 2010)",
+    "citation_score": 0.0007902150118239751
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Mikolov, 2012)",
+    "citation_score": 0.00037486854482039436
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Chelba et al., 2013)",
+    "citation_score": 0.0003229278482136507
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Zaremba et al., 2014)",
+    "citation_score": 0.007288891686579439
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Williams et al., 2015)",
+    "citation_score": 0.00010638887511864031
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Ji et al., 2015a)",
+    "citation_score": 0.00010638887511864031
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Wang & Cho, 2015)",
+    "citation_score": 0.0035817587956608913
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Language Modeling (LM) has been a central task in NLP. The goal of LM is to learn a probability distribution over sequences of symbols pertaining to a language. Much work has been done on both parametric (e.g., log-linear models) and non-parametric approaches (e.g., count-based LMs). Count-based approaches (based on statistics of N-grams) typically add smoothing which account for unseen (yet pos- sible) sequences, and have been quite successful. To this extent, Kneser-Ney smoothed 5-gram models (Kneser & Ney, 1995) are a fairly strong baseline which, for large amounts of training data, have challenged other paramet- ric approaches based on Neural Networks (Bengio et al., 2006). Most of our work is based on Recurrent Neural Networks (RNN) models which retain long term dependencies. To this extent, we used the Long-Short Term Memory model (Hochreiter & Schmidhuber, 1997) which uses a gating mechanism (Gers et al., 2000) to ensure proper propaga- tion of information through many time steps. Much work has been done on small and large scale RNN-based LMs (Mikolov et al., 2010; Mikolov, 2012; Chelba et al., 2013; Zaremba et al., 2014; Williams et al., 2015; Ji et al., 2015a; Wang & Cho, 2015; Ji et al., 2015b). The architectures that we considered in this paper are represented in Figure 1. In our work, we train models on the popular One Bil- lion Word Benchmark, which can be considered to be a medium-sized data set for count-based LMs but a very large data set for NN-based LMs. This regime is most interesting to us as we believe learning a very good model of human language is a complex task which will require large models,",
+    "citation": "(Ji et al., 2015b)",
+    "citation_score": 0.005319443755932017
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling and thus large amounts of data. Further advances in data availability and computational resources helped our study. We argue this leap in scale enabled tremendous advances in deep learning. A clear example found in computer vision is Imagenet (Deng et al., 2009), which enabled learning com- plex vision models from large amounts of data (Krizhevsky et al., 2012). A crucial aspect which we discuss in detail in later sections is the size of our models. Despite the large number of pa- rameters, we try to minimize computation as much as pos- sible by adopting a strategy proposed in (Sak et al., 2014) of projecting a relatively big recurrent state space down so that the matrices involved remain relatively small, yet the model has large memory capacity.",
+    "citation": "(Deng et al., 2009)",
+    "citation_score": 0.000298109936648846
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling and thus large amounts of data. Further advances in data availability and computational resources helped our study. We argue this leap in scale enabled tremendous advances in deep learning. A clear example found in computer vision is Imagenet (Deng et al., 2009), which enabled learning com- plex vision models from large amounts of data (Krizhevsky et al., 2012). A crucial aspect which we discuss in detail in later sections is the size of our models. Despite the large number of pa- rameters, we try to minimize computation as much as pos- sible by adopting a strategy proposed in (Sak et al., 2014) of projecting a relatively big recurrent state space down so that the matrices involved remain relatively small, yet the model has large memory capacity.",
+    "citation": "(Krizhevsky et al., 2012)",
+    "citation_score": 0.0008943298099465381
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Language Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling and thus large amounts of data. Further advances in data availability and computational resources helped our study. We argue this leap in scale enabled tremendous advances in deep learning. A clear example found in computer vision is Imagenet (Deng et al., 2009), which enabled learning com- plex vision models from large amounts of data (Krizhevsky et al., 2012). A crucial aspect which we discuss in detail in later sections is the size of our models. Despite the large number of pa- rameters, we try to minimize computation as much as pos- sible by adopting a strategy proposed in (Sak et al., 2014) of projecting a relatively big recurrent state space down so that the matrices involved remain relatively small, yet the model has large memory capacity.",
+    "citation": "(Sak et al., 2014)",
+    "citation_score": 0.000745274841622115
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "There is an increased interest in incorporating character- level inputs to build word embeddings for various NLP problems, including part-of-speech tagging, parsing and language modeling (Ling et al., 2015; Kim et al., 2015; Ballesteros et al., 2015). The additional character informa- tion has been shown useful on relatively small benchmark data sets.",
+    "citation": "(Ling et al., 2015)",
+    "citation_score": 0.00041033955985782364
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "There is an increased interest in incorporating character- level inputs to build word embeddings for various NLP problems, including part-of-speech tagging, parsing and language modeling (Ling et al., 2015; Kim et al., 2015; Ballesteros et al., 2015). The additional character informa- tion has been shown useful on relatively small benchmark data sets.",
+    "citation": "(Kim et al., 2015)",
+    "citation_score": 0.0006838992664297062
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "There is an increased interest in incorporating character- level inputs to build word embeddings for various NLP problems, including part-of-speech tagging, parsing and language modeling (Ling et al., 2015; Kim et al., 2015; Ballesteros et al., 2015). The additional character informa- tion has been shown useful on relatively small benchmark data sets.",
+    "citation": "(Ballesteros et al., 2015)",
+    "citation_score": 0.0002735597065718825
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The approach proposed in (Ling et al., 2015) builds word embeddings using bidirectional LSTMs (Schuster & Pali- wal, 1997; Graves & Schmidhuber, 2005) over the charac- ters. The recurrent networks process sequences of charac- ters from both sides and their final state vectors are concate- nated. The resulting representation is then fed to a Neural Network. This model achieved very good results on a part- of-speech tagging task.",
+    "citation": "(Ling et al., 2015)",
+    "citation_score": 3.238159405443684e-05
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The approach proposed in (Ling et al., 2015) builds word embeddings using bidirectional LSTMs (Schuster & Pali- wal, 1997; Graves & Schmidhuber, 2005) over the charac- ters. The recurrent networks process sequences of charac- ters from both sides and their final state vectors are concate- nated. The resulting representation is then fed to a Neural Network. This model achieved very good results on a part- of-speech tagging task.",
+    "citation": "(Schuster & Pali-wal, 1997)",
+    "citation_score": 9.714478216331051e-05
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The approach proposed in (Ling et al., 2015) builds word embeddings using bidirectional LSTMs (Schuster & Pali- wal, 1997; Graves & Schmidhuber, 2005) over the charac- ters. The recurrent networks process sequences of charac- ters from both sides and their final state vectors are concate- nated. The resulting representation is then fed to a Neural Network. This model achieved very good results on a part- of-speech tagging task.",
+    "citation": "(Graves & Schmidhuber, 2005)",
+    "citation_score": 0.00012952637621774736
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "In (Kim et al., 2015), the words characters are processed by a 1-d CNN (Le Cun et al., 1990) with max-pooling across the sequence for each convolutional feature. The result- ing features are fed to a 2-layer highway network (Srivas- tava et al., 2015b), which allows the embedding to learn se- mantic representations. The model was evaluated on small- scale language modeling experiments for various languages and matched the best results on the PTB data set despite having 60% fewer parameters.",
+    "citation": "(Kim et al., 2015)",
+    "citation_score": 0.0010983836703264973
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "In (Kim et al., 2015), the words characters are processed by a 1-d CNN (Le Cun et al., 1990) with max-pooling across the sequence for each convolutional feature. The result- ing features are fed to a 2-layer highway network (Srivas- tava et al., 2015b), which allows the embedding to learn se- mantic representations. The model was evaluated on small- scale language modeling experiments for various languages and matched the best results on the PTB data set despite having 60% fewer parameters.",
+    "citation": "(Le Cun et al., 1990)",
+    "citation_score": 0.001647575505489746
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Convolutional Embedding Models"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "In (Kim et al., 2015), the words characters are processed by a 1-d CNN (Le Cun et al., 1990) with max-pooling across the sequence for each convolutional feature. The result- ing features are fed to a 2-layer highway network (Srivas- tava et al., 2015b), which allows the embedding to learn se- mantic representations. The model was evaluated on small- scale language modeling experiments for various languages and matched the best results on the PTB data set despite having 60% fewer parameters.",
+    "citation": "(Srivas-tava et al., 2015b)",
+    "citation_score": 0.002745959175816243
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Softmax Over Large Vocabularies"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The main challenge when jVjis very large (in the order of one million in this paper) is the fact that computing all inner products between hand all embeddings becomes prohibitively slow during training (even when exploiting matrix-matrix multiplications and modern GPUs). Several approaches have been proposed to cope with the scaling is- sue: importance sampling (Bengio et al., 2003; Bengio & Sen \u0301ecal, 2008), Noise Contrastive Estimation (NCE) (Gut- mann & Hyv \u0308arinen, 2010; Mnih & Kavukcuoglu, 2013), self normalizing partition functions (Vincent et al., 2015)",
+    "citation": "(Bengio et al., 2003)",
+    "citation_score": 0.0008800885509408543
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Softmax Over Large Vocabularies"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The main challenge when jVjis very large (in the order of one million in this paper) is the fact that computing all inner products between hand all embeddings becomes prohibitively slow during training (even when exploiting matrix-matrix multiplications and modern GPUs). Several approaches have been proposed to cope with the scaling is- sue: importance sampling (Bengio et al., 2003; Bengio & Sen \u0301ecal, 2008), Noise Contrastive Estimation (NCE) (Gut- mann & Hyv \u0308arinen, 2010; Mnih & Kavukcuoglu, 2013), self normalizing partition functions (Vincent et al., 2015)",
+    "citation": "(Bengio & Sen \u0301ecal, 2008)",
+    "citation_score": 0.0017601771018817085
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Softmax Over Large Vocabularies"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The main challenge when jVjis very large (in the order of one million in this paper) is the fact that computing all inner products between hand all embeddings becomes prohibitively slow during training (even when exploiting matrix-matrix multiplications and modern GPUs). Several approaches have been proposed to cope with the scaling is- sue: importance sampling (Bengio et al., 2003; Bengio & Sen \u0301ecal, 2008), Noise Contrastive Estimation (NCE) (Gut- mann & Hyv \u0308arinen, 2010; Mnih & Kavukcuoglu, 2013), self normalizing partition functions (Vincent et al., 2015)",
+    "citation": "(Gut-mann & Hyv \u0308arinen, 2010)",
+    "citation_score": 0.0004400442754704271
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Softmax Over Large Vocabularies"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The main challenge when jVjis very large (in the order of one million in this paper) is the fact that computing all inner products between hand all embeddings becomes prohibitively slow during training (even when exploiting matrix-matrix multiplications and modern GPUs). Several approaches have been proposed to cope with the scaling is- sue: importance sampling (Bengio et al., 2003; Bengio & Sen \u0301ecal, 2008), Noise Contrastive Estimation (NCE) (Gut- mann & Hyv \u0308arinen, 2010; Mnih & Kavukcuoglu, 2013), self normalizing partition functions (Vincent et al., 2015)",
+    "citation": "(Mnih & Kavukcuoglu, 2013)",
+    "citation_score": 0.00022002213773521356
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Softmax Over Large Vocabularies"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The main challenge when jVjis very large (in the order of one million in this paper) is the fact that computing all inner products between hand all embeddings becomes prohibitively slow during training (even when exploiting matrix-matrix multiplications and modern GPUs). Several approaches have been proposed to cope with the scaling is- sue: importance sampling (Bengio et al., 2003; Bengio & Sen \u0301ecal, 2008), Noise Contrastive Estimation (NCE) (Gut- mann & Hyv \u0308arinen, 2010; Mnih & Kavukcuoglu, 2013), self normalizing partition functions (Vincent et al., 2015)",
+    "citation": "(Vincent et al., 2015)",
+    "citation_score": 0.00022002213773521356
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Softmax Over Large Vocabularies"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Hinton, 2009) \u2013 they all offer good solutions to this prob- lem. We found importance sampling to be quite effective on this task, and explain the connection between it and NCE in the following section, as they are closely related.",
+    "citation": "(Morin & Bengio, 2005)",
+    "citation_score": 0.0012219640132623778
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Softmax Over Large Vocabularies"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Hinton, 2009) \u2013 they all offer good solutions to this prob- lem. We found importance sampling to be quite effective on this task, and explain the connection between it and NCE in the following section, as they are closely related.",
+    "citation": "(Mnih & Hinton, 2009)",
+    "citation_score": 0.0013312599147418582
+  },
+  {
+    "section_path": [
+      "Language Modeling Improvements",
+      "Relationship between Noise Contrastive Estimation and Importance Sampling"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "As discussed in Section 2.3, a large scale Softmax is neces- sary for training good LMs because of the vocabulary size. a tree in which the probability distribution over words is decomposed into a product of two probabilities for each word, greatly reducing training and inference time as only the path specified by the hierarchy needs to be computed and updated. Choosing a good hierarchy is important for obtaining good results and we did not explore this approach further for this paper as sampling methods worked well for our setup.",
+    "citation": "(Mnih & Hinton, 2009)",
+    "citation_score": 0.004766570644813102
+  },
+  {
+    "section_path": [
+      "Language Modeling Improvements",
+      "CNN Softmax"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The character-level features allow for a smoother and com- pact parametrization of the word embeddings. Recent ef- forts on small scale language modeling have used CNN character embeddings for the input embeddings (Kim et al., 2015). Although not as straightforward, we propose an ex- tension to this idea to also reduce the number of param- eters of the Softmax layer. Recall from Section 2.3 that the Softmax computes a logit as zw=hTewwherehis a context vector and ewthe word embedding. Instead of building a matrix of jVj\u0002jhj(whose rows correspond to ew), we produce ewwith a CNN over the characters of was ew=CNN (charsw)\u2013 we call this a CNN Softmax. We used the same network architecture to dynamically gener- ate the Softmax word embeddings without sharing the pa- rameters with the input word-embedding sub-network. For inference, the vectors ewcan be precomputed, so there is no computational complexity increase w.r.t. the regular Soft- max. We note that, when using an importance sampling loss such as the one described in Section 3.1, only a few logits have non-zero gradient (those corresponding to the true and sam- pled words). With a Softmax where eware independently learned word embeddings, this is not a problem. But we observed that, when using a CNN, all the logits become tied as the function mapping from wtoewis quite smooth. As a result, a much smaller learning rate had to be used. Even with this, the model lacks capacity to differentiate between words that have very different meanings but that are spelled similarly. Thus, a reasonable compromise was to add a small correction factor which is learned per word, such that: zw=hTCNN (charsw) +hTMcorrw whereMis a matrix projecting a low-dimensional embed- ding vectorcorrwback up to the dimensionality of the pro- jected LSTM hidden state of h. This amounts to adding a bottleneck linear layer, and brings the CNN Softmax much closer to our best result, as can be seen in Table 1, where adding a 128-dim correction halves the gap between regu- lar and the CNN Softmax. Aside from a big reduction in the number of parameters and incorporating morphological knowledge from words, the other benefit of this approach is that out-of-vocabulary (OOV) words can easily be scored. This may be useful for other problems such as Machine Translation where han- dling out-of-vocabulary words is very important (Luong et al., 2014). This approach also allows parallel training over various data sets since the model is no longer explic- itly parametrized by the vocabulary size \u2013 or the language. This has shown to help when using byte-level input embed- dings for named entity recognition (Gillick et al., 2015),",
+    "citation": "(Kim et al., 2015)",
+    "citation_score": 0.0019558315678071822
+  },
+  {
+    "section_path": [
+      "Language Modeling Improvements",
+      "CNN Softmax"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The character-level features allow for a smoother and com- pact parametrization of the word embeddings. Recent ef- forts on small scale language modeling have used CNN character embeddings for the input embeddings (Kim et al., 2015). Although not as straightforward, we propose an ex- tension to this idea to also reduce the number of param- eters of the Softmax layer. Recall from Section 2.3 that the Softmax computes a logit as zw=hTewwherehis a context vector and ewthe word embedding. Instead of building a matrix of jVj\u0002jhj(whose rows correspond to ew), we produce ewwith a CNN over the characters of was ew=CNN (charsw)\u2013 we call this a CNN Softmax. We used the same network architecture to dynamically gener- ate the Softmax word embeddings without sharing the pa- rameters with the input word-embedding sub-network. For inference, the vectors ewcan be precomputed, so there is no computational complexity increase w.r.t. the regular Soft- max. We note that, when using an importance sampling loss such as the one described in Section 3.1, only a few logits have non-zero gradient (those corresponding to the true and sam- pled words). With a Softmax where eware independently learned word embeddings, this is not a problem. But we observed that, when using a CNN, all the logits become tied as the function mapping from wtoewis quite smooth. As a result, a much smaller learning rate had to be used. Even with this, the model lacks capacity to differentiate between words that have very different meanings but that are spelled similarly. Thus, a reasonable compromise was to add a small correction factor which is learned per word, such that: zw=hTCNN (charsw) +hTMcorrw whereMis a matrix projecting a low-dimensional embed- ding vectorcorrwback up to the dimensionality of the pro- jected LSTM hidden state of h. This amounts to adding a bottleneck linear layer, and brings the CNN Softmax much closer to our best result, as can be seen in Table 1, where adding a 128-dim correction halves the gap between regu- lar and the CNN Softmax. Aside from a big reduction in the number of parameters and incorporating morphological knowledge from words, the other benefit of this approach is that out-of-vocabulary (OOV) words can easily be scored. This may be useful for other problems such as Machine Translation where han- dling out-of-vocabulary words is very important (Luong et al., 2014). This approach also allows parallel training over various data sets since the model is no longer explic- itly parametrized by the vocabulary size \u2013 or the language. This has shown to help when using byte-level input embed- dings for named entity recognition (Gillick et al., 2015),",
+    "citation": "(Luong et al., 2014)",
+    "citation_score": 0.002029636532630095
+  },
+  {
+    "section_path": [
+      "Language Modeling Improvements",
+      "CNN Softmax"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The character-level features allow for a smoother and com- pact parametrization of the word embeddings. Recent ef- forts on small scale language modeling have used CNN character embeddings for the input embeddings (Kim et al., 2015). Although not as straightforward, we propose an ex- tension to this idea to also reduce the number of param- eters of the Softmax layer. Recall from Section 2.3 that the Softmax computes a logit as zw=hTewwherehis a context vector and ewthe word embedding. Instead of building a matrix of jVj\u0002jhj(whose rows correspond to ew), we produce ewwith a CNN over the characters of was ew=CNN (charsw)\u2013 we call this a CNN Softmax. We used the same network architecture to dynamically gener- ate the Softmax word embeddings without sharing the pa- rameters with the input word-embedding sub-network. For inference, the vectors ewcan be precomputed, so there is no computational complexity increase w.r.t. the regular Soft- max. We note that, when using an importance sampling loss such as the one described in Section 3.1, only a few logits have non-zero gradient (those corresponding to the true and sam- pled words). With a Softmax where eware independently learned word embeddings, this is not a problem. But we observed that, when using a CNN, all the logits become tied as the function mapping from wtoewis quite smooth. As a result, a much smaller learning rate had to be used. Even with this, the model lacks capacity to differentiate between words that have very different meanings but that are spelled similarly. Thus, a reasonable compromise was to add a small correction factor which is learned per word, such that: zw=hTCNN (charsw) +hTMcorrw whereMis a matrix projecting a low-dimensional embed- ding vectorcorrwback up to the dimensionality of the pro- jected LSTM hidden state of h. This amounts to adding a bottleneck linear layer, and brings the CNN Softmax much closer to our best result, as can be seen in Table 1, where adding a 128-dim correction halves the gap between regu- lar and the CNN Softmax. Aside from a big reduction in the number of parameters and incorporating morphological knowledge from words, the other benefit of this approach is that out-of-vocabulary (OOV) words can easily be scored. This may be useful for other problems such as Machine Translation where han- dling out-of-vocabulary words is very important (Luong et al., 2014). This approach also allows parallel training over various data sets since the model is no longer explic- itly parametrized by the vocabulary size \u2013 or the language. This has shown to help when using byte-level input embed- dings for named entity recognition (Gillick et al., 2015),",
+    "citation": "(Gillick et al., 2015)",
+    "citation_score": 0.003395028381853977
+  },
+  {
+    "section_path": [
+      "Language Modeling Improvements",
+      "Char LSTM Predictions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The CNN Softmax layer can handle arbitrary words and is much more efficient in terms of number of parameters than the full Softmax matrix. It is, though, still considerably slow, as to evaluate perplexities we need to compute the partition function. A class of models that solve this prob- lem more efficiently are character-level LSTMs (Sutskever et al., 2011; Graves, 2013). They make predictions one character at a time, thus allowing to compute probabili- ties over a much smaller vocabulary. On the other hand, these models are more difficult to train and seem to per- form worse even in small tasks like PTB (Graves, 2013). Most likely this is due to the sequences becoming much longer on average as the LSTM reads the input character by character instead of word by word.",
+    "citation": "(Sutskever et al., 2011)",
+    "citation_score": 0.003455763717489498
+  },
+  {
+    "section_path": [
+      "Language Modeling Improvements",
+      "Char LSTM Predictions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The CNN Softmax layer can handle arbitrary words and is much more efficient in terms of number of parameters than the full Softmax matrix. It is, though, still considerably slow, as to evaluate perplexities we need to compute the partition function. A class of models that solve this prob- lem more efficiently are character-level LSTMs (Sutskever et al., 2011; Graves, 2013). They make predictions one character at a time, thus allowing to compute probabili- ties over a much smaller vocabulary. On the other hand, these models are more difficult to train and seem to per- form worse even in small tasks like PTB (Graves, 2013). Most likely this is due to the sequences becoming much longer on average as the LSTM reads the input character by character instead of word by word.",
+    "citation": "(Graves, 2013)",
+    "citation_score": 0.0013823054869957993
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "All experiments were run using the TensorFlow system (Abadi et al., 2015), with the exception of some older mod- els which were used in the ensemble.",
+    "citation": "(Abadi et al., 2015)",
+    "citation_score": 0.029642420213872665
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Data Set"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The experiments are performed on the 1B Word Bench- mark data set introduced by (Chelba et al., 2013), which is a publicly available benchmark for measuring progress of statistical language modeling. The data set contains about sentence boundary markers. All the sentences are shuffled and the duplicates are removed. The words that are out of vocabulary (OOV) are marked with a special UNK token (there are approximately 0.3% such words).",
+    "citation": "(Chelba et al., 2013)",
+    "citation_score": 0.01320014025149017
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluated many variations of RNN LM architectures. These include the dimensionalities of the embedding lay- ers, the state, projection sizes, and number of LSTM layers to use. Exhaustively trying all combinations would be ex- tremely time consuming for such a large data set, but our findings suggest that LSTMs with a projection layer (i.e., a bottleneck between hidden states as in (Sak et al., 2014)) trained with truncated BPTT (Williams & Peng, 1990) for 20 steps performed well. Following (Zaremba et al., 2014) we use dropout (Srivas- tava, 2013) before and after every LSTM layer. The bi- ases of LSTM forget gate were initialized to 1.0 (Jozefow- icz et al., 2015). The size of the models will be described in more detail in the following sections, and the choices of hyper-parameters will be released as open source upon publication. For any model using character embedding CNNs, we closely follow the architecture from (Kim et al., 2015). The only important difference is that we use a larger number of convolutional features of 4096 to give enough capacity to the model. The resulting embedding is then linearly trans- formed to match the LSTM projection sizes. This allows it to match the performance of regular word embeddings but only uses a small fraction of parameters.",
+    "citation": "(Sak et al., 2014)",
+    "citation_score": 0.0015992477612382326
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluated many variations of RNN LM architectures. These include the dimensionalities of the embedding lay- ers, the state, projection sizes, and number of LSTM layers to use. Exhaustively trying all combinations would be ex- tremely time consuming for such a large data set, but our findings suggest that LSTMs with a projection layer (i.e., a bottleneck between hidden states as in (Sak et al., 2014)) trained with truncated BPTT (Williams & Peng, 1990) for 20 steps performed well. Following (Zaremba et al., 2014) we use dropout (Srivas- tava, 2013) before and after every LSTM layer. The bi- ases of LSTM forget gate were initialized to 1.0 (Jozefow- icz et al., 2015). The size of the models will be described in more detail in the following sections, and the choices of hyper-parameters will be released as open source upon publication. For any model using character embedding CNNs, we closely follow the architecture from (Kim et al., 2015). The only important difference is that we use a larger number of convolutional features of 4096 to give enough capacity to the model. The resulting embedding is then linearly trans- formed to match the LSTM projection sizes. This allows it to match the performance of regular word embeddings but only uses a small fraction of parameters.",
+    "citation": "(Williams & Peng, 1990)",
+    "citation_score": 0.00031984955224764657
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluated many variations of RNN LM architectures. These include the dimensionalities of the embedding lay- ers, the state, projection sizes, and number of LSTM layers to use. Exhaustively trying all combinations would be ex- tremely time consuming for such a large data set, but our findings suggest that LSTMs with a projection layer (i.e., a bottleneck between hidden states as in (Sak et al., 2014)) trained with truncated BPTT (Williams & Peng, 1990) for 20 steps performed well. Following (Zaremba et al., 2014) we use dropout (Srivas- tava, 2013) before and after every LSTM layer. The bi- ases of LSTM forget gate were initialized to 1.0 (Jozefow- icz et al., 2015). The size of the models will be described in more detail in the following sections, and the choices of hyper-parameters will be released as open source upon publication. For any model using character embedding CNNs, we closely follow the architecture from (Kim et al., 2015). The only important difference is that we use a larger number of convolutional features of 4096 to give enough capacity to the model. The resulting embedding is then linearly trans- formed to match the LSTM projection sizes. This allows it to match the performance of regular word embeddings but only uses a small fraction of parameters.",
+    "citation": "(Zaremba et al., 2014)",
+    "citation_score": 0.0014073380298896447
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluated many variations of RNN LM architectures. These include the dimensionalities of the embedding lay- ers, the state, projection sizes, and number of LSTM layers to use. Exhaustively trying all combinations would be ex- tremely time consuming for such a large data set, but our findings suggest that LSTMs with a projection layer (i.e., a bottleneck between hidden states as in (Sak et al., 2014)) trained with truncated BPTT (Williams & Peng, 1990) for 20 steps performed well. Following (Zaremba et al., 2014) we use dropout (Srivas- tava, 2013) before and after every LSTM layer. The bi- ases of LSTM forget gate were initialized to 1.0 (Jozefow- icz et al., 2015). The size of the models will be described in more detail in the following sections, and the choices of hyper-parameters will be released as open source upon publication. For any model using character embedding CNNs, we closely follow the architecture from (Kim et al., 2015). The only important difference is that we use a larger number of convolutional features of 4096 to give enough capacity to the model. The resulting embedding is then linearly trans- formed to match the LSTM projection sizes. This allows it to match the performance of regular word embeddings but only uses a small fraction of parameters.",
+    "citation": "(Srivas-tava, 2013)",
+    "citation_score": 0.00031984955224764657
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluated many variations of RNN LM architectures. These include the dimensionalities of the embedding lay- ers, the state, projection sizes, and number of LSTM layers to use. Exhaustively trying all combinations would be ex- tremely time consuming for such a large data set, but our findings suggest that LSTMs with a projection layer (i.e., a bottleneck between hidden states as in (Sak et al., 2014)) trained with truncated BPTT (Williams & Peng, 1990) for 20 steps performed well. Following (Zaremba et al., 2014) we use dropout (Srivas- tava, 2013) before and after every LSTM layer. The bi- ases of LSTM forget gate were initialized to 1.0 (Jozefow- icz et al., 2015). The size of the models will be described in more detail in the following sections, and the choices of hyper-parameters will be released as open source upon publication. For any model using character embedding CNNs, we closely follow the architecture from (Kim et al., 2015). The only important difference is that we use a larger number of convolutional features of 4096 to give enough capacity to the model. The resulting embedding is then linearly trans- formed to match the LSTM projection sizes. This allows it to match the performance of regular word embeddings but only uses a small fraction of parameters.",
+    "citation": "(Jozefow-icz et al., 2015)",
+    "citation_score": 0.006396991044952931
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We evaluated many variations of RNN LM architectures. These include the dimensionalities of the embedding lay- ers, the state, projection sizes, and number of LSTM layers to use. Exhaustively trying all combinations would be ex- tremely time consuming for such a large data set, but our findings suggest that LSTMs with a projection layer (i.e., a bottleneck between hidden states as in (Sak et al., 2014)) trained with truncated BPTT (Williams & Peng, 1990) for 20 steps performed well. Following (Zaremba et al., 2014) we use dropout (Srivas- tava, 2013) before and after every LSTM layer. The bi- ases of LSTM forget gate were initialized to 1.0 (Jozefow- icz et al., 2015). The size of the models will be described in more detail in the following sections, and the choices of hyper-parameters will be released as open source upon publication. For any model using character embedding CNNs, we closely follow the architecture from (Kim et al., 2015). The only important difference is that we use a larger number of convolutional features of 4096 to give enough capacity to the model. The resulting embedding is then linearly trans- formed to match the LSTM projection sizes. This allows it to match the performance of regular word embeddings but only uses a small fraction of parameters.",
+    "citation": "(Kim et al., 2015)",
+    "citation_score": 0.0007676389253943517
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling Table 1. Best results of single models on the 1B word benchmark. Our results are shown below previous work. MODEL TESTPERPLEXITY NUMBER OF PARAMS [BILLIONS ] SIGMOID -RNN-2048 (J I ET AL ., 2015 A) 68.3 4.1 INTERPOLATED KN 5- GRAM , 1.1B N-GRAMS (CHELBA ET AL ., 2013) 67.6 1.76 SPARSE NON-NEGATIVE MATRIX LM (S HAZEER ET AL ., 2015) 52.9 33 RNN-1024 + M AXENT9-GRAM FEATURES (CHELBA ET AL ., 2013) 51.3 20 LSTM-512-512 54.1 0.82 LSTM-1024-512 48.2 0.82 LSTM-2048-512 43.7 0.83 LSTM-8192-2048 (N ODROPOUT ) 37.9 3.3 LSTM-8192-2048 (50% D ROPOUT ) 32.2 3.3 2-L AYER LSTM-8192-1024 (BIG LSTM) 30.6 1.8 BIG LSTM+CNN I NPUTS 30.0 1.04 BIG LSTM+CNN I NPUTS + CNN S OFTMAX 39.8 0.29 BIG LSTM+CNN I NPUTS + CNN S OFTMAX + 128- DIM CORRECTION 35.8 0.39 BIG LSTM+CNN I NPUTS + C HAR LSTM PREDICTIONS 47.9 0.23 Table 2. Best results of ensembles on the 1B Word Benchmark. MODEL TESTPERPLEXITY LARGE ENSEMBLE (CHELBA ET AL ., 2013) 43.8 RNN+KN-5 (W ILLIAMS ET AL ., 2015) 42.4 RNN+KN-5 (J I ET AL ., 2015 A) 42.0",
+    "citation": "(CHELBA et al., 2013)",
+    "citation_score": 0.0006165642949956343
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling Table 1. Best results of single models on the 1B word benchmark. Our results are shown below previous work. MODEL TESTPERPLEXITY NUMBER OF PARAMS [BILLIONS ] SIGMOID -RNN-2048 (J I ET AL ., 2015 A) 68.3 4.1 INTERPOLATED KN 5- GRAM , 1.1B N-GRAMS (CHELBA ET AL ., 2013) 67.6 1.76 SPARSE NON-NEGATIVE MATRIX LM (S HAZEER ET AL ., 2015) 52.9 33 RNN-1024 + M AXENT9-GRAM FEATURES (CHELBA ET AL ., 2013) 51.3 20 LSTM-512-512 54.1 0.82 LSTM-1024-512 48.2 0.82 LSTM-2048-512 43.7 0.83 LSTM-8192-2048 (N ODROPOUT ) 37.9 3.3 LSTM-8192-2048 (50% D ROPOUT ) 32.2 3.3 2-L AYER LSTM-8192-1024 (BIG LSTM) 30.6 1.8 BIG LSTM+CNN I NPUTS 30.0 1.04 BIG LSTM+CNN I NPUTS + CNN S OFTMAX 39.8 0.29 BIG LSTM+CNN I NPUTS + CNN S OFTMAX + 128- DIM CORRECTION 35.8 0.39 BIG LSTM+CNN I NPUTS + C HAR LSTM PREDICTIONS 47.9 0.23 Table 2. Best results of ensembles on the 1B Word Benchmark. MODEL TESTPERPLEXITY LARGE ENSEMBLE (CHELBA ET AL ., 2013) 43.8 RNN+KN-5 (W ILLIAMS ET AL ., 2015) 42.4 RNN+KN-5 (J I ET AL ., 2015 A) 42.0",
+    "citation": "(S HAZEER et al., 2015)",
+    "citation_score": 0.00016172178229393688
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling Table 1. Best results of single models on the 1B word benchmark. Our results are shown below previous work. MODEL TESTPERPLEXITY NUMBER OF PARAMS [BILLIONS ] SIGMOID -RNN-2048 (J I ET AL ., 2015 A) 68.3 4.1 INTERPOLATED KN 5- GRAM , 1.1B N-GRAMS (CHELBA ET AL ., 2013) 67.6 1.76 SPARSE NON-NEGATIVE MATRIX LM (S HAZEER ET AL ., 2015) 52.9 33 RNN-1024 + M AXENT9-GRAM FEATURES (CHELBA ET AL ., 2013) 51.3 20 LSTM-512-512 54.1 0.82 LSTM-1024-512 48.2 0.82 LSTM-2048-512 43.7 0.83 LSTM-8192-2048 (N ODROPOUT ) 37.9 3.3 LSTM-8192-2048 (50% D ROPOUT ) 32.2 3.3 2-L AYER LSTM-8192-1024 (BIG LSTM) 30.6 1.8 BIG LSTM+CNN I NPUTS 30.0 1.04 BIG LSTM+CNN I NPUTS + CNN S OFTMAX 39.8 0.29 BIG LSTM+CNN I NPUTS + CNN S OFTMAX + 128- DIM CORRECTION 35.8 0.39 BIG LSTM+CNN I NPUTS + C HAR LSTM PREDICTIONS 47.9 0.23 Table 2. Best results of ensembles on the 1B Word Benchmark. MODEL TESTPERPLEXITY LARGE ENSEMBLE (CHELBA ET AL ., 2013) 43.8 RNN+KN-5 (W ILLIAMS ET AL ., 2015) 42.4 RNN+KN-5 (J I ET AL ., 2015 A) 42.0",
+    "citation": "(W ILLIAMS et al., 2015)",
+    "citation_score": 0.00023247506204753426
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Model Architecture"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "LARGE ENSEMBLE (SHAZEER ET AL ., 2015) 41.0 OUR10BEST LSTM MODELS (EQUAL WEIGHTS ) 26.3 OUR10BEST LSTM MODELS (OPTIMAL WEIGHTS ) 26.1 10 LSTM S+ KN-5 ( EQUAL WEIGHTS ) 25.3 10 LSTM S+ KN-5 ( OPTIMAL WEIGHTS ) 25.1",
+    "citation": "(SHAZEER et al., 2015)",
+    "citation_score": 0.01341218730449011
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Training Procedure"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The models were trained until convergence with an Ada- Grad optimizer using a learning rate of 0.2. In all the exper- iments the RNNs were unrolled for 20 steps without ever resetting the LSTM states. We used a batch size of 128. We clip the gradients of the LSTM weights such that their norm is bounded by 1.0 (Pascanu et al., 2012).",
+    "citation": "(Pascanu et al., 2012)",
+    "citation_score": 0.0021120224402384276
+  },
+  {
+    "section_path": [
+      "Discussion and Conclusions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Exploring the Limits of Language Modeling By exploring recent advances in model architectures (e.g. LSTMs), exploiting small character CNNs, and by sharing our findings in this paper and accompanying code and mod- els (to be released upon publication), we hope to inspire research on large scale Language Modeling, a problem we consider crucial towards language understanding. We hope for future research to focus on reasonably sized datasets taking inspiration from recent advances seen in the com- puter vision community thanks to efforts such as Imagenet (Deng et al., 2009).",
+    "citation": "(Deng et al., 2009)",
+    "citation_score": 0.00030750139220229214
+  }
+]
