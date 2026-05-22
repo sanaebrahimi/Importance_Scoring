@@ -1023,13 +1023,29 @@ class ResearchGapDetector:
 
 class CorpusContributionAnalyzer:
     """
-    Corpus-level technical contribution score.
+    Corpus-level contribution scores and normalized influence.
 
+    Corpus-level score
+    ------------------
         σ_P(p) = σ_tech(p) · (1 + Σ_{paths a→…→p} Π_{(u,v) on path} W(u,v))
 
     Each paper starts with 1 unit of mass.  Mass propagates along citation
     edges; the corpus-level score of p is its technical fraction multiplied
     by the total mass accumulated at p.
+
+    External contribution mass
+    --------------------------
+    To isolate the credit that p receives from *other* articles (removing the
+    self-retained technical term):
+
+        σ_{P\p}(p) = σ_P(p) − σ_tech(p)
+
+    Normalized influence score
+    --------------------------
+    The fraction of all cross-paper influence mass in the corpus attributed
+    to article p:
+
+        I_P(p) = σ_{P\p}(p) / Σ_{p'∈P} σ_{P\p'}(p')
 
     Computed in one topological-order pass (Kahn's algorithm).  Nodes in
     exceptional cycles retain only the score propagated from their acyclic
@@ -1039,11 +1055,10 @@ class CorpusContributionAnalyzer:
     def __init__(self, graph: CitationGraph) -> None:
         self.graph = graph
 
-    def compute(self) -> Dict[str, float]:
-        """Return {paper_id: σ_P(paper_id)} for every corpus paper."""
+    def _compute_with_mass(self) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """Return (scores, mass) dicts keyed by paper_id."""
         corpus = self.graph.corpus_nodes()
 
-        # Corpus-only edges: in_edges[p] = [(q, w), …], out_refs[q] = [p, …]
         in_edges: Dict[str, List[Tuple[str, float]]] = defaultdict(list)
         out_refs: Dict[str, List[str]] = defaultdict(list)
         for (q, p), w in self.graph.edges().items():
@@ -1051,11 +1066,9 @@ class CorpusContributionAnalyzer:
                 in_edges[p].append((q, w))
                 out_refs[q].append(p)
 
-        # Kahn's topological sort: q is processed before p whenever q cites p
         in_deg: Dict[str, int] = {p: len(in_edges[p]) for p in corpus}
         queue: deque = deque(p for p in corpus if in_deg[p] == 0)
 
-        # mass starts at 1 for every paper; scores = σ_tech(p) * mass(p)
         mass: Dict[str, float] = {p: 1.0 for p in corpus}
         scores: Dict[str, float] = {}
 
@@ -1077,14 +1090,39 @@ class CorpusContributionAnalyzer:
                 f"[CorpusContributionAnalyzer] Warning: {len(unprocessed)} node(s) "
                 f"in a cycle; scores are partial: {sorted(unprocessed)}"
             )
-            # finalise cycle nodes with whatever mass they accumulated
             for p in unprocessed:
                 scores[p] = self.graph.papers[p].originality_score() * mass[p]
 
+        return scores, mass
+
+    def compute(self) -> Dict[str, float]:
+        """Return {paper_id: σ_P(p)} for every corpus paper."""
+        scores, _ = self._compute_with_mass()
         return scores
 
+    def external_contribution(self) -> Dict[str, float]:
+        """Return {paper_id: σ_{P\\p}(p) = σ_P(p) − σ_tech(p)}."""
+        scores, _ = self._compute_with_mass()
+        return {
+            p: scores[p] - self.graph.papers[p].originality_score()
+            for p in scores
+        }
+
+    def normalized_influence(self) -> Dict[str, float]:
+        """Return {paper_id: I_P(p)} — each paper's share of total cross-paper influence mass."""
+        ext = self.external_contribution()
+        total = sum(ext.values())
+        if total == 0:
+            return {p: 0.0 for p in ext}
+        return {p: v / total for p, v in ext.items()}
+
     def top_k(self, k: int = 10) -> List[Tuple[str, float]]:
+        """Top-k by corpus-level score σ_P(p)."""
         return sorted(self.compute().items(), key=lambda x: x[1], reverse=True)[:k]
+
+    def top_k_influence(self, k: int = 10) -> List[Tuple[str, float]]:
+        """Top-k by normalized influence score I_P(p)."""
+        return sorted(self.normalized_influence().items(), key=lambda x: x[1], reverse=True)[:k]
 
 
 # ---------------------------------------------------------------------------

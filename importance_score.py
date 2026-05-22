@@ -411,6 +411,8 @@ NARRATIVE_AUTHOR_YEAR_CITATION_PATTERN = (
     rf"{AUTHOR_NAME_PHRASE_PATTERN}\s+et al\.\s*\(\d{{4}}[a-z]?\)"
     rf"|"
     rf"{AUTHOR_NAME_PHRASE_PATTERN}\s+(?:and|&)\s+{AUTHOR_NAME_PHRASE_PATTERN}\s*\(\d{{4}}[a-z]?\)"
+    rf"|"
+    rf"[A-Z][A-Za-z`''\-]{{2,}}(?:\s+[A-Z][A-Za-z`''\-]+)?\s*\(\d{{4}}[a-z]?\)"
     rf")"
 )
 NUMERIC_BRACKET_CITATION_PATTERN = r"\[(?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\]"

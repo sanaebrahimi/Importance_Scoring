@@ -32,7 +32,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 _NUMERIC_BRACKET = r"\[(?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\]"
 _NUMERIC_PAREN   = r"\((?:\s*\d+\s*(?:[-,;–]\s*\d+\s*)*)\)"
 _AUTHOR_YEAR     = r"\([A-Z][^)]*\d{4}[a-z]?\)"
-_NARRATIVE_AY    = r"[A-Z][a-zA-Z\-']+(?:\s+[A-Z][a-zA-Z\-']+)*\s+et\s+al\.\s*\(\d{4}[a-z]?\)"
+_NARRATIVE_AY    = (
+    r"(?:"
+    r"[A-Z][a-zA-Z\-']+(?:\s+[A-Z][a-zA-Z\-']+)*\s+et\s+al\.\s*\(\d{4}[a-z]?\)"   # Author et al. (year)
+    r"|"
+    r"[A-Z][a-zA-Z\-']+(?:\s+[A-Z][a-zA-Z\-']+)*\s+(?:and|&)\s+[A-Z][a-zA-Z\-']+(?:\s+[A-Z][a-zA-Z\-']+)*\s*\(\d{4}[a-z]?\)"  # Author and Author (year)
+    r"|"
+    r"[A-Z][A-Za-z`''\-]{2,}(?:\s+[A-Z][A-Za-z`''\-]+)?\s*\(\d{4}[a-z]?\)"         # Author (year)
+    r")"
+)
 _CITATION_RE     = re.compile(
     rf"(?:{_NARRATIVE_AY})|(?:{_AUTHOR_YEAR})|(?:{_NUMERIC_BRACKET})|(?:{_NUMERIC_PAREN})"
 )

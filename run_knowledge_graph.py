@@ -151,6 +151,21 @@ def main() -> None:
         orig = fw.graph.papers[pid].originality_score()
         print(f"  {pid:<35} {score:>10.4f}  {orig:>10.4f}")
 
+    subheader("Normalized Influence Score  I_P(p)")
+    print(
+        f"\n  σ_{{P\\p}}(p) = σ_P(p) − σ_tech(p)          (external contribution mass)\n"
+        f"  I_P(p)     = σ_{{P\\p}}(p) / Σ_{{p'}} σ_{{P\\p'}}(p')  (share of cross-paper influence)\n"
+    )
+    norm_influence = fw.corpus_contribution.normalized_influence()
+    ext_contrib    = fw.corpus_contribution.external_contribution()
+    top_influence  = sorted(norm_influence.items(), key=lambda x: x[1], reverse=True)
+    col1 = "σ_{P\\p}(p)"
+    print(f"  {'Paper':<35} {col1:>12}  {'I_P(p)':>10}")
+    print(f"  {'-'*35} {'-'*12}  {'-'*10}")
+    for pid, inf_score in top_influence:
+        ext = ext_contrib[pid]
+        print(f"  {pid:<35} {ext:>12.4f}  {inf_score:>10.4f}")
+
     # ------------------------------------------------------------------ #
     # Step 7 – Seminal works (influence propagation)                      #
     # ------------------------------------------------------------------ #

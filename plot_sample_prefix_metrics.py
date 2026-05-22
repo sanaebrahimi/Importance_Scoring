@@ -8,35 +8,35 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
+# Model keys match the display names used in compute_sample_size_metrics.py
 MODEL_LABELS = {
-    "llama3.2_1b": "llama3.2:1b",
-    "llama3_2_3": "ollama3.2:3b",
-    "gemma2_2b_3": "gemma2:2b",
-    "gemma3_4b": "gemma3:4b",
-    "phi3_medium_run2": "phi3:medium",
-    "qwen3_4b": "qwen3:4b",
-    "qwen2_5_3b": "qwen2.5:3b",
+    "llama3.2:1b":  "llama3.2:1b",
+    "llama3.2:3b":  "llama3.2:3b",
+    "gemma2:2b":    "gemma2:2b",
+    "gemma3:4b":    "gemma3:4b",
+    "qwen3:1.7b":   "qwen3:1.7b",
+    "phi3:medium":  "phi3:medium",
+    "qwen2.5:3b":   "qwen2.5:3b",
 }
 
-# User-specified palette.
 MODEL_COLORS = {
-    "llama3.2_1b": "#9400D3",      # darkviolet
-    "llama3_2_3": "#228B22",       # forestgreen
-    "gemma2_2b_3": "#B22222",      # firebrick
-    "gemma3_4b": "#008080",        # teal
-    "phi3_medium_run2": "#FF8C00", # darkorange
-    "qwen3_4b": "#000080",         # navy
-    "qwen2_5_3b": "#00BFFF",       # deepskyblue
+    "llama3.2:1b":  "#4e79a7",  # steel blue
+    "llama3.2:3b":  "#f28e2b",  # orange
+    "gemma2:2b":    "#e15759",  # red
+    "gemma3:4b":    "#76b7b2",  # teal
+    "qwen3:1.7b":   "#59a14f",  # green
+    "phi3:medium":  "#edc948",  # yellow
+    "qwen2.5:3b":   "#b07aa1",  # purple
 }
 
 MODEL_MARKERS = {
-    "llama3.2_1b": "X",
-    "llama3_2_3": "o",
-    "gemma2_2b_3": "s",
-    "gemma3_4b": "v",
-    "phi3_medium_run2": "^",
-    "qwen3_4b": "D",
-    "qwen2_5_3b": "P",
+    "llama3.2:1b":  "o",
+    "llama3.2:3b":  "s",
+    "gemma2:2b":    "^",
+    "gemma3:4b":    "D",
+    "qwen3:1.7b":   "P",
+    "phi3:medium":  "X",
+    "qwen2.5:3b":   "v",
 }
 
 METRICS = [
