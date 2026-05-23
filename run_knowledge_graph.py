@@ -108,16 +108,16 @@ def main() -> None:
     print(f"\n  Corpus papers   : {summary['corpus_papers']}")
     print(f"  Total nodes     : {summary['total_nodes']}")
     print(f"  Total edges     : {summary['total_edges']}")
-    print(f"  Total weight    : {summary['total_weight']:.4f}")
-    print(f"  Avg originality : {summary['avg_originality']:.4f}")
+    print(f"  Total weight    : {summary['total_weight']:.9f}")
+    print(f"  Avg originality : {summary['avg_originality']:.9f}")
 
     subheader("Per-paper breakdown")
-    print(f"  {'Paper':<35} {'Originality':>11}  {'Cit. Import.':>12}  {'# Citations':>11}")
-    print(f"  {'-'*35} {'-'*11}  {'-'*12}  {'-'*11}")
+    print(f"  {'Paper':<35} {'Originality':>15}  {'Cit. Import.':>15}  {'# Citations':>11}")
+    print(f"  {'-'*35} {'-'*15}  {'-'*15}  {'-'*11}")
     for pid, d in summary["papers"].items():
         print(
-            f"  {pid:<35} {d['originality']:>11.4f}  "
-            f"{d['citation_importance']:>12.4f}  {d['unique_citations']:>11}"
+            f"  {pid:<35} {d['originality']:>15.9f}  "
+            f"{d['citation_importance']:>15.9f}  {d['unique_citations']:>11}"
         )
 
     # ------------------------------------------------------------------ #
@@ -128,7 +128,7 @@ def main() -> None:
     print(f"\n  Papers ranked by original technical content (higher = more original):\n")
     for rank, (pid, score) in enumerate(fw.originality.rank_by_originality(), 1):
         bar = "█" * int(score * 30)
-        print(f"  {rank}. {pid:<35} {score:.4f}  {bar}")
+        print(f"  {rank}. {pid:<35} {score:.9f}  {bar}")
 
     # ------------------------------------------------------------------ #
     # Step 5 – Importance-Weighted PageRank                               #
@@ -144,7 +144,7 @@ def main() -> None:
             f"{entry.first_author_last} ({entry.year})  {entry.title[:40]}"
             if entry else node
         )
-        print(f"  {rank:>2}. {score:.6f}  {label}")
+        print(f"  {rank:>2}. {score:.9f}  {label}")
 
     # ------------------------------------------------------------------ #
     # Step 6 – Contribution Analyzer                                      #
@@ -157,11 +157,11 @@ def main() -> None:
     )
     contrib_scores = fw.corpus_contribution.compute()
     top_contrib = sorted(contrib_scores.items(), key=lambda x: x[1], reverse=True)
-    print(f"  {'Paper':<35} {'σ_P':>10}  {'σ_tech':>10}")
-    print(f"  {'-'*35} {'-'*10}  {'-'*10}")
+    print(f"  {'Paper':<35} {'σ_P':>15}  {'σ_tech':>15}")
+    print(f"  {'-'*35} {'-'*15}  {'-'*15}")
     for pid, score in top_contrib:
         orig = fw.graph.papers[pid].originality_score()
-        print(f"  {pid:<35} {score:>10.4f}  {orig:>10.4f}")
+        print(f"  {pid:<35} {score:>15.9f}  {orig:>15.9f}")
 
     subheader("Normalized Influence Score  I_P(p)")
     print(
@@ -172,12 +172,43 @@ def main() -> None:
     norm_influence = fw.corpus_contribution.normalized_influence()
     propagated_mass = fw.corpus_contribution.propagated_influence_mass()
     top_influence  = sorted(norm_influence.items(), key=lambda x: x[1], reverse=True)
-    col1 = "π_P(p)"
-    print(f"  {'Paper':<35} {col1:>12}  {'I_P(p)':>10}")
-    print(f"  {'-'*35} {'-'*12}  {'-'*10}")
+    print(f"  {'Paper':<35} {'π_P(p)':>15}  {'I_P(p)':>15}")
+    print(f"  {'-'*35} {'-'*15}  {'-'*15}")
     for pid, inf_score in top_influence:
         propagated = propagated_mass[pid]
-        print(f"  {pid:<35} {propagated:>12.4f}  {inf_score:>10.4f}")
+        print(f"  {pid:<35} {propagated:>15.9f}  {inf_score:>15.9f}")
+
+    # ------------------------------------------------------------------ #
+    # Step 6B – Source-weighted contribution analyzer                     #
+    # ------------------------------------------------------------------ #
+    header("STEP 6B — Source-Weighted Contribution Analyzer")
+
+    print(
+        "\n  Corpus-level total score:\n"
+        "  σ_P(p) = σ_tech(p) + Σ_{paths a→p} σ_tech(a) · Π_{edges} W(u,v)\n"
+    )
+    src_contrib_scores = fw.corpus_contribution.compute_source_weighted()
+    top_src_contrib = sorted(src_contrib_scores.items(), key=lambda x: x[1], reverse=True)
+    print(f"  {'Paper':<35} {'σ_P':>15}  {'σ_tech':>15}")
+    print(f"  {'-'*35} {'-'*15}  {'-'*15}")
+    for pid, score in top_src_contrib:
+        orig = fw.graph.papers[pid].originality_score()
+        print(f"  {pid:<35} {score:>15.9f}  {orig:>15.9f}")
+
+    subheader("Normalized Source-Weighted Influence Score  I_P^src(p)")
+    print(
+        "\n  Propagated cross-paper mass:\n"
+        "  π_P^src(p) = Σ_{paths a→p} σ_tech(a) · Π_{edges} W(u,v)\n"
+        "  I_P^src(p) = π_P^src(p) / Σ_{p'} π_P^src(p')\n"
+    )
+    src_norm_influence = fw.corpus_contribution.normalized_source_weighted_influence()
+    src_propagated_mass = fw.corpus_contribution.source_weighted_propagated_mass()
+    top_src_influence = sorted(src_norm_influence.items(), key=lambda x: x[1], reverse=True)
+    print(f"  {'Paper':<35} {'π_P^src(p)':>18}  {'I_P^src(p)':>18}")
+    print(f"  {'-'*35} {'-'*18}  {'-'*18}")
+    for pid, inf_score in top_src_influence:
+        propagated = src_propagated_mass[pid]
+        print(f"  {pid:<35} {propagated:>18.9e}  {inf_score:>18.9e}")
 
     # ------------------------------------------------------------------ #
     # Step 7 – Seminal works (influence propagation)                      #
@@ -200,7 +231,7 @@ def main() -> None:
             f"{entry.first_author_last} ({entry.year})  {entry.title[:40]}"
             if entry else node
         )
-        print(f"  {rank:>2}. {score:.6f}  {label}")
+        print(f"  {rank:>2}. {score:.9f}  {label}")
 
     # ------------------------------------------------------------------ #
     # Step 8 – Section-level citation roles                               #
@@ -219,7 +250,7 @@ def main() -> None:
                 if entry else cit[:30]
             )
             rho_str = f"{rho:.2f}" if rho != float("inf") else "∞"
-            print(f"    {author_year:<28}  w={total_w:.4f}  ρ={rho_str:<6}  [{label}]")
+            print(f"    {author_year:<28}  w={total_w:.9f}  ρ={rho_str:<6}  [{label}]")
         print()
 
     # ------------------------------------------------------------------ #
@@ -233,8 +264,8 @@ def main() -> None:
     top_found = sorted(
         found_data.items(), key=lambda x: x[1]["foundational_score"], reverse=True
     )[: args.top_k]
-    print(f"  {'Work':<32} {'Found':>7}  {'Periph':>7}  {'Class':<14}")
-    print(f"  {'-'*32} {'-'*7}  {'-'*7}  {'-'*14}")
+    print(f"  {'Work':<32} {'Found':>13}  {'Periph':>13}  {'Class':<14}")
+    print(f"  {'-'*32} {'-'*13}  {'-'*13}  {'-'*14}")
     for cit, d in top_found:
         entry = resolver.resolve(cit)
         label = (
@@ -242,8 +273,8 @@ def main() -> None:
             if entry else cit[:28]
         )
         print(
-            f"  {label:<32} {d['foundational_score']:>7.4f}  "
-            f"{d['peripheral_score']:>7.4f}  {d['classification']}"
+            f"  {label:<32} {d['foundational_score']:>13.9f}  "
+            f"{d['peripheral_score']:>13.9f}  {d['classification']}"
         )
 
     # ------------------------------------------------------------------ #
@@ -251,15 +282,28 @@ def main() -> None:
     # ------------------------------------------------------------------ #
     header("STEP 10 — Community Detection")
 
-    partition = fw.communities.detect(restrict_to_corpus=True)
-    q_score   = fw.communities.modularity(partition)
-    communities: dict = {}
-    for pid, cid in partition.items():
-        communities.setdefault(cid, []).append(pid)
+    partition_dir  = fw.communities.detect(restrict_to_corpus=True, directed=True)
+    partition_undir = fw.communities.detect(restrict_to_corpus=True, directed=False)
 
-    print(f"\n  Weighted modularity Q = {q_score:.4f}")
-    print(f"  {len(communities)} communities detected:\n")
-    for cid, members in sorted(communities.items()):
+    q_directed = fw.communities.modularity(partition_dir,   directed=True)
+    q_undir    = fw.communities.modularity(partition_undir, directed=False)
+
+    communities_dir: dict = {}
+    for pid, cid in partition_dir.items():
+        communities_dir.setdefault(cid, []).append(pid)
+
+    communities_undir: dict = {}
+    for pid, cid in partition_undir.items():
+        communities_undir.setdefault(cid, []).append(pid)
+
+    print(f"\n  Weighted modularity Q (directed)   = {q_directed:.9f}")
+    print(f"  {len(communities_dir)} communities detected (directed):\n")
+    for cid, members in sorted(communities_dir.items()):
+        print(f"  Community {cid}: {', '.join(members)}")
+
+    print(f"\n  Weighted modularity Q (undirected) = {q_undir:.9f}")
+    print(f"  {len(communities_undir)} communities detected (undirected):\n")
+    for cid, members in sorted(communities_undir.items()):
         print(f"  Community {cid}: {', '.join(members)}")
 
     # ------------------------------------------------------------------ #
@@ -269,19 +313,19 @@ def main() -> None:
 
     all_papers = list(fw.graph.papers.keys())
     gap_full   = fw.research_gaps.gap_score(all_papers)
-    print(f"\n  Full-corpus gap score: {gap_full:.4f}")
+    print(f"\n  Full-corpus gap score: {gap_full:.9f}")
     print(
         "  (positive = technically original work not yet adopted "
         "as a dependency by other papers in the corpus)"
     )
 
     print(f"\n  Per-paper gap score (cluster = single paper):\n")
-    print(f"  {'Paper':<35} {'Gap score':>10}  {'Originality':>11}")
-    print(f"  {'-'*35} {'-'*10}  {'-'*11}")
+    print(f"  {'Paper':<35} {'Gap score':>15}  {'Originality':>15}")
+    print(f"  {'-'*35} {'-'*15}  {'-'*15}")
     for pid in sorted(fw.graph.papers):
         g  = fw.research_gaps.gap_score([pid])
         o  = fw.originality.originality(pid)
-        print(f"  {pid:<35} {g:>10.4f}  {o:>11.4f}")
+        print(f"  {pid:<35} {g:>15.9f}  {o:>15.9f}")
 
     header("DONE")
     print(f"\n  All analyses complete.\n")

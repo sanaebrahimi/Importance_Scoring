@@ -1,0 +1,370 @@
+
+
+
+============================================================
+  STEP 2 — Build Citation Graph
+============================================================
+
+CitationGraph(corpus=17, nodes=845, edges=869)
+
+============================================================
+  STEP 3 — Corpus Summary
+============================================================
+
+  Corpus papers   : 17
+  Total nodes     : 845
+  Total edges     : 869
+  Total weight    : 2.6750
+  Avg originality : 0.8079
+
+--- Per-paper breakdown ---
+  Paper                               Originality  Cit. Import.  # Citations
+  ----------------------------------- -----------  ------------  -----------
+  AttentionAllYouNeed                      0.6959        0.3041           38
+  Deep-Residual-Learning                   0.7269        0.2731           47
+  Exploring-Limit-LLMs                     0.8494        0.1506           55
+  Gen-Sequences-RNN                        0.8247        0.1753           37
+  LSM-Memory                               0.7913        0.2087           51
+  N-Machine-Translation                    0.8988        0.1012           20
+  Smarter-Better-Faster-Longer             0.7705        0.2295           95
+  YOLO-World-Real-Time                     0.7763        0.2237           55
+  d-fine-redefine                          0.8766        0.1234           48
+  gemma2                                   0.7779        0.2221           65
+  kimiK2                                   0.9143        0.0857           74
+  llama3                                   0.8763        0.1237          277
+  output-embed-llm                         0.7408        0.2592           42
+  shift-reduce-const-pars                  0.7304        0.2696           48
+  simPo                                    0.8890        0.1110           51
+  struc-attention-net                      0.8046        0.1954           44
+  yolov10                                  0.7899        0.2101           49
+
+============================================================
+  STEP 4 — Originality Ranking  (Orig(p) = Σ S_tech)
+============================================================
+
+  Papers ranked by original technical content (higher = more original):
+
+  1. kimiK2                              0.9143  ███████████████████████████
+  2. N-Machine-Translation               0.8988  ██████████████████████████
+  3. simPo                               0.8890  ██████████████████████████
+  4. d-fine-redefine                     0.8766  ██████████████████████████
+  5. llama3                              0.8763  ██████████████████████████
+  6. Exploring-Limit-LLMs                0.8494  █████████████████████████
+  7. Gen-Sequences-RNN                   0.8247  ████████████████████████
+  8. struc-attention-net                 0.8046  ████████████████████████
+  9. LSM-Memory                          0.7913  ███████████████████████
+  10. yolov10                             0.7899  ███████████████████████
+  11. gemma2                              0.7779  ███████████████████████
+  12. YOLO-World-Real-Time                0.7763  ███████████████████████
+  13. Smarter-Better-Faster-Longer        0.7705  ███████████████████████
+  14. output-embed-llm                    0.7408  ██████████████████████
+  15. shift-reduce-const-pars             0.7304  █████████████████████
+  16. Deep-Residual-Learning              0.7269  █████████████████████
+  17. AttentionAllYouNeed                 0.6959  ████████████████████
+
+============================================================
+  STEP 5 — Importance-Weighted PageRank
+============================================================
+
+  Top-10 cited works by Normalized Reference Score:
+
+   1. 0.109253  jocher (2023)  Ultralytics yolov8.
+   2. 0.093830  wu (2016)  Google’s neural machine translation syst
+   3. 0.080167  sagae (2005)  A classiﬁer-based parser with linear run
+   4. 0.051717  gehring (2017)  Convolutional sequence to sequence learn
+   5. 0.043528  vaswani (2021)  Attention is all you need.
+   6. 0.040041  bahdanau (2015)  Neural Machine Translation by Jointly Le
+   7. 0.036363  cho (2014)  Learning phrase representations using rn
+   8. 0.035357  zaremba (2014)  Recurrent neural network regularization.
+   9. 0.035139  silver (2025)  Welcome to the era of experience
+  10. 0.034875  hochreiter (1997)  Long short-term memory.
+
+============================================================
+  STEP 6 — Contribution Analyzer
+============================================================
+
+  Corpus-level total score:
+  σ_P(p) = σ_tech(p) · (1 + Σ_{paths a→p} Π_{edges} W(u,v))
+
+  Paper                                      σ_P      σ_tech
+  ----------------------------------- ----------  ----------
+  kimiK2                                  0.9143      0.9143
+  N-Machine-Translation                   0.8988      0.8988
+  simPo                                   0.8890      0.8890
+  llama3                                  0.8792      0.8763
+  d-fine-redefine                         0.8766      0.8766
+  Exploring-Limit-LLMs                    0.8494      0.8494
+  Gen-Sequences-RNN                       0.8252      0.8247
+  struc-attention-net                     0.8046      0.8046
+  LSM-Memory                              0.7913      0.7913
+  yolov10                                 0.7899      0.7899
+  gemma2                                  0.7779      0.7779
+  YOLO-World-Real-Time                    0.7763      0.7763
+  Smarter-Better-Faster-Longer            0.7705      0.7705
+  output-embed-llm                        0.7408      0.7408
+  shift-reduce-const-pars                 0.7304      0.7304
+  Deep-Residual-Learning                  0.7271      0.7269
+  AttentionAllYouNeed                     0.6959      0.6959
+
+--- Normalized Influence Score  I_P(p) ---
+
+  Propagated cross-paper mass:
+  π_P(p) = σ_tech(p) · Σ_{paths a→p} Π_{edges} W(u,v)
+  I_P(p) = π_P(p) / Σ_{p'} π_P(p')  (share of propagated cross-paper influence)
+
+  Paper                                     π_P(p)      I_P(p)
+  ----------------------------------- ------------  ----------
+  llama3                                    0.0029      0.8244
+  Gen-Sequences-RNN                         0.0005      0.1349
+  Deep-Residual-Learning                    0.0001      0.0407
+  struc-attention-net                       0.0000      0.0000
+  gemma2                                    0.0000      0.0000
+  yolov10                                   0.0000      0.0000
+  LSM-Memory                                0.0000      0.0000
+  output-embed-llm                          0.0000      0.0000
+  N-Machine-Translation                     0.0000      0.0000
+  Exploring-Limit-LLMs                      0.0000      0.0000
+  kimiK2                                    0.0000      0.0000
+  shift-reduce-const-pars                   0.0000      0.0000
+  d-fine-redefine                           0.0000      0.0000
+  simPo                                     0.0000      0.0000
+  YOLO-World-Real-Time                      0.0000      0.0000
+  AttentionAllYouNeed                       0.0000      0.0000
+  Smarter-Better-Faster-Longer              0.0000      0.0000
+
+============================================================
+  STEP 6B — Source-Weighted Contribution Analyzer
+============================================================
+
+  Corpus-level total score:
+  σ_P(p) = σ_tech(p) + Σ_{paths a→p} σ_tech(a) · Π_{edges} W(u,v)
+
+  Paper                                      σ_P      σ_tech
+  ----------------------------------- ----------  ----------
+  kimiK2                                  0.9143      0.9143
+  N-Machine-Translation                   0.8988      0.8988
+  simPo                                   0.8890      0.8890
+  llama3                                  0.8788      0.8763
+  d-fine-redefine                         0.8766      0.8766
+  Exploring-Limit-LLMs                    0.8494      0.8494
+  Gen-Sequences-RNN                       0.8252      0.8247
+  struc-attention-net                     0.8046      0.8046
+  LSM-Memory                              0.7913      0.7913
+  yolov10                                 0.7899      0.7899
+  gemma2                                  0.7779      0.7779
+  YOLO-World-Real-Time                    0.7763      0.7763
+  Smarter-Better-Faster-Longer            0.7705      0.7705
+  output-embed-llm                        0.7408      0.7408
+  shift-reduce-const-pars                 0.7304      0.7304
+  Deep-Residual-Learning                  0.7271      0.7269
+  AttentionAllYouNeed                     0.6959      0.6959
+
+--- Normalized Source-Weighted Influence Score  I_P^src(p) ---
+
+  Propagated cross-paper mass:
+  π_P^src(p) = Σ_{paths a→p} σ_tech(a) · Π_{edges} W(u,v)
+  I_P^src(p) = π_P^src(p) / Σ_{p'} π_P^src(p')
+
+  Paper                                 π_P^src(p)    I_P^src(p)
+  ----------------------------------- ------------  ------------
+  llama3                                    0.0025        0.7937
+  Gen-Sequences-RNN                         0.0005        0.1609
+  Deep-Residual-Learning                    0.0001        0.0454
+  struc-attention-net                       0.0000        0.0000
+  gemma2                                    0.0000        0.0000
+  yolov10                                   0.0000        0.0000
+  LSM-Memory                                0.0000        0.0000
+  output-embed-llm                          0.0000        0.0000
+  N-Machine-Translation                     0.0000        0.0000
+  Exploring-Limit-LLMs                      0.0000        0.0000
+  kimiK2                                    0.0000        0.0000
+  shift-reduce-const-pars                   0.0000        0.0000
+  d-fine-redefine                           0.0000        0.0000
+  simPo                                     0.0000        0.0000
+  YOLO-World-Real-Time                      0.0000        0.0000
+  AttentionAllYouNeed                       0.0000        0.0000
+  Smarter-Better-Faster-Longer              0.0000        0.0000
+
+============================================================
+  STEP 7 — Seminal Works  (Influence Propagation)
+============================================================
+
+  Top cited works by total downstream influence (depth=3, decay=0.5):
+
+   1. 0.109253  jocher (2023)  Ultralytics yolov8.
+   2. 0.093830  wu (2016)  Google’s neural machine translation syst
+   3. 0.080167  sagae (2005)  A classiﬁer-based parser with linear run
+   4. 0.051717  gehring (2017)  Convolutional sequence to sequence learn
+   5. 0.043528  vaswani (2021)  Attention is all you need.
+   6. 0.040041  bahdanau (2015)  Neural Machine Translation by Jointly Le
+   7. 0.036363  cho (2014)  Learning phrase representations using rn
+   8. 0.035357  zaremba (2014)  Recurrent neural network regularization.
+   9. 0.035139  silver (2025)  Welcome to the era of experience
+  10. 0.034880  hochreiter (1997)  Long short-term memory.
+
+============================================================
+  STEP 8 — Citation Roles  (Technical vs Rhetorical)
+============================================================
+
+  For each corpus paper: top citations and their role.
+
+  AttentionAllYouNeed
+    [38]                          w=0.0938  ρ=0.72    [balanced]
+    [9]                           w=0.0517  ρ=0.67    [balanced]
+    [23]                          w=0.0205  ρ=0.67    [balanced]
+
+  Deep-Residual-Learning
+    [18]                          w=0.0317  ρ=0.67    [balanced]
+    [30]                          w=0.0253  ρ=0.67    [balanced]
+    [33]                          w=0.0196  ρ=0.67    [balanced]
+
+  Exploring-Limit-LLMs
+    (Deng et al., 2009)           w=0.0286  ρ=1.30    [balanced]
+    (Mikolov, 2012)               w=0.0260  ρ=0.37    [rhetorical]
+    (Chelba et al., 2013)         w=0.0191  ρ=2.39    [technical]
+
+  Gen-Sequences-RNN
+    [16]                          w=0.0189  ρ=0.67    [balanced]
+    [11]                          w=0.0174  ρ=0.61    [balanced]
+    [1]                           w=0.0161  ρ=2.09    [technical]
+
+  LSM-Memory
+    (Bahdanau et al., 2014)       w=0.0327  ρ=1.00    [balanced]
+    (Chung et al., 2015)          w=0.0219  ρ=0.67    [balanced]
+    (Weston et al., 2015)         w=0.0167  ρ=1.09    [balanced]
+
+  N-Machine-Translation
+    (Sutskever et al., 2014)      w=0.0259  ρ=1.38    [balanced]
+    (Cho et al., 2014a)           w=0.0242  ρ=4.24    [technical]
+    (Pascanu et al., 2014)        w=0.0165  ρ=1.50    [balanced]
+
+  Smarter-Better-Faster-Longer
+    (Lefaudeux et al., 2022)      w=0.0314  ρ=1.22    [balanced]
+    (Vaswani et al., 2017)        w=0.0275  ρ=0.77    [balanced]
+    (Samuel, 2024)                w=0.0243  ρ=0.67    [balanced]
+
+  YOLO-World-Real-Time
+    [20]                          w=0.1093  ρ=2.43    [technical]
+    [39]                          w=0.0131  ρ=0.91    [balanced]
+    [59]                          w=0.0084  ρ=0.65    [balanced]
+
+  d-fine-redefine
+    (Li et al., 2020)             w=0.0169  ρ=2.31    [technical]
+    (Redmon et al., 2016a)        w=0.0113  ρ=1.30    [balanced]
+    (Wang et al., 2023a)          w=0.0098  ρ=1.08    [balanced]
+
+  gemma2
+    (Vaswani etal., 2017)         w=0.0435  ρ=2.33    [technical]
+    (Zhang & Sennrich, 2019)      w=0.0307  ρ=0.67    [balanced]
+    (Gemma Team, 2024)            w=0.0213  ρ=2.33    [technical]
+
+  kimiK2
+    [64]                          w=0.0351  ρ=2.33    [technical]
+    [34]                          w=0.0095  ρ=2.79    [technical]
+    [36]                          w=0.0087  ρ=5.70    [technical]
+
+  llama3
+    (Rafailov et al., 2024)       w=0.0204  ρ=2.33    [technical]
+    (Alayrac et al., 2022)        w=0.0074  ρ=2.82    [technical]
+    (Vaswani et al., 2017)        w=0.0044  ρ=2.33    [technical]
+
+  output-embed-llm
+    (Zaremba et al., 2014)        w=0.0354  ρ=1.51    [balanced]
+    (Cho et al., 2014)            w=0.0293  ρ=1.62    [balanced]
+    (Axelrod et al., 2011)        w=0.0236  ρ=1.63    [balanced]
+
+  shift-reduce-const-pars
+    (Sagae & Lavie, 2005)         w=0.0553  ρ=0.70    [balanced]
+    (Sagae & Lavie, 2006)         w=0.0225  ρ=0.71    [balanced]
+    (Lavie, 2005)                 w=0.0180  ρ=0.67    [balanced]
+
+  simPo
+    [60]                          w=0.0190  ρ=2.70    [technical]
+    [61]                          w=0.0103  ρ=0.80    [balanced]
+    [83]                          w=0.0097  ρ=5.40    [technical]
+
+  struc-attention-net
+    (Bahdanau et al., 2015)       w=0.0400  ρ=0.86    [balanced]
+    (Eisner, 1996)                w=0.0348  ρ=2.38    [technical]
+    (Kipperwasser & Goldberg, 2016  w=0.0218  ρ=0.67    [balanced]
+
+  yolov10
+    [20]                          w=0.0296  ρ=0.67    [balanced]
+    [21]                          w=0.0203  ρ=1.68    [balanced]
+    [29]                          w=0.0199  ρ=0.67    [balanced]
+
+
+============================================================
+  STEP 9 — Foundational vs Peripheral Works
+============================================================
+
+  Top-10 works by foundational score (cited in methods/experiments):
+
+  Work                               Found   Periph  Class         
+  -------------------------------- -------  -------  --------------
+  [20]                              0.1111   0.0296  foundational
+  [38]                              0.0956   0.0027  foundational
+  [9]                               0.0686   0.0054  foundational
+  (Sagae & Lavie, 2005)             0.0553   0.0000  foundational
+  (Vaswani etal., 2017)             0.0435   0.0000  foundational
+  [64]                              0.0408   0.0000  foundational
+  (Bahdanau et al., 2015)           0.0400   0.0000  foundational
+  [35]                              0.0395   0.0000  foundational
+  (Zaremba et al., 2014)            0.0357   0.0046  foundational
+  (Eisner, 1996)                    0.0348   0.0000  foundational
+
+============================================================
+  STEP 10 — Community Detection
+============================================================
+
+  Weighted modularity Q = 0.0007
+  12 communities detected:
+
+  Community 0: struc-attention-net
+  Community 1: gemma2
+  Community 2: yolov10
+  Community 3: llama3, Smarter-Better-Faster-Longer
+  Community 4: LSM-Memory
+  Community 5: output-embed-llm
+  Community 6: N-Machine-Translation, Deep-Residual-Learning, Gen-Sequences-RNN, YOLO-World-Real-Time, AttentionAllYouNeed
+  Community 7: Exploring-Limit-LLMs
+  Community 8: kimiK2
+  Community 9: shift-reduce-const-pars
+  Community 10: d-fine-redefine
+  Community 11: simPo
+
+============================================================
+  STEP 11 — Research Gap Score  (Gap(C, t))
+============================================================
+
+  Full-corpus gap score: 13.7336
+  (positive = technically original work not yet adopted as a dependency by other papers in the corpus)
+
+  Per-paper gap score (cluster = single paper):
+
+  Paper                                Gap score  Originality
+  ----------------------------------- ----------  -----------
+  AttentionAllYouNeed                     0.6959       0.6959
+  Deep-Residual-Learning                  0.7267       0.7269
+  Exploring-Limit-LLMs                    0.8494       0.8494
+  Gen-Sequences-RNN                       0.8241       0.8247
+  LSM-Memory                              0.7913       0.7913
+  N-Machine-Translation                   0.8988       0.8988
+  Smarter-Better-Faster-Longer            0.7705       0.7705
+  YOLO-World-Real-Time                    0.7763       0.7763
+  d-fine-redefine                         0.8766       0.8766
+  gemma2                                  0.7779       0.7779
+  kimiK2                                  0.9143       0.9143
+  llama3                                  0.8754       0.8763
+  output-embed-llm                        0.7408       0.7408
+  shift-reduce-const-pars                 0.7304       0.7304
+  simPo                                   0.8890       0.8890
+  struc-attention-net                     0.8046       0.8046
+  yolov10                                 0.7899       0.7899
+
+============================================================
+  DONE
+============================================================
+
+  All analyses complete.
+

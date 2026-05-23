@@ -642,6 +642,15 @@ class InfluenceAnalyzer:
         **kwargs,
     ) -> List[Tuple[str, float]]:
         """Rank by Σ_p Inf(q→p) — papers with broadest downstream influence."""
+        totals = self.seminal_scores(restrict_to_corpus=restrict_to_corpus, **kwargs)
+        return sorted(totals.items(), key=lambda x: x[1], reverse=True)[:top_k]
+
+    def seminal_scores(
+        self,
+        restrict_to_corpus: bool = False,
+        **kwargs,
+    ) -> Dict[str, float]:
+        """Return {node_id: Σ_p Inf(node_id→p)} for all eligible source nodes."""
         targets = (
             self.graph.corpus_nodes() if restrict_to_corpus
             else self.graph.all_nodes()
@@ -651,7 +660,7 @@ class InfluenceAnalyzer:
             for p, v in self.influence_from(source, **kwargs).items():
                 if p in targets:
                     totals[source] += v
-        return sorted(totals.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        return dict(totals)
 
 
 # ---------------------------------------------------------------------------
@@ -671,18 +680,30 @@ class CommunityDetector:
     def __init__(self, graph: CitationGraph) -> None:
         self.graph = graph
 
-    def detect(self, restrict_to_corpus: bool = True) -> Dict[str, int]:
-        """Return {paper_id: community_id}."""
+    def detect(self, restrict_to_corpus: bool = True, directed: bool = True) -> Dict[str, int]:
+        """Return {paper_id: community_id}.
+
+        directed=True  — Louvain on directed graph (DiGraph).
+        directed=False — Louvain on symmetrised undirected graph (Graph),
+                         using W_sym(p,q) = W(p,q) + W(q,p) as edge weight.
+        """
         try:
-            return self._louvain(restrict_to_corpus)
+            return self._louvain(restrict_to_corpus, directed)
         except ImportError:
             return self._greedy(restrict_to_corpus)
 
-    def _louvain(self, restrict_to_corpus: bool) -> Dict[str, int]:
+    def _louvain(self, restrict_to_corpus: bool, directed: bool = True) -> Dict[str, int]:
         import community as community_louvain
-        import networkx as nx
 
-        G = self._nx_graph(restrict_to_corpus)
+        # python-louvain requires an undirected Graph.
+        # directed=True  → undirected graph using max(W(p,q), W(q,p)) per pair
+        #                   (dominant citation direction drives community membership)
+        # directed=False → undirected graph using W(p,q)+W(q,p) per pair
+        #                   (symmetric sum treats mutual citations as stronger ties)
+        if directed:
+            G = self._nx_undirected_graph_max(restrict_to_corpus)
+        else:
+            G = self._nx_undirected_graph(restrict_to_corpus)
         return community_louvain.best_partition(G, weight="weight")
 
     def _greedy(self, restrict_to_corpus: bool) -> Dict[str, int]:
@@ -724,16 +745,43 @@ class CommunityDetector:
         penalty = self.graph.out_weight(p) * self.graph.in_weight(q) / (4 * m * m)
         return w_pq / (2 * m) - penalty
 
-    def modularity(self, partition: Dict[str, int]) -> float:
-        """Compute Q for an arbitrary partition."""
+    def modularity(self, partition: Dict[str, int], directed: bool = True) -> float:
+        """Compute Q for an arbitrary partition.
+
+        directed=True  (default) — directed formula:
+            Q = (1/2m) Σ_{(p,r)∈E, same C} [W(p,r) − W_out(p)·W_in(r)/(2m)]
+
+        directed=False — undirected (symmetrised) formula:
+            A_sym(p,r) = W(p,r) + W(r,p)
+            k_p        = W_out(p) + W_in(p)
+            Q = (1/m)  Σ_{unordered {p,r}, same C} [A_sym(p,r) − k_p·k_r/(2m)]
+        """
         m = self.graph.total_weight()
         if m == 0:
             return 0.0
+        two_m = 2.0 * m
         q = 0.0
+
+        if directed:
+            for (p, r), w in self.graph.edges().items():
+                if p in partition and r in partition and partition[p] == partition[r]:
+                    q += w - self.graph.out_weight(p) * self.graph.in_weight(r) / two_m
+            return q / two_m
+
+        # Undirected: symmetrise edges into unordered pairs
+        sym: Dict[Tuple[str, str], float] = {}
         for (p, r), w in self.graph.edges().items():
+            key = (min(p, r), max(p, r))
+            sym[key] = sym.get(key, 0.0) + w
+
+        for (p, r), w_sym in sym.items():
             if p in partition and r in partition and partition[p] == partition[r]:
-                q += w - self.graph.out_weight(p) * self.graph.in_weight(r) / (2 * m)
-        return q / (2 * m)
+                k_p = self.graph.out_weight(p) + self.graph.in_weight(p)
+                k_r = self.graph.out_weight(r) + self.graph.in_weight(r)
+                q += w_sym - k_p * k_r / two_m
+        # sum is over unordered pairs → normalise by m (= 2m/2) to match
+        # the standard (1/2m) Σ_ordered formula
+        return q / m
 
     def _nx_graph(self, restrict_to_corpus: bool):
         import networkx as nx
@@ -747,6 +795,46 @@ class CommunityDetector:
         for (src, tgt), w in self.graph.edges().items():
             if src in nodes and tgt in nodes:
                 G.add_edge(src, tgt, weight=w)
+        return G
+
+    def _nx_undirected_graph(self, restrict_to_corpus: bool):
+        """Undirected graph with W_sym(p, q) = W(p, q) + W(q, p)."""
+        import networkx as nx
+
+        G = nx.Graph()
+        nodes = (
+            self.graph.corpus_nodes() if restrict_to_corpus
+            else self.graph.all_nodes()
+        )
+        G.add_nodes_from(nodes)
+        for (src, tgt), w in self.graph.edges().items():
+            if src in nodes and tgt in nodes:
+                if G.has_edge(src, tgt):
+                    G[src][tgt]["weight"] += w
+                else:
+                    G.add_edge(src, tgt, weight=w)
+        return G
+
+    def _nx_undirected_graph_max(self, restrict_to_corpus: bool):
+        """Undirected graph with W_max(p, q) = max(W(p, q), W(q, p)).
+
+        Used for directed-mode Louvain: the dominant citation direction
+        determines the edge weight; weaker reverse edges are suppressed.
+        """
+        import networkx as nx
+
+        G = nx.Graph()
+        nodes = (
+            self.graph.corpus_nodes() if restrict_to_corpus
+            else self.graph.all_nodes()
+        )
+        G.add_nodes_from(nodes)
+        for (src, tgt), w in self.graph.edges().items():
+            if src in nodes and tgt in nodes:
+                if G.has_edge(src, tgt):
+                    G[src][tgt]["weight"] = max(G[src][tgt]["weight"], w)
+                else:
+                    G.add_edge(src, tgt, weight=w)
         return G
 
 
@@ -1145,6 +1233,86 @@ class CorpusContributionAnalyzer:
     def top_k_influence(self, k: int = 10) -> List[Tuple[str, float]]:
         """Top-k by normalized influence score I_P(p)."""
         return sorted(self.normalized_influence().items(), key=lambda x: x[1], reverse=True)[:k]
+
+    def _compute_source_weighted_with_mass(self) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """
+        Return (scores, propagated_mass) for the source-weighted corpus score
+
+            σ_P(p) = σ_tech(p) + Σ_{paths a→…→p} σ_tech(a) · Π W(u,v).
+
+        This satisfies the recurrence
+
+            σ_P(p) = σ_tech(p) + Σ_{q→p} W(q,p) · σ_P(q).
+        """
+        corpus = self.graph.corpus_nodes()
+
+        in_edges: Dict[str, List[Tuple[str, float]]] = defaultdict(list)
+        out_refs: Dict[str, List[str]] = defaultdict(list)
+        for (q, p), w in self.graph.edges().items():
+            if q in corpus and p in corpus:
+                in_edges[p].append((q, w))
+                out_refs[q].append(p)
+
+        in_deg: Dict[str, int] = {p: len(in_edges[p]) for p in corpus}
+        queue: deque = deque(p for p in corpus if in_deg[p] == 0)
+
+        scores: Dict[str, float] = {
+            p: self.graph.papers[p].originality_score()
+            for p in corpus
+        }
+        propagated_mass: Dict[str, float] = {p: 0.0 for p in corpus}
+
+        processed: Set[str] = set()
+        while queue:
+            q = queue.popleft()
+            processed.add(q)
+            sq = scores[q]
+            for p in out_refs[q]:
+                contribution = self.graph.weight(q, p) * sq
+                scores[p] += contribution
+                propagated_mass[p] += contribution
+                in_deg[p] -= 1
+                if in_deg[p] == 0:
+                    queue.append(p)
+
+        unprocessed = corpus - processed
+        if unprocessed:
+            print(
+                f"[CorpusContributionAnalyzer] Warning: {len(unprocessed)} node(s) "
+                f"in a cycle for source-weighted scores; values are partial: {sorted(unprocessed)}"
+            )
+
+        return scores, propagated_mass
+
+    def compute_source_weighted(self) -> Dict[str, float]:
+        """
+        Return {paper_id: σ_P(p)} for
+
+            σ_P(p) = σ_tech(p) + Σ_{paths a→…→p} σ_tech(a) · Π W(u,v).
+        """
+        scores, _ = self._compute_source_weighted_with_mass()
+        return scores
+
+    def source_weighted_propagated_mass(self) -> Dict[str, float]:
+        """
+        Return the propagated cross-paper term for the source-weighted score:
+
+            π_P^src(p) = Σ_{paths a→…→p} σ_tech(a) · Π W(u,v).
+        """
+        _, propagated_mass = self._compute_source_weighted_with_mass()
+        return propagated_mass
+
+    def normalized_source_weighted_influence(self) -> Dict[str, float]:
+        """
+        Return normalized source-weighted propagated influence
+
+            I_P^src(p) = π_P^src(p) / Σ_{p'∈P} π_P^src(p').
+        """
+        propagated = self.source_weighted_propagated_mass()
+        total = sum(propagated.values())
+        if total == 0:
+            return {p: 0.0 for p in propagated}
+        return {p: v / total for p, v in propagated.items()}
 
 
 # ---------------------------------------------------------------------------

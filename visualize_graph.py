@@ -127,6 +127,11 @@ def _corpus_tooltip(node_id: str) -> str:
     return "\n".join([node_id, "Year: -", "corpus paper"])
 
 
+def _corpus_label(node_id: str) -> str:
+    label = node_id.replace("_", " ").replace("-", " ")
+    return re.sub(r"\s+", " ", label).strip()
+
+
 def _external_label_and_tooltip(resolver: CitationResolver, node_id: str) -> tuple[str, str]:
     entry = resolver.resolve(node_id)
     if not entry:
@@ -151,6 +156,8 @@ def build_graph_payload(
     model_tag: str = "",
 ) -> dict:
     pagerank = fw.pagerank.compute()
+    seminal = fw.influence.seminal_scores(restrict_to_corpus=False)
+    norm_influence = fw.corpus_contribution.normalized_influence()
     corpus_ids = sorted(fw.graph.papers.keys())
     corpus_set = set(corpus_ids)
     partition = fw.communities.detect(restrict_to_corpus=True)
@@ -161,24 +168,63 @@ def build_graph_payload(
         key=lambda node_id: (-pagerank.get(node_id, 0.0), node_id),
     )
 
-    pr_vals = [pagerank.get(node_id, 0.0) for node_id in all_node_ids]
-    pr_min = min(pr_vals, default=0.0)
-    pr_max = max(pr_vals, default=1.0)
+    ip_vals = list(norm_influence.values())
+    ip_min = min(ip_vals, default=0.0)
+    ip_max = max(ip_vals, default=1.0)
+
+    seminal_vals = [seminal.get(node_id, 0.0) for node_id in all_node_ids if node_id not in corpus_set]
+    seminal_min = min(seminal_vals, default=0.0)
+    seminal_max = max(seminal_vals, default=1.0)
 
     nodes = []
     for node_id in all_node_ids:
         pr = pagerank.get(node_id, 0.0)
-        size = _scale(pr, pr_min, pr_max, 14, 60)
+        seminal_score = seminal.get(node_id, 0.0)
 
         if node_id in corpus_set:
+            ip_score = norm_influence.get(node_id, 0.0)
+            size = _scale(ip_score, ip_min, ip_max, 20, 72)
             community = partition.get(node_id, 0)
             colour = _community_colour(community)
-            label = node_id
-            tooltip = _corpus_tooltip(node_id)
+            label = _corpus_label(node_id)
+            tooltip = "\n".join(
+                [
+                    _corpus_tooltip(node_id),
+                    f"Normalized influence I_P: {ip_score:.6f}",
+                    f"Seminal score: {seminal_score:.6f}",
+                    f"Reference score: {pr:.6f}",
+                ]
+            )
+            border_width = 3.0
+            font = {
+                "size": 16,
+                "face": "IBM Plex Sans, Avenir Next, Segoe UI, sans-serif",
+                "color": "#f5f7fb",
+                "strokeWidth": 4,
+                "strokeColor": "rgba(5, 11, 19, 0.92)",
+                "bold": True,
+            }
         else:
+            ip_score = 0.0
+            size = _scale(seminal_score, seminal_min, seminal_max, 14, 55)
             community = None
             colour = _EXTERNAL_COLOUR
-            label, tooltip = _external_label_and_tooltip(resolver, node_id)
+            label, tooltip_base = _external_label_and_tooltip(resolver, node_id)
+            tooltip = "\n".join(
+                [
+                    tooltip_base,
+                    f"Seminal score: {seminal_score:.6f}",
+                    f"Reference score: {pr:.6f}",
+                ]
+            )
+            border_width = 2.0
+            font = {
+                "size": 13,
+                "face": "IBM Plex Sans, Avenir Next, Segoe UI, sans-serif",
+                "color": "#fff6de",
+                "strokeWidth": 4,
+                "strokeColor": "rgba(5, 11, 19, 0.92)",
+            }
 
         nodes.append(
             {
@@ -186,8 +232,8 @@ def build_graph_payload(
                 "label": label,
                 "title": tooltip,
                 "size": size,
-                "borderWidth": 1.5,
-                "font": {"size": 10, "face": "monospace", "color": "#e8e8e8"},
+                "borderWidth": border_width,
+                "font": font,
                 "color": {
                     "background": colour,
                     "border": "#ffffff",
@@ -196,6 +242,8 @@ def build_graph_payload(
                 "is_corpus": node_id in corpus_set,
                 "community": community,
                 "pagerank": pr,
+                "seminal_score": seminal_score,
+                "norm_influence": ip_score,
             }
         )
 
@@ -217,7 +265,7 @@ def build_graph_payload(
                 "title": f"<b>{src}</b> -> {dst_label}<br>weight: {weight:.4f}",
                 "color": {
                     "color": _EDGE_COLOUR,
-                    "opacity": 0.55,
+                    "opacity": 0.72,
                     "highlight": "#ffffff",
                 },
                 "arrows": "to",
@@ -257,7 +305,8 @@ def render_html(
     default_model_key: str,
     default_top_k: int,
     default_min_weight: float,
-    vis_asset_dir: str,
+    vis_css_text: str,
+    vis_js_text: str,
 ) -> str:
     payloads_json = json.dumps(payloads_by_model, ensure_ascii=False)
     default_state_json = json.dumps(
@@ -275,8 +324,12 @@ def render_html(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title}</title>
-  <link rel="stylesheet" href="{vis_asset_dir}/vis-network.css">
-  <script src="{vis_asset_dir}/vis-network.min.js"></script>
+  <style>
+{vis_css_text}
+  </style>
+  <script>
+{vis_js_text}
+  </script>
   <style>
     :root {{
       --bg: #07111f;
@@ -611,7 +664,8 @@ def render_html(
         <p class="status-line" id="stats-line"></p>
         <p class="hint">
           The graph keeps all corpus papers visible and adds the highest-ranked
-          external works that satisfy the current filters.
+          external works that satisfy the current filters. Set
+          <code>min-weight</code> to <code>0</code> to disable edge-weight pruning.
         </p>
       </div>
     </section>
@@ -652,7 +706,7 @@ def render_html(
           <div class="meta-title" style="margin-bottom:0">Legend</div>
           <div class="legend-items" id="legend-items"></div>
           <div class="hint" style="margin-top:8px">
-            Node size = normalized reference score. Edge width = citation importance weight.
+            Corpus node size = Normalized Influence I_P(p). External node size = seminal score. Edge width = citation importance weight.
           </div>
         </div>
       </div>
@@ -667,29 +721,36 @@ def render_html(
       physics: {{
         solver: "barnesHut",
         barnesHut: {{
-          gravitationalConstant: -9000,
-          centralGravity: 0.25,
-          springLength: 220,
-          springConstant: 0.04,
-          damping: 0.12
+          gravitationalConstant: -7200,
+          centralGravity: 0.18,
+          springLength: 250,
+          springConstant: 0.045,
+          damping: 0.16
         }},
+        enabled: true,
         maxVelocity: 60,
         minVelocity: 0.5,
-        stabilization: {{ iterations: 250 }}
+        stabilization: {{ iterations: 350, fit: true }}
+      }},
+      layout: {{
+        improvedLayout: true,
+        randomSeed: 7
       }},
       interaction: {{
         hover: true,
         tooltipDelay: 80,
         navigationButtons: true,
-        keyboard: {{ enabled: true }}
+        keyboard: {{ enabled: true }},
+        hideEdgesOnDrag: true
       }},
       edges: {{
-        smooth: {{ type: "curvedCW", roundness: 0.15 }},
+        smooth: false,
         scaling: {{ min: 0.5, max: 8 }}
       }},
       nodes: {{
-        scaling: {{ min: 14, max: 60 }},
-        shadow: {{ enabled: true, size: 6 }}
+        scaling: {{ min: 18, max: 72 }},
+        shadow: {{ enabled: true, size: 8 }},
+        shape: "dot"
       }}
     }};
 
@@ -873,7 +934,8 @@ def render_html(
         `python3 visualize_graph.py ` +
         `${{filtered.payload.model_tag ? `--model-tag ${{filtered.payload.model_tag}} ` : ``}}` +
         `--load-mappings citation_mappings.json ` +
-        `--top-k ${{state.top_k}} --min-weight ${{formatNumber(state.min_weight)}} ` +
+        `--top-k ${{state.top_k}} ` +
+        `${{state.min_weight > 0 ? `--min-weight ${{formatNumber(state.min_weight)}} ` : ``}}` +
         `--output docs/index.html`;
     }}
 
@@ -898,7 +960,12 @@ def render_html(
       buildLegend(filtered.payload);
       updateSummary(state, filtered);
       updateUrl(state);
-      network.fit({{ animation: {{ duration: 400, easingFunction: "easeInOutQuad" }} }});
+      network.setOptions({{ physics: {{ enabled: true }} }});
+      network.once("stabilized", () => {{
+        network.fit({{ animation: {{ duration: 500, easingFunction: "easeInOutQuad" }} }});
+        network.setOptions({{ physics: {{ enabled: false }} }});
+      }});
+      network.stabilize(350);
     }}
 
     function applyFromInputs() {{
@@ -958,14 +1025,14 @@ def main() -> None:
     parser.add_argument(
         "--top-k",
         type=int,
-        default=40,
-        help="Initial number of top external cited works to show (default 40)",
+        default=18,
+        help="Initial number of top external cited works to show (default 18)",
     )
     parser.add_argument(
         "--min-weight",
         type=float,
-        default=0.005,
-        help="Initial minimum edge weight to display (default 0.005)",
+        default=0.0,
+        help="Initial minimum edge weight to display (default 0.0; disables weight pruning)",
     )
     parser.add_argument(
         "--output",
@@ -1016,14 +1083,18 @@ def main() -> None:
     default_payload = payloads_by_model[default_model_key]
     output_path = Path(args.output)
     vis_asset_root = Path("lib") / "vis-9.1.2"
-    vis_asset_dir = os.path.relpath(vis_asset_root, output_path.parent if output_path.parent != Path("") else Path("."))
+    vis_css_path = vis_asset_root / "vis-network.css"
+    vis_js_path = vis_asset_root / "vis-network.min.js"
+    vis_css_text = vis_css_path.read_text(encoding="utf-8")
+    vis_js_text = vis_js_path.read_text(encoding="utf-8")
     output_path.write_text(
         render_html(
             payloads_by_model,
             default_model_key=default_model_key,
             default_top_k=args.top_k,
             default_min_weight=args.min_weight,
-            vis_asset_dir=vis_asset_dir,
+            vis_css_text=vis_css_text,
+            vis_js_text=vis_js_text,
         ),
         encoding="utf-8",
     )
