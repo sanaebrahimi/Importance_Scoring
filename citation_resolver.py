@@ -716,6 +716,8 @@ class CitationResolver:
         self._paper_model_citation_scores: Dict[str, Dict[str, Dict[str, float]]] = defaultdict(dict)
         # paper_id → {model_tag: file_path}
         self._paper_model_citation_files: Dict[str, Dict[str, str]] = defaultdict(dict)
+        # (paper_id, citation_str) → graph target id
+        self._graph_target_map: Dict[Tuple[str, str], str] = {}
         # optional LLM repair configuration
         self._llm_repair_model = llm_repair_model.strip()
         self._llm_repair_host = llm_repair_host.strip() or "http://localhost:11434"
@@ -1028,6 +1030,7 @@ class CitationResolver:
                 existing = self._stable_id_map[entry.stable_external_id]
                 if _titles_match(existing.title, entry.title):
                     self._raw_map[(paper_id, norm_key)] = existing
+                    self._graph_target_map.pop((paper_id, norm_key), None)
                     resolved += 1
                     continue
 
@@ -1050,6 +1053,7 @@ class CitationResolver:
             if entry.stable_external_id:
                 self._stable_id_map.setdefault(entry.stable_external_id, entry)
             self._raw_map[(paper_id, norm_key)] = entry
+            self._graph_target_map.pop((paper_id, norm_key), None)
             resolved += 1
 
         print(f"[CitationResolver] {paper_id}: resolved {resolved}/{len(citation_keys)} citations")
@@ -1245,8 +1249,27 @@ class CitationResolver:
         """
         result: Dict[str, Dict[str, str]] = {}
         for (paper_id, cit_str), entry in self._raw_map.items():
-            result.setdefault(paper_id, {})[cit_str] = self._canonical_target(entry)
+            result.setdefault(paper_id, {})[cit_str] = self.target_id_for(cit_str, paper_id) or self._canonical_target(entry)
         return result
+
+    def target_id_for(self, citation_str: str, paper_id: str) -> Optional[str]:
+        """Return the graph target id for a paper-scoped citation key."""
+        norm = re.sub(r"\s+", " ", citation_str).strip()
+        cache_key = (paper_id, norm)
+        if cache_key in self._graph_target_map:
+            return self._graph_target_map[cache_key]
+
+        entry = self.resolve(norm, paper_id=paper_id)
+        if entry is None:
+            flat = re.sub(r"\s+", "", citation_str)
+            for (pid, key), target in self._graph_target_map.items():
+                if pid == paper_id and re.sub(r"\s+", "", key) == flat:
+                    return target
+            return None
+
+        target = self._canonical_target(entry)
+        self._graph_target_map[cache_key] = target
+        return target
 
     def all_resolved(self) -> Dict[Tuple[str, str], ReferenceEntry]:
         """Return all (paper_id, citation_str) → ReferenceEntry mappings."""
@@ -1271,7 +1294,7 @@ class CitationResolver:
         graph_targets: Dict[str, str] = {}
         for (paper_id, cit_str), entry in self._raw_map.items():
             raw[f"{paper_id}|||{cit_str}"] = entry.canonical_id
-            graph_targets[f"{paper_id}|||{cit_str}"] = self._canonical_target(entry)
+            graph_targets[f"{paper_id}|||{cit_str}"] = self.target_id_for(cit_str, paper_id) or self._canonical_target(entry)
         return {
             "entries": entries,
             "raw_map": raw,
@@ -1334,6 +1357,9 @@ class CitationResolver:
                 paper_id, cit_str = key.split("|||", 1)
                 entry = resolver._canonical_map[cid]
                 resolver._raw_map[(paper_id, cit_str)] = entry
+            for key, target in data.get("graph_targets", {}).items():
+                paper_id, cit_str = key.split("|||", 1)
+                resolver._graph_target_map[(paper_id, cit_str)] = target
             for paper_id, title in data.get("corpus_titles", {}).items():
                 resolver._corpus_titles[paper_id] = title
                 normalized = _normalize_title_key(title)

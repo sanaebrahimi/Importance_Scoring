@@ -245,8 +245,11 @@ def get_top_k_model_citations(
             score = float(payload)
 
         entry = resolver.resolve(citation, paper_id=paper_id)
-        if entry is not None:
-            group_key = entry.canonical_id or normalize_text_key(entry.title) or citation
+        target_id = resolver.target_id_for(citation, paper_id) if paper_id is not None else None
+        if target_id:
+            group_key = target_id
+        elif entry is not None:
+            group_key = entry.stable_external_id or entry.canonical_id or normalize_text_key(entry.title) or citation
         else:
             group_key = normalize_text_key(citation) or citation
 
@@ -620,6 +623,16 @@ def main() -> None:
         help="Directory containing source PDFs, used for citation resolution.",
     )
     parser.add_argument(
+        "--load-mappings",
+        default="",
+        help="Optional citation_mappings.json to load and reuse during citation evaluation.",
+    )
+    parser.add_argument(
+        "--save-mappings",
+        default="",
+        help="Optional path to save citation mappings after rebuilding them.",
+    )
+    parser.add_argument(
         "--citation-top-k",
         type=int,
         default=4,
@@ -645,8 +658,13 @@ def main() -> None:
     results_root = Path(args.results_root)
     citation_resolver: Optional[CitationResolver] = None
     if args.enable_citation_eval:
-        citation_resolver = CitationResolver()
-        citation_resolver.parse_all(results_root, Path(args.papers_dir))
+        if args.load_mappings and Path(args.load_mappings).exists():
+            citation_resolver = CitationResolver.load(args.load_mappings)
+        else:
+            citation_resolver = CitationResolver()
+            citation_resolver.parse_all(results_root, Path(args.papers_dir))
+            if args.save_mappings:
+                citation_resolver.save(args.save_mappings)
 
     def _run_evaluation(annotations: dict, n_bootstrap: int, seed: int) -> Tuple[dict, Dict[str, Optional[dict]], List[dict], Dict[str, List[dict]], List[dict]]:
         per_paper_reports: List[dict] = []
