@@ -1023,6 +1023,28 @@ def main() -> None:
         help="Save resolved mappings to this file",
     )
     parser.add_argument(
+        "--llm-repair-model",
+        default="",
+        help="Optional Ollama model used to repair low-confidence reference titles.",
+    )
+    parser.add_argument(
+        "--llm-repair-host",
+        default="http://localhost:11434",
+        help="Ollama host for low-confidence reference repair.",
+    )
+    parser.add_argument(
+        "--llm-repair-min-confidence",
+        type=float,
+        default=0.60,
+        help="Minimum LLM confidence required to accept repaired reference metadata.",
+    )
+    parser.add_argument(
+        "--llm-repair-max-calls",
+        type=int,
+        default=200,
+        help="Maximum number of LLM repair calls during one resolver run.",
+    )
+    parser.add_argument(
         "--top-k",
         type=int,
         default=18,
@@ -1042,13 +1064,20 @@ def main() -> None:
     args = parser.parse_args()
     excluded = {paper.strip() for paper in args.exclude_papers if paper.strip()}
 
+    resolver_kwargs = dict(
+        llm_repair_model=args.llm_repair_model,
+        llm_repair_host=args.llm_repair_host,
+        llm_repair_min_confidence=args.llm_repair_min_confidence,
+        llm_repair_max_calls=args.llm_repair_max_calls,
+    )
+
     if args.load_mappings and Path(args.load_mappings).exists():
         print(f"Loading mappings from {args.load_mappings} ...")
-        resolver = CitationResolver.load(args.load_mappings)
+        resolver = CitationResolver.load(args.load_mappings, **resolver_kwargs)
         resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
     else:
         print("Parsing PDFs to resolve citations ...")
-        resolver = CitationResolver()
+        resolver = CitationResolver(**resolver_kwargs)
         resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
 
     resolver.register_corpus_papers(args.results, args.papers, exclude_papers=excluded)

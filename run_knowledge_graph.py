@@ -52,6 +52,28 @@ def main() -> None:
                         help="Save resolved citation mappings to this JSON file")
     parser.add_argument("--load-mappings", default="",
                         help="Load pre-saved mappings instead of re-parsing PDFs")
+    parser.add_argument(
+        "--llm-repair-model",
+        default="",
+        help="Optional Ollama model used to repair low-confidence reference titles.",
+    )
+    parser.add_argument(
+        "--llm-repair-host",
+        default="http://localhost:11434",
+        help="Ollama host for low-confidence reference repair.",
+    )
+    parser.add_argument(
+        "--llm-repair-min-confidence",
+        type=float,
+        default=0.60,
+        help="Minimum LLM confidence required to accept repaired reference metadata.",
+    )
+    parser.add_argument(
+        "--llm-repair-max-calls",
+        type=int,
+        default=200,
+        help="Maximum number of LLM repair calls during one resolver run.",
+    )
     parser.add_argument("--top-k",    type=int, default=10,     help="Top-K for ranked lists")
     parser.add_argument("--pagerank-damping", type=float, default=0.85,
                         help="Deprecated — no longer used")
@@ -65,12 +87,19 @@ def main() -> None:
     # ------------------------------------------------------------------ #
     header("STEP 1 — Citation Resolver")
 
+    resolver_kwargs = dict(
+        llm_repair_model=args.llm_repair_model,
+        llm_repair_host=args.llm_repair_host,
+        llm_repair_min_confidence=args.llm_repair_min_confidence,
+        llm_repair_max_calls=args.llm_repair_max_calls,
+    )
+
     if args.load_mappings and Path(args.load_mappings).exists():
         print(f"Loading pre-saved mappings from {args.load_mappings}")
-        resolver = CitationResolver.load(args.load_mappings)
+        resolver = CitationResolver.load(args.load_mappings, **resolver_kwargs)
         resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
     else:
-        resolver = CitationResolver()
+        resolver = CitationResolver(**resolver_kwargs)
         resolver.parse_all(args.results, args.papers, exclude_papers=excluded)
 
     resolver.register_corpus_papers(args.results, args.papers, exclude_papers=excluded)
@@ -98,6 +127,38 @@ def main() -> None:
         exclude_papers=excluded,
     )
     print(f"\n{fw.graph}")
+
+    audit = fw.graph.internal_citation_audit()
+    if audit:
+        subheader("Internal citation audit")
+        paper_scored = sum(1 for item in audit if item.status == "paper_score")
+        paragraph_fallback = sum(1 for item in audit if item.status == "paragraph_fallback")
+        missing = sum(1 for item in audit if item.status == "missing")
+        ignored_dupes = sum(1 for item in audit if item.status == "ignored_duplicate_missing")
+        print(f"  Internal citation candidates : {len(audit)}")
+        print(f"  Using paper-level scores      : {paper_scored}")
+        print(f"  Using paragraph fallback      : {paragraph_fallback}")
+        print(f"  Missing after fallback        : {missing}")
+        print(f"  Ignored duplicate missings    : {ignored_dupes}")
+
+        if paragraph_fallback:
+            print("\n  Paragraph-fallback edges:")
+            for item in sorted(
+                (entry for entry in audit if entry.status == "paragraph_fallback"),
+                key=lambda entry: (entry.source_paper, entry.target_paper, entry.citation_key),
+            ):
+                print(
+                    f"    {item.source_paper} :: {item.citation_key} -> {item.target_paper} "
+                    f"(fallback={item.fallback_score:.9f})"
+                )
+
+        if missing:
+            print("\n  Still-missing internal citations:")
+            for item in sorted(
+                (entry for entry in audit if entry.status == "missing"),
+                key=lambda entry: (entry.source_paper, entry.target_paper, entry.citation_key),
+            ):
+                print(f"    {item.source_paper} :: {item.citation_key} -> {item.target_paper}")
 
     # ------------------------------------------------------------------ #
     # Step 3 – Summary                                                    #
@@ -305,6 +366,29 @@ def main() -> None:
     print(f"  {len(communities_undir)} communities detected (undirected):\n")
     for cid, members in sorted(communities_undir.items()):
         print(f"  Community {cid}: {', '.join(members)}")
+
+    subheader("Community-detection baselines")
+
+    baseline_specs = [
+        ("binary", "Binary citation graph"),
+        ("mention_count", "Raw citation-mention count graph"),
+    ]
+    for weighting, label in baseline_specs:
+        partition = fw.communities.detect_baseline(weighting, restrict_to_corpus=True)
+        q_baseline = fw.communities.baseline_modularity(
+            partition,
+            weighting,
+            restrict_to_corpus=True,
+        )
+        communities: dict = {}
+        for pid, cid in partition.items():
+            communities.setdefault(cid, []).append(pid)
+
+        print(f"\n  {label}:")
+        print(f"    Weighted modularity Q = {q_baseline:.9f}")
+        print(f"    {len(communities)} communities detected:\n")
+        for cid, members in sorted(communities.items()):
+            print(f"    Community {cid}: {', '.join(members)}")
 
     # ------------------------------------------------------------------ #
     # Step 11 – Research gap                                              #

@@ -42,9 +42,14 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import PyPDF2  # type: ignore[import-untyped]
+
+try:
+    from ollama import Client
+except ImportError:  # pragma: no cover - optional dependency
+    Client = None  # type: ignore[assignment]
 
 
 # ---------------------------------------------------------------------------
@@ -62,6 +67,9 @@ class ReferenceEntry:
     year: Optional[int]
     title: str
     canonical_id: str           # e.g. "hong_2023" — stable across citation styles
+    stable_external_id: str = ""
+    title_source: str = "parsed"
+    confidence: Optional[float] = None
 
     def __str__(self) -> str:
         authors_str = "; ".join(self.authors[:3])
@@ -103,6 +111,64 @@ def _titles_match(t1: str, t2: str, threshold: float = 0.85) -> bool:
     if len(n1) >= 40 and len(n2) >= 40 and n1[:40] == n2[:40]:
         return True
     return difflib.SequenceMatcher(None, n1, n2).ratio() >= threshold
+
+
+def _looks_like_low_quality_title(title: str) -> bool:
+    cleaned = _normalize_ws(title).strip(" .,:;\"'`()[]{}")
+    normalized = _normalize_title_key(cleaned)
+    if not normalized:
+        return True
+
+    lower = cleaned.lower()
+    words = re.findall(r"[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9'’.\-]*", cleaned)
+    if re.fullmatch(r"(1[89]\d{2}|20\d{2})", cleaned):
+        return True
+    if len(words) <= 1:
+        return True
+    if len(normalized) < 12:
+        return True
+    if sum(ch.isdigit() for ch in cleaned) > max(4, len(cleaned) // 3):
+        return True
+    suspicious_phrases = (
+        "attention visualizations",
+        "input-input",
+        "layer5",
+        "pages ",
+        "volume ",
+        "proceedings of",
+    )
+    if any(phrase in lower for phrase in suspicious_phrases):
+        return True
+    return False
+
+
+def _stable_external_id_from_title(title: str, year: Optional[int]) -> str:
+    normalized = _normalize_title_key(title)
+    if not normalized or year is None:
+        return ""
+    return f"ref_{normalized[:96]}_{year}"
+
+
+def _extract_json_object(text: str) -> Optional[Dict[str, Any]]:
+    if not text:
+        return None
+    stripped = text.strip()
+    candidates = [stripped]
+    fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", stripped, re.DOTALL | re.IGNORECASE)
+    if fence_match:
+        candidates.insert(0, fence_match.group(1))
+    brace_match = re.search(r"\{.*\}", stripped, re.DOTALL)
+    if brace_match:
+        candidates.append(brace_match.group(0))
+
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    return None
 
 
 def _model_tag_from_citation_filename(paper_id: str, path: Path) -> Optional[str]:
@@ -149,11 +215,25 @@ def _extract_pdf_title(pdf_path: str | Path) -> Optional[str]:
     if not lines:
         return None
 
-    pre_abstract: List[str] = []
-    for line in lines:
-        if line.strip().lower() == "abstract":
-            break
-        pre_abstract.append(line)
+    def clean_front_matter_line(line: str) -> str:
+        lower = line.lower()
+        if lower.startswith("provided proper attribution is provided"):
+            return ""
+        if lower.startswith("reproduce the tables and figures in this paper solely for use"):
+            return ""
+        if lower.startswith("scholarly works"):
+            return ""
+        if lower.startswith("published as a conference paper at "):
+            return ""
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", line):
+            return ""
+        line = re.sub(
+            r"^arxiv:\S+\s+\[[^\]]+\]\s+\d{1,2}\s+\w+\s+\d{4}\s*",
+            "",
+            line,
+            flags=re.IGNORECASE,
+        )
+        return _normalize_ws(line)
 
     def is_front_matter_noise(line: str) -> bool:
         lower = line.lower()
@@ -171,27 +251,75 @@ def _extract_pdf_title(pdf_path: str | Path) -> Optional[str]:
             return True
         return False
 
-    def is_author_or_affiliation_line(line: str) -> bool:
+    def is_continuation_title_line(line: str) -> bool:
         lower = line.lower()
         if any(token in lower for token in ("@", "university", "department", "school", "institute", "laboratory")):
-            return True
-        words = re.findall(r"[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’.\-]*", line)
-        if not 2 <= len(words) <= 5:
             return False
-        if re.search(r"\b(?:19|20)\d{2}\b", line):
-            return False
-        if any(token in lower for token in ("abstract", "pages", "association", "proceedings", "findings")):
-            return False
-        return all(word[:1].isupper() for word in words)
+        normalized = re.sub(r"([a-z])and([A-Z])", r"\1 and \2", line)
+        normalized = re.sub(r"\band(?=[A-Z])", "and ", normalized)
 
-    filtered = [line for line in pre_abstract if not is_front_matter_noise(line)]
-    if not filtered:
+        def looks_like_author_segment(segment: str) -> bool:
+            words = re.findall(r"[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’.\-]*", segment)
+            if not 1 <= len(words) <= 4:
+                return False
+            forbidden = {
+                "of", "for", "with", "from", "into", "under", "using", "towards",
+                "toward", "through", "via", "machine", "reading", "attention",
+                "networks", "network", "translation", "sequence", "model", "models",
+            }
+            if any(word.lower() in forbidden for word in words):
+                return False
+            return all(word[:1].isupper() for word in words)
+
+        author_segments = [
+            segment.strip()
+            for segment in re.split(r",|\band\b", normalized)
+            if segment.strip()
+        ]
+        if len(author_segments) >= 2:
+            author_like_count = sum(1 for segment in author_segments if looks_like_author_segment(segment))
+            if author_like_count >= 2 and author_like_count == len(author_segments):
+                return False
+        if lower.startswith("abstract"):
+            return False
+        words = re.findall(r"[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’.\-]*", line)
+        if len(words) < 2:
+            return False
+        has_title_stopword = any(
+            word in {"of", "the", "to", "at", "for", "in", "on", "with", "by", "from"}
+            for word in (w.lower() for w in words)
+        )
+        titlecase_ratio = (
+            sum(1 for word in words if word[:1].isupper()) / len(words)
+            if words else 0.0
+        )
+        letters = [ch for ch in line if ch.isalpha()]
+        upper_ratio = (
+            sum(1 for ch in letters if ch.isupper()) / len(letters)
+            if letters else 0.0
+        )
+        return has_title_stopword or upper_ratio >= 0.65 or (len(words) >= 3 and titlecase_ratio >= 0.80)
+
+    pre_abstract: List[str] = []
+    for raw_line in lines:
+        line = clean_front_matter_line(raw_line)
+        if not line or is_front_matter_noise(line):
+            continue
+        if line.strip().lower() == "abstract":
+            break
+        pre_abstract.append(line)
+
+    if not pre_abstract:
         return None
 
-    stop_idx = next((idx for idx, line in enumerate(filtered) if is_author_or_affiliation_line(line)), len(filtered))
-    candidate_lines = filtered[:stop_idx] if stop_idx > 0 else []
-    if not candidate_lines:
-        candidate_lines = filtered[: min(3, len(filtered))]
+    candidate_lines = [pre_abstract[0]]
+    for line in pre_abstract[1:]:
+        if len(candidate_lines) >= 3:
+            break
+        if is_continuation_title_line(line):
+            candidate_lines.append(line)
+            continue
+        break
 
     title = _normalize_ws(" ".join(candidate_lines).rstrip("*"))
     return title or None
@@ -473,11 +601,20 @@ def _parse_entry(
     # IEEE entries like 'Authors, "Title," venue, DD Mon YEAR, pp. N.' have the year
     # embedded in a conference date (e.g. "Feb 2018"), not preceded by ", ", yet the
     # authors and title split must use the quote-based logic.
+    # Finally, if there are clearly two sentence boundaries before the year, we are
+    # almost certainly in an "Authors. Title. Venue ... Year." format, even when OCR
+    # spillover after the reference makes the year appear far from the end.
     has_ieee_quote = bool(re.search(r'["\u201c\u201d]', text[:year_pos]))
+    first_boundary = re.search(r"(?<![A-Z])(?<!al)\.\s+", text)
+    has_second_boundary_before_year = False
+    if first_boundary and first_boundary.end() < year_pos:
+        second_boundary = re.search(r"\.\s+", text[first_boundary.end():year_pos])
+        has_second_boundary_before_year = second_boundary is not None
     year_at_end = (
         bool(re.search(r",\s*$", pre_year))
         or year_pos > len(text) * 0.80
         or has_ieee_quote
+        or has_second_boundary_before_year
     )
 
     if year_at_end:
@@ -555,12 +692,20 @@ class CitationResolver:
     provides canonical cross-paper identifiers.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        llm_repair_model: str = "",
+        llm_repair_host: str = "http://localhost:11434",
+        llm_repair_min_confidence: float = 0.60,
+        llm_repair_max_calls: int = 200,
+    ) -> None:
         # (paper_id, citation_str) → ReferenceEntry  — scoped per paper so that
         # [2] in paper A and [2] in paper B are resolved independently.
         self._raw_map: Dict[Tuple[str, str], ReferenceEntry] = {}
         # canonical_id → ReferenceEntry (first entry that established this id)
         self._canonical_map: Dict[str, ReferenceEntry] = {}
+        # stable external id (usually title+year based) → ReferenceEntry
+        self._stable_id_map: Dict[str, ReferenceEntry] = {}
         # track disambiguation suffixes: canonical_id_base → count
         self._id_counts: Dict[str, int] = {}
         # corpus paper_id → extracted paper title
@@ -571,6 +716,14 @@ class CitationResolver:
         self._paper_model_citation_scores: Dict[str, Dict[str, Dict[str, float]]] = defaultdict(dict)
         # paper_id → {model_tag: file_path}
         self._paper_model_citation_files: Dict[str, Dict[str, str]] = defaultdict(dict)
+        # optional LLM repair configuration
+        self._llm_repair_model = llm_repair_model.strip()
+        self._llm_repair_host = llm_repair_host.strip() or "http://localhost:11434"
+        self._llm_repair_min_confidence = max(0.0, min(1.0, llm_repair_min_confidence))
+        self._llm_repair_max_calls = max(0, llm_repair_max_calls)
+        self._llm_repair_calls = 0
+        self._llm_client: Optional[Client] = None
+        self._llm_repair_cache: Dict[str, Optional[ReferenceEntry]] = {}
 
     def _apply_exclusions(self, exclude_papers: set[str]) -> None:
         if not exclude_papers:
@@ -605,14 +758,14 @@ class CitationResolver:
         papers_path = Path(papers_dir)
         excluded = {paper.strip() for paper in (exclude_papers or set()) if paper.strip()}
         self._apply_exclusions(excluded)
+        self._corpus_titles.clear()
+        self._title_to_paper_ids.clear()
 
         for paper_dir in sorted(results_path.iterdir()):
             if not paper_dir.is_dir() or paper_dir.name.startswith("."):
                 continue
             paper_id = paper_dir.name
             if paper_id in excluded:
-                continue
-            if paper_id in self._corpus_titles:
                 continue
             pdf_path = papers_path / f"{paper_id}{pdf_ext}"
             if not pdf_path.exists():
@@ -626,6 +779,183 @@ class CitationResolver:
                 self._title_to_paper_ids[normalized].append(paper_id)
 
         return self
+
+    def _get_llm_client(self) -> Optional[Client]:
+        if not self._llm_repair_model or self._llm_repair_max_calls <= 0 or Client is None:
+            return None
+        if self._llm_client is None:
+            self._llm_client = Client(host=self._llm_repair_host)
+        return self._llm_client
+
+    def _reference_context(
+        self,
+        refs_text: str,
+        citation_key: str,
+        is_numeric: bool,
+    ) -> tuple[Optional[str], Optional[str]]:
+        if not is_numeric:
+            return None, None
+        match = re.match(r"(?:\[\s*(\d+)\s*\]|\(\s*(\d+)\s*\))", citation_key.strip())
+        if not match:
+            return None, None
+        idx = int(match.group(1) or match.group(2))
+        prev_ref = _find_numeric_entry(refs_text, f"[{idx - 1}]") if idx > 1 else None
+        next_ref = _find_numeric_entry(refs_text, f"[{idx + 1}]")
+        return prev_ref, next_ref
+
+    def _assign_stable_external_id(self, entry: ReferenceEntry) -> ReferenceEntry:
+        if entry.stable_external_id:
+            return entry
+        stable = _stable_external_id_from_title(entry.title, entry.year)
+        entry.stable_external_id = stable or entry.canonical_id
+        return entry
+
+    def _should_attempt_llm_repair(self, entry: Optional[ReferenceEntry], raw: str) -> bool:
+        if self._get_llm_client() is None:
+            return False
+        if entry is None:
+            return True
+        if entry.year is None:
+            return True
+        if not entry.authors or entry.first_author_last == "unknown":
+            return True
+        if _looks_like_low_quality_title(entry.title):
+            return True
+        normalized_title = _normalize_title_key(entry.title)
+        raw_prefix_norm = _normalize_title_key(raw[:260])
+        if normalized_title and normalized_title not in raw_prefix_norm and len(normalized_title) < 24:
+            return True
+        return False
+
+    def _repair_entry_with_llm(
+        self,
+        raw: str,
+        *,
+        citation_key: str,
+        year_suffix: str,
+        previous_reference: Optional[str] = None,
+        next_reference: Optional[str] = None,
+    ) -> Optional[ReferenceEntry]:
+        client = self._get_llm_client()
+        if client is None or self._llm_repair_calls >= self._llm_repair_max_calls:
+            return None
+
+        cache_key = _normalize_ws(" || ".join(filter(None, [previous_reference or "", raw, next_reference or ""])))
+        if cache_key in self._llm_repair_cache:
+            cached = self._llm_repair_cache[cache_key]
+            if cached is None:
+                return None
+            return ReferenceEntry(
+                raw_text=raw,
+                numeric_key=cached.numeric_key,
+                authors=list(cached.authors),
+                first_author_last=cached.first_author_last,
+                year=cached.year,
+                title=cached.title,
+                canonical_id=cached.canonical_id,
+                stable_external_id=cached.stable_external_id,
+                title_source=cached.title_source,
+                confidence=cached.confidence,
+            )
+
+        system_prompt = (
+            "You extract clean bibliographic metadata from one noisy reference entry. "
+            "Return strict JSON only with the keys: title, authors, year, confidence. "
+            "authors must be an array of author strings. year must be an integer or null. "
+            "confidence must be a number between 0 and 1. Do not include any extra text."
+        )
+        context_bits = [f"Citation key: {citation_key}", f"Reference entry: {raw}"]
+        if previous_reference:
+            context_bits.append(f"Previous reference: {previous_reference}")
+        if next_reference:
+            context_bits.append(f"Next reference: {next_reference}")
+        user_prompt = "\n".join(context_bits)
+
+        self._llm_repair_calls += 1
+        try:
+            response = client.chat(
+                model=self._llm_repair_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                options={"temperature": 0},
+                think=False,
+            )
+        except Exception:
+            self._llm_repair_cache[cache_key] = None
+            return None
+        response_text = response.message.content if getattr(response, "message", None) else response["message"]["content"]
+        parsed = _extract_json_object(response_text)
+        if not isinstance(parsed, dict):
+            self._llm_repair_cache[cache_key] = None
+            return None
+
+        title = _normalize_ws(str(parsed.get("title", ""))).strip()
+        if not title or _looks_like_low_quality_title(title):
+            self._llm_repair_cache[cache_key] = None
+            return None
+
+        authors_raw = parsed.get("authors", [])
+        authors = [str(author).strip() for author in authors_raw if str(author).strip()] if isinstance(authors_raw, list) else []
+        year_val = parsed.get("year")
+        try:
+            year = int(year_val) if year_val is not None and str(year_val).strip() else None
+        except (TypeError, ValueError):
+            year = None
+        try:
+            confidence = float(parsed.get("confidence", 0.0))
+        except (TypeError, ValueError):
+            confidence = 0.0
+        if confidence < self._llm_repair_min_confidence:
+            self._llm_repair_cache[cache_key] = None
+            return None
+
+        authors_raw_text = ", ".join(authors)
+        first_last = _first_author_last(authors_raw_text)
+        suffix = year_suffix.strip().lower()
+        canonical_id = (
+            f"{first_last}_{year}{suffix}"
+            if year is not None
+            else f"{first_last}_unknown"
+        )
+        repaired = ReferenceEntry(
+            raw_text=raw,
+            numeric_key=citation_key if re.match(r"^(?:\[\d|\(\d)", citation_key) else None,
+            authors=authors,
+            first_author_last=first_last,
+            year=year,
+            title=title,
+            canonical_id=canonical_id,
+            title_source="llm_repaired",
+            confidence=confidence,
+        )
+        self._assign_stable_external_id(repaired)
+        self._llm_repair_cache[cache_key] = repaired
+        return repaired
+
+    def _maybe_repair_entry_with_llm(
+        self,
+        entry: Optional[ReferenceEntry],
+        raw: str,
+        *,
+        citation_key: str,
+        year_suffix: str,
+        previous_reference: Optional[str] = None,
+        next_reference: Optional[str] = None,
+    ) -> Optional[ReferenceEntry]:
+        if not self._should_attempt_llm_repair(entry, raw):
+            return entry
+        repaired = self._repair_entry_with_llm(
+            raw,
+            citation_key=citation_key,
+            year_suffix=year_suffix,
+            previous_reference=previous_reference,
+            next_reference=next_reference,
+        )
+        if repaired is not None:
+            return repaired
+        return entry
 
     # --- building ---
 
@@ -681,8 +1011,25 @@ class CitationResolver:
                 numeric_key=norm_key if is_numeric else None,
                 year_suffix=year_suffix,
             )
+            prev_ref, next_ref = self._reference_context(refs_text, norm_key, is_numeric)
+            entry = self._maybe_repair_entry_with_llm(
+                entry,
+                raw,
+                citation_key=norm_key,
+                year_suffix=year_suffix,
+                previous_reference=prev_ref,
+                next_reference=next_ref,
+            )
             if entry is None:
                 continue
+            self._assign_stable_external_id(entry)
+
+            if entry.stable_external_id in self._stable_id_map:
+                existing = self._stable_id_map[entry.stable_external_id]
+                if _titles_match(existing.title, entry.title):
+                    self._raw_map[(paper_id, norm_key)] = existing
+                    resolved += 1
+                    continue
 
             # Disambiguate canonical_id when author+year collide
             base_id = entry.canonical_id
@@ -700,6 +1047,8 @@ class CitationResolver:
 
             entry.canonical_id = entry.canonical_id  # (may have been updated above)
             self._canonical_map[entry.canonical_id] = entry
+            if entry.stable_external_id:
+                self._stable_id_map.setdefault(entry.stable_external_id, entry)
             self._raw_map[(paper_id, norm_key)] = entry
             resolved += 1
 
@@ -800,36 +1149,99 @@ class CitationResolver:
         # No paper_id: treat as canonical_id lookup (used by analysis display code)
         if citation_str in self._canonical_map:
             return self._canonical_map[citation_str]
+        if citation_str in self._stable_id_map:
+            return self._stable_id_map[citation_str]
         return None
 
     def _canonical_target(self, entry: ReferenceEntry) -> str:
         """Return the graph target id for a resolved citation."""
-        normalized_title = _normalize_title_key(entry.title)
-        if normalized_title:
-            # Exact normalized match
-            matched_papers = self._title_to_paper_ids.get(normalized_title, [])
+        self._assign_stable_external_id(entry)
+
+        def prefix_match_with_authorish_suffix(entry_title: str, corpus_title: str) -> bool:
+            entry_words = re.findall(r"[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9'’.\-]*", entry_title)
+            corpus_words = re.findall(r"[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9'’.\-]*", corpus_title)
+            entry_norm_words = [re.sub(r"[^a-z0-9]+", "", word.lower()) for word in entry_words]
+            corpus_norm_words = [re.sub(r"[^a-z0-9]+", "", word.lower()) for word in corpus_words]
+            entry_norm_words = [word for word in entry_norm_words if word]
+            corpus_norm_words = [word for word in corpus_norm_words if word]
+            if len(entry_norm_words) < 3 or len(corpus_norm_words) <= len(entry_norm_words):
+                return False
+            if corpus_norm_words[: len(entry_norm_words)] != entry_norm_words:
+                return False
+
+            suffix_words = corpus_words[len(entry_norm_words) :]
+            suffix_lower = [word.lower() for word in suffix_words]
+            if any(
+                token in {"university", "department", "school", "institute", "laboratory", "google", "deepmind", "team"}
+                for token in suffix_lower
+            ):
+                return True
+            core_suffix = [word for word in suffix_words if word.lower() not in {"and", "of", "the"}]
+            if 2 <= len(core_suffix) <= 12 and all(word[:1].isupper() for word in core_suffix):
+                return True
+            if any(char.isdigit() for char in " ".join(suffix_words)):
+                return True
+            return False
+
+        def title_match(normalized_text: str) -> Optional[str]:
+            if not normalized_text:
+                return None
+
+            matched_papers = self._title_to_paper_ids.get(normalized_text, [])
             if len(matched_papers) == 1:
                 return matched_papers[0]
-            # Fuzzy match — handles minor PDF-extraction differences between
-            # the reference string and the corpus paper's own title
+
+            author_suffix_hits: List[Tuple[float, str]] = []
             best_ratio, best_id = 0.0, None
-            for corpus_norm, paper_ids in self._title_to_paper_ids.items():
-                if len(paper_ids) != 1:
+            for paper_id, corpus_title in self._corpus_titles.items():
+                corpus_norm = _normalize_title_key(corpus_title)
+                if not corpus_norm:
                     continue
-                ratio = difflib.SequenceMatcher(None, normalized_title, corpus_norm).ratio()
+                if prefix_match_with_authorish_suffix(entry.title, corpus_title):
+                    ratio = difflib.SequenceMatcher(None, normalized_text, corpus_norm).ratio()
+                    author_suffix_hits.append((ratio, paper_id))
+                ratio = difflib.SequenceMatcher(None, normalized_text, corpus_norm).ratio()
                 if ratio > best_ratio:
-                    best_ratio, best_id = ratio, paper_ids[0]
+                    best_ratio, best_id = ratio, paper_id
+
+            if author_suffix_hits:
+                author_suffix_hits.sort(reverse=True)
+                if len(author_suffix_hits) == 1 or author_suffix_hits[0][0] > author_suffix_hits[1][0]:
+                    return author_suffix_hits[0][1]
             if best_ratio >= 0.90 and best_id is not None:
                 return best_id
-        return entry.canonical_id
+            return None
+
+        normalized_title = _normalize_title_key(entry.title)
+        matched = title_match(normalized_title)
+        if matched is not None:
+            return matched
+
+        # Only fall back to raw reference text when the parsed title is clearly
+        # low quality; otherwise long parser spillover can create false corpus
+        # matches from the next reference entry.
+        if len(normalized_title) >= 20:
+            return entry.stable_external_id or entry.canonical_id
+
+        raw_prefix_norm = _normalize_title_key(entry.raw_text[:220])
+        raw_hits = [
+            paper_ids[0]
+            for corpus_norm, paper_ids in self._title_to_paper_ids.items()
+            if len(paper_ids) == 1 and len(corpus_norm) >= 18 and corpus_norm in raw_prefix_norm
+        ]
+        if len(raw_hits) == 1:
+            return raw_hits[0]
+        return entry.stable_external_id or entry.canonical_id
 
     def build_citation_mappings(self) -> Dict[str, Dict[str, str]]:
         """
-        Return {paper_id: {citation_str: canonical_id}}.
+        Return {paper_id: {citation_str: target_id}}.
 
         The CitationGraph uses this to resolve each paper's citations
         independently, so [2] in paper A and [2] in paper B map to
-        their respective canonical ids.
+        their respective graph targets. For corpus papers the target is the
+        corpus paper id; for external works it is a stable external id, usually
+        derived from normalized title + year.
         """
         result: Dict[str, Dict[str, str]] = {}
         for (paper_id, cit_str), entry in self._raw_map.items():
@@ -849,15 +1261,21 @@ class CitationResolver:
                 "authors": entry.authors,
                 "year": entry.year,
                 "canonical_id": entry.canonical_id,
+                "stable_external_id": entry.stable_external_id,
                 "numeric_key": entry.numeric_key,
                 "raw_text": entry.raw_text,
+                "title_source": entry.title_source,
+                "confidence": entry.confidence,
             }
         raw: Dict[str, str] = {}
+        graph_targets: Dict[str, str] = {}
         for (paper_id, cit_str), entry in self._raw_map.items():
             raw[f"{paper_id}|||{cit_str}"] = entry.canonical_id
+            graph_targets[f"{paper_id}|||{cit_str}"] = self._canonical_target(entry)
         return {
             "entries": entries,
             "raw_map": raw,
+            "graph_targets": graph_targets,
             "corpus_titles": dict(self._corpus_titles),
             "paper_model_citation_scores": {
                 paper_id: dict(model_scores)
@@ -876,9 +1294,21 @@ class CitationResolver:
         print(f"[CitationResolver] Saved {len(self._raw_map)} entries to {path}")
 
     @classmethod
-    def load(cls, path: str | Path) -> "CitationResolver":
+    def load(
+        cls,
+        path: str | Path,
+        llm_repair_model: str = "",
+        llm_repair_host: str = "http://localhost:11434",
+        llm_repair_min_confidence: float = 0.60,
+        llm_repair_max_calls: int = 200,
+    ) -> "CitationResolver":
         """Restore a previously saved resolver (skips re-parsing PDFs)."""
-        resolver = cls()
+        resolver = cls(
+            llm_repair_model=llm_repair_model,
+            llm_repair_host=llm_repair_host,
+            llm_repair_min_confidence=llm_repair_min_confidence,
+            llm_repair_max_calls=llm_repair_max_calls,
+        )
         with open(path) as f:
             data = json.load(f)
         # Support both old flat format and new nested format
@@ -893,8 +1323,13 @@ class CitationResolver:
                     year=d.get("year"),
                     title=d["title"],
                     canonical_id=d["canonical_id"],
+                    stable_external_id=d.get("stable_external_id", ""),
+                    title_source=d.get("title_source", "parsed"),
+                    confidence=d.get("confidence"),
                 )
                 resolver._canonical_map[cid] = entry
+                resolver._assign_stable_external_id(entry)
+                resolver._stable_id_map.setdefault(entry.stable_external_id, entry)
             for key, cid in data["raw_map"].items():
                 paper_id, cit_str = key.split("|||", 1)
                 entry = resolver._canonical_map[cid]
@@ -927,6 +1362,8 @@ class CitationResolver:
                     canonical_id=d["canonical_id"],
                 )
                 resolver._canonical_map.setdefault(entry.canonical_id, entry)
+                resolver._assign_stable_external_id(entry)
+                resolver._stable_id_map.setdefault(entry.stable_external_id, entry)
         return resolver
 
     def __len__(self) -> int:

@@ -37,11 +37,45 @@ DEEP_RESIDUAL_LEARNING_SECTIONS = {
         "Residual Learning": None,
         "Identity Mapping by Shortcuts": None,
         "Network Architectures": None,
-	"Implementation": None,
     },
     "Experiments": {
         "ImageNet Classiﬁcation": None,
+        "GoogLeNet [43]": None,
+        "PReLU-net [12]": None,
+        "ResNet-34 A": None,
+        "ResNet-34 B": None,
+        "ResNet-34 C": None,
+        "ResNet-50": None,
+        "ResNet-101": None,
+        "ResNet-152": None,
+        "VGG [40] (v5)": None,
+        "PReLU-net [12]": None,
+        "BN-inception [16]": None,
+        "ResNet-34 B": None,
+        "ResNet-34 C": None,
+        "ResNet-50": None,
+        "ResNet-101": None,
+        "ResNet-152": None,
+        "GoogLeNet [43] (ILSVRC’14)": None,
+        "VGG [40] (v5)": None,
+        "PReLU-net [12]": None,
+        "BN-inception [16]": None,
+        "ResNet (ILSVRC’15)": None,
         "CIFAR-10 and Analysis": None,
+        "NIN [25]": None,
+        "DSN [24]": None,
+    },
+    "2.5M": {
+        "Highway [41, 42]": None,
+    },
+    "2.3M": {
+        "ResNet": None,
+    },
+    "0.27M": {
+        "ResNet": None,
+        "ResNet": None,
+        "ResNet": None,
+        "ResNet": None,
         "Object Detection on PASCAL and MS COCO": None,
     },
 }
@@ -64,7 +98,10 @@ EXPLORING_LIMIT_LLMS_SECTIONS = {
         "Data Set": None,
         "Model Setup": None,
         "Model Architecture": None,
-	"Training Procedure": None,
+        "SPARSE NON-NEGATIVE MATRIX LM (SHAZEER ET AL., 2015)": None,
+    },
+    "LSTM-512-512": {
+        "Training Procedure": None,
     },
     "Results and Analysis": {
         "Size Matters": None,
@@ -72,12 +109,46 @@ EXPLORING_LIMIT_LLMS_SECTIONS = {
         "Importance Sampling is Data Efﬁcient": None,
         "Word Embeddings vs Character CNN": None,
         "Smaller Models with CNN Softmax": None,
+        "Mean difference in log perplexity": None,
         "Training Speed": None,
-	"Ensembles": None,
-	"LSTMs are best on the tail words": None,
         "Samples from the model": None,
     },
     "Discussion and Conclusions": None,
+}
+
+
+# Fast-RCNN.pdf
+FAST_RCNN_SECTIONS = {
+    "Introduction": None,
+    "Training is a multi-stage pipeline": None,
+    "Object detection is slow": None,
+    "Higher detection quality (mAP) than R-CNN, SPPnet": None,
+    "Fast R-CNN architecture and training": {
+        "Initializing from pre-trained networks": None,
+        "Fine-tuning for detection": None,
+        "Scale invariance": None,
+    },
+    "Fast R-CNN detection": {
+        "Truncated SVD for faster detection": None,
+    },
+    "Main results": None,
+    "Fast training and testing compared to R-CNN, SPPnet": None,
+    "Fine-tuning conv layers in VGG16 improves mAP": {
+        "Experimental setup": None,
+        "VOC 2010 and 2012 results": None,
+        "VOC 2007 results": None,
+        "Training and testing time": None,
+        "▷with SVD": None,
+        "Which layers to ﬁne-tune?": None,
+    },
+    "Design evaluation": {
+        "Does multi-task training help?": None,
+        "Scale invariance": None,
+        "Do SVMs outperform softmax?": None,
+        "Are more proposals always better?": None,
+        "Preliminary MS COCO results": None,
+    },
+    "Conclusion": None,
 }
 
 
@@ -170,37 +241,95 @@ N_MACHINE_TRANSLATION_SECTIONS = {
 }
 
 
+# RNN-Encode-Decode.pdf
+RNN_ENCODE_DECODE_SECTIONS = {
+    "Introduction": None,
+    "RNN Encoder–Decoder": {
+        "Preliminary: Recurrent Neural Networks": None,
+        "RNN Encoder–Decoder": None,
+        "Hidden Unit that Adaptively Remembers and Forgets": None,
+    },
+    "Statistical Machine Translation": {
+        "Scoring Phrase Pairs with RNN Encoder–Decoder": None,
+        "Related Approaches: Neural Networks in Machine Translation": None,
+    },
+    "Experiments": {
+        "Data and Baseline System": {
+            "RNN Encoder–Decoder": None,
+            "Neural Language Model": None,
+        },
+        "Quantitative Analysis": None,
+        "Qualitative Analysis": None,
+        "Word and Phrase Representations": None,
+    },
+    "Conclusion": None,
+    "A RNN Encoder–Decoder": {
+        "A.1 Encoder": {
+            "A.1.1 Decoder": None,
+        },
+    },
+    "B Word and Phrase Representations": None,
+}
+
+
 # Smarter-Better-Faster-Longer.pdf
 SMARTER_BETTER_FASTER_LONGER_SECTIONS = {
     "Introduction": None,
-    "Methods":{
-    	"Architectural Improvements": {
-        	"Modern Transformer": None,
-		"Efficiency Improvements": None,
-		"Model Design": None,
-    	},
-	"Training": {
-        	"Data": None,
-		"Training Settings":None,
-    	},
-	
-     },  
-   "Downstream Evaluation":{
+    "Architectural Improvements": {
+        "Modern Transformer": None,
+    },
+    "FlexBERT": None,
+    "Efficiency Improvements": None,
+    "Model Design": None,
+    "; Karpathy , 2023 ), the vocabulary is set to": {
+        "Training Settings": None,
+    },
+    "We follow the Masked Language Modeling": {
+        "Downstream Evaluation": None,
+    },
+    "We only lowered the LR for ModernBERT-base, as large": {
         "Evaluation Setting": {
             "Natural Language Understanding": None,
-	    "Text Retrieval": None,
-	    "Long-Context Text Retrieval": None,
-            "Code Retrieval": None,
         },
-	"Downstream Results and Discussion": None,
-    }, 
-    "Efficiency": {
-        
+    },
+    "Text Retrieval": None,
+    "Long-Context Text Retrieval": None,
+    "Code Retrieval": None,
+    "Spearheaded by GitHub Copilot in 2021": {
+        "Downstream Results and Discussion": None,
         "Evaluation Setting": None,
-	"Results":None,
     },
     "Conclusion": None,
     "Limitations": None,
+}
+
+
+# YOLO-World-Real-Time.pdf
+YOLO_WORLD_REAL_TIME_SECTIONS = {
+    "Tencent AI Lab 2 ARC Lab, Tencent PCG": None,
+    "Introduction": None,
+    "Related Works": {
+        "Traditional Object Detection": None,
+        "Open-Vocabulary Object Detection": None,
+    },
+    "Method": {
+        "Pre-training Formulation": None,
+        "Model Architecture": None,
+        "Re-parameterizable Vision-Language PAN": None,
+        "Pre-training Schemes": None,
+    },
+    "Experiments": {
+        "Implementation Details": None,
+        "Pre-training": None,
+        "Ablation Experiments": None,
+        "Fine-tuning YOLO-World": None,
+        "BERT-base Fine-tune": None,
+        "APr": None,
+        "YOLO-World-L Seg Head COCO": None,
+        "YOLO-World-M Seg Head LVIS": None,
+        "YOLO-World-L Seg Head LVIS": None,
+    },
+    "Conclusion": None,
 }
 
 
@@ -223,15 +352,16 @@ D_FINE_REDEFINE_SECTIONS = {
         },
         "Visualization Analysis": None,
     },
-    "Conclusion": None,
-    "Implementation Details": {
-        "Hyperparameter Configurations": None,
-        "Datasets Settings": None,
+    "Conclusion": {
+        "Implementation Details": {
+            "Hyperparameter Configurations": None,
+            "Datasets Settings": None,
         },
-    "Visualization of D-FINE Predictions": None,
-    "Comparison with Lighter Detectors": None,
-    "Hyperparameter Sensitivity Analysis": None,
-    "Clarification on the Initial Layer Refinement": None,
+        "Visualization of D-FINE Predictions": None,
+        "Comparison with Lighter Detectors": None,
+        "Hyperparameter Sensitivity Analysis": None,
+        "Clarification on the Initial Layer Refinement": None,
+    },
 }
 
 
@@ -260,57 +390,6 @@ GEMMA2_SECTIONS = {
         "Our approach to responsible open models": None,
     },
     "Discussion and Conclusion": None,
-}
-
-
-# kan-kolmogorov.pdf
-KAN_KOLMOGOROV_SECTIONS = {
-    "Introduction": None,
-    "Kolmogorov–Arnold Networks (KAN)": {
-        "Kolmogorov-Arnold Representation theorem": None,
-        "KAN architecture": None,
-        "KAN's Approximation Abilities and Scaling Laws": None,
-        "Tricks For Interpretability: Pruning and Symbolifying KANs": None,
-        "A Trick For accuracy: Grid Update and Grid Extension": None,
-        "Benefits of deep KANs": None,
-    },
-    "KANs are interpretable": None,
-    "KANs are accurate": None,
-    "Conclusions": None,
-    "Additional Image Fitting Examples": None,
-    "Additional PDE Examples": {
-        "Poisson equation with high-frequency solutions": None,
-        "Allen-Cahn Equation": None,
-        "Darcy Flow": None,
-        "Discussion": None,
-    },
-    "MNIST": None,
-    "Hyperparameter search of MLPs and KANs": None,
-    "What if the network has more layers than needed?": None,
-    "Existence of redundant neurons/edges with small or no sparsity penalty": None,
-    "The necessity of skip connections": None,
-    "The necessity of grid extensions": None,
-    "Implementation details of KAN": None,
-    "Proof of Theorem 2.1": None,
-    "Neural Scaling Laws": None,
-    "Details of grid extension": None,
-    "Techniques for increasing interpretability": {
-        "Simplification techniques": None,
-        "A toy example: how humans can interact with KANs": None,
-    },
-    "Accuracy: toy symbolic datasets": None,
-    "Accuracy: Special functions": None,
-    "Accuracy: Feynman datasets": None,
-    "``Continual Learning'' of a 1D toy function?": None,
-    "Interpretability: Supervised toy datasets": None,
-    "Interpretability: Unsupervised toy datasets": None,
-    "Interpretability: Knot theory": None,
-    "Interpretability: Anderson localization": None,
-    "KAN Functionalities": None,
-    "Dependence on hyperparameters": None,
-    "Remark on grid size": None,
-    "Related works": None,
-    "Discussion": None,
 }
 
 
@@ -360,6 +439,34 @@ KIMIK2_SECTIONS = {
     },
     "Limitations": None,
     "Conclusions": None,
+}
+
+
+# layer-norm.pdf
+LAYER_NORM_SECTIONS = {
+    "Introduction": None,
+    "Background": None,
+    "Layer normalization": {
+        "Layer normalized recurrent neural networks": None,
+    },
+    "Related work": None,
+    "Analysis": {
+        "Invariance under weights and data transformations": None,
+        "Geometry of parameter space during learning": {
+            "Riemannian metric": None,
+            "The geometry of normalized generalized linear models": None,
+        },
+    },
+    "Experimental results": {
+        "Order embeddings of images and language": None,
+        "Teaching machines to read and comprehend": None,
+        "Skip-thought vectors": None,
+        "Modeling binarized MNIST using DRAW": None,
+        "Handwriting sequence generation": None,
+        "Permutation invariant MNIST": None,
+        "Convolutional Networks": None,
+    },
+    "Conclusion": None,
 }
 
 
@@ -491,11 +598,13 @@ LLAMA3_SECTIONS = {
 # output-embed-llm.pdf
 OUTPUT_EMBED_LLM_SECTIONS = {
     "Introduction": None,
-    "Related Work": None,
+    "Related Work Neural": None,
     "Weight Tying": None,
-    "Results": {
+    "∂Uit": {
         "Quality of Obtained Embeddings": None,
         "Neural Network Language Models": None,
+        "Decoder WT 119M": None,
+        "TWWT 79M": None,
         "Neural Machine Translation": None,
     },
 }
@@ -520,8 +629,12 @@ SHIFT_REDUCE_CONST_PARS_SECTIONS = {
         "Set-up": None,
         "Results on Development Sets": None,
         "Final Results": None,
+        "Charniak (2000)": None,
+        "Carreras et al. (2008) Unk This Paper Baseline": None,
         "Comparison of Running Time": None,
         "Error Analysis": None,
+    },
+    "F Score Span Length Baseline Extended Semi-supervised": {
         "Different Phrase Types": None,
         "Different Span Lengths": None,
         "Different Sentence Lengths": None,
@@ -588,120 +701,6 @@ STRUC_ATTENTION_NET_SECTIONS = {
 }
 
 
-# yolov10.pdf
-YOLOV10_SECTIONS = {
-    "Introduction": None,
-    "Related Work": None,
-    "Methodology": {
-        "Consistent Dual Assignments for NMS-free Training": None,
-        "Holistic Efficiency-Accuracy Driven Model Design": None,
-    },
-    "Experiments": {
-        "Implementation Details": None,
-        "Comparison with state-of-the-arts": None,
-        "Model Analyses": None,
-    },
-    "Conclusion": None,
-}
-
-
-# YOLO-World-Real-Time.pdf
-YOLO_WORLD_REAL_TIME_SECTIONS = {
-    "Introduction": None,
-    "Related Works": {
-        "Traditional Object Detection": None,
-        "Open-Vocabulary Object Detection": None,
-    },
-    "Method": {
-        "Pre-training Formulation: Region-Text Pairs": None,
-        "Model Architecture": None,
-        "Re-parameterizable Vision-Language PAN": None,
-        "Pre-training Schemes": None,
-    },
-    "Experiments": {
-        "Implementation Details": None,
-        "Pre-training": {
-            "Experimental Setup": None,
-            "Pre-training Data": None,
-            "Zero-shot Evaluation": None,
-            "Main Results on LVIS Object Detection": None,
-        },
-        "Ablation Experiments": {
-            "Pre-training Data": None,
-            "Ablations on RepVL-PAN": None,
-            "Text Encoders": None,
-        },
-        "Fine-tuning YOLO-World": {
-            "Experimental Setup": None,
-            "COCO Object Detection": None,
-            "LVIS Object Detection": None,
-            "Open-Vocabulary Instance Segmentation": None,
-        },
-        "Visualizations": None,
-    },
-    "Conclusion": None,
-}
-
-
-# layer-norm.pdf
-LAYER_NORM_SECTIONS = {
-    "Introduction": None,
-    "Background": None,
-    "Layer normalization": {
-        "Layer normalized recurrent neural networks": None,
-    },
-    "Related work": None,
-    "Analysis": {
-        "Invariance under weights and data transformations": None,
-        "Geometry of parameter space during learning": {
-            "Riemannian metric": None,
-            "The geometry of normalized generalized linear models": None,
-        },
-    },
-    "Experimental results": {
-        "Order embeddings of images and language": None,
-        "Teaching machines to read and comprehend": None,
-        "Skip-thought vectors": None,
-        "Modeling binarized MNIST using DRAW": None,
-        "Handwriting sequence generation": None,
-        "Permutation invariant MNIST": None,
-        "Convolutional Networks": None,
-    },
-    "Conclusion": None,
-}
-
-
-# RNN-Encode-Decode.pdf
-RNN_ENCODE_DECODE_SECTIONS = {
-    "Introduction": None,
-    "RNN Encoder–Decoder": {
-        "Preliminary: Recurrent Neural Networks": None,
-        "RNN Encoder–Decoder": None,
-        "Hidden Unit that Adaptively Remembers and Forgets": None,
-    },
-    "Statistical Machine Translation": {
-        "Scoring Phrase Pairs with RNN Encoder–Decoder": None,
-        "Related Approaches: Neural Networks in Machine Translation": None,
-    },
-    "Experiments": {
-        "Data and Baseline System": {
-            "RNN Encoder–Decoder": None,
-            "Neural Language Model": None,
-        },
-        "Quantitative Analysis": None,
-        "Qualitative Analysis": None,
-        "Word and Phrase Representations": None,
-    },
-    "Conclusion": None,
-    "A RNN Encoder–Decoder": {
-        "A.1 Encoder": {
-            "A.1.1 Decoder": None,
-        },
-    },
-    "B Word and Phrase Representations": None,
-}
-
-
 # weight-decay.pdf
 WEIGHT_DECAY_SECTIONS = {
     "Introduction": None,
@@ -718,36 +717,18 @@ WEIGHT_DECAY_SECTIONS = {
 }
 
 
-# Fast-RCNN.pdf
-FAST_RCNN_SECTIONS = {
-    "Introduction": {
-	"Contributions":None,
-	},
-    "Fast R-CNN architecture and training": {
-	"The RoI pooling layer": None,
-        "Initializing from pre-trained networks": None,
-        "Fine-tuning for detection": None,
-        "Scale invariance": None,
+# yolov10.pdf
+YOLOV10_SECTIONS = {
+    "Introduction": None,
+    "Related Work": None,
+    "Methodology": {
+        "Consistent Dual Assignments for NMS-free Training": None,
+        "Holistic Efficiency-Accuracy Driven Model Design": None,
     },
-    "Fast R-CNN detection": {
-        "Truncated SVD for faster detection": None,
-    },
-    "Main results":{
-        "Experimental setup": None,
-        "VOC 2010 and 2012 results": None,
-        "VOC 2007 results": None,
-        "Training and testing time": None,
-        "Which layers to ﬁne-tune?": None,
-    },
-    "Design evaluation": {
-        "Does multi-task training help?": None,
-        "Scale invariance": None,
-	"Do we need more training data?":None,
-        "Do SVMs outperform softmax?": None,
-        "Are more proposals always better?": None,
-        "Preliminary MS COCO results": None,
+    "Experiments": {
+        "Implementation Details": None,
+        "Comparison with state-of-the-arts": None,
+        "Model Analyses": None,
     },
     "Conclusion": None,
 }
-
-

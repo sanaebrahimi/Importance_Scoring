@@ -160,6 +160,17 @@ class ParagraphCitationScore:
 
 
 @dataclass
+class InternalCitationDiagnostic:
+    source_paper: str
+    citation_key: str
+    target_paper: str
+    explicit_score: Optional[float]
+    fallback_score: float
+    final_score: float
+    status: str
+
+
+@dataclass
 class SectionScore:
     """Node in the hierarchical importance tree T_p = (V_p, E_p)."""
 
@@ -305,6 +316,16 @@ class Paper:
             raise ValueError(f"{self.paper_id}: call load() first")
         return self._citation_scores
 
+    def citation_score_exact(self, citation_key: str) -> Optional[float]:
+        """Return the saved paper-level score for a citation key, if present."""
+        if citation_key in self.citation_scores:
+            return self.citation_scores[citation_key]
+        norm_key = _norm_cit(citation_key)
+        for key, score in self.citation_scores.items():
+            if _norm_cit(key) == norm_key:
+                return score
+        return None
+
     # --- derived quantities ---
 
     def originality_score(self) -> float:
@@ -326,12 +347,14 @@ class Paper:
         """
         norm_key = _norm_cit(citation_key)
         if self.has_paragraph_citation_scores:
-            return sum(
+            exact_total = sum(
                 alloc.citation_score
                 for alloc in self.paragraph_citation_scores
                 if alloc.top_level_section() == section_name
                 and _norm_cit(alloc.citation) == norm_key
             )
+            if exact_total > 0.0:
+                return exact_total
 
         total = 0.0
         for para in self.paragraph_scores:
@@ -355,22 +378,37 @@ class Paper:
                 (p.paragraph_index, tuple(p.section_path)): p
                 for p in self.paragraph_scores
             }
+            exact_pairs: List[Tuple[float, ParagraphScore]] = []
             for alloc in self.paragraph_citation_scores:
                 if _norm_cit(alloc.citation) != norm_key:
                     continue
                 para = para_index.get((alloc.paragraph_index, tuple(alloc.section_path)))
                 if para is not None:
-                    yield alloc.citation_score, para
-        else:
-            for para in self.paragraph_scores:
-                cites = para.citations_in_paragraph()
-                if not cites:
-                    continue
-                norm_cites = [_norm_cit(c) for c in cites]
-                count = norm_cites.count(norm_key)
-                if count == 0:
-                    continue
-                yield para.citation_score * count / len(cites), para
+                    exact_pairs.append((alloc.citation_score, para))
+            if exact_pairs:
+                for pair in exact_pairs:
+                    yield pair
+                return
+
+        for para in self.paragraph_scores:
+            cites = para.citations_in_paragraph()
+            if not cites:
+                continue
+            norm_cites = [_norm_cit(c) for c in cites]
+            count = norm_cites.count(norm_key)
+            if count == 0:
+                continue
+            yield para.citation_score * count / len(cites), para
+
+    def citation_score_from_paragraphs(self, citation_key: str) -> float:
+        """
+        Estimate a citation's paper-level score from paragraph evidence.
+
+        Uses exact per-paragraph citation allocations when they exist; otherwise
+        falls back to distributing each paragraph's citation channel score
+        proportionally across citations mentioned in that paragraph.
+        """
+        return sum(cite_score for cite_score, _ in self._per_paragraph_cite_score(citation_key))
 
     def w_tech(self, citation_key: str) -> float:
         """W_tech(p, q) = Σ_i cite_score_i(q) × technical_score_i."""
@@ -432,6 +470,7 @@ class CitationGraph:
         self._weights: Dict[Tuple[str, str], float] = defaultdict(float)
         self._out_weights: Dict[str, float] = defaultdict(float)
         self._in_weights: Dict[str, float] = defaultdict(float)
+        self._internal_citation_diagnostics: List[InternalCitationDiagnostic] = []
 
     # --- construction ---
 
@@ -496,18 +535,68 @@ class CitationGraph:
         self._weights.clear()
         self._out_weights.clear()
         self._in_weights.clear()
+        self._internal_citation_diagnostics = []
+        corpus_ids = set(self.papers)
+
+        def explicit_score_for(paper: Paper, citation_key: str) -> Optional[float]:
+            if hasattr(paper, "citation_score_exact"):
+                return paper.citation_score_exact(citation_key)
+            return getattr(paper, "citation_scores", {}).get(citation_key)
+
+        def paragraph_fallback_for(paper: Paper, citation_key: str) -> float:
+            if hasattr(paper, "citation_score_from_paragraphs"):
+                return paper.citation_score_from_paragraphs(citation_key)
+            return 0.0
+
         for paper_id, paper in self.papers.items():
             paper_map = self._citation_map.get(paper_id, {})
-            for cit_str, score in paper.citation_scores.items():
-                # Resolve using this paper's own mapping so [2] in paper A
-                # and [2] in paper B map to their respective works.
-                # Skip unresolved citations — don't create raw-key nodes like "[8]".
-                target = paper_map.get(cit_str)
+            target_to_keys: Dict[str, List[str]] = defaultdict(list)
+            for cit_str, target in paper_map.items():
                 if target is None or target == paper_id:
                     continue
-                self._weights[(paper_id, target)] += score
-                self._out_weights[paper_id] += score
-                self._in_weights[target] += score
+                target_to_keys[target].append(cit_str)
+
+            for target, citation_keys in target_to_keys.items():
+                is_internal = target in corpus_ids
+                explicit_positive_exists = any(
+                    (explicit_score_for(paper, cit_str) or 0.0) > 0.0
+                    for cit_str in citation_keys
+                )
+                for cit_str in citation_keys:
+                    explicit_score = explicit_score_for(paper, cit_str)
+                    fallback_score = 0.0
+                    final_score = 0.0
+                    status = "missing"
+
+                    if explicit_score is not None and explicit_score > 0.0:
+                        final_score = explicit_score
+                        status = "paper_score"
+                    elif is_internal and not explicit_positive_exists:
+                        fallback_score = paragraph_fallback_for(paper, cit_str)
+                        if fallback_score > 0.0:
+                            final_score = fallback_score
+                            status = "paragraph_fallback"
+                    elif is_internal and explicit_positive_exists:
+                        status = "ignored_duplicate_missing"
+
+                    if is_internal:
+                        self._internal_citation_diagnostics.append(
+                            InternalCitationDiagnostic(
+                                source_paper=paper_id,
+                                citation_key=cit_str,
+                                target_paper=target,
+                                explicit_score=explicit_score,
+                                fallback_score=fallback_score,
+                                final_score=final_score,
+                                status=status,
+                            )
+                        )
+
+                    if final_score <= 0.0:
+                        continue
+                    self._weights[(paper_id, target)] += final_score
+                    self._out_weights[paper_id] += final_score
+                    self._in_weights[target] += final_score
         return self
 
     # --- accessors ---
@@ -548,6 +637,9 @@ class CitationGraph:
 
     def corpus_nodes(self) -> Set[str]:
         return set(self.papers)
+
+    def internal_citation_audit(self) -> List[InternalCitationDiagnostic]:
+        return list(self._internal_citation_diagnostics)
 
     def _citation_strings_for(self, paper: Paper, cited_key: str) -> Set[str]:
         """
@@ -692,6 +784,25 @@ class CommunityDetector:
         except ImportError:
             return self._greedy(restrict_to_corpus)
 
+    def detect_baseline(
+        self,
+        weighting: str,
+        restrict_to_corpus: bool = True,
+    ) -> Dict[str, int]:
+        """Return a Louvain partition for a simple citation baseline graph.
+
+        weighting:
+            - "binary": undirected edge weight 1 if either paper cites the other
+            - "mention_count": undirected edge weight = total raw citation mentions
+              across both directions
+        """
+        graph = self._baseline_nx_graph(weighting, restrict_to_corpus)
+        try:
+            import community as community_louvain
+        except ImportError:
+            return self._greedy_from_nx_graph(graph)
+        return community_louvain.best_partition(graph, weight="weight")
+
     def _louvain(self, restrict_to_corpus: bool, directed: bool = True) -> Dict[str, int]:
         import community as community_louvain
 
@@ -740,10 +851,48 @@ class CommunityDetector:
         remap = {c: i for i, c in enumerate(unique)}
         return {n: remap[c] for n, c in comm.items()}
 
+    def _greedy_from_nx_graph(self, graph) -> Dict[str, int]:
+        """Fallback greedy partitioning for a generic undirected weighted nx.Graph."""
+        nodes = list(graph.nodes())
+        comm = {n: i for i, n in enumerate(nodes)}
+        m = graph.size(weight="weight")
+        if m == 0:
+            return comm
+
+        improved = True
+        while improved:
+            improved = False
+            best_gain, best_pair = 0.0, None
+            for i, p in enumerate(nodes):
+                for q in nodes[i + 1:]:
+                    if comm[p] == comm[q]:
+                        continue
+                    gain = self._delta_q_nx(graph, p, q, m)
+                    if gain > best_gain:
+                        best_gain, best_pair = gain, (p, q)
+            if best_pair:
+                p, q = best_pair
+                old = comm[q]
+                new = comm[p]
+                for nd in nodes:
+                    if comm[nd] == old:
+                        comm[nd] = new
+                improved = True
+
+        unique = sorted(set(comm.values()))
+        remap = {c: i for i, c in enumerate(unique)}
+        return {n: remap[c] for n, c in comm.items()}
+
     def _delta_q(self, p: str, q: str, m: float) -> float:
         w_pq = self.graph.weight(p, q) + self.graph.weight(q, p)
         penalty = self.graph.out_weight(p) * self.graph.in_weight(q) / (4 * m * m)
         return w_pq / (2 * m) - penalty
+
+    def _delta_q_nx(self, graph, p: str, q: str, m: float) -> float:
+        w_pq = graph[p][q]["weight"] if graph.has_edge(p, q) else 0.0
+        k_p = graph.degree(p, weight="weight")
+        k_q = graph.degree(q, weight="weight")
+        return w_pq / m - (k_p * k_q) / (2 * m * m)
 
     def modularity(self, partition: Dict[str, int], directed: bool = True) -> float:
         """Compute Q for an arbitrary partition.
@@ -783,6 +932,27 @@ class CommunityDetector:
         # the standard (1/2m) Σ_ordered formula
         return q / m
 
+    def baseline_modularity(
+        self,
+        partition: Dict[str, int],
+        weighting: str,
+        restrict_to_corpus: bool = True,
+    ) -> float:
+        """Compute weighted modularity for a baseline undirected graph."""
+        graph = self._baseline_nx_graph(weighting, restrict_to_corpus)
+        m = graph.size(weight="weight")
+        if m == 0:
+            return 0.0
+
+        q = 0.0
+        for u, v, data in graph.edges(data=True):
+            if u in partition and v in partition and partition[u] == partition[v]:
+                w = float(data.get("weight", 1.0))
+                k_u = graph.degree(u, weight="weight")
+                k_v = graph.degree(v, weight="weight")
+                q += w - (k_u * k_v) / (2.0 * m)
+        return q / m
+
     def _nx_graph(self, restrict_to_corpus: bool):
         import networkx as nx
 
@@ -796,6 +966,31 @@ class CommunityDetector:
             if src in nodes and tgt in nodes:
                 G.add_edge(src, tgt, weight=w)
         return G
+
+    def _internal_citation_counts(self, restrict_to_corpus: bool) -> Dict[Tuple[str, str], int]:
+        """Directed raw mention counts between corpus papers."""
+        nodes = (
+            self.graph.corpus_nodes() if restrict_to_corpus
+            else self.graph.all_nodes()
+        )
+        counts: Dict[Tuple[str, str], int] = defaultdict(int)
+        for paper_id, paper in self.graph.papers.items():
+            if paper_id not in nodes:
+                continue
+            paper_map = self.graph._citation_map.get(paper_id, {})
+            normalized_map = {
+                _norm_cit(citation_key): target
+                for citation_key, target in paper_map.items()
+            }
+            for para in paper.paragraph_scores:
+                for citation in para.citations_in_paragraph():
+                    target = paper_map.get(citation)
+                    if target is None:
+                        target = normalized_map.get(_norm_cit(citation))
+                    if target is None or target == paper_id or target not in nodes:
+                        continue
+                    counts[(paper_id, target)] += 1
+        return counts
 
     def _nx_undirected_graph(self, restrict_to_corpus: bool):
         """Undirected graph with W_sym(p, q) = W(p, q) + W(q, p)."""
@@ -835,6 +1030,34 @@ class CommunityDetector:
                     G[src][tgt]["weight"] = max(G[src][tgt]["weight"], w)
                 else:
                     G.add_edge(src, tgt, weight=w)
+        return G
+
+    def _baseline_nx_graph(self, weighting: str, restrict_to_corpus: bool):
+        """Build an undirected baseline graph for community detection."""
+        import networkx as nx
+
+        if weighting not in {"binary", "mention_count"}:
+            raise ValueError(f"Unknown baseline weighting: {weighting}")
+
+        G = nx.Graph()
+        nodes = (
+            self.graph.corpus_nodes() if restrict_to_corpus
+            else self.graph.all_nodes()
+        )
+        G.add_nodes_from(nodes)
+
+        mention_counts = self._internal_citation_counts(restrict_to_corpus)
+        undirected_weights: Dict[Tuple[str, str], float] = defaultdict(float)
+        for (src, tgt), count in mention_counts.items():
+            key = (min(src, tgt), max(src, tgt))
+            if weighting == "binary":
+                undirected_weights[key] = 1.0
+            else:
+                undirected_weights[key] += float(count)
+
+        for (u, v), weight in undirected_weights.items():
+            G.add_edge(u, v, weight=weight)
+
         return G
 
 
