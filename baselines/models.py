@@ -9,7 +9,10 @@ existing evaluation and graph tooling.
 
 import argparse
 import json
+import os
 import re
+import urllib.error
+import urllib.request
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -23,13 +26,16 @@ except ImportError:  # pragma: no cover - optional dependency for non-LLM baseli
 
 from importance_score import (
     CITATION_BLOCK_PATTERN,
+    build_citation_focus_text,
     canonicalize_citation_key,
     classify_citation_block,
     detect_dominant_citation_style,
     extract_citations_by_section,
     flatten_content_to_text,
     load_sections_from_file,
+    normalize_for_match,
     normalize_distribution,
+    normalized_key,
     parse_score_map_from_response,
     read_pdf_text,
     safe_float,
@@ -53,6 +59,25 @@ def token_count(text: str) -> int:
 
 def ensure_parent(path: str) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+HUMAN_ANNOTATION_INSTRUCTIONS_PATH = ROOT_DIR / "human_section_annotation_instructions.txt"
+NODE_SCORE_LINE_RE = re.compile(
+    r"^(?P<title>.+?)\s*(?::|[–—-])\s*"
+    r"(?:(?:total(?:\s+score)?)\s*:\s*)?"
+    r"(?P<total>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\|\s*"
+    r"(?:(?:citation(?:\s+score)?)\s*:\s*)?"
+    r"(?P<citation>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*$",
+    flags=re.IGNORECASE,
+)
+CITATION_SCORE_LINE_RE = re.compile(
+    r"^(?P<citation>.+)\s*:\s*(?P<score>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*$"
+)
+CITATION_SCORE_TABLE_ROW_RE = re.compile(
+    r"^\|\s*(?P<citation>.+?)\s*\|\s*(?P<score>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\|?\s*$"
+)
+PARAGRAPH_TITLE_RE = re.compile(r"^Paragraph\s+(?P<index>\d+)\s*$", flags=re.IGNORECASE)
 
 
 @dataclass
@@ -89,6 +114,1130 @@ def flatten_citation_contexts(raw: Any) -> Dict[str, List[str]]:
             elif value is not None:
                 flattened[str(key)].append(str(value))
     return dict(flattened)
+
+
+def load_human_annotation_instructions() -> str:
+    return HUMAN_ANNOTATION_INSTRUCTIONS_PATH.read_text(encoding="utf-8").strip()
+
+
+def load_human_section_only_instructions() -> str:
+    full_text = load_human_annotation_instructions()
+    marker = "==================================================\nPART 2: TOP 4 FOUNDATIONAL PAPERS"
+    if marker in full_text:
+        return full_text.split(marker, 1)[0].rstrip()
+    return full_text
+
+
+def extract_json_payload(text: str) -> Dict[str, Any]:
+    candidate = (text or "").strip()
+    fence_match = re.search(r"```(?:json)?\s*(\{.*\})\s*```", candidate, flags=re.DOTALL)
+    if fence_match:
+        candidate = fence_match.group(1).strip()
+
+    try:
+        loaded = json.loads(candidate)
+        if isinstance(loaded, dict):
+            return loaded
+    except json.JSONDecodeError:
+        pass
+
+    decoder = json.JSONDecoder()
+    for match in re.finditer(r"\{", candidate):
+        try:
+            loaded, _ = decoder.raw_decode(candidate[match.start() :])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(loaded, dict):
+            return loaded
+
+    raise ValueError("Model response did not contain a parseable JSON object.")
+
+
+def _clean_scored_line(line: str) -> str:
+    cleaned = str(line or "").replace("\u202f", " ").replace("\xa0", " ").strip()
+    cleaned = re.sub(r"^[\-\*\u2022]+\s*", "", cleaned)
+    cleaned = cleaned.replace("**", "").replace("__", "")
+    return cleaned.strip()
+
+
+def _title_lookup_keys(title: str) -> List[str]:
+    title = str(title or "").strip()
+    if not title:
+        return []
+
+    candidates = [title]
+    ampersand_variant = title.replace("&", " and ").strip()
+    if ampersand_variant and ampersand_variant != title:
+        candidates.append(ampersand_variant)
+    stripped_numeric_prefix = re.sub(
+        r"^\s*(?:section\s+)?(?:[ivxlcdm]+|\d+)(?:\.\d+)*[\)\.\-: ]+\s*",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    ).strip()
+    if stripped_numeric_prefix and stripped_numeric_prefix != title:
+        candidates.append(stripped_numeric_prefix)
+    stripped_parenthetical = re.sub(r"\([^)]*\)", "", title).strip()
+    if stripped_parenthetical and stripped_parenthetical != title:
+        candidates.append(stripped_parenthetical)
+
+    expanded_candidates: List[str] = []
+    for candidate in candidates:
+        if candidate not in expanded_candidates:
+            expanded_candidates.append(candidate)
+        article_stripped = re.sub(r"\b(?:a|an|the)\b", " ", candidate, flags=re.IGNORECASE)
+        article_stripped = re.sub(r"\s+", " ", article_stripped).strip()
+        if article_stripped and article_stripped != candidate and article_stripped not in expanded_candidates:
+            expanded_candidates.append(article_stripped)
+
+    lookup_keys: List[str] = []
+    for candidate in expanded_candidates:
+        normalized = normalized_key(candidate)
+        if normalized and normalized not in lookup_keys:
+            lookup_keys.append(normalized)
+    return lookup_keys
+
+
+def build_section_child_lookup(
+    section_schema: Dict[str, Any],
+    path_prefix: Optional[List[str]] = None,
+    lookup: Optional[Dict[Tuple[str, ...], Dict[str, str]]] = None,
+) -> Dict[Tuple[str, ...], Dict[str, str]]:
+    if lookup is None:
+        lookup = {}
+
+    current_path = tuple(path_prefix or [])
+    children = section_schema if isinstance(section_schema, dict) else {}
+    child_lookup: Dict[str, str] = {}
+    for title in children:
+        title_str = str(title)
+        for key in _title_lookup_keys(title_str):
+            child_lookup.setdefault(key, title_str)
+    lookup[current_path] = child_lookup
+
+    for title, child_schema in children.items():
+        build_section_child_lookup(
+            child_schema if isinstance(child_schema, dict) else {},
+            path_prefix=list(current_path) + [str(title)],
+            lookup=lookup,
+        )
+
+    return lookup
+
+
+def extract_text_fallback_paragraph_payloads(
+    text: str,
+    section_schema: Dict[str, Any],
+    paragraph_inventory: Sequence[Dict[str, Any]],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    child_lookup = build_section_child_lookup(section_schema)
+    paragraph_lookup: Dict[Tuple[Tuple[str, ...], int], Dict[str, Any]] = {}
+    paragraphs_by_section: Dict[Tuple[str, ...], List[Dict[str, Any]]] = {}
+    for leaf in paragraph_inventory:
+        section_path = tuple(str(part) for part in leaf.get("section_path", []))
+        section_paragraphs = list(leaf.get("paragraphs", []))
+        if section_paragraphs:
+            paragraphs_by_section[section_path] = section_paragraphs
+        for paragraph in section_paragraphs:
+            paragraph_index = int(safe_float(paragraph.get("paragraph_index"), 0.0))
+            if paragraph_index > 0:
+                paragraph_lookup[(section_path, paragraph_index)] = paragraph
+
+    def resolve_document_path(title: str, current_path: Sequence[str]) -> Optional[List[str]]:
+        lookup_keys = _title_lookup_keys(title)
+        current_tuple = tuple(str(part) for part in current_path)
+        candidate_parents = [current_tuple[:idx] for idx in range(len(current_tuple), -1, -1)]
+        for parent_path in candidate_parents:
+            children = child_lookup.get(parent_path, {})
+            for key in lookup_keys:
+                child_title = children.get(key)
+                if child_title is not None:
+                    return list(parent_path) + [child_title]
+        return None
+
+    def looks_like_citation_child(title: str) -> bool:
+        stripped = str(title or "").strip()
+        if not stripped:
+            return False
+        if (stripped.startswith("(") and stripped.endswith(")")) or (stripped.startswith("[") and stripped.endswith("]")):
+            return True
+        return False
+
+    raw_paragraph_scores: List[Dict[str, Any]] = []
+    raw_paragraph_citation_scores: List[Dict[str, Any]] = []
+    current_section_path: List[str] = []
+    current_paragraph_key: Optional[Tuple[Tuple[str, ...], int]] = None
+    in_citation_section = False
+
+    for raw_line in str(text or "").splitlines():
+        line = _clean_scored_line(raw_line)
+        if not line:
+            continue
+
+        normalized_line = normalize_for_match(line).lower()
+        if normalized_line == normalize_for_match("Citation Contributions").lower():
+            in_citation_section = True
+            current_paragraph_key = None
+            continue
+        if in_citation_section:
+            continue
+
+        node_match = NODE_SCORE_LINE_RE.match(line)
+        if node_match:
+            title = str(node_match.group("title")).strip()
+            total_score = max(0.0, safe_float(node_match.group("total"), 0.0))
+            citation_score = max(0.0, safe_float(node_match.group("citation"), 0.0))
+            if current_paragraph_key is not None and looks_like_citation_child(title):
+                paragraph_payload = paragraph_lookup.get(current_paragraph_key)
+                if paragraph_payload is not None:
+                    raw_paragraph_citation_scores.append(
+                        {
+                            "paragraph_id": str(paragraph_payload.get("paragraph_id", "")),
+                            "section_path": list(current_paragraph_key[0]),
+                            "paragraph_index": current_paragraph_key[1],
+                            "citation": title,
+                            "citation_score": max(total_score, citation_score),
+                        }
+                    )
+                continue
+            paragraph_match = PARAGRAPH_TITLE_RE.fullmatch(title)
+            if paragraph_match:
+                paragraph_index = int(paragraph_match.group("index"))
+                paragraph_key = (tuple(current_section_path), paragraph_index)
+                paragraph_payload = paragraph_lookup.get(paragraph_key)
+                if paragraph_payload is None:
+                    current_paragraph_key = None
+                    continue
+                raw_paragraph_scores.append(
+                    {
+                        "paragraph_id": str(paragraph_payload.get("paragraph_id", "")),
+                        "section_path": list(current_section_path),
+                        "paragraph_index": paragraph_index,
+                        "technical_score": max(0.0, total_score - citation_score),
+                        "citation_score": citation_score,
+                    }
+                )
+                current_paragraph_key = paragraph_key
+                continue
+
+            current_paragraph_key = None
+            if normalize_for_match(title).lower().startswith(normalize_for_match("Paper").lower()):
+                current_section_path = []
+                continue
+
+            resolved_path = resolve_document_path(title, current_section_path)
+            if resolved_path is not None:
+                current_section_path = resolved_path
+                section_paragraphs = paragraphs_by_section.get(tuple(current_section_path), [])
+                if len(section_paragraphs) == 1:
+                    only_paragraph = section_paragraphs[0]
+                    paragraph_key = (tuple(current_section_path), int(safe_float(only_paragraph.get("paragraph_index"), 0.0)))
+                    raw_paragraph_scores.append(
+                        {
+                            "paragraph_id": str(only_paragraph.get("paragraph_id", "")),
+                            "section_path": list(current_section_path),
+                            "paragraph_index": paragraph_key[1],
+                            "technical_score": max(0.0, total_score - citation_score),
+                            "citation_score": citation_score,
+                        }
+                    )
+                    current_paragraph_key = paragraph_key
+            continue
+
+        if current_paragraph_key is None:
+            continue
+
+        citation_match = CITATION_SCORE_TABLE_ROW_RE.match(line)
+        if not citation_match:
+            citation_match = CITATION_SCORE_LINE_RE.match(line)
+        if not citation_match:
+            continue
+
+        paragraph_payload = paragraph_lookup.get(current_paragraph_key)
+        if paragraph_payload is None:
+            continue
+        raw_paragraph_citation_scores.append(
+            {
+                "paragraph_id": str(paragraph_payload.get("paragraph_id", "")),
+                "section_path": list(current_paragraph_key[0]),
+                "paragraph_index": current_paragraph_key[1],
+                "citation": str(citation_match.group("citation")).strip(),
+                "citation_score": max(0.0, safe_float(citation_match.group("score"), 0.0)),
+            }
+        )
+
+    return raw_paragraph_scores, raw_paragraph_citation_scores
+
+
+def parse_contribution_tree_text_response(
+    text: str,
+) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, float]], float]:
+    node_scores: Dict[str, Dict[str, float]] = {}
+    citation_scores: Dict[str, Dict[str, float]] = {}
+    in_citation_section = False
+
+    for raw_line in str(text or "").splitlines():
+        line = _clean_scored_line(raw_line)
+        if not line:
+            continue
+
+        normalized_line = normalize_for_match(line).lower()
+        if normalized_line == normalize_for_match("Citation Contributions").lower():
+            in_citation_section = True
+            continue
+        if normalized_line in {
+            normalize_for_match("Output format").lower(),
+            normalize_for_match("Node Title: Total Score | Citation Score").lower(),
+            normalize_for_match("Citation Identifier: Score").lower(),
+            normalize_for_match("Paper").lower(),
+            normalize_for_match("Contribution Tree").lower(),
+        }:
+            continue
+
+        if in_citation_section:
+            match = CITATION_SCORE_TABLE_ROW_RE.match(line)
+            if match and normalize_for_match(match.group("citation")).lower() == normalize_for_match("Citation Identifier").lower():
+                continue
+            if match and re.fullmatch(r"-+", match.group("citation").strip()):
+                continue
+            if not match:
+                match = CITATION_SCORE_LINE_RE.match(line)
+            if not match:
+                continue
+            citation = str(match.group("citation")).strip()
+            if not citation:
+                continue
+            citation_scores.setdefault(citation, {"citation_score": 0.0})
+            citation_scores[citation]["citation_score"] += max(0.0, safe_float(match.group("score"), 0.0))
+            continue
+
+        match = NODE_SCORE_LINE_RE.match(line)
+        if not match:
+            continue
+        title = str(match.group("title")).strip()
+        if not title:
+            continue
+        entry = node_scores.setdefault(title, {"total_score": 0.0, "citation_score": 0.0})
+        entry["total_score"] = max(entry["total_score"], max(0.0, safe_float(match.group("total"), 0.0)))
+        entry["citation_score"] = max(entry["citation_score"], max(0.0, safe_float(match.group("citation"), 0.0)))
+
+    if not node_scores and not citation_scores:
+        raise ValueError("Model response did not contain parseable contribution-tree lines.")
+
+    root_citation_score = 0.0
+    if node_scores:
+        _, root_payload = max(node_scores.items(), key=lambda item: safe_float(item[1].get("total_score"), 0.0))
+        root_citation_score = max(0.0, safe_float(root_payload.get("citation_score"), 0.0))
+
+    return node_scores, citation_scores, root_citation_score
+
+
+def read_score_value(raw_value: Any) -> float:
+    if isinstance(raw_value, dict):
+        for field in ("total_score", "citation_score", "score", "value", "weight", "allocation", "credit"):
+            if field in raw_value:
+                return max(0.0, safe_float(raw_value.get(field), 0.0))
+        return 0.0
+    return max(0.0, safe_float(raw_value, 0.0))
+
+
+def canonicalize_inventory_citation(citation: str) -> str:
+    canonical = canonicalize_citation_key(str(citation))
+    bracket_numeric = re.fullmatch(r"\[\s*([0-9,\-;– ]+)\s*\]", canonical)
+    paren_numeric = re.fullmatch(r"\(\s*([0-9,\-;– ]+)\s*\)", canonical)
+    match = bracket_numeric or paren_numeric
+    if not match:
+        return canonical
+
+    inner = match.group(1)
+    pieces = re.split(r"([,;–-])", inner)
+    normalized_parts: List[str] = []
+    for piece in pieces:
+        if piece in {",", ";", "–", "-"}:
+            normalized_parts.append(piece)
+        else:
+            cleaned = re.sub(r"\s+", "", piece)
+            if cleaned:
+                normalized_parts.append(cleaned)
+    merged = "".join(normalized_parts)
+    if bracket_numeric:
+        return f"[{merged}]"
+    return f"({merged})"
+
+
+def normalize_section_scores_to_schema(
+    schema: Dict[str, Any],
+    raw_section_scores: Any,
+    total_score: float = 1.0,
+    fill_missing_uniform: bool = True,
+) -> Dict[str, Any]:
+    raw_dict = raw_section_scores if isinstance(raw_section_scores, dict) else {}
+    sibling_weights = {
+        section_name: read_score_value(raw_dict.get(section_name, 0.0))
+        for section_name in schema
+    }
+    if sum(sibling_weights.values()) <= 0.0 and sibling_weights and fill_missing_uniform:
+        sibling_weights = {section_name: 1.0 for section_name in schema}
+    normalized_scores = (
+        normalize_distribution(sibling_weights, total_score)
+        if sibling_weights and sum(sibling_weights.values()) > 0.0
+        else {section_name: 0.0 for section_name in schema}
+    )
+
+    normalized_tree: Dict[str, Any] = {}
+    for section_name, child_schema in schema.items():
+        raw_child = raw_dict.get(section_name, {})
+        if isinstance(raw_child, dict):
+            child_payload = raw_child.get("subsections")
+            if not isinstance(child_payload, dict):
+                child_payload = {
+                    key: value
+                    for key, value in raw_child.items()
+                    if key not in {"total_score", "citation_score", "score", "value", "weight", "allocation", "credit"}
+                }
+        else:
+            child_payload = {}
+        subsections = (
+            normalize_section_scores_to_schema(
+                child_schema,
+                child_payload,
+                total_score=normalized_scores.get(section_name, 0.0),
+                fill_missing_uniform=fill_missing_uniform,
+            )
+            if isinstance(child_schema, dict) and child_schema
+            else {}
+        )
+        normalized_tree[section_name] = {
+            "total_score": normalized_scores.get(section_name, 0.0),
+            "citation_score": 0.0,
+            "subsections": subsections,
+        }
+    return normalized_tree
+
+
+def enforce_section_score_conservation(
+    section_tree: Dict[str, Any],
+    expected_total: float = 1.0,
+    tol: float = 1e-8,
+) -> float:
+    if not isinstance(section_tree, dict):
+        return 0.0
+
+    sibling_totals = {
+        section_name: max(0.0, safe_float(payload.get("total_score"), 0.0))
+        for section_name, payload in section_tree.items()
+        if isinstance(payload, dict)
+    }
+    actual_total = sum(sibling_totals.values())
+
+    if actual_total <= 0.0:
+        normalized_totals = {section_name: 0.0 for section_name in sibling_totals}
+    elif abs(actual_total - expected_total) > tol:
+        normalized_totals = normalize_distribution(sibling_totals, expected_total)
+    else:
+        normalized_totals = sibling_totals
+
+    for section_name, payload in section_tree.items():
+        if not isinstance(payload, dict):
+            continue
+        payload["total_score"] = normalized_totals.get(section_name, 0.0)
+        subsections = payload.get("subsections", {})
+        if isinstance(subsections, dict) and subsections:
+            enforce_section_score_conservation(
+                subsections,
+                expected_total=max(0.0, safe_float(payload.get("total_score"), 0.0)),
+                tol=tol,
+            )
+
+    return sum(
+        max(0.0, safe_float(payload.get("total_score"), 0.0))
+        for payload in section_tree.values()
+        if isinstance(payload, dict)
+    )
+
+
+def build_raw_section_tree_from_flat_node_scores(
+    schema: Dict[str, Any],
+    flat_node_scores: Dict[str, Dict[str, float]],
+) -> Dict[str, Any]:
+    lookup: Dict[str, Dict[str, float]] = {}
+    for title, payload in flat_node_scores.items():
+        for key in _title_lookup_keys(title):
+            existing = lookup.get(key)
+            if existing is None or read_score_value(payload) > read_score_value(existing):
+                lookup[key] = payload
+
+    def recurse(subschema: Dict[str, Any]) -> Dict[str, Any]:
+        raw_tree: Dict[str, Any] = {}
+        for section_name, child_schema in subschema.items():
+            payload: Optional[Dict[str, float]] = None
+            for key in _title_lookup_keys(section_name):
+                payload = lookup.get(key)
+                if payload is not None:
+                    break
+            raw_tree[section_name] = {
+                "total_score": read_score_value(payload or 0.0),
+                "citation_score": max(0.0, safe_float((payload or {}).get("citation_score"), 0.0)),
+                "subsections": recurse(child_schema) if isinstance(child_schema, dict) and child_schema else {},
+            }
+        return raw_tree
+
+    return recurse(schema)
+
+
+def apply_scaled_section_citation_scores(
+    normalized_section_tree: Dict[str, Any],
+    raw_section_tree: Dict[str, Any],
+) -> float:
+    total = 0.0
+    raw_tree = raw_section_tree if isinstance(raw_section_tree, dict) else {}
+
+    for section_name, normalized_payload in normalized_section_tree.items():
+        raw_payload = raw_tree.get(section_name, {})
+        raw_subsections = raw_payload.get("subsections", {}) if isinstance(raw_payload, dict) else {}
+        child_total = 0.0
+        subsections = normalized_payload.get("subsections", {})
+        if isinstance(subsections, dict) and subsections:
+            child_total = apply_scaled_section_citation_scores(subsections, raw_subsections)
+
+        raw_total = read_score_value(raw_payload if isinstance(raw_payload, dict) else 0.0)
+        raw_citation = max(0.0, safe_float((raw_payload or {}).get("citation_score"), 0.0)) if isinstance(raw_payload, dict) else 0.0
+        normalized_total = max(0.0, safe_float(normalized_payload.get("total_score"), 0.0))
+
+        if raw_total > 0.0 and raw_citation > 0.0:
+            citation_score = min(normalized_total, raw_citation * (normalized_total / raw_total))
+        elif raw_citation > 0.0:
+            citation_score = min(normalized_total, raw_citation)
+        elif child_total > 0.0:
+            citation_score = min(normalized_total, child_total)
+        else:
+            citation_score = 0.0
+
+        normalized_payload["citation_score"] = citation_score
+        total += citation_score
+
+    return total
+
+
+def scale_section_citation_scores(
+    section_tree: Dict[str, Any],
+    target_total: float,
+) -> float:
+    current_total = sum(
+        max(0.0, safe_float(node.get("citation_score"), 0.0))
+        for node in section_tree.values()
+    )
+    if current_total <= 0.0 or target_total < 0.0:
+        return current_total
+
+    scale = target_total / current_total
+
+    def recurse(tree: Dict[str, Any]) -> None:
+        for payload in tree.values():
+            scaled = max(0.0, safe_float(payload.get("citation_score"), 0.0)) * scale
+            payload["citation_score"] = min(
+                max(0.0, safe_float(payload.get("total_score"), 0.0)),
+                scaled,
+            )
+            subsections = payload.get("subsections", {})
+            if isinstance(subsections, dict) and subsections:
+                recurse(subsections)
+
+    recurse(section_tree)
+    return sum(max(0.0, safe_float(node.get("citation_score"), 0.0)) for node in section_tree.values())
+
+
+def total_section_citation_score(section_tree: Dict[str, Any]) -> float:
+    if not isinstance(section_tree, dict):
+        return 0.0
+    return sum(
+        max(0.0, safe_float(node.get("citation_score"), 0.0))
+        for node in section_tree.values()
+        if isinstance(node, dict)
+    )
+
+
+def collect_citation_inventory(
+    citation_tree: Any,
+    path_prefix: Optional[List[str]] = None,
+    inventory: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    if inventory is None:
+        inventory = {}
+    if not isinstance(citation_tree, dict):
+        return inventory
+
+    for key, value in citation_tree.items():
+        if isinstance(value, dict):
+            collect_citation_inventory(value, path_prefix=(path_prefix or []) + [str(key)], inventory=inventory)
+            continue
+        split_keys = split_citation_block(str(key))
+        if not split_keys:
+            split_keys = [str(key)]
+        mention_increment = len(value) if isinstance(value, list) else (1 if value is not None else 0)
+        section_path = " > ".join(path_prefix or [])
+        for split_key in split_keys:
+            citation_key = canonicalize_inventory_citation(split_key)
+            entry = inventory.setdefault(citation_key, {"mention_count": 0, "sections": []})
+            entry["mention_count"] += mention_increment
+            if section_path and section_path not in entry["sections"]:
+                entry["sections"].append(section_path)
+
+    return inventory
+
+
+def build_leaf_paragraph_inventory(
+    content_tree: Any,
+    citation_tree: Any,
+    paper_id: str,
+    path_prefix: Optional[List[str]] = None,
+    inventory: Optional[List[Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    if inventory is None:
+        inventory = []
+    if not isinstance(content_tree, dict):
+        return inventory
+
+    for section_name, section_content in content_tree.items():
+        section_path = list(path_prefix or []) + [str(section_name)]
+        section_citations = citation_tree.get(section_name, {}) if isinstance(citation_tree, dict) else {}
+
+        if isinstance(section_content, dict) and section_content:
+            build_leaf_paragraph_inventory(
+                section_content,
+                section_citations,
+                paper_id=paper_id,
+                path_prefix=section_path,
+                inventory=inventory,
+            )
+            continue
+
+        raw_text = section_content if isinstance(section_content, str) else flatten_content_to_text(section_content, 6000)
+        paragraphs = split_text_into_paragraphs(raw_text)
+        if not paragraphs:
+            normalized_text = normalize_for_match(raw_text)
+            if normalized_text:
+                paragraphs = [normalized_text]
+        if not paragraphs:
+            continue
+
+        paragraph_items = {f"Paragraph {idx + 1}": paragraph for idx, paragraph in enumerate(paragraphs)}
+        paragraph_norms = {name: normalize_for_match(text) for name, text in paragraph_items.items()}
+        paragraph_tokens = {
+            name: set(re.findall(r"[a-z0-9]+", paragraph_norms[name].lower()))
+            for name in paragraph_items
+        }
+        mention_buckets: Dict[str, List[Tuple[str, str, str]]] = {name: [] for name in paragraph_items}
+
+        section_citation_dict = section_citations if isinstance(section_citations, dict) else {}
+        for citation_block, context_value in section_citation_dict.items():
+            contexts = context_value if isinstance(context_value, list) else [context_value]
+            for context in contexts:
+                context_str = str(context)
+                context_norm = normalize_for_match(context_str)
+                target_paragraph = None
+
+                if context_norm:
+                    for paragraph_name, paragraph_norm in paragraph_norms.items():
+                        if context_norm in paragraph_norm:
+                            target_paragraph = paragraph_name
+                            break
+
+                if target_paragraph is None and context_norm:
+                    context_tokens = set(re.findall(r"[a-z0-9]+", context_norm.lower()))
+                    if context_tokens:
+                        best_name = None
+                        best_overlap = -1
+                        for paragraph_name, p_tokens in paragraph_tokens.items():
+                            overlap = len(context_tokens & p_tokens)
+                            if overlap > best_overlap:
+                                best_overlap = overlap
+                                best_name = paragraph_name
+                        if best_name is not None and best_overlap > 0:
+                            target_paragraph = best_name
+
+                if target_paragraph is None:
+                    target_paragraph = max(paragraph_items, key=lambda name: len(paragraph_items[name]))
+
+                for citation in split_citation_block(str(citation_block)):
+                    mention_buckets[target_paragraph].append(
+                        (canonicalize_inventory_citation(citation), str(citation_block), context_str)
+                    )
+
+        paragraph_payloads: List[Dict[str, Any]] = []
+        for idx, paragraph_name in enumerate(paragraph_items, start=1):
+            paragraph_text = paragraph_items[paragraph_name]
+            mentions = mention_buckets.get(paragraph_name, [])
+            if not mentions:
+                mentions = infer_paragraph_citation_mentions(paragraph_text)
+            citation_contexts: Dict[str, List[str]] = defaultdict(list)
+            for citation, _, context in mentions:
+                normalized_context = normalize_for_match(context)
+                if normalized_context:
+                    citation_contexts[citation].append(normalized_context)
+
+            citation_entries = []
+            for citation, contexts in citation_contexts.items():
+                unique_contexts = [ctx for ctx in dict.fromkeys(contexts) if ctx]
+                context_blob = " ".join(unique_contexts)[:700]
+                citation_entries.append(
+                    {
+                        "citation": citation,
+                        "mention_count": len(contexts),
+                        "context": context_blob if context_blob else paragraph_text[:700],
+                    }
+                )
+
+            paragraph_payloads.append(
+                {
+                    "paragraph_id": f"{paper_id}::{' > '.join(section_path)}::p{idx}",
+                    "section_path": list(section_path),
+                    "paragraph_index": idx,
+                    "text": paragraph_text,
+                    "has_citations": bool(mentions),
+                    "citation_focus_text": build_citation_focus_text(paragraph_text, mentions),
+                    "citations": citation_entries,
+                }
+            )
+
+        inventory.append(
+            {
+                "section_path": list(section_path),
+                "paragraphs": paragraph_payloads,
+            }
+        )
+
+    return inventory
+
+
+def section_schema_from_content(content: Any) -> Dict[str, Any]:
+    if not isinstance(content, dict):
+        return {}
+    schema: Dict[str, Any] = {}
+    for key, value in content.items():
+        schema[str(key)] = section_schema_from_content(value) if isinstance(value, dict) else {}
+    return schema
+
+
+def render_authoritative_hierarchy(
+    section_schema: Dict[str, Any],
+    paragraph_inventory: Sequence[Dict[str, Any]],
+) -> str:
+    tree: Dict[str, Any] = {"children": {}}
+
+    def ensure_section_nodes(parent: Dict[str, Any], schema: Dict[str, Any]) -> None:
+        for title, child_schema in schema.items():
+            node = parent.setdefault(str(title), {"children": {}})
+            if isinstance(child_schema, dict) and child_schema:
+                ensure_section_nodes(node["children"], child_schema)
+
+    ensure_section_nodes(tree["children"], section_schema if isinstance(section_schema, dict) else {})
+
+    path_to_node: Dict[Tuple[str, ...], Dict[str, Any]] = {}
+
+    def index_paths(children: Dict[str, Any], prefix: Optional[List[str]] = None) -> None:
+        for title, node in children.items():
+            current_path = tuple(list(prefix or []) + [str(title)])
+            path_to_node[current_path] = node
+            node_children = node.get("children", {})
+            if isinstance(node_children, dict) and node_children:
+                index_paths(node_children, list(current_path))
+
+    index_paths(tree["children"])
+
+    for leaf in paragraph_inventory:
+        section_path = tuple(str(part) for part in leaf.get("section_path", []))
+        parent_node = path_to_node.get(section_path)
+        if parent_node is None:
+            continue
+
+        parent_children = parent_node.setdefault("children", {})
+        for paragraph in leaf.get("paragraphs", []):
+            paragraph_index = max(1, int(safe_float(paragraph.get("paragraph_index"), 1)))
+            paragraph_title = f"Paragraph {paragraph_index}"
+            paragraph_node = parent_children.setdefault(paragraph_title, {"children": {}})
+            citation_children = paragraph_node.setdefault("children", {})
+            for citation_entry in paragraph.get("citations", []):
+                citation = str(citation_entry.get("citation", "")).strip()
+                if citation and citation not in citation_children:
+                    citation_children[citation] = {"children": {}}
+
+    lines = ["Paper"]
+
+    def emit(children: Dict[str, Any], depth: int) -> None:
+        indent = "  " * depth
+        for title, node in children.items():
+            lines.append(f"{indent}- {title}")
+            node_children = node.get("children", {})
+            if isinstance(node_children, dict) and node_children:
+                emit(node_children, depth + 1)
+
+    emit(tree["children"], depth=1)
+    return "\n".join(lines)
+
+
+def section_totals_by_path(section_tree: Dict[str, Any], path_prefix: Optional[List[str]] = None) -> Dict[Tuple[str, ...], float]:
+    totals: Dict[Tuple[str, ...], float] = {}
+    for section_name, payload in section_tree.items():
+        current_path = tuple(list(path_prefix or []) + [section_name])
+        totals[current_path] = max(0.0, safe_float(payload.get("total_score"), 0.0))
+        subsections = payload.get("subsections", {})
+        if isinstance(subsections, dict) and subsections:
+            totals.update(section_totals_by_path(subsections, list(current_path)))
+    return totals
+
+
+def annotate_section_citation_scores(
+    section_tree: Dict[str, Any],
+    paragraph_scores: Sequence[Dict[str, Any]],
+    path_prefix: Optional[List[str]] = None,
+) -> float:
+    total = 0.0
+    for section_name, payload in section_tree.items():
+        current_path = list(path_prefix or []) + [section_name]
+        subsections = payload.get("subsections", {})
+        if isinstance(subsections, dict) and subsections:
+            citation_total = annotate_section_citation_scores(subsections, paragraph_scores, current_path)
+        else:
+            citation_total = sum(
+                max(0.0, safe_float(item.get("citation_score"), 0.0))
+                for item in paragraph_scores
+                if list(item.get("section_path", [])) == current_path
+            )
+        payload["citation_score"] = citation_total
+        total += citation_total
+    return total
+
+
+def _paragraph_lookup_key(section_path: Sequence[str], paragraph_index: int) -> Tuple[Tuple[str, ...], int]:
+    return (tuple(str(part) for part in section_path), int(paragraph_index))
+
+
+def _extract_channel_value(raw_item: Dict[str, Any], field: str, aliases: Sequence[str]) -> float:
+    if field in raw_item:
+        return max(0.0, safe_float(raw_item.get(field), 0.0))
+    for alias in aliases:
+        if alias in raw_item:
+            return max(0.0, safe_float(raw_item.get(alias), 0.0))
+    return 0.0
+
+
+def normalize_openai_paragraph_scores(
+    paragraph_inventory: Sequence[Dict[str, Any]],
+    raw_paragraph_scores: Any,
+    normalized_section_scores: Dict[str, Any],
+    raw_paragraph_citation_scores: Any = None,
+) -> List[Dict[str, Any]]:
+    raw_items = raw_paragraph_scores if isinstance(raw_paragraph_scores, list) else []
+    raw_citation_items = raw_paragraph_citation_scores if isinstance(raw_paragraph_citation_scores, list) else []
+    by_id: Dict[str, Dict[str, Any]] = {}
+    by_key: Dict[Tuple[Tuple[str, ...], int], Dict[str, Any]] = {}
+    paragraphs_with_raw_citation_children: set[str] = set()
+    paragraph_keys_with_raw_citation_children: set[Tuple[Tuple[str, ...], int]] = set()
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        paragraph_id = str(item.get("paragraph_id", "")).strip()
+        if paragraph_id:
+            by_id[paragraph_id] = item
+        section_path = item.get("section_path")
+        paragraph_index = safe_float(item.get("paragraph_index"), -1)
+        if isinstance(section_path, list) and paragraph_index >= 0:
+            by_key[_paragraph_lookup_key(section_path, int(paragraph_index))] = item
+    for item in raw_citation_items:
+        if not isinstance(item, dict):
+            continue
+        paragraph_id = str(item.get("paragraph_id", "")).strip()
+        if paragraph_id:
+            paragraphs_with_raw_citation_children.add(paragraph_id)
+        section_path = item.get("section_path")
+        paragraph_index = safe_float(item.get("paragraph_index"), -1)
+        if isinstance(section_path, list) and paragraph_index >= 0:
+            paragraph_keys_with_raw_citation_children.add(_paragraph_lookup_key(section_path, int(paragraph_index)))
+
+    section_total_lookup = section_totals_by_path(normalized_section_scores)
+    normalized_paragraphs: List[Dict[str, Any]] = []
+
+    for leaf in paragraph_inventory:
+        section_path = list(leaf.get("section_path", []))
+        section_total = section_total_lookup.get(tuple(section_path), 0.0)
+        expected_paragraphs = leaf.get("paragraphs", [])
+
+        raw_totals: Dict[str, float] = {}
+        channel_ratios: Dict[str, Tuple[float, float]] = {}
+        for paragraph in expected_paragraphs:
+            paragraph_id = str(paragraph.get("paragraph_id", ""))
+            paragraph_index = int(paragraph.get("paragraph_index", 0))
+            raw_item = by_id.get(paragraph_id) or by_key.get(_paragraph_lookup_key(section_path, paragraph_index))
+            raw_technical = _extract_channel_value(raw_item or {}, "technical_score", ("technical",))
+            raw_citation = _extract_channel_value(raw_item or {}, "citation_score", ("citation",))
+            raw_total = raw_technical + raw_citation
+            if raw_total <= 0.0:
+                raw_total = float(max(1, token_count(str(paragraph.get("text", "")))))
+
+            has_citations = bool(paragraph.get("has_citations"))
+            has_explicit_citation_children = (
+                paragraph_id in paragraphs_with_raw_citation_children
+                or _paragraph_lookup_key(section_path, paragraph_index) in paragraph_keys_with_raw_citation_children
+            )
+            if not has_citations and not has_explicit_citation_children:
+                tech_ratio, cit_ratio = 1.0, 0.0
+            elif raw_technical + raw_citation > 0.0:
+                tech_ratio = raw_technical / (raw_technical + raw_citation)
+                cit_ratio = raw_citation / (raw_technical + raw_citation)
+            else:
+                mention_total = sum(int(entry.get("mention_count", 0)) for entry in paragraph.get("citations", []))
+                cit_ratio = min(0.40, max(0.10, 0.12 * max(1, mention_total)))
+                tech_ratio = 1.0 - cit_ratio
+
+            raw_totals[paragraph_id] = raw_total
+            channel_ratios[paragraph_id] = (tech_ratio, cit_ratio)
+
+        paragraph_totals = normalize_distribution(raw_totals, section_total) if raw_totals else {}
+        for paragraph in expected_paragraphs:
+            paragraph_id = str(paragraph.get("paragraph_id", ""))
+            paragraph_total = max(0.0, safe_float(paragraph_totals.get(paragraph_id), 0.0))
+            tech_ratio, cit_ratio = channel_ratios.get(paragraph_id, (1.0, 0.0))
+            technical_score = paragraph_total * tech_ratio
+            citation_score = paragraph_total * cit_ratio
+            normalized_paragraphs.append(
+                {
+                    "section_path": section_path,
+                    "paragraph_index": int(paragraph.get("paragraph_index", 0)),
+                    "paragraph": str(paragraph.get("text", "")),
+                    "paragraph_id": paragraph_id,
+                    "technical_score": technical_score,
+                    "citation_score": citation_score,
+                }
+            )
+
+    return normalized_paragraphs
+
+
+def normalize_openai_paragraph_citation_scores(
+    paragraph_inventory: Sequence[Dict[str, Any]],
+    paragraph_scores: Sequence[Dict[str, Any]],
+    raw_paragraph_citation_scores: Any,
+    global_citation_scores: Any = None,
+) -> List[Dict[str, Any]]:
+    raw_items = raw_paragraph_citation_scores if isinstance(raw_paragraph_citation_scores, list) else []
+    grouped_raw: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        paragraph_id = str(item.get("paragraph_id", "")).strip()
+        if paragraph_id:
+            grouped_raw[paragraph_id].append(item)
+            continue
+        section_path = item.get("section_path")
+        paragraph_index = safe_float(item.get("paragraph_index"), -1)
+        if isinstance(section_path, list) and paragraph_index >= 0:
+            grouped_raw[str(_paragraph_lookup_key(section_path, int(paragraph_index)))].append(item)
+
+    paragraph_score_lookup = {
+        str(item.get("paragraph_id", "")): item for item in paragraph_scores if str(item.get("paragraph_id", ""))
+    }
+    normalized_outputs: List[Dict[str, Any]] = []
+
+    for leaf in paragraph_inventory:
+        section_path = list(leaf.get("section_path", []))
+        for paragraph in leaf.get("paragraphs", []):
+            paragraph_id = str(paragraph.get("paragraph_id", ""))
+            paragraph_index = int(paragraph.get("paragraph_index", 0))
+            paragraph_score_payload = paragraph_score_lookup.get(paragraph_id)
+            if paragraph_score_payload is None:
+                continue
+            paragraph_citation_budget = max(0.0, safe_float(paragraph_score_payload.get("citation_score"), 0.0))
+            raw_group = grouped_raw.get(paragraph_id, []) + grouped_raw.get(str(_paragraph_lookup_key(section_path, paragraph_index)), [])
+            citation_entries = list(paragraph.get("citations", []))
+            if not citation_entries and raw_group:
+                inferred_counts: Dict[str, int] = defaultdict(int)
+                for item in raw_group:
+                    citation = item.get("citation") or item.get("id") or item.get("key")
+                    if citation is None:
+                        continue
+                    split_keys = split_citation_block(str(citation))
+                    if not split_keys:
+                        split_keys = [str(citation)]
+                    for split_key in split_keys:
+                        canonical = canonicalize_inventory_citation(split_key)
+                        if canonical:
+                            inferred_counts[canonical] += 1
+                citation_entries = [
+                    {
+                        "citation": citation,
+                        "mention_count": mention_count,
+                        "context": str(paragraph.get("text", ""))[:700],
+                    }
+                    for citation, mention_count in inferred_counts.items()
+                ]
+            if paragraph_citation_budget <= 0.0 or not citation_entries:
+                continue
+
+            candidates = {
+                canonicalize_inventory_citation(str(entry.get("citation", ""))): int(entry.get("mention_count", 0))
+                for entry in citation_entries
+            }
+            candidate_norm_to_id = {
+                normalized_key(citation): citation
+                for citation in candidates
+                if normalized_key(citation)
+            }
+            raw_weights: Dict[str, float] = {}
+            candidate_ids = set(candidates.keys())
+            for item in raw_group:
+                citation = item.get("citation") or item.get("id") or item.get("key")
+                if citation is None:
+                    continue
+                value = max(0.0, safe_float(item.get("citation_score", item.get("score", 0.0)), 0.0))
+                split_keys = split_citation_block(str(citation))
+                if len(split_keys) > 1:
+                    per_value = value / len(split_keys)
+                    for split_key in split_keys:
+                        canonical = canonicalize_inventory_citation(split_key)
+                        target_key = canonical if canonical in candidate_ids else candidate_norm_to_id.get(normalized_key(split_key))
+                        if target_key is not None:
+                            raw_weights[target_key] = raw_weights.get(target_key, 0.0) + per_value
+                    continue
+                canonical = canonicalize_inventory_citation(str(citation))
+                target_key = canonical if canonical in candidate_ids else candidate_norm_to_id.get(normalized_key(str(citation)))
+                if target_key is not None:
+                    raw_weights[target_key] = raw_weights.get(target_key, 0.0) + value
+
+            if sum(raw_weights.values()) <= 0.0:
+                global_items: List[Tuple[str, float]] = []
+                if isinstance(global_citation_scores, list):
+                    for item in global_citation_scores:
+                        if not isinstance(item, dict):
+                            continue
+                        citation = item.get("citation") or item.get("id") or item.get("key")
+                        if citation is None:
+                            continue
+                        global_items.append(
+                            (
+                                str(citation),
+                                max(0.0, safe_float(item.get("citation_score", item.get("score", 0.0)), 0.0)),
+                            )
+                        )
+                elif isinstance(global_citation_scores, dict):
+                    for citation, payload in global_citation_scores.items():
+                        global_items.append((str(citation), read_score_value(payload)))
+
+                for citation, value in global_items:
+                    split_keys = split_citation_block(str(citation))
+                    if len(split_keys) > 1:
+                        per_value = value / len(split_keys)
+                        for split_key in split_keys:
+                            canonical = canonicalize_inventory_citation(split_key)
+                            target_key = canonical if canonical in candidate_ids else candidate_norm_to_id.get(normalized_key(split_key))
+                            if target_key is not None:
+                                raw_weights[target_key] = raw_weights.get(target_key, 0.0) + per_value
+                        continue
+                    canonical = canonicalize_inventory_citation(str(citation))
+                    target_key = canonical if canonical in candidate_ids else candidate_norm_to_id.get(normalized_key(str(citation)))
+                    if target_key is not None:
+                        raw_weights[target_key] = raw_weights.get(target_key, 0.0) + value
+
+            if sum(raw_weights.values()) <= 0.0:
+                raw_weights = {citation: float(max(1, mention_count)) for citation, mention_count in candidates.items()}
+            if sum(raw_weights.values()) <= 0.0:
+                raw_weights = {citation: 1.0 for citation in candidates}
+
+            normalized = normalize_distribution(raw_weights, paragraph_citation_budget)
+            for citation in candidates:
+                normalized_outputs.append(
+                    {
+                        "section_path": section_path,
+                        "paragraph_index": paragraph_index,
+                        "paragraph": str(paragraph.get("text", "")),
+                        "paragraph_id": paragraph_id,
+                        "citation": citation,
+                        "citation_score": max(0.0, safe_float(normalized.get(citation), 0.0)),
+                    }
+                )
+
+    return normalized_outputs
+
+
+def aggregate_citation_scores_from_paragraphs(
+    paragraph_citation_scores: Sequence[Dict[str, Any]],
+) -> Dict[str, Dict[str, float]]:
+    aggregated: Dict[str, Dict[str, float]] = {}
+    for item in paragraph_citation_scores:
+        citation = canonicalize_inventory_citation(str(item.get("citation", "")))
+        if not citation:
+            continue
+        aggregated.setdefault(citation, {"citation_score": 0.0})
+        aggregated[citation]["citation_score"] += max(0.0, safe_float(item.get("citation_score"), 0.0))
+    return aggregated
+
+
+def normalize_citation_scores(
+    citation_inventory: Dict[str, Dict[str, Any]],
+    raw_citation_scores: Any,
+    total_score: float = 1.0,
+    fallback_to_mentions: bool = True,
+) -> Dict[str, Dict[str, float]]:
+    expected_ids = list(citation_inventory.keys())
+    if not expected_ids:
+        return {}
+
+    norm_to_id = {normalized_key(citation): citation for citation in expected_ids}
+    canonical_to_id = {canonicalize_inventory_citation(citation): citation for citation in expected_ids}
+    raw_weights: Dict[str, float] = {}
+
+    def add_weight(raw_key: Any, raw_value: Any) -> None:
+        value = read_score_value(raw_value)
+        split_keys = split_citation_block(str(raw_key))
+        if len(split_keys) > 1:
+            per_key_value = value / len(split_keys) if split_keys else 0.0
+            for split_key in split_keys:
+                canonical_key = canonicalize_inventory_citation(split_key)
+                target_key = (
+                    canonical_to_id.get(canonical_key)
+                    or (split_key if split_key in citation_inventory else None)
+                    or norm_to_id.get(normalized_key(split_key))
+                )
+                if target_key is None:
+                    continue
+                raw_weights[target_key] = raw_weights.get(target_key, 0.0) + per_key_value
+            return
+
+        canonical_key = canonicalize_inventory_citation(str(raw_key))
+        target_key = (
+            canonical_to_id.get(canonical_key)
+            or (str(raw_key) if str(raw_key) in citation_inventory else None)
+            or norm_to_id.get(normalized_key(str(raw_key)))
+        )
+        if target_key is None:
+            return
+        raw_weights[target_key] = raw_weights.get(target_key, 0.0) + value
+
+    if isinstance(raw_citation_scores, list):
+        for item in raw_citation_scores:
+            if not isinstance(item, dict):
+                continue
+            citation_key = item.get("citation") or item.get("id") or item.get("key")
+            if citation_key is None:
+                continue
+            add_weight(citation_key, item)
+    else:
+        raw_dict = raw_citation_scores if isinstance(raw_citation_scores, dict) else {}
+        for raw_key, raw_value in raw_dict.items():
+            add_weight(raw_key, raw_value)
+
+    if sum(raw_weights.values()) <= 0.0 and fallback_to_mentions:
+        raw_weights = {citation: float(citation_inventory[citation]["mention_count"]) for citation in expected_ids}
+    if sum(raw_weights.values()) <= 0.0 and fallback_to_mentions:
+        raw_weights = {citation: 1.0 for citation in expected_ids}
+    if sum(raw_weights.values()) <= 0.0:
+        return {citation: {"citation_score": 0.0} for citation in expected_ids}
+
+    normalized_scores = normalize_distribution(raw_weights, total_score)
+    return {
+        citation: {"citation_score": normalized_scores.get(citation, 0.0)}
+        for citation in expected_ids
+    }
 
 
 def build_section_records(
@@ -157,6 +1306,26 @@ def scan_paragraph_citations(paragraph_text: str, expected_citations: Sequence[s
             if key in expected_set:
                 mention_counter[key] += 1
     return mention_counter
+
+
+def infer_paragraph_citation_mentions(paragraph_text: str) -> List[Tuple[str, str, str]]:
+    mentions: List[Tuple[str, str, str]] = []
+    for match in re.finditer(CITATION_BLOCK_PATTERN, paragraph_text or ""):
+        citation_block = match.group(0)
+        prefix_text = (paragraph_text or "")[max(0, match.start() - 24) : match.start()]
+        suffix_text = (paragraph_text or "")[match.end() : min(len(paragraph_text or ""), match.end() + 24)]
+        citation_style = classify_citation_block(
+            citation_block,
+            prefix_text=prefix_text,
+            suffix_text=suffix_text,
+        )
+        if citation_style is None:
+            continue
+        for citation in split_citation_block(citation_block):
+            canonical = canonicalize_inventory_citation(citation)
+            if canonical:
+                mentions.append((canonical, citation_block, citation_block))
+    return mentions
 
 
 def format_section_excerpt(record: SectionRecord, limit: int = 900) -> str:
@@ -516,6 +1685,519 @@ class SinglePassLLMSectionBaseline(BaselineModel):
         return float(mentions) / max(1.0, float(record.token_count))
 
 
+class OpenAIFullPaperBaseline(BaselineModel):
+    """One-request full-paper annotator via an OpenAI-compatible chat endpoint."""
+
+    model_tag = "openai_full_paper"
+
+    SYSTEM_PROMPT = (
+        "You are a scientific contribution-scoring assistant.\n\n"
+        "Follow the contribution-scoring framework exactly as described by the user.\n\n"
+        "Perform careful hierarchical reasoning over the document structure.\n\n"
+        "Use citation identifiers exactly as they appear in the paper.\n\n"
+        "Return only the requested scores and format. Do not provide explanations, reasoning traces, commentary, or summaries unless explicitly requested."
+    )
+
+    def __init__(
+        self,
+        model: str = "gpt-4.1",
+        host: str = "https://api.openai.com/v1",
+        temperature: float = 0.0,
+        max_retries: int = 3,
+        debug_log_path: str = "",
+        pdf_path: str = "",
+        api_key: str = "",
+        api_key_env: str = "OPENAI_API_KEY",
+        api_endpoint: str = "",
+        request_timeout: int = 600,
+        max_output_tokens: int = 12000,
+        api_response_format: str = "none",
+    ) -> None:
+        super().__init__(
+            model=model,
+            host=host,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+        )
+        self.pdf_path = pdf_path
+        self.api_key = api_key
+        self.api_key_env = api_key_env
+        self.api_endpoint = api_endpoint
+        self.request_timeout = max(30, request_timeout)
+        self.max_output_tokens = max(512, max_output_tokens)
+        self.api_response_format = api_response_format
+
+    def raw_section_weights(
+        self,
+        records: Sequence[SectionRecord],
+        parent_path: Optional[List[str]] = None,
+    ) -> Dict[str, float]:
+        del records, parent_path
+        raise NotImplementedError("OpenAIFullPaperBaseline scores sections directly from the full-paper response.")
+
+    def leaf_citation_fraction(self, record: SectionRecord) -> float:
+        del record
+        raise NotImplementedError("OpenAIFullPaperBaseline does not allocate citation mass via paragraph fractions.")
+
+    def raw_citation_weight(self, record: SectionRecord, citation: str, mentions: int) -> float:
+        del record, citation, mentions
+        raise NotImplementedError("OpenAIFullPaperBaseline scores citations directly from the full-paper response.")
+
+    def _resolved_api_key(self) -> str:
+        if self.api_key:
+            return self.api_key
+        env_value = os.environ.get(self.api_key_env, "")
+        if env_value:
+            return env_value
+        raise ValueError(
+            f"Missing API key. Pass --api-key directly or set the {self.api_key_env} environment variable."
+        )
+
+    def _endpoint(self) -> str:
+        if self.api_endpoint:
+            return self.api_endpoint
+        return self.host.rstrip("/") + "/chat/completions"
+
+    def _call_full_paper_api(self, system_prompt: str, user_prompt: str) -> str:
+        return self._call_openai_compatible_api(system_prompt, user_prompt)
+
+    def _build_prompt(
+        self,
+        paper_id: str,
+        full_paper_text: str,
+        section_schema: Dict[str, Any],
+        content_dict: Dict[str, Any],
+        citation_inventory: Dict[str, Dict[str, Any]],
+        paragraph_inventory: List[Dict[str, Any]],
+    ) -> str:
+        del paper_id, content_dict, citation_inventory
+        hierarchy_text = render_authoritative_hierarchy(section_schema, paragraph_inventory)
+        return (
+            "Assign contribution scores to the provided hierarchy using the paper text.\n\n"
+            "The hierarchy provided below is authoritative.\n\n"
+            "Your task is to score the provided hierarchy, not reconstruct the paper structure.\n\n"
+            "Requirements\n\n"
+            "* Score every node in the hierarchy.\n"
+            "* Every node must appear exactly once in the output.\n"
+            "* Preserve the hierarchy exactly as provided.\n"
+            "* Do not add, remove, rename, merge, split, or reorder nodes.\n"
+            "* Do not invent sections, subsections, paragraphs, appendices, or aggregate nodes.\n"
+            "* Include nodes even if their contribution score or citation score is 0.\n"
+            "* Output nodes in the exact order they appear in the provided hierarchy.\n\n"
+            "Contribution Tree Structure\n\n"
+            "The Contribution Tree is a rooted hierarchical tree representing how scientific contribution flows through the paper.\n\n"
+            "The root node is the paper and has contribution score 1.0.\n\n"
+            "Document nodes correspond to the document structure:\n\n"
+            "* Sections\n"
+            "* Subsections\n"
+            "* Subsubsections\n"
+            "* Paragraphs\n\n"
+            "The provided hierarchy already specifies all document nodes.\n\n"
+            "Paragraphs are the lowest document-level nodes.\n\n"
+            "A paragraph without citations is a leaf node.\n\n"
+            "A paragraph containing citations is not a leaf node. Citations discussed within that paragraph are treated as child citation nodes.\n\n"
+            "Citation nodes represent individual cited references.\n\n"
+            "Only citation nodes may appear beneath paragraphs.\n\n"
+            "Hierarchical Scoring Procedure\n\n"
+            "Contribution scores must be assigned recursively through the hierarchy.\n\n"
+            "Do not assign scores directly from a section to descendant paragraphs if intermediate hierarchy levels exist.\n\n"
+            "For every parent node:\n\n"
+            "1. Consider only its immediate children.\n"
+            "2. Estimate the relative importance of those children.\n"
+            "3. Distribute the parent's score among those children.\n"
+            "4. Recursively repeat this process for each child.\n\n"
+            "Scoring must proceed level-by-level through the hierarchy:\n\n"
+            "Paper\n"
+            "→ Sections\n"
+            "→ Subsections\n"
+            "→ Subsubsections\n"
+            "→ Paragraphs\n\n"
+            "A node may only receive contribution from its immediate parent.\n\n"
+            "If a subsection exists beneath a section, score the subsection before scoring any paragraphs contained within that subsection.\n\n"
+            "If a subsubsection exists beneath a subsection, score the subsubsection before scoring any paragraphs contained within that subsubsection.\n\n"
+            "Do not skip hierarchy levels.\n\n"
+            "Do not distribute a parent's score directly to grandchildren or deeper descendants.\n\n"
+            "The contribution score of a paragraph must be derived from the contribution assigned to its immediate parent node.\n\n"
+            "Contribution Scoring\n\n"
+            "A node's score represents its contribution to the scientific value of the paper, not its length.\n\n"
+            "Contribution scores are assigned recursively top-down through the hierarchy, one parent-child level at a time.\n\n"
+            "The contribution score of a parent should approximately equal the sum of the contribution scores of its children. Exact normalization will be performed after output.\n\n"
+            "Sibling scores should reflect their relative scientific importance within the same parent.\n\n"
+            "Assign higher scores to content central to the paper's technical contribution, such as:\n\n"
+            "* methods\n"
+            "* algorithms\n"
+            "* theory\n"
+            "* experimental design\n"
+            "* technical analysis\n"
+            "* key findings\n\n"
+            "Assign lower scores to content primarily serving as:\n\n"
+            "* motivation\n"
+            "* background\n"
+            "* related work\n"
+            "* organizational text\n"
+            "* summaries\n\n"
+            "All scores must be global scores relative to the entire paper.\n\n"
+            "Citation Attribution\n\n"
+            "Citation contribution is computed bottom-up from citation-containing paragraphs.\n\n"
+            "For a paragraph without citations:\n\n"
+            "* Citation Score = 0.\n\n"
+            "For a paragraph containing citations:\n\n"
+            "* Estimate what fraction of the paragraph's contribution is derived from prior work.\n"
+            "* This becomes the paragraph Citation Score.\n"
+            "* The remaining contribution is considered original contribution.\n\n"
+            "Only paragraphs containing citations should be decomposed into original and citation-derived contribution.\n\n"
+            "After determining the paragraph Citation Score, identify citation contexts within the paragraph.\n\n"
+            "A citation context is text that discusses, compares against, extends, relies on, or describes one or more cited works.\n\n"
+            "Distribute the paragraph Citation Score across citation contexts according to their relative importance.\n\n"
+            "Within a citation context, divide contribution uniformly among all citations appearing in that citation context.\n\n"
+            "Examples:\n\n"
+            "[10]\n\n"
+            "→ all contribution goes to [10]\n\n"
+            "[1, 10]\n\n"
+            "→ contribution is divided equally between [1] and [10]\n\n"
+            "(Smith et al., 2020; Johnson et al., 2021)\n\n"
+            "→ contribution is divided equally between the cited references\n\n"
+            "The contribution score of a citation equals the sum of all contribution assigned to that citation across the paper.\n\n"
+            "If a citation appears multiple times, aggregate all assigned contribution into a single final citation score.\n\n"
+            "Use citation identifiers exactly as they appear in the paper.\n\n"
+            "Do not rewrite, expand, infer, or replace citation identifiers.\n\n"
+            "The sum of all citation contribution scores should approximately equal the root paper Citation Score.\n\n"
+            "Output Format\n\n"
+            "Output every node in the provided hierarchy.\n\n"
+            "For each document node output:\n\n"
+            "Node Title: Total Score | Citation Score\n\n"
+            "where:\n\n"
+            "* Total Score is the node's contribution score.\n"
+            "* Citation Score is the portion of the node's contribution attributed to cited prior work.\n"
+            "Nodes without citations must still be reported with Citation Score = 0.\n\n"
+            "After all document nodes output:\n\n"
+            "Citation Contributions\n\n"
+            "Citation Identifier: Score\n\n"
+            "Paper Text\n\n"
+            f"{full_paper_text}\n\n"
+            "Hierarchy To Score\n\n"
+            f"{hierarchy_text}"
+        )
+
+    def _call_openai_compatible_api(self, system_prompt: str, user_prompt: str) -> str:
+        payload: Dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": self.temperature,
+            "max_tokens": self.max_output_tokens,
+        }
+        if self.api_response_format == "json_object":
+            payload["response_format"] = {"type": "json_object"}
+
+        encoded_payload = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(
+            self._endpoint(),
+            data=encoded_payload,
+            headers={
+                "Authorization": f"Bearer {self._resolved_api_key()}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(request, timeout=self.request_timeout) as response:
+                response_data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:  # pragma: no cover - exercised only against live endpoints
+            body = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"OpenAI-compatible request failed with HTTP {exc.code}: {body[:2000]}"
+            ) from exc
+        except urllib.error.URLError as exc:  # pragma: no cover - exercised only against live endpoints
+            raise RuntimeError(f"OpenAI-compatible request failed: {exc}") from exc
+
+        try:
+            return str(response_data["choices"][0]["message"]["content"])
+        except (KeyError, IndexError, TypeError) as exc:
+            raise RuntimeError(f"Unexpected API response shape: {json.dumps(response_data)[:2000]}") from exc
+
+    def build_outputs(
+        self,
+        content_dict: Dict[str, Any],
+        citations_dict: Dict[str, Any],
+        paper_id: str,
+    ) -> Tuple[Dict[str, Any], Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
+        if not self.pdf_path:
+            raise ValueError("OpenAIFullPaperBaseline requires a PDF path.")
+
+        section_schema = section_schema_from_content(content_dict)
+        citation_inventory = collect_citation_inventory(citations_dict)
+        paragraph_inventory = build_leaf_paragraph_inventory(content_dict, citations_dict, paper_id=paper_id)
+        full_paper_text = read_pdf_text(self.pdf_path)
+        user_prompt = self._build_prompt(
+            paper_id=paper_id,
+            full_paper_text=full_paper_text,
+            section_schema=section_schema,
+            content_dict=content_dict,
+            citation_inventory=citation_inventory,
+            paragraph_inventory=paragraph_inventory,
+        )
+        append_debug_log(self.debug_log_path, f"[{self.model_tag}_prompt]\n{user_prompt}")
+
+        last_error = "no_valid_response"
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                response_text = self._call_full_paper_api(self.SYSTEM_PROMPT, user_prompt)
+            except Exception as api_exc:  # noqa: BLE001
+                last_error = f"api_error={api_exc}"
+                append_debug_log(
+                    self.debug_log_path,
+                    f"[{self.model_tag}_api_error] attempt={attempt}/{self.max_retries}\n{api_exc}",
+                )
+                continue
+            append_debug_log(
+                self.debug_log_path,
+                f"[{self.model_tag}_response] attempt={attempt}/{self.max_retries}\n{response_text}",
+            )
+            try:
+                payload = extract_json_payload(response_text)
+                section_scores = normalize_section_scores_to_schema(
+                    section_schema,
+                    payload.get("section_scores", {}),
+                    total_score=1.0,
+                )
+                enforce_section_score_conservation(section_scores, expected_total=1.0)
+                paragraph_scores = normalize_openai_paragraph_scores(
+                    paragraph_inventory=paragraph_inventory,
+                    raw_paragraph_scores=payload.get("paragraph_scores", []),
+                    normalized_section_scores=section_scores,
+                    raw_paragraph_citation_scores=payload.get("paragraph_citation_scores", []),
+                )
+                paragraph_citation_scores = normalize_openai_paragraph_citation_scores(
+                    paragraph_inventory=paragraph_inventory,
+                    paragraph_scores=paragraph_scores,
+                    raw_paragraph_citation_scores=payload.get("paragraph_citation_scores", []),
+                )
+                citation_scores = aggregate_citation_scores_from_paragraphs(paragraph_citation_scores)
+                annotate_section_citation_scores(section_scores, paragraph_scores)
+                return citation_scores, section_scores, paragraph_scores, paragraph_citation_scores
+            except Exception as json_exc:  # noqa: BLE001
+                try:
+                    flat_node_scores, raw_citation_scores, root_citation_score = parse_contribution_tree_text_response(
+                        response_text
+                    )
+                    raw_section_scores = build_raw_section_tree_from_flat_node_scores(section_schema, flat_node_scores)
+                    section_scores = normalize_section_scores_to_schema(
+                        section_schema,
+                        raw_section_scores,
+                        total_score=1.0,
+                        fill_missing_uniform=False,
+                    )
+                    enforce_section_score_conservation(section_scores, expected_total=1.0)
+                    apply_scaled_section_citation_scores(section_scores, raw_section_scores)
+
+                    # Reconstruct the paper citation total bottom-up from child nodes instead of
+                    # trusting the model's root Paper citation line, which can be inconsistent.
+                    target_citation_total = total_section_citation_score(section_scores)
+                    if target_citation_total <= 0.0:
+                        target_citation_total = sum(
+                            max(0.0, safe_float(item.get("citation_score"), 0.0))
+                            for item in raw_citation_scores.values()
+                        )
+
+                    raw_paragraph_scores, raw_paragraph_citation_scores = extract_text_fallback_paragraph_payloads(
+                        response_text,
+                        section_schema=section_schema,
+                        paragraph_inventory=paragraph_inventory,
+                    )
+                    if raw_paragraph_scores:
+                        paragraph_scores = normalize_openai_paragraph_scores(
+                            paragraph_inventory=paragraph_inventory,
+                            raw_paragraph_scores=raw_paragraph_scores,
+                            normalized_section_scores=section_scores,
+                            raw_paragraph_citation_scores=raw_paragraph_citation_scores,
+                        )
+                        paragraph_citation_scores = normalize_openai_paragraph_citation_scores(
+                            paragraph_inventory=paragraph_inventory,
+                            paragraph_scores=paragraph_scores,
+                            raw_paragraph_citation_scores=raw_paragraph_citation_scores,
+                            global_citation_scores=raw_citation_scores,
+                        )
+                        citation_scores = aggregate_citation_scores_from_paragraphs(paragraph_citation_scores)
+                        annotate_section_citation_scores(section_scores, paragraph_scores)
+                        return citation_scores, section_scores, paragraph_scores, paragraph_citation_scores
+
+                    citation_scores = normalize_citation_scores(
+                        citation_inventory,
+                        raw_citation_scores,
+                        total_score=target_citation_total,
+                        fallback_to_mentions=False,
+                    )
+                    return citation_scores, section_scores, [], []
+                except Exception as text_exc:  # noqa: BLE001
+                    last_error = f"json_error={json_exc}; text_error={text_exc}"
+
+        raise RuntimeError(f"Failed to parse full-paper response after {self.max_retries} attempts: {last_error}")
+
+
+class AnthropicFullPaperBaseline(OpenAIFullPaperBaseline):
+    """One-request full-paper annotator via Anthropic's Messages API on Bedrock."""
+
+    model_tag = "anthropic_full_paper"
+    ANTHROPIC_VERSION = "2023-06-01"
+    MESSAGES_API_MODEL_IDS = {
+        "anthropic.claude-fable-5",
+        "anthropic.claude-opus-4-8",
+        "anthropic.claude-opus-4-7",
+        "anthropic.claude-haiku-4-5",
+        "anthropic.claude-mythos-preview",
+    }
+
+    def __init__(
+        self,
+        model: str = "global.anthropic.claude-sonnet-4-6",
+        host: str = "https://bedrock-mantle.us-east-2.api.aws",
+        temperature: float = 0.0,
+        max_retries: int = 3,
+        debug_log_path: str = "",
+        pdf_path: str = "",
+        api_key: str = "",
+        api_key_env: str = "AWS_BEARER_TOKEN_BEDROCK",
+        api_endpoint: str = "",
+        request_timeout: int = 600,
+        max_output_tokens: int = 12000,
+        api_response_format: str = "none",
+    ) -> None:
+        super().__init__(
+            model=model,
+            host=host,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+            pdf_path=pdf_path,
+            api_key=api_key,
+            api_key_env=api_key_env,
+            api_endpoint=api_endpoint,
+            request_timeout=request_timeout,
+            max_output_tokens=max_output_tokens,
+            api_response_format=api_response_format,
+        )
+
+    def _endpoint(self) -> str:
+        if self.api_endpoint:
+            return self.api_endpoint
+        return self.host.rstrip("/") + "/anthropic/v1/messages"
+
+    def _resolved_aws_region(self) -> str:
+        for env_name in ("AWS_REGION", "AWS_DEFAULT_REGION"):
+            env_value = os.environ.get(env_name, "").strip()
+            if env_value:
+                return env_value
+
+        for candidate in (self.api_endpoint, self.host):
+            if not candidate:
+                continue
+            match = re.search(r"bedrock(?:-mantle)?\.([a-z0-9-]+)\.api\.aws", candidate)
+            if match:
+                return match.group(1)
+
+        return "us-east-2"
+
+    def _uses_messages_api_transport(self) -> bool:
+        return self.model in self.MESSAGES_API_MODEL_IDS
+
+    def _call_messages_api_transport(self, system_prompt: str, user_prompt: str) -> str:
+        payload: Dict[str, Any] = {
+            "model": self.model,
+            "system": system_prompt,
+            "messages": [
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": self.temperature,
+            "max_tokens": self.max_output_tokens,
+        }
+
+        encoded_payload = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(
+            self._endpoint(),
+            data=encoded_payload,
+            headers={
+                "x-api-key": self._resolved_api_key(),
+                "anthropic-version": self.ANTHROPIC_VERSION,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(request, timeout=self.request_timeout) as response:
+                response_data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:  # pragma: no cover - exercised only against live endpoints
+            body = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"Anthropic Messages request failed with HTTP {exc.code}: {body[:2000]}"
+            ) from exc
+        except urllib.error.URLError as exc:  # pragma: no cover - exercised only against live endpoints
+            raise RuntimeError(f"Anthropic Messages request failed: {exc}") from exc
+
+        try:
+            content = response_data["content"]
+            if not isinstance(content, list):
+                raise TypeError("content is not a list")
+            text_blocks = [
+                str(block.get("text", ""))
+                for block in content
+                if isinstance(block, dict) and block.get("type") == "text"
+            ]
+            joined = "\n".join(block for block in text_blocks if block.strip()).strip()
+            if not joined:
+                raise ValueError("response did not contain any text blocks")
+            return joined
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise RuntimeError(f"Unexpected Anthropic response shape: {json.dumps(response_data)[:2000]}") from exc
+
+    def _call_legacy_bedrock_transport(self, system_prompt: str, user_prompt: str) -> str:
+        try:
+            from anthropic import AnthropicBedrock
+        except ImportError as exc:  # pragma: no cover - depends on local optional install
+            raise RuntimeError(
+                "Anthropic Bedrock support requires the 'anthropic' package. "
+                "Install it with 'python3 -m pip install anthropic'."
+            ) from exc
+
+        try:
+            client = AnthropicBedrock(
+                api_key=self._resolved_api_key(),
+                aws_region=self._resolved_aws_region(),
+                timeout=self.request_timeout,
+                max_retries=max(1, self.max_retries),
+            )
+            response = client.messages.create(
+                model=self.model,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+                temperature=self.temperature,
+                max_tokens=self.max_output_tokens,
+            )
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(f"Anthropic Bedrock legacy request failed: {exc}") from exc
+
+        text_blocks = []
+        for block in getattr(response, "content", []):
+            if getattr(block, "type", "") == "text":
+                text = getattr(block, "text", "")
+                if text and str(text).strip():
+                    text_blocks.append(str(text))
+        joined = "\n".join(text_blocks).strip()
+        if not joined:
+            raise RuntimeError(f"Unexpected Anthropic Bedrock response shape: {response}")
+        return joined
+
+    def _call_full_paper_api(self, system_prompt: str, user_prompt: str) -> str:
+        if self._uses_messages_api_transport():
+            return self._call_messages_api_transport(system_prompt, user_prompt)
+        return self._call_legacy_bedrock_transport(system_prompt, user_prompt)
+
+
 def build_baseline_model(
     baseline_name: str,
     model: str = "llama3.2",
@@ -523,39 +2205,88 @@ def build_baseline_model(
     temperature: float = 0.0,
     max_retries: int = 3,
     debug_log_path: str = "",
+    pdf_path: str = "",
+    api_key: str = "",
+    api_key_env: str = "OPENAI_API_KEY",
+    api_endpoint: str = "",
+    request_timeout: int = 600,
+    max_output_tokens: int = 12000,
+    api_response_format: str = "none",
 ) -> BaselineModel:
     baseline_name = baseline_name.strip().lower()
+    resolved_model = model
+    resolved_host = host
+    resolved_api_key_env = api_key_env
+    if baseline_name == "openai_full_paper" and model == "llama3.2":
+        resolved_model = "gpt-4.1"
+    if baseline_name == "anthropic_full_paper" and api_key_env == "OPENAI_API_KEY":
+        resolved_api_key_env = "AWS_BEARER_TOKEN_BEDROCK"
+    if baseline_name == "anthropic_full_paper":
+        if model == "llama3.2":
+            resolved_model = "global.anthropic.claude-sonnet-4-6"
+        if host == "http://localhost:11434":
+            resolved_host = "https://bedrock-mantle.us-east-2.api.aws"
     if baseline_name == "citation_frequency":
         return UniformBaseline(
-            model=model,
-            host=host,
+            model=resolved_model,
+            host=resolved_host,
             temperature=temperature,
             max_retries=max_retries,
             debug_log_path=debug_log_path,
         )
     if baseline_name == "length_weighted_frequency":
         return LengthHeuristicBaseline(
-            model=model,
-            host=host,
+            model=resolved_model,
+            host=resolved_host,
             temperature=temperature,
             max_retries=max_retries,
             debug_log_path=debug_log_path,
         )
     if baseline_name == "technical_section_prior":
         return TechnicalSectionPriorBaseline(
-            model=model,
-            host=host,
+            model=resolved_model,
+            host=resolved_host,
             temperature=temperature,
             max_retries=max_retries,
             debug_log_path=debug_log_path,
         )
     if baseline_name == "single_pass_llm":
         return SinglePassLLMSectionBaseline(
-            model=model,
-            host=host,
+            model=resolved_model,
+            host=resolved_host,
             temperature=temperature,
             max_retries=max_retries,
             debug_log_path=debug_log_path,
+        )
+    if baseline_name == "openai_full_paper":
+        return OpenAIFullPaperBaseline(
+            model=resolved_model,
+            host=resolved_host,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+            pdf_path=pdf_path,
+            api_key=api_key,
+            api_key_env=resolved_api_key_env,
+            api_endpoint=api_endpoint,
+            request_timeout=request_timeout,
+            max_output_tokens=max_output_tokens,
+            api_response_format=api_response_format,
+        )
+    if baseline_name == "anthropic_full_paper":
+        return AnthropicFullPaperBaseline(
+            model=resolved_model,
+            host=resolved_host,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+            pdf_path=pdf_path,
+            api_key=api_key,
+            api_key_env=resolved_api_key_env,
+            api_endpoint=api_endpoint,
+            request_timeout=request_timeout,
+            max_output_tokens=max_output_tokens,
+            api_response_format=api_response_format,
         )
     raise ValueError(f"Unknown baseline '{baseline_name}'.")
 
@@ -572,6 +2303,13 @@ def run_baseline_from_args(args: argparse.Namespace) -> Tuple[str, str, str, str
         temperature=args.temperature,
         max_retries=args.max_retries,
         debug_log_path=args.debug_log,
+        pdf_path=args.pdf,
+        api_key=args.api_key,
+        api_key_env=args.api_key_env,
+        api_endpoint=args.api_endpoint,
+        request_timeout=args.request_timeout,
+        max_output_tokens=args.max_output_tokens,
+        api_response_format=args.api_response_format,
     ).model_tag
 
     debug_log_path = args.debug_log
@@ -586,6 +2324,13 @@ def run_baseline_from_args(args: argparse.Namespace) -> Tuple[str, str, str, str
         temperature=args.temperature,
         max_retries=args.max_retries,
         debug_log_path=debug_log_path,
+        pdf_path=args.pdf,
+        api_key=args.api_key,
+        api_key_env=args.api_key_env,
+        api_endpoint=args.api_endpoint,
+        request_timeout=args.request_timeout,
+        max_output_tokens=args.max_output_tokens,
+        api_response_format=args.api_response_format,
     )
     citation_scores, section_scores, paragraph_scores, paragraph_citation_scores = baseline.build_outputs(
         content_dict=content,

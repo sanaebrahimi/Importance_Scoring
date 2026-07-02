@@ -1,0 +1,2411 @@
+[openai_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+The hierarchy provided below is authoritative.
+
+Your task is to score the provided hierarchy, not reconstruct the paper structure.
+
+Requirements
+
+* Score every node in the hierarchy.
+* Every node must appear exactly once in the output.
+* Preserve the hierarchy exactly as provided.
+* Do not add, remove, rename, merge, split, or reorder nodes.
+* Do not invent sections, subsections, paragraphs, appendices, or aggregate nodes.
+* Include nodes even if their contribution score or citation score is 0.
+* Output nodes in the exact order they appear in the provided hierarchy.
+
+Contribution Tree Structure
+
+The Contribution Tree is a rooted hierarchical tree representing how scientific contribution flows through the paper.
+
+The root node is the paper and has contribution score 1.0.
+
+Document nodes correspond to the document structure:
+
+* Sections
+* Subsections
+* Subsubsections
+* Paragraphs
+
+The provided hierarchy already specifies all document nodes.
+
+Paragraphs are the lowest document-level nodes.
+
+A paragraph without citations is a leaf node.
+
+A paragraph containing citations is not a leaf node. Citations discussed within that paragraph are treated as child citation nodes.
+
+Citation nodes represent individual cited references.
+
+Only citation nodes may appear beneath paragraphs.
+
+Hierarchical Scoring Procedure
+
+Contribution scores must be assigned recursively through the hierarchy.
+
+Do not assign scores directly from a section to descendant paragraphs if intermediate hierarchy levels exist.
+
+For every parent node:
+
+1. Consider only its immediate children.
+2. Estimate the relative importance of those children.
+3. Distribute the parent's score among those children.
+4. Recursively repeat this process for each child.
+
+Scoring must proceed level-by-level through the hierarchy:
+
+Paper
+→ Sections
+→ Subsections
+→ Subsubsections
+→ Paragraphs
+
+A node may only receive contribution from its immediate parent.
+
+If a subsection exists beneath a section, score the subsection before scoring any paragraphs contained within that subsection.
+
+If a subsubsection exists beneath a subsection, score the subsubsection before scoring any paragraphs contained within that subsubsection.
+
+Do not skip hierarchy levels.
+
+Do not distribute a parent's score directly to grandchildren or deeper descendants.
+
+The contribution score of a paragraph must be derived from the contribution assigned to its immediate parent node.
+
+Contribution Scoring
+
+A node's score represents its contribution to the scientific value of the paper, not its length.
+
+Contribution scores are assigned recursively top-down through the hierarchy, one parent-child level at a time.
+
+The contribution score of a parent should approximately equal the sum of the contribution scores of its children. Exact normalization will be performed after output.
+
+Sibling scores should reflect their relative scientific importance within the same parent.
+
+Assign higher scores to content central to the paper's technical contribution, such as:
+
+* methods
+* algorithms
+* theory
+* experimental design
+* technical analysis
+* key findings
+
+Assign lower scores to content primarily serving as:
+
+* motivation
+* background
+* related work
+* organizational text
+* summaries
+
+All scores must be global scores relative to the entire paper.
+
+Citation Attribution
+
+Citation contribution is computed bottom-up from citation-containing paragraphs.
+
+For a paragraph without citations:
+
+* Citation Score = 0.
+
+For a paragraph containing citations:
+
+* Estimate what fraction of the paragraph's contribution is derived from prior work.
+* This becomes the paragraph Citation Score.
+* The remaining contribution is considered original contribution.
+
+Only paragraphs containing citations should be decomposed into original and citation-derived contribution.
+
+After determining the paragraph Citation Score, identify citation contexts within the paragraph.
+
+A citation context is text that discusses, compares against, extends, relies on, or describes one or more cited works.
+
+Distribute the paragraph Citation Score across citation contexts according to their relative importance.
+
+Within a citation context, divide contribution uniformly among all citations appearing in that citation context.
+
+Examples:
+
+[10]
+
+→ all contribution goes to [10]
+
+[1, 10]
+
+→ contribution is divided equally between [1] and [10]
+
+(Smith et al., 2020; Johnson et al., 2021)
+
+→ contribution is divided equally between the cited references
+
+The contribution score of a citation equals the sum of all contribution assigned to that citation across the paper.
+
+If a citation appears multiple times, aggregate all assigned contribution into a single final citation score.
+
+Use citation identifiers exactly as they appear in the paper.
+
+Do not rewrite, expand, infer, or replace citation identifiers.
+
+The sum of all citation contribution scores should approximately equal the root paper Citation Score.
+
+Output Format
+
+Output every node in the provided hierarchy.
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+where:
+
+* Total Score is the node's contribution score.
+* Citation Score is the portion of the node's contribution attributed to cited prior work.
+Nodes without citations must still be reported with Citation Score = 0.
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in
+Approximate Nearest Neighbor Search
+Mohsen Dehghankar
+University of Illinois Chicago
+Chicago, IL, USA
+mdehgh2@uic.eduAbolfazl Asudeh
+University of Illinois Chicago
+Chicago, IL, USA
+asudeh@uic.edu
+Abstract
+Hierarchical graph-based algorithms such as HNSW achieve state-
+of-the-art performance for Approximate Nearest Neighbor (ANN)
+search in practice, yet they often lack theoretical guarantees on
+query time or recall due to their reliance on randomized heuristic
+constructions. Conversely, existing theoretically grounded struc-
+tures are typically difficult to implement and fail to scale in real-
+world scenarios.
+In this paper, we introduce Hierarchical 𝜀-Net Navigation (HENN),
+a property of hierarchical graphs grounded in 𝜀-net theory from
+computational geometry. HENN enables formal query-time guar-
+antees for ANN search on graphs that satisfy this property and is
+agnostic to the choice of proximity graph at each layer, treating it as
+a black box. We further show that HNSW satisfies the HENN prop-
+erty with high probability, yielding the first formal time guarantees
+for HNSW.
+Constructing HENN graphs requires finding 𝜀-nets, whose ex-
+isting construction methods are either probabilistic or impractical
+in high dimensions. To address this, we propose a budget-aware
+algorithm that constructs 𝜀-nets under a user-specified preprocess-
+ing time budget, enabling efficient HENN construction and index
+compression.
+Empirical evaluations validate our theoretical guarantees for
+both HENN and HNSW. Furthermore, our experiments demon-
+strate the effectiveness of the proposed budget-aware algorithm
+for constructing HENN and, more generally, 𝜀-nets. This flexibility
+allows practitioners to select a method that best fits their specific
+use case.
+1 Introduction
+The Approximate Nearest Neighbor (ANN) search problem involves
+retrieving the 𝑘closest points to a given query point 𝑞in a𝑑-
+dimensional metric space. This problem is foundational in database
+systems, machine learning, information retrieval, and computer
+vision, and has seen growing importance in large language models
+(LLMs) [ 34], particularly in retrieval-augmented generation (RAG)
+pipelines, where relevant documents must be retrieved efficiently
+from large corpora [ 18,39]. More generally, any vector database
+system implements some form of ANN search to enable efficient
+vector similarity queries [ 4,24,55]. For a comprehensive overview
+of additional applications, we refer the reader to the following
+surveys [40, 42, 63].
+Several classes of algorithms have been developed for ANN.
+Hash-based approaches (e.g., Locality-Sensitive Hashing [ 11,26,
+Conference’17, Washington, DC, USA
+2026. ACM ISBN 978-x-xxxx-xxxx-x/YYYY/MM
+https://doi.org/10.1145/nnnnnnn.nnnnnnn29]) offer theoretical guarantees on retrieval quality but often strug-
+gle in practical settings [ 57]. Quantization-based methods cluster
+data and search among representative centroids, yielding speedups
+at the cost of approximation error [ 21,32,54]. Graph-based ap-
+proaches [ 31,46,63], particularly hierarchical variants [ 43,46,49],
+have gained attention due to their strong empirical performance
+and scalability. These methods build graphs over the dataset and
+perform greedy traversal to locate approximate neighbors quickly.1
+Among them, the Hierarchical Navigable Small World (HNSW) [ 46]
+graph is widely used in practice [ 8,16,17,48,56,62]. HNSW or-
+ganizes data into multiple layers by assigning each point to a ran-
+domly chosen level and constructs navigable small-world graphs
+at each layer. While HNSW is widely used in many existing tools
+and is easy to implement, it lacks formal guarantees on query time,
+while the upper-bound on its worst-case complexity is linear to
+dataset size inadversarial settings [ 30,58]. In contrast, earlier theo-
+retically grounded hierarchical structures like Cover Trees [ 6,36],
+provide logarithmic query time guarantees by constructing hierar-
+chies using𝑟-nets.2However, these structures are relatively difficult
+to implement and often do not scale well to real datasets, limiting
+their practical adoption.
+In this work, we introduce a general class of hierarchical graphs
+for ANN search, grounded in 𝜀-net theory from computational ge-
+ometry [ 28]. In these graphs, each layer forms an 𝜀-net of the preced-
+ing one, while the choice of proximity graph at each layer remains
+agnostic, allowing the use of any suitable graph. The framework is
+general enough to include a wide range of graph-based ANN algo-
+rithms introduced in the recent literature [ 19,31,32,47,55,59,63];
+therefore, we treat such graphs abstractly and focus on their prop-
+erties. Our framework establishes time guarantees for such indices
+as a function of the properties of the underlying proximity graph.
+Notably, we show that HNSW is a special case of HENN with
+high probability, corresponding to the choice of NSW as the base
+proximity graph. As a crucial building block, we further propose
+budget-aware practical algorithms for computing 𝜀-nets on large
+datasets, enabling the scalable construction of these hierarchical
+graphs and offering a mechanism for compressing these indices by
+trading additional preprocessing time for improved space efficiency.
+Our contributions can be summarized as follows:
+•We introduce a general property for hierarchical indices in ANN
+search, called Hierarchical 𝜀-Net Navigation (HENN) , where each
+layer is an𝜀-net of the preceding one. This framework is agnostic
+to the choice of proximity graph and can be combined with
+1Related work is further discussed in Appendix 9.
+2Here,𝑟-nets differ from 𝜀-nets as defined in computational geometry. By 𝑟-net, we
+refer to a subset of points that ensures every point in the space is within distance 𝑟of
+some net point. In contrast, 𝜀-nets refer to subsets that intersect all "heavy" ranges,
+containing more than an 𝜀fraction of the total volume or weight.
+1
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+Figure 1: A simple representation of the Hierarchical 𝜀-net Navigation Graph (right) with an example of answering a query using this structure
+(left). Layers are numbered bottom-up, with layer 0being the point set 𝑋and the last layer (layer 𝐿) called the root.
+common graphs such as kNN, NSW [ 46], NSG [ 19], RNG [ 59], or
+other existing ANN graphs [63].
+•We formalize a property of proximity graphs, called the recall
+bound , which quantifies how well a graph performs when used
+within a hierarchical index.
+•We establish probabilistic query-time bounds for HENN graphs,
+which are logarithmic in the dataset size and parameterized by
+the properties of the underlying proximity graph.
+•We show that HNSW is a HENN with high probability, when
+NSW is used as the proximity graph, thereby yielding formal
+probabilistic time guarantees for HNSW .
+•A key component in building HENN graphs is computing 𝜀-nets.
+Existing randomized algorithms [ 28] provide𝜀-nets only with a
+fixed success probability, while deterministic methods based on
+discrepancy theory [ 9] are impractical in high dimensions. We
+design a budget-aware algorithm that allows the user to specify
+a preprocessing budget. More preprocessing time increases the
+probability of successfully constructing an 𝜀-net.
+•Our budget-aware algorithm leads to the construction of more
+compact indexes , effectively yielding a compressed version of
+HNSW while preserving recall.
+Our empirical evaluation confirms the theoretical time bounds
+forHENN andHNSW as a special case of HENN, as well as for other
+HENN-based structures. We show that these bounds hold with high
+probability (greater than 0.99) in practical scenarios, and further
+demonstrate the flexibility of HENN by integrating it with different
+proximity graphs and comparing their performance. In addition, we
+illustrate how our budget-aware algorithm enables the construction
+of compressed indices: by allocating more preprocessing time, one
+can reduce index size while maintaining recall, highlighting a clear
+tradeoff between preprocessing cost and query performance. Finally,
+we implement HENN as a new index in the popular Faiss [ 17]
+library and compare it against state-of-the-art baselines, showing
+its equivalence to HNSW and empirically validating our theoretical
+claims.
+Paper Organization . We begin by providing formal definitions
+and necessary background on 𝜀-net theory and proximity graphs
+(Section 2). In Section 3, we introduce the HENN structure. The sub-
+sequent sections establish theoretical bounds (Section 4) and show
+that HNSW can be viewed as a HENN graph (Section 5). We thendiscuss practical aspects of constructing HENN graphs, including
+algorithms for computing 𝜀-nets in Section 6, followed by our ex-
+perimental evaluation in Section 7. The discussions and limitations
+are in Section 8. Finally, the related work is discussed in Section 9.
+The appendix contains background on different proximity graphs,
+results for parallel and dynamic settings, and further experimental
+details.
+2 Background and Definitions
+In this section, we introduce the concepts and notations that will
+be used throughout the paper.
+Data Model . Let𝑋={𝑥𝑖}𝑛
+𝑖=1denote a set of 𝑛points, where each
+𝑥𝑖is a𝑑-dimensional vector in R𝑑. We define a distance function
+d:R𝑑×R𝑑→Rover this space, resulting in the metric space
+(𝑋,d). For example, the ℓ𝑝-norm between two points 𝑥𝑖and𝑥𝑗is
+defined as
+d(𝑥𝑖,𝑥𝑗)=∥𝑥𝑖−𝑥𝑗∥𝑝=(︄𝑑∑︂
+𝑘=1|︁|︁𝑥𝑖[𝑘]−𝑥𝑗[𝑘]|︁|︁𝑝)︄1
+𝑝
+.
+Unless otherwise stated, we use the ℓ2-norm in our examples and
+analysis. However, the results extend naturally to any metric space,
+yielding a bounded VC-dimension for the range families introduced
+later.3
+VC-dimension . LetRbe a family of ranges defined over 𝑋, such
+as balls, axis-aligned rectangles, or half-spaces in R𝑑. The VC-
+dimension of(𝑋,R), denoted𝛿, is the largest integer 𝑚for which
+there exists a subset 𝑆⊆𝑋of size𝑚that is shattered byR[25,60].
+𝜀-net. Let(𝑋,R)be a range space with bounded VC-dimension
+𝛿. A subsetN⊆𝑋is called an 𝜀-net of(𝑋,R)if, for every range
+𝑅∈R with|𝑅∩𝑋|≥𝜀|𝑋|, we getN∩𝑅≠∅. In other words,
+Nintersects every “heavy” range; any range containing at least
+an𝜀-fraction of the points in 𝑋. We will often refer to an 𝜀-net of
+(𝑋,R)simply as an 𝜀-net of𝑋when the range family is clear from
+the context.
+We make use of the following well-known result [25, 28]:
+3Throughout our guarantees and proofs, we follow the convention in computational
+geometry [ 1] of removing the dimension 𝑑as a multiplicative factor in big-oh notations.
+However, we explicitly retain 𝑑when it appears in the exponent.
+2
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+Theorem 1. Let(𝑋,R)be a range space with VC-dimension 𝛿. If
+a random sample of size 𝑚𝜀is drawn with replacement, where
+𝑚𝜀≥max{︃4
+𝜀log4
+1−𝜑,8𝛿
+𝜀log16
+𝜀}︃
+,
+then the sample forms an 𝜀-net with probability at least 𝜑.
+Ignoring constant factors, Theorem 1 implies the existence of
+an𝜀-net of size 𝑂(︂
+𝛿
+𝜀log1
+𝜀)︂
+for range spaces with VC-dimension
+𝛿.4The theorem also provides a randomized sampling method for
+constructing 𝜀-nets. Alternatively, 𝜀-nets with the same size can be
+constructed deterministically using techniques from discrepancy
+theory [ 9]. More details on 𝜀-net construction is provided in Sec-
+tion 6.
+Problem Setting . Our objective is to preprocess 𝑋and construct a
+data structure that enables answering the nearest-neighbor queries.
+Given a query point 𝑞∈R𝑑and a point set 𝑋, a𝑘-nearest neighbor
+(𝑘-NN) query aims to find the 𝑘closest points 𝑥𝑖∈𝑋to𝑞; i.e.,𝑂𝑞=
+𝑘-min𝑥𝑖∈𝑋d(𝑥𝑖,𝑞). The Approximate Nearest Neighbor (ANN) is
+a relaxed version of this problem where the goal is to find a set
+𝐴𝑞⊂𝑋of size𝑘with a high recall rate : the probability that each
+returned point in 𝐴𝑞belongs to𝑂𝑞, formally:𝑅𝑒𝑐𝑎𝑙𝑙 @𝑘=|𝐴𝑞∩𝑂𝑞|
+𝑘.
+Proximity Graph (PG) . Given a point set 𝑋, a proximity graph is
+a graph whose vertices correspond to the points in 𝑋, and whose
+edges connect pairs of points according to a proximity criterion
+in the underlying space. The goal is to preserve the neighborhood
+structure of the data so that ANN queries can be answered by
+navigating the graph. Several types of proximity graphs have been
+studied in the literature, including the Delaunay Triangulation
+(DT) [ 37], Navigable Small World graphs (NSW) [ 47],𝑘-nearest
+neighbor graphs ( 𝑘-NN), Relative Neighborhood Graphs (RNG) [ 59],
+and Navigable Spreading-out Graphs (NSG) [ 19]. A more detailed
+discussion of these graph types is provided in Appendix A. Given
+the large number of graph-based ANN methods in the literature [ 63],
+we do not discuss them individually and instead emphasize the
+generality of our framework and a few representative, well-known
+graphs.
+3 Hierarchical 𝜀-net Navigation Graph (HENN)
+In this section, we introduce a property for the hierarchical naviga-
+tion graphs that guarantees their ANN query answering time.
+Definition 1 (Hierarchical 𝜀-net Navigation Graph (HENN)).
+A multi-layer graph built on top of the point set 𝑋is a HENN graph
+(i.e., satisfies HENN property) if it satisfies the following criteria:
+(1)Nodes: Each node of the graph represents a point in 𝑋.
+(2)𝜀-net Hierarchy: Each layerL𝑖, for0≤𝑖≤𝐿, is an𝜀-net of the
+preceding layer, with L0=𝑋. The𝜀-net is defined with respect
+to the ring ranges and for a specific value of 𝜀, both introduced
+later in Equation 1.
+(3)PG (Intra-layer edges): The nodes within each layer are con-
+nected with Intra-layer edges that construct a proximity graph
+(PG) to answer the ANN only inside this layer. Any PG can be
+chosen and integrated into HENN.
+4Assuming a constant failure probability 𝜑.(4)Inter-layer edges: Each pair of layersL𝑖andL𝑖+1,0≤𝑖<𝐿,
+are connected with Inter-layer edges. There is an edge between
+the nodes𝑣∈L𝑖and𝑢∈L𝑖+1, if and only if 𝑣and𝑢represent
+the same point in the point set 𝑋.
+Figure 1 (right) shows a simple example of a HENN graph, in
+which each layer contains half as many points as the layer below
+it. We now describe the HENN structure in detail, focusing on the
+high-level structure, as well as each individual component.
+𝜀-net Hierarchy . Each layerL𝑖in a HENN graph is an 𝜀-net, with
+a choice of𝜀that results in the optimum query time (Equation 1).
+This𝜀-net is defined on the range space (𝑋,R), where𝑋denotes
+the input point set and Ris the family of ring ranges defined below.
+Definition 2 (Ring Ranges). Given a set of points 𝑋, and a
+distance function d, aring𝑅∈ R is specified with a base point
+𝑝∈R𝑑and two values 𝑟1<𝑟2. Any point in 𝑋with distance within
+two values𝑟1and𝑟2from𝑝falls inside the ring. Formally,
+𝑅∩𝑋={𝑥∈𝑋|𝑟1≤d(𝑥,𝑝)≤𝑟2}
+Proposition 2. The VC-dimension of the ring range space, (𝑋,R),
+isΘ(𝑑).
+The correctness of Proposition 2 follows the fact that each ring
+range𝑅:⟨𝑝,𝑟1,𝑟2⟩can be formulated by mixing the two ball ranges
+𝑅′:d(𝑥,𝑝)≤𝑟2and𝑅′′:d(𝑥,𝑝)≤𝑟1as𝑅=𝑅′−𝑅′′. Hence, due
+to the mixing property of range spaces [ 25], the VC-dim of the ring
+ranges is two times the VC-dim of the distance ranges, i.e., Θ(𝑑).
+Recall that we require the distance dto satisfy a VC-dim of Θ(𝑑)
+for balls.
+Following Proposition 2 and Theorem 1, one can find an 𝜀-net of
+size𝑚𝜀=𝑂(𝑑
+𝜀log1
+𝜀), for the ring range space, for a given value 𝜀.
+The construction details of 𝜀-net are provided in Section 6. Hereafter,
+whenever we refer to an 𝜀-net of a point set, we mean an 𝜀-net with
+respect to the range space of rings defined on that point set.
+The Value of 𝜀.To satisfy the HENN property, each layer L𝑖+1
+must form an 𝜀-net of the preceding layer L𝑖. We define a function
+E:N→(0,1)that specifies the value of 𝜀for a layer of size 𝑛.
+In other words,L𝑖+1is anE(|L𝑖|)-net ofL𝑖. For the graph to be
+HENN, the required value of 𝜀is
+𝜀=E(|L𝑖|)=E(𝑛)=Θ(︂𝑑log𝑛
+𝑛)︂
+, (1)
+where𝑛=|L𝑖|.
+In the next section, we show that this choice of 𝜀leads to optimal
+query time guarantees on the graph.
+The Construction of HENN . Section 6 discusses the details of
+how to directly construct a HENN graph, including the methods
+for finding 𝜀-nets. For a high-level perspective, we also provide
+pseudo-code outlining the construction procedure in Algorithm 2.
+Until then, we assume the graph is given and focus on establishing
+guarantees for it.
+Query Answering Using a HENN Graph . During the query time,
+given a query point 𝑞∈R𝑑, the goal is to find the approximate
+nearest neighbor of 𝑞within𝑋. We follow the greedy search al-
+gorithm on top of HENN graph: Starting from a random node in
+the root (layerL𝐿), we find the nearest neighbor of 𝑞within this
+layer by following a simple greedy search algorithm [ 46,47]. After
+3
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+finding the nearest neighbor 𝑣𝑖in layerL𝑖, we continue this pro-
+cess, starting from 𝑣𝑖in layerL𝑖−1. We proceed until reaching the
+bottom (layerL0).5A pseudo-code of this algorithm is provided
+in Algorithm 1 in the Appendix, and a visual illustration is shown
+in Figure 1 (left). Answering 𝑘-Nearest Neighbors for 𝑘>1can
+be achieved by considering a set of candidates at each step in the
+greedy algorithm or running a beam search to consider multiple
+paths to the query [31, 46].
+Algorithm 1 Greedy Search Algorithm
+Require: The HENN graphHand the query point 𝑞.
+Ensure: The approximate nearest neighbor of 𝑞in𝑋.
+1:function Query (H,𝑞)
+2:𝑣←random point from root (L0)
+3: foreach layer𝑖=𝐿,𝐿−1,···,0do
+4:𝑣←GreedySearch(L𝑖,𝑣,𝑞)
+5: Return𝑣
+6:function GreedySearch (G,𝑣,𝑞)⊲Gis the proximity graph,
+starting node 𝑣, and query 𝑞
+7:𝑛𝑒𝑥𝑡←𝑣
+8: repeat
+9:𝑐𝑢𝑟𝑟←𝑛𝑒𝑥𝑡
+10:N← neighbors of 𝑐𝑢𝑟𝑟 inG.
+11:𝑛𝑒𝑥𝑡←arg min𝑢∈Nd(𝑢,𝑞)⊲Closest neighbor to 𝑞
+12: until d(𝑛𝑒𝑥𝑡,𝑞)≥d(𝑐𝑢𝑟𝑟,𝑞)⊲Until getting stuck in local
+minimum
+13: Return𝑐𝑢𝑟𝑟
+4 Theoretical Analysis
+In this section, we analyze the query-time complexity of the HENN
+structure with respect to the black-box choice of the underlying
+proximity graph (PG) and the value of 𝜀specified in Equation 1. We
+begin by introducing the preliminary concepts needed to establish
+the final time bound.
+4.1 Definitions
+LetGSG(𝑞,𝑠)denote the result of running the greedy search algo-
+rithm (Algorithm 1) on a proximity graph Gfor the query 𝑞, starting
+from the node 𝑠. LetGLdenote the proximity graph constructed
+at layerLof HENN.
+Definition 3 (Rank). We define the rank of a point𝑥∈𝑋with
+respect to the query point 𝑞as the position of 𝑥in the ordering of the
+points in𝑋by their distance to 𝑞:
+rank𝑋,𝑞(𝑥)=|{𝑦∈𝑋|d(𝑞,𝑦)<d(𝑞,𝑥)}|+ 1.
+We now introduce the following definition, which captures a
+property of a proximity graph.
+Definition 4 (Recall Bound 𝜌𝛾).LetGbe a proximity graph
+defined on a point set 𝑋sampled from distribution D. Given a query 𝑞,
+greedy search onGreturns a data point. Consider the random variable
+5Note that this is the standard greedy algorithm on an ANN graph.representing the rank of this output. Let 𝑝D,Gbe the probability mass
+function (PMF) of this random variable. In other words,6
+𝑝D,G(𝑘)=Pr[︁
+rank𝑋,𝑞(︁GSG(𝑞,𝑠))︁=𝑘]︁
+.
+Similarly, we can define the CDF of this random variable:
+𝐹D,G(𝑘)=Pr[︁
+rank𝑋,𝑞(GSG(𝑞,𝑠))≤𝑘]︁
+.
+For a value 0<𝛾≤1, we define the recall bound , as the inverse
+CDF at𝛾:
+𝜌𝛾=𝐹−1
+D,G(𝛾)
+We will use𝜌𝛾instead of𝐹−1
+D,G(𝛾), whereGandDare clear from
+the context.7
+This definition captures a weaker notion of accuracy for proxim-
+ity graphs compared to the standard recall metric. While Recall @𝑘
+measures the fraction of the true 𝑘nearest neighbors retrieved, 𝜌𝛾
+identifies the smallest 𝑘such that, with probability 𝛾,at least one of
+the true𝑘nearest neighbors is returned by the search algorithm. A
+good proximity graph induces a distribution 𝑝(𝑘)that puts higher
+mass on smaller values of 𝑘, resulting in smaller recall bounds 𝜌𝛾.
+Throughout our analysis, we fix a parameter 𝛾and derive bounds
+parameterized by 𝜌𝛾. More generally, by varying 𝛾, one recovers
+the full distribution 𝐹D,Gassociated with a proximity graph. Ad-
+ditional details on recall bounds and the induced distributions are
+provided in Appendix F. A graph with a larger value of 𝜌𝛾will show
+worse query times when integrated with HENN, as also proved in
+the following section.
+4.2 Running Time Analysis
+We begin with a simplified setting where HENN consists of only
+two layers: the base layer L0=𝑋and the upper layer L1, which is
+anE(𝑛)-net of𝑋, where𝑛=|𝑋|. A greedy search is initiated from
+an initial node inL1, proceeds until it reaches a local minimum
+in this layer, and then continues in the base layer. The following
+lemma provides an upper bound on the total number of steps taken
+after reaching the local minimum in L1:
+Lemma 3. LetL1andL0be defined as above. Let 𝑝=GSGL1(𝑞,𝑠)
+denote the result of running greedy search from an initial node 𝑠∈L 1.
+Then, with probability 𝛾, there are at most 𝑂(︁𝜌𝛾·𝜀·𝑛)︁points closer
+to𝑞than𝑝where𝜀=E(𝑛).
+Proof. SinceL1is an𝜀-net ofL0, we know that each (ring) range
+𝑅of size more than 𝜀·𝑛, intersects withL1. In other words:
+|𝑅|≥𝜀𝑛− →L 1∩𝑅≠∅
+This comes from the definition of an 𝜀-net.
+Based on the definition of recall bound, we know that there are at
+most𝜌𝛾more points, denoted as 𝑃={𝑝1,𝑝2,···,𝑝𝜌𝛾}, inL1that
+are closer to 𝑞than𝑝(with probability 𝛾).
+Assume that the points in 𝑃are sorted based on their distance to
+𝑞, with𝑝1being the closest. For each 𝑝𝑗∈𝑃define a unique range
+6In this probability, other random variables like the query point 𝑞and the starting
+node𝑠are marginalized out.
+7Specifically, when considering different layers in a HENN index, both the PG and D
+are fixed.
+4
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+𝑅𝑗, which is a ring centered at 𝑞, covering all the distances between(︁d(𝑞,𝑝𝑗−1),d(𝑞,𝑝𝑗))︁, exclusively (see Figure 2). In addition, define
+one more ring, 𝑅𝜌𝛾+1for(︂
+𝑑𝑖𝑠𝑡(𝑞,𝑝𝜌𝛾),𝑑𝑖𝑠𝑡(𝑞,𝑝))︂
+.
+All these𝜌𝛾+1ranges are disjoint, and they do not contain any
+point inL1. SinceL1is an𝜀-net for this range space, this means that
+all the ranges 𝑅𝑗have at most 𝜀·𝑛points fromL0(the lower level).
+As a result, the union of all these ranges contains at most 𝜀·𝑛·(𝜌𝛾+1)
+points. □
+Figure 2: Visualization of Lemma 3. In this example, 𝜌𝛾=2and the
+black points are inside the 𝜀-net.
+We continue to analyze the query running time of HENN and
+show that the choice of Ein equation 1 yields the optimal runtime.
+Throughout this analysis, we assume access to an algorithm that,
+for a given𝜀, computes an 𝜀-net of size 𝑚𝜀(see Theorem 1) with
+probability at least 𝜑. A more detailed discussion of the construction
+algorithms is provided in Section 6.
+Theorem 4. Let a HENN index be given, as defined in Definition 1,
+constructed using a proximity graph Gat each layer with degree 𝜋,
+with recall bound 𝜌𝛾for some choice of 𝛾. Assume further that each
+layer forms an 𝜀-net of size𝑚𝜀with probability at least 𝜑, where𝜀is
+chosen as in Equation 1: E(𝑛′)=Θ(︂𝑑log𝑛′
+𝑛′)︂
+. Let𝑛=|𝑋|be the size
+of the point set. Then, for the number of layers 𝐿=log𝑛, the query
+running time is 𝑂(𝜌𝛾𝜋𝑑log2𝑛), which holds with probability at least
+(𝜑𝛾)log𝑛.
+Proof. The query process begins at the top layer L𝐿, where greedy
+search is executed on the corresponding proximity graph. The search
+then proceeds layer by layer until reaching the base layer L0.
+In the final step, the algorithm identifies a point
+𝑝=GSGL1(𝑞,𝑠),
+the output of greedy search on GL1starting from some initial node
+𝑠. From𝑝, the search continues in the base layer L0. We analyze the
+running time inductively, proceeding from the base layer upward.
+Let𝑇(𝑛)denote the time required to query a HENN graph con-
+structed on a dataset of size 𝑛. Computing 𝑝requires𝑇(|L1|)time,
+since layersL1,...,L𝐿themselves form a HENN structure. By Lemma 3,
+continuing the search from 𝑝in the base layer requires at most
+𝑂(𝜌𝛾·𝜀·𝑛)hops. If𝜋is the degree of the proximity graph, the
+total cost per hop is 𝑂(𝜋). Thus,
+𝑇(𝑛)=𝑇(|L1|)+𝑂(𝜋𝜌𝛾𝜀𝑛).
+Treating𝜌𝛾and𝜋as fixed constants gives
+𝑇(𝑛)=𝑇(𝑚E(𝑛))+𝑂(𝜀𝑛),where𝑚𝜀is the size of the 𝜀-net.8By Theorem 1 and using the fact
+that VC-dim is Θ(𝑑), we have𝑚𝜀=𝑂(︂
+𝑑
+𝜀log1
+𝜀)︂
+. Substituting this
+bound yields
+𝑇(𝑛)=𝑇(︂
+𝑂(︂
+𝑑
+𝜀log1
+𝜀)︂)︂
++𝑂(𝜀𝑛).
+Ignoring constant factors, we obtain
+𝑇(𝑛)≤𝑇(︂
+𝑑
+𝜀log1
+𝜀)︂
++𝜀𝑛.
+Let𝑥(𝑛)=1
+𝜀as a function of 𝑛. Then,
+𝑇(𝑛)≤𝑇(︁𝑑·𝑥(𝑛)log𝑥(𝑛))︁+𝑛
+𝑥(𝑛).
+To guarantee convergence, we require
+𝑑·𝑥(𝑛)log𝑥(𝑛)=𝑜(𝑛).
+At the same time, to minimize the second term𝑛
+𝑥(𝑛), we select𝑥(𝑛)
+as large as possible subject to this constraint. The optimal choice is
+obtained by solving
+𝑥(𝑛)log𝑥(𝑛)=𝑛
+𝑑,
+which admits the asymptotic solution
+log𝑥(𝑛)=𝑊(𝑛
+𝑑)≈log(𝑛/𝑑)−log log(𝑛/𝑑)+𝑂(1),
+where𝑊denotes the Lambert 𝑊function [ 38]. Consequently, up to
+lower-order terms,
+𝑥(𝑛)=𝑛
+𝑑log𝑛.
+This implies
+𝑛
+𝑥(𝑛)=𝑑·log𝑛,
+and therefore, since 𝐿=log𝑛, the total running time is (bringing back
+the constants 𝜌𝛾and𝜋)
+𝑇(𝑛)=𝑂(𝜌𝛾𝜋𝑑log2𝑛).
+Finally, to see why this choice of 𝑥(𝑛)is optimal, suppose instead
+we take𝑥(𝑛)such that
+𝑑·𝑥(𝑛)log𝑥(𝑛)=𝑛1−𝛼, 𝛼 >0.
+Then𝑥(𝑛)≈𝑛1−𝛼
+𝑑log𝑛, which yields
+𝑛
+𝑥(𝑛)=𝑑𝑛𝛼log𝑛,
+leading to a runtime strictly larger than 𝑂(𝑑log2𝑛). Hence, the choice
+𝑥(𝑛)=𝑛
+𝑑log𝑛is asymptotically optimal.
+To achieve this running time, two conditions must hold: (1) each
+layer must form an 𝜀-net of the preceding one, and (2) the greedy search
+at each layer must return a point within the 𝜌𝛾nearest neighbors of
+the query in the layer below.
+For (1), since each layer is an 𝜀-net with probability at least 𝜑, the
+probability that all 𝐿layers are valid 𝜀-nets is𝜑𝐿. For (2), by the
+definition of the recall bound, the event occurs with probability 𝛾per
+layer, and thus 𝛾𝐿across all layers. Combining these independent
+events, the above query time is achieved with probability at least
+(𝜑·𝛾)𝐿for𝐿=log𝑛. □
+8Note that based on the definition of 𝜌𝛾, this value only depends on the underlying
+data distributionDand the graphGand these two are fixed for all the layers.
+5
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+Theorem 4 also shows that the best choice of function Eis
+E(𝑛)=𝑐𝑑log𝑛
+𝑛for𝑐to be a constant. This implies that for a layer
+L𝑖of size𝑛′, the next layerL𝑖+1satisfies
+|L𝑖+1|=𝑚E(𝑛′)=𝑂(︂
+𝑑
+E(𝑛′)log1
+E(𝑛′))︂
+≤𝑂(︂
+𝑛′
+𝑐)︂
+.
+In other words, by choosing a sufficiently large constant 𝑐, the
+size of each layer decreases exponentially relative to the previous
+one.
+Although the probability in Theorem 4 scales exponentially with
+log𝑛, it corresponds to a fixed choice of 𝛾(or𝜌𝛾) and characterizes
+the CDF of the query time of HENN for a single input. By varying 𝛾,
+one can recover the full probability distribution of the HENN query
+time. Additional details on deriving this distribution are provided
+in Appendix F.
+Space Complexity . Since each layer decreases in size by at least a
+constant factor 𝑐>1, the layer sizes form a geometric progression.
+Consequently, the total number of points stored across all layers is
+bounded by∑︁𝐿
+𝑖=0|L𝑖|=∑︁𝐿
+𝑖=0𝑂(︂
+𝑛
+𝑐𝑖)︂
+=𝑂(𝑛).Therefore, the overall
+space usage of a HENN graph is linear in 𝑛, under the assumption
+that each proximity graph requires a linear space to the size of its
+underlying dataset.
+5 HNSW is a HENN Graph
+In this section, we present one of our main contributions: showing
+that HNSW is a HENN graph, with a high probability. Building on
+this connection, we derive probabilistic time guarantees for HNSW.
+We begin with a simplified description of HNSW [ 46]. During
+preprocessing, points are inserted incrementally into the index. For
+each new point, a random variable determines its maximum layer,
+with the probability of assignment to higher layers decreasing ex-
+ponentially. After the layers are determined, the point is connected
+at each layer to its nearest neighbors among the previously inserted
+points, identified using the greedy search procedure (Algorithm 1).
+Equivalently, HNSW can be viewed as starting from a base layer
+containing all points and recursively constructing higher layers
+by randomly sampling subsets of points, such that the size of each
+layer decreases exponentially with the level. At each layer, an NSW
+graph [ 47] is built on the sampled subset. Comparing this construc-
+tion with the definition of HENN,9we observe that HNSW satisfies
+the HENN property with high probability, where NSW serves as the
+underlying proximity graph and the 𝜀-net construction is realized
+through random sampling (cf. Theorem 1).
+5.1 Time Complexity Analysis of HNSW
+Let𝑐>1denote the constant parameter in the HNSW index con-
+struction that controls the rate of layer size reduction. Specifically,
+for every𝑖≥1we have|L𝑖|=|L𝑖−1|
+𝑐. We now turn to the following
+key question to analyze each layer of the HNSW graph: "Based on
+Theorem 1, what are the values of 𝜀and𝜑that guarantee a
+random sample of size𝑛
+𝑐forms an𝜀-net with probability at
+least𝜑?"
+9See also Section 6 for an example construction algorithm.Lemma 5. For any layerL𝑖of size𝑛in the HNSW index, the next
+layerL𝑖+1is an𝜀-net ofL𝑖with𝜀=Θ(︂𝑑log𝑛
+𝑛)︂
+, and with probability
+at least𝜑=1−Θ(︂log𝑛
+𝑛)︂
+.
+Proof. For a large enough constant 𝑐1≥𝑐, choosing𝜀=𝑐1𝛿log𝑛
+𝑛
+we have:
+8𝛿
+𝜀log16
+𝜀≤𝑛
+𝑐.
+Choose a failure probability 𝜑′=log𝑛
+𝑐2𝑛for a large enough constant
+𝑐2>1. Then,
+4
+𝜀log4
+𝜑′≤8𝛿
+𝜀log16
+𝜀.
+Hence, by Theorem 1, we obtain
+max{︂
+4
+𝜀log4
+𝜑′,8𝛿
+𝜀log16
+𝜀}︂
+=8𝛿
+𝜀log16
+𝜀≤𝑛
+𝑐.
+Therefore, setting 𝑚𝜀=𝑛
+𝑐gives us thatL𝑖+1is an𝜀-net ofL𝑖, with
+𝜀=Θ(︂𝛿log𝑛
+𝑛)︂
+and success probability at least 1−Θ(︂log𝑛
+𝑛)︂
+.
+□
+Combining Theorem 4 and Lemma 5, for HNSW we conclude
+that the functionEin this graph satisfies: E(𝑛)=Θ(︂𝑑log𝑛
+𝑛)︂
+.Thus,
+HNSW implicitly uses the optimal choice of Efor𝜀values. Conse-
+quently, the query running time is 𝑂(𝑑log2𝑛),with a probability
+of at least(︁(1−log𝑛
+𝑛)·𝛾)︁log𝑛,
+where the parameter 𝛾depends on the recall quality of the NSW
+proximity graph (which has a constant degree 𝜋).
+Success Probability in Practice . Assuming a small recall bound
+𝜌𝛾for NSW, the above probability simplifies to (1−log𝑛
+𝑛)log𝑛.For
+concreteness, we can evaluate the probability for different dataset
+sizes. When the dataset size is 𝑛=103, we have:
+(︂
+1−log 1000
+1000)︂log 1000
+≈0.905
+and when𝑛=106, we have
+(︂
+1−log 106
+106)︂log 106
+≈0.9996.
+These calculations explain why, in practice, HNSW often exhibits
+logarithmic query times in most cases. Observing this in HNSW,
+therefore, also provides indirect evidence of the effectiveness of
+NSW, in terms of recall bound, as the underlying proximity graph.
+6 HENN Construction
+In this section, we first present an algorithm for directly construct-
+ing a HENN graph, followed by a discussion on building 𝜀-nets,
+which serve as a key subroutine in the construction.
+The preprocessing phase of building a HENN graph follows a
+recursive process provided in Algorithm 2. As an input, it receives a
+functionE:N− →(0,1), that calculates the value of 𝜀as a function
+of input size 𝑛(see Equation 1 for the best choice of this function).
+It begins with the initial set of points being the entire point set,
+i.e.,L0=𝑋, and constructs an 𝜀-net over𝑋, where𝜀=E(|𝑋|). This
+forms the first layer, denoted L1. After finding the points in this
+layer, we follow a black-box approach for constructing a proximity
+6
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+Table 1: Comparison of different methods for constructing 𝜀-nets.
+Algorithms Output Guarantee Time Guarantee Practical
+Sampling-based [28] Probabilistic Fast ✓
+Discrepancy-based [9] Deterministic Slow (exponential to 𝑑) ✗
+Sketch-and-Merge [9] Deterministic Near-linear to 𝑛 ✗
+Budget-Aware (ours) Probabilistic (Budget-based) Fast (budget-based) ✓
+graph within this layer and add the intra-layer edges accordingly
+(see Appendix A for more details).
+Algorithm 2 HENN Construction (Preprocess) Algorithm
+Require: The set of points 𝑋, maximum number of layers 𝐿, and
+the functionE.
+Ensure: The HENN graphH.
+1:function BuildHENN (𝑋,𝐿,E)
+2:L0←𝑋
+3: for𝑖≤𝐿do
+4:𝜀←E(|L𝑖−1|)
+5:L𝑖←BuildEpsNet(L𝑖−1,𝜀) ⊲See Section 6.1
+6: Connect nodes to the previous layer (Inter-layer edges).
+7: Build a proximity graph on L𝑖(Intra-layer edges).
+8: ReturnH={L0,L1,···,L𝐿}and the edges.
+Subsequently, the algorithm recursively builds each layer L𝑖+1
+as anE(|L𝑖|)-net of the previous layer L𝑖and adds the inter-layer
+edges. This process continues until a total of 𝐿layers are con-
+structed, where 𝐿is a hyperparameter specifying the depth of the
+HENN graph. Even though this construction follows a sequential
+order in building layers, a discussion on how to parallelize this step
+is provided in Appendix C.
+In the next sections, we present several algorithms for construct-
+ing𝜀-nets, which serve as a crucial subroutine in the preprocessing
+phase of HENN. Each algorithm is suitable for different settings,
+offering a range of trade-offs between speed, guarantees, and prac-
+ticality. This allows a practitioner to select the method that best
+matches their requirements. A comparative summary of these algo-
+rithms is provided in Table 1.
+6.1 Existing 𝜀-net Construction Algorithms
+We begin with an overview of existing algorithms from the com-
+putational geometry literature. Then, as our third contribution, we
+introduce a new algorithm that balances preprocessing time and the
+success probability of 𝜀-net construction, based on a user-specified
+budget.
+Sampling-based. Therandom sampling algorithm (Theorem 1)
+offers a fast and practical way to construct 𝜀-nets: it simply selects
+𝑚𝜀random points from the dataset without enumerating ranges R.
+However, the guarantee holds only with a certain probability, mak-
+ing this approach inherently non-deterministic. Also, repeating the
+process multiple times using a Las-Vegas algorithm is not practical
+(see Algorithm 4 in the Appendix).
+Discrepancy-based. When exact deterministic 𝜀-nets are required,
+e.g., for robustness, algorithms from discrepancy theory [ 9] can beapplied. Recursively partitioning the dataset yields a guaranteed 𝜀-
+net in𝑂(𝑛|R|)=𝑂(𝑛𝛿+1)time. The sketch-and-merge technique [ 9,
+26] improves runtime to 𝑂(𝛿3𝛿·1
+𝜀2log(𝛿
+𝜀)·𝑛), though these methods
+remain impractical due to their exponential dependence on the
+dimension𝑑(see Algorithm 5 in the Appendix).
+This algorithm (Algorithm 5) works by iteratively halving the
+point-set𝑋, until reaching the desired size of 𝑐0𝛿
+𝜀log𝛿
+𝜀, where𝑐0
+is a large enough constant. In order to do so, it first constructs
+an arbitrary matching Πof the points. A matching Πis a set of
+pairs(𝑥,𝑦)where𝑥,𝑦∈𝑋, it also partitions 𝑋into a set of|𝑋|
+2
+disjoint pairs. Given this matching, this algorithm randomly picks
+one of the points in each pair, removing the other point of the pair,
+resulting in a subset of remaining points 𝑋1⊂𝑋where|𝑋1|=|𝑋|
+2.
+Continuing this process 𝑘times for the following value of 𝑘
+2𝑘=|𝑋|
+𝑐0𝛿
+𝜀log𝛿
+𝜀(2)
+results in the set|𝑋𝑘|which is an 𝜀-net for𝑋with high proba-
+bility. It is easy to make this process deterministic by following the
+conditional expectation method at each halving step [9].
+Comparison. The randomized algorithm is straightforward to
+implement, requiring only random sampling from each layer L𝑖
+to construct the subsequent layer L𝑖+1. However, it is inherently
+randomized and provides running-time guarantees in expectation.
+Furthermore, its time complexity depends on the time to verify if
+the selected set is indeed an 𝜀-net.
+In contrast, the deterministic discrepancy-based algorithm de-
+terministically constructs an 𝜀-net by progressively halving each
+layerL𝑖. This process involves only halving L𝑖a couple of times to
+identify the next layer L𝑖+1(See BuildEpsNetDisc in Algorithm 5).
+Nevertheless, the running time of the discrepancy-based algorithm
+depends exponentially on the dimensionality of the input points,
+which makes it impractical.
+6.2 Budget-Aware Algorithm for Constructing
+𝜀-nets
+To bridge the gap between sampling-based methods (fast but prob-
+abilistic) and discrepancy-based methods (deterministic but compu-
+tationally expensive), we introduce a budget-aware algorithm . This
+approach allows the user to control a resource budget, thereby ad-
+justing the trade-off between construction speed and the probability
+that the resulting set forms a valid 𝜀-net.
+Given a user-specified timing budget B, which determines the
+allowed construction time, we design an algorithm that achieves
+success with a probability depending on B. This approach is in-
+spired by the deterministic 𝜀-net construction via finding an unhit
+range, known as Net-Finder algorithm [ 51]. Our proposed Budget-
+Aware algorithm is presented in Algorithm 3.
+7
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+Algorithm 3 Budget-Aware 𝜀-net Construction
+Require: The range space(𝑋,R), value of𝜀, the budgetB.
+Ensure: The𝜀-net.
+1:function BudgetAware (𝑋,𝜀,B)
+2:N← small random sample from 𝑋. ⊲See [51]
+3: for𝑖≤Bdo ⊲At mostBiterations.
+4:𝑅←FindUnhitRange(N,R) ⊲Find𝑅∈Rwhere
+|𝑅|≥𝜀·|𝑋|but𝑅∩N=∅.
+5: if𝑅exists then
+6: Add𝑂(1)random points from 𝑅toN.
+7: else
+8: break ⊲Nis an𝜀-net.
+returnN
+The algorithm begins with a small random sample Nfrom the
+point set𝑋, similar to General Net-Finder [51]. At each iteration,
+it identifies a heavy range𝑅not intersectingN:
+𝑅∈R,|𝑅|≥𝜀·|𝑋|, 𝑅∩N=∅.
+While General Net-Finder proceeds until all heavy ranges are
+covered, Budget-Aware terminates after at most Biterations. The
+parameterB, specified by the user, controls the preprocessing time
+and introduces a trade-off between efficiency and the final success
+probability (see Section 6.3).
+Finding an Unhit Range . A naive implementation of the function
+FindUnhitRange would require iterating through all ranges 𝑅∈R
+and checking their intersection with N, which is impractical. To
+address this issue, we use a heuristic strategy for identifying unhit
+ring ranges . Specifically, we select a random point 𝑝from the dataset
+and partition the remaining points into rings centered at 𝑝, each
+containing at least an 𝜀-fraction of the data. We then search for a
+ring among these partitions that does not intersect N. Any such
+ring serves as a valid unhit range.
+Although this heuristic does not guarantee the existence of an
+unhit range in all cases, our empirical results indicate that such
+rings can consistently be found in practice. As a result, this approach
+enables a significantly faster execution of Algorithm 3, avoiding
+the need to enumerate all possible ranges.
+6.3 Analysis of Budget-Aware Algorithm
+We analyze both the running time of the Budget-Aware algorithm
+and bound the failure probability as a function of the user-provided
+budgetB.
+Success Probability. LetCdenote the random variable repre-
+senting the number of calls to the oracle FindUnhitRange (Line
+3) needed to obtain an 𝜀-net. Prior work [ 51] shows that E[C]=
+𝑂(1/𝜀). Failure occurs when C≥B , meaning thatBcalls are not
+enough, hence by Markov’s inequality:
+Pr(failure)=Pr(C≥B) ≤E[C]
+B≤1
+𝜀·B.
+Thus, increasingBimproves success probability: doubling Bhalves
+the failure probability.Time Complexity. Each iteration (Line 3 in Alg. 3) requires one
+call to FindUnhitRange . As described above, a naive implementa-
+tion checks all 𝑅∈R for intersection with N, costing𝑂(|R|) =
+𝑂(𝑛𝛿)for VC-dimension 𝛿. To improve practicality, in our experi-
+ments, we instead partition the space into disjoint ranges of size
+at least𝜀𝑛, searching only within these partitions. This heuristic
+reduces the cost to 𝑂(𝑛2)per call10Therefore, the total preprocess-
+ing time is𝑂(B·𝑛2). See experiments for more details (Section 7
+and Appendix E).
+Output Size. The output of Net-Finder is known to be an 𝜀-net
+of size𝑂(𝑑
+𝜀log1
+𝜀)(see Theorem 1). The same bound holds for the
+Budget-Aware algorithm.
+6.3.1 Index Compression. One advantage of the Budget-Aware al-
+gorithm is its ability to compress HENN index and, consequently,
+HNSW index. By allocating additional preprocessing budget, the
+algorithm constructs an 𝜀-net that satisfies the conditions of Theo-
+rem 4 using a smaller sample size while still covering most heavy
+ranges. Using fewer sampled points both increases the likelihood
+of meeting the 𝜀-net guarantees and reduces the size of the layers.
+This effect is validated experimentally in Section 7 and illustrated
+in Figure 8.
+7 Experiments
+In this section, we empirically validate the theoretical results of the
+proposed HENN structure and assess the algorithms developed for
+its construction. Furthermore, we implement the general HENN
+graph within the widely used Faiss library [ 17,35], providing it as a
+new index alongside the existing popular ANN indices. The code is
+publicly available at this anonymous repository. Additional experi-
+mental results are provided in Appendix E due to space constraints.
+We organize the experiments into the following parts:
+(1)Experiments Setup. Description of datasets (both real and syn-
+thetic), baseline methods, evaluation metrics, and configuration
+details.
+(2)Proximity Graph Integration. Integration of different prox-
+imity graphs into the HENN framework and evaluation of their
+performance.
+(3)Verification of Time Guarantees. Empirical validation of the
+time bounds proved in Section 4.
+(4)𝜀-net Construction. Comparison of introduced algorithms for
+building𝜀-nets (Section 6) and their impact when integrated
+into HENN.
+(5)Comparison with Other ANN Indices. Evaluation of a stan-
+dard implementation of HENN integrated with the HNSW index
+in the widely used FAISS library, and comparison against other
+indices available there, including LSH [ 11], IVF-PQ [ 32], and
+NSG [19].
+(6)More on Recall Bound. Comparison of different proximity
+graphs with different recall bounds and deriving the probability
+distribution over query time of HENN.
+10This requires calculating all the distances to the randomly selected point 𝑝. Using
+optimized libraries for matrix multiplication, this step can be made faster (almost
+linear) in practice.
+8
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+Figure 3: Comparison of HENN integrated with different proximity graphs. Points closer to the upper-right indicate better performance.
+QPS (queries per second) is the inverse of the average query time. The synthetic dataset has 20k points with 𝑑=4following the Mixture of
+Gaussians.
+Figure 4: Effect of dataset size 𝑛on the query
+time (GIST dataset).
+Figure 5: Effect of PG degree on the query time
+(SIFT dataset).
+Figure 6: Effect of dimension 𝑑on the query
+time (synthetic uniform).
+(7)Proximity Graph Comparison. Analysis of recall bounds
+and performance trade-offs across different proximity graphs
+(provided in Appendix E.2).
+Experiments Setup . We use standard benchmark datasets for ANN
+search [ 3], including SIFT-128 [33],GIST-960 [33],Fashion-MNIST-
+784[65], and NYTimes-256 [52], along with synthetic datasets (uni-
+form distributions and mixtures of Gaussians). Both Euclidean ( ℓ2-
+norm) and cosine (angular) distance metrics are considered. For
+proximity graphs, we evaluate several structures, including KNN ,
+KGraph [15],11NSW [47],NSG [19], and FAANG [27]. Our meth-
+ods are denoted as HENN +X, where𝑋specifies the underlying
+proximity graph used in the construction. Additional details on
+experimental setup can be found at the Appendix E.1.
+Proximity Graph Integration . Figure 3 presents the performance
+of HENN when integrated with different proximity graphs across
+different datasets. The plots show the trade-off between query speed
+and recall as the exponential decay rate (the number of layers)
+in HENN are varied. Increasing the number of layers generally
+improves recall but slows down query processing, whereas fewer
+layers yield faster queries at the cost of weakening the hierarchical
+structure. Overall, HENN+NSW andHENN+FAANG achieve the
+best area under the curve (AUC).
+Verification of Time Guarantees . We study the impact of several
+parameters on query time. Figure 4 illustrates the effect of dataset
+size𝑛on query time. For each dataset, we subsampled 𝑛points and
+generated random queries within the space. Across all datasets, the
+query time grows logarithmically with 𝑛, consistent with Theorem 4.
+11Here, KGraph refers to NN-descent applied on a 𝑘NN graph, following [15].Similarly, Figure 16 (in Appendix E.4) reports the number of visited
+hops during greedy search with a similar trend. Similar experiments
+on more datasets is provided in Appendix E.4.
+The effect of the proximity graph degree is shown in Figure 5,
+where we varied the degree across all layers. The results indicate
+that query time scales linearly with the graph degree 𝜋. Figure 6
+examines the effect of data dimensionality 𝑑on query time. Starting
+from𝑑=2, as𝑑increases, the search is more likely to get trapped
+in local minima (curse of dimensionality), which accelerates query
+by halting the greedy search early. However, once 𝑑exceeds 64,
+the query time becomes dominated by the linear dependence on
+𝑑. Similar results on the number of visited hops and other datasets
+are in Appendix E.
+𝜀-net Construction . As discussed in Section 6, the budget-aware
+algorithm introduces a trade-off between the preprocessing budget
+and the success rate of the resulting 𝜀-net. Figure 7 illustrates this
+trade-off: larger budgets Bsignificantly increase the probability
+that the final set forms a valid 𝜀-net. For example, on the Fashion-
+MNIST dataset, allocating only 30% of the sampled points through
+finding unhit-sets raises the success rate from 0.7 to 1.0.
+More importantly, Figure 8 demonstrates the impact of the budget-
+aware algorithm on the final HENN index. Compressing the index
+by selecting smaller layers, which are 𝜀-nets, normally reduces the
+success rate and recall, but integrating the budget-aware strategy
+substantially changes this effect. As a result, HENN+BudgetAware
+produces a more compact index with the same recall as HENN+NSW
+(or equivalently, HNSW ). In other words, by spending additional
+preprocessing time, we obtain a smaller index, with a higher proba-
+bility of each layer being an 𝜀-net, resulting in no loss in recall.
+9
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+(a) SIFT
+ (b) NYTimes
+ (c) Fashion-MNIST
+Figure 7: The comparison of Random Sampling and Budget-Aware algorithms on finding an 𝜀-net. The budget ratio 𝑟means that for an 𝜀-net
+of size𝑚𝜀, we added(1−𝑟)·𝑚𝜀points greedily by finding unhit ranges (see Appendix E for details). The experiment is run on small subset of
+these datasets.
+Figure 8: HENN index compression (with a cost of more preprocessing time) as an effect of using the Budget-Aware algorithm for finding
+𝜀-nets.
+Comparison with Other ANN Indices . We integrated HENN as a
+new index within the popular Faiss library and compared it against
+widely used ANN indices. Figure 9 presents this comparison. As
+expected, HENN+NSW andHNSW exhibit nearly identical perfor-
+mance in both recall and query time, consistent with our discussion
+in Section 5. The only noticeable difference is a slightly higher
+preprocessing time for HENN+NSW , which arises from employ-
+ing the construction Algorithm 2 rather than the highly optimized
+incremental procedure used in HNSW .12
+Analysis of the Recall Bound . In Appendix F, we provide a de-
+tailed interpretation of Theorem 4. This result enables a theoretical
+characterization of the query-time distribution of HENN as a func-
+tion of the recall bound of the underlying proximity graph across
+different values of 𝛾.
+Figure 23 in Appendix F illustrates the probability mass function
+of the output rank for different proximity graphs and datasets, ob-
+tained by sampling from this distribution. Graphs with stronger
+recall bounds exhibit probability mass concentrated on smaller
+ranks. In contrast, more challenging datasets (e.g., Mixture of Gaus-
+sians) tend to induce heavier tails, with probability mass peaking
+at larger values of 𝑘. This behavior is a consequence of the greedy
+search algorithm becoming trapped in local minima. Figure 24 in
+Appendix F shows the derived distribution of the HENN query time
+(random variable 𝑇) as derived from Theorem 4. Finally, Figure 10
+and Figure 11 empirically validate our theoretical predictions: the
+12Our objective in this study is not to provide a comprehensive comparison of
+HENN against all ANN baselines, but rather to demonstrate the equivalence between
+HENN+NSW andHNSW , since HENN represents a structural property rather than a
+specific graph.observed query time closely correlates with the recall of the proxim-
+ity graph, where stronger recall bounds lead to faster query times,
+while weaker recall bounds result in slower query times.
+Additional Experiments . Further results on parameter variations,
+such as exponential decay, comparisons of recall bounds across
+different proximity graphs, index size, and preprocessing time are
+provided in Appendix E.
+8 Discussion and Future Work
+Parallelization and Dynamic Setting . HENN construction can
+be naturally parallelized during the indexing phase, enabling faster
+preprocessing. Moreover, it can support dynamic updates to the
+dataset, provided that the layers are maintained and the 𝜀-net prop-
+erty is preserved. In the following, we discuss extensions to dynamic
+settings and parallel construction. Further details on parallel con-
+struction and dynamic maintenance are provided in Appendices C
+and B.
+Metrics . HENN is defined as a structural property that extends
+to any metric dyielding bounded VC-dimension for ring ranges.
+This includes widely used metrics such as ℓ𝑝-norms and angular
+distances (cosine similarity). However, if the VC-dimension is un-
+bounded,𝜀-net construction becomes impractical.
+Recall Bound and Degree . The theoretical query-time guarantees
+of HENN depend on key properties of the underlying proximity
+graph, namely its recall bound and degree. As established by Theo-
+rem 4 and shown by our experimental results, graphs with stronger
+recall bounds yield faster query times, whereas graphs with weaker
+recall bounds lead to slower performance. The degree of a proximity
+10
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+Figure 9: Comparison of HENN implementation in Faiss library with other indices.
+Figure 10: Expected values of random variable 𝑇(HENN query time). This is derived from the observed distribution of random variable 𝐾
+(rank) of proximity graphs and applying Theorem 4.
+Figure 11: Real observed average query times of HENN integrated with different proximity graphs.
+graph can, in principle, be large. For instance, the Delaunay trian-
+gulation (DT) may exhibit degrees that grow exponentially with
+the dimension. However, such graphs are rarely used in practical
+high-dimensional settings.
+Non-hierarchical (Flat) Setting . Although our theorems are stated
+for hierarchical structures, the same 𝜀-net sampling idea can be
+applied to build a single-layer (flat) graph index: selecting an 𝜀-net
+and adding long-range shortcut edges between the nodes of it, mim-
+ics the effect of “hub” nodes. After following such a shortcut, our
+theoretical bounds in Theorem 4 control the remaining number of
+steps needed to reach the true neighbor. Thus, our framework not
+only explains hierarchical graphs like HNSW but also provides a
+theoretically sound operation to build flat indexes.
+Recall Bound of Popular Proximity Graphs . In our experiments,
+we empirically estimate the recall bound (i.e., the inverse CDF) ofa proximity graph by sampling and fitting an appropriate density
+function. Deriving a closed-form expression for the recall bound, or
+a closed-form characterization of the rank distribution, remains an
+interesting direction for future work. Focusing on specific input data
+distributionsD(see Section 4.1) may further facilitate such analyses.
+Doing so could enable an end-to-end closed-form characterization
+of the query-time distribution of HENN, as well as of flat indices
+constructed via 𝜀-nets.
+9 Related Work
+In this section, we review the literature most relevant to our work.
+More general information on the approximate nearest neighbor,
+search, vector databases, and graph indexes can be found in these
+surveys [2, 7, 13, 24, 40, 45, 55, 58, 63].
+11
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+Hierarchical Methods for ANN. A notable class of approaches for
+solving the ANN problem is based on hierarchical structures. One
+of the most widely used methods in this category is Hierarchical
+Navigable Small World ( HNSW ) [46], which constructs a multi-
+layered structure of navigable small-world graphs to enable efficient
+search. Interestingly, the core idea of hierarchical organization can
+be traced back to earlier work in computational geometry, including
+Cover Trees [6] and Navigating Nets [36].
+Hierarchical Navigable Small World (HNSW) graphs [ 46] con-
+struct a multi-layered hierarchy of navigable small world (NSW)
+graphs. An NSW graph serves as an efficient approximation of the
+Delaunay graph [ 25], which is known to be an optimal structure for
+solving the approximate nearest neighbor (ANN) problem [ 47]. The
+Delaunay graph is closely related to the Voronoi diagram, which
+partitions the space into cells based on their proximity to the points
+in the dataset. Unlike the Delaunay graph, which requires explicit
+geometric computation, NSW graphs are built incrementally by
+inserting points and connecting them to their approximate nearest
+neighbors [ 47]. During insertion and querying, HNSW employs
+a greedy search algorithm (Algorithm 1) to navigate through the
+graph and locate nearby points. To improve scalability, HNSW orga-
+nizes the data in a hierarchy where the number of nodes decreases
+exponentially across layers, resulting in 𝑂(log𝑛)layers and a total
+space complexity of 𝑂(𝑛).
+The Cover Tree [ 6] and Navigating Nets [ 36] are hierarchical
+data structures for nearest neighbor search in general metric spaces.
+Both achieve logarithmic query times by recursively organizing
+data into nested layers, cover trees through covering and separa-
+tion invariants, and navigating nets via sequences of 𝑟-nets that
+approximate the dataset at multiple scales. While they offer strong
+theoretical guarantees and predictable performance, these methods
+are challenging to implement and scale poorly in practice, limiting
+their adoption in modern large-scale applications.
+Beyond HNSW, several other hierarchical indices and heuris-
+tics have been proposed. None being generalized to HENN. For
+example, HVS organizes data into coarse Voronoi regions that are
+refined hierarchically, enabling layered navigation and accelerating
+search by progressively narrowing the candidate set [ 43]. HCNNG
+instead builds multiple hierarchical clusterings and merges them
+into a proximity graph, leveraging both global and local structure.
+By combining clustering with MST-based connectivity, HCNNG re-
+duces construction overhead while maintaining competitive query
+performance [49].
+Some methods integrate hierarchical tree structures with graph
+refinement, while large-scale libraries such as FAISS [ 35] adopt
+hierarchical inverted file strategies. In FAISS, coarse quantization
+partitions the dataset into clusters, which are then refined with
+product quantization (PQ) [32].
+Other Solutions for ANN. Solutions to the nearest neighbor prob-
+lem can be categorized along several dimensions. One common dis-
+tinction is between classical methods, which primarily target the ex-
+act NN problem. Examples include k-d trees [ 5], ball trees [ 53], and
+Delaunay triangulations [ 26]. While effective in low-dimensional
+spaces, these methods typically fail to scale in high-dimensional
+settings. Another broad category includes quantization-based meth-
+ods [ 21,32,54], which cluster the data and represent points by theirassigned centroids (codewords), thereby approximating distances
+efficiently. Additionally, hashing-based methods such as Locality-
+Sensitive Hashing (LSH [ 11]) provide theoretical guarantees and
+have been widely used for high-dimensional ANN, and finally, the
+graph-based methods [ 43,46,47,58]. For comprehensive overviews
+of these and other approaches, we refer the reader to the following
+surveys [ 4,24,40,42,55,63]. Beyond graph topology, several lines
+of work improve ANN accuracy and efficiency through quantiza-
+tion. Guo, et al. [ 23] introduce direction-sensitive quantizers that
+better preserve angular similarity, enabling faster high-dimensional
+inference with competitive recall. Similarly, Rabitq [ 20] provides
+a quantization scheme with theoretical reconstruction-error guar-
+antees designed specifically for ANN search, showing that quanti-
+zation can substantially reduce memory while retaining accuracy.
+These works mainly focus on compressing the data vectors used
+for distance estimation, whereas our focus is on the structure and
+navigability of the search graph itself. Another complementary line
+is probabilistic search guidance [ 44], which proposes stochastic
+transition rules to escape local minima and improve robustness of
+greedy search. Such methods modify the search dynamics rather
+than the graph structure. The above systems are orthogonal and
+compatible with our theoretical contributions. Quantization-based
+methods can be applied inside any graph index to reduce vector
+memory footprint. Similarly, probabilistic routing modifies how the
+search moves on a fixed graph.
+Worst-Case Performance Analysis. Several works study the lim-
+itations of graph-based ANN indices. Indyk et al. [ 30] show that
+HNSW can require linear query time on adversarial datasets. Wang
+et al. [ 64] propose Steiner-hardness as a graph-native measure of
+query difficulty, capturing structural factors that influence cost
+and enabling the design of unbiased workloads. While these ap-
+proaches characterize hard queries or highlight specific failure cases
+on proximity graphs , our analysis takes a complementary view by
+providing general bounds on query time for HENN as a function of
+the underlying proximity graph. Moreover, empirical results sug-
+gest that the worst-case recall bounds rarely manifest in practice,
+as they remain stable across real-world datasets.
+Comparison with Other Structural Analysis. Other recent works
+focus on improving or analyzing proximity graph constructions.
+Yang et al. [ 66] revisit construction strategies for indices like RNG
+and NSWG, optimizing pruning and edge selection to reduce build
+time without harming query performance. Diwan et al. [ 14] study
+the fundamental limits of navigable graphs, proving upper and
+lower bounds on node degree for efficient greedy routing. In con-
+trast, our contribution is structural: we introduce HENN as a graph-
+agnostic framework based on 𝜀-net layering, yielding provable
+polylogarithmic query-time guarantees for any underlying prox-
+imity graph. DiskANN [ 31] shows that a navigable graph com-
+bined with SSD-aware prefetching enables billion-scale search with
+near–HNSW accuracy. Lin & Zhao [ 41] provide a critical examina-
+tion of proximity-graph search, showing that well-constructed flat
+graphs can perform competitively and highlighting when greedy
+search succeeds or fails. Practical engineering optimizations also
+matter: Coleman et al. [ 10] demonstrate that simple node reordering
+can substantially reduce cache misses and latency. Most recently,
+Munyampirwa et al. [ 50] show that the performance of HNSW
+12
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+largely comes from a set of high-degree “hub” nodes, and that
+flattening the hierarchy yields similar recall and speed.
+10 Conclusion
+We introduced HENN , a structural property for hierarchical graph-
+based indices in ANN search that unifies theoretical guarantees with
+practical efficiency. By organizing layers as 𝜀-nets, HENN achieves
+provable polylogarithmic query time while retaining a simple and
+implementable design. We further provided a probabilistic analysis
+ofHNSW , shedding light on the reasons behind its strong empirical
+performance. To support practical adoption, we developed a budget-
+aware algorithm for 𝜀-net construction, allowing practitioners to
+balance preprocessing time against recall quality.
+13
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+References
+[1]Pankaj K Agarwal. Range searching. In Handbook of discrete and computational
+geometry , pp. 1057–1092. Chapman and Hall/CRC, 2017.
+[2]Alexandr Andoni. Nearest neighbor search: the old, the new, and the impossible .
+PhD thesis, Massachusetts Institute of Technology, 2009.
+[3] ANN Benchmarks. URL http://ann-benchmarks.com.
+[4]Martin Aumüller, Erik Bernhardsson, and Alexander Faithfull. Ann-benchmarks:
+A benchmarking tool for approximate nearest neighbor algorithms. Information
+Systems , 87:101374, 2020.
+[5]Jon Louis Bentley. Multidimensional binary search trees used for associative
+searching. Communications of the ACM , 18(9):509–517, 1975.
+[6]Alina Beygelzimer, Sham Kakade, and John Langford. Cover trees for nearest
+neighbor. In Proceedings of the 23rd international conference on Machine learning ,
+pp. 97–104, 2006.
+[7]Nitin Bhatia et al. Survey of nearest neighbor techniques. arXiv preprint
+arXiv:1007.0085 , 2010.
+[8]Leonid Boytsov and Bilegsaikhan Naidan. Engineering efficient and effective
+non-metric space library. In Nieves R. Brisaboa, Oscar Pedreira, and Pavel Zezula
+(eds.), Similarity Search and Applications - 6th International Conference, SISAP
+2013, A Coruña, Spain, October 2-4, 2013, Proceedings , volume 8199 of Lecture Notes
+in Computer Science , pp. 280–293. Springer, 2013. doi: 10.1007/978-3-642-41062-
+8\_28. URL https://doi.org/10.1007/978-3-642-41062-8_28.
+[9]Bernard Chazelle. The Discrepancy Method: Randomness and Complex-
+ity. Cambridge University Press, Cambridge, UK, 2000. ISBN 978-0-521-
+77093-4. URL https://www.cambridge.org/core/books/discrepancy-method/
+46C58D0C5DD0F8A01AD9FE221EAD7E8E.
+[10] Benjamin Coleman, Santiago Segarra, Alexander J Smola, and Anshumali Shri-
+vastava. Graph reordering for cache-efficient near neighbor search. Advances in
+Neural Information Processing Systems , 35:38488–38500, 2022.
+[11] Mayur Datar, Nicole Immorlica, Piotr Indyk, and Vahab S Mirrokni. Locality-
+sensitive hashing scheme based on p-stable distributions. In Proceedings of the
+twentieth annual symposium on Computational geometry , pp. 253–262, 2004.
+[12] Mark de Berg, Otfried Cheong, Marc van Kreveld, and Mark Overmars. Computa-
+tional Geometry: Algorithms and Applications . Springer-Verlag, Berlin, Heidelberg,
+3rd edition, 2008. ISBN 978-3-540-77973-5. URL https://www.springer.com/gp/
+book/9783540779735.
+[13] Subramaniam Dhanabal and SJIJCA Chandramathi. A review of various k-
+nearest neighbor query processing techniques. International Journal of Computer
+Applications , 31(7):14–22, 2011.
+[14] Haya Diwan, Jinrui Gou, Cameron Musco, Christopher Musco, and Torsten Suel.
+Navigable graphs for high-dimensional nearest neighbor search: Constructions
+and limits. Advances in Neural Information Processing Systems , 37:59513–59531,
+2024.
+[15] Wei Dong, Charikar Moses, and Kai Li. Efficient k-nearest neighbor graph con-
+struction for generic similarity measures. In Proceedings of the 20th international
+conference on World wide web , pp. 577–586, 2011.
+[16] Elastic Team. Elasticsearch: Distributed search and analytics engine. https:
+//www.elastic.co/elasticsearch/, 2024. Version 8.x.
+[17] Faiss Library. URL https://github.com/facebookresearch/faiss.
+[18] Wenqi Fan, Yujuan Ding, Liangbo Ning, Shijie Wang, Hengyun Li, Dawei Yin,
+Tat-Seng Chua, and Qing Li. A survey on rag meeting llms: Towards retrieval-
+augmented large language models. In Proceedings of the 30th ACM SIGKDD
+Conference on Knowledge Discovery and Data Mining , pp. 6491–6501, 2024.
+[19] Cong Fu, Chao Xiang, Changxu Wang, and Deng Cai. Fast approximate near-
+est neighbor search with the navigating spreading-out graph. arXiv preprint
+arXiv:1707.00143 , 2017.
+[20] Jianyang Gao and Cheng Long. Rabitq: Quantizing high-dimensional vectors with
+a theoretical error bound for approximate nearest neighbor search. Proceedings
+of the ACM on Management of Data , 2(3):1–27, 2024.
+[21] Tiezheng Ge, Kaiming He, Qifa Ke, and Jian Sun. Optimized product quantization.
+IEEE transactions on pattern analysis and machine intelligence , 36(4):744–755,
+2013.
+[22] Phillip B Gibbons, Yossi Matias, and Viswanath Poosala. Fast incremental main-
+tenance of approximate histograms. ACM Transactions on Database Systems
+(TODS) , 27(3):261–298, 2002.
+[23] Ruiqi Guo, Philip Sun, Erik Lindgren, Quan Geng, David Simcha, Felix Chern,
+and Sanjiv Kumar. Accelerating large-scale inference with anisotropic vector
+quantization. In International Conference on Machine Learning , pp. 3887–3896.
+PMLR, 2020.
+[24] Yikun Han, Chunjiang Liu, and Pengfei Wang. A comprehensive survey on
+vector database: Storage and retrieval technique, challenge. arXiv preprint
+arXiv:2310.11703 , 2023.
+[25] Sariel Har-Peled. Geometric Approximation Algorithms , volume 173 of Mathemat-
+ical Surveys and Monographs . American Mathematical Society, Providence, RI,
+2011. ISBN 978-0-8218-4911-8. URL https://www.ams.org/books/surv/173/.
+[26] Sariel Har-Peled, Piotr Indyk, and Rajeev Motwani. Approximate nearest neigh-
+bor: Towards removing the curse of dimensionality. 2012.[27] Ben Harwood and Tom Drummond. Fanng: Fast approximate nearest neighbour
+graphs. In Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition , pp. 5713–5722, 2016.
+[28] David Haussler and Emo Welzl. Epsilon-nets and simplex range queries. In
+Proceedings of the second annual symposium on Computational geometry , pp.
+61–71, 1986.
+[29] Piotr Indyk and Rajeev Motwani. Approximate nearest neighbors: towards
+removing the curse of dimensionality. In Proceedings of the thirtieth annual ACM
+symposium on Theory of computing , pp. 604–613, 1998.
+[30] Piotr Indyk and Haike Xu. Worst-case performance of popular approximate
+nearest neighbor search implementations: Guarantees and limitations. Advances
+in Neural Information Processing Systems , 36:66239–66256, 2023.
+[31] Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Ravishankar
+Krishnawamy, and Rohan Kadekodi. Diskann: Fast accurate billion-point nearest
+neighbor search on a single node. Advances in neural information processing
+Systems , 32, 2019.
+[32] Herve Jegou, Matthijs Douze, and Cordelia Schmid. Product quantization for
+nearest neighbor search. IEEE transactions on pattern analysis and machine
+intelligence , 33(1):117–128, 2010.
+[33] Hervé Jégou, Matthijs Douze, and Cordelia Schmid. Product quantization for
+nearest neighbor search. In IEEE Transactions on Pattern Analysis and Machine
+Intelligence (TPAMI) , volume 33, pp. 117–128. IEEE, 2011.
+[34] Zhi Jing, Yongye Su, Yikun Han, Bo Yuan, Haiyun Xu, Chunjiang Liu, Kehai
+Chen, and Min Zhang. When large language models meet vector databases: A
+survey. arXiv preprint arXiv:2402.01763 , 2024.
+[35] Jeff Johnson, Matthijs Douze, and Hervé Jégou. Billion-scale similarity search
+with gpus. IEEE Transactions on Big Data , 7(3):535–547, 2019.
+[36] Robert Krauthgamer and James R Lee. Navigating nets: Simple algorithms for
+proximity search. In Proceedings of the fifteenth annual ACM-SIAM symposium
+on Discrete algorithms , pp. 798–807. Citeseer, 2004.
+[37] Gérard Le Caer and Renaud Delannay. Correlations in topological models of 2d
+random cellular structures. Journal of Physics A: Mathematical and General , 26
+(16):3931, 1993.
+[38] Jussi Lehtonen. The lambert w function in ecological and evolutionary models.
+Methods in Ecology and Evolution , 7(9):1110–1118, 2016.
+[39] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin,
+Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, et al.
+Retrieval-augmented generation for knowledge-intensive nlp tasks. Advances in
+neural information processing systems , 33:9459–9474, 2020.
+[40] Wen Li, Ying Zhang, Yifang Sun, Wei Wang, Mingjie Li, Wenjie Zhang, and
+Xuemin Lin. Approximate nearest neighbor search on high dimensional
+data—experiments, analyses, and improvement. IEEE Transactions on Knowledge
+and Data Engineering , 32(8):1475–1488, 2019.
+[41] Peng-Cheng Lin and Wan-Lei Zhao. Graph based nearest neighbor search:
+Promises and failures. arXiv preprint arXiv:1904.02077 , 2019.
+[42] Yingfan Liu, Cheng Hong, and Jiangtao Jiang. Revisiting k-nearest neighbor
+graph construction on high-dimensional data: Experiments and analyses. arXiv
+preprint arXiv:2112.02234 , 2021. URL https://arxiv.org/abs/2112.02234.
+[43] Kejing Lu, Mineichi Kudo, Chuan Xiao, and Yoshiharu Ishikawa. Hvs: hierarchical
+graph structure based on voronoi diagrams for solving approximate nearest
+neighbor search. Proceedings of the VLDB Endowment , 15(2):246–258, 2021.
+[44] Kejing Lu, Chuan Xiao, and Yoshiharu Ishikawa. Probabilistic routing for graph-
+based approximate nearest neighbor search. arXiv preprint arXiv:2402.11354 ,
+2024.
+[45] Le Ma, Ran Zhang, Yikun Han, Shirui Yu, Zaitian Wang, Zhiyuan Ning, Jing-
+han Zhang, Ping Xu, Pengjiang Li, Wei Ju, et al. A comprehensive survey
+on vector database: Storage and retrieval technique, challenge. arXiv preprint
+arXiv:2310.11703 , 2023.
+[46] Yu A Malkov and Dmitry A Yashunin. Efficient and robust approximate nearest
+neighbor search using hierarchical navigable small world graphs. IEEE transac-
+tions on pattern analysis and machine intelligence , 42(4):824–836, 2018.
+[47] Yury Malkov, Alexander Ponomarenko, Andrey Logvinov, and Vladimir Krylov.
+Approximate nearest neighbor algorithm based on navigable small world graphs.
+Information Systems , 45:61–68, 2014.
+[48] Yury Malkov et al. hnswlib. https://github.com/nmslib/hnswlib, 2018.
+C++/Python library implementing HNSW.
+[49] Javier Vargas Munoz, Marcos A Gonçalves, Zanoni Dias, and Ricardo da S Torres.
+Hierarchical clustering-based graphs for large scale approximate nearest neighbor
+search. Pattern Recognition , 96:106970, 2019.
+[50] Blaise Munyampirwa, Vihan Lakshman, and Benjamin Coleman. Down with the
+hierarchy: The’h’in hnsw stands for" hubs". arXiv preprint arXiv:2412.01940 , 2024.
+[51] Nabil H Mustafa. Computing optimal epsilon-nets is as easy as finding an unhit
+set. In 46th International Colloquium on Automata, Languages, and Programming
+(ICALP 2019) , pp. 87–1. Schloss Dagstuhl–Leibniz-Zentrum für Informatik, 2019.
+[52] David Newman. Bag of Words. UCI Machine Learning Repository, 2008. DOI:
+https://doi.org/10.24432/C5ZG6P.
+[53] Stephen M Omohundro. Five balltree construction algorithms. 1989.
+14
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+[54] Ezgi Can Ozan, Serkan Kiranyaz, and Moncef Gabbouj. Competitive quantization
+for approximate nearest neighbor search. IEEE Transactions on Knowledge and
+Data Engineering , 28(11):2884–2894, 2016.
+[55] James Jie Pan, Jianguo Wang, and Guoliang Li. Survey of vector database man-
+agement systems. The VLDB Journal , 33(5):1591–1615, 2024.
+[56] pgvector Contributors. pgvector: Open-source vector similarity search extension
+for PostgreSQL. https://github.com/pgvector/pgvector, 2026. Version 0.8.x (or
+whichever release you used).
+[57] Ninh Pham and Tao Liu. Falconn++: A locality-sensitive filtering approach for
+approximate nearest neighbor search. Advances in Neural Information Processing
+Systems , 35:31186–31198, 2022.
+[58] Liudmila Prokhorenkova and Aleksandr Shekhovtsov. Graph-based nearest
+neighbor search: From practice to theory. In International Conference on Machine
+Learning , pp. 7803–7813. PMLR, 2020.
+[59] Godfried T Toussaint. The relative neighbourhood graph of a finite planar set.
+Pattern recognition , 12(4):261–268, 1980.
+[60] Vladimir N Vapnik and A Ya Chervonenkis. On the uniform convergence of
+relative frequencies of events to their probabilities. In Measures of complexity:festschrift for alexey chervonenkis , pp. 11–30. Springer, 2015.
+[61] Jeffrey S Vitter. Random sampling with a reservoir. ACM Transactions on Mathe-
+matical Software (TOMS) , 11(1):37–57, 1985.
+[62] Jianguo Wang, Xiaomeng Yi, Rentong Guo, Hai Jin, Peng Xu, Shengjun Li, Xi-
+angyu Wang, Xiangzhou Guo, Chengming Li, Xiaohai Xu, et al. Milvus: A
+purpose-built vector data management system. In Proceedings of the 2021 Inter-
+national Conference on Management of Data , pp. 2614–2627, 2021.
+[63] Mengzhao Wang, Xiaoliang Xu, Qiang Yue, and Yuxiang Wang. A comprehen-
+sive survey and experimental comparison of graph-based approximate nearest
+neighbor search. arXiv preprint arXiv:2101.12631 , 2021.
+[64] Zeyu Wang, Qitong Wang, Xiaoxing Cheng, Peng Wang, Themis Palpanas, and
+Wei Wang. Steiner-hardness: A query hardness measure for graph-based ann
+indexes. Proceedings of the VLDB Endowment , 17(13):4668–4682, 2024.
+[65] Han Xiao, Kashif Rasul, and Roland Vollgraf. Fashion-mnist: a novel image
+dataset for benchmarking machine learning algorithms, 2017.
+[66] Shuo Yang, Jiadong Xie, Yingfan Liu, Jeffrey Xu Yu, Xiyue Gao, Qianru Wang, Yan-
+guo Peng, and Jiangtao Cui. Revisiting the index construction of proximity graph-
+based approximate nearest neighbor search. arXiv preprint arXiv:2410.01231 , 2024.
+15
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+Appendix
+Table of Content
+1. Background on Proximity Graphs . . . . . . . . . . . . . . . . . . . . . . . A
+2. Dynamic Setting . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . B
+3. Parallelization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . C
+4. Pseudo-codes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . D
+5. More on Experiments . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . E
+6. More on Recall Bound . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . F
+A Background on Proximity Graphs
+Graph-based algorithms for the ANN problem typically begin by
+constructing a graph on the given dataset 𝑋. A key property of
+these graphs is navigability , which ensures that the Greedy Search
+algorithm (Algorithm 1) can be effectively applied [ 47]. Specifically,
+navigability means that by following a sequence of locally greedy
+steps, the algorithm can successfully reach an approximate nearest
+neighbor of the query point 𝑞.
+According to this definition, a complete graph over the point
+set is trivially navigable. The most optimized navigable graph can,
+in principle, be obtained by constructing the dual of the Voronoi
+diagram of the points, known as the Delaunay triangulation [12].
+However, constructing this graph is computationally challenging,
+particularly in high dimensions, due to the curse of dimensionality.
+An efficient approximation of the Delaunay triangulation can
+be achieved through a simple randomized algorithm that incre-
+mentally inserts points and connects each new point to its nearest
+neighbors in the existing graph structure. This approach forms
+the basis of the Navigable Small World (NSW) graph [ 47]. The
+HNSW algorithm adopts a similar strategy within each layer, while
+introducing additional heuristics to improve practical performance,
+such as adding random exploration edges between points. These
+heuristics can also be incorporated into the HENN structure as well,
+treating the navigable graph as a black-box [46].
+A natural baseline is the 𝑘-NN graph , where each point is con-
+nected to its 𝑘nearest neighbors. While this structure is easy to
+build and widely used, it is well known that for small values of 𝑘,
+𝑘-NN graphs tend to exhibit numerous local minima that hinder
+greedy navigation [42].
+Another classical proximity structure is the Relative Neighbor-
+hood Graph (RNG) , introduced in computational geometry [ 59].
+An edge between two points exists only if no other point lies within
+the lens defined by them, making the RNG a sparse subgraph of the
+Delaunay triangulation. While RNGs enjoy theoretical navigability
+guarantees, their practical construction cost and sparsity often limit
+their use in large-scale ANN systems.
+TheNavigable Spreading-Out Graph (NSG) [19] has emerged
+as a practical ANN graph structure that carefully sparsifies a 𝑘-NN
+graph while ensuring connectivity and navigability. NSG uses a
+diversification step to spread out edges and eliminate redundancy,
+resulting in a graph that balances efficiency and search quality.
+It is among the most competitive structures in large-scale ANN
+benchmarks.
+For a more detailed comparison of these graph structures, we
+refer the reader to [ 66]. As highlighted earlier, any navigable graphcan be treated as a black box and seamlessly integrated into the
+HENN framework within each layer.
+B Dynamic Setting
+In this section, we present a procedure for maintaining the HENN
+structure under dynamic updates to the point set 𝑋. The supported
+operations include Insert(x) , which adds a new point 𝑥, and
+Delete(x) , which removes an existing point 𝑥∈𝑋.
+Based on the discussion in Theorem 1, a random sample of an
+appropriate size forms an 𝜀-net of𝑋with high probability. We
+denote this required sample size by 𝑚𝜀, given by:
+𝑚𝜀=𝑂(︃𝑑
+𝜀log𝑑
+𝜀)︃
+Each layer of HENN, denoted by L𝑖, is constructed as a random
+sample of size 𝑚E(|L 𝑖−1|)from the previous layer (see Equation 1).
+Consequently, the problem reduces to dynamically maintaining a
+random sample 𝑆of size𝑚𝜀from the point set 𝑋.13
+This problem can be addressed using Reservoir Sampling [ 61]
+and the Backing Samples technique [ 22]. The key idea is to handle
+Insert(x) operations by probabilistically adding the new element
+to the sample 𝑆using a non-uniform coin toss. To support deletions,
+a larger backing sample is maintained beyond size 𝑚𝜀, allowing
+for efficient resampling of 𝑆once the size drops below a threshold.
+This approach yields a constant amortized update time.
+According to this, we can maintain the HENN structure dynami-
+cally:
+Insert(x) :To insert a new point, dynamic updates are per-
+formed starting from layer L1and proceeding upward through the
+hierarchy, stopping at the highest layer where the new point is
+included. This process takes 𝑂(log𝑛)time, matching the insertion
+time complexity of HNSW.
+Delete(x) :Deletion begins at layer L1, where the point 𝑥is
+removed if present. If the size of a layer falls below a critical thresh-
+old (as discussed in [ 22]), the layer must be resampled. Following
+resampling, the HENN structure is rebuilt from that layer up to the
+root, which incurs a cost of 𝑂(𝑛log𝑛)in the worst case. However,
+since such rebuilding occurs infrequently, only when the layer size
+drops significantly (e.g., 𝑚𝜀<𝑐0𝑛for a constant 𝑐0), the amortized
+cost remains 𝑂(log𝑛).
+C Parallelization
+Having discussed the dynamic setting, we next present a paral-
+lelized approach to constructing the HENN index during preprocess-
+ing. While the original HENN construction, shown in Algorithm 2,
+runs sequentially by building layers L1throughL𝑚from the base
+point set𝑋, this process can be parallelized to reduce preprocessing
+time.
+To enable parallelization, we exploit the fact that layer sampling
+in HENN is performed with replacement. Given 𝑝parallel CPU
+cores, we can independently generate samples for each layer in
+parallel. Specifically, each core performs independent sampling,
+effectively achieving a 𝑝-factor speedup for the sampling phase
+performed on each layer.
+13𝑆is a random sample with replacement, with each element having a probability𝑚𝜀
+𝑛
+being in𝑆.
+16
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+HNSW also uses a parallelization to enhance preprocessing [ 46],
+where each input point is processed independently. For each point,
+a random level is assigned, and the point is inserted into the corre-
+sponding layers. This results in a total construction time of 𝑂(𝑛log𝑛),
+which can be reduced to 𝑂(𝑛log𝑛
+𝑝)under parallel execution with 𝑝
+cores.
+For HENN, the construction begins by sampling a subset of
+size𝑛
+2𝑚for the first layerL1, and recursively building higher lay-
+ers. Each layerL𝑖requires constructing a navigation graph, the
+complexity of which depends on the chosen method. For instance,
+NSW-based graph construction requires 𝑂(|L𝑖|log|L𝑖|)time on
+the𝑖th layer. Excluding graph construction, the sampling phase
+alone can be executed in 𝑂(𝑛log𝑛
+𝑝)time using𝑝cores.
+D Pseudo-codes
+Algorithm 4 Building𝜀-net (Sampling-based Algorithm)
+Require: The range space(𝑋,R), value of𝜀, failure probability
+𝜑′.
+Ensure: The𝜀-netA.
+1:function BuildEpsNetSampling (𝑋,𝜀,𝜑′)⊲Sampling-based
+algorithm
+2: repeat
+3:𝑚𝜀←calculate the size (Theorem 1)
+4:A←𝑚𝜀random samples with replacement from 𝑋.
+5: until IsEpsNet(A)=true ⊲Takes long
+6: ReturnA
+Algorithm 5 Building𝜀-net (Discrepancy-based Algorithm)
+Require: The range space(𝑋,R), value of𝜀, failure probability
+𝜑′.
+Ensure: The𝜀-netA.
+1:function BuildEpsNetDisc (𝑋,𝜀,R)⊲Build𝜀-net by providing
+𝜀
+2:𝑘←number of iterations (Equation 2)
+3:A←𝑋
+4: for1≤𝑖≤𝑘do
+5:A← Halving(A,R)⊲The halving step, with arbitrary
+matching.
+6: ReturnA
+E More on Experiments
+E.1 Details on Experimental Setting
+Real Datasets. We evaluate our methods on standard ANN bench-
+marks with both Euclidean and angular (cosine) distance metrics.
+The datasets include: SIFT-128 [33], consisting of 1M vectors in
+128 dimensions; GIST-960 [33], with 1M vectors in 960 dimensions;
+Fashion-MNIST , containing 60K vectors in 784 dimensions; and
+NYTimes , with 290K vectors in 56 dimensions. Among these, NY-
+Times is evaluated with cosine similarity, while the others use the
+Euclidean norm.Synthetic Datasets. To study the effect of varying parameters
+such as dimensionality, we generated synthetic datasets for ANN
+search. These were drawn either from a uniform distribution or
+from mixtures of anisotropic Gaussians, producing several skewed
+clusters that mimic the structure of challenging real-world datasets.
+Queries. For our experiments, queries are generated in two ways:
+by randomly sampling a subset of points from the dataset, and by
+creating an additional set of points drawn uniformly at random
+from the ambient space.
+Methods. In our experiments, we combined HENN with different
+PGs at each level. For this purpose, we followed the construction
+algorithm 2 with a standard construction process for the PG.
+Implementation of 𝜀-net Construction. We employ two approaches
+for building 𝜀-nets. The first is Random Sampling , where a random
+subset of size 𝑚𝜀is selected, which yields an 𝜀-net with a cer-
+tain probability. Other approaches, such as sketch-and-merge or
+discrepancy-based methods, are not practical in this context as their
+complexity grows exponentially with the dimension 𝑑. Our second
+approach is the Budget-Aware Algorithm , in which the user specifies
+a budgetB, expressed as a ratio 𝑟∈(0,1].
+Concretely, if the target 𝜀-net size is𝑚, we first select(1−𝑟)𝑚
+elements uniformly at random. The remaining 𝑟·𝑚elements are
+then chosen using a heuristic procedure (see Algorithm 6), which is
+based on the unhit-set discovery technique described in Section 6.1.
+Algorithm 6 Finding an Unhit Range
+Require: A point set𝑋and a subsetNas the𝜀-net placeholder.
+Ensure: The𝜀-net with high probability.
+1:function FindAnUnhitSet (𝑋,𝜀,N)
+2: for𝑖≤Bdo ⊲At mostBiterations.
+3:𝑝←a random point from 𝑋
+4: Partition the whole space based on the distance of points
+to𝑝.
+5: forpartition𝑃𝑖do
+6: if𝑃𝑖∩N=∅then
+7: Add a random point from 𝑃𝑖toN
+8: If no new points added, just add a random point to N.
+returnN
+E.2 Comparison of Proximity Graphs
+In this section, we compare several proximity graphs, including
+kNN ,KGraph ,NSG ,FAANG , and NSW . While this is not the pri-
+mary focus of our work, we report their recall bounds and query
+times in a flat (single-layer) setting across multiple datasets.
+Figures 12 and 13 present the recall bounds of these proximity
+graphs on both synthetic and real datasets. In these experiments,
+we varied the value of 𝑘in the𝑘-nearest neighbor search and,
+over multiple runs, measured the fraction of queries for which the
+returned neighbors included the true 𝑘nearest neighbors. This frac-
+tion provides an estimate of the probability of correctly retrieving
+the𝑘nearest neighbors. As 𝑘increases, this probability naturally
+improves, since the search is more likely to include points from the
+true neighborhood of the query. We define the recall bound of a
+proximity graph (Definition 4) as the smallest value of 𝑘for which17
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+(a) Uniform distribution ( ℓ2)
+ (b) Mixture of Gaussians ( ℓ2)
+ (c) Mixture of Gaussians (cosine)
+Figure 12: Comparison of recall bound (average hit among 𝑘neighbors of the query) between different proximity graphs (synthetic dataset).
+(a) Fashion-MNIST
+ (b) SIFT
+ (c) NYTimes
+Figure 13: omparison of recall bound (average hit among 𝑘neighbors of the query) between different proximity graphs (real datasets).
+this probability exceeds 0.9on average. Notably, some graphs, such
+asNSW (used in HNSW ), show very small recall bounds, which in
+turn leads to better performance for HENN .
+Figures 14 compare the query-time performance of these prox-
+imity graphs in a single-layer (flat) setting across different datasets.
+E.3 Indexing Size and Time
+In this section, we evaluate the indexing phase of HENN , focusing
+on index size and preprocessing time. Figure 15 reports the indexing
+cost of HENN when integrated with different proximity graphs.
+We observe that the build time for NSW is higher than for other
+graphs, since our implementation includes a second refinement
+phase to enforce the desired node degree specified by the user. In
+terms of memory usage, the index grows almost linearly with both
+the dataset size 𝑛and the dimensionality 𝑑.
+E.4 Additional Experimental Reports
+Effect of𝑛and𝑑.Figure 17 illustrates the effect of dataset size
+𝑛on query time, while Figure 16 reports its effect on the number
+of hops (steps) in the greedy search. In both cases, the dependence
+on𝑛is logarithmic, consistent with Theorem 4. Figure 18 shows
+the effect of dimensionality 𝑑on query time and hops, which scales
+linearly with 𝑑as predicted by Theorem 4. As discussed earlier,
+increasing𝑑raises the likelihood of getting trapped in local minima
+(for proximity graphs with fixed degree). Consequently, for smaller
+values of𝑑, the query time initially decreases before the linear
+dependence on 𝑑dominates. Figure 20 also shows the effect of
+dimension𝑑on the synthetic data with the Mixture of Gaussians
+distribution.Budget-Aware 𝜀-net construction. Figure 7 demonstrates the ef-
+fectiveness of the budget-aware algorithm in constructing 𝜀-nets
+with high probability. Across multiple real datasets, even a small
+preprocessing budget (as low as 10%) substantially increases the
+likelihood that the resulting set forms a valid 𝜀-net. This property
+is particularly important for compressing the HENN index : by
+selecting smaller subsets per layer, we can reduce the overall index
+size, but at the cost of recall, since the subsets may no longer be
+𝜀-nets with high probability. Incorporating the budget-aware strat-
+egy mitigates this issue, yielding smaller subsets that retain a high
+probability of being 𝜀-nets and thus achieve recall comparable to
+the non-compressed version (as shown earlier in Figure 8).
+Figure 19 further illustrates the trade-off in preprocessing time.
+While the budget-aware algorithm requires additional time, grow-
+ing linearly with the budget, it provides substantially better 𝜀-net
+quality, making the extra preprocessing cost as a trade-off.
+Effect of Proximity Graph Degree. Figure 21 illustrates the impact
+of varying the degree of the proximity graph (across all layers)
+on the query time of HENN over additional datasets. The results
+confirm a linear dependence on the graph degree.
+Effect of exponential decay. Figure 22 shows the effect of varying
+the exponential decay rate, which controls the reduction in layer
+size (and equivalently, the number of layers) on recall and query
+time. Smaller decay values produce deeper hierarchies with more
+layers, leading to higher recall but longer query times, since the
+greedy search must traverse additional layers. Interestingly, there
+18
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+(a) Fashion-MNIST
+ (b) SIFT
+ (c) NYTimes
+Figure 14: Comparison of query times of different PGs in a single-layer setting (real dataset).
+(a) Indexing time vs. 𝑛
+ (b) Indexing time vs. 𝑑
+ (c) Index size vs. 𝑛
+ (d) Index size vs. 𝑑
+Figure 15: Index size and index time as a function of dataset size 𝑛and dimension 𝑑. This is the synthetic dataset with Mixture of Gaussians
+distribution.
+(a) GIST
+ (b) SIFT
+ (c) Fashion-MNIST
+Figure 16: Number of visited hops vs 𝑛.
+(a) Uniform distribution
+ (b) Mixture of Gaussians distribution
+Figure 18: Number of visited hops vs. 𝑑(synthetic dataset)
+(a) SIFT
+ (b) Fashion-MNIST
+Figure 17: Effect of dataset size 𝑛on the query time.
+exists an optimal number of layers that minimizes query time. In-
+creasing the decay (reducing the number of layers) weakens the
+hierarchical structure and degrades performance. In the extreme
+case of very few layers, query time increases again, as most of the
+effort is spent in the top layer, which contains 𝑂(𝑛)points, making
+it more prone to getting stuck in local minima. 19
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+(a) SIFT
+ (b) NYTimes
+ (c) Fashion-MNIST
+Figure 19: Comparing the time spent to find 𝜀-net using Budget-Aware algorithm for different values of budget B.
+Figure 20: Effect of dimension 𝑑on the query time. The results are
+on the synthetic dataset with varying 𝑑(Mixture of Gaussians distri-
+bution).
+(a) GIST
+ (b) Fashion-MNIST
+Figure 21: Effect of the degree of PG on the query time. Every other
+parameter, like the number of layers, is fixed.
+(a) time vs. decay
+ (b) recall vs. decay
+Figure 22: Effect of exponential decay rate on time and recall of
+HENN. Higher decay rate is equivalent of smaller number of layers.
+The experiments are on synthetic dataset with Mixture of Gaussians
+with 10k points and 𝑑=4.
+F More on Recall Bound
+In this section, we further examine the recall bound parameter in-
+troduced in Definition 4 and provide deeper insight into the results
+of Theorem 4. In particular, we interpret the theorem’s implications:broadly, Theorem 4 derives a probability distribution for the final
+running time (i.e., the number of visited hops) in the HENN index.
+This distribution is governed by the structural properties of the
+underlying proximity graph.
+Let𝐾be a random variable denoting the rank of the output
+returned when running the greedy search algorithm on the chosen
+proximity graphG. Based on the definitions in Section 4.1:
+𝐾=rank𝑋,𝑞(GSG(𝑞,𝑠)).
+In other words, a search over Greturns the𝐾-th nearest neighbor
+of the query point. The distribution of 𝐾is inherently determined by
+the structure and quality of the proximity graph: a better-designed
+graph places more probability mass on smaller values of 𝐾, yielding
+a lower expected rank.
+The exact distribution of this variable can be empirically ob-
+served by repeatedly sampling from it, that is, by running the search
+algorithm and recording the quality of its outputs (see Figures 12
+and 13). While our goal in this paper is not to derive closed-form
+distributions for different proximity graphs, doing so would be an
+interesting direction for future work.
+As in Section 4.1, we define the PMF and CDF of the random
+variable𝐾as:
+𝑝𝑘:=Pr(𝐾=𝑘), 𝐹𝐾(𝑘):=Pr(𝐾≤𝑘)=𝑘∑︂
+𝑗=1𝑝𝑗.
+Based on our definition of the recall bound (Definition 4), the
+value𝜌𝛾is given by:
+𝜌𝛾:=𝐹−1
+𝐾(𝛾).
+Following Theorem 4, for any fixed value 𝐾=𝑘, the running
+time of HENN is
+𝑂(𝑘·𝑑·log2𝑛)
+with probability at least 𝑝𝐿
+𝑘, where𝐿is the number of layers, which
+is bounded by 𝑂(log𝑛).
+Let𝑇be the random variable representing the number of hops
+visited (i.e., the running time of HENN). Theorem 4 therefore implies
+the following:
+For any𝑘∈Nand a fixed constant 𝑐>0, defining
+𝑡𝑘:=𝑐𝑘𝑑log2𝑛 and𝐿:=log𝑛,
+the running-time random variable 𝑇satisfies
+Pr(𝑇≤𝑡𝑘)=Pr(𝑇≤𝑐𝑘𝑑log2𝑛)=(︁𝐹𝐾(𝑘))︁𝐿.
+20
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+Thus, the CDF of 𝑇on the discrete grid {𝑡𝑘}𝑘≥1is
+𝐹𝑇(𝑡𝑘):=Pr(𝑇≤𝑡𝑘)=(︁𝐹𝐾(𝑘))︁𝐿, 𝑘 =1,2,...,
+with𝐹𝑇(𝑡0):=0.
+From this, we can derive the probability mass function of the
+running-time distribution of HENN:
+Pr(𝑇=𝑡𝑘)=(︁𝐹𝐾(𝑘))︁𝐿−(︁𝐹𝐾(𝑘−1))︁𝐿. (3)
+Result. Based on the above, Theorem 4 provides a probability
+distribution for the running time of the HENN structure, expressed
+in terms of the properties of the underlying proximity graph. Since
+each proximity graph induces its own distribution over the random
+variable𝐾, graphs whose distributions place more mass on smaller
+values of𝐾(e.g., those with smaller medians) correspondingly
+yield better average running times. See the following empirical
+evaluation.
+F.1 Empirical Results
+In this subsection, we present empirical results to validate the pre-
+ceding discussion. We begin by examining the distribution of 𝐾
+across different proximity graphs. Then, using equation 3 (derived
+from Theorem 4), we compute the corresponding distribution of
+the HENN running time. Finally, we compare these theoretical pre-
+dictions with empirical measurements to confirm that the observed
+running times of HENN align with these insights. In our experi-
+ments, we report the expected running time and compare it across
+different proximity graph constructions.
+Settings. We conducted experiments using the following prox-
+imity graphs: KNN, KGraph, NSW, and FAANG. The datasets used
+were Random (L2) ,Mixture of Gaussians L2 ,NYTimes (Cosine) ,andGloVe (Cosine) . Additional details about these datasets and
+experimental configurations are provided in the main Experiments
+section of the paper.
+Distribution of 𝐾.Figure 23 illustrates the empirical distribution
+of𝐾for the different proximity graphs. For example, on the Mixture
+of Gaussians dataset, several graphs tend to get trapped in local
+minima, which creates a secondary peak (a local mode) in the middle
+of the distribution. In contrast, NSW is able to escape these local
+traps more effectively, resulting in a distribution that concentrates
+more heavily on smaller values of 𝐾.
+Distribution of 𝑇.Figure 24 shows the derived distribution of the
+running-time variable 𝑇using equation 3. Here, we choose an arbi-
+trary constant 𝑐, so the resulting values do not correspond directly
+to the exact number of visited hops; rather, they represent a scaled
+version of the running time. The goal is to enable a meaningful
+relative comparison across different proximity graphs and dataset
+settings, which this transformation preserves.
+Expected Value of 𝑇.Figure 10 reports the expected value of 𝑇
+across different proximity graphs and datasets, computed using
+the result of Theorem 4 and equation 3. These values reflect the
+predicted average running time of HENN under each proximity
+graph construction (again, here 𝑇is proportional to time).
+Real Query Time of HENN. Figure 11 presents the actual query-
+time performance of HENN constructed using different proximity
+graphs. The empirical runtimes exhibit patterns consistent with our
+theoretical predictions: the relative ordering and average behavior
+closely mirror the expected values of 𝑇, thereby validating our
+analysis.
+21
+
+Conference’17, July 2017, Washington, DC, USA Mohsen Dehghankar and Abolfazl Asudeh
+Figure 23: Distribution of 𝐾. Each row shows a different dataset, and each column corresponds to a different proximity graph.
+22
+
+Hierarchical Epsilon-Net Graphs: Time Guarantees for HNSW in Approximate Nearest Neighbor Search Conference’17, July 2017, Washington, DC, USA
+Figure 24: Distribution of 𝑇, the query time of HENN derived theoretically based on the proximity graph’s performance. Each row is a different
+dataset, and each column corresponds to a different proximity graph. The blue line is the fitted density over the distribution.
+23
+
+Hierarchy To Score
+
+Paper
+  - Introduction
+    - Paragraph 1
+      - [34]
+      - [18]
+      - [39]
+      - [57]
+      - [43]
+      - [46]
+      - [49]
+      - [6]
+      - [36]
+      - [28]
+      - [19]
+      - [59]
+      - [63]
+      - [9]
+      - [17]
+    - Paragraph 2
+  - Background and Definitions
+    - Paragraph 1
+    - Paragraph 2
+      - [25]
+      - [28]
+      - [1]
+    - Paragraph 3
+      - [9]
+    - Paragraph 4
+    - Paragraph 5
+      - [37]
+      - [47]
+      - [59]
+      - [19]
+      - [63]
+  - Hierarchical -net Navigation Graph (HENN)
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+    - Paragraph 4
+    - Paragraph 5
+    - Paragraph 6
+    - Paragraph 7
+    - Paragraph 8
+    - Paragraph 9
+    - Paragraph 10
+    - Paragraph 11
+      - [46]
+      - [47]
+      - [31]
+    - Paragraph 12
+    - Paragraph 13
+    - Paragraph 14
+    - Paragraph 15
+  - Theoretical Analysis
+    - [Section Lead-in]
+      - Paragraph 1
+    - Definitions
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+    - Running Time Analysis
+      - Paragraph 1
+        - [38]
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+  - HNSW is a HENN Graph
+    - [Section Lead-in]
+      - Paragraph 1
+        - [46]
+        - [47]
+    - Time Complexity Analysis of HNSW
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+  - HENN Construction
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+        - [28]
+        - [9]
+      - Paragraph 3
+    - Existing -net Construction Algorithms
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+        - [9]
+        - [26]
+      - Paragraph 4
+    - Budget-Aware Algorithm for Constructing -nets
+      - Paragraph 1
+        - [51]
+      - Paragraph 2
+      - Paragraph 3
+        - [51]
+      - Paragraph 4
+    - Analysis of Budget-Aware Algorithm
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+        - [51]
+      - Paragraph 4
+      - Paragraph 5
+  - Experiments
+    - Paragraph 1
+      - [17]
+      - [35]
+      - [11]
+      - [32]
+      - [19]
+    - Paragraph 2
+    - Paragraph 3
+    - Paragraph 4
+      - [19]
+      - [3]
+      - [33]
+      - [65]
+      - [52]
+      - [15]
+      - [47]
+      - [27]
+    - Paragraph 5
+    - Paragraph 6
+      - [15]
+    - Paragraph 7
+    - Paragraph 8
+    - Paragraph 9
+    - Paragraph 10
+  - Discussion and Future Work
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+    - Paragraph 4
+    - Paragraph 5
+  - Related Work
+    - Paragraph 1
+    - Paragraph 2
+      - [46]
+      - [6]
+      - [36]
+      - [25]
+      - [47]
+      - [43]
+      - [49]
+      - [35]
+      - [32]
+    - Paragraph 3
+      - [5]
+      - [53]
+      - [26]
+      - [11]
+      - [23]
+      - [20]
+      - [44]
+    - Paragraph 4
+      - [30]
+      - [64]
+    - Paragraph 5
+      - [66]
+      - [14]
+      - [31]
+      - [41]
+      - [10]
+      - [50]
+  - Conclusion
+    - Paragraph 1
+  - A Background on Proximity Graphs
+    - Paragraph 1
+      - [47]
+    - Paragraph 2
+      - [47]
+      - [12]
+      - [46]
+      - [42]
+    - Paragraph 3
+      - [59]
+    - Paragraph 4
+      - [19]
+    - Paragraph 5
+      - [66]
+  - B Dynamic Setting
+    - Paragraph 1
+    - Paragraph 2
+      - [61]
+      - [22]
+    - Paragraph 3
+    - Paragraph 4
+      - [22]
+  - Parallelization
+    - Paragraph 1
+    - Paragraph 2
+      - [46]
+  - D Pseudo-codes
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+    - Paragraph 4
+    - Paragraph 5
+    - Paragraph 6
+    - Paragraph 7
+    - Paragraph 8
+  - E More on Experiments
+    - E.1 Details on Experimental Setting
+      - Paragraph 1
+        - [33]
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+    - E.2 Comparison of Proximity Graphs
+      - Paragraph 1
+    - E.3 Indexing Size and Time
+      - Paragraph 1
+    - E.4 Additional Experimental Reports
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+  - F More on Recall Bound
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+    - F.1 Empirical Results
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+[openai_full_paper_response] attempt=1/3
+Paper: 1.000000 | 0.000000
+Introduction: 0.050000 | 0.000000
+Paragraph 1: 0.025000 | 0.015000
+Paragraph 2: 0.025000 | 0.000000
+Background and Definitions: 0.050000 | 0.000000
+Paragraph 1: 0.010000 | 0.000000
+Paragraph 2: 0.010000 | 0.005000
+Paragraph 3: 0.010000 | 0.005000
+Paragraph 4: 0.010000 | 0.000000
+Paragraph 5: 0.010000 | 0.005000
+Hierarchical -net Navigation Graph (HENN): 0.200000 | 0.000000
+Paragraph 1: 0.013333 | 0.000000
+Paragraph 2: 0.013333 | 0.000000
+Paragraph 3: 0.013333 | 0.000000
+Paragraph 4: 0.013333 | 0.000000
+Paragraph 5: 0.013333 | 0.000000
+Paragraph 6: 0.013333 | 0.000000
+Paragraph 7: 0.013333 | 0.000000
+Paragraph 8: 0.013333 | 0.000000
+Paragraph 9: 0.013333 | 0.000000
+Paragraph 10: 0.013333 | 0.000000
+Paragraph 11: 0.013333 | 0.005333
+Paragraph 12: 0.013333 | 0.000000
+Paragraph 13: 0.013333 | 0.000000
+Paragraph 14: 0.013333 | 0.000000
+Paragraph 15: 0.013333 | 0.000000
+Theoretical Analysis: 0.150000 | 0.000000
+[Section Lead-in]: 0.015000 | 0.000000
+Paragraph 1: 0.015000 | 0.000000
+Definitions: 0.067500 | 0.000000
+Paragraph 1: 0.009643 | 0.000000
+Paragraph 2: 0.009643 | 0.000000
+Paragraph 3: 0.009643 | 0.000000
+Paragraph 4: 0.009643 | 0.000000
+Paragraph 5: 0.009643 | 0.000000
+Paragraph 6: 0.009643 | 0.000000
+Paragraph 7: 0.009643 | 0.000000
+Running Time Analysis: 0.067500 | 0.000000
+Paragraph 1: 0.013500 | 0.004050
+Paragraph 2: 0.013500 | 0.000000
+Paragraph 3: 0.013500 | 0.000000
+Paragraph 4: 0.013500 | 0.000000
+Paragraph 5: 0.013500 | 0.000000
+HNSW is a HENN Graph: 0.100000 | 0.000000
+[Section Lead-in]: 0.020000 | 0.000000
+Paragraph 1: 0.020000 | 0.008000
+Time Complexity Analysis of HNSW: 0.080000 | 0.000000
+Paragraph 1: 0.016000 | 0.000000
+Paragraph 2: 0.016000 | 0.000000
+Paragraph 3: 0.016000 | 0.000000
+Paragraph 4: 0.016000 | 0.000000
+Paragraph 5: 0.016000 | 0.000000
+HENN Construction: 0.100000 | 0.000000
+[Section Lead-in]: 0.020000 | 0.000000
+Paragraph 1: 0.006667 | 0.000000
+Paragraph 2: 0.006667 | 0.003333
+Paragraph 3: 0.006667 | 0.000000
+Existing -net Construction Algorithms: 0.030000 | 0.000000
+Paragraph 1: 0.007500 | 0.000000
+Paragraph 2: 0.007500 | 0.000000
+Paragraph 3: 0.007500 | 0.003750
+Paragraph 4: 0.007500 | 0.000000
+Budget-Aware Algorithm for Constructing -nets: 0.030000 | 0.000000
+Paragraph 1: 0.007500 | 0.003750
+Paragraph 2: 0.007500 | 0.000000
+Paragraph 3: 0.007500 | 0.003750
+Paragraph 4: 0.007500 | 0.000000
+Analysis of Budget-Aware Algorithm: 0.020000 | 0.000000
+Paragraph 1: 0.004000 | 0.000000
+Paragraph 2: 0.004000 | 0.000000
+Paragraph 3: 0.004000 | 0.002000
+Paragraph 4: 0.004000 | 0.000000
+Paragraph 5: 0.004000 | 0.000000
+Experiments: 0.100000 | 0.000000
+Paragraph 1: 0.010000 | 0.004000
+Paragraph 2: 0.010000 | 0.000000
+Paragraph 3: 0.010000 | 0.000000
+Paragraph 4: 0.010000 | 0.004000
+Paragraph 5: 0.010000 | 0.000000
+Paragraph 6: 0.010000 | 0.003000
+Paragraph 7: 0.010000 | 0.000000
+Paragraph 8: 0.010000 | 0.000000
+Paragraph 9: 0.010000 | 0.000000
+Paragraph 10: 0.010000 | 0.000000
+Discussion and Future Work: 0.040000 | 0.000000
+Paragraph 1: 0.008000 | 0.000000
+Paragraph 2: 0.008000 | 0.000000
+Paragraph 3: 0.008000 | 0.000000
+Paragraph 4: 0.008000 | 0.000000
+Paragraph 5: 0.008000 | 0.000000
+Related Work: 0.040000 | 0.000000
+Paragraph 1: 0.008000 | 0.000000
+Paragraph 2: 0.008000 | 0.004000
+Paragraph 3: 0.008000 | 0.004000
+Paragraph 4: 0.008000 | 0.004000
+Paragraph 5: 0.008000 | 0.004000
+Conclusion: 0.020000 | 0.000000
+Paragraph 1: 0.020000 | 0.000000
+A Background on Proximity Graphs: 0.030000 | 0.000000
+Paragraph 1: 0.006000 | 0.003000
+Paragraph 2: 0.006000 | 0.003000
+Paragraph 3: 0.006000 | 0.003000
+Paragraph 4: 0.006000 | 0.003000
+Paragraph 5: 0.006000 | 0.003000
+B Dynamic Setting: 0.020000 | 0.000000
+Paragraph 1: 0.005000 | 0.000000
+Paragraph 2: 0.005000 | 0.002500
+Paragraph 3: 0.005000 | 0.000000
+Paragraph 4: 0.005000 | 0.002500
+Parallelization: 0.020000 | 0.000000
+Paragraph 1: 0.010000 | 0.000000
+Paragraph 2: 0.010000 | 0.005000
+D Pseudo-codes: 0.020000 | 0.000000
+Paragraph 1: 0.002500 | 0.000000
+Paragraph 2: 0.002500 | 0.000000
+Paragraph 3: 0.002500 | 0.000000
+Paragraph 4: 0.002500 | 0.000000
+Paragraph 5: 0.002500 | 0.000000
+Paragraph 6: 0.002500 | 0.000000
+Paragraph 7: 0.002500 | 0.000000
+Paragraph 8: 0.002500 | 0.000000
+E More on Experiments: 0.030000 | 0.000000
+E.1 Details on Experimental Setting: 0.007500 | 0.000000
+Paragraph 1: 0.001250 | 0.000625
+Paragraph 2: 0.001250 | 0.000000
+Paragraph 3: 0.001250 | 0.000000
+Paragraph 4: 0.001250 | 0.000000
+Paragraph 5: 0.001250 | 0.000000
+Paragraph 6: 0.001250 | 0.000000
+E.2 Comparison of Proximity Graphs: 0.007500 | 0.000000
+Paragraph 1: 0.007500 | 0.000000
+E.3 Indexing Size and Time: 0.007500 | 0.000000
+Paragraph 1: 0.007500 | 0.000000
+E.4 Additional Experimental Reports: 0.007500 | 0.000000
+Paragraph 1: 0.002500 | 0.000000
+Paragraph 2: 0.002500 | 0.000000
+Paragraph 3: 0.002500 | 0.000000
+F More on Recall Bound: 0.030000 | 0.000000
+[Section Lead-in]: 0.006000 | 0.000000
+Paragraph 1: 0.003000 | 0.000000
+Paragraph 2: 0.003000 | 0.000000
+F.1 Empirical Results: 0.024000 | 0.000000
+Paragraph 1: 0.006000 | 0.000000
+Paragraph 2: 0.006000 | 0.000000
+Paragraph 3: 0.006000 | 0.000000
+Paragraph 4: 0.006000 | 0.000000
+
+Citation Contributions
+[34]: 0.001000
+[18]: 0.001000
+[39]: 0.001000
+[57]: 0.001000
+[43]: 0.001444
+[46]: 0.012972
+[49]: 0.001444
+[6]: 0.001444
+[36]: 0.001444
+[28]: 0.002667
+[19]: 0.006300
+[59]: 0.005000
+[63]: 0.002000
+[9]: 0.009542
+[25]: 0.002111
+[1]: 0.001667
+[37]: 0.001000
+[47]: 0.010722
+[31]: 0.002445
+[38]: 0.004050
+[17]: 0.001800
+[35]: 0.001244
+[11]: 0.001371
+[32]: 0.001244
+[3]: 0.000500
+[33]: 0.000500
+[65]: 0.000500
+[52]: 0.000500
+[15]: 0.003500
+[27]: 0.000500
+[26]: 0.002446
+[5]: 0.000571
+[53]: 0.000571
+[23]: 0.000571
+[20]: 0.000571
+[44]: 0.000571
+[30]: 0.002000
+[64]: 0.002000
+[66]: 0.003667
+[14]: 0.000667
+[41]: 0.000667
+[10]: 0.000667
+[50]: 0.000667
+[12]: 0.000750
+[42]: 0.000750
+[61]: 0.001250
+[22]: 0.003750
+[51]: 0.009500
+[33]: 0.000625

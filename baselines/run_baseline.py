@@ -15,7 +15,14 @@ def main() -> None:
     parser.add_argument(
         "--baseline",
         required=True,
-        choices=["citation_frequency", "length_weighted_frequency", "single_pass_llm", "technical_section_prior"],
+        choices=[
+            "citation_frequency",
+            "length_weighted_frequency",
+            "single_pass_llm",
+            "technical_section_prior",
+            "openai_full_paper",
+            "anthropic_full_paper",
+        ],
         help="Baseline model to run.",
     )
     parser.add_argument("--pdf", required=True, help="Path to the source PDF.")
@@ -60,6 +67,39 @@ def main() -> None:
         "--debug-log",
         default="",
         help="Optional debug log path. For single_pass_llm, raw prompts/responses are appended here.",
+    )
+    parser.add_argument(
+        "--api-key",
+        default="",
+        help="Optional API key for the selected full-paper API baseline. Prefer using --api-key-env instead of passing secrets on the command line.",
+    )
+    parser.add_argument(
+        "--api-key-env",
+        default="OPENAI_API_KEY",
+        help="Environment variable that stores the API key. For anthropic_full_paper, the code automatically falls back to AWS_BEARER_TOKEN_BEDROCK when this is left at the OpenAI default.",
+    )
+    parser.add_argument(
+        "--api-endpoint",
+        default="",
+        help="Optional full API endpoint URL for the selected full-paper baseline. If omitted, the baseline-specific default endpoint is used.",
+    )
+    parser.add_argument(
+        "--request-timeout",
+        type=int,
+        default=600,
+        help="HTTP timeout in seconds for full-paper API requests.",
+    )
+    parser.add_argument(
+        "--max-output-tokens",
+        type=int,
+        default=12000,
+        help="Maximum output tokens requested from the full-paper API baseline.",
+    )
+    parser.add_argument(
+        "--api-response-format",
+        choices=["json_object", "none"],
+        default="none",
+        help="Response-format hint for OpenAI-compatible baselines. Anthropic ignores this flag.",
     )
     args = parser.parse_args()
 

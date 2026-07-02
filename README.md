@@ -6,6 +6,11 @@ This project scores the content of research papers at three levels:
 - paragraphs
 - citations inside paragraphs
 
+It also now supports a full-paper OpenAI-compatible annotator that reads the entire extracted paper in one request and scores:
+
+- sections and subsections directly
+- citations directly across the full paper
+
 The code reads a PDF, matches its content to a predefined section tree, and then uses an Ollama-hosted language model to distribute importance scores across the paper. Scores are normalized so the full paper totals `1.0`.
 
 ## Example
@@ -61,6 +66,7 @@ To publish it on `github.io`:
 - PDF papers in [papers](papers)
 - a section mapping for each paper in [papers_section_titles.txt](papers_section_titles.txt)
 - an Ollama model running locally or on a reachable host
+- or an OpenAI-compatible `chat/completions` endpoint for the `openai_full_paper` baseline
 
 The scorer supports both author-year citations like `(Smith et al., 2024)` and numeric citations like `[2]` or `[7, 13]`.
 
@@ -155,7 +161,32 @@ python3 importance_score.py \
   --prompts-output paper_results/your_paper/prompts_llama3_2.json
 ```
 
-5. Inspect one paper's JSON outputs from the terminal:
+5. Run the full-paper OpenAI-compatible annotator without paragraph redistribution:
+
+```bash
+export OPENAI_API_KEY='your_api_key_here'
+
+python3 baselines/run_baseline.py \
+  --baseline openai_full_paper \
+  --pdf papers/your_paper.pdf \
+  --paper-id your_paper \
+  --sections-file papers_section_titles.txt \
+  --sections-var YOUR_PAPER_SECTIONS \
+  --output1 paper_results/your_paper/your_paper \
+  --output2 paper_results/your_paper/your_paper \
+  --output3 paper_results/your_paper/your_paper \
+  --model gpt-4.1 \
+  --host https://api.openai.com/v1 \
+  --api-key-env OPENAI_API_KEY \
+  --max-retries 3 \
+  --request-timeout 600 \
+  --max-output-tokens 12000 \
+  --debug-log paper_results/your_paper/debug_openai_full_paper.log
+```
+
+This mode sends the full extracted paper text with the section hierarchy and citation inventory in one request. It writes standard section and citation JSON files, and it leaves the paragraph JSON files empty because it does not use the old paragraph-to-citation redistribution path.
+
+6. Inspect one paper's JSON outputs from the terminal:
 
 ```bash
 python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_section_scores.json
@@ -164,7 +195,7 @@ python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_citation_score
 python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_citation_scores.json
 ```
 
-6. Run the citation resolver and knowledge-discovery framework:
+7. Run the citation resolver and knowledge-discovery framework:
 
 ```bash
 python3 run_knowledge_graph.py \
@@ -172,7 +203,7 @@ python3 run_knowledge_graph.py \
   --save-mappings citation_mappings.json
 ```
 
-7. Build an interactive graph for one model:
+8. Build an interactive graph for one model:
 
 ```bash
 python3 visualize_graph.py \

@@ -1,0 +1,3391 @@
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+The hierarchy provided below is authoritative.
+
+Your task is to score the provided hierarchy, not reconstruct the paper structure.
+
+Requirements
+
+* Score every node in the hierarchy.
+* Every node must appear exactly once in the output.
+* Preserve the hierarchy exactly as provided.
+* Do not add, remove, rename, merge, split, or reorder nodes.
+* Do not invent sections, subsections, paragraphs, appendices, or aggregate nodes.
+* Include nodes even if their contribution score or citation score is 0.
+* Output nodes in the exact order they appear in the provided hierarchy.
+
+Contribution Tree Structure
+
+The Contribution Tree is a rooted hierarchical tree representing how scientific contribution flows through the paper.
+
+The root node is the paper and has contribution score 1.0.
+
+Document nodes correspond to the document structure:
+
+* Sections
+* Subsections
+* Subsubsections
+* Paragraphs
+
+The provided hierarchy already specifies all document nodes.
+
+Paragraphs are the lowest document-level nodes.
+
+A paragraph without citations is a leaf node.
+
+A paragraph containing citations is not a leaf node. Citations discussed within that paragraph are treated as child citation nodes.
+
+Citation nodes represent individual cited references.
+
+Only citation nodes may appear beneath paragraphs.
+
+Hierarchical Scoring Procedure
+
+Contribution scores must be assigned recursively through the hierarchy.
+
+Do not assign scores directly from a section to descendant paragraphs if intermediate hierarchy levels exist.
+
+For every parent node:
+
+1. Consider only its immediate children.
+2. Estimate the relative importance of those children.
+3. Distribute the parent's score among those children.
+4. Recursively repeat this process for each child.
+
+Scoring must proceed level-by-level through the hierarchy:
+
+Paper
+→ Sections
+→ Subsections
+→ Subsubsections
+→ Paragraphs
+
+A node may only receive contribution from its immediate parent.
+
+If a subsection exists beneath a section, score the subsection before scoring any paragraphs contained within that subsection.
+
+If a subsubsection exists beneath a subsection, score the subsubsection before scoring any paragraphs contained within that subsubsection.
+
+Do not skip hierarchy levels.
+
+Do not distribute a parent's score directly to grandchildren or deeper descendants.
+
+The contribution score of a paragraph must be derived from the contribution assigned to its immediate parent node.
+
+Contribution Scoring
+
+A node's score represents its contribution to the scientific value of the paper, not its length.
+
+Contribution scores are assigned recursively top-down through the hierarchy, one parent-child level at a time.
+
+The contribution score of a parent should approximately equal the sum of the contribution scores of its children. Exact normalization will be performed after output.
+
+Sibling scores should reflect their relative scientific importance within the same parent.
+
+Assign higher scores to content central to the paper's technical contribution, such as:
+
+* methods
+* algorithms
+* theory
+* experimental design
+* technical analysis
+* key findings
+
+Assign lower scores to content primarily serving as:
+
+* motivation
+* background
+* related work
+* organizational text
+* summaries
+
+All scores must be global scores relative to the entire paper.
+
+Citation Attribution
+
+Citation contribution is computed bottom-up from citation-containing paragraphs.
+
+For a paragraph without citations:
+
+* Citation Score = 0.
+
+For a paragraph containing citations:
+
+* Estimate what fraction of the paragraph's contribution is derived from prior work.
+* This becomes the paragraph Citation Score.
+* The remaining contribution is considered original contribution.
+
+Only paragraphs containing citations should be decomposed into original and citation-derived contribution.
+
+After determining the paragraph Citation Score, identify citation contexts within the paragraph.
+
+A citation context is text that discusses, compares against, extends, relies on, or describes one or more cited works.
+
+Distribute the paragraph Citation Score across citation contexts according to their relative importance.
+
+Within a citation context, divide contribution uniformly among all citations appearing in that citation context.
+
+Examples:
+
+[10]
+
+→ all contribution goes to [10]
+
+[1, 10]
+
+→ contribution is divided equally between [1] and [10]
+
+(Smith et al., 2020; Johnson et al., 2021)
+
+→ contribution is divided equally between the cited references
+
+The contribution score of a citation equals the sum of all contribution assigned to that citation across the paper.
+
+If a citation appears multiple times, aggregate all assigned contribution into a single final citation score.
+
+Use citation identifiers exactly as they appear in the paper.
+
+Do not rewrite, expand, infer, or replace citation identifiers.
+
+The sum of all citation contribution scores should approximately equal the root paper Citation Score.
+
+Output Format
+
+Output every node in the provided hierarchy.
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+where:
+
+* Total Score is the node's contribution score.
+* Citation Score is the portion of the node's contribution attributed to cited prior work.
+Nodes without citations must still be reported with Citation Score = 0.
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+Rank It, Then Ask It: Input Reranking for Maximizing the
+Performance of LLMs on Symmetric Tasks
+Mohsen Dehghankar
+University of Illinois Chicago
+Chicago, IL, USA
+mdehgh2@uic.eduAbolfazl Asudeh
+University of Illinois Chicago
+Chicago, IL, USA
+asudeh@uic.edu
+Abstract
+Large language models (LLMs) have quickly emerged as practical
+and versatile tools that provide new solutions for a wide range of
+domains. In this paper, we consider the application of LLMs on
+symmetric tasks where a query is asked on an (unordered) bag
+of elements. Examples of such tasks include answering aggregate
+queries on a dataset. In general, when the bag contains a large
+number of elements, LLMs tend to overlook some elements, leading
+to challenges in generating accurate responses to the query. LLMs
+receive their inputs as ordered sequences. On the other hand, the
+input of a symmetric task is not ordered; hence reordering should
+not affect the LLM’s response.
+Observing that LLMs are less likely to miss elements at certain
+positions of the input, we introduce the problem of LLM input
+reranking: to find a ranking of the input that maximizes the LLM’s
+accuracy for the given query without making explicit assumptions
+about the query. Finding the optimal ranking requires identifying (i)
+the relevance of each input element for answering the query and (ii)
+the importance of each rank position for the LLM’s attention. We
+develop algorithms for estimating these values efficiently utilizing
+a helper LLM. We conduct comprehensive experiments on different
+synthetic and real datasets to validate our proposal and to evaluate
+the effectiveness of our proposed algorithms. Our experiments
+confirm that our reranking approach improves the accuracy of the
+LLMs on symmetric tasks by up to 99%proximity to the optimum
+upper bound.
+CCS Concepts
+•Computing methodologies →Natural language generation .
+Keywords
+Large Language Models, Ranking, Input Reordering, Long-context
+ACM Reference Format:
+Mohsen Dehghankar and Abolfazl Asudeh. 2025. Rank It, Then Ask It: Input
+Reranking for Maximizing the Performance of LLMs on Symmetric Tasks.
+InProceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery
+and Data Mining V.2 (KDD ’25), August 3–7, 2025, Toronto, ON, Canada. ACM,
+New York, NY, USA, 12 pages. https://doi.org/10.1145/3711896.3737099
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+KDD ’25, Toronto, ON, Canada
+©2025 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM ISBN 979-8-4007-1454-2/2025/08
+https://doi.org/10.1145/3711896.37370991 Introduction
+Large Language Models (LLMs) have rapidly become invaluable
+tools, expanding their impact far beyond the realm of natural lan-
+guage processing. Tasks that have long been studied across various
+areas of computer science are now finding alternative solutions
+with LLMs.
+In particular, LLMs can be used for symmetric [ 15] tasks where a
+query is issued on an input that takes the form of a bag (or multi-set)
+of elements. Dataset queries is an example of this type of task. To
+further clarify this, let us consider the following toy example.
+Example 1: Consider a publications dataset in form of a CSV file,
+containing the information of papers published across various
+domains:
+A
+uthors Title Venue Year
+Alan
+Turing Computing Machinery and Intelligence Mind 1950
+·
+·· ··· ··· ···
+Suppose one is interested in finding out the number of publica-
+tions in an "Operations Research" (OR) venue since 2010. They
+specify their query in the form of a prompt1[how many papers
+were published in an operations research venue since 2010] ,
+and pass it alongside the CSV file to an LLM to find the answer.
+Indeed,onecanusethetraditional appr oaches, such asimple-
+menting/generating anefficient codeandexecuting it,orutilizing
+atext-to-SQL approach with adatabase (ordata science packages),
+toansw ertheabovequer y.However,many ordinar yusers who
+viewLLMs asomniscient andmay lack therequiredbackgr ound
+knowledge,infrastructur e,orinter estmay choosetodirectlypass
+their inquiries toanLLM, expectingittoknowthesolution. This is
+evident bytheoverwhelming popularity ofLLMs asarevolutionar y
+andversatile technology [39],motivating prior worktostudy LLMs
+forthese settings [21,22,24,28].2
+Besides, LLMs may havelearne dtheknowledgethat helps for
+answ ering queries thatother wise arenot“easy” toansw erwith the
+traditional approaches. Forinstance ,answ ering Example 1requires
+knowing which venues areintheORcategor y.Asaresult, atradi-
+tional approach foransw ering thisqueryrequiresfirst acquiring a
+compr ehensiv elistofallORvenues beforebeing able toprocess
+it.Ontheother hand, using thesemantic similarities, anLLM can
+directlyprocess thequery.
+Examples ofsymmetric tasks arenotlimite dtodataset queries.
+Particularly ,Zhou etal.[15]study symmetric tasks ongraph ap-
+plications such asknowledgegraphs, wher e,forexample ,passing
+theedges ofagraph astheinput elements, onecanasktheLLM
+1A prompt is a textual instruction for the LLM.
+2Please refer to Appendix Aforanextende ddiscussion oftherelate dwork.
+451
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+100 200 300 400 500
+Graph Size (# of Edges)246810A verage Error
+Figure 1: Illustrating the average error of GPT-3.5 Turbo on
+Graph Degree Task based on different input sizes. The error
+is the absolute difference between the real degree of a node
+(less than 20 in this case) and the reported degree by the LLM.
+questions about node degrees (see Example 2). We refer to this as
+the Graph Degree Task.
+LLMs follow a sequential randomized process to generate their
+outputs. As a result, their inputs are received and processed as
+ordered sequences. In particular, when the input is lengthy, LLMs
+are known to pay “less attention” to certain regions of the input,
+hence, struggling with retaining information from those regions.
+This leads to a performance degradation over extended inputs [ 23].
+For example, Fig 1 shows the significant error of GPT-3.5 Turbo for
+Graph Degree Task when the graph size is more than 200.
+On the other hand, the input of a symmetric task is an unordered
+bag of elements. As a result, the input elements can be freely re-
+ordered. This gives us the opportunity to rerank the input elements
+before passing it to the LLM for maximizing its accuracy – which is
+the research focus of this paper. Specifically, we introduce a rerank-
+ing mechanism that (a) learns the so-called “exposure” of each rank
+position for an LLM during the preprocessing time. Then, at the
+query time, it (b) assesses the relevance of each input element to the
+given natural language query and (c) generates a reranking of the
+input that puts the relevant elements in high-exposure positions.
+1.1 Summary of Contributions
+In this work, we introduce the problem of LLM input reranking to
+find an ordering of the input that maximizes the accuracy of an
+LLM for symmetric tasks. To the best of our knowledge, we are the
+first to introduce and study this problem.
+We propose a two-stage solution for the problem. First, we iden-
+tify the exposures of the LLM to detect patterns of “forgetting”
+when processing large inputs. Second, we rank the input elements
+by estimating their relevance scores in relation to a query 𝑞, with-
+out requiring explicit knowledge of the task or the query itself. Our
+method enhances the effectiveness of LLMs in handling large and
+complex inputs in symmetric problem scenarios.
+Our approach is model-agnostic, treating LLMs as black-box with-
+out requiring knowledge of their internal structures. It functions
+asa ready-to-deploy wrapper for LLM input reranking for accu-
+racy maximization. Additionally, our method is problem-agnostic,
+optimizing a re-ranking function without explicit knowledge of
+the query or dataset, making it widely applicable across different
+domains.We present extensive experimental evaluations across two dis-
+tinct categories of tasks. First, in a Graph Degree Task, we demon-
+strate that by utilizing lightweight versions of open-source large
+language models, such as Llama 3.1, Qwen 2, and DeepSeek-Coder,
+we are able to estimate relevance scores and rank input elements
+with rank utility values approaching those of optimal solutions
+(see Table 1). Second, leveraging the obtained ranking information,
+we introduce a reranking approach that significantly enhances the
+accuracy of LLM outputs. Our method improves performance by
+up to 99% proximity to the optimum solution, as demonstrated in
+Table 3.
+We also identify a notable distinction in the token retention
+patterns of two widely used commercial LLMs. For instance, we
+observe that GPT-3.5 Turbo demonstrates a stronger tendency to
+retain tokens positioned at the beginning of the prompt, whereas
+in GPT-4o Mini, tokens located in the middle are more likely to be
+remembered by the model (Fig. 3).
+Additionally, we conducted experiments on other tasks, such as
+database query answering with real-world datasets, and observed
+comparable improvements in the output of the LLMs after reranking
+the input. More details on the experiments and more empirical
+results are provided in the Technical Report [9].
+1.2 Paper Organization
+The rest of the paper is organized as follows: we begin our technical
+discussions in Section 2, where we introduce the necessary nota-
+tions and formalize our input reranking problem. Next, we present
+our algorithm for estimating the relevance of the input elements to
+the given query, in Section 3. In Section 4, we discuss our approach
+for learning the exposure values for an LLM for each rank position.
+Our experimental evaluations are provided in Section 5, followed
+by the discussion and conclusion. Due to the space constraints, the
+extended related work is provided in the Appendix.
+2 Preliminaries
+In this section, we formally define the problem and the specific
+notations that we use in the following sections.
+2.1 Query Model
+We assume that each task 𝑇is a pair(I,𝑞). WhereIis a (large)
+bag of elements{𝑒1,𝑒2,...,𝑒𝑛}and𝑞is a query in natural language
+aboutI. For example, for the Graph Degree Task, Iis the list of
+edges with any order and 𝑞is a natural language question about
+the graph, like "What is the degree of node 10?". We assume that I
+and𝑞are given to the LLM as two different prompts in the same
+context. That is, we first provide the list to the LLM, then we ask
+about the query 𝑞. More details on the implementation is discussed
+in Section 5.
+2.2 LLM Model
+We assume that we have API access to a black-box LLM L. For a
+task𝑇=(I,𝑞)as defined in the previous section, L(I,𝑞)is the
+response of the LLM. The output error is defined as:
+𝜀L(I,𝑞)=Δ[L(I,𝑞),O(I,𝑞)]
+452
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+WhereO(I,𝑞)is defined as the correct output of the task, and
+Δis a function that measures the distance between the LLM results
+and the correct output. For example, for the Graph Degree Task, Δ
+is the absolute difference between the reported degree and the real
+degree of the node.
+2.3 Problem Definition
+Given a task(I,𝑞)and a large language model L, our objective is
+to rerank the elements in Iwith respect to the query 𝑞to minimize
+the expected error, denoted as E(𝜀L(I,𝑞)). Specifically, from the
+set of all possible rankings Π, we seek to identify the reranking
+function𝜋∗:{1,2,...,𝑛} → { 1,2,...,𝑛}that rearranges each
+element𝑒𝜋∗(𝑖)to a new position 𝑖in such a way that the response
+of the LLM exhibits an improvement in terms of reduced expected
+error.
+𝜋∗=arg min
+𝜋∈ΠE[𝜀L(I𝜋,𝑞)] (1)
+Our approach is task (and query) agnostic. In other words, we
+find the function 𝜋∗without using any explicit knowledge about
+the query or the task.
+2.4 Solution Overview
+We define a utility function on different orderings of I. Based on
+the objective function in our Problem Definition (Section 2.3), the
+utility of a reranking function 𝜋should capture the expected error
+E[︁
+𝜀L(I𝜋,𝑞)]︁
+.
+Let us define a function 𝑅𝑒𝑙𝑞:I → [ 0,1]that captures the
+relevance of each element 𝑒𝑖∈Ito the query 𝑞. That is,𝑅𝑒𝑙𝑞(𝑒𝑖)
+is the relevance of 𝑒𝑖to the query 𝑞.
+Also, letXL(𝑖)denote the “exposure” of the position 𝑖in a ranked
+input to the LLML, i.e., the likelihood that the LLM will not miss
+an element in position 𝑖. Then, the expected utility of a ranking 𝜋
+of the inputIis calculated as [31],
+E[𝑢𝑡𝑖𝑙𝑖𝑡𝑦(𝜋|𝑞)]=|I|∑︂
+𝑖=1E[︁
+XL(𝑖)]︁
+·E[︁
+𝑅𝑒𝑙𝑞(𝑒𝜋(𝑖))]︁
+(2)
+Example 2: Consider the graph 𝐺, with 6 vertices and the fol-
+lowing edges:
+𝑒1𝑒2𝑒3𝑒4𝑒5𝑒6𝑒7𝑒8𝑒9𝑒10
+1 2 1 3 1 2 3 3 5 2
+2 4 4 4 3 5 5 6 6 6
+Also, let the exposure function be XL(𝑖)=1
+𝑖. Now let the query
+𝑞be“compute the degree of 𝑣1”. For edges incident to 𝑣1,
+𝑅𝑒𝑙𝑞(𝑒𝑖)=1, while for the others the relevance is 0. As a result,
+the utility of the ranking 𝜋={1,2,···,10}is𝑢𝑡𝑖𝑙𝑖𝑡𝑦(𝜋|𝑞)=
+1+1
+3+1
+5≃1.53. Note that the ranking with maximum utility
+put𝑒1,𝑒3, and𝑒5at the beginning of the list, and has the utility
+of1+1
+2+1
+3≃1.83.
+Thefirst step towardscomputing theutility ofaranking isto
+specifytheexposurefunctionX.Wenote that theexposurevalues
+areLLM-sp ecific, i.e.,theexposureofaposition intheranking may
+varybasedontheLLM athand andthelength ofeach element in
+theinputI.Ther efore,during thepreprocessing time,weneedto
+estimate theexposurevalues foragivenLLM. Todoso,inSection 4,Algorithm 1 Warm-up
+Input: ThelistofelementsI,Thequer y𝑞,ThehelperLLMH,Numb er
+ofpartitions𝑚
+Output: Thelistofrelevance scores{𝑅𝑒𝑙𝑞(𝑒𝑖)|𝑒𝑖∈I}
+1:function PSM(I,𝑞,H,𝑚)
+2:𝑃←Partition(I,𝑚)⊲PartitionIinto𝑚chunks ofequal size
+3: for𝑃𝑗∈𝑃do
+4:𝑅←H(𝑃𝑗,𝑞)⊲Askhelpertogivetherelevant elements𝑅
+5: for𝑒𝑖∈𝑃𝑗do𝑅𝑒𝑙𝑞(𝑒𝑖)←1if𝑒𝑖∈𝑅,0other wise
+6: Return{𝑅𝑒𝑙𝑞(𝑒𝑖)|𝑒𝑖∈I}
+wedevelop anapproach basedonsample tasks forwhich thequery
+𝑞,theinputI,thecorrectoutputO,andthe𝑅𝑒𝑙𝑞(𝑒𝑖),∀𝑒𝑖∈Iis
+knownahead oftime.
+After specifying theexposurevalues during thepreprocessing
+time,weneedtoestimate therelevance values atthequer ytime.
+Recallthat𝑞canbeanynatural language queryontheinput setI.
+Givenatask𝑇=(I,𝑞),inSection 3,wepresent ourapproach for
+estimating therelevance function𝑅𝑒𝑙𝑞.
+3Estimating theRelevance
+Each element𝑒𝑖∈Iisassociate dwith animplicit relevance score
+thatquantifies itsdegreeofrelevance tothequery𝑞.This relevance
+scoreisdenote das𝑅𝑒𝑙𝑞(𝑒𝑖).Forinstance ,inExample 2,theedges
+adjacent tothenode𝑣aremorerelevant tothequery“compute the
+degreeofnode𝑣”.
+However,computing therelevance values ischallenging since
+thetask𝑇isnotspecifiedbeforehand, and𝑞canbeanyquer yon
+I.Toaddressthisissue ,inthissection, westudy thesub-pr oblem
+ofestimating therelevance scoreforeach element𝑒𝑖∈I.
+Weutilize ahelperLLMHforestimating therelevance values.
+Hisasmall open-sour ceLLM that isrelativ elycheap torunand
+deplo y.Inourexperiments, wecompar ediffer entmodels asH,
+likeGemma2(9b) [36],Llama3.1 (8b) [11],Qwen2(7b) [41],
+DeepSeek-Coder-v2 (16b) [43], andMistral (7b) [18].
+Intherestofthissection, weexplain twometho dstoestimate
+therelevance scores.First, wediscuss awarm-up baseline that
+partitions theinput elementsIinto smaller subsets andidentifies
+therelevant andnon-r elevant elements within each partition. Next,
+wepresent ourestimation approach bymodeling theproblem asa
+bipartite graph.
+3.1 Warm-up: Partitioning theInput
+Letusconsider Example 2once again. Tofindtherelevant edges
+tothegivenquer y,onecanpartition theinput elementsIinto
+smaller subsets andaskthehelperLLM tofind relevant edges in
+each subset.
+Follo wing thisidea, thewarm-up algorithm first partitions the
+input listIinto𝑚smaller subsets ofsize𝑙=⌈𝑛
+𝑚⌉,i.e.,{𝑃1=
+{𝑒1,···,𝑒𝑙},𝑃2={𝑒𝑙+1,···,𝑒2𝑙},···,𝑃𝑚={𝑒(𝑚−1)𝑙+1,···,𝑒𝑚𝑙}}.
+Next,foreach partition𝑃𝑖,thealgorithm asks thehelperLLMH
+“whatelements in[𝑃𝑖]aremorerelevant foranswering
+thequery𝑞?”.Itthen assigns therelevance score1tothereturne d
+elements and0toothers. SeeAlgorithm 1forthemoredetails.
+453
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+3.2 Modeling of the Relevance Estimation as
+Bipartite Graph
+While providing a baseline for estimating the relevance values,
+the warm-up algorithm suffers from multiple drawbacks. First, the
+scope of the relevance values generated by the warm-up algorithm
+is limited to binary. Second, given the randomized nature of the
+LLMs, the output generated by the warm-up algorithm may not
+be reliable, particularly given that we assume we have no prior
+knowledge about the task and the query at hand. Third, depending
+on the composition of a partition, the output may miss relevant
+elements or return less relevant ones. In other words, the helper
+LLM may over/under-estimate the relevance scores in each parti-
+tion. As a result, changing an element’s partition may impact its
+relevance-value estimation.
+To address the first issue, one can ask the helper to directly esti-
+mate the relevance value of each element in each partition, but this
+would result in high variance and sometimes inconsistent scores.
+Alternatively, addressing the first and second issues is possible by
+collecting multiple responses for each partition – instead of relying
+on a single evaluation. The relevance value of each element is then
+the average of each individual estimation. This, however, does not
+resolve the third issue; hence the estimations may remain inaccu-
+rate. Addressing the third issue is possible by shuffling the input
+before each partitioning, but this may require a large number of
+evaluations to generate unbiased and accurate estimations for each
+element – making the relevance estimation process costly.
+Instead, our goal is to obtain accurate estimations with a small
+number of evaluations per element.
+Let us now make a connection to the peer-reviewing process [ 25],
+in which a small number of reviewers review each paper, while
+various reviewers may generally provide higher/lower scores for
+the papers they review. Similarly, we can view each element as a
+paper and each relevance-value estimation for the elements in a
+partition as the scores provided by a reviewer.
+Inspired by this connection, we devise a similar process for
+relevance-value estimation. Specifically, we randomly shuffle the
+input listIa total of𝜎times (for a small value of 𝜎) to get the
+shuffled lists{I1,I2,...,I𝜎}. Subsequently, we partition each shuf-
+fled list into 𝑚equal-size subsets, as in the warm-up algorithm.
+This ensures that each evaluation of an element will be with a
+different set of elements, minimizing the partition composition im-
+pact on the final evaluations. Let 𝑃𝑖,𝑘denote the𝑘thpartition of
+I𝑖where𝑖≤𝜎and𝑘≤𝑚. We ask the helper LLM Hto give us
+a categorized score (e.g., from one to five) for each element inside
+each of these 𝑃𝑖,𝑘partitions. We index the score-evaluations to
+all partitions as{E1,E2,···,E𝜎𝑚}(the evaluations obtained for
+𝑃𝑖,𝑘isE(𝑖−1)𝑚+𝑘). Each evaluation can be considered a potentially
+biased (i.e., over/under-estimated) set of scores assigned to a set of
+elements.
+For an element 𝑒𝑖, let𝑆𝑖=𝑅𝑒𝑙𝑞(𝑒𝑖). Assume we could obtain
+a collection of 𝜎unbiased evaluations {𝑤𝑜
+𝑖,1,𝑤𝑜
+𝑖,2,···,𝑤𝑜
+𝑖,𝜎}for𝑒𝑖.
+Then, each𝑤𝑜
+𝑖,𝑗would be viewed as a random variable taken from a
+distribution with mean 𝑆𝑖, i.e.,E[︂
+𝑤𝑜
+𝑖,𝑗]︂
+=𝑆𝑖. Then𝑆¯𝑖=1
+𝑚∑︁𝜎
+𝑗=1𝑤𝑜
+𝑖,𝑗
+would be an unbiased estimation for 𝑆𝑖.𝑆¯1
+𝑆¯2
+𝑆¯3
+·
+··
+𝑆¯𝑛𝛽1
+𝛽2
+𝛽3
+·
+··
+𝛽𝜎𝑚𝑤1,1
+𝑤1,2
+𝑈 𝑉
+Figure 2: An example of the bipartite representation of eval-
+uations. Each node in 𝑈represents an element in Iand its
+final score. Each node in 𝑉represents one evaluation done on
+a partition 𝑃𝑖,𝑘from a shuffled list 𝐸𝑖and the associated bias
+with that. The weights on the edges are the scores assigned
+by the helper LLM Hto elements.
+Let𝑤𝑖,𝑗be the evaluation score of 𝑒𝑖inE𝑗. We assume that each
+evaluationE𝑗equally over/under estimates the evaluation scores
+for all elements with an unknown but constant coefficient 𝛽𝑗. That
+is, for all𝑒𝑖evaluated inE𝑗,𝑤𝑜
+𝑖,𝑗=1
+𝛽𝑗𝑤𝑖,𝑗. Had we known the bias
+values{𝛽1,···,𝛽𝑗}, we could estimate the relevance score 𝑆𝑖of the
+element𝑒𝑖as𝑆¯𝑖=1
+𝜎∑︁
+𝑒𝑖∈E𝑗1
+𝛽𝑗𝑤𝑖,𝑗.
+In order to find the bias coefficients for each of the evaluations,
+we build a bipartite graph G, which we call the evaluation graph.
+Definition 1 (Bipartite Evaluation Graph). Consider the
+weighted bipartite graph G(𝑈,𝑉,𝐸).𝑈contains𝑛nodes, each rep-
+resenting an element 𝑒𝑖∈I.𝑉is a set of𝜎·𝑚nodes, representing
+the evaluation outputs E1,···E𝜎𝑚. An edge(𝑢𝑖,𝑣𝑗)belongs to𝐸iff
+E𝑗contains the element 𝑒𝑖, with its weight being equal to 𝑤𝑖,𝑗– the
+evaluation scoreE𝑗provides for 𝑒𝑖.
+In the bipartite evaluation graph, the degree of each node 𝑢𝑖∈𝑈
+is𝑑𝑒𝑔(𝑢𝑖)=𝜎, while the degree of each node 𝑣𝑗∈𝑉is𝑑𝑒𝑔(𝑣𝑗)=
+⌈𝑛
+𝑚⌉(size of each partition). An illustration of the graph Gis shown
+in Figure 2.
+Let us associate each node 𝑢𝑖∈𝑈with the weight 𝑆¯𝑖and each
+node𝑣𝑗∈𝑉with the weight 𝛽𝑗. Then, the following equations
+hold:
+𝑆¯𝑖=1
+𝜎∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝛽𝑗,∀𝑢𝑖∈𝑈
+𝛽𝑗=1
+⌈𝑛
+𝑚⌉∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝑆¯𝑖,∀𝑣𝑗∈𝑉 (3)
+Intuitively, this equation gives an estimator of the bias values by
+averaging the samples taken from individual evaluations.
+Therefore, to estimate the bias coefficients, we develop an it-
+erative numeric process that at every iteration updates the node
+weights𝛽𝑗(resp.,𝑆¯𝑖) based on its current estimates of the weights
+𝑆¯𝑖(resp.,𝛽𝑗) of the nodes connected to it.
+The process starts by initializing all 𝛽𝑗values with 1 ( 𝛽(0)
+𝑗=1).
+It then alternates between updating 𝑆¯𝑖values based on 𝛽𝑗values
+or we updating 𝛽𝑗using𝑆¯𝑖values:
+454
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+Algorithm 2 Bipartite
+Input: The list of elements I, The query𝑞, The helper LLMH, Number
+of partitions 𝑚, Number of shuffles 𝜎
+Output: The list of estimated relevance scores {𝑅𝑒𝑙𝑞(𝑒𝑖)|𝑒𝑖∈I}
+1:function BEM(I,𝑞,H,𝑚,𝜎)
+2:𝐺←Initialize the bipartite graph
+3: for1≤𝑖≤𝜎do
+4:I𝑖←Random shuffleI
+5:𝑃𝑖←PartitionI𝑖into𝑚chunks
+6: for𝑃𝑖,𝑘∈𝑃𝑖do
+7:E←H(𝑃𝑖,𝑘) ⊲Ask helper to score this chunk
+8: Update𝐺 ⊲Add edges𝑤𝑖,𝑗based on observed scores.
+9: Initialize𝛽𝑗values inside 𝐺
+10: while didn’t converge do
+11: Update𝑆¯𝑖and𝛽𝑗values based on Equations 4
+12: Return{𝑆¯1,𝑆¯2,···,𝑆¯𝑛}
+𝑆¯(𝑇)
+𝑖=1
+𝜎∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝛽(𝑇−1)
+𝑗,∀𝑢𝑖∈𝑈
+𝛽(𝑇+1)
+𝑗=1
+⌈𝑛
+𝑚⌉∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝑆¯(𝑇)
+𝑖,∀𝑢𝑖∈𝑈 (4)
+Where𝑆¯(𝑇)
+𝑖(resp.,𝛽(𝑇)
+𝑗) is the estimated relevance score (resp.
+bias coefficient) at time step 𝑇. A pseudo-code of this method is
+presented in Algorithm 2.
+Theorem 1. The process described in Equation 4 would eventually
+converge.
+Proof. (Proof sketch) This process resembles the process applied
+to a positive semi-definite matrix, where, in each step, we alternately
+normalize all rows and then all columns. This procedure preserves
+the eigenvalues of the matrix. According to Sinkhorn’s theorem,
+such a process converges. A formal proof is provided in Appendix B.
+□
+The above algorithm is run as the preprocessing phase of our
+method. As part of this step (Algorithm 2), we issue API calls to
+the helper LLMsH, lightweight models designed for efficient ex-
+ecution during preprocessing. The total number of such calls is
+𝜎𝑚, corresponding to the total number of evaluations, as shown in
+Figure 2, where 𝜎denotes the number of shuffles and 𝑚represents
+the number of items in each partition.
+4 Pre-processing: Exposure Discovery
+So far, we studied the relevance estimation of the input elements
+to a given query. The remaining information for the LLM-input
+reranking based on Equation 2 is to compute the exposure values for
+different rank positions. The exposure values are LLM-dependent,
+and hence, we compute those during the preprocessing phase for
+each large language model L.
+The exposure value of the position 𝑖in the ranking, i.e., XL(𝑖),
+represents the likelihood that the model misses each token in the
+input prompt as a function of its position 𝑖. Throughout this section,
+𝑖will be used to indicate the position of a token within the input
+prompt toL. In the end, we shall explore how this information canbe utilized for the general list I, where each element 𝑒𝑖∈Iis not
+necessarily a token.
+In order to estimate the exposure values, we consider a sample
+set of predefined tasks, each consisting a query 𝑞and the input
+elementsI=[𝑡1,𝑡2,...,𝑡𝑛](consisting of 𝑛tokens arranged in
+sequential order). The task samples can be viewed as the training
+data we use to learn the exposure values. Note that for each of the
+tasks, we already know the ground-truth relevance values 𝑅𝑒𝑙𝑞(.)
+and the output of the query, i.e., O(I,𝑞). Hence, for an output
+generated by the LLM, we can calculate the output error 𝜖L(I,𝑞).
+Let𝑅𝑒𝑙𝑞(𝑡𝑖)be either 0 or 1 for each token in I3. Our goal is to
+estimate a set of unknown values {XL(𝑖)|𝑖≤𝑛}.
+After passing the task (I,𝑞)toLwith a specific ordering of I,
+the error of the output provides aggregate information about the
+valuesXL(𝑖)based on the relevance scores. We model the relation
+between the error and the exposures as,
+1
+E[𝜖L(I,𝑞)]∝1
+𝑛𝑛∑︂
+𝑖=1(XL(𝑖)·𝑅𝑒𝑙𝑞(𝑡𝑖)) (5)
+In other words, the inverse of the error is directly proportional
+to the rank utilization of the items within I. The higher utilization
+implies that items of greater relevance are positioned in more ex-
+posed locations (XL(𝑖)). Consequently, this results in a relatively
+smaller output error of the LLM.
+In the Appendix C, we provide the details of estimating the
+exposuresXand a confidence bound on the estimation. Finally, a
+discussion of the practical details for the implementation is provided
+there.
+5 Experiments
+In this section, we assess the practical applicability of our results
+through experiments conducted on both real and synthetic datasets.
+Specifically, we evaluate three categories of tasks. The first category
+is similar to Example 1, where we have a dataset of published papers
+and ask for a query about the papers. The second task focuses on
+the Graph Degree Task (Example 2), where a graph is constructed,
+and its edges are provided as input to the LLM, denoted as I. A
+query𝑞is then issued, requesting the degree of a specific node
+within the graph. The final category involves answering queries
+about structured datasets. In these tasks, we supply a table to the
+LLM (I) and ask an aggregation query ( 𝑞), expressed in natural
+language, about the table. We try different real-world datasets for
+this category. All experiments were conducted on a local server
+equipped with 128 GB of memory, 32 CPU cores, and two NVIDIA
+GeForce RTX 2080 Ti GPUs. The code is also accessible through
+this repository.
+In the subsequent subsections, we begin by detailing the process
+of exposure discovery. Following this, we provide an in-depth dis-
+cussion of the tasks, including the methods employed to evaluate
+the LLMs. Next, we analyze the ranking performance of various
+open-source models (referred to as helpers) on these tasks. Finally,
+we compare the effectiveness of the different reranking techniques
+presented throughout this study. Due to the space limitations, the
+detail of the experiments, as well as the examination of the effec-
+tiveness of the exposure discovery, is provided in the Technical
+3Check the experiments section (Section 5) for practical examples.
+455
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+Report [ 9]. Finally, a discussion on the advantages and limitations
+of our approaches is provided in Section 6.
+5.1 Exposure Discovery
+In the pre-processing phase, we determine the exposure of each
+input token position to the LLM denoted as XL(𝑖). For this experi-
+ment, we utilize two widely adopted closed-source LLMs: GPT-3.5
+Turbo andGPT-4o Mini, and two open-source LLMs: Gemma-
+2:27B [36] and Phi-4:14B [1]. To measure token exposure values,
+as outlined in Section 4, we construct a synthetic task denoted as
+(I,𝑞), where each element within Icorresponds to an individual
+token. The query 𝑞prompts the LLM to report the frequency of
+occurrence for each token in the input set I. The LLM’s output is
+represented as a key-value list, where each key corresponds to a
+token, and the associated value indicates the number of times that
+token was identified within the input.
+We systematically reposition various tokens, including their
+repeated occurrences across consecutive positions (aka windows)
+within the inputI, to assess the extent to which each position is
+exposed to the LLM. We estimate the exposure levels by conducting
+multiple sampling iterations, as illustrated in Figure 3. The errors
+are computed as the absolute difference between the actual repeats
+of each token and the corresponding LLM prediction, averaged
+across all unique tokens. The exposure is modeled as the inverse of
+error at each position.
+Based on Figure 3, GPT-3.5 Turbo tends to focus more on the
+beginning of a long prompt, while it is more likely to forget the later
+tokens. In contrast, GPT-4o Mini shows a different pattern, where it
+is more likely to forget tokens at the start and the end while keeping
+those in the middle. As shown in the Technical Report [ 9], Phi-4
+behaves similarly to GPT-4o Mini, mainly retaining the middle part
+of the prompt. On the other hand, Gemma-2 remembers tokens at
+the end of the prompt but tends to forget the beginning.
+We leverage the exposures identified in this subsection as a
+preprocessing step to address the subsequent tasks discussed in the
+following subsection.
+5.2 Tasks Setup
+In this section, we present a detailed overview of the task setups
+and the datasets utilized.
+5.2.1 Publication Venue Task. Following Example 1, we utilized
+theDBLP ACM dataset [ 29], with approximately 132,000 entries. This
+dataset provides a comprehensive list of research papers, including
+attributes such as titles, authors, and the journals in which the
+papers were published. It is widely used for entity resolution tasks.
+For our study, we extracted a smaller sample of rows from this
+dataset. The task involved passing the sampled DataFrame to the
+LLM as input and querying it with questions such as, "How many
+papers were published in physics-related journals?" to determine
+the number of papers relevant to a given research topic.
+5.2.2 Graph Degree Task. In this task, we generate a random graph
+using the Erdős-Rényi model [ 14], where the edges represent the
+set of elements, denoted as I. The primary query 𝑞for this graph
+is: “What is the degree of a given node 𝑣?”. We systematically
+select various nodes 𝑣within the graph and evaluate the responses
+provided by an LLM to these queries. Since the generated graph is
+fully accessible, we can compute the ground-truth degree of eachqueried node. To assess the accuracy of the LLM’s responses, we
+calculate the error 𝜀Las the absolute difference between the degree
+reported by the LLM and the ground-truth degree. We first pass the
+set of edges to the LLM and then ask the query in a different prompt
+message but in the same context. We selected graph sizes up to 500
+edges to generate synthetic graphs to ensure that all edges could
+be represented within a single prompt when inputting them into
+LLMs, thereby adhering to the models’ token limits.
+5.2.3 Dataset Query Task. Similar to the publication venue task,
+in this task, we provide a dataset table as input to the LLM and ask
+aggregation queries in natural language. For instance, a query might
+ask, "How many rows contain the value in the ‘col’ column equal
+to ‘value’?"
+We utilize three real-world datasets for this study. The IMDB
+Movies dataset[ 26] provides information on the top 1,000 movies
+listed on IMDB . We extract a subset containing 60 rows from this
+dataset and formulate a query regarding the number of movies with
+a rating of𝑅𝑎𝑡𝑖𝑛𝑔≥8.2. TheAdult Income dataset [ 2], which
+comprises data on approximately 48,000 individuals for income
+prediction tasks, is also employed. From this dataset, we sample 60
+rows and pose a query about the number of individuals associated
+with a specific “workclass” category. Finally, the Open University
+Learning Analytics ( OULAD ) dataset [ 19] includes data on student
+enrollments across various courses. It contains 32K rows. For our
+task, we sample a subset of 100 rows and ask about the number
+of students enrolled in a particular course. These sample sizes are
+carefully selected to align with the token limits of LLMs4. The re-
+sults for the Adults and OULAD are presented in the Technical
+Report [9].
+5.3 Analysis of the Ranking utility
+In this subsection, we utilize different small-sizes open-source LLMs
+as helpers (H) to estimate the relevance scores of elements to
+the query (𝑅𝑒𝑙𝑞). We use five different models: DeepSeek-Coder-
+v2:16B [43],Gemma2:9B [36],Llama3.1:8B [11],Qwen2:7B [41],
+andMistral:7B [18]. This selection, while random within the range
+of small models (approximately 7B–8B parameters), ensures cover-
+age of diverse and widely used open-source models.
+We compare four ranking methods in this experiment. The first
+method, Warm-up, as described in Section 3.1, involves querying
+each partition of the input and subsequently splitting it. The second
+method, Bipartite, detailed in Section 3.2, utilizes Bipartite Graph
+Modeling to estimate relevance scores. To establish a lower bound
+for performance comparison, we use the Random method, which
+involves randomly shuffling all the input elements within the set I
+and passing them to the language model, L. We expect this method
+to give us less accurate results. As an upper bound, we employ the
+Optimum method, where elements are completely sorted based on
+explicit knowledge of the task to maximize relevance to the query.
+This approach provides a theoretical upper limit for ranking utility,
+and we expect it to give us the best answer. For example, for the
+4GPT-3.5-Turbo has a token limit of 4,096. For this model, we selected 60 rows from
+the ADULT dataset, which resulted in almost 3,244 tokens. For GPT-4o-mini, which
+supports a significantly larger context window of 128k tokens, we selected a corre-
+spondingly larger number of rows.
+456
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+0 2 4 6 8
+R elative  Position in Prompt0.60.70.80.91.0Normalized ErrorGPT 3.5 T urbo
+1.01.11.21.31.41.51.61.7
+Exposure ( )
+0 2 4 6 8
+Relative Position in Prompt0.50.60.70.80.91.0Normalized ErrorGPT 4o Mini
+1.01.21.41.61.82.0
+Exposure ( )
+Figure 3: Relative exposure values for different LLMs. The red plot represents the normalized error observed when placing
+relevant data at specific positions within a long prompt, averaged over 100 runs. The prompt length is 2000 tokens for
+Gemma2:27B and 1000 for others. In our formulation, the inverse of the average error at each position is proportional to the
+exposureXL(𝑖). Higher error at a given location indicates lower exposure at that index.
+Table 1: Ranking utility comparison across algorithms and helper models. Each point is an average of 10 runs. The percentage
+values are the proximity of the numbers compared to the upper and lower bounds. The green (red) arrow indicates the closeness
+to the upper (lower) bounds. The closer the values in the table are to the Optimum, the better the results.
+Algorithm Synthetic Graph Task
+DeepSeek-Coder-V2 (16B) Gemma2 (9B) Llama3.1 (8B) Mistral (7B) Qwen2 (7B)
+Optimum (UB) 3.02 (100%)↑ 2.98 (100%)↑ 3.01 (100%)↑ 3.00 (100%)↑2.98 (100%)↑
+Bipartite 2.95 (97%) ↑ 1.87 (58%) 2.22 (70%)↑ 2.49 (81%)↑1.03 (26%)↓
+Warm-up 0.67 (13%)↓ 2.58 (85%)↑ 1.70 (51%) 2.03 (63%) ↑ 0.72 (15%)↓
+Random (LB) 0.31 (0%)↓ 0.31 (0%)↓ 0.32 (0%)↓ 0.33 (0%)↓ 0.32 (0%)↓
+IMDB Dataset
+DeepSeek-Coder-V2 (16B) Gemma2 (9B) Llama3.1 (8B) Mistral (7B) Qwen2 (7B)
+Optimum (UB) 2.76 (100%)↑ 2.60 (100%)↑ 2.69 (100%)↑ 2.52 (100%)↑2.67 (100%)↑
+Bipartite 2.63 (94%) ↑ 2.50 (95%)↑ 2.48 (90%)↑ 2.22 (84%)↑1.60 (48%)
+Warm-up 1.30 (33%) 2.58 (99%)↑ 1.68 (52%) 2.22 (84%)↑1.50 (44%)
+Random (LB) 0.57 (0%)↓ 0.48 (0%)↓ 0.58 (0%)↓ 0.55 (0%)↓ 0.58 (0%)↓
+DBLP ACM Dataset
+DeepSeek-Coder-V2 (16B) Gemma2 (9B) Llama3.1 (8B) Mistral (7B) Qwen2 (7B)
+Optimum (UB) 3.27 (100%)↑ 3.35 (100%)↑ 3.35 (100%)↑ 3.29 (100%)↑3.36 (100%)↑
+Bipartite 2.16 (57) ↑ 2.76 (77%)↑ 1.68 (56%) 1.65 (26%)↓ 1.65 (32%)
+Warm-Up 0.89 (8%)↓ 2.25 (58%) 1.45 (41%) 1.86 (35%) 1.36 (21%)↓
+Random (LB) 0.66 (0%)↓ 0.72 (0%)↓ 0.00 (0%)↓ 1.07 (0%)↓ 0.81 (0%)↓
+Graph Degree Task, we sort all the elements based on the fact that
+whether the edge contains the query node 𝑣or not.
+Table 1 presents the comparison of ranking utilities across dif-
+ferent models and methods (more results on additional datasets are
+illustrated in the Technical Report [ 9]). The Random and Optimum
+methods serve as lower and upper bounds, respectively, providing
+benchmarks for comparison independent of any specific helper
+model. Due to the variability introduced by sampling, slight dif-
+ferences in the ranking utilities across different models can occurfor these two methods, even though they do not use any helper
+models. Each value reported in the table represents the average of
+10 independent runs.
+The values represent the ranking utilities computed under the
+assumption that the exposure function is given by XL(𝑖)=1
+𝑖. In
+other words, once each helper model assigns relevance scores, a
+corresponding reranking function is obtained based on the specific
+model and method applied. To evaluate and compare the perfor-
+mance of different models, we analyze their respective rerankings.
+457
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+Specifically, we first sort the elements according to the reranking
+produced by each model. Within the sorted list, we then compute
+the utility associated with the truly relevant elements using expo-
+sure1
+𝑖. A higher utility value indicates that the relevant elements
+are positioned at higher ranks, reflecting that the reranking gener-
+ated by the model assigns them higher estimated relevance scores.
+The percentage values in the table indicate the Proximity of
+the results, which can be defined as below.
+Definition 2 (Proximity). Let𝐿be the lower bound and 𝑈be
+the upper bound for a given observed error 𝑥. The proximity𝑃(𝑥)
+with respect to these bounds can be defined as:
+𝑃(𝑥)=𝑥−𝐿
+𝑈−𝐿,where𝐿≤𝑥≤𝑈.
+Based on this observation, in most cases, the Bipartite approach
+estimates relevance scores nearly equivalent to those of the opti-
+mal solution. However, for certain models, such as Gemma2, the
+Warm-up algorithm yields better results. This is because the Bipar-
+tite method requires the model to generate a list of scores, and the
+resulting output from the model may not always align with expec-
+tations. In contrast, for models designed to perform well in coding
+tasks, such as DeepSeek-Coder-v2 and Llama3.1, the Bipartite graph
+approach effectively enhances the reranking of the prompt.
+The impact of the iterative procedure described in Algorithm 2
+is demonstrated in Table 2. This table compares the ranking utility
+obtained after running the iterative process to convergence with the
+utility achieved without applying the procedure, using the original
+(biased) model evaluations. As shown, the iterative refinement
+effectively reduces bias and leads to improved ranking utility.
+Setting DeepSeek-Coder-V2 Llama3.1
+w/o convergence 0.84 1.96
+after convergence 2.95 2.22
+Table 2: The effect of iterative process (Algorithm 2) in the
+final ranking utility. ‘w/o convergence’ is the result of apply-
+ing Equation 3 only once to achieve (biased) scores, while the
+second row shows the effect of using converged scores. The
+results are for the Synthetic Graph Task.
+The number of API calls to the helper models is determined by
+the number of samples used in the experiment. In this experiment,
+we used 10 samples for each reported number. For the Bipartite
+method, we performed four shuffles, where each shuffle divided
+the input into chunks of size 20. Consequently, the total number
+of API calls is calculated as 4×(100/20), where 100 represents the
+length of the input prompt (i.e., the number of elements), resulting
+in 20 API calls per open-source model for each sample. Similarly,
+for the Warm-Up method, the total number of API calls remains 20,
+as we used a partition size of 5, leading to 100/5 =20partitions.
+5.4 Analysis of the Output Error
+In this subsection, we compare the helper models and the methods
+in achieving the final goal which is enhancing the final output
+error from the LLM L. The results for GPT-3.5 Turbo and GPT-4o
+Mini are presented in Tables 3b and 3a. For each helper model weused shorter names: DC2 (DeepSeek-Coder-v2), G2 (Gemma2), L3.1
+(Llama3.1), M (Mistral), and Q2 (Qwen2). In these tables, Optimum
+is a lower bound since it is the best result one can achieve.
+Each value in these tables represents the average of 10 runs. The
+errors for each helper model on a given dataset are normalized to the
+range[0,1]. In most cases, the final error for the model employing
+the Bipartite method is close to the optimal solution. However,
+certain helper models, such as Qwen2, perform poorly in reranking
+the prompt, resulting in errors comparable to those obtained from
+random shuffling of the input. We observe that the Adults dataset
+presents a relatively more challenging task in most cases. This
+increased difficulty arises from the larger number of columns in
+this dataset compared to others, with a significant portion of these
+columns consisting of string-type data. The prevalence of such
+features complicates the query-answering process for the LLM.
+6 Discussions
+In this section, we first examine the advantages of our method in
+practical applications, followed by a discussion of its limitations.
+6.1 Advantages
+In all the proposed models and methods, we have the assumption
+that the final large language model is treated as a black-box, mean-
+ing we have no explicit knowledge of its internal architecture and
+make no use of such details. Even the smaller helper models em-
+ployed in our approach are more cost-effective language models, yet
+we similarly assume no access to or detailed understanding of their
+underlying structures. Consequently, our method can be regarded
+as a wrapper that complements any advancements in large lan-
+guage models and improvements in their accuracy. This approach
+is applicable to any given LLM to enhance its performance in ad-
+dressing symmetric problems, functioning as an additional layer to
+increase overall accuracy. In general, without detailed knowledge
+of a model’s architecture, it is challenging to understand how it
+remembers different parts of the input. However, our approach
+aims to estimate the exposure of different input segments, allowing
+us to infer the recall patterns of a black-box LLM.
+Additionally, we adopt an abstract approach from the problem
+perspective. Without requiring explicit knowledge of the specific
+problem or the query applied to the bag of elements, we aim to
+identify a re-ranking function that optimizes the final accuracy.
+This approach serves as a generalizable solution applicable to any
+symmetric problem (a query asked about a set or multi-set of ele-
+ments).
+The proposed model and algorithm for debiasing the LLM evalua-
+tions, known as bipartite evaluation, can be applied in any scenario
+where pointwise evaluations are performed on a set of objects and
+varying biases exist across different evaluations. More broadly, the
+approach is applicable to any problem that can be framed as a
+peer-review (peer-grading) process.
+6.2 Limitations
+As discussed in previous sections, our focus is on symmetric prob-
+lems, where a set (or multi-set) of elements Iis presented, and a
+query is asked about it. Our methods aim to re-rank Iunder this
+assumption and, therefore, are not applicable in cases where the
+458
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+Table 3: Normalized Error ( 𝜀L) across algorithms and helper models. The errors are normalized for each helper model to align
+them in the interval [0,1]. Each value is an average of 10 runs. The green (red) arrow indicates the closeness to the lower (upper)
+bound. The closer the values in the table are to the Optimum, the better the results.
+(a) Output error results on GPT-4o Mini
+Algorithm Synthetic Graph Task
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.98↑0.12↓0.99↑0.5 0.72↑
+Bipartite 0.12 ↓0.63 0.68 0.12↓0.28↓
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+IMDB Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.33 0.11↓0.64 0.42 0.68
+Bipartite 0.25 ↓0.10↓0.01↓0.42 0.62
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+DBLP ACM Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.46 0.77↑1.00↑0.25↓0.89↑
+Bipartite 0.37 ↓0.24↓0.71 0.27↓0.58
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓(b) Output error results on GPT-3.5 Turbo
+Algorithm Synthetic Graph Task
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.72 0.35 0.63 0.90↑0.58
+Bipartite 0.09 ↓0.59 0.37 0.14↓0.30
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+IMDB Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.56 0.87↑0.85↑0.49 0.50
+Bipartite 0.03 ↓0.29↓0.04↓0.69 0.48
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+DBLP ACM Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.45 0.57 0.71 0.47 0.84↑
+Bipartite 0.23 ↓0.45 0.31↓0.58 0.77↑
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+input is an ordered list, and the ordering of elements plays a crucial
+role in the final response to the query.
+Additionally, we assume that different elements have different
+relevance when answering the given query. Hence, placing the
+high-relevance elements in highly exposed positions within the
+input sequence leads to improved accuracy. Conversely, when all
+elements in the input set are nearly equally relevant to the query,
+re-ranking the input may result in only marginal accuracy improve-
+ments. Regardless of the sorting method, some highly relevant
+elements may still stay in less exposed locations, leading to poten-
+tial degradation in the LLM’s ability to retain them effectively.
+Finally, in a practical setting, the proposed approaches necessi-
+tate the use of a significantly smaller helper model in conjunction
+with the primary large language model. As a result, deploying these
+methods requires the additional deployment of a smaller model.
+7 Conclusion
+In this work, we addressed the challenge of handling lengthy input
+prompts for large language models within the context of symmetric
+tasks. We observe that while the performance of LLMs drops for
+large inputs, certain positions in the input are less likely to be
+missed by an LLM. Moreover, reordering the input elements of
+symmetric tasks does not logically affect the query outcome.
+Following these observations, we introduced the LLM input
+reranking problem to reorder an input in a way that the accuracy
+of the LLM is maximized for the given query.We proposed a two-step solution for this problem. First, dur-
+ing the preprocessing phase, we identify the exposure of ranking
+positions for a given LLM. Next, at query time, we estimate the
+relevance score of each element to the query. By combining these
+insights, we rerank the input and pass the reranked data to the LLM.
+For query relevance estimation, we introduced a method based on
+a bipartite graph modeling, with a performance to the optimal
+reranking in our experiments.
+Our solutions treat both the tasks and the LLMs as black-box
+components, allowing for a high level of abstraction. As a result,
+those can serve as a wrapper layer on top of any of the existing or
+future LLMs for solving symmetric tasks.
+Despite the contributions of this work, certain limitations remain.
+For instance, the deployment of smaller LLMs and their suboptimal
+performance in score estimation in certain cases present challenges.
+By addressing these limitations and exploring enhancements in the
+reranking approaches, future research has the potential to further
+advance the effectiveness and scalability of language models in
+real-world applications.
+Acknowledgments
+This work was supported in part by the National Science Founda-
+tion, Grant No. 2348919 and 2107290.
+459
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+References
+[1]Marah Abdin, Jyoti Aneja, Harkirat Behl, Sébastien Bubeck, Ronen Eldan,
+Suriya Gunasekar, Michael Harrison, Russell J. Hewett, Mojan Javaheripi, Piero
+Kauffmann, James R. Lee, Yin Tat Lee, Yuanzhi Li, Weishung Liu, Caio C. T.
+Mendes, Anh Nguyen, Eric Price, Gustavo de Rosa, Olli Saarikivi, Adil Salim,
+Shital Shah, Xin Wang, Rachel Ward, Yue Wu, Dingli Yu, Cyril Zhang, and Yi
+Zhang. 2024. Phi-4 Technical Report. arXiv preprint arXiv:2412.08905 (2024).
+https://arxiv.org/abs/2412.08905 Accessed: 2025-01-31.
+[2]Barry Becker and Ronny Kohavi. 1996. Adult. UCI Machine Learning Repository.
+DOI: https://doi.org/10.24432/C5XW20.
+[3]Iz Beltagy, Matthew E Peters, and Arman Cohan. 2020. Longformer: The long-
+document transformer. arXiv preprint arXiv:2004.05150 (2020).
+[4]Tom B Brown. 2020. Language models are few-shot learners. arXiv preprint
+arXiv:2005.14165 (2020).
+[5]Howard Chen, Ramakanth Pasunuru, Jason Weston, and Asli Celikyilmaz. 2023.
+Walking down the memory maze: Beyond context limit through interactive
+reading. arXiv preprint arXiv:2310.05029 (2023).
+[6]Jiawei Chen, Hande Dong, Xiang Wang, Fuli Feng, Meng Wang, and Xiangnan
+He. 2023. Bias and debias in recommender system: A survey and future directions.
+ACM Transactions on Information Systems 41, 3 (2023), 1–39.
+[7]Shouyuan Chen, Sherman Wong, Liangjian Chen, and Yuandong Tian. 2023.
+Extending context window of large language models via positional interpolation.
+arXiv preprint arXiv:2306.15595 (2023).
+[8]Rewon Child, Scott Gray, Alec Radford, and Ilya Sutskever. 2019. Generating
+long sequences with sparse transformers. arXiv preprint arXiv:1904.10509 (2019).
+[9]Mohsen Dehghankar and Abolfazl Asudeh. 2024. Rank It, Then Ask It: In-
+put Reranking for Maximizing the Performance of LLMs on Symmetric Tasks.
+arXiv:2412.00546 https://arxiv.org/abs/2412.00546
+[10] Daniel Deutsch, Rotem Dror, and Dan Roth. 2022. On the limitations of reference-
+free evaluations of generated text. arXiv preprint arXiv:2210.12563 (2022).
+[11] Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad
+Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan,
+et al. 2024. The llama 3 herd of models. arXiv preprint arXiv:2407.21783 (2024).
+[12] Sana Ebrahimi, Kaiwen Chen, Abolfazl Asudeh, Gautam Das, and Nick Koudas.
+2024. AXOLOTL: Fairness through Assisted Self-Debiasing of Large Language
+Model Outputs. 15th IEEE International Conference on Knowledge Graphs (2024).
+[13] Sana Ebrahimi, Nima Shahbazi, and Abolfazl Asudeh. 2024. REQUAL-LM: Relia-
+bility and Equity through Aggregation in Large Language Models. In Findings of
+the Association for Computational Linguistics: NAACL 2024. 549–560.
+[14] Paul Erdos, Alfréd Rényi, et al .1960. On the evolution of random graphs. Publ.
+math. inst. hung. acad. sci 5, 1 (1960), 17–60.
+[15] Jianfei Gao, Yangze Zhou, Jincheng Zhou, and Bruno Ribeiro. 2023. Double
+equivariance for inductive link prediction for both new nodes and new relation
+types. NeurIPS (2023).
+[16] Junqing He, Kunhao Pan, Xiaoqun Dong, Zhuoyang Song, LiuYiBo LiuYiBo, Qian-
+guosun Qianguosun, Yuxin Liang, Hao Wang, Enming Zhang, and Jiaxing Zhang.
+2024. Never Lost in the Middle: Mastering Long-Context Question Answering
+with Position-Agnostic Decompositional Training. In Proceedings of the 62nd
+Annual Meeting of the Association for Computational Linguistics (Volume 1: Long
+Papers). 13628–13642.
+[17] Cheng-Yu Hsieh, Yung-Sung Chuang, Chun-Liang Li, Zifeng Wang, Long Le, Ab-
+hishek Kumar, James Glass, Alexander Ratner, Chen-Yu Lee, Ranjay Krishna, et al .
+2024. Found in the middle: Calibrating Positional Attention Bias Improves Long
+Context Utilization. In Findings of the Association for Computational Linguistics
+ACL 2024. 14982–14995.
+[18] Albert Q Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris Bamford, De-
+vendra Singh Chaplot, Diego de las Casas, Florian Bressand, Gianna Lengyel,
+Guillaume Lample, Lucile Saulnier, et al .2023. Mistral 7B. arXiv preprint
+arXiv:2310.06825 (2023).
+[19] Jakub Kuzilek, Martin Hlosta, and Zdenek Zdrahal. 2017. Open university learning
+analytics dataset. Scientific data 4, 1 (2017), 1–8.
+[20] Rui Li, Jianlin Su, Chenxi Duan, and Shunyi Zheng. 2020. Linear attention
+mechanism: An efficient attention for semantic segmentation. arXiv preprint
+arXiv:2007.14902 (2020).
+[21] Yiming Lin, Madelon Hulsebos, Ruiying Ma, Shreya Shankar, Sepanta Zeigham,
+Aditya G Parameswaran, and Eugene Wu. 2024. Towards Accurate and Ef-
+ficient Document Analytics with Large Language Models. arXiv preprint
+arXiv:2405.04674 (2024).[22] Chunwei Liu, Matthew Russo, Michael Cafarella, Lei Cao, Peter Baille Chen, Zui
+Chen, Michael Franklin, Tim Kraska, Samuel Madden, and Gerardo Vitagliano.
+2024. A Declarative System for Optimizing AI Workloads. arXiv preprint
+arXiv:2405.14696 (2024).
+[23] Nelson F Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua,
+Fabio Petroni, and Percy Liang. 2024. Lost in the middle: How language models
+use long contexts. Transactions of the Association for Computational Linguistics
+12 (2024), 157–173.
+[24] Shicheng Liu, Jialiang Xu, Wesley Tjangnaka, Sina J Semnani, Chen Jie Yu, and
+Monica S Lam. 2023. SUQL: Conversational Search over Structured and Un-
+structured Data with Large Language Models. arXiv preprint arXiv:2311.09818
+(2023).
+[25] Yusha Liu, Yichong Xu, Nihar B Shah, and Aarti Singh. 2022. Integrating rankings
+into quantized scores in peer review. arXiv preprint arXiv:2204.03505 (2022).
+[26] Andrew Maas, Raymond E Daly, Peter T Pham, Dan Huang, Andrew Y Ng,
+and Christopher Potts. 2011. Learning word vectors for sentiment analysis.
+InProceedings of the 49th annual meeting of the association for computational
+linguistics: Human language technologies. 142–150.
+[27] Arjun Panickssery, Samuel R Bowman, and Shi Feng. 2024. Llm evaluators
+recognize and favor their own generations. arXiv preprint arXiv:2404.13076
+(2024).
+[28] Liana Patel, Siddharth Jha, Carlos Guestrin, and Matei Zaharia. 2024. Lotus:
+Enabling semantic queries with llms over tables of unstructured and structured
+data. arXiv preprint arXiv:2407.11418 (2024).
+[29] Erhard Rahm, Hanna Köpcke, and Andreas Thor. 2017. DBLP ACM Dataset.
+doi:10.3886/E100843V2
+[30] Keita Saito, Akifumi Wachi, Koki Wataoka, and Youhei Akimoto. 2023. Ver-
+bosity bias in preference labeling by large language models. arXiv preprint
+arXiv:2310.10076 (2023).
+[31] Ashudeep Singh and Thorsten Joachims. 2018. Fairness of exposure in rankings.
+InProceedings of the 24th ACM SIGKDD international conference on knowledge
+discovery & data mining. 2219–2228.
+[32] Richard Sinkhorn. 1967. Diagonal equivalence to matrices with prescribed row
+and column sums. The American Mathematical Monthly 74, 4 (1967), 402–405.
+[33] Richard Sinkhorn and Paul Knopp. 1967. Concerning nonnegative matrices and
+doubly stochastic matrices. Pacific J. Math. 21, 2 (1967), 343–348.
+[34] Rickard Stureborg, Dimitris Alikaniotis, and Yoshi Suhara. 2024. Large language
+models are inconsistent and biased evaluators. arXiv preprint arXiv:2405.01724
+(2024).
+[35] Zhiqing Sun, Yikang Shen, Qinhong Zhou, Hongxin Zhang, Zhenfang Chen,
+David Cox, Yiming Yang, and Chuang Gan. 2024. Principle-driven self-alignment
+of language models from scratch with minimal human supervision. Advances in
+Neural Information Processing Systems 36 (2024).
+[36] Gemma Team, Morgane Riviere, Shreya Pathak, Pier Giuseppe Sessa, Cassidy
+Hardin, Surya Bhupatiraju, Léonard Hussenot, Thomas Mesnard, Bobak Shahriari,
+Alexandre Ramé, et al .2024. Gemma 2: Improving open language models at a
+practical size. arXiv preprint arXiv:2408.00118 (2024).
+[37] Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed Chi, Sharan Narang,
+Aakanksha Chowdhery, and Denny Zhou. 2022. Self-consistency improves chain
+of thought reasoning in language models. arXiv preprint arXiv:2203.11171 (2022).
+[38] Koki Wataoka, Tsubasa Takahashi, and Ryokan Ri. 2024. Self-preference bias in
+llm-as-a-judge. arXiv preprint arXiv:2410.21819 (2024).
+[39] Zhiheng Xi, Wenxiang Chen, Xin Guo, Wei He, Yiwen Ding, Boyang Hong, Ming
+Zhang, Junzhe Wang, Senjie Jin, Enyu Zhou, et al .2023. The rise and potential
+of large language model based agents: A survey. arXiv preprint arXiv:2309.07864
+(2023).
+[40] Sang Michael Xie, Aditi Raghunathan, Percy Liang, and Tengyu Ma. 2021. An
+explanation of in-context learning as implicit bayesian inference. arXiv preprint
+arXiv:2111.02080 (2021).
+[41] An Yang, Baosong Yang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Zhou, Cheng-
+peng Li, Chengyuan Li, Dayiheng Liu, Fei Huang, et al .2024. Qwen2 technical
+report. arXiv preprint arXiv:2407.10671 (2024).
+[42] Manzil Zaheer, Guru Guruganesh, Kumar Avinava Dubey, Joshua Ainslie, Chris
+Alberti, Santiago Ontanon, Philip Pham, Anirudh Ravula, Qifan Wang, Li Yang,
+et al.2020. Big bird: Transformers for longer sequences. Advances in neural
+information processing systems 33 (2020), 17283–17297.
+[43] Qihao Zhu, Daya Guo, Zhihong Shao, Dejian Yang, Peiyi Wang, Runxin Xu,
+Y Wu, Yukun Li, Huazuo Gao, Shirong Ma, et al .2024. DeepSeek-Coder-V2:
+Breaking the Barrier of Closed-Source Models in Code Intelligence. arXiv preprint
+arXiv:2406.11931 (2024).
+460
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+Appendix
+A Related Work
+In this section, we give a brief literature review for this work. A more
+detailed literature review is provided in the Technical Report [9].
+Handling Long Inputs: The challenge of handling long input
+prompts is a widely recognized issue in large language models. Var-
+ious studies have approached this problem from multiple perspec-
+tives. One notable scenario occurs when prompts involve in-context
+learning [ 4,5,40], which often results in extended inputs that LLMs
+struggle to fully process. The “Lost in the Middle” phenomenon5,
+as identified by Liu et al. [ 23], highlights this issue, where LLMs fail
+to retain or utilize certain portions of lengthy inputs. Other studies
+have approached this issue by modifying the training datasets used
+for LLMs [ 16]. Several studies have explored modifying the archi-
+tecture of LLMs, particularly the attention mechanisms, to improve
+their ability to process extensive context and handle larger input
+sizes [3, 7, 8, 17, 20, 42].
+Debiasing LLM outputs: Part of our technical solution in Sec-
+tion 3 involves estimating input elements’ relevance to the query,
+where we learn a so-called bias coefficient for various LLM evalua-
+tions. Debiasing LLM outputs is extensively studied across various
+domains such as recommender systems rankings[ 6], using a variety
+of solutions such as output aggregation [ 13], prompt-writing [ 12],
+and many more [ 10,27,30,34,35,38]. Note that despite their name
+similarity, the objective of these papers is different as they aim to
+mitigate the societal bias and unfairnesses introduced during vari-
+ous stages such as data-driven systems. Related work also includes
+reducing the output variance of LLMs using self-consistency meth-
+ods [ 37], where the diversity of the model’s responses is leveraged
+to enhance reliability and accuracy. This approach is fundamentally
+different from our relevance estimation subproblem, where we aim
+to estimate the relevance of input items to the query.
+B Proofs
+Theorem 1. The process described in Equation 4 would eventually
+converge.
+Proof. Define the matrix 𝑊=(𝑤𝑖,𝑗). Let𝑆¯=(𝑆¯𝑖)be a vector of
+size𝑛and𝛽=(𝛽𝑗)be a vector of size 𝜎·𝑚. For a vector 𝑣=(𝑣𝑖)of
+size𝑛, let1
+𝑣denote the new vector (1
+𝑣1,1
+𝑣2,···,1
+𝑣𝑛)and𝑣[𝑘]denote
+the𝑘𝑡ℎelement of a vector 𝑣.
+Let𝐴◦𝑣denote the Hadamard product of an 𝑛×𝑚matrix𝐴
+to vector𝑣of size𝑚. The result of this production is a matrix 𝐵of
+size𝑛×𝑚where𝐵(𝑖,𝑗)=𝐴(𝑖,𝑗)·𝑣[𝑗]. We also use 1𝑛to denote a
+vector of size 𝑛with all elements equal to 1.
+We can rewrite Equation 4 using the new notations:
+𝑆¯(𝑇)=1
+𝜎·𝑊·1
+𝛽(𝑇−1)
+𝛽(𝑇+1)=1
+⌈𝑛
+𝑚⌉·𝑊⊤·1
+𝑆¯(𝑇)
+5While there have been attempts to resolve the lost in the middle issue in recent LLMs,
+as we shall experiment in Section 5.1, the attention has shifted to various sections of
+the input, and is not uniform across various input positions (see Figure 3).Let us change the vector products to Hadamard products:
+𝑆¯(𝑇)=1
+𝜎·(︃
+𝑊◦1
+𝛽(𝑇−1))︃
+·1𝜎·𝑚 (6)
+𝛽(𝑇+1)=1
+⌈𝑛/𝑚⌉·(︃
+𝑊⊤◦1
+𝑆¯(𝑇))︃
+·1𝑛 (7)
+We can now define a sequence of matrices 𝑊𝑡according to the
+above update process:
+𝑊𝑡=⎧⎪⎪ ⎨
+⎪⎪⎩𝑊◦1
+𝛽(𝑡/2) if𝑡is even,
+(︂
+𝑊⊤◦1
+𝑆¯((𝑡+1)/2))︂⊤
+if𝑡is odd.
+For example, 𝑊0=𝑊·1
+𝛽(0)=𝑊because𝛽(0)=1𝜎·𝑚. However,
+𝑊1is a column-scaled of 𝑊, so the sum of each column is now
+equal to𝜎. Subsequently, 𝑊2is a row-scaled of 𝑊1, so that the sum
+of each row is equal to ⌈𝑛/𝑚⌉. This process continues similarly. At
+each iteration, we either rescale the rows or columns of 𝑊𝑡to get
+the matrix𝑊𝑡+1. As a result, we can reduce this problem to the
+following:
+Given a matrix 𝑊of size𝑛×(𝜎𝑚), at each iteration, we are alter-
+natively scaling the rows to have a sum of 𝜎or scaling the columns
+to have a sum of⌈𝑛/𝑚⌉. We would like to know the convergence
+condition for this process.
+This is the same process as Sinkhorn’s algorithm [ 32,33] to find
+a doubly stochastic matrix starting from a positive matrix 𝑊. If𝑊
+is a non-negative matrix with at least one positive diagonal (refer
+to [33]), then this process would converge to a doubly stochastic
+matrix of𝑊such that in this matrix ( 𝑊∞), the sum of each row is
+equal to𝜎and the sum of each column is equal to ⌈𝑛/𝑚⌉. We skip
+most of the details to the references.
+Now, we can rewrite the Equations 6 and 7 as:
+𝑆¯(∞)=1
+𝜎·𝑊∞·1𝜎·𝑚 (8)
+𝛽(∞)=1
+⌈𝑛/𝑚⌉·𝑊∞·1𝑛 (9)
+□
+C Exposure Discovery Details
+C.1 Estimation
+Let𝜋1,𝜋2,...,𝜋𝑝be a set of𝑝random permutations on I. We apply
+each permutation 𝜋𝑗onIto obtain the permuted lists I𝜋𝑗. This
+would change the position of token 𝑡𝜋𝑗(𝑖)to𝑖. Within each per-
+muted list, the relevant tokens are positioned at random locations.
+Subsequently, we generate the output of the large language model
+(LLM) for eachI𝜋𝑗and compute the error 𝜖L(I𝜋𝑗,𝑞). This process
+allows us to sample exposures according to the relationship defined
+in equation (5).
+We then create an 𝑛×𝑝matrixR, such thatR𝑖,𝑗=𝑅𝑒𝑙𝑞(𝑡𝜋𝑗(𝑖)).
+Let𝜖⃗be a vector of size 𝑝such that𝜖⃗𝑗=1
+𝜖L(I𝜋𝑗,𝑞). Now, we should
+solve the following equation to find the unknown exposure vector
+X:
+R⊤·X=𝜖⃗ (10)
+461
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+We can choose a value 𝑝larger than 𝑛to obtain a sufficient
+number of samples, thereby ensuring that the system of equations
+is overdetermined and can be solved effectively.
+In order to solve equation (10), we find an estimation Xto mini-
+mize the Mean Squared Errors.
+𝑀𝑆𝐸(X)=∥R⊤·X−𝜖⃗∥2,
+∇𝑀𝑆𝐸(X)=0↔X=(R·R⊤)−1·R·𝜖⃗
+As a result,X𝑖would be an estimation for XL(𝑖).
+C.2 Confidence
+While one can use a fixed budget on the number of permutations to
+use for estimating the exposure values, the user can alternatively
+specify a target variance in the estimation. In such cases, consider-
+ing the exponential search strategy, we start from a base number
+of permutations and compute the estimation variance, as explained
+in the following. If the estimation variance is larger than the target
+variance, we double the number of permutations (i.e., double the
+value of𝑝) and repeat the process.
+We follow the standard confidence interval analysis for a Mean
+Squared Error estimation. Each X𝑖is an unbiased estimator of
+XL(𝑖). This estimator follows a t-Distribution around the real value:
+X𝑖−XL(𝑖)√︂
+𝑉𝑎𝑟(X𝑖)∼𝑡𝑝−𝑛 (11)
+Where𝑡𝑝−𝑛is the t-Distribution with 𝑝−𝑛degree of freedom
+and,
+𝑉𝑎𝑟(X𝑖)=𝜎ˆ2·[(R·R⊤)−1]𝑖,𝑖, (12)
+𝜎ˆ=∥R⊤·X−𝜖⃗∥2
+𝑝−𝑛(13)
+By increasing the number of random permutations 𝑝, we increase
+the degree of freedom and as a result we would have less variance
+and a narrower distribution for the estimation.C.3 Practical Concerns
+The process for exposure value estimation requires 𝑝separate API
+calls to the large language model, L. In the following, we explore
+heuristic methods aimed at reducing the number of required API
+calls, thereby optimizing the associated costs.
+At first, we can choose a task (I,𝑞)such that there is only one
+token𝑡𝑖related to the query 𝑞. As a result, one can just place this rel-
+evant element into different positions and sample from each XL(𝑖)
+individually. Secondly, one can carefully create a task such that the
+result identifies how much information from all the positions is
+retained by the LLM.
+Specifically, consider the token-counting task that counts the
+number of occurrences of each token in the input I. For example,
+given the inputI={𝑎,𝑏,𝑏,𝑏,𝑎,𝑎,𝑎,𝑐,𝑐}, the output is “a:4, b:3,
+c:2” . Note that in this example, all elements are relevant to the
+query, but each of them is relevant to one of the sub-problems
+(contributing only to one of the token counts). Using this technique,
+each query to the LLM provides relevant information about allrank
+positions (not only a subset of positions that are relevant to the
+query). We shall discuss this technique further with more examples
+in our experiments (Section 5).
+So far in this section, we examined the exposure at each token
+position within the input prompt. However, for specific tasks each
+element𝑒∈Ican correspond to multiple tokens. Let ℓ(𝑒)denote
+the number of tokens associated with element 𝑒. As outlined in
+Section 2.4, the objective is to compute the utility of a particular
+ranking, which depends on the exposure of entire elements, rather
+than individual tokens, within the reranked input. To generalize
+the definition of utility, we define the exposure of each element 𝑒as
+the average exposure of the tokens that compose it. In other words,
+we rewrite equation 2 as,
+E[utility(𝜋|𝑞)]=|I|∑︂
+𝑖=1⎛⎜
+⎝E⎡⎢⎢⎢⎢⎣∑︁𝑖+ℓ(𝑒𝑖)
+𝑗=𝑖XL(𝑖)
+ℓ(𝑒𝑖)⎤⎥⎥⎥⎥⎦·E[︁
+𝑅𝑒𝑙𝑞(𝑒𝜋𝑖)]︁⎞⎟
+⎠
+462
+
+Hierarchy To Score
+
+Paper
+  - Introduction
+    - [Section Lead-in]
+      - Paragraph 1
+        - [15]
+        - [39]
+      - Paragraph 2
+        - [23]
+    - Summary of Contributions
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+        - [9]
+    - Paper Organization
+      - Paragraph 1
+  - Preliminaries
+    - [Section Lead-in]
+      - Paragraph 1
+    - Query Model
+      - Paragraph 1
+    - Model
+      - Paragraph 1
+      - Paragraph 2
+    - Problem Definition
+      - Paragraph 1
+      - Paragraph 2
+    - Solution Overview
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+        - [31]
+      - Paragraph 4
+        - (2)
+      - Paragraph 5
+        - [31]
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+  - Estimating the Relevance
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+        - [43]
+        - [18]
+    - Warm-up: Partitioning the Input
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+    - Modeling of the Relevance Estimation as Bipartite Graph
+      - Paragraph 1
+        - [25]
+  - Pre-processing: Exposure Discovery
+    - Paragraph 1
+    - Paragraph 2
+      - (5)
+  - Experiments
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+        - [9]
+    - Exposure Discovery
+      - Paragraph 1
+        - [36]
+        - [1]
+      - Paragraph 2
+      - Paragraph 3
+        - [9]
+    - Tasks Setup
+      - Paragraph 1
+        - [29]
+        - [14]
+        - [26]
+        - [2]
+        - [19]
+        - [9]
+    - Analysis of the Ranking utility
+      - Paragraph 1
+        - [43]
+        - [36]
+        - [11]
+        - [41]
+        - [18]
+      - Paragraph 2
+        - [9]
+      - Paragraph 3
+    - Analysis of the Output Error
+      - Paragraph 1
+  - Discussions
+    - [Section Lead-in]
+      - Paragraph 1
+    - Advantages
+      - Paragraph 1
+      - Paragraph 2
+    - Limitations
+      - Paragraph 1
+  - Conclusion
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+[anthropic_full_paper_api_error] attempt=1/3
+Anthropic Bedrock legacy request failed: Error code: 403 - {'Message': 'Authentication failed: Please make sure your API Key is valid.'}
+[anthropic_full_paper_api_error] attempt=2/3
+Anthropic Bedrock legacy request failed: Error code: 403 - {'Message': 'Authentication failed: Please make sure your API Key is valid.'}
+[anthropic_full_paper_api_error] attempt=3/3
+Anthropic Bedrock legacy request failed: Error code: 403 - {'Message': 'Authentication failed: Please make sure your API Key is valid.'}
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+The hierarchy provided below is authoritative.
+
+Your task is to score the provided hierarchy, not reconstruct the paper structure.
+
+Requirements
+
+* Score every node in the hierarchy.
+* Every node must appear exactly once in the output.
+* Preserve the hierarchy exactly as provided.
+* Do not add, remove, rename, merge, split, or reorder nodes.
+* Do not invent sections, subsections, paragraphs, appendices, or aggregate nodes.
+* Include nodes even if their contribution score or citation score is 0.
+* Output nodes in the exact order they appear in the provided hierarchy.
+
+Contribution Tree Structure
+
+The Contribution Tree is a rooted hierarchical tree representing how scientific contribution flows through the paper.
+
+The root node is the paper and has contribution score 1.0.
+
+Document nodes correspond to the document structure:
+
+* Sections
+* Subsections
+* Subsubsections
+* Paragraphs
+
+The provided hierarchy already specifies all document nodes.
+
+Paragraphs are the lowest document-level nodes.
+
+A paragraph without citations is a leaf node.
+
+A paragraph containing citations is not a leaf node. Citations discussed within that paragraph are treated as child citation nodes.
+
+Citation nodes represent individual cited references.
+
+Only citation nodes may appear beneath paragraphs.
+
+Hierarchical Scoring Procedure
+
+Contribution scores must be assigned recursively through the hierarchy.
+
+Do not assign scores directly from a section to descendant paragraphs if intermediate hierarchy levels exist.
+
+For every parent node:
+
+1. Consider only its immediate children.
+2. Estimate the relative importance of those children.
+3. Distribute the parent's score among those children.
+4. Recursively repeat this process for each child.
+
+Scoring must proceed level-by-level through the hierarchy:
+
+Paper
+→ Sections
+→ Subsections
+→ Subsubsections
+→ Paragraphs
+
+A node may only receive contribution from its immediate parent.
+
+If a subsection exists beneath a section, score the subsection before scoring any paragraphs contained within that subsection.
+
+If a subsubsection exists beneath a subsection, score the subsubsection before scoring any paragraphs contained within that subsubsection.
+
+Do not skip hierarchy levels.
+
+Do not distribute a parent's score directly to grandchildren or deeper descendants.
+
+The contribution score of a paragraph must be derived from the contribution assigned to its immediate parent node.
+
+Contribution Scoring
+
+A node's score represents its contribution to the scientific value of the paper, not its length.
+
+Contribution scores are assigned recursively top-down through the hierarchy, one parent-child level at a time.
+
+The contribution score of a parent should approximately equal the sum of the contribution scores of its children. Exact normalization will be performed after output.
+
+Sibling scores should reflect their relative scientific importance within the same parent.
+
+Assign higher scores to content central to the paper's technical contribution, such as:
+
+* methods
+* algorithms
+* theory
+* experimental design
+* technical analysis
+* key findings
+
+Assign lower scores to content primarily serving as:
+
+* motivation
+* background
+* related work
+* organizational text
+* summaries
+
+All scores must be global scores relative to the entire paper.
+
+Citation Attribution
+
+Citation contribution is computed bottom-up from citation-containing paragraphs.
+
+For a paragraph without citations:
+
+* Citation Score = 0.
+
+For a paragraph containing citations:
+
+* Estimate what fraction of the paragraph's contribution is derived from prior work.
+* This becomes the paragraph Citation Score.
+* The remaining contribution is considered original contribution.
+
+Only paragraphs containing citations should be decomposed into original and citation-derived contribution.
+
+After determining the paragraph Citation Score, identify citation contexts within the paragraph.
+
+A citation context is text that discusses, compares against, extends, relies on, or describes one or more cited works.
+
+Distribute the paragraph Citation Score across citation contexts according to their relative importance.
+
+Within a citation context, divide contribution uniformly among all citations appearing in that citation context.
+
+Examples:
+
+[10]
+
+→ all contribution goes to [10]
+
+[1, 10]
+
+→ contribution is divided equally between [1] and [10]
+
+(Smith et al., 2020; Johnson et al., 2021)
+
+→ contribution is divided equally between the cited references
+
+The contribution score of a citation equals the sum of all contribution assigned to that citation across the paper.
+
+If a citation appears multiple times, aggregate all assigned contribution into a single final citation score.
+
+Use citation identifiers exactly as they appear in the paper.
+
+Do not rewrite, expand, infer, or replace citation identifiers.
+
+The sum of all citation contribution scores should approximately equal the root paper Citation Score.
+
+Output Format
+
+Output every node in the provided hierarchy.
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+where:
+
+* Total Score is the node's contribution score.
+* Citation Score is the portion of the node's contribution attributed to cited prior work.
+Nodes without citations must still be reported with Citation Score = 0.
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+Rank It, Then Ask It: Input Reranking for Maximizing the
+Performance of LLMs on Symmetric Tasks
+Mohsen Dehghankar
+University of Illinois Chicago
+Chicago, IL, USA
+mdehgh2@uic.eduAbolfazl Asudeh
+University of Illinois Chicago
+Chicago, IL, USA
+asudeh@uic.edu
+Abstract
+Large language models (LLMs) have quickly emerged as practical
+and versatile tools that provide new solutions for a wide range of
+domains. In this paper, we consider the application of LLMs on
+symmetric tasks where a query is asked on an (unordered) bag
+of elements. Examples of such tasks include answering aggregate
+queries on a dataset. In general, when the bag contains a large
+number of elements, LLMs tend to overlook some elements, leading
+to challenges in generating accurate responses to the query. LLMs
+receive their inputs as ordered sequences. On the other hand, the
+input of a symmetric task is not ordered; hence reordering should
+not affect the LLM’s response.
+Observing that LLMs are less likely to miss elements at certain
+positions of the input, we introduce the problem of LLM input
+reranking: to find a ranking of the input that maximizes the LLM’s
+accuracy for the given query without making explicit assumptions
+about the query. Finding the optimal ranking requires identifying (i)
+the relevance of each input element for answering the query and (ii)
+the importance of each rank position for the LLM’s attention. We
+develop algorithms for estimating these values efficiently utilizing
+a helper LLM. We conduct comprehensive experiments on different
+synthetic and real datasets to validate our proposal and to evaluate
+the effectiveness of our proposed algorithms. Our experiments
+confirm that our reranking approach improves the accuracy of the
+LLMs on symmetric tasks by up to 99%proximity to the optimum
+upper bound.
+CCS Concepts
+•Computing methodologies →Natural language generation .
+Keywords
+Large Language Models, Ranking, Input Reordering, Long-context
+ACM Reference Format:
+Mohsen Dehghankar and Abolfazl Asudeh. 2025. Rank It, Then Ask It: Input
+Reranking for Maximizing the Performance of LLMs on Symmetric Tasks.
+InProceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery
+and Data Mining V.2 (KDD ’25), August 3–7, 2025, Toronto, ON, Canada. ACM,
+New York, NY, USA, 12 pages. https://doi.org/10.1145/3711896.3737099
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+KDD ’25, Toronto, ON, Canada
+©2025 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM ISBN 979-8-4007-1454-2/2025/08
+https://doi.org/10.1145/3711896.37370991 Introduction
+Large Language Models (LLMs) have rapidly become invaluable
+tools, expanding their impact far beyond the realm of natural lan-
+guage processing. Tasks that have long been studied across various
+areas of computer science are now finding alternative solutions
+with LLMs.
+In particular, LLMs can be used for symmetric [ 15] tasks where a
+query is issued on an input that takes the form of a bag (or multi-set)
+of elements. Dataset queries is an example of this type of task. To
+further clarify this, let us consider the following toy example.
+Example 1: Consider a publications dataset in form of a CSV file,
+containing the information of papers published across various
+domains:
+A
+uthors Title Venue Year
+Alan
+Turing Computing Machinery and Intelligence Mind 1950
+·
+·· ··· ··· ···
+Suppose one is interested in finding out the number of publica-
+tions in an "Operations Research" (OR) venue since 2010. They
+specify their query in the form of a prompt1[how many papers
+were published in an operations research venue since 2010] ,
+and pass it alongside the CSV file to an LLM to find the answer.
+Indeed,onecanusethetraditional appr oaches, such asimple-
+menting/generating anefficient codeandexecuting it,orutilizing
+atext-to-SQL approach with adatabase (ordata science packages),
+toansw ertheabovequer y.However,many ordinar yusers who
+viewLLMs asomniscient andmay lack therequiredbackgr ound
+knowledge,infrastructur e,orinter estmay choosetodirectlypass
+their inquiries toanLLM, expectingittoknowthesolution. This is
+evident bytheoverwhelming popularity ofLLMs asarevolutionar y
+andversatile technology [39],motivating prior worktostudy LLMs
+forthese settings [21,22,24,28].2
+Besides, LLMs may havelearne dtheknowledgethat helps for
+answ ering queries thatother wise arenot“easy” toansw erwith the
+traditional approaches. Forinstance ,answ ering Example 1requires
+knowing which venues areintheORcategor y.Asaresult, atradi-
+tional approach foransw ering thisqueryrequiresfirst acquiring a
+compr ehensiv elistofallORvenues beforebeing able toprocess
+it.Ontheother hand, using thesemantic similarities, anLLM can
+directlyprocess thequery.
+Examples ofsymmetric tasks arenotlimite dtodataset queries.
+Particularly ,Zhou etal.[15]study symmetric tasks ongraph ap-
+plications such asknowledgegraphs, wher e,forexample ,passing
+theedges ofagraph astheinput elements, onecanasktheLLM
+1A prompt is a textual instruction for the LLM.
+2Please refer to Appendix Aforanextende ddiscussion oftherelate dwork.
+451
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+100 200 300 400 500
+Graph Size (# of Edges)246810A verage Error
+Figure 1: Illustrating the average error of GPT-3.5 Turbo on
+Graph Degree Task based on different input sizes. The error
+is the absolute difference between the real degree of a node
+(less than 20 in this case) and the reported degree by the LLM.
+questions about node degrees (see Example 2). We refer to this as
+the Graph Degree Task.
+LLMs follow a sequential randomized process to generate their
+outputs. As a result, their inputs are received and processed as
+ordered sequences. In particular, when the input is lengthy, LLMs
+are known to pay “less attention” to certain regions of the input,
+hence, struggling with retaining information from those regions.
+This leads to a performance degradation over extended inputs [ 23].
+For example, Fig 1 shows the significant error of GPT-3.5 Turbo for
+Graph Degree Task when the graph size is more than 200.
+On the other hand, the input of a symmetric task is an unordered
+bag of elements. As a result, the input elements can be freely re-
+ordered. This gives us the opportunity to rerank the input elements
+before passing it to the LLM for maximizing its accuracy – which is
+the research focus of this paper. Specifically, we introduce a rerank-
+ing mechanism that (a) learns the so-called “exposure” of each rank
+position for an LLM during the preprocessing time. Then, at the
+query time, it (b) assesses the relevance of each input element to the
+given natural language query and (c) generates a reranking of the
+input that puts the relevant elements in high-exposure positions.
+1.1 Summary of Contributions
+In this work, we introduce the problem of LLM input reranking to
+find an ordering of the input that maximizes the accuracy of an
+LLM for symmetric tasks. To the best of our knowledge, we are the
+first to introduce and study this problem.
+We propose a two-stage solution for the problem. First, we iden-
+tify the exposures of the LLM to detect patterns of “forgetting”
+when processing large inputs. Second, we rank the input elements
+by estimating their relevance scores in relation to a query 𝑞, with-
+out requiring explicit knowledge of the task or the query itself. Our
+method enhances the effectiveness of LLMs in handling large and
+complex inputs in symmetric problem scenarios.
+Our approach is model-agnostic, treating LLMs as black-box with-
+out requiring knowledge of their internal structures. It functions
+asa ready-to-deploy wrapper for LLM input reranking for accu-
+racy maximization. Additionally, our method is problem-agnostic,
+optimizing a re-ranking function without explicit knowledge of
+the query or dataset, making it widely applicable across different
+domains.We present extensive experimental evaluations across two dis-
+tinct categories of tasks. First, in a Graph Degree Task, we demon-
+strate that by utilizing lightweight versions of open-source large
+language models, such as Llama 3.1, Qwen 2, and DeepSeek-Coder,
+we are able to estimate relevance scores and rank input elements
+with rank utility values approaching those of optimal solutions
+(see Table 1). Second, leveraging the obtained ranking information,
+we introduce a reranking approach that significantly enhances the
+accuracy of LLM outputs. Our method improves performance by
+up to 99% proximity to the optimum solution, as demonstrated in
+Table 3.
+We also identify a notable distinction in the token retention
+patterns of two widely used commercial LLMs. For instance, we
+observe that GPT-3.5 Turbo demonstrates a stronger tendency to
+retain tokens positioned at the beginning of the prompt, whereas
+in GPT-4o Mini, tokens located in the middle are more likely to be
+remembered by the model (Fig. 3).
+Additionally, we conducted experiments on other tasks, such as
+database query answering with real-world datasets, and observed
+comparable improvements in the output of the LLMs after reranking
+the input. More details on the experiments and more empirical
+results are provided in the Technical Report [9].
+1.2 Paper Organization
+The rest of the paper is organized as follows: we begin our technical
+discussions in Section 2, where we introduce the necessary nota-
+tions and formalize our input reranking problem. Next, we present
+our algorithm for estimating the relevance of the input elements to
+the given query, in Section 3. In Section 4, we discuss our approach
+for learning the exposure values for an LLM for each rank position.
+Our experimental evaluations are provided in Section 5, followed
+by the discussion and conclusion. Due to the space constraints, the
+extended related work is provided in the Appendix.
+2 Preliminaries
+In this section, we formally define the problem and the specific
+notations that we use in the following sections.
+2.1 Query Model
+We assume that each task 𝑇is a pair(I,𝑞). WhereIis a (large)
+bag of elements{𝑒1,𝑒2,...,𝑒𝑛}and𝑞is a query in natural language
+aboutI. For example, for the Graph Degree Task, Iis the list of
+edges with any order and 𝑞is a natural language question about
+the graph, like "What is the degree of node 10?". We assume that I
+and𝑞are given to the LLM as two different prompts in the same
+context. That is, we first provide the list to the LLM, then we ask
+about the query 𝑞. More details on the implementation is discussed
+in Section 5.
+2.2 LLM Model
+We assume that we have API access to a black-box LLM L. For a
+task𝑇=(I,𝑞)as defined in the previous section, L(I,𝑞)is the
+response of the LLM. The output error is defined as:
+𝜀L(I,𝑞)=Δ[L(I,𝑞),O(I,𝑞)]
+452
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+WhereO(I,𝑞)is defined as the correct output of the task, and
+Δis a function that measures the distance between the LLM results
+and the correct output. For example, for the Graph Degree Task, Δ
+is the absolute difference between the reported degree and the real
+degree of the node.
+2.3 Problem Definition
+Given a task(I,𝑞)and a large language model L, our objective is
+to rerank the elements in Iwith respect to the query 𝑞to minimize
+the expected error, denoted as E(𝜀L(I,𝑞)). Specifically, from the
+set of all possible rankings Π, we seek to identify the reranking
+function𝜋∗:{1,2,...,𝑛} → { 1,2,...,𝑛}that rearranges each
+element𝑒𝜋∗(𝑖)to a new position 𝑖in such a way that the response
+of the LLM exhibits an improvement in terms of reduced expected
+error.
+𝜋∗=arg min
+𝜋∈ΠE[𝜀L(I𝜋,𝑞)] (1)
+Our approach is task (and query) agnostic. In other words, we
+find the function 𝜋∗without using any explicit knowledge about
+the query or the task.
+2.4 Solution Overview
+We define a utility function on different orderings of I. Based on
+the objective function in our Problem Definition (Section 2.3), the
+utility of a reranking function 𝜋should capture the expected error
+E[︁
+𝜀L(I𝜋,𝑞)]︁
+.
+Let us define a function 𝑅𝑒𝑙𝑞:I → [ 0,1]that captures the
+relevance of each element 𝑒𝑖∈Ito the query 𝑞. That is,𝑅𝑒𝑙𝑞(𝑒𝑖)
+is the relevance of 𝑒𝑖to the query 𝑞.
+Also, letXL(𝑖)denote the “exposure” of the position 𝑖in a ranked
+input to the LLML, i.e., the likelihood that the LLM will not miss
+an element in position 𝑖. Then, the expected utility of a ranking 𝜋
+of the inputIis calculated as [31],
+E[𝑢𝑡𝑖𝑙𝑖𝑡𝑦(𝜋|𝑞)]=|I|∑︂
+𝑖=1E[︁
+XL(𝑖)]︁
+·E[︁
+𝑅𝑒𝑙𝑞(𝑒𝜋(𝑖))]︁
+(2)
+Example 2: Consider the graph 𝐺, with 6 vertices and the fol-
+lowing edges:
+𝑒1𝑒2𝑒3𝑒4𝑒5𝑒6𝑒7𝑒8𝑒9𝑒10
+1 2 1 3 1 2 3 3 5 2
+2 4 4 4 3 5 5 6 6 6
+Also, let the exposure function be XL(𝑖)=1
+𝑖. Now let the query
+𝑞be“compute the degree of 𝑣1”. For edges incident to 𝑣1,
+𝑅𝑒𝑙𝑞(𝑒𝑖)=1, while for the others the relevance is 0. As a result,
+the utility of the ranking 𝜋={1,2,···,10}is𝑢𝑡𝑖𝑙𝑖𝑡𝑦(𝜋|𝑞)=
+1+1
+3+1
+5≃1.53. Note that the ranking with maximum utility
+put𝑒1,𝑒3, and𝑒5at the beginning of the list, and has the utility
+of1+1
+2+1
+3≃1.83.
+Thefirst step towardscomputing theutility ofaranking isto
+specifytheexposurefunctionX.Wenote that theexposurevalues
+areLLM-sp ecific, i.e.,theexposureofaposition intheranking may
+varybasedontheLLM athand andthelength ofeach element in
+theinputI.Ther efore,during thepreprocessing time,weneedto
+estimate theexposurevalues foragivenLLM. Todoso,inSection 4,Algorithm 1 Warm-up
+Input: ThelistofelementsI,Thequer y𝑞,ThehelperLLMH,Numb er
+ofpartitions𝑚
+Output: Thelistofrelevance scores{𝑅𝑒𝑙𝑞(𝑒𝑖)|𝑒𝑖∈I}
+1:function PSM(I,𝑞,H,𝑚)
+2:𝑃←Partition(I,𝑚)⊲PartitionIinto𝑚chunks ofequal size
+3: for𝑃𝑗∈𝑃do
+4:𝑅←H(𝑃𝑗,𝑞)⊲Askhelpertogivetherelevant elements𝑅
+5: for𝑒𝑖∈𝑃𝑗do𝑅𝑒𝑙𝑞(𝑒𝑖)←1if𝑒𝑖∈𝑅,0other wise
+6: Return{𝑅𝑒𝑙𝑞(𝑒𝑖)|𝑒𝑖∈I}
+wedevelop anapproach basedonsample tasks forwhich thequery
+𝑞,theinputI,thecorrectoutputO,andthe𝑅𝑒𝑙𝑞(𝑒𝑖),∀𝑒𝑖∈Iis
+knownahead oftime.
+After specifying theexposurevalues during thepreprocessing
+time,weneedtoestimate therelevance values atthequer ytime.
+Recallthat𝑞canbeanynatural language queryontheinput setI.
+Givenatask𝑇=(I,𝑞),inSection 3,wepresent ourapproach for
+estimating therelevance function𝑅𝑒𝑙𝑞.
+3Estimating theRelevance
+Each element𝑒𝑖∈Iisassociate dwith animplicit relevance score
+thatquantifies itsdegreeofrelevance tothequery𝑞.This relevance
+scoreisdenote das𝑅𝑒𝑙𝑞(𝑒𝑖).Forinstance ,inExample 2,theedges
+adjacent tothenode𝑣aremorerelevant tothequery“compute the
+degreeofnode𝑣”.
+However,computing therelevance values ischallenging since
+thetask𝑇isnotspecifiedbeforehand, and𝑞canbeanyquer yon
+I.Toaddressthisissue ,inthissection, westudy thesub-pr oblem
+ofestimating therelevance scoreforeach element𝑒𝑖∈I.
+Weutilize ahelperLLMHforestimating therelevance values.
+Hisasmall open-sour ceLLM that isrelativ elycheap torunand
+deplo y.Inourexperiments, wecompar ediffer entmodels asH,
+likeGemma2(9b) [36],Llama3.1 (8b) [11],Qwen2(7b) [41],
+DeepSeek-Coder-v2 (16b) [43], andMistral (7b) [18].
+Intherestofthissection, weexplain twometho dstoestimate
+therelevance scores.First, wediscuss awarm-up baseline that
+partitions theinput elementsIinto smaller subsets andidentifies
+therelevant andnon-r elevant elements within each partition. Next,
+wepresent ourestimation approach bymodeling theproblem asa
+bipartite graph.
+3.1 Warm-up: Partitioning theInput
+Letusconsider Example 2once again. Tofindtherelevant edges
+tothegivenquer y,onecanpartition theinput elementsIinto
+smaller subsets andaskthehelperLLM tofind relevant edges in
+each subset.
+Follo wing thisidea, thewarm-up algorithm first partitions the
+input listIinto𝑚smaller subsets ofsize𝑙=⌈𝑛
+𝑚⌉,i.e.,{𝑃1=
+{𝑒1,···,𝑒𝑙},𝑃2={𝑒𝑙+1,···,𝑒2𝑙},···,𝑃𝑚={𝑒(𝑚−1)𝑙+1,···,𝑒𝑚𝑙}}.
+Next,foreach partition𝑃𝑖,thealgorithm asks thehelperLLMH
+“whatelements in[𝑃𝑖]aremorerelevant foranswering
+thequery𝑞?”.Itthen assigns therelevance score1tothereturne d
+elements and0toothers. SeeAlgorithm 1forthemoredetails.
+453
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+3.2 Modeling of the Relevance Estimation as
+Bipartite Graph
+While providing a baseline for estimating the relevance values,
+the warm-up algorithm suffers from multiple drawbacks. First, the
+scope of the relevance values generated by the warm-up algorithm
+is limited to binary. Second, given the randomized nature of the
+LLMs, the output generated by the warm-up algorithm may not
+be reliable, particularly given that we assume we have no prior
+knowledge about the task and the query at hand. Third, depending
+on the composition of a partition, the output may miss relevant
+elements or return less relevant ones. In other words, the helper
+LLM may over/under-estimate the relevance scores in each parti-
+tion. As a result, changing an element’s partition may impact its
+relevance-value estimation.
+To address the first issue, one can ask the helper to directly esti-
+mate the relevance value of each element in each partition, but this
+would result in high variance and sometimes inconsistent scores.
+Alternatively, addressing the first and second issues is possible by
+collecting multiple responses for each partition – instead of relying
+on a single evaluation. The relevance value of each element is then
+the average of each individual estimation. This, however, does not
+resolve the third issue; hence the estimations may remain inaccu-
+rate. Addressing the third issue is possible by shuffling the input
+before each partitioning, but this may require a large number of
+evaluations to generate unbiased and accurate estimations for each
+element – making the relevance estimation process costly.
+Instead, our goal is to obtain accurate estimations with a small
+number of evaluations per element.
+Let us now make a connection to the peer-reviewing process [ 25],
+in which a small number of reviewers review each paper, while
+various reviewers may generally provide higher/lower scores for
+the papers they review. Similarly, we can view each element as a
+paper and each relevance-value estimation for the elements in a
+partition as the scores provided by a reviewer.
+Inspired by this connection, we devise a similar process for
+relevance-value estimation. Specifically, we randomly shuffle the
+input listIa total of𝜎times (for a small value of 𝜎) to get the
+shuffled lists{I1,I2,...,I𝜎}. Subsequently, we partition each shuf-
+fled list into 𝑚equal-size subsets, as in the warm-up algorithm.
+This ensures that each evaluation of an element will be with a
+different set of elements, minimizing the partition composition im-
+pact on the final evaluations. Let 𝑃𝑖,𝑘denote the𝑘thpartition of
+I𝑖where𝑖≤𝜎and𝑘≤𝑚. We ask the helper LLM Hto give us
+a categorized score (e.g., from one to five) for each element inside
+each of these 𝑃𝑖,𝑘partitions. We index the score-evaluations to
+all partitions as{E1,E2,···,E𝜎𝑚}(the evaluations obtained for
+𝑃𝑖,𝑘isE(𝑖−1)𝑚+𝑘). Each evaluation can be considered a potentially
+biased (i.e., over/under-estimated) set of scores assigned to a set of
+elements.
+For an element 𝑒𝑖, let𝑆𝑖=𝑅𝑒𝑙𝑞(𝑒𝑖). Assume we could obtain
+a collection of 𝜎unbiased evaluations {𝑤𝑜
+𝑖,1,𝑤𝑜
+𝑖,2,···,𝑤𝑜
+𝑖,𝜎}for𝑒𝑖.
+Then, each𝑤𝑜
+𝑖,𝑗would be viewed as a random variable taken from a
+distribution with mean 𝑆𝑖, i.e.,E[︂
+𝑤𝑜
+𝑖,𝑗]︂
+=𝑆𝑖. Then𝑆¯𝑖=1
+𝑚∑︁𝜎
+𝑗=1𝑤𝑜
+𝑖,𝑗
+would be an unbiased estimation for 𝑆𝑖.𝑆¯1
+𝑆¯2
+𝑆¯3
+·
+··
+𝑆¯𝑛𝛽1
+𝛽2
+𝛽3
+·
+··
+𝛽𝜎𝑚𝑤1,1
+𝑤1,2
+𝑈 𝑉
+Figure 2: An example of the bipartite representation of eval-
+uations. Each node in 𝑈represents an element in Iand its
+final score. Each node in 𝑉represents one evaluation done on
+a partition 𝑃𝑖,𝑘from a shuffled list 𝐸𝑖and the associated bias
+with that. The weights on the edges are the scores assigned
+by the helper LLM Hto elements.
+Let𝑤𝑖,𝑗be the evaluation score of 𝑒𝑖inE𝑗. We assume that each
+evaluationE𝑗equally over/under estimates the evaluation scores
+for all elements with an unknown but constant coefficient 𝛽𝑗. That
+is, for all𝑒𝑖evaluated inE𝑗,𝑤𝑜
+𝑖,𝑗=1
+𝛽𝑗𝑤𝑖,𝑗. Had we known the bias
+values{𝛽1,···,𝛽𝑗}, we could estimate the relevance score 𝑆𝑖of the
+element𝑒𝑖as𝑆¯𝑖=1
+𝜎∑︁
+𝑒𝑖∈E𝑗1
+𝛽𝑗𝑤𝑖,𝑗.
+In order to find the bias coefficients for each of the evaluations,
+we build a bipartite graph G, which we call the evaluation graph.
+Definition 1 (Bipartite Evaluation Graph). Consider the
+weighted bipartite graph G(𝑈,𝑉,𝐸).𝑈contains𝑛nodes, each rep-
+resenting an element 𝑒𝑖∈I.𝑉is a set of𝜎·𝑚nodes, representing
+the evaluation outputs E1,···E𝜎𝑚. An edge(𝑢𝑖,𝑣𝑗)belongs to𝐸iff
+E𝑗contains the element 𝑒𝑖, with its weight being equal to 𝑤𝑖,𝑗– the
+evaluation scoreE𝑗provides for 𝑒𝑖.
+In the bipartite evaluation graph, the degree of each node 𝑢𝑖∈𝑈
+is𝑑𝑒𝑔(𝑢𝑖)=𝜎, while the degree of each node 𝑣𝑗∈𝑉is𝑑𝑒𝑔(𝑣𝑗)=
+⌈𝑛
+𝑚⌉(size of each partition). An illustration of the graph Gis shown
+in Figure 2.
+Let us associate each node 𝑢𝑖∈𝑈with the weight 𝑆¯𝑖and each
+node𝑣𝑗∈𝑉with the weight 𝛽𝑗. Then, the following equations
+hold:
+𝑆¯𝑖=1
+𝜎∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝛽𝑗,∀𝑢𝑖∈𝑈
+𝛽𝑗=1
+⌈𝑛
+𝑚⌉∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝑆¯𝑖,∀𝑣𝑗∈𝑉 (3)
+Intuitively, this equation gives an estimator of the bias values by
+averaging the samples taken from individual evaluations.
+Therefore, to estimate the bias coefficients, we develop an it-
+erative numeric process that at every iteration updates the node
+weights𝛽𝑗(resp.,𝑆¯𝑖) based on its current estimates of the weights
+𝑆¯𝑖(resp.,𝛽𝑗) of the nodes connected to it.
+The process starts by initializing all 𝛽𝑗values with 1 ( 𝛽(0)
+𝑗=1).
+It then alternates between updating 𝑆¯𝑖values based on 𝛽𝑗values
+or we updating 𝛽𝑗using𝑆¯𝑖values:
+454
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+Algorithm 2 Bipartite
+Input: The list of elements I, The query𝑞, The helper LLMH, Number
+of partitions 𝑚, Number of shuffles 𝜎
+Output: The list of estimated relevance scores {𝑅𝑒𝑙𝑞(𝑒𝑖)|𝑒𝑖∈I}
+1:function BEM(I,𝑞,H,𝑚,𝜎)
+2:𝐺←Initialize the bipartite graph
+3: for1≤𝑖≤𝜎do
+4:I𝑖←Random shuffleI
+5:𝑃𝑖←PartitionI𝑖into𝑚chunks
+6: for𝑃𝑖,𝑘∈𝑃𝑖do
+7:E←H(𝑃𝑖,𝑘) ⊲Ask helper to score this chunk
+8: Update𝐺 ⊲Add edges𝑤𝑖,𝑗based on observed scores.
+9: Initialize𝛽𝑗values inside 𝐺
+10: while didn’t converge do
+11: Update𝑆¯𝑖and𝛽𝑗values based on Equations 4
+12: Return{𝑆¯1,𝑆¯2,···,𝑆¯𝑛}
+𝑆¯(𝑇)
+𝑖=1
+𝜎∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝛽(𝑇−1)
+𝑗,∀𝑢𝑖∈𝑈
+𝛽(𝑇+1)
+𝑗=1
+⌈𝑛
+𝑚⌉∑︂
+(𝑢𝑖,𝑣𝑗)∈𝐸𝑤𝑖,𝑗
+𝑆¯(𝑇)
+𝑖,∀𝑢𝑖∈𝑈 (4)
+Where𝑆¯(𝑇)
+𝑖(resp.,𝛽(𝑇)
+𝑗) is the estimated relevance score (resp.
+bias coefficient) at time step 𝑇. A pseudo-code of this method is
+presented in Algorithm 2.
+Theorem 1. The process described in Equation 4 would eventually
+converge.
+Proof. (Proof sketch) This process resembles the process applied
+to a positive semi-definite matrix, where, in each step, we alternately
+normalize all rows and then all columns. This procedure preserves
+the eigenvalues of the matrix. According to Sinkhorn’s theorem,
+such a process converges. A formal proof is provided in Appendix B.
+□
+The above algorithm is run as the preprocessing phase of our
+method. As part of this step (Algorithm 2), we issue API calls to
+the helper LLMsH, lightweight models designed for efficient ex-
+ecution during preprocessing. The total number of such calls is
+𝜎𝑚, corresponding to the total number of evaluations, as shown in
+Figure 2, where 𝜎denotes the number of shuffles and 𝑚represents
+the number of items in each partition.
+4 Pre-processing: Exposure Discovery
+So far, we studied the relevance estimation of the input elements
+to a given query. The remaining information for the LLM-input
+reranking based on Equation 2 is to compute the exposure values for
+different rank positions. The exposure values are LLM-dependent,
+and hence, we compute those during the preprocessing phase for
+each large language model L.
+The exposure value of the position 𝑖in the ranking, i.e., XL(𝑖),
+represents the likelihood that the model misses each token in the
+input prompt as a function of its position 𝑖. Throughout this section,
+𝑖will be used to indicate the position of a token within the input
+prompt toL. In the end, we shall explore how this information canbe utilized for the general list I, where each element 𝑒𝑖∈Iis not
+necessarily a token.
+In order to estimate the exposure values, we consider a sample
+set of predefined tasks, each consisting a query 𝑞and the input
+elementsI=[𝑡1,𝑡2,...,𝑡𝑛](consisting of 𝑛tokens arranged in
+sequential order). The task samples can be viewed as the training
+data we use to learn the exposure values. Note that for each of the
+tasks, we already know the ground-truth relevance values 𝑅𝑒𝑙𝑞(.)
+and the output of the query, i.e., O(I,𝑞). Hence, for an output
+generated by the LLM, we can calculate the output error 𝜖L(I,𝑞).
+Let𝑅𝑒𝑙𝑞(𝑡𝑖)be either 0 or 1 for each token in I3. Our goal is to
+estimate a set of unknown values {XL(𝑖)|𝑖≤𝑛}.
+After passing the task (I,𝑞)toLwith a specific ordering of I,
+the error of the output provides aggregate information about the
+valuesXL(𝑖)based on the relevance scores. We model the relation
+between the error and the exposures as,
+1
+E[𝜖L(I,𝑞)]∝1
+𝑛𝑛∑︂
+𝑖=1(XL(𝑖)·𝑅𝑒𝑙𝑞(𝑡𝑖)) (5)
+In other words, the inverse of the error is directly proportional
+to the rank utilization of the items within I. The higher utilization
+implies that items of greater relevance are positioned in more ex-
+posed locations (XL(𝑖)). Consequently, this results in a relatively
+smaller output error of the LLM.
+In the Appendix C, we provide the details of estimating the
+exposuresXand a confidence bound on the estimation. Finally, a
+discussion of the practical details for the implementation is provided
+there.
+5 Experiments
+In this section, we assess the practical applicability of our results
+through experiments conducted on both real and synthetic datasets.
+Specifically, we evaluate three categories of tasks. The first category
+is similar to Example 1, where we have a dataset of published papers
+and ask for a query about the papers. The second task focuses on
+the Graph Degree Task (Example 2), where a graph is constructed,
+and its edges are provided as input to the LLM, denoted as I. A
+query𝑞is then issued, requesting the degree of a specific node
+within the graph. The final category involves answering queries
+about structured datasets. In these tasks, we supply a table to the
+LLM (I) and ask an aggregation query ( 𝑞), expressed in natural
+language, about the table. We try different real-world datasets for
+this category. All experiments were conducted on a local server
+equipped with 128 GB of memory, 32 CPU cores, and two NVIDIA
+GeForce RTX 2080 Ti GPUs. The code is also accessible through
+this repository.
+In the subsequent subsections, we begin by detailing the process
+of exposure discovery. Following this, we provide an in-depth dis-
+cussion of the tasks, including the methods employed to evaluate
+the LLMs. Next, we analyze the ranking performance of various
+open-source models (referred to as helpers) on these tasks. Finally,
+we compare the effectiveness of the different reranking techniques
+presented throughout this study. Due to the space limitations, the
+detail of the experiments, as well as the examination of the effec-
+tiveness of the exposure discovery, is provided in the Technical
+3Check the experiments section (Section 5) for practical examples.
+455
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+Report [ 9]. Finally, a discussion on the advantages and limitations
+of our approaches is provided in Section 6.
+5.1 Exposure Discovery
+In the pre-processing phase, we determine the exposure of each
+input token position to the LLM denoted as XL(𝑖). For this experi-
+ment, we utilize two widely adopted closed-source LLMs: GPT-3.5
+Turbo andGPT-4o Mini, and two open-source LLMs: Gemma-
+2:27B [36] and Phi-4:14B [1]. To measure token exposure values,
+as outlined in Section 4, we construct a synthetic task denoted as
+(I,𝑞), where each element within Icorresponds to an individual
+token. The query 𝑞prompts the LLM to report the frequency of
+occurrence for each token in the input set I. The LLM’s output is
+represented as a key-value list, where each key corresponds to a
+token, and the associated value indicates the number of times that
+token was identified within the input.
+We systematically reposition various tokens, including their
+repeated occurrences across consecutive positions (aka windows)
+within the inputI, to assess the extent to which each position is
+exposed to the LLM. We estimate the exposure levels by conducting
+multiple sampling iterations, as illustrated in Figure 3. The errors
+are computed as the absolute difference between the actual repeats
+of each token and the corresponding LLM prediction, averaged
+across all unique tokens. The exposure is modeled as the inverse of
+error at each position.
+Based on Figure 3, GPT-3.5 Turbo tends to focus more on the
+beginning of a long prompt, while it is more likely to forget the later
+tokens. In contrast, GPT-4o Mini shows a different pattern, where it
+is more likely to forget tokens at the start and the end while keeping
+those in the middle. As shown in the Technical Report [ 9], Phi-4
+behaves similarly to GPT-4o Mini, mainly retaining the middle part
+of the prompt. On the other hand, Gemma-2 remembers tokens at
+the end of the prompt but tends to forget the beginning.
+We leverage the exposures identified in this subsection as a
+preprocessing step to address the subsequent tasks discussed in the
+following subsection.
+5.2 Tasks Setup
+In this section, we present a detailed overview of the task setups
+and the datasets utilized.
+5.2.1 Publication Venue Task. Following Example 1, we utilized
+theDBLP ACM dataset [ 29], with approximately 132,000 entries. This
+dataset provides a comprehensive list of research papers, including
+attributes such as titles, authors, and the journals in which the
+papers were published. It is widely used for entity resolution tasks.
+For our study, we extracted a smaller sample of rows from this
+dataset. The task involved passing the sampled DataFrame to the
+LLM as input and querying it with questions such as, "How many
+papers were published in physics-related journals?" to determine
+the number of papers relevant to a given research topic.
+5.2.2 Graph Degree Task. In this task, we generate a random graph
+using the Erdős-Rényi model [ 14], where the edges represent the
+set of elements, denoted as I. The primary query 𝑞for this graph
+is: “What is the degree of a given node 𝑣?”. We systematically
+select various nodes 𝑣within the graph and evaluate the responses
+provided by an LLM to these queries. Since the generated graph is
+fully accessible, we can compute the ground-truth degree of eachqueried node. To assess the accuracy of the LLM’s responses, we
+calculate the error 𝜀Las the absolute difference between the degree
+reported by the LLM and the ground-truth degree. We first pass the
+set of edges to the LLM and then ask the query in a different prompt
+message but in the same context. We selected graph sizes up to 500
+edges to generate synthetic graphs to ensure that all edges could
+be represented within a single prompt when inputting them into
+LLMs, thereby adhering to the models’ token limits.
+5.2.3 Dataset Query Task. Similar to the publication venue task,
+in this task, we provide a dataset table as input to the LLM and ask
+aggregation queries in natural language. For instance, a query might
+ask, "How many rows contain the value in the ‘col’ column equal
+to ‘value’?"
+We utilize three real-world datasets for this study. The IMDB
+Movies dataset[ 26] provides information on the top 1,000 movies
+listed on IMDB . We extract a subset containing 60 rows from this
+dataset and formulate a query regarding the number of movies with
+a rating of𝑅𝑎𝑡𝑖𝑛𝑔≥8.2. TheAdult Income dataset [ 2], which
+comprises data on approximately 48,000 individuals for income
+prediction tasks, is also employed. From this dataset, we sample 60
+rows and pose a query about the number of individuals associated
+with a specific “workclass” category. Finally, the Open University
+Learning Analytics ( OULAD ) dataset [ 19] includes data on student
+enrollments across various courses. It contains 32K rows. For our
+task, we sample a subset of 100 rows and ask about the number
+of students enrolled in a particular course. These sample sizes are
+carefully selected to align with the token limits of LLMs4. The re-
+sults for the Adults and OULAD are presented in the Technical
+Report [9].
+5.3 Analysis of the Ranking utility
+In this subsection, we utilize different small-sizes open-source LLMs
+as helpers (H) to estimate the relevance scores of elements to
+the query (𝑅𝑒𝑙𝑞). We use five different models: DeepSeek-Coder-
+v2:16B [43],Gemma2:9B [36],Llama3.1:8B [11],Qwen2:7B [41],
+andMistral:7B [18]. This selection, while random within the range
+of small models (approximately 7B–8B parameters), ensures cover-
+age of diverse and widely used open-source models.
+We compare four ranking methods in this experiment. The first
+method, Warm-up, as described in Section 3.1, involves querying
+each partition of the input and subsequently splitting it. The second
+method, Bipartite, detailed in Section 3.2, utilizes Bipartite Graph
+Modeling to estimate relevance scores. To establish a lower bound
+for performance comparison, we use the Random method, which
+involves randomly shuffling all the input elements within the set I
+and passing them to the language model, L. We expect this method
+to give us less accurate results. As an upper bound, we employ the
+Optimum method, where elements are completely sorted based on
+explicit knowledge of the task to maximize relevance to the query.
+This approach provides a theoretical upper limit for ranking utility,
+and we expect it to give us the best answer. For example, for the
+4GPT-3.5-Turbo has a token limit of 4,096. For this model, we selected 60 rows from
+the ADULT dataset, which resulted in almost 3,244 tokens. For GPT-4o-mini, which
+supports a significantly larger context window of 128k tokens, we selected a corre-
+spondingly larger number of rows.
+456
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+0 2 4 6 8
+R elative  Position in Prompt0.60.70.80.91.0Normalized ErrorGPT 3.5 T urbo
+1.01.11.21.31.41.51.61.7
+Exposure ( )
+0 2 4 6 8
+Relative Position in Prompt0.50.60.70.80.91.0Normalized ErrorGPT 4o Mini
+1.01.21.41.61.82.0
+Exposure ( )
+Figure 3: Relative exposure values for different LLMs. The red plot represents the normalized error observed when placing
+relevant data at specific positions within a long prompt, averaged over 100 runs. The prompt length is 2000 tokens for
+Gemma2:27B and 1000 for others. In our formulation, the inverse of the average error at each position is proportional to the
+exposureXL(𝑖). Higher error at a given location indicates lower exposure at that index.
+Table 1: Ranking utility comparison across algorithms and helper models. Each point is an average of 10 runs. The percentage
+values are the proximity of the numbers compared to the upper and lower bounds. The green (red) arrow indicates the closeness
+to the upper (lower) bounds. The closer the values in the table are to the Optimum, the better the results.
+Algorithm Synthetic Graph Task
+DeepSeek-Coder-V2 (16B) Gemma2 (9B) Llama3.1 (8B) Mistral (7B) Qwen2 (7B)
+Optimum (UB) 3.02 (100%)↑ 2.98 (100%)↑ 3.01 (100%)↑ 3.00 (100%)↑2.98 (100%)↑
+Bipartite 2.95 (97%) ↑ 1.87 (58%) 2.22 (70%)↑ 2.49 (81%)↑1.03 (26%)↓
+Warm-up 0.67 (13%)↓ 2.58 (85%)↑ 1.70 (51%) 2.03 (63%) ↑ 0.72 (15%)↓
+Random (LB) 0.31 (0%)↓ 0.31 (0%)↓ 0.32 (0%)↓ 0.33 (0%)↓ 0.32 (0%)↓
+IMDB Dataset
+DeepSeek-Coder-V2 (16B) Gemma2 (9B) Llama3.1 (8B) Mistral (7B) Qwen2 (7B)
+Optimum (UB) 2.76 (100%)↑ 2.60 (100%)↑ 2.69 (100%)↑ 2.52 (100%)↑2.67 (100%)↑
+Bipartite 2.63 (94%) ↑ 2.50 (95%)↑ 2.48 (90%)↑ 2.22 (84%)↑1.60 (48%)
+Warm-up 1.30 (33%) 2.58 (99%)↑ 1.68 (52%) 2.22 (84%)↑1.50 (44%)
+Random (LB) 0.57 (0%)↓ 0.48 (0%)↓ 0.58 (0%)↓ 0.55 (0%)↓ 0.58 (0%)↓
+DBLP ACM Dataset
+DeepSeek-Coder-V2 (16B) Gemma2 (9B) Llama3.1 (8B) Mistral (7B) Qwen2 (7B)
+Optimum (UB) 3.27 (100%)↑ 3.35 (100%)↑ 3.35 (100%)↑ 3.29 (100%)↑3.36 (100%)↑
+Bipartite 2.16 (57) ↑ 2.76 (77%)↑ 1.68 (56%) 1.65 (26%)↓ 1.65 (32%)
+Warm-Up 0.89 (8%)↓ 2.25 (58%) 1.45 (41%) 1.86 (35%) 1.36 (21%)↓
+Random (LB) 0.66 (0%)↓ 0.72 (0%)↓ 0.00 (0%)↓ 1.07 (0%)↓ 0.81 (0%)↓
+Graph Degree Task, we sort all the elements based on the fact that
+whether the edge contains the query node 𝑣or not.
+Table 1 presents the comparison of ranking utilities across dif-
+ferent models and methods (more results on additional datasets are
+illustrated in the Technical Report [ 9]). The Random and Optimum
+methods serve as lower and upper bounds, respectively, providing
+benchmarks for comparison independent of any specific helper
+model. Due to the variability introduced by sampling, slight dif-
+ferences in the ranking utilities across different models can occurfor these two methods, even though they do not use any helper
+models. Each value reported in the table represents the average of
+10 independent runs.
+The values represent the ranking utilities computed under the
+assumption that the exposure function is given by XL(𝑖)=1
+𝑖. In
+other words, once each helper model assigns relevance scores, a
+corresponding reranking function is obtained based on the specific
+model and method applied. To evaluate and compare the perfor-
+mance of different models, we analyze their respective rerankings.
+457
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+Specifically, we first sort the elements according to the reranking
+produced by each model. Within the sorted list, we then compute
+the utility associated with the truly relevant elements using expo-
+sure1
+𝑖. A higher utility value indicates that the relevant elements
+are positioned at higher ranks, reflecting that the reranking gener-
+ated by the model assigns them higher estimated relevance scores.
+The percentage values in the table indicate the Proximity of
+the results, which can be defined as below.
+Definition 2 (Proximity). Let𝐿be the lower bound and 𝑈be
+the upper bound for a given observed error 𝑥. The proximity𝑃(𝑥)
+with respect to these bounds can be defined as:
+𝑃(𝑥)=𝑥−𝐿
+𝑈−𝐿,where𝐿≤𝑥≤𝑈.
+Based on this observation, in most cases, the Bipartite approach
+estimates relevance scores nearly equivalent to those of the opti-
+mal solution. However, for certain models, such as Gemma2, the
+Warm-up algorithm yields better results. This is because the Bipar-
+tite method requires the model to generate a list of scores, and the
+resulting output from the model may not always align with expec-
+tations. In contrast, for models designed to perform well in coding
+tasks, such as DeepSeek-Coder-v2 and Llama3.1, the Bipartite graph
+approach effectively enhances the reranking of the prompt.
+The impact of the iterative procedure described in Algorithm 2
+is demonstrated in Table 2. This table compares the ranking utility
+obtained after running the iterative process to convergence with the
+utility achieved without applying the procedure, using the original
+(biased) model evaluations. As shown, the iterative refinement
+effectively reduces bias and leads to improved ranking utility.
+Setting DeepSeek-Coder-V2 Llama3.1
+w/o convergence 0.84 1.96
+after convergence 2.95 2.22
+Table 2: The effect of iterative process (Algorithm 2) in the
+final ranking utility. ‘w/o convergence’ is the result of apply-
+ing Equation 3 only once to achieve (biased) scores, while the
+second row shows the effect of using converged scores. The
+results are for the Synthetic Graph Task.
+The number of API calls to the helper models is determined by
+the number of samples used in the experiment. In this experiment,
+we used 10 samples for each reported number. For the Bipartite
+method, we performed four shuffles, where each shuffle divided
+the input into chunks of size 20. Consequently, the total number
+of API calls is calculated as 4×(100/20), where 100 represents the
+length of the input prompt (i.e., the number of elements), resulting
+in 20 API calls per open-source model for each sample. Similarly,
+for the Warm-Up method, the total number of API calls remains 20,
+as we used a partition size of 5, leading to 100/5 =20partitions.
+5.4 Analysis of the Output Error
+In this subsection, we compare the helper models and the methods
+in achieving the final goal which is enhancing the final output
+error from the LLM L. The results for GPT-3.5 Turbo and GPT-4o
+Mini are presented in Tables 3b and 3a. For each helper model weused shorter names: DC2 (DeepSeek-Coder-v2), G2 (Gemma2), L3.1
+(Llama3.1), M (Mistral), and Q2 (Qwen2). In these tables, Optimum
+is a lower bound since it is the best result one can achieve.
+Each value in these tables represents the average of 10 runs. The
+errors for each helper model on a given dataset are normalized to the
+range[0,1]. In most cases, the final error for the model employing
+the Bipartite method is close to the optimal solution. However,
+certain helper models, such as Qwen2, perform poorly in reranking
+the prompt, resulting in errors comparable to those obtained from
+random shuffling of the input. We observe that the Adults dataset
+presents a relatively more challenging task in most cases. This
+increased difficulty arises from the larger number of columns in
+this dataset compared to others, with a significant portion of these
+columns consisting of string-type data. The prevalence of such
+features complicates the query-answering process for the LLM.
+6 Discussions
+In this section, we first examine the advantages of our method in
+practical applications, followed by a discussion of its limitations.
+6.1 Advantages
+In all the proposed models and methods, we have the assumption
+that the final large language model is treated as a black-box, mean-
+ing we have no explicit knowledge of its internal architecture and
+make no use of such details. Even the smaller helper models em-
+ployed in our approach are more cost-effective language models, yet
+we similarly assume no access to or detailed understanding of their
+underlying structures. Consequently, our method can be regarded
+as a wrapper that complements any advancements in large lan-
+guage models and improvements in their accuracy. This approach
+is applicable to any given LLM to enhance its performance in ad-
+dressing symmetric problems, functioning as an additional layer to
+increase overall accuracy. In general, without detailed knowledge
+of a model’s architecture, it is challenging to understand how it
+remembers different parts of the input. However, our approach
+aims to estimate the exposure of different input segments, allowing
+us to infer the recall patterns of a black-box LLM.
+Additionally, we adopt an abstract approach from the problem
+perspective. Without requiring explicit knowledge of the specific
+problem or the query applied to the bag of elements, we aim to
+identify a re-ranking function that optimizes the final accuracy.
+This approach serves as a generalizable solution applicable to any
+symmetric problem (a query asked about a set or multi-set of ele-
+ments).
+The proposed model and algorithm for debiasing the LLM evalua-
+tions, known as bipartite evaluation, can be applied in any scenario
+where pointwise evaluations are performed on a set of objects and
+varying biases exist across different evaluations. More broadly, the
+approach is applicable to any problem that can be framed as a
+peer-review (peer-grading) process.
+6.2 Limitations
+As discussed in previous sections, our focus is on symmetric prob-
+lems, where a set (or multi-set) of elements Iis presented, and a
+query is asked about it. Our methods aim to re-rank Iunder this
+assumption and, therefore, are not applicable in cases where the
+458
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+Table 3: Normalized Error ( 𝜀L) across algorithms and helper models. The errors are normalized for each helper model to align
+them in the interval [0,1]. Each value is an average of 10 runs. The green (red) arrow indicates the closeness to the lower (upper)
+bound. The closer the values in the table are to the Optimum, the better the results.
+(a) Output error results on GPT-4o Mini
+Algorithm Synthetic Graph Task
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.98↑0.12↓0.99↑0.5 0.72↑
+Bipartite 0.12 ↓0.63 0.68 0.12↓0.28↓
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+IMDB Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.33 0.11↓0.64 0.42 0.68
+Bipartite 0.25 ↓0.10↓0.01↓0.42 0.62
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+DBLP ACM Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.46 0.77↑1.00↑0.25↓0.89↑
+Bipartite 0.37 ↓0.24↓0.71 0.27↓0.58
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓(b) Output error results on GPT-3.5 Turbo
+Algorithm Synthetic Graph Task
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.72 0.35 0.63 0.90↑0.58
+Bipartite 0.09 ↓0.59 0.37 0.14↓0.30
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+IMDB Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.56 0.87↑0.85↑0.49 0.50
+Bipartite 0.03 ↓0.29↓0.04↓0.69 0.48
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+DBLP ACM Dataset
+DC2 G2 L3.1 M Q2
+Random (UB) 1.00↑1.00↑1.00↑1.00↑1.00↑
+Warm-up 0.45 0.57 0.71 0.47 0.84↑
+Bipartite 0.23 ↓0.45 0.31↓0.58 0.77↑
+Optimum (LB) 0.00↓0.00↓0.00↓0.00↓0.00↓
+input is an ordered list, and the ordering of elements plays a crucial
+role in the final response to the query.
+Additionally, we assume that different elements have different
+relevance when answering the given query. Hence, placing the
+high-relevance elements in highly exposed positions within the
+input sequence leads to improved accuracy. Conversely, when all
+elements in the input set are nearly equally relevant to the query,
+re-ranking the input may result in only marginal accuracy improve-
+ments. Regardless of the sorting method, some highly relevant
+elements may still stay in less exposed locations, leading to poten-
+tial degradation in the LLM’s ability to retain them effectively.
+Finally, in a practical setting, the proposed approaches necessi-
+tate the use of a significantly smaller helper model in conjunction
+with the primary large language model. As a result, deploying these
+methods requires the additional deployment of a smaller model.
+7 Conclusion
+In this work, we addressed the challenge of handling lengthy input
+prompts for large language models within the context of symmetric
+tasks. We observe that while the performance of LLMs drops for
+large inputs, certain positions in the input are less likely to be
+missed by an LLM. Moreover, reordering the input elements of
+symmetric tasks does not logically affect the query outcome.
+Following these observations, we introduced the LLM input
+reranking problem to reorder an input in a way that the accuracy
+of the LLM is maximized for the given query.We proposed a two-step solution for this problem. First, dur-
+ing the preprocessing phase, we identify the exposure of ranking
+positions for a given LLM. Next, at query time, we estimate the
+relevance score of each element to the query. By combining these
+insights, we rerank the input and pass the reranked data to the LLM.
+For query relevance estimation, we introduced a method based on
+a bipartite graph modeling, with a performance to the optimal
+reranking in our experiments.
+Our solutions treat both the tasks and the LLMs as black-box
+components, allowing for a high level of abstraction. As a result,
+those can serve as a wrapper layer on top of any of the existing or
+future LLMs for solving symmetric tasks.
+Despite the contributions of this work, certain limitations remain.
+For instance, the deployment of smaller LLMs and their suboptimal
+performance in score estimation in certain cases present challenges.
+By addressing these limitations and exploring enhancements in the
+reranking approaches, future research has the potential to further
+advance the effectiveness and scalability of language models in
+real-world applications.
+Acknowledgments
+This work was supported in part by the National Science Founda-
+tion, Grant No. 2348919 and 2107290.
+459
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+References
+[1]Marah Abdin, Jyoti Aneja, Harkirat Behl, Sébastien Bubeck, Ronen Eldan,
+Suriya Gunasekar, Michael Harrison, Russell J. Hewett, Mojan Javaheripi, Piero
+Kauffmann, James R. Lee, Yin Tat Lee, Yuanzhi Li, Weishung Liu, Caio C. T.
+Mendes, Anh Nguyen, Eric Price, Gustavo de Rosa, Olli Saarikivi, Adil Salim,
+Shital Shah, Xin Wang, Rachel Ward, Yue Wu, Dingli Yu, Cyril Zhang, and Yi
+Zhang. 2024. Phi-4 Technical Report. arXiv preprint arXiv:2412.08905 (2024).
+https://arxiv.org/abs/2412.08905 Accessed: 2025-01-31.
+[2]Barry Becker and Ronny Kohavi. 1996. Adult. UCI Machine Learning Repository.
+DOI: https://doi.org/10.24432/C5XW20.
+[3]Iz Beltagy, Matthew E Peters, and Arman Cohan. 2020. Longformer: The long-
+document transformer. arXiv preprint arXiv:2004.05150 (2020).
+[4]Tom B Brown. 2020. Language models are few-shot learners. arXiv preprint
+arXiv:2005.14165 (2020).
+[5]Howard Chen, Ramakanth Pasunuru, Jason Weston, and Asli Celikyilmaz. 2023.
+Walking down the memory maze: Beyond context limit through interactive
+reading. arXiv preprint arXiv:2310.05029 (2023).
+[6]Jiawei Chen, Hande Dong, Xiang Wang, Fuli Feng, Meng Wang, and Xiangnan
+He. 2023. Bias and debias in recommender system: A survey and future directions.
+ACM Transactions on Information Systems 41, 3 (2023), 1–39.
+[7]Shouyuan Chen, Sherman Wong, Liangjian Chen, and Yuandong Tian. 2023.
+Extending context window of large language models via positional interpolation.
+arXiv preprint arXiv:2306.15595 (2023).
+[8]Rewon Child, Scott Gray, Alec Radford, and Ilya Sutskever. 2019. Generating
+long sequences with sparse transformers. arXiv preprint arXiv:1904.10509 (2019).
+[9]Mohsen Dehghankar and Abolfazl Asudeh. 2024. Rank It, Then Ask It: In-
+put Reranking for Maximizing the Performance of LLMs on Symmetric Tasks.
+arXiv:2412.00546 https://arxiv.org/abs/2412.00546
+[10] Daniel Deutsch, Rotem Dror, and Dan Roth. 2022. On the limitations of reference-
+free evaluations of generated text. arXiv preprint arXiv:2210.12563 (2022).
+[11] Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad
+Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan,
+et al. 2024. The llama 3 herd of models. arXiv preprint arXiv:2407.21783 (2024).
+[12] Sana Ebrahimi, Kaiwen Chen, Abolfazl Asudeh, Gautam Das, and Nick Koudas.
+2024. AXOLOTL: Fairness through Assisted Self-Debiasing of Large Language
+Model Outputs. 15th IEEE International Conference on Knowledge Graphs (2024).
+[13] Sana Ebrahimi, Nima Shahbazi, and Abolfazl Asudeh. 2024. REQUAL-LM: Relia-
+bility and Equity through Aggregation in Large Language Models. In Findings of
+the Association for Computational Linguistics: NAACL 2024. 549–560.
+[14] Paul Erdos, Alfréd Rényi, et al .1960. On the evolution of random graphs. Publ.
+math. inst. hung. acad. sci 5, 1 (1960), 17–60.
+[15] Jianfei Gao, Yangze Zhou, Jincheng Zhou, and Bruno Ribeiro. 2023. Double
+equivariance for inductive link prediction for both new nodes and new relation
+types. NeurIPS (2023).
+[16] Junqing He, Kunhao Pan, Xiaoqun Dong, Zhuoyang Song, LiuYiBo LiuYiBo, Qian-
+guosun Qianguosun, Yuxin Liang, Hao Wang, Enming Zhang, and Jiaxing Zhang.
+2024. Never Lost in the Middle: Mastering Long-Context Question Answering
+with Position-Agnostic Decompositional Training. In Proceedings of the 62nd
+Annual Meeting of the Association for Computational Linguistics (Volume 1: Long
+Papers). 13628–13642.
+[17] Cheng-Yu Hsieh, Yung-Sung Chuang, Chun-Liang Li, Zifeng Wang, Long Le, Ab-
+hishek Kumar, James Glass, Alexander Ratner, Chen-Yu Lee, Ranjay Krishna, et al .
+2024. Found in the middle: Calibrating Positional Attention Bias Improves Long
+Context Utilization. In Findings of the Association for Computational Linguistics
+ACL 2024. 14982–14995.
+[18] Albert Q Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris Bamford, De-
+vendra Singh Chaplot, Diego de las Casas, Florian Bressand, Gianna Lengyel,
+Guillaume Lample, Lucile Saulnier, et al .2023. Mistral 7B. arXiv preprint
+arXiv:2310.06825 (2023).
+[19] Jakub Kuzilek, Martin Hlosta, and Zdenek Zdrahal. 2017. Open university learning
+analytics dataset. Scientific data 4, 1 (2017), 1–8.
+[20] Rui Li, Jianlin Su, Chenxi Duan, and Shunyi Zheng. 2020. Linear attention
+mechanism: An efficient attention for semantic segmentation. arXiv preprint
+arXiv:2007.14902 (2020).
+[21] Yiming Lin, Madelon Hulsebos, Ruiying Ma, Shreya Shankar, Sepanta Zeigham,
+Aditya G Parameswaran, and Eugene Wu. 2024. Towards Accurate and Ef-
+ficient Document Analytics with Large Language Models. arXiv preprint
+arXiv:2405.04674 (2024).[22] Chunwei Liu, Matthew Russo, Michael Cafarella, Lei Cao, Peter Baille Chen, Zui
+Chen, Michael Franklin, Tim Kraska, Samuel Madden, and Gerardo Vitagliano.
+2024. A Declarative System for Optimizing AI Workloads. arXiv preprint
+arXiv:2405.14696 (2024).
+[23] Nelson F Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua,
+Fabio Petroni, and Percy Liang. 2024. Lost in the middle: How language models
+use long contexts. Transactions of the Association for Computational Linguistics
+12 (2024), 157–173.
+[24] Shicheng Liu, Jialiang Xu, Wesley Tjangnaka, Sina J Semnani, Chen Jie Yu, and
+Monica S Lam. 2023. SUQL: Conversational Search over Structured and Un-
+structured Data with Large Language Models. arXiv preprint arXiv:2311.09818
+(2023).
+[25] Yusha Liu, Yichong Xu, Nihar B Shah, and Aarti Singh. 2022. Integrating rankings
+into quantized scores in peer review. arXiv preprint arXiv:2204.03505 (2022).
+[26] Andrew Maas, Raymond E Daly, Peter T Pham, Dan Huang, Andrew Y Ng,
+and Christopher Potts. 2011. Learning word vectors for sentiment analysis.
+InProceedings of the 49th annual meeting of the association for computational
+linguistics: Human language technologies. 142–150.
+[27] Arjun Panickssery, Samuel R Bowman, and Shi Feng. 2024. Llm evaluators
+recognize and favor their own generations. arXiv preprint arXiv:2404.13076
+(2024).
+[28] Liana Patel, Siddharth Jha, Carlos Guestrin, and Matei Zaharia. 2024. Lotus:
+Enabling semantic queries with llms over tables of unstructured and structured
+data. arXiv preprint arXiv:2407.11418 (2024).
+[29] Erhard Rahm, Hanna Köpcke, and Andreas Thor. 2017. DBLP ACM Dataset.
+doi:10.3886/E100843V2
+[30] Keita Saito, Akifumi Wachi, Koki Wataoka, and Youhei Akimoto. 2023. Ver-
+bosity bias in preference labeling by large language models. arXiv preprint
+arXiv:2310.10076 (2023).
+[31] Ashudeep Singh and Thorsten Joachims. 2018. Fairness of exposure in rankings.
+InProceedings of the 24th ACM SIGKDD international conference on knowledge
+discovery & data mining. 2219–2228.
+[32] Richard Sinkhorn. 1967. Diagonal equivalence to matrices with prescribed row
+and column sums. The American Mathematical Monthly 74, 4 (1967), 402–405.
+[33] Richard Sinkhorn and Paul Knopp. 1967. Concerning nonnegative matrices and
+doubly stochastic matrices. Pacific J. Math. 21, 2 (1967), 343–348.
+[34] Rickard Stureborg, Dimitris Alikaniotis, and Yoshi Suhara. 2024. Large language
+models are inconsistent and biased evaluators. arXiv preprint arXiv:2405.01724
+(2024).
+[35] Zhiqing Sun, Yikang Shen, Qinhong Zhou, Hongxin Zhang, Zhenfang Chen,
+David Cox, Yiming Yang, and Chuang Gan. 2024. Principle-driven self-alignment
+of language models from scratch with minimal human supervision. Advances in
+Neural Information Processing Systems 36 (2024).
+[36] Gemma Team, Morgane Riviere, Shreya Pathak, Pier Giuseppe Sessa, Cassidy
+Hardin, Surya Bhupatiraju, Léonard Hussenot, Thomas Mesnard, Bobak Shahriari,
+Alexandre Ramé, et al .2024. Gemma 2: Improving open language models at a
+practical size. arXiv preprint arXiv:2408.00118 (2024).
+[37] Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed Chi, Sharan Narang,
+Aakanksha Chowdhery, and Denny Zhou. 2022. Self-consistency improves chain
+of thought reasoning in language models. arXiv preprint arXiv:2203.11171 (2022).
+[38] Koki Wataoka, Tsubasa Takahashi, and Ryokan Ri. 2024. Self-preference bias in
+llm-as-a-judge. arXiv preprint arXiv:2410.21819 (2024).
+[39] Zhiheng Xi, Wenxiang Chen, Xin Guo, Wei He, Yiwen Ding, Boyang Hong, Ming
+Zhang, Junzhe Wang, Senjie Jin, Enyu Zhou, et al .2023. The rise and potential
+of large language model based agents: A survey. arXiv preprint arXiv:2309.07864
+(2023).
+[40] Sang Michael Xie, Aditi Raghunathan, Percy Liang, and Tengyu Ma. 2021. An
+explanation of in-context learning as implicit bayesian inference. arXiv preprint
+arXiv:2111.02080 (2021).
+[41] An Yang, Baosong Yang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Zhou, Cheng-
+peng Li, Chengyuan Li, Dayiheng Liu, Fei Huang, et al .2024. Qwen2 technical
+report. arXiv preprint arXiv:2407.10671 (2024).
+[42] Manzil Zaheer, Guru Guruganesh, Kumar Avinava Dubey, Joshua Ainslie, Chris
+Alberti, Santiago Ontanon, Philip Pham, Anirudh Ravula, Qifan Wang, Li Yang,
+et al.2020. Big bird: Transformers for longer sequences. Advances in neural
+information processing systems 33 (2020), 17283–17297.
+[43] Qihao Zhu, Daya Guo, Zhihong Shao, Dejian Yang, Peiyi Wang, Runxin Xu,
+Y Wu, Yukun Li, Huazuo Gao, Shirong Ma, et al .2024. DeepSeek-Coder-V2:
+Breaking the Barrier of Closed-Source Models in Code Intelligence. arXiv preprint
+arXiv:2406.11931 (2024).
+460
+
+Rank It, Then Ask It: Input Reranking for Maximizing the Performance of LLMs on Symmetric Tasks KDD ’25, August 3–7, 2025, Toronto, ON, Canada
+Appendix
+A Related Work
+In this section, we give a brief literature review for this work. A more
+detailed literature review is provided in the Technical Report [9].
+Handling Long Inputs: The challenge of handling long input
+prompts is a widely recognized issue in large language models. Var-
+ious studies have approached this problem from multiple perspec-
+tives. One notable scenario occurs when prompts involve in-context
+learning [ 4,5,40], which often results in extended inputs that LLMs
+struggle to fully process. The “Lost in the Middle” phenomenon5,
+as identified by Liu et al. [ 23], highlights this issue, where LLMs fail
+to retain or utilize certain portions of lengthy inputs. Other studies
+have approached this issue by modifying the training datasets used
+for LLMs [ 16]. Several studies have explored modifying the archi-
+tecture of LLMs, particularly the attention mechanisms, to improve
+their ability to process extensive context and handle larger input
+sizes [3, 7, 8, 17, 20, 42].
+Debiasing LLM outputs: Part of our technical solution in Sec-
+tion 3 involves estimating input elements’ relevance to the query,
+where we learn a so-called bias coefficient for various LLM evalua-
+tions. Debiasing LLM outputs is extensively studied across various
+domains such as recommender systems rankings[ 6], using a variety
+of solutions such as output aggregation [ 13], prompt-writing [ 12],
+and many more [ 10,27,30,34,35,38]. Note that despite their name
+similarity, the objective of these papers is different as they aim to
+mitigate the societal bias and unfairnesses introduced during vari-
+ous stages such as data-driven systems. Related work also includes
+reducing the output variance of LLMs using self-consistency meth-
+ods [ 37], where the diversity of the model’s responses is leveraged
+to enhance reliability and accuracy. This approach is fundamentally
+different from our relevance estimation subproblem, where we aim
+to estimate the relevance of input items to the query.
+B Proofs
+Theorem 1. The process described in Equation 4 would eventually
+converge.
+Proof. Define the matrix 𝑊=(𝑤𝑖,𝑗). Let𝑆¯=(𝑆¯𝑖)be a vector of
+size𝑛and𝛽=(𝛽𝑗)be a vector of size 𝜎·𝑚. For a vector 𝑣=(𝑣𝑖)of
+size𝑛, let1
+𝑣denote the new vector (1
+𝑣1,1
+𝑣2,···,1
+𝑣𝑛)and𝑣[𝑘]denote
+the𝑘𝑡ℎelement of a vector 𝑣.
+Let𝐴◦𝑣denote the Hadamard product of an 𝑛×𝑚matrix𝐴
+to vector𝑣of size𝑚. The result of this production is a matrix 𝐵of
+size𝑛×𝑚where𝐵(𝑖,𝑗)=𝐴(𝑖,𝑗)·𝑣[𝑗]. We also use 1𝑛to denote a
+vector of size 𝑛with all elements equal to 1.
+We can rewrite Equation 4 using the new notations:
+𝑆¯(𝑇)=1
+𝜎·𝑊·1
+𝛽(𝑇−1)
+𝛽(𝑇+1)=1
+⌈𝑛
+𝑚⌉·𝑊⊤·1
+𝑆¯(𝑇)
+5While there have been attempts to resolve the lost in the middle issue in recent LLMs,
+as we shall experiment in Section 5.1, the attention has shifted to various sections of
+the input, and is not uniform across various input positions (see Figure 3).Let us change the vector products to Hadamard products:
+𝑆¯(𝑇)=1
+𝜎·(︃
+𝑊◦1
+𝛽(𝑇−1))︃
+·1𝜎·𝑚 (6)
+𝛽(𝑇+1)=1
+⌈𝑛/𝑚⌉·(︃
+𝑊⊤◦1
+𝑆¯(𝑇))︃
+·1𝑛 (7)
+We can now define a sequence of matrices 𝑊𝑡according to the
+above update process:
+𝑊𝑡=⎧⎪⎪ ⎨
+⎪⎪⎩𝑊◦1
+𝛽(𝑡/2) if𝑡is even,
+(︂
+𝑊⊤◦1
+𝑆¯((𝑡+1)/2))︂⊤
+if𝑡is odd.
+For example, 𝑊0=𝑊·1
+𝛽(0)=𝑊because𝛽(0)=1𝜎·𝑚. However,
+𝑊1is a column-scaled of 𝑊, so the sum of each column is now
+equal to𝜎. Subsequently, 𝑊2is a row-scaled of 𝑊1, so that the sum
+of each row is equal to ⌈𝑛/𝑚⌉. This process continues similarly. At
+each iteration, we either rescale the rows or columns of 𝑊𝑡to get
+the matrix𝑊𝑡+1. As a result, we can reduce this problem to the
+following:
+Given a matrix 𝑊of size𝑛×(𝜎𝑚), at each iteration, we are alter-
+natively scaling the rows to have a sum of 𝜎or scaling the columns
+to have a sum of⌈𝑛/𝑚⌉. We would like to know the convergence
+condition for this process.
+This is the same process as Sinkhorn’s algorithm [ 32,33] to find
+a doubly stochastic matrix starting from a positive matrix 𝑊. If𝑊
+is a non-negative matrix with at least one positive diagonal (refer
+to [33]), then this process would converge to a doubly stochastic
+matrix of𝑊such that in this matrix ( 𝑊∞), the sum of each row is
+equal to𝜎and the sum of each column is equal to ⌈𝑛/𝑚⌉. We skip
+most of the details to the references.
+Now, we can rewrite the Equations 6 and 7 as:
+𝑆¯(∞)=1
+𝜎·𝑊∞·1𝜎·𝑚 (8)
+𝛽(∞)=1
+⌈𝑛/𝑚⌉·𝑊∞·1𝑛 (9)
+□
+C Exposure Discovery Details
+C.1 Estimation
+Let𝜋1,𝜋2,...,𝜋𝑝be a set of𝑝random permutations on I. We apply
+each permutation 𝜋𝑗onIto obtain the permuted lists I𝜋𝑗. This
+would change the position of token 𝑡𝜋𝑗(𝑖)to𝑖. Within each per-
+muted list, the relevant tokens are positioned at random locations.
+Subsequently, we generate the output of the large language model
+(LLM) for eachI𝜋𝑗and compute the error 𝜖L(I𝜋𝑗,𝑞). This process
+allows us to sample exposures according to the relationship defined
+in equation (5).
+We then create an 𝑛×𝑝matrixR, such thatR𝑖,𝑗=𝑅𝑒𝑙𝑞(𝑡𝜋𝑗(𝑖)).
+Let𝜖⃗be a vector of size 𝑝such that𝜖⃗𝑗=1
+𝜖L(I𝜋𝑗,𝑞). Now, we should
+solve the following equation to find the unknown exposure vector
+X:
+R⊤·X=𝜖⃗ (10)
+461
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada Mohsen Dehghankar and Abolfazl Asudeh
+We can choose a value 𝑝larger than 𝑛to obtain a sufficient
+number of samples, thereby ensuring that the system of equations
+is overdetermined and can be solved effectively.
+In order to solve equation (10), we find an estimation Xto mini-
+mize the Mean Squared Errors.
+𝑀𝑆𝐸(X)=∥R⊤·X−𝜖⃗∥2,
+∇𝑀𝑆𝐸(X)=0↔X=(R·R⊤)−1·R·𝜖⃗
+As a result,X𝑖would be an estimation for XL(𝑖).
+C.2 Confidence
+While one can use a fixed budget on the number of permutations to
+use for estimating the exposure values, the user can alternatively
+specify a target variance in the estimation. In such cases, consider-
+ing the exponential search strategy, we start from a base number
+of permutations and compute the estimation variance, as explained
+in the following. If the estimation variance is larger than the target
+variance, we double the number of permutations (i.e., double the
+value of𝑝) and repeat the process.
+We follow the standard confidence interval analysis for a Mean
+Squared Error estimation. Each X𝑖is an unbiased estimator of
+XL(𝑖). This estimator follows a t-Distribution around the real value:
+X𝑖−XL(𝑖)√︂
+𝑉𝑎𝑟(X𝑖)∼𝑡𝑝−𝑛 (11)
+Where𝑡𝑝−𝑛is the t-Distribution with 𝑝−𝑛degree of freedom
+and,
+𝑉𝑎𝑟(X𝑖)=𝜎ˆ2·[(R·R⊤)−1]𝑖,𝑖, (12)
+𝜎ˆ=∥R⊤·X−𝜖⃗∥2
+𝑝−𝑛(13)
+By increasing the number of random permutations 𝑝, we increase
+the degree of freedom and as a result we would have less variance
+and a narrower distribution for the estimation.C.3 Practical Concerns
+The process for exposure value estimation requires 𝑝separate API
+calls to the large language model, L. In the following, we explore
+heuristic methods aimed at reducing the number of required API
+calls, thereby optimizing the associated costs.
+At first, we can choose a task (I,𝑞)such that there is only one
+token𝑡𝑖related to the query 𝑞. As a result, one can just place this rel-
+evant element into different positions and sample from each XL(𝑖)
+individually. Secondly, one can carefully create a task such that the
+result identifies how much information from all the positions is
+retained by the LLM.
+Specifically, consider the token-counting task that counts the
+number of occurrences of each token in the input I. For example,
+given the inputI={𝑎,𝑏,𝑏,𝑏,𝑎,𝑎,𝑎,𝑐,𝑐}, the output is “a:4, b:3,
+c:2” . Note that in this example, all elements are relevant to the
+query, but each of them is relevant to one of the sub-problems
+(contributing only to one of the token counts). Using this technique,
+each query to the LLM provides relevant information about allrank
+positions (not only a subset of positions that are relevant to the
+query). We shall discuss this technique further with more examples
+in our experiments (Section 5).
+So far in this section, we examined the exposure at each token
+position within the input prompt. However, for specific tasks each
+element𝑒∈Ican correspond to multiple tokens. Let ℓ(𝑒)denote
+the number of tokens associated with element 𝑒. As outlined in
+Section 2.4, the objective is to compute the utility of a particular
+ranking, which depends on the exposure of entire elements, rather
+than individual tokens, within the reranked input. To generalize
+the definition of utility, we define the exposure of each element 𝑒as
+the average exposure of the tokens that compose it. In other words,
+we rewrite equation 2 as,
+E[utility(𝜋|𝑞)]=|I|∑︂
+𝑖=1⎛⎜
+⎝E⎡⎢⎢⎢⎢⎣∑︁𝑖+ℓ(𝑒𝑖)
+𝑗=𝑖XL(𝑖)
+ℓ(𝑒𝑖)⎤⎥⎥⎥⎥⎦·E[︁
+𝑅𝑒𝑙𝑞(𝑒𝜋𝑖)]︁⎞⎟
+⎠
+462
+
+Hierarchy To Score
+
+Paper
+  - Introduction
+    - [Section Lead-in]
+      - Paragraph 1
+        - [15]
+        - [39]
+      - Paragraph 2
+        - [23]
+    - Summary of Contributions
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+        - [9]
+    - Paper Organization
+      - Paragraph 1
+  - Preliminaries
+    - [Section Lead-in]
+      - Paragraph 1
+    - Query Model
+      - Paragraph 1
+    - Model
+      - Paragraph 1
+      - Paragraph 2
+    - Problem Definition
+      - Paragraph 1
+      - Paragraph 2
+    - Solution Overview
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+        - [31]
+      - Paragraph 4
+        - (2)
+      - Paragraph 5
+        - [31]
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+  - Estimating the Relevance
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+        - [43]
+        - [18]
+    - Warm-up: Partitioning the Input
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+    - Modeling of the Relevance Estimation as Bipartite Graph
+      - Paragraph 1
+        - [25]
+  - Pre-processing: Exposure Discovery
+    - Paragraph 1
+    - Paragraph 2
+      - (5)
+  - Experiments
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+        - [9]
+    - Exposure Discovery
+      - Paragraph 1
+        - [36]
+        - [1]
+      - Paragraph 2
+      - Paragraph 3
+        - [9]
+    - Tasks Setup
+      - Paragraph 1
+        - [29]
+        - [14]
+        - [26]
+        - [2]
+        - [19]
+        - [9]
+    - Analysis of the Ranking utility
+      - Paragraph 1
+        - [43]
+        - [36]
+        - [11]
+        - [41]
+        - [18]
+      - Paragraph 2
+        - [9]
+      - Paragraph 3
+    - Analysis of the Output Error
+      - Paragraph 1
+  - Discussions
+    - [Section Lead-in]
+      - Paragraph 1
+    - Advantages
+      - Paragraph 1
+      - Paragraph 2
+    - Limitations
+      - Paragraph 1
+  - Conclusion
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+[anthropic_full_paper_response] attempt=1/3
+I'll work through this hierarchy systematically, distributing scores level by level.
+
+**Paper-level score: 1.0**
+
+**Section-level distribution:**
+- Introduction: 0.08
+- Preliminaries: 0.12
+- Estimating the Relevance: 0.22
+- Pre-processing: Exposure Discovery: 0.15
+- Experiments: 0.28
+- Discussions: 0.07
+- Conclusion: 0.08
+
+Now I'll work through each section's children.
+
+**Introduction subsections:**
+- [Section Lead-in]: 0.035
+- Summary of Contributions: 0.035
+- Paper Organization: 0.01
+
+**Introduction > [Section Lead-in] paragraphs:**
+- Paragraph 1: 0.015 (cites [15],[39])
+- Paragraph 2: 0.02 (cites [23])
+
+**Introduction > Summary of Contributions paragraphs:**
+- Paragraph 1: 0.007
+- Paragraph 2: 0.007
+- Paragraph 3: 0.007
+- Paragraph 4: 0.007
+- Paragraph 5: 0.003 (cites [9])
+
+**Introduction > Paper Organization paragraphs:**
+- Paragraph 1: 0.01
+
+**Preliminaries subsections:**
+- [Section Lead-in]: 0.01
+- Query Model: 0.015
+- Model: 0.02
+- Problem Definition: 0.03
+- Solution Overview: 0.045
+
+**Preliminaries > [Section Lead-in] paragraphs:**
+- Paragraph 1: 0.01
+
+**Preliminaries > Query Model paragraphs:**
+- Paragraph 1: 0.015
+
+**Preliminaries > Model paragraphs:**
+- Paragraph 1: 0.01
+- Paragraph 2: 0.01
+
+**Preliminaries > Problem Definition paragraphs:**
+- Paragraph 1: 0.015
+- Paragraph 2: 0.015
+
+**Preliminaries > Solution Overview paragraphs:**
+- Paragraph 1: 0.005
+- Paragraph 2: 0.007
+- Paragraph 3: 0.008 (cites [31])
+- Paragraph 4: 0.008 (cites (2))
+- Paragraph 5: 0.007 (cites [31])
+- Paragraph 6: 0.004
+- Paragraph 7: 0.004
+- Paragraph 8: 0.002
+
+**Estimating the Relevance subsections:**
+- [Section Lead-in]: 0.04
+- Warm-up: Partitioning the Input: 0.05
+- Modeling of the Relevance Estimation as Bipartite Graph: 0.13
+
+**Estimating the Relevance > [Section Lead-in] paragraphs:**
+- Paragraph 1: 0.015
+- Paragraph 2: 0.025 (cites [43],[18] and others)
+
+**Estimating the Relevance > Warm-up paragraphs:**
+- Paragraph 1: 0.015
+- Paragraph 2: 0.02
+- Paragraph 3: 0.015
+
+**Estimating the Relevance > Modeling of the Relevance Estimation as Bipartite Graph paragraphs:**
+- Paragraph 1: 0.13 (cites [25])
+
+**Pre-processing: Exposure Discovery paragraphs:**
+- Paragraph 1: 0.06
+- Paragraph 2: 0.09 (cites (5))
+
+**Experiments subsections:**
+- [Section Lead-in]: 0.02
+- Exposure Discovery: 0.05
+- Tasks Setup: 0.04
+- Analysis of the Ranking utility: 0.10
+- Analysis of the Output Error: 0.07
+
+**Experiments > [Section Lead-in] paragraphs:**
+- Paragraph 1: 0.01
+- Paragraph 2: 0.01 (cites [9])
+
+**Experiments > Exposure Discovery paragraphs:**
+- Paragraph 1: 0.02 (cites [36],[1])
+- Paragraph 2: 0.02
+- Paragraph 3: 0.01 (cites [9])
+
+**Experiments > Tasks Setup paragraphs:**
+- Paragraph 1: 0.04 (cites [29],[14],[26],[2],[19],[9])
+
+**Experiments > Analysis of the Ranking utility paragraphs:**
+- Paragraph 1: 0.04 (cites [43],[36],[11],[41],[18])
+- Paragraph 2: 0.02 (cites [9])
+- Paragraph 3: 0.04
+
+**Experiments > Analysis of the Output Error paragraphs:**
+- Paragraph 1: 0.07
+
+**Discussions subsections:**
+- [Section Lead-in]: 0.01
+- Advantages: 0.03
+- Limitations: 0.03
+
+**Discussions > [Section Lead-in] paragraphs:**
+- Paragraph 1: 0.01
+
+**Discussions > Advantages paragraphs:**
+- Paragraph 1: 0.015
+- Paragraph 2: 0.015
+
+**Discussions > Limitations paragraphs:**
+- Paragraph 1: 0.03
+
+**Conclusion paragraphs:**
+- Paragraph 1: 0.025
+- Paragraph 2: 0.03
+- Paragraph 3: 0.025
+
+Now computing citation scores for paragraphs with citations:
+
+**Introduction > [Section Lead-in] > Paragraph 1:** cites [15] and [39]. About 40% from prior work → citation score = 0.006. [15]: 0.003, [39]: 0.003
+
+**Introduction > [Section Lead-in] > Paragraph 2:** cites [23]. About 60% from prior work → citation score = 0.012. [23]: 0.012
+
+**Introduction > Summary of Contributions > Paragraph 5:** cites [9]. About 50% → citation score = 0.0015. [9]: 0.0015
+
+**Preliminaries > Solution Overview > Paragraph 3:** cites [31]. About 50% → citation score = 0.004. [31]: 0.004
+
+**Preliminaries > Solution Overview > Paragraph 4:** cites (2) — this appears to be a reference to Equation 2, not a citation. Citation score = 0.
+
+**Preliminaries > Solution Overview > Paragraph 5:** cites [31]. About 50% → citation score = 0.0035. [31]: 0.0035
+
+**Estimating the Relevance > [Section Lead-in] > Paragraph 2:** cites [43],[18] and mentions [36],[11],[41]. Five models cited. About 60% from prior work → citation score = 0.015. Divided equally among [43],[36],[11],[41],[18]: 0.003 each.
+
+**Estimating the Relevance > Modeling > Paragraph 1:** cites [25]. About 30% from prior work → citation score = 0.039. [25]: 0.039
+
+**Pre-processing > Paragraph 2:** cites (5) — reference to Equation 5, not a citation. Citation score = 0.
+
+**Experiments > [Section Lead-in] > Paragraph 2:** cites [9]. About 40% → citation score = 0.004. [9]: 0.004
+
+**Experiments > Exposure Discovery > Paragraph 1:** cites [36],[1]. About 50% → citation score = 0.01. [36]: 0.005, [1]: 0.005
+
+**Experiments > Exposure Discovery > Paragraph 3:** cites [9]. About 40% → citation score = 0.004. [9]: 0.004
+
+**Experiments > Tasks Setup > Paragraph 1:** cites [29],[14],[26],[2],[19],[9]. About 60% from prior work → citation score = 0.024. Divided equally: 0.004 each.
+
+**Experiments > Analysis of the Ranking utility > Paragraph 1:** cites [43],[36],[11],[41],[18]. About 50% → citation score = 0.02. Divided equally: 0.004 each.
+
+**Experiments > Analysis of the Ranking utility > Paragraph 2:** cites [9]. About 40% → citation score = 0.008. [9]: 0.008
+
+Now aggregating citation scores:
+
+- [9]: 0.0015 + 0.004 + 0.004 + 0.004 + 0.004 + 0.008 = 0.0255
+- [15]: 0.003
+- [39]: 0.003
+- [23]: 0.012
+- [31]: 0.004 + 0.0035 = 0.0075
+- [43]: 0.003 + 0.004 = 0.007
+- [36]: 0.003 + 0.005 + 0.004 = 0.012
+- [11]: 0.003 + 0.004 = 0.007
+- [41]: 0.003 + 0.004 = 0.007
+- [18]: 0.003 + 0.004 = 0.007
+- [25]: 0.039
+- [1]: 0.005
+- [29]: 0.004
+- [14]: 0.004
+- [26]: 0.004
+- [2]: 0.004
+- [19]: 0.004
+
+---
+
+Paper: 1.0 | 0.0
+  - Introduction: 0.08 | 0.0
+    - [Section Lead-in]: 0.035 | 0.0
+      - Paragraph 1: 0.015 | 0.006
+        - [15]: 0.003
+        - [39]: 0.003
+      - Paragraph 2: 0.02 | 0.012
+        - [23]: 0.012
+    - Summary of Contributions: 0.035 | 0.0
+      - Paragraph 1: 0.007 | 0.0
+      - Paragraph 2: 0.007 | 0.0
+      - Paragraph 3: 0.007 | 0.0
+      - Paragraph 4: 0.007 | 0.0
+      - Paragraph 5: 0.003 | 0.0015
+        - [9]: 0.0015
+    - Paper Organization: 0.01 | 0.0
+      - Paragraph 1: 0.01 | 0.0
+  - Preliminaries: 0.12 | 0.0
+    - [Section Lead-in]: 0.01 | 0.0
+      - Paragraph 1: 0.01 | 0.0
+    - Query Model: 0.015 | 0.0
+      - Paragraph 1: 0.015 | 0.0
+    - Model: 0.02 | 0.0
+      - Paragraph 1: 0.01 | 0.0
+      - Paragraph 2: 0.01 | 0.0
+    - Problem Definition: 0.03 | 0.0
+      - Paragraph 1: 0.015 | 0.0
+      - Paragraph 2: 0.015 | 0.0
+    - Solution Overview: 0.045 | 0.0
+      - Paragraph 1: 0.005 | 0.0
+      - Paragraph 2: 0.007 | 0.0
+      - Paragraph 3: 0.008 | 0.004
+        - [31]: 0.004
+      - Paragraph 4: 0.008 | 0.0
+        - (2): 0.0
+      - Paragraph 5: 0.007 | 0.0035
+        - [31]: 0.0035
+      - Paragraph 6: 0.004 | 0.0
+      - Paragraph 7: 0.004 | 0.0
+      - Paragraph 8: 0.002 | 0.0
+  - Estimating the Relevance: 0.22 | 0.0
+    - [Section Lead-in]: 0.04 | 0.0
+      - Paragraph 1: 0.015 | 0.0
+      - Paragraph 2: 0.025 | 0.015
+        - [43]: 0.003
+        - [18]: 0.003
+    - Warm-up: Partitioning the Input: 0.05 | 0.0
+      - Paragraph 1: 0.015 | 0.0
+      - Paragraph 2: 0.02 | 0.0
+      - Paragraph 3: 0.015 | 0.0
+    - Modeling of the Relevance Estimation as Bipartite Graph: 0.13 | 0.0
+      - Paragraph 1: 0.13 | 0.039
+        - [25]: 0.039
+  - Pre-processing: Exposure Discovery: 0.15 | 0.0
+    - Paragraph 1: 0.06 | 0.0
+    - Paragraph 2: 0.09 | 0.0
+      - (5): 0.0
+  - Experiments: 0.28 | 0.0
+    - [Section Lead-in]: 0.02 | 0.0
+      - Paragraph 1: 0.01 | 0.0
+      - Paragraph 2: 0.01 | 0.004
+        - [9]: 0.004
+    - Exposure Discovery: 0.05 | 0.0
+      - Paragraph 1: 0.02 | 0.01
+        - [36]: 0.005
+        - [1]: 0.005
+      - Paragraph 2: 0.02 | 0.0
+      - Paragraph 3: 0.01 | 0.004
+        - [9]: 0.004
+    - Tasks Setup: 0.04 | 0.0
+      - Paragraph 1: 0.04 | 0.024
+        - [29]: 0.004
+        - [14]: 0.004
+        - [26]: 0.004
+        - [2]: 0.004
+        - [19]: 0.004
+        - [9]: 0.004
+    - Analysis of the Ranking utility: 0.10 | 0.0
+      - Paragraph 1: 0.04 | 0.02
+        - [43]: 0.004
+        - [36]: 0.004
+        - [11]: 0.004
+        - [41]: 0.004
+        - [18]: 0.004
+      - Paragraph 2: 0.02 | 0.008
+        - [9]: 0.008
+      - Paragraph 3: 0.04 | 0.0
+    - Analysis of the Output Error: 0.07 | 0.0
+      - Paragraph 1: 0.07 | 0.0
+  - Discussions: 0.07 | 0.0
+    - [Section Lead-in]: 0.01 | 0.0
+      - Paragraph 1: 0.01 | 0.0
+    - Advantages: 0.03 | 0.0
+      - Paragraph 1: 0.015 | 0.0
+      - Paragraph 2: 0.015 | 0.0
+    - Limitations: 0.03 | 0.0
+      - Paragraph 1: 0.03 | 0.0
+  - Conclusion: 0.08 | 0.0
+    - Paragraph 1: 0.025 | 0.0
+    - Paragraph 2: 0.03 | 0.0
+    - Paragraph 3: 0.025 | 0.0
+
+Citation Contributions
+
+[15]: 0.003
+[39]: 0.003
+[23]: 0.012
+[9]: 0.0255
+[31]: 0.0075
+[43]: 0.007
+[36]: 0.012
+[11]: 0.007
+[41]: 0.007
+[18]: 0.007
+[25]: 0.039
+[1]: 0.005
+[29]: 0.004
+[14]: 0.004
+[26]: 0.004
+[2]: 0.004
+[19]: 0.004
+(2): 0.0
+(5): 0.0
