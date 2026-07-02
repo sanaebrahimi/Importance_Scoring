@@ -1,0 +1,362 @@
+[
+  {
+    "section_path": [
+      "B"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "3. B, Chazelle, Filtering search: A new approach to query-answering, Proc. 24th Annual FOCS",
+    "technical_score": 0.16230666666666665,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "4.",
+    "technical_score": 0.02417333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "B.",
+    "technical_score": 0.02417333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "B"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Chazelle and D. Dobkin, Detection is easier than computation, Proc. 12th Annual SIGACT",
+    "technical_score": 0.13468,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "H"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "the point T r among the boundaries of D, we first compute the ~ edges of D that intersect the vertical line V passing through T L. To do so, we use the hive-graph structure described in [3]. This is a simple structure which allows us to report all the intersections in time O(logn+~)= O(logn). From this information, we easily derive the value of m. Once m has been computed~ we can proceed as described earlier. Since for any i, if L intersects both Ci and Ci \u00f7 1, at least roughly log n points will be later reported between these two layers, the O(h log n) time spent in the first phase of the algorithm is also O(k), so the total run time of the algorithm is O(k +log n).",
+    "technical_score": 0.11951999999999999,
+    "citation_score": 0.013279999999999997
+  },
+  {
+    "section_path": [
+      "H"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "An alternative for computing m, suggested to us by H. Edelsbrunner ['5], involves using the fact that the hive-graph structure of [-3] will also allow us to compute all fl intersections between the segment OT L and the dual structure of S in O(fl+logn) time. It is easy to see that the farthest intersection from O lies on the dual of Sin, which gives us the value of m immediately. Since fl < k, this method will also require O(k + log n).",
+    "technical_score": 0.05976,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "H"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "THEOREM 3. It is possible tO solve the half-plane range query problem on n points in O(k + log n) time, using O(n) storage and O(n log n) time in preprocessing (k being the number of points reported). The method is modular and practical i it invoh,es a straight[brward planar point location and does not require the use of dynamic tree structures.",
+    "technical_score": 0.13943999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Fig. 2. Computing a line arrangement. LEMMA 1. The total number of edyes on the faces of G intersecting the line L does not exceed 8n.",
+    "technical_score": 0.011635360000000055,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "PROOF. For convenience we may assume that L is horizontal. We can then distinguish the laces adjacent to L above from the faces adjacent below. Since the two cases are strictly identical, we will restrict our attention to the former. In clockwise order, a face f consists of a horizontal or base edge, followed by a sequence of first left then riyht edges. An edge is said to be left (resp. right) if its supporting line intersects L on the left (resp. right) hand side of the base. Note that the edges adjacent to L, called 9rounded edges, are right edges for the face on their left-hand side and left edges for the face on their right-hand side. Let us charge each left but non-grounded edge to the intersection of the line supporting the previous (in the clockwise sense) left edge with L (Fig. 3). We define a symmetric Charging scheme for the right non-grounded edges. It is easy to see that each vertex on L can be charged at most once from a left edge and at most once from a right edge. Actually the leftmost vertex cannot be charged from a left edge and the rightmost vertex cannot be charged from a right edge. Thus the number of traversed edges above L is bounded by 4k-2, where k is the number of intersections of L by the rest of the lines. This bound is in fact the best possible. Since the same reasoning can be applied to the faces below L as well, the proof is complete. \u2022 From Lemma 1, we find that each insertion takes O(n) time and therefore, as claimed earlier, the overall algorithm is quadratic. THEOREM 1. It is possible to compute an arrangement of n lines in O(n 2) time.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "THE POWER OF GEOMETRIC DUALITY bose edge ( / (G) 81 Fig. 3. Inserting a new line. 3. Smallest-area triangle, empty wedges, and other applications.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Let S = {Pl ..... p,} be a set of n points in the plane. We will apply Theorem 1 to the problem of determining which of the (] ) triangles with vertices in S has the smallest a\"rea. The difficulty of this problem resides essentially in the absence of locality. Indeed, the vertices of the smallest triangle may be arbitrarily distant from one another, if they happen to be collinear (this illustrates the fact that solving this problem will allow us to determine whether three points in S are collinear). Using duality, we are able to strenghten the time complexity of the best algorithm known for this problem, i.e., the O(n 2 logn) time and O(n) space algorithm of [8]. For the sake of convenience, we will use a slightly different dual transform, denoted D, and defined as follows. A point p: (a, b) is mapped to the line Dp: Y = aX + b, and a line L: Y = kX +d is mapped to the point DL: (--k, d). We should observe that two points are mapped to two parallel lines if and only if ' these points have the same X-coordinates. We will assume that no points of S share the same X-coordinates. This may possibly entail rotating the axes by a small angle, easily determined in O(nlogn) time. We define G as the planar graph formed by the lines {Dp,, ....",
+    "technical_score": 0.007760069787063881,
+    "citation_score": 0.0019392902129361192
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Dp,}. Let L(i,j, k) denote the line passing through Pk that is parallel to p~p~, and let h(i,j,k) be the vertical distance between p~pj and L(i,j,k), i.e., the length of a vertical segment joining p~p~ and L(i,j, k). It is clear that the smallest-area triangle with PiPj as an edge minimizes h(i,j, k) for all k 4 = i,j; 1 < k < n. We can express this property in the dual plane. The line through P*Pi becomes the intersection point I of Dp, and Dpj, and L(i,j, k) is mapped to the point on Dpk which has the same X-coordinate as I. It is now easy to check that the vertical distance between I and Dp, is precisely (x() and y( ) denote the X and Y coordinates respectively): h(i, j, k) = Y(Pk) + X(pk)[Y(P J) -- Y(P~)] + x(p J)Y(Pt) -- x(pi)Y(P J) x(pi) --x(pj)",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "82 BERNARD CHAZELLE~ LEO J.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "GUIBAS AND D.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "T. LEE To determine the smallest-area triangle among the points of S, we simply mimic the computation of G described in the previous section. We traverse each line Dpk in turn, examining all the vertices v~ of each face incident to Dpk. Note that each vi is the intersection of two lines Da~ and Db. From the remarks above, it follows that the smallest triangle with vertex Pk will be of the form (Pk, a~, b~), so it will be effectively found with this procedure. Finally, Theorem 1 shows that the entire computation will take O(n 2) time. We conclude: THEOREM 2. It is possible to compute the smallest-area triangle among n points in O(n 2) time and space. We can use Lemma 1 in order to derive a fairly curious result about arbitrary arrangements of lines in the plane. Consider the dual graph of G (in the graph- theoretic sense), denoted H, and defined as follows: each face of G is a vertex of H and two vertices of H are connected by an edge if and 0nly if the corresponding faces in G share a common edge.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Let V (resp. E) denote the number of vertices (resp. edges) in H. Clearly t/= O(n2), and since H is a planar graph with no multiple edges, we have E = O(V).",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Let wl ..... w v be the vertices of H, and let d i denote the degree of vertex w~. It is easy to see that ~, d k = 2E = O(V). l<_k<V We can strenghten this relation and prove a relation that is not true for general planar graphs. LEMMA 2. Let G be any arrangement of n lines with V = t2(n 2) vertices. The vertex-degrees of the dual graph H satisfy the relation : Y = o(v). l<k<V PROOF.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Let fl ...... [~ be all the faces of G incident to a given line L of the arrangement. Without loss of generality, assume that wl ..... wt are the corre- sponding vertices in H. From Lemma 1, we have (d i- 1) < 8n. l<_i<_l Summing the left-hand side of the inequality over all the lines in G will have the effect of duplicating each term (d i- 1) exactly di times, therefore dk(d k- 1) =< 8n2. l<k<_V",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "THE POWER OF GEOMETRIC DUALITY 83 Since, as we already noticed, ~l <_ k <- vdk = O(V), we have ~,t <_ k <- V d2 = O(n2) --- o(v). \u2022 We can use Lemma 2 to derive an interesting combinatorial result on planar point sets. Consider S, our set of n points in the plane, Pl ..... Pn, and let Li, i be the line passing through pl and pj. Any pair of such lines defines two double wedges, and it is easy to see that the n points define on the order of n 4 double wedges. We say that a double wedge is empty if it does not strictly contain any point of S (Fig. 4). The next result will show in particular that there are only O(n z) empty double wedges. . . \u2022 \u2022 \u2022 t \u2022 \u2022 \u2022 \u2022 \u2022 \u2022 \u2022 \u2022 \u2022 \u2022 \u2022 0 \u2022 Fig. 4. An empty double wedge. LEMMA 3. It is possible to enumerate all the empty double wedges formed by n points in O(n 2) time.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "PROOF. Place a line L in arbitrary position in the original plane, and move it in a continuous fashion anywhere, as long as it does not intersect any point of S. It is easy to see that the locus of the points DL thus defined coincides exactly with one of the faces of G. It follows that the dual transform D puts the empty double wedges in one-to-one correspondence with the segments that have vertices of G as endpoints and do not intersect any edge of G except at their endpoints. Since there are no more than ~1 _< k -< v(~ k) such segments, Lemma 2 shows that we have at most O(V) = O(n 2) empty double wedges. To compute them, we can use the representation of G and examine each face in turn. Note that in order to obtain the empty wedges containing a vertical line, we can reset the problem with the roles of x and y now exchanged. \u2022 4. The half-plane range query problem. We now turn to the main result of this paper. Given a set S of n points",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "84 BERNARD CHAZELLL LEO J.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "GUIBAS AND D.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "T. LEE in the plane, we consider the problem of reporting all the points in S that lie on a given side of a query line. From now on, k will refer to the number of points to be reported. Previous work on this problem includes an O(n 3) space data structure that allows us to answer a query in O(k+lo#n) time [6]. Other solutions have been proposed for solving the half-plane range query problem, using only linear space: one is the polygon tree of Willard [17,], and more recently the conjugation tree of Edelsbrunner and Welzl [9-]. These structures yield O(n \u00b0'77) and O(?/0'695) query time, respectively. Yao [18] provided an O(n\u00b0'98q-k) time and O(n) space algorithm for the same problem in three dimensions, as well as for circular queries in two dimensions. We show here that in two dimensions it is possible to achieve optimal O(k + log n) query time, using only O(n) space. We should stress the fact that blithely comparing these complexity results would be unfair. Although our algorithm is significantly superior to the methods of [6, 9, 17] when the points are to be explicitly reported, it is inadequate for, say, counting points or dealing with more complex test figures such as polygons. For these situations, the polygon tree of [17,] and the conjugation tree of [9-] are still the most efficient tools known to date. As a starter, recall the basic method of the algorithm in [6-]. We compute G, the dual set of S, via the transform D, and for each face of the graph, we keep a list of all the lines of G lying respectively above and below the face. This allows us to solve our problem in time O(k+logn), since a point p of S is above (resp. below) a query line L, if and only if its dual line, Dp, is above (resp. below) the dual point Dr,. Indeed, with this preprocessing in hand, we can answer a query by first determining which face of G contains the point D L, and then outputting the contents of the associated list containing the lines above (resp. below) D L if the query halfplane lies above (resp. below) L. Kirkpatrick's optimal planar point location algorithm can be used for this purpose [13-], so as to locate T L in G in O(log n) operations. This scheme clearly entails the use of cubic space, which we can then proceed to reduce to O(n 2) by providing G with a set of O(n 2) additional pointers. We say that an edge of a face f of G is an upper (resp. lower) edge with respect to f if its inward-directed normal points downward (resp. upward). Let el and e~ be two arbitrarily chosen edges of f, respectively of the upper and lower type with respect to f. We set- up a pointer from each lower (resp. upper) edge of f to el (resp. e2). With this construction, we can simply follow the pointers from DL upward or downward, depending on the orientation of the query halfplane. This will lead us to cross each of the desired lines exactly once. Proving the validity of this fact is straightforward, so we leave out the details. Note that we stop when reaching a face with no upper (lower) pointer, if going upward (resp. downward). The choice of el and e2 will determine the order in which the lines are reported, which is immaterial for our purposes. This addition of special pointers allows us to save a factor of n in storage, thus reducing it to O(n2).",
+    "technical_score": 0.007762393449825262,
+    "citation_score": 0.0019369665501747374
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "THE POWER OF GEOMETRIC DUALITY 85 To produce a more radical breakthrough in the complexity of the algorithm, while retaining the same basic idea, let us momentarily step back to the original point set S. The first phase of our algorithm consists of partitioning S into its set of convex layers (sometimes referred to as \"onion\"). These layers are convex polygons, defined iteratively as follows (Fig. 5): intially i is 1.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "I. Define S~ as the convex hull of all the points currently in S. 2. Remove the vertices of Si from S. 3. If S is not empty, increment i and go back to 1.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "Otherwise stop. Fig, 5. The set of convex layers. Let u be the total number of layers; from now on, any use of duality will refer to the transform T, with the origin placed anywhere in the interior of Su. Overmars and van Leeuwen have shown how to compute the layers of n points in O(nlog 2 n) time using a general technique for computing convex hulls in a dynamic environment [16]. This result was recently improved in [2], where an optimal O(n) space, O(nlogn) time algorithm was described. With this pre- processing in hand, we may now proceed to present the main part of the algorithm. Let L be the line delimiting the query half-plane zc. It is easy to determine whether L intersects S i, for a given i, in O(logn) time, using the Fibonacci-search technique of [4]. If the answer is negative, either g contains no point of S i or it contains them all, and this can be decided in constant time. It is easy to prove that the set of hulls S~ intersected by L forms an initial segment of the sequence S~, S2 .....",
+    "technical_score": 0.007762973495707727,
+    "citation_score": 0.0019363865042922733
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "S u. Let us assume also that L does intersect Sx, which implies in turn that ~ contains at least one point of S;",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 21,
+    "paragraph": "86 BERNARD CHAZELLE, LEO J.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 22,
+    "paragraph": "GUIBAS AND D.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 23,
+    "paragraph": "T. LEE otherwise the problem is trivial. Let S 1 ..... S m be the layers that L intersects. We say that Sm is the neighboring layer of L (Fig. 5). We will prove later on that the index m can be computed in O(logn) operations, so we assume the validity of this result for the time being. With this information, we can compute the two (possibly coinciding) intersection points of L and Sm in O(log n) time. This immediately gives us a vertex v of Sm that lies in the half-plane ~. The goal at this point is to find one vertex lying in 7c on each layer $1,. f., Sm_ 1. To do so, we augment our set of layers with vertical connections, by proceeding as follows: for each vertex w of S i (1 ~ i _-< u) keep a pointer to the two edges immediately above and below w, i.e. the edges hit by a vertical ray emanating from w upward or downward (Fig. 5). The first type of pointers is called upper, the second lower. Once the convex layers have been computed, we can easily set up these pointers in linear time, proceeding in a merge-like fashion for each pair of consecutive layers. We omit the details of this very simple procedure. To achieve our goal, we now iterate on the following process : starting from v, follow the upper (resp. lower) pointer, if L lies below (resp. above) n. The edge e pointed to has at least one endpoint in g (for example its endpoint in ~ further from L), so we can simply continue the iteration from this point. Since we proceed from the layer Sm outwards, we will effectively report one vertex on each of the layers $1 .....",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 24,
+    "paragraph": "S m (Fig. 6-A). Depending on the position of L with respect to the origin, we may even end up reporting more vertices, but all these extra vertices will be in g, however (Fig. 6-B). The next step is to start a traversal from each of the vertices reported, on their corresponding layer, sweeping across the part of the layer inside ~. Note that if the origin lies in ~ --which can be determined in constant time-- we must also report all the vertices in S~+ 1, S~+2 .....",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 25,
+    "paragraph": "Su (Fig. 6-B). This may cause vertices to be duplicated in the report. It is easy, however, to eliminate duplicates in O(k) time, using an array of indices, so this will not affect the overall asymptotic complexity of the algorithm.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 26,
+    "paragraph": "Fig. 6. Walking across the layers.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 27,
+    "paragraph": "THE POWER OF GEOMETRIC DUALITY 87 The method above is very simple to describe, but it may lead to certain implementation difficulties if L is vertical. We describe below a different method for the same \"walk outwards\" that requires slightly more storage but is completely isotropic. This alternative method rests crucially on an interesting geometric observation. If Q is a convex polygon that contains another convex polygon P in its interior so that each diagonal of Q intersects P, then we call Q an immediate cover of P (Fig. 7). ql qo q5 qz q~ q4 Fig. 7. The triangulation approach. LEMMA 4. Suppose that convex polygon Q is an immediate cover of convex polygon P and that the region between P and Q has been triangulated. Then each vertex of P will be connected to at least one vertex and at most four vertices of Q in the triangulation.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 28,
+    "paragraph": "PROOF. Let p be a vertex of P. Consider the two edges of P incident at p. Each of them defines a half-plane not containing P. No more than two vertices of Q may lie in such a half-plane, as otherwise there would be a diagonal of Q avoiding P. From this the lemma follows. \u2022 Given two successive convex hulls Si and Si + t, the outer hull can be triangulated in any greedy fashion, as long as none of the diagonals drawn intersects the inner hull. At that point the polygon enclosing the inner hull forms an immediate cover of it. The triangulation of the ring between the two layers can now be completed in any manner whatsoever. This guarantees that at most four of the triangulation edges reach every inner vertex. It is easy to see how to implement such a triangulation in linear time by keeping two roving pointers, one on S~",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 29,
+    "paragraph": "88 BERNARD CHAZELLE, LEO J.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 30,
+    "paragraph": "GUIBAS AND D.",
+    "technical_score": 0.009699359999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 31,
+    "paragraph": "T. LEE and one on S~+1. The algorithm of Garey et al. [10] can also be adapted to this task. Once obtained, the doubly-connected-edge-list or quad-edge representation of this planar graph can be used to carry out the above walk. Implementing and testing both methods on concrete examples will decide which one should be retained in practice. We now turn our attention to the computation of S,,, the neighboring layer of L. LEMMA 5. Once the convex layers have been computed, the value of m can be found in O(toy n) time, after O(n) preprocessiny.",
+    "technical_score": 0.007765290209371884,
+    "citation_score": 0.0019340697906281158
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 32,
+    "paragraph": "PROOF. The problem is that of\"locating\" a line among a set of convex polygons. We use duality to recast the problem as a planar point location problem. Applying the transform T to each point Pi we can show that, if as mentioned earlier, the origin is chosen inside S~, each layer is mapped into another convex polygon, and furthermore, the u layers of S are mapped into another set of u layers with the nested order reversed, i.e., the innermost layer becomes the outermost one and vice-versa. Also, it can be easily shown that the point T L lies between the dual versions of the two layers S,, and Sin+ 1. We can then preprocess the set of dual layers in O(n) time, so as to apply a planar point location algorithm to T L, and thus determine m in O(log n) time. Possible choices are Kirkpatrick's method [13] based on a hierarchy of coarser and coarser subdivisions, or Lipton and Tarjan's remarkable, yet impractical algorithm [14]. II The proof of the lemma is complete; yet we wish to strengthen this result from a practical standpoint. One drawback of the method which we have just presented is its reliance on planar point location. Even for Kirkpatrick's algorithm, which is conceptually quite simple, it is not clear at all that this simplicity will carry over in practice. To circumvent this difficulty, we will show that it is possible to dispense with planar point location altogether, using the concept of filtering search introduced in [3]. Since, in our case, O(logn) seems to be an inherent search cost, we will try to partition the set of layers S 1 ..... S~ into groups of roughly log n consecutive layers.",
+    "technical_score": 0.007765483018642208,
+    "citation_score": 0.0019338769813577906
+  },
+  {
+    "section_path": [
+      "L"
+    ],
+    "paragraph_index": 33,
+    "paragraph": "Let C~ = Si~ognl. The algorithm will consist of searching for the value of the index m by computing the inter- sections of L with C1, C2, Ca ..... iterating as long as there are, indeed, inter- sections to report. Let C1,..., Ch be the intersecting layers thus discovered. Using a logarithmic intersection algorithm, as usual, this step will take O(h log n) time. Certainly Sm lies between Ch and Ch+ 1. To refine this information and actually determine the value of m, we will step into the dual space, proceeding as described above. One major difference, however, is that the dual structure will now consist of only [log n] convex boundaries. This allows us to do planar point location in a radically different (and simpler) way. Let D be the dual structure of the layers S~ between C h and Ch+ 1- To locate the point T r among the boundaries of D, we first compute the ~ edges of D that intersect the vertical line V passing through T L. To do so, we use the hive-graph",
+    "technical_score": 0.008287520935672513,
+    "citation_score": 0.0020636257309941514
+  }
+]
