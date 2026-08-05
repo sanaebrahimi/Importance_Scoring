@@ -69,7 +69,7 @@
       "paper_id": "axolotl",
       "reason": "non_positive_citation_mass",
       "tags": [
-        "openai_full_paper"
+        "qwen3_4b_promptv2"
       ]
     }
   ],
@@ -78,6 +78,7 @@
     "llama3.2:3b": "llama3_2_promptv2",
     "gemma2:2b": "gemma2_2b_promptv2",
     "gemma3:4b": "gemma3_4b_promptv2",
+    "qwen3:4b": "qwen3_4b_promptv2",
     "qwen3:1.7b": "qwen3_1_7_promptv2",
     "phi3:medium": "phi3_medium_promptv2",
     "qwen2.5:3b": "qwen2_5_3b_promptv2"
@@ -187,6 +188,40 @@
     },
     "gemma3:4b": {
       "model_tag": "gemma3_4b_promptv2",
+      "gpt_common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "gpt_common_count": 28
+    },
+    "qwen3:4b": {
+      "model_tag": "qwen3_4b_promptv2",
       "gpt_common_papers": [
         "AFD",
         "AlgorithmicCollectiveAction",
@@ -331,15 +366,15 @@
     "phi3_medium_promptv2": 29,
     "qwen2_5_3b_promptv2": 29,
     "qwen3_1_7_promptv2": 29,
-    "qwen3_4b_promptv2": 9
+    "qwen3_4b_promptv2": 29
   },
   "notes": [
     "Citation keys are canonicalized and merged with CitationResolver before comparison.",
     "KL and JSD are computed on citation-only score distributions normalized within each paper.",
     "Spearman and Kendall tau-b are computed on aligned raw citation-score vectors after canonical aggregation.",
     "Top-k overlap uses k=4 on canonicalized citation targets.",
-    "Only models with the maximum GPT-overlap coverage are included so every selected model is evaluated on the same paper set.",
-    "Papers with empty or non-positive citation mass for GPT or any selected local model are excluded from the final citation benchmark."
+    "Only models with the maximum OpenAI-overlap coverage are included so every selected model is evaluated on the same paper set.",
+    "Papers with empty or non-positive citation mass for OpenAI or any selected local model are excluded from the final citation benchmark."
   ],
   "model_summaries": {
     "llama3.2:1b": {
@@ -522,6 +557,51 @@
       "std_top_4_overlap_fraction": 0.2658775718086864,
       "model_tag": "gemma3_4b_promptv2"
     },
+    "qwen3:4b": {
+      "papers_evaluated": 27,
+      "mean_kl_divergence": 1.111130474961019,
+      "mean_kl_divergence_ci": [
+        0.6367028504179786,
+        1.7296185978821847
+      ],
+      "median_kl_divergence": 0.5047687065441756,
+      "std_kl_divergence": 1.4757681666152194,
+      "mean_jensen_shannon_divergence": 0.15038000310971011,
+      "mean_jensen_shannon_divergence_ci": [
+        0.10473349527849989,
+        0.20595159396039284
+      ],
+      "median_jensen_shannon_divergence": 0.10300572602899266,
+      "std_jensen_shannon_divergence": 0.1375335251781146,
+      "mean_spearman": 0.5019994184455159,
+      "mean_spearman_ci": [
+        0.4008516119986503,
+        0.5963899549273753
+      ],
+      "median_spearman": 0.5455546191412559,
+      "std_spearman": 0.25865092353440067,
+      "mean_kendall_tau_b": 0.3943135105114374,
+      "mean_kendall_tau_b_ci": [
+        0.3156593385777422,
+        0.47533678082809233
+      ],
+      "median_kendall_tau_b": 0.400524556276468,
+      "std_kendall_tau_b": 0.21334789912979854,
+      "mean_top_4_overlap_count": 2.185185185185185,
+      "mean_top_4_overlap_count_ci": [
+        1.7777777777777777,
+        2.5555555555555554
+      ],
+      "median_top_4_overlap_count": 3,
+      "mean_top_4_overlap_fraction": 0.5462962962962963,
+      "mean_top_4_overlap_fraction_ci": [
+        0.4537037037037037,
+        0.6388888888888888
+      ],
+      "median_top_4_overlap_fraction": 0.75,
+      "std_top_4_overlap_fraction": 0.25978020514611,
+      "model_tag": "qwen3_4b_promptv2"
+    },
     "qwen3:1.7b": {
       "papers_evaluated": 27,
       "mean_kl_divergence": 0.9667265852690564,
@@ -671,11 +751,24 @@
       {
         "model": "qwen3:1.7b",
         "model_tag": "qwen3_1_7_promptv2",
-        "rank_sum": 6,
+        "rank_sum": 10,
         "metric_ranks": {
           "mean_kl_divergence": 1,
-          "mean_jensen_shannon_divergence": 1,
+          "mean_jensen_shannon_divergence": 2,
           "std_kl_divergence": 1,
+          "mean_spearman": 2,
+          "mean_kendall_tau_b": 2,
+          "mean_top_4_overlap_fraction": 2
+        }
+      },
+      {
+        "model": "qwen3:4b",
+        "model_tag": "qwen3_4b_promptv2",
+        "rank_sum": 12,
+        "metric_ranks": {
+          "mean_kl_divergence": 2,
+          "mean_jensen_shannon_divergence": 1,
+          "std_kl_divergence": 6,
           "mean_spearman": 1,
           "mean_kendall_tau_b": 1,
           "mean_top_4_overlap_fraction": 1
@@ -684,93 +777,93 @@
       {
         "model": "gemma2:2b",
         "model_tag": "gemma2_2b_promptv2",
-        "rank_sum": 15,
-        "metric_ranks": {
-          "mean_kl_divergence": 3,
-          "mean_jensen_shannon_divergence": 3,
-          "std_kl_divergence": 3,
-          "mean_spearman": 2,
-          "mean_kendall_tau_b": 2,
-          "mean_top_4_overlap_fraction": 2
-        }
-      },
-      {
-        "model": "gemma3:4b",
-        "model_tag": "gemma3_4b_promptv2",
         "rank_sum": 20,
         "metric_ranks": {
           "mean_kl_divergence": 4,
-          "mean_jensen_shannon_divergence": 5,
-          "std_kl_divergence": 2,
+          "mean_jensen_shannon_divergence": 4,
+          "std_kl_divergence": 3,
           "mean_spearman": 3,
           "mean_kendall_tau_b": 3,
           "mean_top_4_overlap_fraction": 3
         }
       },
       {
-        "model": "phi3:medium",
-        "model_tag": "phi3_medium_promptv2",
-        "rank_sum": 20,
+        "model": "gemma3:4b",
+        "model_tag": "gemma3_4b_promptv2",
+        "rank_sum": 25,
         "metric_ranks": {
-          "mean_kl_divergence": 2,
-          "mean_jensen_shannon_divergence": 2,
-          "std_kl_divergence": 4,
+          "mean_kl_divergence": 5,
+          "mean_jensen_shannon_divergence": 6,
+          "std_kl_divergence": 2,
           "mean_spearman": 4,
           "mean_kendall_tau_b": 4,
           "mean_top_4_overlap_fraction": 4
         }
       },
       {
-        "model": "qwen2.5:3b",
-        "model_tag": "qwen2_5_3b_promptv2",
-        "rank_sum": 30,
+        "model": "phi3:medium",
+        "model_tag": "phi3_medium_promptv2",
+        "rank_sum": 25,
         "metric_ranks": {
-          "mean_kl_divergence": 5,
-          "mean_jensen_shannon_divergence": 4,
-          "std_kl_divergence": 6,
+          "mean_kl_divergence": 3,
+          "mean_jensen_shannon_divergence": 3,
+          "std_kl_divergence": 4,
           "mean_spearman": 5,
           "mean_kendall_tau_b": 5,
           "mean_top_4_overlap_fraction": 5
         }
       },
       {
-        "model": "llama3.2:3b",
-        "model_tag": "llama3_2_promptv2",
+        "model": "qwen2.5:3b",
+        "model_tag": "qwen2_5_3b_promptv2",
         "rank_sum": 36,
         "metric_ranks": {
           "mean_kl_divergence": 6,
-          "mean_jensen_shannon_divergence": 6,
-          "std_kl_divergence": 5,
+          "mean_jensen_shannon_divergence": 5,
+          "std_kl_divergence": 7,
           "mean_spearman": 6,
           "mean_kendall_tau_b": 6,
-          "mean_top_4_overlap_fraction": 7
+          "mean_top_4_overlap_fraction": 6
+        }
+      },
+      {
+        "model": "llama3.2:3b",
+        "model_tag": "llama3_2_promptv2",
+        "rank_sum": 41,
+        "metric_ranks": {
+          "mean_kl_divergence": 7,
+          "mean_jensen_shannon_divergence": 7,
+          "std_kl_divergence": 5,
+          "mean_spearman": 7,
+          "mean_kendall_tau_b": 7,
+          "mean_top_4_overlap_fraction": 8
         }
       },
       {
         "model": "llama3.2:1b",
         "model_tag": "llama3_2_1b_promptv2",
-        "rank_sum": 41,
+        "rank_sum": 47,
         "metric_ranks": {
-          "mean_kl_divergence": 7,
-          "mean_jensen_shannon_divergence": 7,
-          "std_kl_divergence": 7,
-          "mean_spearman": 7,
-          "mean_kendall_tau_b": 7,
-          "mean_top_4_overlap_fraction": 6
+          "mean_kl_divergence": 8,
+          "mean_jensen_shannon_divergence": 8,
+          "std_kl_divergence": 8,
+          "mean_spearman": 8,
+          "mean_kendall_tau_b": 8,
+          "mean_top_4_overlap_fraction": 7
         }
       }
     ],
     "recommended_model": {
       "model": "qwen3:1.7b",
       "model_tag": "qwen3_1_7_promptv2",
-      "rank_sum": 6,
+      "rank_sum": 10,
       "metric_ranks": {
         "mean_kl_divergence": 1,
-        "mean_jensen_shannon_divergence": 1,
+        "mean_jensen_shannon_divergence": 2,
         "std_kl_divergence": 1,
-        "mean_spearman": 1,
-        "mean_kendall_tau_b": 1,
-        "mean_top_4_overlap_fraction": 1
+        "mean_spearman": 2,
+        "mean_kendall_tau_b": 2,
+        "mean_top_4_overlap_fraction": 2
       }
     }
   },
@@ -16640,6 +16733,4050 @@
             "gpt_score": 0.006216328222130131,
             "model_score": 6.748970345963758e-05,
             "absolute_difference": 0.006148838518670494
+          }
+        ]
+      }
+    ],
+    "qwen3:4b": [
+      {
+        "paper_id": "AFD",
+        "citation_components": 46,
+        "gpt_total_citation_mass": 0.11418075738643887,
+        "model_total_citation_mass": 0.11265129341749336,
+        "metrics": {
+          "kl_divergence": 0.48901010600928724,
+          "jensen_shannon_divergence": 0.0654262105285727,
+          "spearman": 0.704224449099586,
+          "kendall_tau_b": 0.5196827441721328
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_thelatticebasedapproachesforminingassociationrulesareview_2016",
+              "citation": "[25]",
+              "score": 0.010000000000000009
+            },
+            {
+              "target_id": "ref_computersandintractability_2002",
+              "citation": "[15]",
+              "score": 0.009999999999999998
+            },
+            {
+              "target_id": "ref_onlinealgorithmsasurvey_2003",
+              "citation": "[1]",
+              "score": 0.008749999999999999
+            },
+            {
+              "target_id": "ref_anincrementalalgorithmforageneralizationoftheshortestpathproblem_1996",
+              "citation": "[39]",
+              "score": 0.008749999999999999
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_onlinealgorithmsasurvey_2003",
+              "citation": "[1]",
+              "score": 0.011212042703417005
+            },
+            {
+              "target_id": "ref_anincrementalalgorithmforageneralizationoftheshortestpathproblem_1996",
+              "citation": "[39]",
+              "score": 0.010180669645532776
+            },
+            {
+              "target_id": "ref_computersandintractability_2002",
+              "citation": "[15]",
+              "score": 0.009170775845465162
+            },
+            {
+              "target_id": "ref_approximateinferenceoffunctionaldependenciesfromrelations_1995",
+              "citation": "[21]",
+              "score": 0.007465183554644142
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_anincrementalalgorithmforageneralizationoftheshortestpathproblem_1996",
+              "gpt_citation": "[39]",
+              "model_citation": "[39]",
+              "gpt_score": 0.008749999999999999,
+              "model_score": 0.010180669645532776
+            },
+            {
+              "target_id": "ref_computersandintractability_2002",
+              "gpt_citation": "[15]",
+              "model_citation": "[15]",
+              "gpt_score": 0.009999999999999998,
+              "model_score": 0.009170775845465162
+            },
+            {
+              "target_id": "ref_onlinealgorithmsasurvey_2003",
+              "gpt_citation": "[1]",
+              "model_citation": "[1]",
+              "gpt_score": 0.008749999999999999,
+              "model_score": 0.011212042703417005
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_anytimemeasuresfortopkalgorithmsonexactandfuzzydatasets_2009",
+            "citation": "[2]",
+            "gpt_score": 0.005444850402892666,
+            "model_score": 0.0005241799019853598,
+            "absolute_difference": 0.0049206705009073055
+          },
+          {
+            "target_id": "ref_hassediagramgeneratorsandpetrinets_2010",
+            "citation": "[12]",
+            "gpt_score": 0.005238095238095238,
+            "model_score": 0.00098318874447136,
+            "absolute_difference": 0.004254906493623878
+          },
+          {
+            "target_id": "ref_atheoreticalanalysisofndcgtyperankingmeasures_2013",
+            "citation": "[45]",
+            "gpt_score": 0.0046832579185520345,
+            "model_score": 0.0008609249256669279,
+            "absolute_difference": 0.0038223329928851065
+          },
+          {
+            "target_id": "ref_thelatticebasedapproachesforminingassociationrulesareview_2016",
+            "citation": "[25]",
+            "gpt_score": 0.010000000000000009,
+            "model_score": 0.006261907851439963,
+            "absolute_difference": 0.0037380921485600455
+          },
+          {
+            "target_id": "ref_discoveringfunctionaldependenciesthroughhittingsetenumeration_2024",
+            "citation": "[6]",
+            "gpt_score": 0.0012891205759970072,
+            "model_score": 0.0045728226498291695,
+            "absolute_difference": 0.003283702073832162
+          },
+          {
+            "target_id": "ref_theoryoflinearandintegerprogramming_1998",
+            "citation": "[41]",
+            "gpt_score": 0.0037500000000000033,
+            "model_score": 0.0005348406000171073,
+            "absolute_difference": 0.003215159399982896
+          },
+          {
+            "target_id": "ref_onlinealgorithmsasurvey_2003",
+            "citation": "[1]",
+            "gpt_score": 0.008749999999999999,
+            "model_score": 0.011212042703417005,
+            "absolute_difference": 0.0024620427034170063
+          },
+          {
+            "target_id": "ref_functionaldependencydiscoveryanexperimentalevaluationofsevenalgorithms_2015",
+            "citation": "[31]",
+            "gpt_score": 0.0012891205759970072,
+            "model_score": 0.0037276582768689683,
+            "absolute_difference": 0.0024385377008719613
+          },
+          {
+            "target_id": "ref_discoveringdenialconstraints_2013",
+            "citation": "[10]",
+            "gpt_score": 0.0012891205759970072,
+            "model_score": 0.0036071165393632408,
+            "absolute_difference": 0.002317995963366234
+          },
+          {
+            "target_id": "ref_approximatedenialconstraints_2020",
+            "citation": "[27]",
+            "gpt_score": 0.0012891205759970072,
+            "model_score": 0.0036071165393632408,
+            "absolute_difference": 0.002317995963366234
+          }
+        ]
+      },
+      {
+        "paper_id": "AlgorithmicCollectiveAction",
+        "citation_components": 36,
+        "gpt_total_citation_mass": 0.11348566233766232,
+        "model_total_citation_mass": 0.04191755110437608,
+        "metrics": {
+          "kl_divergence": 6.936084030278318,
+          "jensen_shannon_divergence": 0.27409154073484515,
+          "spearman": -0.139878323520168,
+          "kendall_tau_b": -0.11625140912093301
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "olson1965",
+              "citation": "(Olson, 1965)",
+              "score": 0.035
+            },
+            {
+              "target_id": "mcmahanetal2017",
+              "citation": "(McMahan et al., 2017)",
+              "score": 0.021428571428571415
+            },
+            {
+              "target_id": "efron2022",
+              "citation": "(Efron, 2022)",
+              "score": 0.018750000000000003
+            },
+            {
+              "target_id": "ref_isavailableathttpsgithub_2021",
+              "citation": "(Jiechieu & Tsopze, 2021)",
+              "score": 0.010909090909090908
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "olson1965",
+              "citation": "(Olson, 1965)",
+              "score": 0.011425210887814806
+            },
+            {
+              "target_id": "grosseetal2022",
+              "citation": "(Grosse et al., 2022)",
+              "score": 0.00390507
+            },
+            {
+              "target_id": "woodetal2019",
+              "citation": "(Wood et al., 2019)",
+              "score": 0.0033611026810344835
+            },
+            {
+              "target_id": "cherepanovaetal2021",
+              "citation": "(Cherepanova et al., 2021)",
+              "score": 0.003154095
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "olson1965",
+              "gpt_citation": "(Olson, 1965)",
+              "model_citation": "(Olson, 1965)",
+              "gpt_score": 0.035,
+              "model_score": 0.011425210887814806
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "olson1965",
+            "citation": "(Olson, 1965)",
+            "gpt_score": 0.035,
+            "model_score": 0.011425210887814806,
+            "absolute_difference": 0.023574789112185197
+          },
+          {
+            "target_id": "mcmahanetal2017",
+            "citation": "(McMahan et al., 2017)",
+            "gpt_score": 0.021428571428571415,
+            "model_score": 0.0013305600000000002,
+            "absolute_difference": 0.020098011428571413
+          },
+          {
+            "target_id": "efron2022",
+            "citation": "(Efron, 2022)",
+            "gpt_score": 0.018750000000000003,
+            "model_score": 0.0,
+            "absolute_difference": 0.018750000000000003
+          },
+          {
+            "target_id": "ref_isavailableathttpsgithub_2021",
+            "citation": "(Jiechieu & Tsopze, 2021)",
+            "gpt_score": 0.010909090909090908,
+            "model_score": 0.0024549927165612656,
+            "absolute_difference": 0.008454098192529642
+          },
+          {
+            "target_id": "grosseetal2022",
+            "citation": "(Grosse et al., 2022)",
+            "gpt_score": 0.000875,
+            "model_score": 0.00390507,
+            "absolute_difference": 0.00303007
+          },
+          {
+            "target_id": "woodetal2019",
+            "citation": "(Wood et al., 2019)",
+            "gpt_score": 0.0007108888888888888,
+            "model_score": 0.0033611026810344835,
+            "absolute_difference": 0.0026502137921455946
+          },
+          {
+            "target_id": "cherepanovaetal2021",
+            "citation": "(Cherepanova et al., 2021)",
+            "gpt_score": 0.000875,
+            "model_score": 0.003154095,
+            "absolute_difference": 0.002279095
+          },
+          {
+            "target_id": "geipingetal2021",
+            "citation": "(Geiping et al., 2021)",
+            "gpt_score": 0.000875,
+            "model_score": 0.003154095,
+            "absolute_difference": 0.002279095
+          },
+          {
+            "target_id": "ref_transformersstateoftheartnaturallanguageprocessing_2022",
+            "citation": "(Vincent et al., 2021)",
+            "gpt_score": 0.00175,
+            "model_score": 0.0,
+            "absolute_difference": 0.00175
+          },
+          {
+            "target_id": "farhadkhanietal2022",
+            "citation": "(Farhadkhani et al., 2022)",
+            "gpt_score": 0.001749999999999993,
+            "model_score": 0.0,
+            "absolute_difference": 0.001749999999999993
+          }
+        ]
+      },
+      {
+        "paper_id": "Dynamic_Necklace_Splitting",
+        "citation_components": 17,
+        "gpt_total_citation_mass": 0.06399222585924713,
+        "model_total_citation_mass": 0.09974902098097413,
+        "metrics": {
+          "kl_divergence": 0.7626862053020041,
+          "jensen_shannon_divergence": 0.126217499040443,
+          "spearman": 0.8069589260457244,
+          "kendall_tau_b": 0.6453550571712313
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "19",
+              "citation": "[19]",
+              "score": 0.02772094926350243
+            },
+            {
+              "target_id": "2",
+              "citation": "[2]",
+              "score": 0.015357446808510637
+            },
+            {
+              "target_id": "6",
+              "citation": "[6]",
+              "score": 0.012944680851063834
+            },
+            {
+              "target_id": "ref_674let2k_2026",
+              "citation": "[4]",
+              "score": 0.006
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "19",
+              "citation": "[19]",
+              "score": 0.07438922641554414
+            },
+            {
+              "target_id": "ref_674let2k_2026",
+              "citation": "[4]",
+              "score": 0.010818736089779929
+            },
+            {
+              "target_id": "6",
+              "citation": "[6]",
+              "score": 0.003384613019368243
+            },
+            {
+              "target_id": "12",
+              "citation": "[12]",
+              "score": 0.0020430988633191476
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "19",
+              "gpt_citation": "[19]",
+              "model_citation": "[19]",
+              "gpt_score": 0.02772094926350243,
+              "model_score": 0.07438922641554414
+            },
+            {
+              "target_id": "6",
+              "gpt_citation": "[6]",
+              "model_citation": "[6]",
+              "gpt_score": 0.012944680851063834,
+              "model_score": 0.003384613019368243
+            },
+            {
+              "target_id": "ref_674let2k_2026",
+              "gpt_citation": "[4]",
+              "model_citation": "[4]",
+              "gpt_score": 0.006,
+              "model_score": 0.010818736089779929
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "19",
+            "citation": "[19]",
+            "gpt_score": 0.02772094926350243,
+            "model_score": 0.07438922641554414,
+            "absolute_difference": 0.046668277152041714
+          },
+          {
+            "target_id": "2",
+            "citation": "[2]",
+            "gpt_score": 0.015357446808510637,
+            "model_score": 0.00139736817310114,
+            "absolute_difference": 0.013960078635409497
+          },
+          {
+            "target_id": "6",
+            "citation": "[6]",
+            "gpt_score": 0.012944680851063834,
+            "model_score": 0.003384613019368243,
+            "absolute_difference": 0.009560067831695591
+          },
+          {
+            "target_id": "ref_674let2k_2026",
+            "citation": "[4]",
+            "gpt_score": 0.006,
+            "model_score": 0.010818736089779929,
+            "absolute_difference": 0.004818736089779929
+          },
+          {
+            "target_id": "12",
+            "citation": "[12]",
+            "gpt_score": 0.00027618657937806873,
+            "model_score": 0.0020430988633191476,
+            "absolute_difference": 0.0017669122839410788
+          },
+          {
+            "target_id": "14",
+            "citation": "[14]",
+            "gpt_score": 0.00011047463175122748,
+            "model_score": 0.0013310052842681612,
+            "absolute_difference": 0.0012205306525169338
+          },
+          {
+            "target_id": "9",
+            "citation": "[9]",
+            "gpt_score": 0.00017872340425531912,
+            "model_score": 0.0011703923482990763,
+            "absolute_difference": 0.0009916689440437572
+          },
+          {
+            "target_id": "3",
+            "citation": "[3]",
+            "gpt_score": 0.00017872340425531912,
+            "model_score": 0.0010383757971386923,
+            "absolute_difference": 0.0008596523928833732
+          },
+          {
+            "target_id": "17",
+            "citation": "[17]",
+            "gpt_score": 0.00011047463175122748,
+            "model_score": 0.0009009881924276781,
+            "absolute_difference": 0.0007905135606764506
+          },
+          {
+            "target_id": "1",
+            "citation": "[1]",
+            "gpt_score": 0.00017872340425531912,
+            "model_score": 0.0007411455503740853,
+            "absolute_difference": 0.0005624221461187662
+          }
+        ]
+      },
+      {
+        "paper_id": "Efficient-MM-Algo",
+        "citation_components": 28,
+        "gpt_total_citation_mass": 0.05939641986018113,
+        "model_total_citation_mass": 0.0973689413894909,
+        "metrics": {
+          "kl_divergence": 0.13144136767693032,
+          "jensen_shannon_divergence": 0.03471471195732815,
+          "spearman": 0.8959772760821112,
+          "kendall_tau_b": 0.7846836042855909
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 2,
+          "overlap_fraction": 0.5,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_arxivpreprintarxiv2402_2024",
+              "citation": "(Ma et al., 2024)",
+              "score": 0.005799556807607256
+            },
+            {
+              "target_id": "hubaraetal2018",
+              "citation": "(Hubara et al., 2018)",
+              "score": 0.0038330832708177048
+            },
+            {
+              "target_id": "ref_2017hubaraetal_2017",
+              "citation": "(Moons et al., 2017)",
+              "score": 0.0038330832708177048
+            },
+            {
+              "target_id": "ai21labs2024",
+              "citation": "(AI21 Labs, 2024)",
+              "score": 0.00375
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_1970isaclassicalmethodforefficientbooleanmatrixmultiplication_1970",
+              "citation": "(Arlazarov et al., 1970)",
+              "score": 0.013972198082697538
+            },
+            {
+              "target_id": "ref_arxivpreprintarxiv2402_2024",
+              "citation": "(Ma et al., 2024)",
+              "score": 0.008358717799091555
+            },
+            {
+              "target_id": "openai2024",
+              "citation": "(OpenAI, 2024)",
+              "score": 0.006583236580974293
+            },
+            {
+              "target_id": "ref_2017hubaraetal_2017",
+              "citation": "(Moons et al., 2017)",
+              "score": 0.006449250899669901
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_2017hubaraetal_2017",
+              "gpt_citation": "(Moons et al., 2017)",
+              "model_citation": "(Moons et al., 2017)",
+              "gpt_score": 0.0038330832708177048,
+              "model_score": 0.006449250899669901
+            },
+            {
+              "target_id": "ref_arxivpreprintarxiv2402_2024",
+              "gpt_citation": "(Ma et al., 2024)",
+              "model_citation": "(Ma et al., 2024)",
+              "gpt_score": 0.005799556807607256,
+              "model_score": 0.008358717799091555
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_1970isaclassicalmethodforefficientbooleanmatrixmultiplication_1970",
+            "citation": "(Arlazarov et al., 1970)",
+            "gpt_score": 0.001555388847211803,
+            "model_score": 0.013972198082697538,
+            "absolute_difference": 0.012416809235485734
+          },
+          {
+            "target_id": "ref_in2021ieeeworkshoponsignalprocessingsystemssipspp_2024",
+            "citation": "(Choi et al., 2021)",
+            "gpt_score": 0.001555388847211803,
+            "model_score": 0.005603548207444051,
+            "absolute_difference": 0.0040481593602322485
+          },
+          {
+            "target_id": "openai2024",
+            "citation": "(OpenAI, 2024)",
+            "gpt_score": 0.00375,
+            "model_score": 0.006583236580974293,
+            "absolute_difference": 0.0028332365809742932
+          },
+          {
+            "target_id": "ref_2017hubaraetal_2017",
+            "citation": "(Moons et al., 2017)",
+            "gpt_score": 0.0038330832708177048,
+            "model_score": 0.006449250899669901,
+            "absolute_difference": 0.0026161676288521964
+          },
+          {
+            "target_id": "ref_arxivpreprintarxiv2402_2024",
+            "citation": "(Ma et al., 2024)",
+            "gpt_score": 0.005799556807607256,
+            "model_score": 0.008358717799091555,
+            "absolute_difference": 0.0025591609914842987
+          },
+          {
+            "target_id": "ai21labs2024",
+            "citation": "(AI21 Labs, 2024)",
+            "gpt_score": 0.00375,
+            "model_score": 0.005186792457737321,
+            "absolute_difference": 0.0014367924577373212
+          },
+          {
+            "target_id": "wuetal2016",
+            "citation": "(Wu et al., 2016)",
+            "gpt_score": 0.0015553888472118022,
+            "model_score": 0.002991642683204962,
+            "absolute_difference": 0.0014362538359931596
+          },
+          {
+            "target_id": "daietal2021",
+            "citation": "(Dai et al., 2021)",
+            "gpt_score": 0.0015553888472118022,
+            "model_score": 0.002719675166549965,
+            "absolute_difference": 0.001164286319338163
+          },
+          {
+            "target_id": "ref_2024wangetal_2024",
+            "citation": "(Guo et al., 2024)",
+            "gpt_score": 0.001555388847211803,
+            "model_score": 0.002669753334436695,
+            "absolute_difference": 0.0011143644872248918
+          },
+          {
+            "target_id": "parkchoi2019",
+            "citation": "(Park & Choi, 2019)",
+            "gpt_score": 0.001555388847211803,
+            "model_score": 0.002669753334436695,
+            "absolute_difference": 0.0011143644872248918
+          }
+        ]
+      },
+      {
+        "paper_id": "FCM_SIGMOD_CRV",
+        "citation_components": 92,
+        "gpt_total_citation_mass": 0.020611968409052866,
+        "model_total_citation_mass": 0.16383276144708714,
+        "metrics": {
+          "kl_divergence": 0.6205101410053673,
+          "jensen_shannon_divergence": 0.17087235297510867,
+          "spearman": 0.5756448340418191,
+          "kendall_tau_b": 0.4479143719391886
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_animproveddatastreamsummarythecountminsketchanditsapplications_2005",
+              "citation": "[28]",
+              "score": 0.003113019292245733
+            },
+            {
+              "target_id": "ref_fairnessandmachinelearninglimitationsandopportunities_2023",
+              "citation": "[15]",
+              "score": 0.0021926666666666657
+            },
+            {
+              "target_id": "ref_quantitativeanalysisofcultureusingmillionsofdigitizedbooks_2011",
+              "citation": "[61]",
+              "score": 0.0013210526315789468
+            },
+            {
+              "target_id": "ref_newdirectionsintrafficmeasurementandaccounting_2002",
+              "citation": "[37]",
+              "score": 0.0011050842075263755
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_animproveddatastreamsummarythecountminsketchanditsapplications_2005",
+              "citation": "[28]",
+              "score": 0.009914599925892545
+            },
+            {
+              "target_id": "ref_thecaseforlearnedindexstructures_2018",
+              "citation": "[54]",
+              "score": 0.009089334784556582
+            },
+            {
+              "target_id": "ref_thespacecomplexityofapproximatingthefrequencymoments_1996",
+              "citation": "(5)",
+              "score": 0.008901307147601999
+            },
+            {
+              "target_id": "ref_newyorkcitytransportstatistics_2025",
+              "citation": "[82]",
+              "score": 0.008687200715403246
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_animproveddatastreamsummarythecountminsketchanditsapplications_2005",
+              "gpt_citation": "[28]",
+              "model_citation": "[28]",
+              "gpt_score": 0.003113019292245733,
+              "model_score": 0.009914599925892545
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_thespacecomplexityofapproximatingthefrequencymoments_1996",
+            "citation": "[5]",
+            "gpt_score": 0.0004999999999999999,
+            "model_score": 0.008901307147601999,
+            "absolute_difference": 0.008401307147601999
+          },
+          {
+            "target_id": "ref_thecaseforlearnedindexstructures_2018",
+            "citation": "[54]",
+            "gpt_score": 0.0007192307692307691,
+            "model_score": 0.009089334784556582,
+            "absolute_difference": 0.008370104015325813
+          },
+          {
+            "target_id": "ref_newyorkcitytransportstatistics_2025",
+            "citation": "[82]",
+            "gpt_score": 0.0009090526315789474,
+            "model_score": 0.008687200715403246,
+            "absolute_difference": 0.0077781480838242986
+          },
+          {
+            "target_id": "ref_quantitativeanalysisofcultureusingmillionsofdigitizedbooks_2011",
+            "citation": "[61]",
+            "gpt_score": 0.0013210526315789468,
+            "model_score": 0.008165822790635907,
+            "absolute_difference": 0.00684477015905696
+          },
+          {
+            "target_id": "ref_animproveddatastreamsummarythecountminsketchanditsapplications_2005",
+            "citation": "[28]",
+            "gpt_score": 0.003113019292245733,
+            "model_score": 0.009914599925892545,
+            "absolute_difference": 0.006801580633646812
+          },
+          {
+            "target_id": "ref_frequencyestimationalgorithmsunderzipfiandistribution_2019",
+            "citation": "(1)",
+            "gpt_score": 0.0,
+            "model_score": 0.0064091810005457595,
+            "absolute_difference": 0.0064091810005457595
+          },
+          {
+            "target_id": "ref_fairnessandmachinelearninglimitationsandopportunities_2023",
+            "citation": "[15]",
+            "gpt_score": 0.0021926666666666657,
+            "model_score": 0.008102096986496995,
+            "absolute_difference": 0.005909430319830329
+          },
+          {
+            "target_id": "ref_smallsummariesforbigdata_2020",
+            "citation": "[29]",
+            "gpt_score": 0.0002999999999999999,
+            "model_score": 0.005690800034868384,
+            "absolute_difference": 0.0053908000348683845
+          },
+          {
+            "target_id": "ref_machinelearningddosdetectionusingstochasticgradientboosting_2019",
+            "citation": "[69]",
+            "gpt_score": 0.0006460526315789471,
+            "model_score": 0.005682182458270896,
+            "absolute_difference": 0.005036129826691949
+          },
+          {
+            "target_id": "ref_fairnessinmaximalcoveringlocationproblems_2023",
+            "citation": "(17)",
+            "gpt_score": 0.0,
+            "model_score": 0.004780414841138952,
+            "absolute_difference": 0.004780414841138952
+          }
+        ]
+      },
+      {
+        "paper_id": "FairSetCover",
+        "citation_components": 52,
+        "gpt_total_citation_mass": 0.13904718672992836,
+        "model_total_citation_mass": 0.19584598073041806,
+        "metrics": {
+          "kl_divergence": 0.4752477284410501,
+          "jensen_shannon_divergence": 0.10300572602899266,
+          "spearman": 0.1416862025108658,
+          "kendall_tau_b": 0.09183532534985694
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 2,
+          "overlap_fraction": 0.5,
+          "gpt_top_k": [
+            {
+              "target_id": "FairSetCover",
+              "citation": "[14]",
+              "score": 0.03910257166306341
+            },
+            {
+              "target_id": "ref_algorithmsforfairteamformationinonlinelabourmarketplaces_2019",
+              "citation": "[5]",
+              "score": 0.013332833343333132
+            },
+            {
+              "target_id": "ref_fairregretminimizationqueries_2021",
+              "citation": "[32]",
+              "score": 0.00666716667916698
+            },
+            {
+              "target_id": "ref_asurveyonbiasandfairnessinmachinelearning_2021",
+              "citation": "[36]",
+              "score": 0.005666416671666567
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_algorithmsforfairteamformationinonlinelabourmarketplaces_2019",
+              "citation": "[5]",
+              "score": 0.029641492099752524
+            },
+            {
+              "target_id": "ref_inherenttradeoffsinthefairdeterminationofriskscores_2017",
+              "citation": "[30]",
+              "score": 0.021804287999999998
+            },
+            {
+              "target_id": "FairSetCover",
+              "citation": "[14]",
+              "score": 0.018862545027557555
+            },
+            {
+              "target_id": "ref_balancingutilityandfairnessinsubmodularmaximizationtechnicalreport_2022",
+              "citation": "[49]",
+              "score": 0.01484778521877088
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "FairSetCover",
+              "gpt_citation": "[14]",
+              "model_citation": "[14]",
+              "gpt_score": 0.03910257166306341,
+              "model_score": 0.018862545027557555
+            },
+            {
+              "target_id": "ref_algorithmsforfairteamformationinonlinelabourmarketplaces_2019",
+              "gpt_citation": "[5]",
+              "model_citation": "[5]",
+              "gpt_score": 0.013332833343333132,
+              "model_score": 0.029641492099752524
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "FairSetCover",
+            "citation": "[14]",
+            "gpt_score": 0.03910257166306341,
+            "model_score": 0.018862545027557555,
+            "absolute_difference": 0.020240026635505858
+          },
+          {
+            "target_id": "ref_inherenttradeoffsinthefairdeterminationofriskscores_2017",
+            "citation": "[30]",
+            "gpt_score": 0.003125,
+            "model_score": 0.021804287999999998,
+            "absolute_difference": 0.018679288
+          },
+          {
+            "target_id": "ref_algorithmsforfairteamformationinonlinelabourmarketplaces_2019",
+            "citation": "[5]",
+            "gpt_score": 0.013332833343333132,
+            "model_score": 0.029641492099752524,
+            "absolute_difference": 0.016308658756419393
+          },
+          {
+            "target_id": "ref_balancingutilityandfairnessinsubmodularmaximizationtechnicalreport_2022",
+            "citation": "[49]",
+            "gpt_score": 0.002690404763333303,
+            "model_score": 0.01484778521877088,
+            "absolute_difference": 0.012157380455437577
+          },
+          {
+            "target_id": "ref_theblackwhitedisparityinbreastcancermortalitytheexampleofchicago_2007",
+            "citation": "[23]",
+            "gpt_score": 0.003125,
+            "model_score": 0.010220759999999997,
+            "absolute_difference": 0.007095759999999997
+          },
+          {
+            "target_id": "ref_clusteranalysisandmathematicalprogramming_1997",
+            "citation": "[22]",
+            "gpt_score": 0.0011363636363636365,
+            "model_score": 0.0074364589719999865,
+            "absolute_difference": 0.00630009533563635
+          },
+          {
+            "target_id": "ref_fairregretminimizationqueries_2021",
+            "citation": "[32]",
+            "gpt_score": 0.00666716667916698,
+            "model_score": 0.0013715076923076924,
+            "absolute_difference": 0.005295658986859288
+          },
+          {
+            "target_id": "ref_analysisandsimulationofafairqueueingalgorithm_1989",
+            "citation": "[15]",
+            "gpt_score": 0.0005952023816666522,
+            "model_score": 0.004847758496345069,
+            "absolute_difference": 0.004252556114678417
+          },
+          {
+            "target_id": "ref_greedysetcoveralgorithms19741979chvtaljohnsonlovszstein_2008",
+            "citation": "[51]",
+            "gpt_score": 0.00333358333958349,
+            "model_score": 0.00011025066666666668,
+            "absolute_difference": 0.003223332672916823
+          },
+          {
+            "target_id": "ref_maximizingcoveragewhileensuringfairnessataleofconflictingobjectives_2023",
+            "citation": "[2]",
+            "gpt_score": 0.0005952023816666522,
+            "model_score": 0.0037642966359479613,
+            "absolute_difference": 0.003169094254281309
+          }
+        ]
+      },
+      {
+        "paper_id": "Fair_Epsilon_Net",
+        "citation_components": 98,
+        "gpt_total_citation_mass": 0.23831681290234838,
+        "model_total_citation_mass": 0.24159093204270612,
+        "metrics": {
+          "kl_divergence": 1.9794467982553443,
+          "jensen_shannon_divergence": 0.44016620609686724,
+          "spearman": 0.21873137699131173,
+          "kendall_tau_b": 0.17687824582879105
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_thediscrepancymethodrandomnessandcomplexity_2000",
+              "citation": "[25]",
+              "score": 0.10576896597985372
+            },
+            {
+              "target_id": "ref_onfairepsilonnetandgeometrichittingsettechnicalreport_2025",
+              "citation": "[32]",
+              "score": 0.026462482076726326
+            },
+            {
+              "target_id": "ref_geometricapproximationalgorithms_2011",
+              "citation": "[44]",
+              "score": 0.02645236178584488
+            },
+            {
+              "target_id": "ref_2024_2025",
+              "citation": "[28]",
+              "score": 0.0125
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_onfairepsilonnetandgeometrichittingsettechnicalreport_2025",
+              "citation": "[32]",
+              "score": 0.021070957785710272
+            },
+            {
+              "target_id": "ref_janusaqpefficientpartitiontreemaintenancefordynamicapproximatequeryprocessing_2023",
+              "citation": "[54]",
+              "score": 0.01918458654389089
+            },
+            {
+              "target_id": "ref_verdictdbuniversalizingapproximatequeryprocessing_2018",
+              "citation": "[70]",
+              "score": 0.018899666941753906
+            },
+            {
+              "target_id": "ref_combiningaggregationandsamplingnearlyoptimallyforapproximatequeryprocessing_2021",
+              "citation": "[55]",
+              "score": 0.0188996669417539
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_onfairepsilonnetandgeometrichittingsettechnicalreport_2025",
+              "gpt_citation": "[32]",
+              "model_citation": "[32]",
+              "gpt_score": 0.026462482076726326,
+              "model_score": 0.021070957785710272
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_thediscrepancymethodrandomnessandcomplexity_2000",
+            "citation": "[25]",
+            "gpt_score": 0.10576896597985372,
+            "model_score": 0.00976832981974547,
+            "absolute_difference": 0.09600063616010825
+          },
+          {
+            "target_id": "ref_geometricapproximationalgorithms_2011",
+            "citation": "[44]",
+            "gpt_score": 0.02645236178584488,
+            "model_score": 0.0007113447563248543,
+            "absolute_difference": 0.025741017029520023
+          },
+          {
+            "target_id": "ref_janusaqpefficientpartitiontreemaintenancefordynamicapproximatequeryprocessing_2023",
+            "citation": "[54]",
+            "gpt_score": 0.0,
+            "model_score": 0.01918458654389089,
+            "absolute_difference": 0.01918458654389089
+          },
+          {
+            "target_id": "ref_verdictdbuniversalizingapproximatequeryprocessing_2018",
+            "citation": "[70]",
+            "gpt_score": 0.0,
+            "model_score": 0.018899666941753906,
+            "absolute_difference": 0.018899666941753906
+          },
+          {
+            "target_id": "ref_combiningaggregationandsamplingnearlyoptimallyforapproximatequeryprocessing_2021",
+            "citation": "[55]",
+            "gpt_score": 0.0,
+            "model_score": 0.0188996669417539,
+            "absolute_difference": 0.0188996669417539
+          },
+          {
+            "target_id": "ref_2024_2025",
+            "citation": "[28]",
+            "gpt_score": 0.0125,
+            "model_score": 0.0014588497496547525,
+            "absolute_difference": 0.011041150250345248
+          },
+          {
+            "target_id": "ref_towardsfairnessinvisualrecognitioneffectivestrategiesforbiasmitigation_2020",
+            "citation": "[94]",
+            "gpt_score": 0.0125,
+            "model_score": 0.0014588497496547525,
+            "absolute_difference": 0.011041150250345248
+          },
+          {
+            "target_id": "ref_auditingyelpsbusinessrankingandreviewrecommendationthroughthelensoffairness_2025",
+            "citation": "[86]",
+            "gpt_score": 0.0125,
+            "model_score": 0.0021608285360857128,
+            "absolute_difference": 0.010339171463914288
+          },
+          {
+            "target_id": "ref_clusteringmillionsofpointsonamapwithsupercluster_2016",
+            "citation": "[2]",
+            "gpt_score": 0.0125,
+            "model_score": 0.0041204225955494365,
+            "absolute_difference": 0.008379577404450564
+          },
+          {
+            "target_id": "ref_fixedparameteralgorithmsforfairhittingsetproblems_2023",
+            "citation": "[49]",
+            "gpt_score": 0.0,
+            "model_score": 0.005567807468532366,
+            "absolute_difference": 0.005567807468532366
+          }
+        ]
+      },
+      {
+        "paper_id": "Fairness-Expo-Rankings",
+        "citation_components": 37,
+        "gpt_total_citation_mass": 0.15926618289766634,
+        "model_total_citation_mass": 0.15998103951949214,
+        "metrics": {
+          "kl_divergence": 0.518641463976027,
+          "jensen_shannon_divergence": 0.09638734744560185,
+          "spearman": 0.5455546191412559,
+          "kendall_tau_b": 0.3966185195269057
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_theprobabilityrankingprincipleinir_1977",
+              "citation": "[28]",
+              "score": 0.017285911602209943
+            },
+            {
+              "target_id": "ref_unbiasedlearningtorankwithbiasedfeedback_2017",
+              "citation": "[18]",
+              "score": 0.015499999999999995
+            },
+            {
+              "target_id": "ref_cumulatedgainbasedevaluationofirtechniques_2002",
+              "citation": "[17]",
+              "score": 0.013535911602209943
+            },
+            {
+              "target_id": "ref_predictingclicksestimatingtheclickthroughratefornewads_2007",
+              "citation": "[27]",
+              "score": 0.012000000000000009
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_theprobabilityrankingprincipleinir_1977",
+              "citation": "[28]",
+              "score": 0.026964871726643986
+            },
+            {
+              "target_id": "ref_equityofattentionamortizingindividualfairnessinrankings_2018",
+              "citation": "[3]",
+              "score": 0.02043696519876161
+            },
+            {
+              "target_id": "ref_latticetheory_1940",
+              "citation": "[4]",
+              "score": 0.01247831868111455
+            },
+            {
+              "target_id": "ref_fairnessthroughawareness_2012",
+              "citation": "[12]",
+              "score": 0.011732379550353028
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_theprobabilityrankingprincipleinir_1977",
+              "gpt_citation": "[28]",
+              "model_citation": "[28]",
+              "gpt_score": 0.017285911602209943,
+              "model_score": 0.026964871726643986
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_unbiasedlearningtorankwithbiasedfeedback_2017",
+            "citation": "[18]",
+            "gpt_score": 0.015499999999999995,
+            "model_score": 0.0027818629333333338,
+            "absolute_difference": 0.012718137066666661
+          },
+          {
+            "target_id": "ref_recommendationsastreatmentsdebiasinglearningandevaluation_2016",
+            "citation": "[29]",
+            "gpt_score": 0.009999999999999998,
+            "model_score": 0.00017589609571788418,
+            "absolute_difference": 0.009824103904282115
+          },
+          {
+            "target_id": "ref_theprobabilityrankingprincipleinir_1977",
+            "citation": "[28]",
+            "gpt_score": 0.017285911602209943,
+            "model_score": 0.026964871726643986,
+            "absolute_difference": 0.009678960124434043
+          },
+          {
+            "target_id": "ref_equityofattentionamortizingindividualfairnessinrankings_2018",
+            "citation": "[3]",
+            "gpt_score": 0.011119402985074621,
+            "model_score": 0.02043696519876161,
+            "absolute_difference": 0.009317562213686988
+          },
+          {
+            "target_id": "ref_cumulatedgainbasedevaluationofirtechniques_2002",
+            "citation": "[17]",
+            "gpt_score": 0.013535911602209943,
+            "model_score": 0.0054121207430340565,
+            "absolute_difference": 0.008123790859175885
+          },
+          {
+            "target_id": "ref_redundancydiversityandinterdependentdocumentrelevance_2009",
+            "citation": "[24]",
+            "gpt_score": 0.0013992537313432835,
+            "model_score": 0.008804399999999999,
+            "absolute_difference": 0.007405146268656715
+          },
+          {
+            "target_id": "ref_latticetheory_1940",
+            "citation": "[4]",
+            "gpt_score": 0.0054702317143563925,
+            "model_score": 0.01247831868111455,
+            "absolute_difference": 0.007008086966758158
+          },
+          {
+            "target_id": "ref_predictingclicksestimatingtheclickthroughratefornewads_2007",
+            "citation": "[27]",
+            "gpt_score": 0.012000000000000009,
+            "model_score": 0.00554612326530612,
+            "absolute_difference": 0.006453876734693889
+          },
+          {
+            "target_id": "ref_fairnessthroughawareness_2012",
+            "citation": "[12]",
+            "gpt_score": 0.005610583446404342,
+            "model_score": 0.011732379550353028,
+            "absolute_difference": 0.006121796103948686
+          },
+          {
+            "target_id": "ref_bigdatasdisparateimpact_2016",
+            "citation": "[2]",
+            "gpt_score": 0.0006105834464043418,
+            "model_score": 0.005392305047164441,
+            "absolute_difference": 0.004781721600760099
+          }
+        ]
+      },
+      {
+        "paper_id": "Fast-Monte-Carlo",
+        "citation_components": 56,
+        "gpt_total_citation_mass": 0.026614204017791687,
+        "model_total_citation_mass": 0.3067451388005853,
+        "metrics": {
+          "kl_divergence": 1.3765651339034786,
+          "jensen_shannon_divergence": 0.2827767382917312,
+          "spearman": 0.4880865534696067,
+          "kendall_tau_b": 0.38546868914518356
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_p_2003",
+              "citation": "[10]",
+              "score": 0.005623616571121337
+            },
+            {
+              "target_id": "ref_p_2006",
+              "citation": "[12]",
+              "score": 0.0034825749059093796
+            },
+            {
+              "target_id": "1",
+              "citation": "[1]",
+              "score": 0.002688303436140574
+            },
+            {
+              "target_id": "ref_d_2001",
+              "citation": "[2]",
+              "score": 0.002688303436140574
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_d_2001",
+              "citation": "(2)",
+              "score": 0.06920585425057867
+            },
+            {
+              "target_id": "1",
+              "citation": "(1)",
+              "score": 0.06281920917830057
+            },
+            {
+              "target_id": "ref_p_2006",
+              "citation": "[11]",
+              "score": 0.024938845295853634
+            },
+            {
+              "target_id": "ref_r_1997",
+              "citation": "[6]",
+              "score": 0.012358770937500003
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "1",
+              "gpt_citation": "[1]",
+              "model_citation": "(1)",
+              "gpt_score": 0.002688303436140574,
+              "model_score": 0.06281920917830057
+            },
+            {
+              "target_id": "ref_d_2001",
+              "gpt_citation": "[2]",
+              "model_citation": "(2)",
+              "gpt_score": 0.002688303436140574,
+              "model_score": 0.06920585425057867
+            },
+            {
+              "target_id": "ref_p_2006",
+              "gpt_citation": "[12]",
+              "model_citation": "[11]",
+              "gpt_score": 0.0034825749059093796,
+              "model_score": 0.024938845295853634
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_d_2001",
+            "citation": "[2]",
+            "gpt_score": 0.002688303436140574,
+            "model_score": 0.06920585425057867,
+            "absolute_difference": 0.0665175508144381
+          },
+          {
+            "target_id": "1",
+            "citation": "[1]",
+            "gpt_score": 0.002688303436140574,
+            "model_score": 0.06281920917830057,
+            "absolute_difference": 0.06013090574216
+          },
+          {
+            "target_id": "ref_p_2006",
+            "citation": "[12]",
+            "gpt_score": 0.0034825749059093796,
+            "model_score": 0.024938845295853634,
+            "absolute_difference": 0.021456270389944253
+          },
+          {
+            "target_id": "ref_r_1997",
+            "citation": "[6]",
+            "gpt_score": 0.0,
+            "model_score": 0.012358770937500003,
+            "absolute_difference": 0.012358770937500003
+          },
+          {
+            "target_id": "ref_g_1989",
+            "citation": "[18]",
+            "gpt_score": 0.0,
+            "model_score": 0.012143897150857102,
+            "absolute_difference": 0.012143897150857102
+          },
+          {
+            "target_id": "ref_e_1999",
+            "citation": "[7]",
+            "gpt_score": 0.0,
+            "model_score": 0.011804005667397068,
+            "absolute_difference": 0.011804005667397068
+          },
+          {
+            "target_id": "ref_g_1990",
+            "citation": "[25]",
+            "gpt_score": 0.0,
+            "model_score": 0.010789428604934658,
+            "absolute_difference": 0.010789428604934658
+          },
+          {
+            "target_id": "ref_r_1985",
+            "citation": "[20]",
+            "gpt_score": 0.0,
+            "model_score": 0.010741690299849912,
+            "absolute_difference": 0.010741690299849912
+          },
+          {
+            "target_id": "ref_n_1996",
+            "citation": "[3]",
+            "gpt_score": 0.00039713573488440296,
+            "model_score": 0.011127395949959814,
+            "absolute_difference": 0.01073026021507541
+          },
+          {
+            "target_id": "38",
+            "citation": "(38)",
+            "gpt_score": 0.0,
+            "model_score": 0.008877835256665337,
+            "absolute_difference": 0.008877835256665337
+          }
+        ]
+      },
+      {
+        "paper_id": "HENN_ICLR_26-1",
+        "citation_components": 48,
+        "gpt_total_citation_mass": 0.11646032152537493,
+        "model_total_citation_mass": 0.14102379173573168,
+        "metrics": {
+          "kl_divergence": 0.28251070532944333,
+          "jensen_shannon_divergence": 0.05273700001280304,
+          "spearman": 0.6320213004372623,
+          "kendall_tau_b": 0.48902477083023776
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_efficientandrobustapproximatenearestneighborsearchusinghierarchicalnavigablesmallworldgraphs_2018",
+              "citation": "[46]",
+              "score": 0.01553195127955122
+            },
+            {
+              "target_id": "ref_approximatenearestneighboralgorithmbasedonnavigablesmallworldgraphs_2014",
+              "citation": "[47]",
+              "score": 0.01114311239191236
+            },
+            {
+              "target_id": "ref_thediscrepancymethodrandomnessandcomplexity_2000",
+              "citation": "[9]",
+              "score": 0.010867722238888052
+            },
+            {
+              "target_id": "ref_computingoptimalepsilonnetsisaseasyasfindinganunhitset_2019",
+              "citation": "[51]",
+              "score": 0.009499999999999998
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_thediscrepancymethodrandomnessandcomplexity_2000",
+              "citation": "[9]",
+              "score": 0.017568834707529915
+            },
+            {
+              "target_id": "ref_approximatenearestneighboralgorithmbasedonnavigablesmallworldgraphs_2014",
+              "citation": "[47]",
+              "score": 0.015874316530451828
+            },
+            {
+              "target_id": "ref_efficientandrobustapproximatenearestneighborsearchusinghierarchicalnavigablesmallworldgraphs_2018",
+              "citation": "[46]",
+              "score": 0.010985398021692225
+            },
+            {
+              "target_id": "ref_fastapproximatenearestneighborsearchwiththenavigatingspreadingoutgraph_2017",
+              "citation": "[19]",
+              "score": 0.008873590342337322
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_approximatenearestneighboralgorithmbasedonnavigablesmallworldgraphs_2014",
+              "gpt_citation": "[47]",
+              "model_citation": "[47]",
+              "gpt_score": 0.01114311239191236,
+              "model_score": 0.015874316530451828
+            },
+            {
+              "target_id": "ref_efficientandrobustapproximatenearestneighborsearchusinghierarchicalnavigablesmallworldgraphs_2018",
+              "gpt_citation": "[46]",
+              "model_citation": "[46]",
+              "gpt_score": 0.01553195127955122,
+              "model_score": 0.010985398021692225
+            },
+            {
+              "target_id": "ref_thediscrepancymethodrandomnessandcomplexity_2000",
+              "gpt_citation": "[9]",
+              "model_citation": "[9]",
+              "gpt_score": 0.010867722238888052,
+              "model_score": 0.017568834707529915
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_thediscrepancymethodrandomnessandcomplexity_2000",
+            "citation": "[9]",
+            "gpt_score": 0.010867722238888052,
+            "model_score": 0.017568834707529915,
+            "absolute_difference": 0.0067011124686418636
+          },
+          {
+            "target_id": "ref_approximatenearestneighboralgorithmbasedonnavigablesmallworldgraphs_2014",
+            "citation": "[47]",
+            "gpt_score": 0.01114311239191236,
+            "model_score": 0.015874316530451828,
+            "absolute_difference": 0.004731204138539467
+          },
+          {
+            "target_id": "ref_efficientandrobustapproximatenearestneighborsearchusinghierarchicalnavigablesmallworldgraphs_2018",
+            "citation": "[46]",
+            "gpt_score": 0.01553195127955122,
+            "model_score": 0.010985398021692225,
+            "absolute_difference": 0.004546553257858995
+          },
+          {
+            "target_id": "ref_computingoptimalepsilonnetsisaseasyasfindinganunhitset_2019",
+            "citation": "[51]",
+            "gpt_score": 0.009499999999999998,
+            "model_score": 0.005014151397692996,
+            "absolute_difference": 0.004485848602307002
+          },
+          {
+            "target_id": "ref_geometricapproximationalgorithmsvolume173ofmathematicalsurveysandmonographs_2011",
+            "citation": "[25]",
+            "gpt_score": 0.0019743589743589736,
+            "model_score": 0.005830509803974045,
+            "absolute_difference": 0.003856150829615071
+          },
+          {
+            "target_id": "ref_thelambertwfunctioninecologicalandevolutionarymodels_2016",
+            "citation": "[38]",
+            "gpt_score": 0.003919354838709675,
+            "model_score": 0.0001439359834780155,
+            "absolute_difference": 0.00377541885523166
+          },
+          {
+            "target_id": "ref_fastapproximatenearestneighborsearchwiththenavigatingspreadingoutgraph_2017",
+            "citation": "[19]",
+            "gpt_score": 0.006077777777777777,
+            "model_score": 0.008873590342337322,
+            "absolute_difference": 0.002795812564559545
+          },
+          {
+            "target_id": "ref_computationalgeometryalgorithmsandapplications_2008",
+            "citation": "[12]",
+            "gpt_score": 0.0007499999999999998,
+            "model_score": 0.003487498435009262,
+            "absolute_difference": 0.0027374984350092622
+          },
+          {
+            "target_id": "ref_efficientknearestneighborgraphconstructionforgenericsimilaritymeasures_2011",
+            "citation": "[15]",
+            "gpt_score": 0.003444444444444444,
+            "model_score": 0.0007163334719640573,
+            "absolute_difference": 0.0027281109724803868
+          },
+          {
+            "target_id": "ref_epsilonnetsandsimplexrangequeries_1986",
+            "citation": "[28]",
+            "gpt_score": 0.004444277786110693,
+            "model_score": 0.007064879257206788,
+            "absolute_difference": 0.0026206014710960946
+          }
+        ]
+      },
+      {
+        "paper_id": "INFINI-GRAM-MINI",
+        "citation_components": 26,
+        "gpt_total_citation_mass": 0.14393047999412478,
+        "model_total_citation_mass": 0.1736980273827789,
+        "metrics": {
+          "kl_divergence": 0.28259507193840977,
+          "jensen_shannon_divergence": 0.06684573426233742,
+          "spearman": 0.46580955376563354,
+          "kendall_tau_b": 0.35216918615812975
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_infinigramscalingunboundedngramlanguagemodelstoatrilliontokens_2024",
+              "citation": "(Liu et al., 2024)",
+              "score": 0.03745479048262648
+            },
+            {
+              "target_id": "ref_opportunisticdatastructureswithapplications_2000",
+              "citation": "(Ferragina & Manzini, 2000)",
+              "score": 0.017499999999999995
+            },
+            {
+              "target_id": "ref_dolmaanopencorpusofthreetrilliontokensforlanguagemodelpretrainingresearch_2024",
+              "citation": "(Soldaini et al., 2024)",
+              "score": 0.01024045071801599
+            },
+            {
+              "target_id": "ref_whatsinmybigdatapreprintarxiv2310_2024",
+              "citation": "(Elazar et al., 2024)",
+              "score": 0.00762193210079433
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_infinigramscalingunboundedngramlanguagemodelstoatrilliontokens_2024",
+              "citation": "(Liu et al., 2024)",
+              "score": 0.050131817378923325
+            },
+            {
+              "target_id": "ref_opportunisticdatastructureswithapplications_2000",
+              "citation": "(Ferragina & Manzini, 2000)",
+              "score": 0.021776826846137038
+            },
+            {
+              "target_id": "ref_whatsinmybigdatapreprintarxiv2310_2024",
+              "citation": "(Elazar et al., 2024)",
+              "score": 0.020974482175022777
+            },
+            {
+              "target_id": "ref_evaluatingngramnoveltyoflanguagemodelsusingrustydawg_2024",
+              "citation": "(Merrill et al., 2024)",
+              "score": 0.010709103989281274
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_infinigramscalingunboundedngramlanguagemodelstoatrilliontokens_2024",
+              "gpt_citation": "(Liu et al., 2024)",
+              "model_citation": "(Liu et al., 2024)",
+              "gpt_score": 0.03745479048262648,
+              "model_score": 0.050131817378923325
+            },
+            {
+              "target_id": "ref_opportunisticdatastructureswithapplications_2000",
+              "gpt_citation": "(Ferragina & Manzini, 2000)",
+              "model_citation": "(Ferragina & Manzini, 2000)",
+              "gpt_score": 0.017499999999999995,
+              "model_score": 0.021776826846137038
+            },
+            {
+              "target_id": "ref_whatsinmybigdatapreprintarxiv2310_2024",
+              "gpt_citation": "(Elazar et al., 2024)",
+              "model_citation": "(Elazar et al., 2024)",
+              "gpt_score": 0.00762193210079433,
+              "model_score": 0.020974482175022777
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_whatsinmybigdatapreprintarxiv2310_2024",
+            "citation": "(Elazar et al., 2024)",
+            "gpt_score": 0.00762193210079433,
+            "model_score": 0.020974482175022777,
+            "absolute_difference": 0.013352550074228448
+          },
+          {
+            "target_id": "ref_infinigramscalingunboundedngramlanguagemodelstoatrilliontokens_2024",
+            "citation": "(Liu et al., 2024)",
+            "gpt_score": 0.03745479048262648,
+            "model_score": 0.050131817378923325,
+            "absolute_difference": 0.012677026896296843
+          },
+          {
+            "target_id": "ref_evaluatingngramnoveltyoflanguagemodelsusingrustydawg_2024",
+            "citation": "(Merrill et al., 2024)",
+            "gpt_score": 0.002501706741786335,
+            "model_score": 0.010709103989281274,
+            "absolute_difference": 0.00820739724749494
+          },
+          {
+            "target_id": "ref_deduplicatingtrainingdatamakeslanguagemodelsbetter_2022",
+            "citation": "(Lee et al., 2022)",
+            "gpt_score": 0.0,
+            "model_score": 0.005921578903208876,
+            "absolute_difference": 0.005921578903208876
+          },
+          {
+            "target_id": "ref_opportunisticdatastructureswithapplications_2000",
+            "citation": "(Ferragina & Manzini, 2000)",
+            "gpt_score": 0.017499999999999995,
+            "model_score": 0.021776826846137038,
+            "absolute_difference": 0.004276826846137043
+          },
+          {
+            "target_id": "makinennavarro2005",
+            "citation": "(Ma\u0308kinen & Navarro, 2005)",
+            "gpt_score": 0.0062375249500998,
+            "model_score": 0.002037140209253731,
+            "absolute_difference": 0.00420038474084607
+          },
+          {
+            "target_id": "ref_autoregressivesearchenginesgeneratingsubstringsasdocumentidentifiers_2022",
+            "citation": "(Bevilacqua et al., 2022)",
+            "gpt_score": 0.0024999999999999988,
+            "model_score": 0.00654906723640649,
+            "absolute_difference": 0.0040490672364064915
+          },
+          {
+            "target_id": "ref_languagemodelsarefewshotlearners_2020",
+            "citation": "(Brown et al., 2020)",
+            "gpt_score": 1.7067417863359977e-06,
+            "model_score": 0.003932960914500965,
+            "absolute_difference": 0.0039312541727146285
+          },
+          {
+            "target_id": "ref_dolmaanopencorpusofthreetrilliontokensforlanguagemodelpretrainingresearch_2024",
+            "citation": "(Soldaini et al., 2024)",
+            "gpt_score": 0.01024045071801599,
+            "model_score": 0.0066210936590047585,
+            "absolute_difference": 0.003619357059011232
+          },
+          {
+            "target_id": "ref_evaluationdatacontaminationinllmshowdowemeasureitandwhendoesitmatterpreprintarxiv2411_2024",
+            "citation": "(Singh et al., 2024)",
+            "gpt_score": 0.005120225359007995,
+            "model_score": 0.002648406488051188,
+            "absolute_difference": 0.0024718188709568073
+          }
+        ]
+      },
+      {
+        "paper_id": "LSH-Curves",
+        "citation_components": 22,
+        "gpt_total_citation_mass": 0.12660000000000002,
+        "model_total_citation_mass": 0.07808978694372294,
+        "metrics": {
+          "kl_divergence": 1.1231582415176737,
+          "jensen_shannon_divergence": 0.10470808637373141,
+          "spearman": 0.4818124591779863,
+          "kendall_tau_b": 0.400524556276468
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "17",
+              "citation": "[17]",
+              "score": 0.03312727272727273
+            },
+            {
+              "target_id": "16",
+              "citation": "[16]",
+              "score": 0.024
+            },
+            {
+              "target_id": "24",
+              "citation": "[24]",
+              "score": 0.0175
+            },
+            {
+              "target_id": "29",
+              "citation": "[29]",
+              "score": 0.0108
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "16",
+              "citation": "[16]",
+              "score": 0.03290181818181817
+            },
+            {
+              "target_id": "17",
+              "citation": "[17]",
+              "score": 0.01370972761904762
+            },
+            {
+              "target_id": "29",
+              "citation": "[29]",
+              "score": 0.009805824000000001
+            },
+            {
+              "target_id": "15",
+              "citation": "[15]",
+              "score": 0.0038020022857142865
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "16",
+              "gpt_citation": "[16]",
+              "model_citation": "[16]",
+              "gpt_score": 0.024,
+              "model_score": 0.03290181818181817
+            },
+            {
+              "target_id": "17",
+              "gpt_citation": "[17]",
+              "model_citation": "[17]",
+              "gpt_score": 0.03312727272727273,
+              "model_score": 0.01370972761904762
+            },
+            {
+              "target_id": "29",
+              "gpt_citation": "[29]",
+              "model_citation": "[29]",
+              "gpt_score": 0.0108,
+              "model_score": 0.009805824000000001
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "17",
+            "citation": "[17]",
+            "gpt_score": 0.03312727272727273,
+            "model_score": 0.01370972761904762,
+            "absolute_difference": 0.019417545108225107
+          },
+          {
+            "target_id": "24",
+            "citation": "[24]",
+            "gpt_score": 0.0175,
+            "model_score": 0.0006612,
+            "absolute_difference": 0.0168388
+          },
+          {
+            "target_id": "16",
+            "citation": "[16]",
+            "gpt_score": 0.024,
+            "model_score": 0.03290181818181817,
+            "absolute_difference": 0.00890181818181817
+          },
+          {
+            "target_id": "28",
+            "citation": "[28]",
+            "gpt_score": 0.0036,
+            "model_score": 8.1432e-05,
+            "absolute_difference": 0.0035185679999999997
+          },
+          {
+            "target_id": "21",
+            "citation": "[21]",
+            "gpt_score": 0.0036,
+            "model_score": 0.0001861302857142857,
+            "absolute_difference": 0.0034138697142857143
+          },
+          {
+            "target_id": "27",
+            "citation": "[27]",
+            "gpt_score": 0.0036,
+            "model_score": 0.0001861302857142857,
+            "absolute_difference": 0.0034138697142857143
+          },
+          {
+            "target_id": "14",
+            "citation": "[14]",
+            "gpt_score": 0.0024,
+            "model_score": 0.0007553519999999999,
+            "absolute_difference": 0.0016446479999999999
+          },
+          {
+            "target_id": "30",
+            "citation": "[30]",
+            "gpt_score": 0.0024,
+            "model_score": 0.000755352,
+            "absolute_difference": 0.0016446479999999999
+          },
+          {
+            "target_id": "13",
+            "citation": "[13]",
+            "gpt_score": 0.0024,
+            "model_score": 0.0009232080000000001,
+            "absolute_difference": 0.0014767919999999998
+          },
+          {
+            "target_id": "19",
+            "citation": "[19]",
+            "gpt_score": 0.0024,
+            "model_score": 0.0009232080000000001,
+            "absolute_difference": 0.0014767919999999998
+          }
+        ]
+      },
+      {
+        "paper_id": "Minoria",
+        "citation_components": 39,
+        "gpt_total_citation_mass": 0.16712875274219044,
+        "model_total_citation_mass": 0.13448329388668448,
+        "metrics": {
+          "kl_divergence": 0.5047687065441756,
+          "jensen_shannon_divergence": 0.11031774724161333,
+          "spearman": 0.4334374348122722,
+          "kendall_tau_b": 0.28101638222112607
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 2,
+          "overlap_fraction": 0.5,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "citation": "[21]",
+              "score": 0.03217748919874312
+            },
+            {
+              "target_id": "Minoria",
+              "citation": "[16]",
+              "score": 0.02480817257759243
+            },
+            {
+              "target_id": "ref_representationbiasindataasurveyonidentificationandresolutiontechniques_2023",
+              "citation": "[38]",
+              "score": 0.015399999999999994
+            },
+            {
+              "target_id": "ref_measuringskewnessaforgottenstatisticjournalofstatisticseducation1922011_2011",
+              "citation": "[19]",
+              "score": 0.01296296296296296
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_representationbiasindataasurveyonidentificationandresolutiontechniques_2023",
+              "citation": "[38]",
+              "score": 0.027312950801886796
+            },
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "citation": "[21]",
+              "score": 0.0165809128918677
+            },
+            {
+              "target_id": "ref_slicefinderautomateddataslicingformodelvalidation_2019",
+              "citation": "[14]",
+              "score": 0.011826000000000001
+            },
+            {
+              "target_id": "ref_lookingfortroubleanalyzingclassifierbehaviorviapatterndivergence_2021",
+              "citation": "[33]",
+              "score": 0.007446000000000001
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "gpt_citation": "[21]",
+              "model_citation": "[21]",
+              "gpt_score": 0.03217748919874312,
+              "model_score": 0.0165809128918677
+            },
+            {
+              "target_id": "ref_representationbiasindataasurveyonidentificationandresolutiontechniques_2023",
+              "gpt_citation": "[38]",
+              "model_citation": "[38]",
+              "gpt_score": 0.015399999999999994,
+              "model_score": 0.027312950801886796
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "Minoria",
+            "citation": "[16]",
+            "gpt_score": 0.02480817257759243,
+            "model_score": 0.00475140427873387,
+            "absolute_difference": 0.02005676829885856
+          },
+          {
+            "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+            "citation": "[21]",
+            "gpt_score": 0.03217748919874312,
+            "model_score": 0.0165809128918677,
+            "absolute_difference": 0.015596576306875422
+          },
+          {
+            "target_id": "ref_representationbiasindataasurveyonidentificationandresolutiontechniques_2023",
+            "citation": "[38]",
+            "gpt_score": 0.015399999999999994,
+            "model_score": 0.027312950801886796,
+            "absolute_difference": 0.011912950801886802
+          },
+          {
+            "target_id": "ref_slicefinderautomateddataslicingformodelvalidation_2019",
+            "citation": "[14]",
+            "gpt_score": 0.002571428571428574,
+            "model_score": 0.011826000000000001,
+            "absolute_difference": 0.009254571428571428
+          },
+          {
+            "target_id": "ref_measuringskewnessaforgottenstatisticjournalofstatisticseducation1922011_2011",
+            "citation": "[19]",
+            "gpt_score": 0.01296296296296296,
+            "model_score": 0.006649651376146789,
+            "absolute_difference": 0.0063133115868161714
+          },
+          {
+            "target_id": "ref_computingkregretminimizingsets_2014",
+            "citation": "[13]",
+            "gpt_score": 0.006167763157894735,
+            "model_score": 0.000349184,
+            "absolute_difference": 0.005818579157894735
+          },
+          {
+            "target_id": "RRR",
+            "citation": "[9]",
+            "gpt_score": 0.006167763157894735,
+            "model_score": 0.0004444159999999999,
+            "absolute_difference": 0.005723347157894736
+          },
+          {
+            "target_id": "ref_lookingfortroubleanalyzingclassifierbehaviorviapatterndivergence_2021",
+            "citation": "[33]",
+            "gpt_score": 0.0025714285714285704,
+            "model_score": 0.007446000000000001,
+            "absolute_difference": 0.004874571428571431
+          },
+          {
+            "target_id": "ref_improvedboundsonplanarksetsandklevels_1997",
+            "citation": "[17]",
+            "gpt_score": 0.007401315789473683,
+            "model_score": 0.0029802442244224415,
+            "absolute_difference": 0.004421071565051241
+          },
+          {
+            "target_id": "ref_optimalsublinearsamplingofspanningtreesanddeterminantalpointprocessesviaaveragecaseentropicindep_2022",
+            "citation": "[6]",
+            "gpt_score": 0.004746268656716418,
+            "model_score": 0.0005047777878283094,
+            "absolute_difference": 0.004241490868888109
+          }
+        ]
+      },
+      {
+        "paper_id": "Native-Sparse-Attention",
+        "citation_components": 30,
+        "gpt_total_citation_mass": 0.08842105283457702,
+        "model_total_citation_mass": 0.0630135039638491,
+        "metrics": {
+          "kl_divergence": 0.4403516782161227,
+          "jensen_shannon_divergence": 0.10580190182538389,
+          "spearman": 0.4409642209603712,
+          "kendall_tau_b": 0.3521270527555575
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_challengingbigbenchtasksandwhetherchainofthoughtcansolvethem_2022",
+              "citation": "(Suzgun et al., 2022)",
+              "score": 0.009473684261275837
+            },
+            {
+              "target_id": "deepseekai2025",
+              "citation": "(DeepSeek-AI, 2025)",
+              "score": 0.005318559556786724
+            },
+            {
+              "target_id": "ref_questqueryawaresparsityforefficientlongcontextllminference_2024",
+              "citation": "(Tang et al., 2024)",
+              "score": 0.0040126632442899
+            },
+            {
+              "target_id": "ref_infllmtrainingfreelongcontextextrapolationforllmswithanefficientcontextmemory_2024",
+              "citation": "(Xiao et al., 2024a)",
+              "score": 0.0040126632442899
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "deepseekai2025",
+              "citation": "(DeepSeek-AI, 2025)",
+              "score": 0.010992462222222223
+            },
+            {
+              "target_id": "ref_yarnefficientcontextwindowextensionoflargelanguagemodels_2024",
+              "citation": "(Peng et al., 2024)",
+              "score": 0.006777408215519863
+            },
+            {
+              "target_id": "zelikmanetal2022",
+              "citation": "(Zelik-man et al., 2022)",
+              "score": 0.005374435555555557
+            },
+            {
+              "target_id": "ref_2023a_2024",
+              "citation": "(Zhang et al., 2023b)",
+              "score": 0.005318445940537104
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "deepseekai2025",
+              "gpt_citation": "(DeepSeek-AI, 2025)",
+              "model_citation": "(DeepSeek-AI, 2025)",
+              "gpt_score": 0.005318559556786724,
+              "model_score": 0.010992462222222223
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_challengingbigbenchtasksandwhetherchainofthoughtcansolvethem_2022",
+            "citation": "(Suzgun et al., 2022)",
+            "gpt_score": 0.009473684261275837,
+            "model_score": 0.0026236653415649108,
+            "absolute_difference": 0.006850018919710927
+          },
+          {
+            "target_id": "deepseekai2025",
+            "citation": "(DeepSeek-AI, 2025)",
+            "gpt_score": 0.005318559556786724,
+            "model_score": 0.010992462222222223,
+            "absolute_difference": 0.005673902665435499
+          },
+          {
+            "target_id": "ref_yarnefficientcontextwindowextensionoflargelanguagemodels_2024",
+            "citation": "(Peng et al., 2024)",
+            "gpt_score": 0.001353383465896548,
+            "model_score": 0.006777408215519863,
+            "absolute_difference": 0.005424024749623314
+          },
+          {
+            "target_id": "zelikmanetal2022",
+            "citation": "(Zelik-man et al., 2022)",
+            "gpt_score": 0.0026592797783933516,
+            "model_score": 0.005374435555555557,
+            "absolute_difference": 0.002715155777162205
+          },
+          {
+            "target_id": "ref_efficientstreaminglanguagemodelswithattentionsinks_2023",
+            "citation": "(Xiao et al., 2023)",
+            "gpt_score": 0.0031578947537586124,
+            "model_score": 0.0005126880471589418,
+            "absolute_difference": 0.002645206706599671
+          },
+          {
+            "target_id": "ref_measuringmassivemultitasklanguageunderstanding_2020",
+            "citation": "(Hendrycks et al., 2020)",
+            "gpt_score": 0.0037218045312155073,
+            "model_score": 0.0012277488512759146,
+            "absolute_difference": 0.0024940556799395927
+          },
+          {
+            "target_id": "ref_generativeagentsinteractivesimulacraofhumanbehavior_2023",
+            "citation": "(Park et al., 2023)",
+            "gpt_score": 0.0026592797783933516,
+            "model_score": 0.0048486755555555575,
+            "absolute_difference": 0.002189395777162206
+          },
+          {
+            "target_id": "ref_2024b_2021",
+            "citation": "(Chen et al., 2024b)",
+            "gpt_score": 0.0026592797783933516,
+            "model_score": 0.0005257600000000001,
+            "absolute_difference": 0.0021335197783933515
+          },
+          {
+            "target_id": "ref_hashattentionsemanticsparsityforfasterinference_2024",
+            "citation": "(Desai et al., 2024)",
+            "gpt_score": 0.0026592797783933516,
+            "model_score": 0.0005257600000000001,
+            "absolute_difference": 0.0021335197783933515
+          },
+          {
+            "target_id": "ref_deepseekmoetowardsultimateexpertspecializationinmixtureofexpertslanguagemodels_2024",
+            "citation": "(Gao et al., 2024)",
+            "gpt_score": 0.0026592797783933516,
+            "model_score": 0.0005257600000000001,
+            "absolute_difference": 0.0021335197783933515
+          }
+        ]
+      },
+      {
+        "paper_id": "QR",
+        "citation_components": 30,
+        "gpt_total_citation_mass": 0.22305846351614217,
+        "model_total_citation_mass": 0.2665326453198616,
+        "metrics": {
+          "kl_divergence": 0.26666832141575025,
+          "jensen_shannon_divergence": 0.05762375768656054,
+          "spearman": 0.6893147817933194,
+          "kendall_tau_b": 0.5409733652268429
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_animprovedalgorithmfordiscretel1linearapproximation_1973",
+              "citation": "[1]",
+              "score": 0.052399614100959536
+            },
+            {
+              "target_id": "ref_thegaussianhareandthelaplaciantortoisecomputabilityofsquarederrorversusabsoluteerrorestimators_1997",
+              "citation": "[24]",
+              "score": 0.04689894119657604
+            },
+            {
+              "target_id": "ref_remarksonklevelalgorithmsintheplane1999_1999",
+              "citation": "[4]",
+              "score": 0.01659859422492401
+            },
+            {
+              "target_id": "ref_xxii_1888",
+              "citation": "[13]",
+              "score": 0.009057937004589069
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_thegaussianhareandthelaplaciantortoisecomputabilityofsquarederrorversusabsoluteerrorestimators_1997",
+              "citation": "[24]",
+              "score": 0.06471809394958947
+            },
+            {
+              "target_id": "ref_animprovedalgorithmfordiscretel1linearapproximation_1973",
+              "citation": "[1]",
+              "score": 0.058541398153627834
+            },
+            {
+              "target_id": "ref_xxii_1888",
+              "citation": "[13]",
+              "score": 0.026955408000000007
+            },
+            {
+              "target_id": "ref_leastabsolutedeviationstheoryapplicationsandalgorithms_1983",
+              "citation": "[2]",
+              "score": 0.021041239215327676
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_animprovedalgorithmfordiscretel1linearapproximation_1973",
+              "gpt_citation": "[1]",
+              "model_citation": "[1]",
+              "gpt_score": 0.052399614100959536,
+              "model_score": 0.058541398153627834
+            },
+            {
+              "target_id": "ref_thegaussianhareandthelaplaciantortoisecomputabilityofsquarederrorversusabsoluteerrorestimators_1997",
+              "gpt_citation": "[24]",
+              "model_citation": "[24]",
+              "gpt_score": 0.04689894119657604,
+              "model_score": 0.06471809394958947
+            },
+            {
+              "target_id": "ref_xxii_1888",
+              "gpt_citation": "[13]",
+              "model_citation": "[13]",
+              "gpt_score": 0.009057937004589069,
+              "model_score": 0.026955408000000007
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_xxii_1888",
+            "citation": "[13]",
+            "gpt_score": 0.009057937004589069,
+            "model_score": 0.026955408000000007,
+            "absolute_difference": 0.01789747099541094
+          },
+          {
+            "target_id": "ref_thegaussianhareandthelaplaciantortoisecomputabilityofsquarederrorversusabsoluteerrorestimators_1997",
+            "citation": "[24]",
+            "gpt_score": 0.04689894119657604,
+            "model_score": 0.06471809394958947,
+            "absolute_difference": 0.017819152753013427
+          },
+          {
+            "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+            "citation": "[11]",
+            "gpt_score": 0.0040529828952857744,
+            "model_score": 0.01844146285714286,
+            "absolute_difference": 0.014388479961857084
+          },
+          {
+            "target_id": "ref_remarksonklevelalgorithmsintheplane1999_1999",
+            "citation": "[4]",
+            "gpt_score": 0.01659859422492401,
+            "model_score": 0.004153636029997,
+            "absolute_difference": 0.012444958194927011
+          },
+          {
+            "target_id": "ref_leastabsolutedeviationstheoryapplicationsandalgorithms_1983",
+            "citation": "[2]",
+            "gpt_score": 0.00874530663329161,
+            "model_score": 0.021041239215327676,
+            "absolute_difference": 0.012295932582036066
+          },
+          {
+            "target_id": "ref_animprovedalgorithmfordiscretel1linearapproximation_1973",
+            "citation": "[1]",
+            "gpt_score": 0.052399614100959536,
+            "model_score": 0.058541398153627834,
+            "absolute_difference": 0.006141784052668298
+          },
+          {
+            "target_id": "ref_dynamicplanarconvexhulloperationsinnearlogarithmicamortizedtime_2001",
+            "citation": "[5]",
+            "gpt_score": 0.007266337386018236,
+            "model_score": 0.0016122080299970005,
+            "absolute_difference": 0.005654129356021236
+          },
+          {
+            "target_id": "ref_primaldualinteriorpointmethods_1997",
+            "citation": "[29]",
+            "gpt_score": 0.007743794326241135,
+            "model_score": 0.012854880000000003,
+            "absolute_difference": 0.005111085673758868
+          },
+          {
+            "target_id": "ref_constructingbeltsintwodimensionalarrangementswithapplications_1986",
+            "citation": "[12]",
+            "gpt_score": 0.007266337386018236,
+            "model_score": 0.002750048029997,
+            "absolute_difference": 0.0045162893560212365
+          },
+          {
+            "target_id": "ref_regressionquantiles_1978",
+            "citation": "[20]",
+            "gpt_score": 0.002643929912390488,
+            "model_score": 0.0069566223336795414,
+            "absolute_difference": 0.004312692421289054
+          }
+        ]
+      },
+      {
+        "paper_id": "RRR",
+        "citation_components": 51,
+        "gpt_total_citation_mass": 0.36312012987013,
+        "model_total_citation_mass": 0.23056528225904852,
+        "metrics": {
+          "kl_divergence": 0.3016602575566848,
+          "jensen_shannon_divergence": 0.07020699611343965,
+          "spearman": 0.5096345238508667,
+          "kendall_tau_b": 0.3707740845921107
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "citation": "[17]",
+              "score": 0.057575757575757565
+            },
+            {
+              "target_id": "ref_qr2athirdpartyqueryrerankingserviceoverwebdatabases_2018",
+              "citation": "[2]",
+              "score": 0.04607727272727273
+            },
+            {
+              "target_id": "ref_queryrerankingasaservice_2019",
+              "citation": "[1]",
+              "score": 0.04082727272727272
+            },
+            {
+              "target_id": "ref_quadtreesadatastructureforretrievaloncompositekeys_1974",
+              "citation": "[36]",
+              "score": 0.027999999999999997
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_queryrerankingasaservice_2019",
+              "citation": "[1]",
+              "score": 0.027879586444126105
+            },
+            {
+              "target_id": "ref_qr2athirdpartyqueryrerankingserviceoverwebdatabases_2018",
+              "citation": "[2]",
+              "score": 0.027388808629630435
+            },
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "citation": "[17]",
+              "score": 0.020607846399174
+            },
+            {
+              "target_id": "ref_designingfairrankingschemes_2019",
+              "citation": "[23]",
+              "score": 0.01460966283636364
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "gpt_citation": "[17]",
+              "model_citation": "[17]",
+              "gpt_score": 0.057575757575757565,
+              "model_score": 0.020607846399174
+            },
+            {
+              "target_id": "ref_qr2athirdpartyqueryrerankingserviceoverwebdatabases_2018",
+              "gpt_citation": "[2]",
+              "model_citation": "[2]",
+              "gpt_score": 0.04607727272727273,
+              "model_score": 0.027388808629630435
+            },
+            {
+              "target_id": "ref_queryrerankingasaservice_2019",
+              "gpt_citation": "[1]",
+              "model_citation": "[1]",
+              "gpt_score": 0.04082727272727272,
+              "model_score": 0.027879586444126105
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+            "citation": "[17]",
+            "gpt_score": 0.057575757575757565,
+            "model_score": 0.020607846399174,
+            "absolute_difference": 0.036967911176583566
+          },
+          {
+            "target_id": "ref_quadtreesadatastructureforretrievaloncompositekeys_1974",
+            "citation": "[36]",
+            "gpt_score": 0.027999999999999997,
+            "model_score": 0.0033262878787878787,
+            "absolute_difference": 0.024673712121212117
+          },
+          {
+            "target_id": "ref_qr2athirdpartyqueryrerankingserviceoverwebdatabases_2018",
+            "citation": "[2]",
+            "gpt_score": 0.04607727272727273,
+            "model_score": 0.027388808629630435,
+            "absolute_difference": 0.018688464097642295
+          },
+          {
+            "target_id": "reg-ratio",
+            "citation": "[5]",
+            "gpt_score": 0.02225028480291638,
+            "model_score": 0.0050637813743412505,
+            "absolute_difference": 0.017186503428575133
+          },
+          {
+            "target_id": "ref_queryrerankingasaservice_2019",
+            "citation": "[1]",
+            "gpt_score": 0.04082727272727272,
+            "model_score": 0.027879586444126105,
+            "absolute_difference": 0.012947686283146614
+          },
+          {
+            "target_id": "RRR",
+            "citation": "[29]",
+            "gpt_score": 0.012150000000000001,
+            "model_score": 0.0014662342999365078,
+            "absolute_difference": 0.010683765700063493
+          },
+          {
+            "target_id": "ref_animprovedboundforksetsinthreedimensions_2000",
+            "citation": "[27]",
+            "gpt_score": 0.013544805194805196,
+            "model_score": 0.0028806167855131887,
+            "absolute_difference": 0.010664188409292008
+          },
+          {
+            "target_id": "ref_almostoptimalsetcoversinfinitevcdimension_1995",
+            "citation": "[22]",
+            "gpt_score": 0.010633333333333335,
+            "model_score": 0.0037644281212121204,
+            "absolute_difference": 0.0068689052121212145
+          },
+          {
+            "target_id": "ref_efficientalgorithmsforkregretminimizingsets_2017",
+            "citation": "[14]",
+            "gpt_score": 0.014305422647527908,
+            "model_score": 0.009096156438609412,
+            "absolute_difference": 0.005209266208918496
+          },
+          {
+            "target_id": "ref_onthecomplexityofoptimizationproblemsfor3dimensionalconvexpolyhedraanddecisiontrees_1997",
+            "citation": "[21]",
+            "gpt_score": 0.0016483253588516747,
+            "model_score": 0.006841435427545633,
+            "absolute_difference": 0.005193110068693958
+          }
+        ]
+      },
+      {
+        "paper_id": "RSR-Core",
+        "citation_components": 12,
+        "gpt_total_citation_mass": 0.21475,
+        "model_total_citation_mass": 0.14571429333333333,
+        "metrics": {
+          "kl_divergence": 0.21028337345741854,
+          "jensen_shannon_divergence": 0.04224867755680564,
+          "spearman": 0.8617907325721191,
+          "kendall_tau_b": 0.7597371763975863
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 4,
+          "overlap_fraction": 1.0,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_bitnetscaling1bittransformersforlargelanguagemodels_2023",
+              "citation": "[11]",
+              "score": 0.0556
+            },
+            {
+              "target_id": "Efficient-MM-Algo",
+              "citation": "[2]",
+              "score": 0.034350000000000006
+            },
+            {
+              "target_id": "ref_huggingface_2024",
+              "citation": "[5]",
+              "score": 0.023999999999999997
+            },
+            {
+              "target_id": "ref_pytorchanimperativestylehighperformancedeeplearninglibrary_2019",
+              "citation": "[8]",
+              "score": 0.023999999999999997
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "Efficient-MM-Algo",
+              "citation": "[2]",
+              "score": 0.03952926222222221
+            },
+            {
+              "target_id": "ref_bitnetscaling1bittransformersforlargelanguagemodels_2023",
+              "citation": "[11]",
+              "score": 0.038575079111111105
+            },
+            {
+              "target_id": "ref_huggingface_2024",
+              "citation": "[5]",
+              "score": 0.030211584000000003
+            },
+            {
+              "target_id": "ref_pytorchanimperativestylehighperformancedeeplearninglibrary_2019",
+              "citation": "[8]",
+              "score": 0.016364608000000003
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "Efficient-MM-Algo",
+              "gpt_citation": "[2]",
+              "model_citation": "[2]",
+              "gpt_score": 0.034350000000000006,
+              "model_score": 0.03952926222222221
+            },
+            {
+              "target_id": "ref_bitnetscaling1bittransformersforlargelanguagemodels_2023",
+              "gpt_citation": "[11]",
+              "model_citation": "[11]",
+              "gpt_score": 0.0556,
+              "model_score": 0.038575079111111105
+            },
+            {
+              "target_id": "ref_huggingface_2024",
+              "gpt_citation": "[5]",
+              "model_citation": "[5]",
+              "gpt_score": 0.023999999999999997,
+              "model_score": 0.030211584000000003
+            },
+            {
+              "target_id": "ref_pytorchanimperativestylehighperformancedeeplearninglibrary_2019",
+              "gpt_citation": "[8]",
+              "model_citation": "[8]",
+              "gpt_score": 0.023999999999999997,
+              "model_score": 0.016364608000000003
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_bitnetscaling1bittransformersforlargelanguagemodels_2023",
+            "citation": "[11]",
+            "gpt_score": 0.0556,
+            "model_score": 0.038575079111111105,
+            "absolute_difference": 0.017024920888888892
+          },
+          {
+            "target_id": "ref_theeraof1bitllmsalllargelanguagemodelsarein1_2024",
+            "citation": "[6]",
+            "gpt_score": 0.009600000000000001,
+            "model_score": 0.00044281600000000006,
+            "absolute_difference": 0.009157184
+          },
+          {
+            "target_id": "ref_pytorchanimperativestylehighperformancedeeplearninglibrary_2019",
+            "citation": "[8]",
+            "gpt_score": 0.023999999999999997,
+            "model_score": 0.016364608000000003,
+            "absolute_difference": 0.007635391999999994
+          },
+          {
+            "target_id": "ref_neuralrankingmodelsfordocumentretrieval_2021",
+            "citation": "[10]",
+            "gpt_score": 0.009600000000000001,
+            "model_score": 0.0027043405714285715,
+            "absolute_difference": 0.006895659428571429
+          },
+          {
+            "target_id": "ref_maximuminnerproductisqueryscalednearestneighbor_2025",
+            "citation": "[1]",
+            "gpt_score": 0.009600000000000001,
+            "model_score": 0.0027043405714285715,
+            "absolute_difference": 0.006895659428571429
+          },
+          {
+            "target_id": "ref_machinelearningandhighdimensionalvectorsearch_2025",
+            "citation": "[3]",
+            "gpt_score": 0.009600000000000001,
+            "model_score": 0.0027043405714285715,
+            "absolute_difference": 0.006895659428571429
+          },
+          {
+            "target_id": "ref_asurveyonefficientinferenceforlargelanguagemodels_2024",
+            "citation": "[12]",
+            "gpt_score": 0.009600000000000001,
+            "model_score": 0.0028150445714285716,
+            "absolute_difference": 0.006784955428571429
+          },
+          {
+            "target_id": "ref_thefaisslibrary_2024",
+            "citation": "[4]",
+            "gpt_score": 0.009600000000000001,
+            "model_score": 0.003036452571428572,
+            "absolute_difference": 0.0065635474285714295
+          },
+          {
+            "target_id": "ref_towardsefficientgenerativelargelanguagemodelservingasurveyfromalgorithmstosystems_2025",
+            "citation": "[7]",
+            "gpt_score": 0.009600000000000015,
+            "model_score": 0.0032578605714285716,
+            "absolute_difference": 0.006342139428571443
+          },
+          {
+            "target_id": "ref_ageneralmatrixframeworkformodellinginformationretrieval_2006",
+            "citation": "[9]",
+            "gpt_score": 0.009600000000000001,
+            "model_score": 0.003368564571428571,
+            "absolute_difference": 0.0062314354285714305
+          }
+        ]
+      },
+      {
+        "paper_id": "Random_access_Retrieval-5",
+        "citation_components": 54,
+        "gpt_total_citation_mass": 0.11809464613583931,
+        "model_total_citation_mass": 0.14099741711295963,
+        "metrics": {
+          "kl_divergence": 0.5919063034594181,
+          "jensen_shannon_divergence": 0.10407030478934949,
+          "spearman": 0.6732118234256105,
+          "kendall_tau_b": 0.49397833361065707
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_geometricapproximationalgorithms_2011",
+              "citation": "[50]",
+              "score": 0.016539367080759173
+            },
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "citation": "[41]",
+              "score": 0.010145578219170856
+            },
+            {
+              "target_id": "Power-Duality",
+              "citation": "[29]",
+              "score": 0.008792368976552114
+            },
+            {
+              "target_id": "ref_timeboundsforselection_1973",
+              "citation": "[18]",
+              "score": 0.008708233332564095
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "citation": "[41]",
+              "score": 0.021401372755363753
+            },
+            {
+              "target_id": "ref_pointlocationinarrangementsofhyperplanes_1993",
+              "citation": "[73]",
+              "score": 0.012150893963841117
+            },
+            {
+              "target_id": "ref_geometricapproximationalgorithms_2011",
+              "citation": "[50]",
+              "score": 0.008233130169781345
+            },
+            {
+              "target_id": "Power-Duality",
+              "citation": "[29]",
+              "score": 0.007152295665080892
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "Power-Duality",
+              "gpt_citation": "[29]",
+              "model_citation": "[29]",
+              "gpt_score": 0.008792368976552114,
+              "model_score": 0.007152295665080892
+            },
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "gpt_citation": "[41]",
+              "model_citation": "[41]",
+              "gpt_score": 0.010145578219170856,
+              "model_score": 0.021401372755363753
+            },
+            {
+              "target_id": "ref_geometricapproximationalgorithms_2011",
+              "gpt_citation": "[50]",
+              "model_citation": "[50]",
+              "gpt_score": 0.016539367080759173,
+              "model_score": 0.008233130169781345
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+            "citation": "[41]",
+            "gpt_score": 0.010145578219170856,
+            "model_score": 0.021401372755363753,
+            "absolute_difference": 0.011255794536192897
+          },
+          {
+            "target_id": "ref_pointlocationinarrangementsofhyperplanes_1993",
+            "citation": "[73]",
+            "gpt_score": 0.0010343388960205391,
+            "model_score": 0.012150893963841117,
+            "absolute_difference": 0.01111655506782058
+          },
+          {
+            "target_id": "ref_geometricapproximationalgorithms_2011",
+            "citation": "[50]",
+            "gpt_score": 0.016539367080759173,
+            "model_score": 0.008233130169781345,
+            "absolute_difference": 0.008306236910977828
+          },
+          {
+            "target_id": "ref_timeboundsforselection_1973",
+            "citation": "[18]",
+            "gpt_score": 0.008708233332564095,
+            "model_score": 0.001179872338442486,
+            "absolute_difference": 0.007528360994121609
+          },
+          {
+            "target_id": "ref_introductiontoalgorithms_2022",
+            "citation": "[31]",
+            "gpt_score": 0.008708233332564095,
+            "model_score": 0.001179872338442486,
+            "absolute_difference": 0.007528360994121609
+          },
+          {
+            "target_id": "ref_randomsamplingwithareservoir_1985",
+            "citation": "[96]",
+            "gpt_score": 0.000719298245614035,
+            "model_score": 0.005440045822963294,
+            "absolute_difference": 0.004720747577349259
+          },
+          {
+            "target_id": "ref_lowerboundsonthecomplexityofpolytoperangesearching_1989",
+            "citation": "[26]",
+            "gpt_score": 0.0023331333133313316,
+            "model_score": 0.00666540493433508,
+            "absolute_difference": 0.004332271621003749
+          },
+          {
+            "target_id": "ref_directaccessforanswerstoconjunctivequerieswithaggregation_2023",
+            "citation": "[42]",
+            "gpt_score": 0.0019999999999999996,
+            "model_score": 0.006107830301501693,
+            "absolute_difference": 0.004107830301501693
+          },
+          {
+            "target_id": "ref_2005_1991",
+            "citation": "[98]",
+            "gpt_score": 0.0029168666566671657,
+            "model_score": 0.006238998659227822,
+            "absolute_difference": 0.003322132002560656
+          },
+          {
+            "target_id": "ref_fastincrementalmaintenanceofapproximatehistograms_2002",
+            "citation": "[47]",
+            "gpt_score": 0.0016666666666666663,
+            "model_score": 0.0038145238178502005,
+            "absolute_difference": 0.002147857151183534
+          }
+        ]
+      },
+      {
+        "paper_id": "Rankit-Askit",
+        "citation_components": 17,
+        "gpt_total_citation_mass": 0.08518067226890755,
+        "model_total_citation_mass": 0.05336411977281061,
+        "metrics": {
+          "kl_divergence": 2.8484498174503456,
+          "jensen_shannon_divergence": 0.1605708497500093,
+          "spearman": 0.47368866007598237,
+          "kendall_tau_b": 0.3154219456345401
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 2,
+          "overlap_fraction": 0.5,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_integratingrankingsintoquantizedscoresinpeerreview_2022",
+              "citation": "[25]",
+              "score": 0.01714285714285714
+            },
+            {
+              "target_id": "Rankit-Askit",
+              "citation": "[9]",
+              "score": 0.015562091503267973
+            },
+            {
+              "target_id": "ref_lostinthemiddlehowlanguagemodelsuselongcontexts_2024",
+              "citation": "[23]",
+              "score": 0.0075
+            },
+            {
+              "target_id": "ref_doubleequivarianceforinductivelinkpredictionforbothnewnodesandnewrelationtypes_2023",
+              "citation": "[15]",
+              "score": 0.005999999999999999
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "Rankit-Askit",
+              "citation": "[9]",
+              "score": 0.016808528695172416
+            },
+            {
+              "target_id": "ref_ontheevolutionofrandomgraphs_1960",
+              "citation": "[14]",
+              "score": 0.009253280000000003
+            },
+            {
+              "target_id": "ref_dblpacmdataset_2017",
+              "citation": "[29]",
+              "score": 0.009253280000000003
+            },
+            {
+              "target_id": "ref_integratingrankingsintoquantizedscoresinpeerreview_2022",
+              "citation": "[25]",
+              "score": 0.004768005
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "Rankit-Askit",
+              "gpt_citation": "[9]",
+              "model_citation": "[9]",
+              "gpt_score": 0.015562091503267973,
+              "model_score": 0.016808528695172416
+            },
+            {
+              "target_id": "ref_integratingrankingsintoquantizedscoresinpeerreview_2022",
+              "gpt_citation": "[25]",
+              "model_citation": "[25]",
+              "gpt_score": 0.01714285714285714,
+              "model_score": 0.004768005
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_integratingrankingsintoquantizedscoresinpeerreview_2022",
+            "citation": "[25]",
+            "gpt_score": 0.01714285714285714,
+            "model_score": 0.004768005,
+            "absolute_difference": 0.012374852142857141
+          },
+          {
+            "target_id": "ref_lostinthemiddlehowlanguagemodelsuselongcontexts_2024",
+            "citation": "[23]",
+            "gpt_score": 0.0075,
+            "model_score": 0.0012499200000000003,
+            "absolute_difference": 0.00625008
+          },
+          {
+            "target_id": "ref_ontheevolutionofrandomgraphs_1960",
+            "citation": "[14]",
+            "gpt_score": 0.00326797385620915,
+            "model_score": 0.009253280000000003,
+            "absolute_difference": 0.005985306143790853
+          },
+          {
+            "target_id": "ref_dblpacmdataset_2017",
+            "citation": "[29]",
+            "gpt_score": 0.0032679738562091535,
+            "model_score": 0.009253280000000003,
+            "absolute_difference": 0.005985306143790849
+          },
+          {
+            "target_id": "ref_doubleequivarianceforinductivelinkpredictionforbothnewnodesandnewrelationtypes_2023",
+            "citation": "[15]",
+            "gpt_score": 0.005999999999999999,
+            "model_score": 0.0020095488,
+            "absolute_difference": 0.003990451199999999
+          },
+          {
+            "target_id": "Fairness-Expo-Rankings",
+            "citation": "[31]",
+            "gpt_score": 0.000392156862745098,
+            "model_score": 0.004255905527638191,
+            "absolute_difference": 0.003863748664893093
+          },
+          {
+            "target_id": "ref_openuniversitylearninganalyticsdataset_2017",
+            "citation": "[19]",
+            "gpt_score": 0.00326797385620915,
+            "model_score": 0.0,
+            "absolute_difference": 0.00326797385620915
+          },
+          {
+            "target_id": "ref_learningwordvectorsforsentimentanalysis_2011",
+            "citation": "[26]",
+            "gpt_score": 0.00326797385620915,
+            "model_score": 0.0,
+            "absolute_difference": 0.00326797385620915
+          },
+          {
+            "target_id": "ref_adult_1996",
+            "citation": "[2]",
+            "gpt_score": 0.00326797385620915,
+            "model_score": 0.0,
+            "absolute_difference": 0.00326797385620915
+          },
+          {
+            "target_id": "ref_23highlightsthisissuewherellmsfailtoretainorutilizecertainportionsoflengthyinputs_2025",
+            "citation": "[43]",
+            "gpt_score": 0.004817927170868347,
+            "model_score": 0.0016624008456666672,
+            "absolute_difference": 0.0031555263252016795
+          }
+        ]
+      },
+      {
+        "paper_id": "adv_res_paper",
+        "citation_components": 24,
+        "gpt_total_citation_mass": 0.19266,
+        "model_total_citation_mass": 0.10454785665092702,
+        "metrics": {
+          "kl_divergence": 0.8113547041971056,
+          "jensen_shannon_divergence": 0.096503841137605,
+          "spearman": 0.8592727557690535,
+          "kendall_tau_b": 0.725112578095782
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "requal",
+              "citation": "(Ebrahimi et al., 2024)",
+              "score": 0.034
+            },
+            {
+              "target_id": "ref_multiagentcollaborationattackinvestigatingadversarialattacksinlargelanguagemodelcollaborationsvi_2024",
+              "citation": "(Amayuelas et al., 2024)",
+              "score": 0.02433333333333333
+            },
+            {
+              "target_id": "ref_notesonthenpersongameiithevalueofannpersongame_1951",
+              "citation": "(Shapley, 1951)",
+              "score": 0.020159999999999997
+            },
+            {
+              "target_id": "ref_chainofagentslargelanguagemodelscollaboratingonlongcontexttasks_2024",
+              "citation": "(Zhang et al., 2024b)",
+              "score": 0.01533333333333333
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "requal",
+              "citation": "(Ebrahimi et al., 2024)",
+              "score": 0.026979682365212736
+            },
+            {
+              "target_id": "ref_multiagentcollaborationattackinvestigatingadversarialattacksinlargelanguagemodelcollaborationsvi_2024",
+              "citation": "(Amayuelas et al., 2024)",
+              "score": 0.016561678967896794
+            },
+            {
+              "target_id": "ref_chainofagentslargelanguagemodelscollaboratingonlongcontexttasks_2024",
+              "citation": "(Zhang et al., 2024b)",
+              "score": 0.009173307348849172
+            },
+            {
+              "target_id": "ref_theriseandpotentialoflargelanguagemodelbasedagentsasurvey_2025",
+              "citation": "(Xi et al., 2025)",
+              "score": 0.009095467920277744
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_chainofagentslargelanguagemodelscollaboratingonlongcontexttasks_2024",
+              "gpt_citation": "(Zhang et al., 2024b)",
+              "model_citation": "(Zhang et al., 2024b)",
+              "gpt_score": 0.01533333333333333,
+              "model_score": 0.009173307348849172
+            },
+            {
+              "target_id": "ref_multiagentcollaborationattackinvestigatingadversarialattacksinlargelanguagemodelcollaborationsvi_2024",
+              "gpt_citation": "(Amayuelas et al., 2024)",
+              "model_citation": "(Amayuelas et al., 2024)",
+              "gpt_score": 0.02433333333333333,
+              "model_score": 0.016561678967896794
+            },
+            {
+              "target_id": "requal",
+              "gpt_citation": "(Ebrahimi et al., 2024)",
+              "model_citation": "(Ebrahimi et al., 2024)",
+              "gpt_score": 0.034,
+              "model_score": 0.026979682365212736
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_notesonthenpersongameiithevalueofannpersongame_1951",
+            "citation": "(Shapley, 1951)",
+            "gpt_score": 0.020159999999999997,
+            "model_score": 0.00017914000000000002,
+            "absolute_difference": 0.019980859999999996
+          },
+          {
+            "target_id": "ref_multiagentcollaborationattackinvestigatingadversarialattacksinlargelanguagemodelcollaborationsvi_2024",
+            "citation": "(Amayuelas et al., 2024)",
+            "gpt_score": 0.02433333333333333,
+            "model_score": 0.016561678967896794,
+            "absolute_difference": 0.007771654365436535
+          },
+          {
+            "target_id": "requal",
+            "citation": "(Ebrahimi et al., 2024)",
+            "gpt_score": 0.034,
+            "model_score": 0.026979682365212736,
+            "absolute_difference": 0.007020317634787266
+          },
+          {
+            "target_id": "ref_chainofagentslargelanguagemodelscollaboratingonlongcontexttasks_2024",
+            "citation": "(Zhang et al., 2024b)",
+            "gpt_score": 0.01533333333333333,
+            "model_score": 0.009173307348849172,
+            "absolute_difference": 0.006160025984484159
+          },
+          {
+            "target_id": "ref_encouragingdivergentthinkinginlargelanguagemodelsthroughmultiagentdebate_2023",
+            "citation": "(Liang et al., 2023a)",
+            "gpt_score": 0.005999999999999999,
+            "model_score": 0.00016423942857142861,
+            "absolute_difference": 0.005835760571428571
+          },
+          {
+            "target_id": "ref_moreagentsisallyouneed_2024",
+            "citation": "(Li et al., 2024a)",
+            "gpt_score": 0.0075,
+            "model_score": 0.002084544,
+            "absolute_difference": 0.005415456
+          },
+          {
+            "target_id": "qianetal2024",
+            "citation": "(Qian et al., 2024)",
+            "gpt_score": 0.009,
+            "model_score": 0.004335268761904761,
+            "absolute_difference": 0.004664731238095238
+          },
+          {
+            "target_id": "ref_metagptmetaprogrammingformultiagentcollaborativeframework_2023",
+            "citation": "(Hong et al., 2023)",
+            "gpt_score": 0.009333333333333332,
+            "model_score": 0.0053621320797222595,
+            "absolute_difference": 0.003971201253611073
+          },
+          {
+            "target_id": "ref_camelcommunicativeagentsformindexplorationoflargelanguagemodelsociety_2023",
+            "citation": "(Li et al., 2023)",
+            "gpt_score": 0.009333333333333332,
+            "model_score": 0.0053621320797222595,
+            "absolute_difference": 0.003971201253611073
+          },
+          {
+            "target_id": "ref_autogenenablingnextgenllmapplicationsviamultiagentconversationframework_2023",
+            "citation": "(Wu et al., 2023)",
+            "gpt_score": 0.009333333333333332,
+            "model_score": 0.0053621320797222595,
+            "absolute_difference": 0.003971201253611073
+          }
+        ]
+      },
+      {
+        "paper_id": "fairRQ",
+        "citation_components": 67,
+        "gpt_total_citation_mass": 0.05315787719299307,
+        "model_total_citation_mass": 0.18786350731208748,
+        "metrics": {
+          "kl_divergence": 0.39411945260441617,
+          "jensen_shannon_divergence": 0.08870317758141688,
+          "spearman": 0.6019182106858639,
+          "kendall_tau_b": 0.4665649588616764
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_answeringquerieswithaggregationusingviews_1996",
+              "citation": "[52]",
+              "score": 0.004511275563910826
+            },
+            {
+              "target_id": "ref_certifyingandremovingdisparateimpact_2015",
+              "citation": "[59]",
+              "score": 0.004398493451128935
+            },
+            {
+              "target_id": "ref_equitensorslearningfairintegrationsofheterogeneousurbandata_2021",
+              "citation": "[12]",
+              "score": 0.0038830409356725147
+            },
+            {
+              "target_id": "ref_theimpactofrewritingoncoverageconstraintsatisfaction_2021",
+              "citation": "[35]",
+              "score": 0.0023792808354221686
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_certifyingandremovingdisparateimpact_2015",
+              "citation": "[59]",
+              "score": 0.017421404313335626
+            },
+            {
+              "target_id": "ref_answeringquerieswithaggregationusingviews_1996",
+              "citation": "[52]",
+              "score": 0.01525641287714899
+            },
+            {
+              "target_id": "ref_theimpactofrewritingoncoverageconstraintsatisfaction_2021",
+              "citation": "[35]",
+              "score": 0.009318434356954796
+            },
+            {
+              "target_id": "ref_coveragebasedrewritingfordatapreparation_2020",
+              "citation": "[36]",
+              "score": 0.009255525454663214
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_answeringquerieswithaggregationusingviews_1996",
+              "gpt_citation": "[52]",
+              "model_citation": "[52]",
+              "gpt_score": 0.004511275563910826,
+              "model_score": 0.01525641287714899
+            },
+            {
+              "target_id": "ref_certifyingandremovingdisparateimpact_2015",
+              "gpt_citation": "[59]",
+              "model_citation": "[59]",
+              "gpt_score": 0.004398493451128935,
+              "model_score": 0.017421404313335626
+            },
+            {
+              "target_id": "ref_theimpactofrewritingoncoverageconstraintsatisfaction_2021",
+              "gpt_citation": "[35]",
+              "model_citation": "[35]",
+              "gpt_score": 0.0023792808354221686,
+              "model_score": 0.009318434356954796
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_certifyingandremovingdisparateimpact_2015",
+            "citation": "[59]",
+            "gpt_score": 0.004398493451128935,
+            "model_score": 0.017421404313335626,
+            "absolute_difference": 0.01302291086220669
+          },
+          {
+            "target_id": "ref_answeringquerieswithaggregationusingviews_1996",
+            "citation": "[52]",
+            "gpt_score": 0.004511275563910826,
+            "model_score": 0.01525641287714899,
+            "absolute_difference": 0.010745137313238163
+          },
+          {
+            "target_id": "ref_coveragebasedrewritingfordatapreparation_2020",
+            "citation": "[36]",
+            "gpt_score": 0.0020284036424397123,
+            "model_score": 0.009255525454663214,
+            "absolute_difference": 0.0072271218122235015
+          },
+          {
+            "target_id": "ref_optimizingquerieswithmaterializedviews_1995",
+            "citation": "[53]",
+            "gpt_score": 0.001303257268170777,
+            "model_score": 0.008341607123713455,
+            "absolute_difference": 0.0070383498555426785
+          },
+          {
+            "target_id": "ref_theimpactofrewritingoncoverageconstraintsatisfaction_2021",
+            "citation": "[35]",
+            "gpt_score": 0.0023792808354221686,
+            "model_score": 0.009318434356954796,
+            "absolute_difference": 0.006939153521532628
+          },
+          {
+            "target_id": "ref_datapreprocessingtechniquesforclassificationwithoutdiscrimination_2012",
+            "citation": "[43]",
+            "gpt_score": 0.0,
+            "model_score": 0.006374933277658539,
+            "absolute_difference": 0.006374933277658539
+          },
+          {
+            "target_id": "ref_hypdbademonstrationofdetectingexplainingandresolvingbiasinolapqueries_2018",
+            "citation": "[64]",
+            "gpt_score": 0.00031746008354228234,
+            "model_score": 0.006239026794907737,
+            "absolute_difference": 0.005921566711365454
+          },
+          {
+            "target_id": "ref_discriminationpreventionindataminingforintrusionandcrimedetection_2011",
+            "citation": "[60]",
+            "gpt_score": 0.0012406003984966824,
+            "model_score": 0.006234921891280783,
+            "absolute_difference": 0.0049943214927841
+          },
+          {
+            "target_id": "ref_dbestrevisitingapproximatequeryprocessingengineswithmachinelearningmodels_2019",
+            "citation": "[57]",
+            "gpt_score": 0.0004010021553886115,
+            "model_score": 0.0047872359843010555,
+            "absolute_difference": 0.004386233828912444
+          },
+          {
+            "target_id": "ref_optimizedstratiedsamplingforapproximatequeryprocessing_2007",
+            "citation": "[54]",
+            "gpt_score": 0.0004010021553886115,
+            "model_score": 0.004693694136963682,
+            "absolute_difference": 0.00429269198157507
+          }
+        ]
+      },
+      {
+        "paper_id": "mm-mlp",
+        "citation_components": 40,
+        "gpt_total_citation_mass": 0.2244213231409819,
+        "model_total_citation_mass": 0.16488019438592094,
+        "metrics": {
+          "kl_divergence": 0.35621061501929724,
+          "jensen_shannon_divergence": 0.080791310008393,
+          "spearman": 0.6318031392747168,
+          "kendall_tau_b": 0.4832469113161749
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_fasterneuralnetworktrainingwithapproximatetensoroperations_2021",
+              "citation": "[1]",
+              "score": 0.03643513609207664
+            },
+            {
+              "target_id": "ref_understandingtheefficiencyofgpualgorithmsformatrixmatrixmultiplication_2004",
+              "citation": "[18]",
+              "score": 0.02864583333333333
+            },
+            {
+              "target_id": "ref_asparsematrixoptimizationmethodforgraphneuralnetworkstraining_2023",
+              "citation": "[60]",
+              "score": 0.021875
+            },
+            {
+              "target_id": "ref_asymmetriclshalshforsublineartimemaximuminnerproductsearchmips_2014",
+              "citation": "[48]",
+              "score": 0.019675925925925923
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_asparsematrixoptimizationmethodforgraphneuralnetworkstraining_2023",
+              "citation": "[60]",
+              "score": 0.02757396466431096
+            },
+            {
+              "target_id": "ref_understandingtheefficiencyofgpualgorithmsformatrixmatrixmultiplication_2004",
+              "citation": "[18]",
+              "score": 0.023978766247349823
+            },
+            {
+              "target_id": "ref_scalableandsustainabledeeplearningviarandomizedhashing_2017",
+              "citation": "[50]",
+              "score": 0.023775957246561622
+            },
+            {
+              "target_id": "ref_fasterneuralnetworktrainingwithapproximatetensoroperations_2021",
+              "citation": "[1]",
+              "score": 0.012894082508468496
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_asparsematrixoptimizationmethodforgraphneuralnetworkstraining_2023",
+              "gpt_citation": "[60]",
+              "model_citation": "[60]",
+              "gpt_score": 0.021875,
+              "model_score": 0.02757396466431096
+            },
+            {
+              "target_id": "ref_fasterneuralnetworktrainingwithapproximatetensoroperations_2021",
+              "gpt_citation": "[1]",
+              "model_citation": "[1]",
+              "gpt_score": 0.03643513609207664,
+              "model_score": 0.012894082508468496
+            },
+            {
+              "target_id": "ref_understandingtheefficiencyofgpualgorithmsformatrixmatrixmultiplication_2004",
+              "gpt_citation": "[18]",
+              "model_citation": "[18]",
+              "gpt_score": 0.02864583333333333,
+              "model_score": 0.023978766247349823
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_fasterneuralnetworktrainingwithapproximatetensoroperations_2021",
+            "citation": "[1]",
+            "gpt_score": 0.03643513609207664,
+            "model_score": 0.012894082508468496,
+            "absolute_difference": 0.02354105358360814
+          },
+          {
+            "target_id": "ref_asymmetriclshalshforsublineartimemaximuminnerproductsearchmips_2014",
+            "citation": "[48]",
+            "gpt_score": 0.019675925925925923,
+            "model_score": 0.0029525984815122097,
+            "absolute_difference": 0.016723327444413714
+          },
+          {
+            "target_id": "ref_deeplearning_2016",
+            "citation": "[22]",
+            "gpt_score": 0.0037138310185185174,
+            "model_score": 0.01283226932656997,
+            "absolute_difference": 0.009118438308051452
+          },
+          {
+            "target_id": "Fast-Monte-Carlo",
+            "citation": "[15]",
+            "gpt_score": 0.017708205784395352,
+            "model_score": 0.009280340925795053,
+            "absolute_difference": 0.008427864858600299
+          },
+          {
+            "target_id": "ref_scalableandsustainabledeeplearningviarandomizedhashing_2017",
+            "citation": "[50]",
+            "gpt_score": 0.016951940343640476,
+            "model_score": 0.023775957246561622,
+            "absolute_difference": 0.006824016902921146
+          },
+          {
+            "target_id": "ref_adaptivedropoutfortrainingdeepneuralnetworks_2013",
+            "citation": "[6]",
+            "gpt_score": 0.005022203325774753,
+            "model_score": 0.011697930345894388,
+            "absolute_difference": 0.006675727020119635
+          },
+          {
+            "target_id": "ref_approximatenearestneighborstowardsremovingthecurseofdimensionality_1998",
+            "citation": "[28]",
+            "gpt_score": 0.007407638921962396,
+            "model_score": 0.0008390945540017896,
+            "absolute_difference": 0.006568544367960607
+          },
+          {
+            "target_id": "ref_samplingbasedtechniquesfortrainingdeepneuralnetworkswithlimitedcomputationalresourcesascalabilit_2023",
+            "citation": "[17]",
+            "gpt_score": 0.011089004778460414,
+            "model_score": 0.004641634436026272,
+            "absolute_difference": 0.006447370342434142
+          },
+          {
+            "target_id": "ref_asparsematrixoptimizationmethodforgraphneuralnetworkstraining_2023",
+            "citation": "[60]",
+            "gpt_score": 0.021875,
+            "model_score": 0.02757396466431096,
+            "absolute_difference": 0.005698964664310961
+          },
+          {
+            "target_id": "ref_understandingtheefficiencyofgpualgorithmsformatrixmatrixmultiplication_2004",
+            "citation": "[18]",
+            "gpt_score": 0.02864583333333333,
+            "model_score": 0.023978766247349823,
+            "absolute_difference": 0.0046670670859835055
+          }
+        ]
+      },
+      {
+        "paper_id": "ranked-ret",
+        "citation_components": 47,
+        "gpt_total_citation_mass": 0.108796603912883,
+        "model_total_citation_mass": 0.1808839628803072,
+        "metrics": {
+          "kl_divergence": 1.2881261212131303,
+          "jensen_shannon_divergence": 0.3206730619097472,
+          "spearman": 0.28149147872241487,
+          "kendall_tau_b": 0.22097895154724165
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_geometricapproximationalgorithms_2011",
+              "citation": "[27]",
+              "score": 0.017777777777777778
+            },
+            {
+              "target_id": "ref_hennahierarchicalepsilonnetnavigationgraphforapproximatenearestneighborsearch_2025",
+              "citation": "[19]",
+              "score": 0.01388888888888889
+            },
+            {
+              "target_id": "ref_efficientandrobustapproximatenearestneighborsearchusinghierarchicalnavigablesmallworldgraphs_2018",
+              "citation": "[35]",
+              "score": 0.01388888888888889
+            },
+            {
+              "target_id": "ref_introductiontoalgorithms_2022",
+              "citation": "[16]",
+              "score": 0.013842746400885933
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+              "citation": "[22]",
+              "score": 0.01617007949688966
+            },
+            {
+              "target_id": "ref_geometricapproximationalgorithms_2011",
+              "citation": "[27]",
+              "score": 0.014350821945291897
+            },
+            {
+              "target_id": "ref_lowerboundsonthecomplexityofpolytoperangesearching_1989",
+              "citation": "[11]",
+              "score": 0.010002758620689656
+            },
+            {
+              "target_id": "ref_optimalaggregationalgorithmsformiddleware_2001",
+              "citation": "[25]",
+              "score": 0.008993792237275918
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_geometricapproximationalgorithms_2011",
+              "gpt_citation": "[27]",
+              "model_citation": "[27]",
+              "gpt_score": 0.017777777777777778,
+              "model_score": 0.014350821945291897
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_algorithmsincombinatorialgeometryvolume10_1987",
+            "citation": "[22]",
+            "gpt_score": 0.0,
+            "model_score": 0.01617007949688966,
+            "absolute_difference": 0.01617007949688966
+          },
+          {
+            "target_id": "ref_hennahierarchicalepsilonnetnavigationgraphforapproximatenearestneighborsearch_2025",
+            "citation": "[19]",
+            "gpt_score": 0.01388888888888889,
+            "model_score": 0.001177932091969262,
+            "absolute_difference": 0.012710956796919628
+          },
+          {
+            "target_id": "ref_lowerboundsonthecomplexityofpolytoperangesearching_1989",
+            "citation": "[11]",
+            "gpt_score": 0.0,
+            "model_score": 0.010002758620689656,
+            "absolute_difference": 0.010002758620689656
+          },
+          {
+            "target_id": "ref_introductiontoalgorithms_2022",
+            "citation": "[16]",
+            "gpt_score": 0.013842746400885933,
+            "model_score": 0.004127586206896551,
+            "absolute_difference": 0.009715160193989382
+          },
+          {
+            "target_id": "ref_timeboundsforselection_1973",
+            "citation": "[7]",
+            "gpt_score": 0.013842746400885933,
+            "model_score": 0.004127586206896551,
+            "absolute_difference": 0.009715160193989382
+          },
+          {
+            "target_id": "ref_efficientandrobustapproximatenearestneighborsearchusinghierarchicalnavigablesmallworldgraphs_2018",
+            "citation": "[35]",
+            "gpt_score": 0.01388888888888889,
+            "model_score": 0.0047757479649851355,
+            "absolute_difference": 0.009113140923903754
+          },
+          {
+            "target_id": "ref_optimalaggregationalgorithmsformiddleware_2001",
+            "citation": "[25]",
+            "gpt_score": 0.0,
+            "model_score": 0.008993792237275918,
+            "absolute_difference": 0.008993792237275918
+          },
+          {
+            "target_id": "Power-Duality",
+            "citation": "[14]",
+            "gpt_score": 0.0,
+            "model_score": 0.007103225528188288,
+            "absolute_difference": 0.007103225528188288
+          },
+          {
+            "target_id": "ref_rangesearching_2017",
+            "citation": "[1]",
+            "gpt_score": 0.0,
+            "model_score": 0.004770981958962447,
+            "absolute_difference": 0.004770981958962447
+          },
+          {
+            "target_id": "ref_anoptimalalgorithmfortheklevelswithapplicationstoseparationandtransversalproblems_1993",
+            "citation": "[24]",
+            "gpt_score": 0.0,
+            "model_score": 0.004662339235787512,
+            "absolute_difference": 0.004662339235787512
+          }
+        ]
+      },
+      {
+        "paper_id": "reg-ratio",
+        "citation_components": 29,
+        "gpt_total_citation_mass": 0.002515124431289944,
+        "model_total_citation_mass": 0.14234568651372578,
+        "metrics": {
+          "kl_divergence": 3.9674990678053574,
+          "jensen_shannon_divergence": 0.6460638845606037,
+          "spearman": 0.06779649823765421,
+          "kendall_tau_b": 0.05648325441285856
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 0,
+          "overlap_fraction": 0.0,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_ontheexpectedcomplexityofrandomconvexhulls_2011",
+              "citation": "[13]",
+              "score": 0.002515124431289944
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_regretminimizingrepresentativedatabases_2010",
+              "citation": "[22]",
+              "score": 0.03272121701392626
+            },
+            {
+              "target_id": "ref_computingkregretminimizingsets_2014",
+              "citation": "[6]",
+              "score": 0.025111259073254646
+            },
+            {
+              "target_id": "ref_theskylineoperator_2001",
+              "citation": "[2]",
+              "score": 0.015479278657145937
+            },
+            {
+              "target_id": "ref_athresholdoflnnforapproximatingsetcover_1998",
+              "citation": "[12]",
+              "score": 0.008898594847173973
+            }
+          ],
+          "overlapping_citations": []
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_regretminimizingrepresentativedatabases_2010",
+            "citation": "[22]",
+            "gpt_score": 0.0,
+            "model_score": 0.03272121701392626,
+            "absolute_difference": 0.03272121701392626
+          },
+          {
+            "target_id": "ref_computingkregretminimizingsets_2014",
+            "citation": "[6]",
+            "gpt_score": 0.0,
+            "model_score": 0.025111259073254646,
+            "absolute_difference": 0.025111259073254646
+          },
+          {
+            "target_id": "ref_theskylineoperator_2001",
+            "citation": "[2]",
+            "gpt_score": 0.0,
+            "model_score": 0.015479278657145937,
+            "absolute_difference": 0.015479278657145937
+          },
+          {
+            "target_id": "ref_athresholdoflnnforapproximatingsetcover_1998",
+            "citation": "[12]",
+            "gpt_score": 0.0,
+            "model_score": 0.008898594847173973,
+            "absolute_difference": 0.008898594847173973
+          },
+          {
+            "target_id": "ref_approximationalgorithmsforconvexhulls_1982",
+            "citation": "[1]",
+            "gpt_score": 0.0,
+            "model_score": 0.008661643145042135,
+            "absolute_difference": 0.008661643145042135
+          },
+          {
+            "target_id": "ref_chanh_2006",
+            "citation": "[4]",
+            "gpt_score": 0.0,
+            "model_score": 0.00653723224771604,
+            "absolute_difference": 0.00653723224771604
+          },
+          {
+            "target_id": "ref_ihmk_2014",
+            "citation": "[16]",
+            "gpt_score": 0.0,
+            "model_score": 0.00471321106143575,
+            "absolute_difference": 0.00471321106143575
+          },
+          {
+            "target_id": "ref_articialintelligenceamodernapproachvolume2_2003",
+            "citation": "[24]",
+            "gpt_score": 0.0,
+            "model_score": 0.004227180693129782,
+            "absolute_difference": 0.004227180693129782
+          },
+          {
+            "target_id": "ref_castellic_2000",
+            "citation": "[5]",
+            "gpt_score": 0.0,
+            "model_score": 0.0031294472640962575,
+            "absolute_difference": 0.0031294472640962575
+          },
+          {
+            "target_id": "ref_kregretquerieswithnonlinearutilities_2015",
+            "citation": "[17]",
+            "gpt_score": 0.0,
+            "model_score": 0.0031274406130155615,
+            "absolute_difference": 0.0031274406130155615
+          }
+        ]
+      },
+      {
+        "paper_id": "requal",
+        "citation_components": 23,
+        "gpt_total_citation_mass": 0.1092333333333333,
+        "model_total_citation_mass": 0.24293124994482526,
+        "metrics": {
+          "kl_divergence": 2.2659833948095005,
+          "jensen_shannon_divergence": 0.19182609855207725,
+          "spearman": 0.06012947240312932,
+          "kendall_tau_b": 0.11194765882357141
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_probabilitytheoryandexamples_2010",
+              "citation": "(Durrett, 2010)",
+              "score": 0.022499999999999996
+            },
+            {
+              "target_id": "ref_oneembedderanytaskinstructionfinetunedtextembeddings_2023",
+              "citation": "(Su et al., 2023)",
+              "score": 0.0104
+            },
+            {
+              "target_id": "ref_stereosetmeasuringstereotypicalbiasinpretrainedlanguagemodels_2021",
+              "citation": "(Nadeem et al., 2021)",
+              "score": 0.0073333333333333375
+            },
+            {
+              "target_id": "ref_llmblenderensemblinglargelanguagemodelswithpairwiserankingandgenerativefusion_2023",
+              "citation": "(Jiang et al., 2023)",
+              "score": 0.006923076923076924
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_oneembedderanytaskinstructionfinetunedtextembeddings_2023",
+              "citation": "(Su et al., 2023)",
+              "score": 0.08065000000000001
+            },
+            {
+              "target_id": "ref_mithrarankingasystemforresponsiblerankingdesign_2019",
+              "citation": "(Guan et al., 2019)",
+              "score": 0.023180000000000006
+            },
+            {
+              "target_id": "ref_doubleequivarianceforinductivelinkpredictionforbothnewnodesandnewrelationtypes_2023",
+              "citation": "(Gao et al., 2023)",
+              "score": 0.01769
+            },
+            {
+              "target_id": "ref_montecarlomethods_2013",
+              "citation": "(Hammersley, 2013)",
+              "score": 0.012200000000000003
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_oneembedderanytaskinstructionfinetunedtextembeddings_2023",
+              "gpt_citation": "(Su et al., 2023)",
+              "model_citation": "(Su et al., 2023)",
+              "gpt_score": 0.0104,
+              "model_score": 0.08065000000000001
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_oneembedderanytaskinstructionfinetunedtextembeddings_2023",
+            "citation": "(Su et al., 2023)",
+            "gpt_score": 0.0104,
+            "model_score": 0.08065000000000001,
+            "absolute_difference": 0.07025
+          },
+          {
+            "target_id": "ref_mithrarankingasystemforresponsiblerankingdesign_2019",
+            "citation": "(Guan et al., 2019)",
+            "gpt_score": 0.005999999999999998,
+            "model_score": 0.023180000000000006,
+            "absolute_difference": 0.017180000000000008
+          },
+          {
+            "target_id": "ref_probabilitytheoryandexamples_2010",
+            "citation": "(Durrett, 2010)",
+            "gpt_score": 0.022499999999999996,
+            "model_score": 0.0066549999999999995,
+            "absolute_difference": 0.015844999999999998
+          },
+          {
+            "target_id": "ref_doubleequivarianceforinductivelinkpredictionforbothnewnodesandnewrelationtypes_2023",
+            "citation": "(Gao et al., 2023)",
+            "gpt_score": 0.005999999999999998,
+            "model_score": 0.01769,
+            "absolute_difference": 0.011690000000000002
+          },
+          {
+            "target_id": "ref_redditbiasarealworldresourceforbiasevaluationanddebiasingofconversationallanguagemodels_2021",
+            "citation": "(Barikeri et al., 2021)",
+            "gpt_score": 0.0019230769230769227,
+            "model_score": 0.010111111111111112,
+            "absolute_difference": 0.00818803418803419
+          },
+          {
+            "target_id": "bolukbasietal2016",
+            "citation": "(Boluk-basi et al., 2016)",
+            "gpt_score": 0.0019230769230769227,
+            "model_score": 0.010111111111111112,
+            "absolute_difference": 0.00818803418803419
+          },
+          {
+            "target_id": "ref_semanticsderivedautomaticallyfromlanguagecorporacontainhumanlikebiases_2017",
+            "citation": "(Caliskan et al., 2017)",
+            "gpt_score": 0.0019230769230769227,
+            "model_score": 0.010111111111111112,
+            "absolute_difference": 0.00818803418803419
+          },
+          {
+            "target_id": "ref_queensarepowerfultoomitigatinggenderbiasindialoguegeneration_2020",
+            "citation": "(Dinan et al., 2020)",
+            "gpt_score": 0.0019230769230769227,
+            "model_score": 0.010111111111111112,
+            "absolute_difference": 0.00818803418803419
+          },
+          {
+            "target_id": "ref_debiasingpretrainedcontextualisedembeddings_2021",
+            "citation": "(Kaneko & Bollegala, 2021)",
+            "gpt_score": 0.0019230769230769227,
+            "model_score": 0.010111111111111112,
+            "absolute_difference": 0.00818803418803419
+          },
+          {
+            "target_id": "ref_onmeasuringsocialbiasesinsentenceencoders_2019",
+            "citation": "(May et al., 2019)",
+            "gpt_score": 0.0019230769230769227,
+            "model_score": 0.010111111111111112,
+            "absolute_difference": 0.00818803418803419
+          }
+        ]
+      },
+      {
+        "paper_id": "shapley",
+        "citation_components": 59,
+        "gpt_total_citation_mass": 0.18984453338340052,
+        "model_total_citation_mass": 0.1980669413635512,
+        "metrics": {
+          "kl_divergence": 0.42683881060991175,
+          "jensen_shannon_divergence": 0.09194211586481284,
+          "spearman": 0.5985759619411437,
+          "kendall_tau_b": 0.46617591278341686
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 1,
+          "overlap_fraction": 0.25,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_aunifiedapproachtointerpretingmodelpredictions_2017",
+              "citation": "[10]",
+              "score": 0.01946345788920882
+            },
+            {
+              "target_id": "ref_queryrerankingasaservice_2016",
+              "citation": "[11]",
+              "score": 0.018
+            },
+            {
+              "target_id": "ref_acomparisonofregressionmodelsforpredictionofgraduateadmissions_2019",
+              "citation": "[17]",
+              "score": 0.013513513513513514
+            },
+            {
+              "target_id": "ref_alinearapproximationmethodfortheshapleyvalue_2008",
+              "citation": "[14]",
+              "score": 0.013513513513513513
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_avaluefornpersongamespage3140_1988",
+              "citation": "[7]",
+              "score": 0.031135018959722906
+            },
+            {
+              "target_id": "ref_answeringwhynotquestionsonreversetopkqueries_2015",
+              "citation": "[57]",
+              "score": 0.025087103999999992
+            },
+            {
+              "target_id": "ref_aunifiedapproachtointerpretingmodelpredictions_2017",
+              "citation": "[10]",
+              "score": 0.0196317715687822
+            },
+            {
+              "target_id": "ref_whynotyetfixingatopkrankingthatisnotfairtoindividuals_2023",
+              "citation": "[58]",
+              "score": 0.016039296
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_aunifiedapproachtointerpretingmodelpredictions_2017",
+              "gpt_citation": "[10]",
+              "model_citation": "[10]",
+              "gpt_score": 0.01946345788920882,
+              "model_score": 0.0196317715687822
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_answeringwhynotquestionsonreversetopkqueries_2015",
+            "citation": "[57]",
+            "gpt_score": 0.006,
+            "model_score": 0.025087103999999992,
+            "absolute_difference": 0.019087103999999994
+          },
+          {
+            "target_id": "ref_avaluefornpersongamespage3140_1988",
+            "citation": "[7]",
+            "gpt_score": 0.012706701132452059,
+            "model_score": 0.031135018959722906,
+            "absolute_difference": 0.01842831782727085
+          },
+          {
+            "target_id": "ref_queryrerankingasaservice_2016",
+            "citation": "[11]",
+            "gpt_score": 0.018,
+            "model_score": 0.0024615360000000003,
+            "absolute_difference": 0.015538463999999998
+          },
+          {
+            "target_id": "ref_acomparisonofregressionmodelsforpredictionofgraduateadmissions_2019",
+            "citation": "[17]",
+            "gpt_score": 0.013513513513513514,
+            "model_score": 0.0017174737724550894,
+            "absolute_difference": 0.011796039741058424
+          },
+          {
+            "target_id": "ref_whynotyetfixingatopkrankingthatisnotfairtoindividuals_2023",
+            "citation": "[58]",
+            "gpt_score": 0.006,
+            "model_score": 0.016039296,
+            "absolute_difference": 0.010039296000000001
+          },
+          {
+            "target_id": "ref_alinearapproximationmethodfortheshapleyvalue_2008",
+            "citation": "[14]",
+            "gpt_score": 0.013513513513513513,
+            "model_score": 0.004569956455089822,
+            "absolute_difference": 0.00894355705842369
+          },
+          {
+            "target_id": "ref_onansweringwhynotquestionsinreverseskylinequeries_2013",
+            "citation": "[59]",
+            "gpt_score": 0.003000000000000002,
+            "model_score": 0.007316190000000003,
+            "absolute_difference": 0.004316190000000001
+          },
+          {
+            "target_id": "ref_springerinternationalpublishingcham2016_2016",
+            "citation": "[2]",
+            "gpt_score": 0.008355557009848831,
+            "model_score": 0.004384804269685695,
+            "absolute_difference": 0.003970752740163137
+          },
+          {
+            "target_id": "ref_matchingsupplyanddemandatypologyofclimateservices_2020",
+            "citation": "[3]",
+            "gpt_score": 0.007498414152705974,
+            "model_score": 0.003656303170564723,
+            "absolute_difference": 0.003842110982141251
+          },
+          {
+            "target_id": "ref_whyshoulditrustyou_2016",
+            "citation": "[16]",
+            "gpt_score": 0.006756756756756755,
+            "model_score": 0.0034034759856287427,
+            "absolute_difference": 0.0033532807711280127
+          }
+        ]
+      },
+      {
+        "paper_id": "unf-prms",
+        "citation_components": 43,
+        "gpt_total_citation_mass": 0.2766330621194888,
+        "model_total_citation_mass": 0.24644157248956824,
+        "metrics": {
+          "kl_divergence": 0.348405205955542,
+          "jensen_shannon_divergence": 0.0749672056359924,
+          "spearman": 0.5543253762614145,
+          "kendall_tau_b": 0.42802255596688427
+        },
+        "top_k_overlap": {
+          "k": 4,
+          "overlap_count": 3,
+          "overlap_fraction": 0.75,
+          "gpt_top_k": [
+            {
+              "target_id": "ref_findingaverageregretratiominimizingsetindatabase_2019",
+              "citation": "[15]",
+              "score": 0.0433506089315033
+            },
+            {
+              "target_id": "ref_regretminimizingrepresentativedatabases_2010",
+              "citation": "[10]",
+              "score": 0.03540994016227315
+            },
+            {
+              "target_id": "ref_onthecomplexityofcomputingthevolumeofapolyhedron_1988",
+              "citation": "[18]",
+              "score": 0.018923636903877578
+            },
+            {
+              "target_id": "ref_montecarlomethods_2013",
+              "citation": "[24]",
+              "score": 0.014763779527559053
+            }
+          ],
+          "model_top_k": [
+            {
+              "target_id": "ref_onthecomplexityofcomputingthevolumeofapolyhedron_1988",
+              "citation": "[18]",
+              "score": 0.041310719999999995
+            },
+            {
+              "target_id": "ref_efficientalgorithmsforkregretminimizingsets_2017",
+              "citation": "[12]",
+              "score": 0.02560366714698763
+            },
+            {
+              "target_id": "ref_findingaverageregretratiominimizingsetindatabase_2019",
+              "citation": "[15]",
+              "score": 0.023761959192136885
+            },
+            {
+              "target_id": "ref_regretminimizingrepresentativedatabases_2010",
+              "citation": "[10]",
+              "score": 0.01997876453088094
+            }
+          ],
+          "overlapping_citations": [
+            {
+              "target_id": "ref_findingaverageregretratiominimizingsetindatabase_2019",
+              "gpt_citation": "[15]",
+              "model_citation": "[15]",
+              "gpt_score": 0.0433506089315033,
+              "model_score": 0.023761959192136885
+            },
+            {
+              "target_id": "ref_onthecomplexityofcomputingthevolumeofapolyhedron_1988",
+              "gpt_citation": "[18]",
+              "model_citation": "[18]",
+              "gpt_score": 0.018923636903877578,
+              "model_score": 0.041310719999999995
+            },
+            {
+              "target_id": "ref_regretminimizingrepresentativedatabases_2010",
+              "gpt_citation": "[10]",
+              "model_citation": "[10]",
+              "gpt_score": 0.03540994016227315,
+              "model_score": 0.01997876453088094
+            }
+          ]
+        },
+        "top_absolute_differences": [
+          {
+            "target_id": "ref_onthecomplexityofcomputingthevolumeofapolyhedron_1988",
+            "citation": "[18]",
+            "gpt_score": 0.018923636903877578,
+            "model_score": 0.041310719999999995,
+            "absolute_difference": 0.022387083096122418
+          },
+          {
+            "target_id": "ref_findingaverageregretratiominimizingsetindatabase_2019",
+            "citation": "[15]",
+            "gpt_score": 0.0433506089315033,
+            "model_score": 0.023761959192136885,
+            "absolute_difference": 0.01958864973936641
+          },
+          {
+            "target_id": "ref_regretminimizingrepresentativedatabases_2010",
+            "citation": "[10]",
+            "gpt_score": 0.03540994016227315,
+            "model_score": 0.01997876453088094,
+            "absolute_difference": 0.015431175631392208
+          },
+          {
+            "target_id": "ref_montecarlomethods_2013",
+            "citation": "[24]",
+            "gpt_score": 0.014763779527559053,
+            "model_score": 0.0017755885714285712,
+            "absolute_difference": 0.012988190956130482
+          },
+          {
+            "target_id": "ref_randomizedalgorithms_1995",
+            "citation": "[25]",
+            "gpt_score": 0.014763779527559053,
+            "model_score": 0.0017755885714285712,
+            "absolute_difference": 0.012988190956130482
+          },
+          {
+            "target_id": "ref_efficientalgorithmsforkregretminimizingsets_2017",
+            "citation": "[12]",
+            "gpt_score": 0.013532367799318771,
+            "model_score": 0.02560366714698763,
+            "absolute_difference": 0.01207129934766886
+          },
+          {
+            "target_id": "26",
+            "citation": "[26]",
+            "gpt_score": 0.0041338582677165345,
+            "model_score": 0.011053025125628137,
+            "absolute_difference": 0.006919166857911603
+          },
+          {
+            "target_id": "ref_convexoptimization_2004",
+            "citation": "[23]",
+            "gpt_score": 0.006630750103605471,
+            "model_score": 0.0005613753599999999,
+            "absolute_difference": 0.006069374743605471
+          },
+          {
+            "target_id": "reg-ratio",
+            "citation": "[11]",
+            "gpt_score": 0.012089974142585435,
+            "model_score": 0.0076422495595239335,
+            "absolute_difference": 0.004447724583061501
+          },
+          {
+            "target_id": "ref_adetailedintroductiontoknearestneighborknnalgorithm_2010",
+            "citation": "[21]",
+            "gpt_score": 0.006151574803149609,
+            "model_score": 0.0018678566399999998,
+            "absolute_difference": 0.004283718163149609
           }
         ]
       }

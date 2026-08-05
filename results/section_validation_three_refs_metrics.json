@@ -1,0 +1,911 @@
+{
+  "bootstrap_samples": 5000,
+  "bootstrap_seed": 7,
+  "references": {
+    "human": "human_expert_annotations.json",
+    "openai": "paper_results/*/*_openai_full_paper_section_scores.json",
+    "anthropic": "paper_results/*/*_anthropic_full_paper_section_scores.json"
+  },
+  "models": {
+    "Citation freq.": {
+      "model_tag": "citation_frequency",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.01313752054833521,
+            -0.10099247075950607,
+            0.1250289249341867
+          ],
+          "kendall": [
+            0.008358059360845256,
+            -0.09122176208481252,
+            0.1055657117625149
+          ],
+          "l1": [
+            0.687033145774297,
+            0.6345651818583962,
+            0.736625679254226
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            -0.08783420167418927,
+            -0.23197193308410125,
+            0.04955032023451049
+          ],
+          "kendall": [
+            -0.08164074557376344,
+            -0.21474150695517474,
+            0.05457614297997887
+          ],
+          "l1": [
+            0.5546989860951138,
+            0.45974379164635865,
+            0.6588652094921318
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            -0.037590226037967835,
+            -0.12403065778797585,
+            0.04920198749377875
+          ],
+          "kendall": [
+            -0.0336736157278636,
+            -0.11009506905617993,
+            0.04279634839926533
+          ],
+          "l1": [
+            0.599544363234728,
+            0.5473714242941642,
+            0.6502697580373263
+          ]
+        }
+      }
+    },
+    "Length-wtd. freq.": {
+      "model_tag": "length_weighted_frequency",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.6242477535494906,
+            0.5211385404733306,
+            0.7214061619144801
+          ],
+          "kendall": [
+            0.5281579451529014,
+            0.43451989519638584,
+            0.615945330035568
+          ],
+          "l1": [
+            0.5255486145968418,
+            0.4648517371694908,
+            0.5831281412505426
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.575993167430205,
+            0.4746270315880987,
+            0.6807574101054102
+          ],
+          "kendall": [
+            0.48361243539167154,
+            0.390209835244102,
+            0.5830808274173379
+          ],
+          "l1": [
+            0.5275520964686382,
+            0.43923164725140385,
+            0.6244364239804432
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.7440483065119772,
+            0.6845535632522134,
+            0.8037067454913532
+          ],
+          "kendall": [
+            0.6220245324704996,
+            0.5552608975505192,
+            0.6937073695079201
+          ],
+          "l1": [
+            0.3826692251384177,
+            0.3353100620319104,
+            0.4421667321401968
+          ]
+        }
+      }
+    },
+    "llama3.2:1b": {
+      "model_tag": "llama3_2_1b_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.14852468654901513,
+            0.04773737481957018,
+            0.25140199274845787
+          ],
+          "kendall": [
+            0.1246785184482799,
+            0.04549010445787393,
+            0.21289604995502126
+          ],
+          "l1": [
+            0.7164470619159696,
+            0.6541724892849808,
+            0.7774636519612238
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.2785373338146193,
+            0.12434062188096869,
+            0.4242715290565754
+          ],
+          "kendall": [
+            0.23084520052698096,
+            0.08918019306600321,
+            0.35723402754523986
+          ],
+          "l1": [
+            0.5731424234713806,
+            0.4904740672264,
+            0.6647349992886388
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.25137407716080423,
+            0.11710241790996348,
+            0.37591268085284524
+          ],
+          "kendall": [
+            0.18815574389656126,
+            0.06158891169940888,
+            0.28852559849224757
+          ],
+          "l1": [
+            0.6028476764303063,
+            0.5318419778632186,
+            0.6831231167114628
+          ]
+        }
+      }
+    },
+    "llama3.2:3b": {
+      "model_tag": "llama3_2_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.5646972455077739,
+            0.44750926341303693,
+            0.6714268966784094
+          ],
+          "kendall": [
+            0.469080699379222,
+            0.3662908123472824,
+            0.5686710063162598
+          ],
+          "l1": [
+            0.6909643030237526,
+            0.5679054525931975,
+            0.8268432578322986
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.4589629561572704,
+            0.34203149487548906,
+            0.5708149004700497
+          ],
+          "kendall": [
+            0.36997686755540127,
+            0.2709785341861212,
+            0.46688168289908644
+          ],
+          "l1": [
+            0.6281941899692383,
+            0.4826799670134326,
+            0.7890414495276569
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.4861866785444164,
+            0.35656830770886044,
+            0.6082275155571255
+          ],
+          "kendall": [
+            0.40321314214855997,
+            0.294334278912792,
+            0.5081026568208311
+          ],
+          "l1": [
+            0.6384872675301575,
+            0.513927401521808,
+            0.7751426374532077
+          ]
+        }
+      }
+    },
+    "gemma2:2b": {
+      "model_tag": "gemma2_2b_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.5488273690746158,
+            0.4454074750829075,
+            0.6474475667887102
+          ],
+          "kendall": [
+            0.46310823325156086,
+            0.3783008455037402,
+            0.5471856416959661
+          ],
+          "l1": [
+            0.591480225608157,
+            0.5308497404772387,
+            0.6486673253781767
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.3874209235763905,
+            0.2729174879060066,
+            0.495422567387707
+          ],
+          "kendall": [
+            0.3106533691019699,
+            0.2129452848315438,
+            0.399158897772062
+          ],
+          "l1": [
+            0.5058842397778481,
+            0.4102146522196257,
+            0.6106188956264046
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.4639244158741157,
+            0.3361404420149114,
+            0.5855977578278367
+          ],
+          "kendall": [
+            0.3894767004159947,
+            0.28685803389115516,
+            0.4938728097202083
+          ],
+          "l1": [
+            0.5024250289879403,
+            0.45740186647436515,
+            0.5457060350085513
+          ]
+        }
+      }
+    },
+    "gemma3:4b": {
+      "model_tag": "gemma3_4b_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.3243994168891043,
+            0.17404759981159643,
+            0.47163044983800867
+          ],
+          "kendall": [
+            0.2615829324281653,
+            0.14093477980378594,
+            0.3829024927383601
+          ],
+          "l1": [
+            0.6404951042624372,
+            0.5639449386457404,
+            0.7180518732704068
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.27820546584088385,
+            0.14051260312724784,
+            0.41606038745225776
+          ],
+          "kendall": [
+            0.23942038120643186,
+            0.12262739708745525,
+            0.35543378615574855
+          ],
+          "l1": [
+            0.5483081516216285,
+            0.4365228034443504,
+            0.6686011355643491
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.2758812726732855,
+            0.10545915434874512,
+            0.438815481185335
+          ],
+          "kendall": [
+            0.24365875970592019,
+            0.10248688993870195,
+            0.3759558632911972
+          ],
+          "l1": [
+            0.5622811719102225,
+            0.4874613135698556,
+            0.6412107563703445
+          ]
+        }
+      }
+    },
+    "qwen3:1.7b": {
+      "model_tag": "qwen3_1_7_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.6363443477229539,
+            0.5340427574168658,
+            0.7302277213558802
+          ],
+          "kendall": [
+            0.5114466099651821,
+            0.4239699810084974,
+            0.5954026679742089
+          ],
+          "l1": [
+            0.5480345758767287,
+            0.48961773768175093,
+            0.6081383968113043
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.45593810545707303,
+            0.3327320138750477,
+            0.5723902593032025
+          ],
+          "kendall": [
+            0.3701195297160152,
+            0.2634012877176976,
+            0.47826808074123855
+          ],
+          "l1": [
+            0.4768617949053603,
+            0.375112041910223,
+            0.5918674566004627
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.5799379558575826,
+            0.4463506179466737,
+            0.697803912320537
+          ],
+          "kendall": [
+            0.4884208530684853,
+            0.3805851111358913,
+            0.5936763028922553
+          ],
+          "l1": [
+            0.4635976821841178,
+            0.42612843914778187,
+            0.5034208976999331
+          ]
+        }
+      }
+    },
+    "qwen3:4b": {
+      "model_tag": "qwen3_4b_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.4357373929689566,
+            0.25938507694414736,
+            0.5946118399173913
+          ],
+          "kendall": [
+            0.35413921794944697,
+            0.2045920940589511,
+            0.4925668391007835
+          ],
+          "l1": [
+            0.6083666427539139,
+            0.5409118770388737,
+            0.6753654977142837
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.3591754697552461,
+            0.2189355887496485,
+            0.5000881993836683
+          ],
+          "kendall": [
+            0.29997593327330646,
+            0.17347205191225984,
+            0.4292276178231662
+          ],
+          "l1": [
+            0.5350495107103986,
+            0.43291394113941617,
+            0.6559223093883332
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.35913681071996106,
+            0.18266115806329442,
+            0.5145765865127138
+          ],
+          "kendall": [
+            0.2930686428045278,
+            0.14968309253411077,
+            0.42487060637570834
+          ],
+          "l1": [
+            0.5602597587731594,
+            0.5028705588074975,
+            0.6154546090316277
+          ]
+        }
+      }
+    },
+    "phi3:medium": {
+      "model_tag": "phi3_medium_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.448423363851269,
+            0.2781776896000676,
+            0.6063990326116381
+          ],
+          "kendall": [
+            0.36188084551093924,
+            0.21558371625926714,
+            0.4983708112950326
+          ],
+          "l1": [
+            0.5956512480232906,
+            0.5201758712597514,
+            0.6786860666498198
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.3101595275327072,
+            0.14962694929411174,
+            0.45939096156883913
+          ],
+          "kendall": [
+            0.2519608773217733,
+            0.11753992693125319,
+            0.38234569230074616
+          ],
+          "l1": [
+            0.5466746233495962,
+            0.4517728227559493,
+            0.6477855889335838
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.4075414360053829,
+            0.23066534505618377,
+            0.5740348652784437
+          ],
+          "kendall": [
+            0.34607980935226185,
+            0.19692657871808492,
+            0.4880360160688802
+          ],
+          "l1": [
+            0.5385123587729606,
+            0.47296524297898557,
+            0.6037758418319888
+          ]
+        }
+      }
+    },
+    "qwen2.5:3b": {
+      "model_tag": "qwen2_5_3b_promptv2",
+      "common_papers": [
+        "AFD",
+        "AlgorithmicCollectiveAction",
+        "Dynamic_Necklace_Splitting",
+        "Efficient-MM-Algo",
+        "FCM_SIGMOD_CRV",
+        "FairSetCover",
+        "Fair_Epsilon_Net",
+        "Fairness-Expo-Rankings",
+        "Fast-Monte-Carlo",
+        "HENN_ICLR_26-1",
+        "INFINI-GRAM-MINI",
+        "LSH-Curves",
+        "Minoria",
+        "Native-Sparse-Attention",
+        "QR",
+        "RRR",
+        "RSR-Core",
+        "Random_access_Retrieval-5",
+        "Rankit-Askit",
+        "adv_res_paper",
+        "axolotl",
+        "fairRQ",
+        "mm-mlp",
+        "ranked-ret",
+        "reg-ratio",
+        "requal",
+        "shapley",
+        "unf-prms"
+      ],
+      "paper_count": 28,
+      "references": {
+        "human": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.5483738051220665,
+            0.418245111872909,
+            0.6706332968761457
+          ],
+          "kendall": [
+            0.4525297105336561,
+            0.3459201691260649,
+            0.5602263971971341
+          ],
+          "l1": [
+            0.6097355859920822,
+            0.5362800768428528,
+            0.6846927698030598
+          ]
+        },
+        "openai": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.3559964926519718,
+            0.22281175278270166,
+            0.480499345918056
+          ],
+          "kendall": [
+            0.2834714239918351,
+            0.18170950818935203,
+            0.38484063798250506
+          ],
+          "l1": [
+            0.5316224094876821,
+            0.4227909788028033,
+            0.6445583005561385
+          ]
+        },
+        "anthropic": {
+          "papers_evaluated": 28,
+          "spearman": [
+            0.4651789099040406,
+            0.3218734693678483,
+            0.5896361533430668
+          ],
+          "kendall": [
+            0.3850818842534874,
+            0.28148537164296106,
+            0.4830191976928044
+          ],
+          "l1": [
+            0.5296809871130063,
+            0.4717541542495902,
+            0.5884029840179397
+          ]
+        }
+      }
+    }
+  }
+}

@@ -22,6 +22,7 @@ def main() -> None:
             "technical_section_prior",
             "openai_full_paper",
             "anthropic_full_paper",
+            "single_shot_citation_api",
         ],
         help="Baseline model to run.",
     )
@@ -43,8 +44,14 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default="llama3.2",
-        help="Ollama model name used by the single_pass_llm baseline.",
+        default="",
+        help="Explicit model name used by the selected baseline. Required for single_pass_llm, openai_full_paper, anthropic_full_paper, and single_shot_citation_api.",
+    )
+    parser.add_argument(
+        "--api-provider",
+        choices=["openai", "anthropic"],
+        default="",
+        help="API provider used by single_shot_citation_api. Required for that baseline.",
     )
     parser.add_argument(
         "--host",
@@ -105,10 +112,9 @@ def main() -> None:
 
     citation_path, section_path, paragraph_path, paragraph_citation_path = run_baseline_from_args(args)
     print("Saved baseline outputs:")
-    print(citation_path)
-    print(section_path)
-    print(paragraph_path)
-    print(paragraph_citation_path)
+    for path in (citation_path, section_path, paragraph_path, paragraph_citation_path):
+        if path:
+            print(path)
 
 
 if __name__ == "__main__":

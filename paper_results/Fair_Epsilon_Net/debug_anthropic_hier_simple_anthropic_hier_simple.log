@@ -1,0 +1,2477 @@
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+Use the provided hierarchy exactly as given.
+Do not add, remove, rename, merge, split, reorder, or invent nodes.
+Output every node exactly once, including nodes with score 0.
+Output nodes in the exact order they appear in the hierarchy.
+
+Scoring rules
+
+* The root paper node has total score 1.0.
+* For each parent node, distribute its score only among its immediate children.
+* Do not skip hierarchy levels or assign a parent's score directly to deeper descendants.
+* Child scores should approximately sum to the parent score. Exact normalization is handled after output.
+* Scores should be global scores relative to the entire paper, not local percentages.
+* Score scientific contribution, not length.
+* Assign higher scores to content central to the paper's technical contribution.
+* Assign lower scores to background, motivation, related work, summaries, and organizational text.
+
+Citation attribution
+
+* For a paragraph without citations, Citation Score = 0.
+* For a paragraph with citations, estimate what fraction of the paragraph's contribution depends on prior work. This is the paragraph Citation Score.
+* Allocate that citation-derived contribution across the cited references according to their importance in that paragraph.
+* If multiple citations play the same role, split them evenly.
+* Aggregate repeated appearances of the same citation into one final citation score.
+* Use citation identifiers exactly as they appear in the paper.
+
+Output Format
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+On Fair Epsilon Net and Geometric Hitting Set
+Mohsen Dehghankar
+University of Illinois Chicago
+Chicago, IL, USA
+mdehgh2@uic.eduStavros Sintos
+University of Illinois Chicago
+Chicago, IL, USA
+stavros@uic.eduAbolfazl Asudeh
+University of Illinois Chicago
+Chicago, IL, USA
+asudeh@uic.edu
+ABSTRACT
+Fairness has emerged as a formidable challenge in data-driven
+decisions. Many of the data problems, such as creating compact data
+summaries for approximate query processing, can be effectively
+tackled using concepts from computational geometry, such as 𝜀-
+nets. However, these powerful tools have yet to be examined from
+the perspective of fairness.
+To fill this research gap, we add fairness to classical geometric
+approximation problems of 𝜀-net,𝜀-sample, and geometric hitting
+set. We introduce and address two notions of group fairness: demo-
+graphic parity, which requires preserving group proportions from
+the input distribution, and custom-ratios fairness, which demands
+satisfying arbitrary target ratios.
+We develop two algorithms to enforce fairness—one based on
+sampling and another on discrepancy theory. The sampling-based
+algorithm is faster and computes a fair 𝜀-net of size which is only
+larger by a log(𝑘)factor compared to the standard (unfair) 𝜀-net,
+where𝑘is the number of demographic groups. The discrepancy-
+based algorithm is slightly slower (for bounded VC dimension),
+but it computes a smaller fair 𝜀-net. Notably, we reduce the fair
+geometric hitting set problem to finding fair 𝜀-nets. This results in
+a𝑂(logOPT×log𝑘)approximation of a fair geometric hitting set.
+Additionally, we show that under certain input distributions, con-
+structing fair 𝜀-samples can be infeasible, highlighting limitations
+in fair sampling. Beyond the theoretical guarantees, our experi-
+mental results validate the practical effectiveness of the proposed
+algorithms. In particular, we achieve zero unfairness with only a
+modest increase in output size compared to the unfair setting.
+PVLDB Reference Format:
+Mohsen Dehghankar, Stavros Sintos, and Abolfazl Asudeh. On Fair Epsilon
+Net and Geometric Hitting Set. PVLDB, 19(5): 1032 - 1045, 2026.
+doi:10.14778/3796195.3796213
+PVLDB Artifact Availability:
+The source code, data, and/or other artifacts have been made available at
+https://github.com/UIC-InDeXLab/FairNet.
+This work is licensed under the Creative Commons BY-NC-ND 4.0 International
+License. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to view a copy of
+this license. For any use beyond those covered by this license, obtain permission by
+emailing info@vldb.org. Copyright is held by the owner/author(s). Publication rights
+licensed to the VLDB Endowment.
+Proceedings of the VLDB Endowment, Vol. 19, No. 5 ISSN 2150-8097.
+doi:10.14778/3796195.3796213
+This material is based upon work supported in part by the National Science Foundation
+under Award No. 2348919.1 INTRODUCTION
+1.1 Motivation
+As algorithmic decisions continue to influence critical aspects of
+modern human life, from resource allocation and recommendation
+to hiring and even predictive policing, the need to ensure fairness
+in data-driven systems has become increasingly urgent.
+Geometric approximation algorithms and notions such as 𝜀-nets
+facilitate Approximate Query Processing (AQP ) by providing compact
+data summaries, aka data representations, that preserve key proper-
+ties of large datasets [ 47,65]. These geometric tools are especially
+valuable due to their provable guarantees of approximation quality
+and computational efficiency. 𝜀-nets, for example, are well-known
+as small subsets of data that guarantee to contain at least one sample
+from each range larger than 𝜀, and hence can be used for fast query
+answering. To further clarify this, let us consider the following
+example for approximate database range-query processing.
+Example 1. (Part 1) Consider a map dataset 𝑇with two filtering attributes
+𝑥:long and𝑦:lat, and𝑛=18tuples shown as points in Figure 1. The range
+predicates in this relation are in the form of axis-parallel rectangles. For
+example,𝑟1in Figure 1 corresponds with the following SQL query:
+SELECT * FROM T
+WHERE -87.73<=long<=-85.5 AND 41.86<=lat<=41.94
+In a very large setting, where the goal is to quickly identify a tuple matching
+the query, one can model the problem as a range space (𝑋,R)where𝑋is the
+set of points in 𝑇andRis the universe of all axis-parallel rectangles.
+Let𝜀=5
+18. An𝜀-net on(𝑋,R)is a subset of 𝑇that guarantees to contain at
+least one point from any possible range with cardinality at least 5. The points
+highlighted in green form such an 𝜀-net. For example, the rectangle 𝑟1, which
+encompasses five points, has one point from the 𝜀-net. Using only the set of
+points in the 𝜀-net, one can quickly find a point satisfying any (sufficiently
+large) range query. For example, the highlighted point in the bottom-right of
+𝑟1is the point in the 𝜀-net satisfying the above SQL query. □
+In § 7, we will illustrate some of the other applications of 𝜀-nets,
+including k-Nearest Neighbors and top- 𝑘queries.
+The traditional formulations of these problems, however, oper-
+ate under the assumption of homogeneity in the data, neglecting
+the underlying (demographic) group structure that may be critical
+in fairness-sensitive applications. To better motivate this, let us
+consider Example 1 once more:
+Example 1. (Part 2) Suppose the tuples in Figure 1 belong to two demo-
+graphic groups specified by the color of the points (i.e., {blue,red} ). One
+can notice the selected points for 𝜀-net mainly belong to the redgroup. As
+a result, answer ingrange queries usingthissetwillfavortheredgroup by
+mostly returning a tuple from this group. □
+Example 1 highlights a concrete use case of query answering on
+map data for finding points of interest [ 2,68,92], where businesses
+such as restaurants are the tuples on the map. In particular, consider
+an interactive application, such as Yelp or Google Maps, where users
+
+𝑟1
+𝑟2
+Longitude
+-87.8 -87.7 -87.6 -87.5 -87.4Latitude
+41.741.841.942.0
+Figure 1: Illustration of a toy example on a Chicago map with an
+unfair𝜀-net, highlighted with green circles.
+explore the map by panning and zooming to certain (rectangular)
+regions on their screen. Biases in the outputs of these applications
+against (businesses owned by) certain demographic groups is a
+well-known concern [86].
+In order to make the UI interactive, such an application needs
+to quickly find some points that match the specified region [ 2,28].
+Using an𝜀-net as the dataset representative, the system can quickly
+find and display some points that match the query, without scanning
+the entire dataset. Now, if some groups are underrepresented in
+the𝜀-net (e.g., only a few black-owned restaurants are selected),
+those groups will have a lower exposure (e.g., the black-owned
+restaurants are highlighted disproportionately less on the maps),
+causing potentially less income for those groups.
+Afair𝜀-net ensures that the selected points are representative
+of all groups, and using it for approximate query answering is not
+discriminatory against some groups.
+Using standard geometric sampling in this example can introduce
+bias. As shown in Figure 1, the standard 𝜖-net result (green anno-
+tated points) may capture mostly restaurants from the red group,
+particularly when that group is the majority of the dataset. This
+imbalance skews the recommendations toward the majority group,
+violating fairness principles in recommender systems [ 94]. Our
+fairness-aware algorithms address this issue by ensuring balanced
+group representation with minimal overhead . The randomized
+variant guarantees fairness with only an 𝑂(log𝑘)increase in the
+sample size, where 𝑘is the number of groups, while the determin-
+istic variant achieves the same goal with merely a constant-size
+increase. These results highlight an effective trade-off between fair-
+ness and efficiency; our approach forces equitable recommendations
+and full neighborhood coverage without significantly increasing
+the overall sample size.
+1.2 Technical Contributions
+In this paper, we introduce fairness on three foundational geometric
+approximation problems: the construction of 𝜀-nets,𝜀-samples, and
+the geometric hitting set problem. Our goal is to enforce fairness
+constraints while preserving strong approximation guarantees.
+We formalize our problems based on two group-fairness notions:
+(a) demographic parity (DP), which requires preserving the group
+ratios from the input data distribution, and (b) custom-ratios fair-
+ness (CR), which generalizes DP by allowing arbitrary target ratios
+for different groups.Problem Fairness Notion Proposed Algorithms
+Fair 𝜺-netDemographic ParityFair Monte-Carlo (§ 4.1)
+Fair Discrepancy-based (§ 4.2)
+Fair Sketch-and-merge (§ 4.2.2)
+Custom-ratios Reduction to FGHS (§ 4.3)
+Fair 𝜺-sampleDemographic ParityFair Monte-Carlo (§ 4.4)
+Fair Sketch-and-merge (§ 4.4)
+Custom-ratios Infeasible (§ 4.4)
+Fair Geometric Custom-ratios Reduction to DP Fair 𝜀-net
+Hitting Set (FGHS) (§ 5)
+Table 1: Summary of the proposed fairness-aware algorithms under
+different fairness measures.
+To address demographic parity in the construction of 𝜀-nets,
+we propose two algorithms: a Monte Carlo Randomized algorithm
+based on sampling and a deterministic discrepancy-based algorithm.
+We further generalize both approaches to the weighted setting,
+where each point carries a weight and fairness is measured based
+on the total weight of each color group.
+To address the custom-ratio fairness,1we reduce the fair 𝜀-net
+problem to the Fair Geometric Hitting Set problem. To solve this,
+we develop a fair LP-based algorithm that constructs geometric
+hitting sets (equivalently, geometric set covers), satisfying both
+demographic parity and custom-ratio constraints. A summary of
+the proposed algorithms is provided in Table 1.
+In addition to the theoretical analysis, we conduct comprehen-
+sive experimental evaluations on real-world and synthetic datasets
+on several applications of 𝜀-nets and hitting sets. Our experiments
+verified our theoretical findings since our algorithms’ outputs sat-
+isfied the fairness requirements while minimally increasing the
+output size compared to the regular (unfair) outputs. Our experi-
+ments further demonstrate the efficiency of our algorithms across
+diverse settings, including different dataset sizes, dimensionalities,
+numbers of demographic groups, and their distribution patterns.
+Paper Organization. The remainder of the paper is structured
+as follows. § 7 discusses the applications of geometric sampling in
+database systems.§ 2 introduces the necessary preliminaries and
+formal definitions. § 3 provides an overview of classical results on
+𝜀-nets,𝜀-samples, and the Geometric Hitting Set problem. In § 4, we
+present our algorithms for constructing fair 𝜀-nets, followed by a
+discussion on fair 𝜀-samples in Sub§ 4.4. § 5 details our approach to
+the Fair Geometric Hitting Set problem. Related work is discussed in
+§ 6. Finally, § 8 presents the experimental results of the algorithms.
+2 PRELIMINARIES
+In this section, we begin by introducing the necessary notation,
+followed by formal definitions of the preliminary concepts. We then
+provide a formulation of the problem studied in this paper.
+2.1 Notations
+Range spaces: A range space(𝑋,R)consists of a finite set of
+points𝑋, where|𝑋|=𝑛, and each point 𝑝𝑖(1≤𝑖≤𝑛) lies in a
+𝑑-dimensional space R𝑑. Associated with 𝑋is a family of subsets R,
+referred to as ranges, where each 𝑅𝑗∈Ris a subset of 𝑋. While the
+1It is important to note that any algorithm satisfying the more general custom-
+ratio (CR) fairness also satisfies demographic parity (DP); however, it may not do
+so efficiently.
+
+set of rangesRmay be infinite in general, we denote by 𝑚=|R|
+the number of ranges when Ris finite.
+Thedual of a range space(𝑋,R)is another range space, denoted
+by(R,X), in which each range in Ris treated as a point, and the
+new family of ranges Xis defined as below:
+X={R(𝑝)|𝑝∈𝑋},
+whereR(𝑝)={𝑅∈R|𝑝∈𝑅}. That is, each point 𝑝in the original
+space defines a range in the dual space, consisting of all ranges in
+Rthat contain 𝑝.
+Demographic groups: We assume a fixed set of demographic
+groups, represented as a finite set of colors 𝐶={𝑐1,𝑐2,...,𝑐𝑘}. Each
+point𝑝𝑖∈𝑋is associated with a color 𝑐(𝑝𝑖)∈𝐶. This induces a
+partition of the point set 𝑋into demographic groups: for each 𝑐∈𝐶,
+let𝑋𝑐={𝑝∈𝑋|𝑐(𝑝)=𝑐}denote the subset of points of color 𝑐.
+Generally, for every subset 𝑌⊆𝑋, we set𝑌𝑐={𝑝∈𝑌|𝑐(𝑝)=𝑐}
+for each𝑐∈𝐶. We use the terms ‘demographic group’ and ‘color’
+interchangeably.
+Weights: In the weighted setting, each point 𝑝𝑖∈𝑋is associated
+with a weight denoted by 𝑤𝑖. For any subset 𝑆⊆𝑋, the total weight
+of the points in 𝑆is given by𝑤(𝑆)=∑︁
+𝑝𝑖∈𝑆𝑤𝑖.
+2.2 Definitions
+For the range space (𝑋,R), a subset𝑆⊆𝑋is said to be shattered by
+Rif, for every subset 𝑇⊆𝑆, there exists a range 𝑅∈Rsuch that
+𝑅∩𝑆=𝑇. DefineR|𝑇as the set of ranges induced on 𝑇, in other
+words,R|𝑇={𝑅∩𝑇|𝑅∈R} .
+TheVC dimension of the range space(𝑋,R), denoted by VC(𝑋,R),
+is the maximum size of a subset 𝑆⊆𝑋that can be shattered by R.
+If arbitrarily large shattered subsets exist, the VC dimension is said
+to be infinite. We will use 𝑑as the VC dimension where the range
+space is clear from the context.
+In the following, we formally define 𝜀-net,𝜀-sample, and the
+Geometric Hitting Set problem [20, 47].
+Definition 1 ( 𝜀-net). Fix a value 𝜀≤1. A subsetN ⊆𝑋is
+called an𝜀-net of(𝑋,R), if for any range 𝑅∈R we have:
+|𝑅|
+|𝑋|≥𝜀=⇒|N∩𝑅|≥0
+Definition 2 ( 𝜀-sample). Fix a value𝜀≤1. A subsetA⊆𝑋is
+called an𝜀-sample of(𝑋,R), if for any range 𝑅∈R we have:
+|︁|︁|︁|︁|A∩𝑅|
+|A|−|𝑋∩𝑅|
+|𝑋||︁|︁|︁|︁≤𝜀
+Definition 3 (Geometric Hitting Set). Given a range space
+(𝑋,R)with a bounded 𝑉𝐶-dimension. The Geometric Hitting Set
+problem asks to find the smallest subset of points 𝑋∗⊆𝑋to hit all
+the ranges inR, i.e.:∀𝑅∈R,∃𝑝∈𝑋∗such that𝑝∈𝑅
+𝑋∗is called the smallest hitting set of (𝑋,R).
+The dual of this problem, formulated over the dual range space,
+is referred to as the Geometric Set Cover problem (where the
+dual VC-dimension is bounded). Consequently, most of the results
+presented in this paper for Geometric Hitting Set also extend to the
+Set Covering setting.2.3 Problems
+We now introduce fair variants of the problems by incorporating
+fairness constraints into their definitions.
+Definition 4 (Fair 𝜀-net). Given a range space (𝑋,R), a finite
+set of colors 𝐶={𝑐1,...,𝑐𝑘}representing 𝑘groups, a parameter
+𝜀∈(0,1), and a vectorT=(𝜏1,𝜏2,···,𝜏𝑘)of𝑘ratios for the groups,
+such that for every 𝑙∈[𝑘],𝜏𝑙≤1and∑︁
+𝑙∈[𝑘]𝜏𝑙=1, the goal is to
+compute a setN⊆𝑋of minimum size such that Nis an𝜀-net of
+(𝑋,R)and for every 𝑙∈[𝑘],|N∩𝑋𝑐𝑙|
+|N|=𝜏𝑙.
+The Fair𝜀-sample problem can be defined similarly.
+Definition 5 (Fair 𝜀-sample). Given the same input as in the
+Fair𝜀-net problem, the goal is to compute a set A⊆𝑋of minimum
+size such thatAis an𝜀-sample of(𝑋,R)and for every 𝑙∈[𝑘],
+|A∩𝑋𝑐𝑙|
+|A|=𝜏𝑙.
+Definition 6 (Fair Geometric Hitting Set, FGHS). Given a
+range space(𝑋,R)with a bounded 𝑉𝐶-dimension and the color ratios
+T=(𝜏1,𝜏2,···,𝜏𝑘)defined similarly to the Fair 𝜀-net problem. The
+Fair Geometric Hitting Set (FGHS) problem2asks for the smallest
+subset𝑋∗⊆𝑋satisfying the following conditions:
+(1)𝑋∗isfair with respect toT, i.e.,|𝑋∗∩𝑋𝑐𝑙|
+|𝑋∗|=𝜏𝑙,∀𝑙∈[𝑘].
+(2)𝑋∗hits all the ranges in R.
+2.4 Fairness
+In all the above problems, we may either address the demographic
+parity orcustom-ratio fairness constraints defined as below.
+We say that a subset of points 𝑆⊆𝑋satisfies demographic
+parity (DP) if, for each color, it maintains the same ratio as the
+ground set𝑋. In other words, the ratios Tare defined as
+𝜏𝑙=|𝑋𝑐𝑙|
+|𝑋|,∀𝑙∈[𝑘].
+The same definition is valid for a subset of ranges (instead of
+points) if the demographic groups are defined on ranges.
+In a more general setting, we consider any arbitrary ratios T
+and try to satisfy the fairness accordingly; we call it custom-ratio
+(CR) constraint. However, it is sometimes impossible to satisfy any
+ratio in some cases.
+Example 2. Consider a range space consisting of 10 points, where
+9 are blue and only 1 is red. Suppose that any valid hitting set must
+contain more than two points. In this case, it is impossible to satisfy
+a 50%-50% color ratio in any hitting set, as there are insufficient red
+points to meet the fairness constraint.
+Demographic parity, also known as statistical parity, is a natural
+and widely adopted notion of fairness in data management and
+machine learning literature [ 15,21,35,84,85,104]. It ensures to
+maintain the same group proportions as in the original dataset.
+Custom-ratio fairness generalizes the fairness constraints be-
+yond maintaining the dataset ratios. This enables the enforcement
+2Note that the Geometric Set Cover and Geometric Hitting Set problems are equivalent
+by duality. The solutions we propose for Fair Hitting Set naturally extend to Fair
+Geometric Set Cover (FGSC) , where the groups are defined over the sets.
+
+of fairness based on social norms, to, for example, reverse histor-
+ical discriminations reflected in data [ 39]. For instance, consider
+the businesses such as restaurants as the data points in Example 1.
+Suppose that due to various biases, group distributions among
+the business owners is different from their underlying distribu-
+tion in the society. This is a well-known issue for black-owned
+businesses in the US [ 17]. In such cases, the custom-ratio fairness
+allows to move the group distributions closer to the ones in the
+society. Overall, custom-ratio fairness offers greater flexibility in
+defining fairness. This broader formulation has also been explored
+as a general fairness framework in recent works [31, 42, 43].
+3 BACKGROUND
+In this section, we briefly review classical results related to the
+problems defined in Section 2.2. References to this background will
+be made in subsequent sections as needed.
+𝜀-nets and𝜀-samples: A classical approach to constructing 𝜀-nets
+is based on random sampling:
+Theorem 1 ( 𝜀-net [ 47]).Given a range space (𝑋,R)with bounded
+VC dimension 𝑑. A random sample (with replacement) of size 𝜆≥
+max(︂
+4
+𝜀log4
+𝜑,8𝑑
+𝜀log16
+𝜀)︂
+is an𝜀-net with probability at least 1−𝜑.
+A similar result characterizes the number of random samples
+required to construct an 𝜀-sample:
+Theorem 2 ( 𝜀-sample [ 91]).Given a range space (𝑋,R)with
+bounded VC-dim 𝑑. A random sample (with replacement) of size
+𝛾≥𝑐0
+𝜀2(︂
+𝑑log𝑑
+𝜀+log1
+𝜑)︂
+is an𝜀-sample with probability at least
+1−𝜑, for a large enough constant 𝑐0.
+Deterministic constructions of 𝜀-nets and𝜀-samples can also be
+achieved via discrepancy methods [ 25,26], which we discuss in the
+relevant section, in the context of building deterministic fair 𝜀-nets.
+Geometric Hitting Set: The Hitting Set and Set Cover problems
+are dual and algorithmically equivalent, which is known to be NP-
+hard. In the general (non-geometric) setting, a standard greedy
+algorithm—which iteratively selects the point that hits the most
+(remaining) ranges—yields a log𝑛approximation. However, in geo-
+metric settings with bounded VC dimension 𝑑, improved algorithms
+achieve a log𝑑approximation factor.
+To achieve this improvement, one approach uses the multiplica-
+tive weight update method [ 5,44], while another uses LP relaxation,
+reducing the Hitting Set problem to an instance of the weighted
+𝜀-net problem [22, 58].
+Assumptions .Similarly to [ 25], we assume that 𝑛=|𝑋|=2𝜉
+for a positive integer 𝜉, i.e., the number of points in 𝑋is a power of
+2. Furthermore, we make the mild assumption that for every 𝑐∈𝐶,
+|𝑋𝑐|=2𝜉𝑐, where𝜉𝑐is a positive integer. Our goal in all cases is to
+construct fair 𝜀-nets of small size – ideally comparable to the size of
+unfair𝜀-nets. In order to achieve this goal, we assume that 𝜏ℓ·𝜆≥1,
+for everyℓ∈[𝑘]. If these inequalities do not hold, then the size of
+a fair𝜀-net might be much larger (even 𝑘times larger) than the size
+of the (unfair) 𝜀-net. Even if this assumption does not hold, then
+all our algorithms are correct, however the approximation factor
+and the running time of some of our algorithms might increase by
+a factor1
+𝜆·minℓ∈[𝑘]𝜏ℓ.Aspect Fair Monte-Carlo Fair Discrepancy-based
+Size Increase Factor 𝑂(log𝑘) Constant𝑂(1)
+Running time 𝑂(𝑛)𝑂(𝑚·𝑛log𝑛)
+for simple discrepancy
+𝑂(︂
+𝑛·𝑑3𝑑
+𝜀2𝑑log𝑑(︂
+𝑑
+𝜀)︂)︂
+for Sketch-and-Merge
+Weighted Case Similar guarantees Very slow
+to unweighted (depends on∑︁
+𝑖𝑤𝑖)
+Determinism Monte Carlo Randomized Deterministic ifR
+(always fair if successful) is materialized (always fair)
+Implementation Easier to implement More complex
+Table 2: High-level comparison of fair Monte-Carlo sampling-based
+and fair discrepancy-based algorithms for addressing DP in 𝜀-nets.
+4 FAIR𝜀-NETS
+In this section, we discuss our algorithms for the Fair 𝜀-net and
+𝜀-sample problems. First, in Sections 4.1 and 4.2, we address fair
+𝜀-net under the demographic parity, followed by the custom-ratios
+fairness in § 4.3. We will then study fair 𝜀-sample in § 4.4.
+We propose two categories of algorithms for constructing fair 𝜀-
+nets that satisfy demographic parity: a Monte-Carlo sampling-based
+and a discrepancy-based algorithm. The sampling-based approach
+returns a larger fair 𝜀-net efficiently, while the discrepancy-based
+method algorithms return a smaller fair 𝜀-net at the expense of
+increased runtime. We design two discrepancy-based algorithms.
+While they both return a fair 𝜀-net of (asymptotically) the same size,
+the second one is more efficient when 𝑑is small and 𝑚is large. A
+comparative summary of all our algorithms is presented in Table 2.
+4.1 A Monte-Carlo Randomized Algorithm for
+Satisfying Demographic Parity
+Our first algorithm is a sampling-based Monte Carlo randomized
+algorithm that finds a fair 𝜀-net satisfying demographic parity with
+a high probability. At a high level, the algorithm is developed based
+on the observation that a random sample from 𝑋should be “near-
+fair” for each color 𝑐𝑖, in the sense that the ratio of samples from
+𝑐𝑖in the sample set should be close to the required ratio 𝜏𝑖. Hence,
+with a high probability, an 𝑂(log𝑘)-factor increase in the size of
+the set is enough to satisfy the demographic parity ratios.
+Algorithm. Draw a setNof𝜆≥max{4
+𝜀log4
+𝜑/2,8𝑑
+𝜀log16
+𝜀}uni-
+form random samples (with replacement) from 𝑋. Let𝑣=2ln(𝑘·
+1
+𝜑/2). For every color 𝑐∈𝐶addmax{(1+𝑣)·|𝑋𝑐|
+|𝑋|·𝜆−|N𝑐|,0}
+arbitrary points of color 𝑐toN. LetSbe the new set after we tra-
+versed all colors 𝑐∈𝐶. ReturnS. A pseudo-code of this algorithm
+is presented in Algorithm 1.
+Correctness and runtime analysis.
+Lemma 3. For every color 𝑐∈𝐶,|N𝑐|≤( 1+𝑣)·|𝑋𝑐|
+|𝑋|·𝜆, with
+probability at least 1−𝜑/2.
+Proof. This is a result of applying Chernoff’s inequality on
+the number of points sampled from each color. See Technical Re-
+port [32] for complete proof. □
+Lemma 4. The setSis a fair𝜀-net of(𝑋,R)and|S|=𝑂((1+𝑣)𝜆),
+with probability at least 1−𝜑.
+Proof. This is a result of applying the well known Theorem 1
+and Lemma 3. See Technical Report [32] for detailed proof. □
+Lemma 5. The algorithm’s time complexity is 𝑂(|𝑋|).
+
+Algorithm 1 Fair Monte-Carlo (FMC) algorithm for building an
+𝜀-net satisfying DP fairness.
+Require: Range space(𝑋,R), Epsilon𝜀.
+Ensure: The DP fair𝜀-netS, found by sampling .
+1:function FMC (𝑋,R,𝜀)
+2:𝑣←2 ln(𝑘·1
+𝜑/2)
+3:N← a random subset of size 𝜆from𝑋
+4:S← copy(N) ⊲Initialize a new set for fair 𝜀-net.
+5: forAll colors𝑐∈𝐶do
+6:𝑇𝑚𝑝←arbitrary(1+𝑣)|𝑋𝑐|
+|𝑋|𝜆−|N𝑐|points from𝑋𝑐
+7:S←S∪𝑇𝑚𝑝
+8: returnS ⊲This is a fair 𝜀-net with probability ≥1−𝜑.
+Proof. We place all points from 𝑋in a table. We sample 𝜆in-
+dexes and we add the corresponding points in N. Then we go
+through each element in the table and we add it in Nif needed in
+𝑂(1)time. □
+Theorem 6. Given a range space (𝑋,R), with|𝑋|=𝑛, VC dimen-
+sion𝑑, DP constraintsT, and parameters 𝜀,𝜑∈(0,1), there exists a
+randomized algorithm that constructs a fair 𝜀-net with respect to T
+of size𝑂(1
+𝜀max{log1
+𝜑,𝑑log1
+𝜀}·log(𝑘
+𝜑))with probability at least
+1−𝜑, in𝑂(𝑛)time, where𝑘is the number of different colors in set 𝑋.
+4.1.1 Weighted fair 𝜀-net. Our randomized algorithm can be ex-
+tended to the fair 𝜀-net problem over a weighted set of points.
+Assume that each point 𝑝𝑖∈𝑋is associated with a weight 𝑤𝑖.
+Let𝑊𝑐=∑︁
+𝑝𝑖∈𝑋𝑐𝑤𝑖be the sum of weights of points with color
+𝑐∈𝐶. For simplicity and without loss of generality, we assume
+that∑︁
+𝑐∈𝐶𝑊𝑐=1. A weighted 𝜀-net is a subsetS⊆𝑋such that
+for every𝑅∈R with∑︁
+𝑝𝑖∈𝑅𝑤𝑖≥𝜀, it holds that 𝑅∩S≠∅. In
+terms of fairness, the DP ratios Tare defined as 𝜏ℓ=𝑊𝑐ℓ, for each
+ℓ∈[𝑘]. The goal is to compute a set S⊆𝑋such that, for every
+𝑅∈Rwith∑︁
+𝑝𝑖∈𝑅𝑤𝑖≥𝜀, it holds that 𝑅∩S≠∅(weighted𝜀-net)
+and for every 𝑐ℓ∈𝐶,|S𝑐ℓ|
+|S|=𝜏ℓ. As we had in the unweighted case,
+we assume for simplicity that the ratios in Tare chosen in that
+way such that 𝑊𝑐ℓ·𝜆=𝜏ℓ·𝜆≥1.
+It is known [ 47], that a set of 𝜆random samples from 𝑋with
+respect to the weights of the points returns a weighted (unfair)
+𝜀-net. Hence, intuitively, we can extend the algorithm from the
+unweighted case to the weighted case, as follows.
+Algorithm. Draw a setNof𝜆random samples with respect to
+the weights of the points from 𝑋. Let𝑣=2ln(𝑘·1
+𝜑/2). For every
+color𝑐∈𝐶, add max{(1+𝑣)·|𝑋𝑐|
+|𝑋|·𝜆−|N𝑐|,0}arbitrary points
+of color𝑐toN. LetSbe the new set after we traversed all colors
+𝑐∈𝐶. ReturnS.
+Using the same arguments as in Lemma 3, we can show that
+P(︂
+∃𝑐∈𝐶,|N𝑐|≥( 1+𝑣)|𝑋𝑐|
+|𝑋|·𝜆)︂
+≤𝜑
+2. Skipping the details, we
+conclude with the following theorem.
+Theorem 7. Given a range space (𝑋,R)over a weighted set of
+points𝑋, with|𝑋|=𝑛, VC dimension 𝑑, DP constraintsT, and param-
+eters𝜀,𝜑∈(0,1), there exists a randomized algorithm that constructs
+a weighted fair 𝜀-net with respect toTof𝑂(︂
+1
+𝜀max{log1
+𝜑,𝑑log1
+𝜀}·log𝑘
+𝜑)︂
+size with probability at least 1−𝜑, where𝑘is the number of different
+colors in set 𝑋. The time complexity of the algorithm is 𝑂(𝑛).4.2 Discrepancy-based Algorithms for
+Satisfying Demographic Parity
+The Monte-Carlo sampling-based algorithm proposed in the previ-
+ous section, while being efficient, returns a fair 𝜀-net, which is larger
+than standard 𝜀-nets by roughly a log(𝑘)factor. Besides, similar to
+other randomized Monte-Carlo algorithms, it does not always find
+a valid solution. In this section, we propose two fair discrepancy-
+based algorithms to address these issues; we propose deterministic
+methods that construct smaller fair 𝜀-nets. Such results come at
+the cost of increased running time. While both discrepancy-based
+algorithms return a fair 𝜀-net of (asymptotically) the same size, the
+first one is more efficient when 𝑚is small and 𝑑is large, while the
+second one is more efficient when 𝑑is small and 𝑚is large.
+4.2.1 Discrepancy-based algorithm for fair 𝜀-net. We first describe
+the notion of discrepancy to construct an 𝜀-net. After that, we adjust
+this method to construct a fair𝜀-net. More details on the definitions
+and the proofs relating to the standard 𝜀-net construction using
+discrepancy can be found in [25, 44].
+Before we start the description of our algorithm, we give some
+useful definitions. Let (𝑋,R)be a range space with |𝑋|=𝑛and
+|R|=𝑚. Define a coloring function 𝜅:𝑋→{− 1,+1}that as-
+signs a color+1or−1to each point in 𝑋. The coloring 𝜅differs
+from the demographic groups and should not be mistaken with
+colors/groups 𝐶={𝑐1,𝑐2,···,𝑐𝑘}. The discrepancy of𝜅over a
+range𝑅∈Ris defined as:|𝜅(𝑅)|=|︁|︁|︁∑︁
+𝑝∈𝑅𝜅(𝑝)|︁|︁|︁. The discrepancy
+of the function 𝜅is defined as: disc(𝜅)=max𝑅∈R|𝜅(𝑅)|. Namely,
+it is the color difference in the most unbalanced range based on
+coloring𝜅(·). The discrepancy of the range space (𝑋,R)is de-
+fined as the best achievable discrepancy by a coloring function,
+disc(𝑋)=min𝜅:𝑋→{− 1,+1}disc(𝜅).
+Amatching Πof𝑋is a set of pairs{(𝑝𝑖,𝑝𝑗)|𝑝𝑖,𝑝𝑗∈𝑋}that
+partitions the entire set 𝑋into𝑛/2pairs. A coloring 𝜅is said to be
+compatible with a matching Π, if for any pair(𝑝𝑖,𝑝𝑗)∈Π, we have:
+𝜅(𝑝𝑖)+𝜅(𝑝𝑗)=0.
+The following procedure defines a major step in building 𝜀-nets
+using this method:
+Random Halving .LetΠbe an arbitrary matching on 𝑋. For each
+pair(𝑝𝑖,𝑝𝑗)∈Π, randomly either color 𝑝𝑖as+1and𝑝𝑗as−1, or
+the other way around, by tossing a fair coin. Then, without loss
+of generality, only keep the points with color +1. Let𝑋(1)be the
+result set with|𝑋(1)|=𝑛
+2.
+The next lemma that uses the Random Halving procedure is
+proven in [44].
+Lemma 8. We are given a range space (𝑋,R)with|𝑋|=𝑛and
+|R|=𝑚. LetΠbe an arbitrary matching of 𝑋and let𝜅be the
+coloring constructed by applying the procedure Random Halving .
+With a probability more than1
+2, we have:
+∀𝑅∈R,|𝜅(𝑅)|≤Δ=√︁
+2𝑛ln(4𝑚).
+The construction of Lemma 8 can be made deterministic by the
+method of conditional expectations [44], assuming that we have
+access to all the ranges in R:
+Lemma 9. Given a range space (𝑋,R)with|𝑋|=𝑛and|R|=𝑚.
+LetΠbe an arbitrary matching on 𝑋. There exists a deterministic
+
+method Halving(𝑋,R,Π)that constructs a coloring function 𝜅:𝑋→
+{−1,1}which is compatible with matching Πin𝑂(𝑛·𝑚)time, such
+that∀𝑅∈R,|𝜅(𝑅)|≤Δ.
+Using the notion and properties of discrepancy, we describe our
+algorithm for constructing a fair 𝜀-net.
+Algorithm. Our algorithm works in iterations 𝑖=1,...,𝑈 , where
+𝑈=log𝑛
+𝑐0𝑑
+𝜀log𝑑
+𝜀and𝑐0is a sufficiently large constant. Initially,
+𝑋(0)=𝑋. In the𝑖-th iteration, we construct a fair matching Π(𝑖−1)
+𝑓
+on𝑋(𝑖−1), as follows. Let 𝑌=𝑋(𝑖−1). For each pair 𝑝𝑗1,𝑝𝑗2∈𝑌
+with𝑐(𝑝𝑗1)=𝑐(𝑝𝑗2), we add the pair(𝑝𝑗1,𝑝𝑗2)inΠ(𝑖−1)
+𝑓and re-
+move𝑝𝑗1,𝑝𝑗2from𝑌. We repeat the same pairing procedure until
+𝑌=∅. Then, we run the halving procedure from Lemma 9, execut-
+ingHalving(︂
+𝑋(𝑖−1),R|𝑋(𝑖−1),Π(𝑖−1)
+𝑓)︂
+. Let𝑋(𝑖)be the points with
+color+1returned by the halving procedure. In the end, we return
+𝑋(𝑈).
+Correctness and runtime analysis. We first show that the set re-
+turned by our algorithm is an 𝜀-net of small size. Then we show
+that this is also a fair 𝜀-net.
+Lemma 10. Our algorithm returns an 𝜀-net of size𝑂(𝑑
+𝜀log𝑑
+𝜀).
+Proof. This is inspired by the known result from [ 25] and ap-
+plying Lemma 9. See Technical Report [ 32] for complete proof. □
+Lemma 11. Our algorithm returns a fair 𝜀-net.
+Proof. This comes from the fact that the halving steps, maintain
+the ratios from each color. See Technical Report [ 32] for complete
+proof. □
+Lemma 12. The running time of our algorithm is 𝑂(𝑛·𝑚·log𝑛).
+Proof. In each iteration 𝑖of our algorithm, we construct a fair
+matching in 𝑂(|𝑋(𝑖−1)|)=𝑂(𝑛)time by making a pass over all
+points in𝑋(𝑖−1). The Halving procedure from Lemma 9 runs in
+𝑂(|𝑋(𝑖−1)|·|R|𝑋(𝑖−1)||)=𝑂(𝑛·𝑚)time. We execute 𝑈=𝑂(log𝑛)
+iterations of the algorithm so the total running time is 𝑂(𝑛·𝑚·
+log𝑛). □
+Putting everything together, we conclude with Theorem 13.
+Theorem 13. Given a range space (𝑋,R), with|𝑋|=𝑛,|R|=𝑚,
+VC dimension 𝑑, DP constraintsT, and a parameter 𝜀∈(0,1), there
+exists a deterministic algorithm that constructs a fair 𝜀-net with respect
+toT, of size𝑂(𝑑
+𝜀log𝑑
+𝜀)in𝑂(𝑛·𝑚·log𝑛)time.
+A comparison of the two algorithms, discrepancy-based and
+sampling-based, is provided in Table 2.
+Weighted case: If the points 𝑋have weights, a simple approach
+would be to replicate each point according to its weight 𝑤𝑖(assum-
+ing all the weights are integers; otherwise, we multiply them by a
+large value). However, the running time of this method would de-
+pend on∑︁
+𝑖𝑤𝑖(integer weights), which can be significantly larger
+than𝑛. The same argument is valid for space usage.
+Figure 2: Sketch-and-Merge approach on a partition tree.
+4.2.2 Discrepancy with Sketch-and-Merge. In this subsection, we
+discuss an alternative deterministic algorithm that is more efficient
+than the algorithm from Theorem 13 if the VC dimension is small. At
+a high level, the algorithm works as follows. We first construct a fair
+𝜀-sample of small size satisfying DP constraints using a hierarchical
+bottom-up approach (resulting in a tree structure visualized in
+Figure 2). Then we apply the algorithm from Theorem 13 on the
+fair𝜀-sample set to construct a fair 𝜀-net. The algorithm is faster
+because, this time, the expensive algorithm from Theorem 13 is
+executed on a small set, i.e., a fair 𝜀-sample. The correctness follows
+from the fact that an 𝜀1-net of a𝜀2-sample of(𝑋,R), is an(𝜀1+𝜀2)-
+net of(𝑋,R)[25].
+Algorithm 2 Fair Sketch-and-Merge algorithm (FSM) for Finding
+an𝜀-net satisfying DP fairness.
+Require: Range space(𝑋,R), Epsilon𝜀, the value 2𝑝for the size of small
+partitions.
+Ensure: The DP fair𝜀-netS, found by sketch-and-merge.
+1:function FSM(𝑋,R,𝜀,2𝑝)
+2:P← partition𝑋to𝑛
+2𝑝equally-sized fair subsets.
+3:L←P ⊲All nodes in current level.
+4: while|L|>1do ⊲Until reaching root
+5:L′←[] ⊲placeholder of the next level.
+6: forsiblings(𝑣1,𝑣2)inLwith parent𝑢do
+7: 𝑋′𝑢←𝑋𝑣1∪𝑋𝑣2 ⊲Merge each pair of siblings
+8: Π(𝑢)
+𝑓←a fair matching constructed on 𝑋′𝑢
+9: 𝑋𝑢←Halving(𝑋′𝑢,R|𝑋′𝑢,Π(𝑢)
+𝑓)
+10:L′.𝑎𝑝𝑝𝑒𝑛𝑑(𝑢)
+11:L←L′
+12: root←L[ 0]
+13: ˆ︁X←𝑋root
+14: while|ˆ︁X|>𝑐04𝑑
+𝜀2log2𝑑
+𝜀do ⊲Until finding𝜀
+2-sample
+15: Construct fair matching Π𝑓onˆ︁X
+16: ˆ︁X← Halving(ˆ︁X,R|ˆ︁X,Π𝑓)
+17:X←ˆ︁X ⊲The𝜀
+2-sample.
+18:S← Execute algorithm from Theorem 13 on (X,R|X)
+19: returnS
+Algorithm. Let𝑝be a small parameter value that is set later.
+LetPbe the partitioning of 𝑋into𝑛
+2𝑝equally-sized fair subsets.
+Each partition 𝑃∈P contains 2𝑝points of the same color 𝑐∈𝐶.
+We construct an empty binary partition tree with𝑛
+2𝑝leaf nodes.
+For a node𝑣of the partition tree, let 𝑋𝑣⊆𝑋be the points stored
+in node𝑣. Initially,𝑋𝑣=∅for every node 𝑣in the partition tree.
+Each partition 𝑃∈Pis assigned to a leaf node 𝑣𝑃in the partition
+tree and𝑋𝑣𝑃=𝑃. LetL𝑗be the set of nodes in the 𝑗-th level of
+the tree. Initially,L0={𝑣𝑃|𝑃∈ P} be the set of leaf nodes
+of the partition tree. We repeat the following until we reach the
+root of the tree. For every pair of sibling nodes 𝑣1,𝑣2inL𝑗with
+
+parent𝑢∈L𝑗+1we define𝑋′𝑢=𝑋𝑣1∪𝑋𝑣2(Merging step). We
+construct a fair matching Π(𝑢)
+𝑓on𝑋′𝑢as we had in the algorithm
+of § 4.2.1, and we execute Halving(𝑋′𝑢,R|𝑋′𝑢,Π(𝑢)
+𝑓). Let𝑋𝑢be the
+set of points from 𝑋′𝑢with color+1returned by the halving proce-
+dure (Halving step). Let root be the root of the partition tree and
+𝑋(root)the points stored in it following the procedure above. We
+setˆ︁X=𝑋root. While|ˆ︁X|>𝑐04𝑑
+𝜀2log(2𝑑
+𝜀), we repeat the following
+recursive approach. We construct a fair matching Π𝑓onˆ︁Xand we
+execute Halving(ˆ︁X,R|ˆ︁X,Π𝑓). Letˆ︁Xbe the set of points with color
++1returned by the halving procedure. The first time that we find
+|ˆ︁X|<𝑐04𝑑
+log2𝑑
+𝜀, we stop the repetitions and we set X=ˆ︁X. In the
+end, we run the algorithm from Theorem 13 on the range space
+(X,R|X)with parameter 𝜀/2, and letSbe the returned set of points.
+We returnS. We show the pseudocode of our algorithm in Algo-
+rithm 2. The overall structure of our algorithm using a partition is
+shown in Figure 2.
+Correctness and runtime analysis.
+Lemma 14. The setXis a fair𝜀
+2-sample of(𝑋,R).
+Proof. We show thatXis both an𝜀
+2-sample and a fair sample.
+For the proof, please refer to the Technical Report [32]. □
+Lemma 15. The returned setSis a fair𝜀-net of(𝑋,R).
+Proof. It is known from [ 25] that an𝜀1-net of a𝜀2-sample of
+(𝑋,R), is an(𝜀1+𝜀2)-net of(𝑋,R). Similarly, it is straightforward
+to see that a fair 𝜀1-net of a fair 𝜀2-sample of(𝑋,R), is a fair(𝜀1+𝜀2)-
+net of(𝑋,R). From Lemma 14, we know that Xis a fair𝜀
+2-sample
+of(𝑋,R). The algorithm from Theorem 13 is executed on (X,R|X)
+with parameter𝜀
+2, and it returns the set Swhich is a fair𝜀
+2-net of
+(X,R|X). Hence,Sis also a fair 𝜀-net of(𝑋,R). □
+Lemma 16. The running time of the algorithm is
+𝑂(︃
+𝑛·𝑑3𝑑
+𝜀2𝑑log𝑑(︃𝑑
+𝜀)︃)︃
+.Proof. This comes from the tree partitioning of the points. We
+refer the reader to the Technical Report [32] for more details. □
+Putting everything together, we conclude with Theorem 17.
+Theorem 17. Given a range space (𝑋,R), with|𝑋|=𝑛, VC di-
+mension𝑑, DP constraintsT, and a parameter 𝜀∈(0,1), there exists
+a deterministic algorithm that constructs a fair 𝜀-net with respect to
+T, of size𝑂(︂
+𝑑
+𝜀log𝑑
+𝜀)︂
+in𝑂(︂
+𝑛·𝑑3𝑑
+𝜀2𝑑log𝑑(︂
+𝑑
+𝜀)︂)︂
+time.
+4.3 Satisfying Custom-Ratio Fairness
+In this section, we discuss the second, more general, fairness defi-
+nition where the user provides the ratios T={𝜏1,𝜏2,···,𝜏𝑘}and
+requires the returned 𝜀-netSto satisfy|S𝑐𝑖|
+|S|=𝜏𝑖for every𝑐𝑖∈𝐶.
+Through the whole subsection, we assume that we have access
+to the rangesR; in other words, the ranges are explicitly given to
+us as input. This assumption is valid in most cases; for example,
+the discrepancy approach to deterministically find an 𝜀-net is based
+on this assumption [ 25,44]. Assuming that we have access to the
+rangesRand|R|=𝑚, finding an 𝜀-net of the range space (𝑋,R)
+can be reduced to the hitting set problem. In other words, based on
+the Definition 1,Nis an𝜀-net of(𝑋,R), if and only if it hits all the
+ranges inR𝜀={𝑅|𝑅∈R,|𝑅|
+|𝑋|≥𝜀}.Given the range space (𝑋,R), one can first filter out the light
+ranges and keep only the heavy ranges, akaR𝜀. Then, compute a
+hitting set for the new range space (𝑋,R𝜀). Any algorithm solving
+the hitting set problem would result in solving the 𝜀-net problem.
+𝜀-netreduction−→
+overR𝜀Hitting Set
+In the fairness context, any fair hitting set given the constraints
+Tis also a fair 𝜀-net. Solving the Fair Hitting Set problem is dis-
+cussed in [ 31] in the general setting. They provide a randomized
+𝑂(log𝑛)-approximation algorithm for the fair set cover that runs
+in𝑂(poly(𝑛,𝑚))time. The approximation factor holds in expec-
+tation. The algorithm in [ 31] is a greedy algorithm that picks the
+most promising points at each step. As a result, by applying the
+same algorithm, we can compute a fair𝜀-net for the range space
+(𝑋,R)with expected size 𝑂(OPT·log𝑛), where OPT is the fair
+𝜀-net with the minimum size. We note that this algorithm does not
+find a fair𝜀-net with an absolute size as we had in Theorems 6, 13,
+and 17. Instead, our algorithm for custom-ratios returns a fair 𝜀-net
+with size larger by an (expected) 𝑂(log𝑛)factor from the smallest
+possible fair 𝜀-net with respect to the CR constraints T.
+Theorem 18. Given a range space (𝑋,R), with|𝑋|=𝑛,|R|=𝑚,
+CR constraintsT, and a parameter 𝜀∈ (0,1), there exists a ran-
+domized algorithm that constructs a fair 𝜀-net with respect to T, of
+expected size 𝑂(OPT·log(𝑛))in𝑂(poly(𝑛,𝑚))time, where OPT is
+the size of the smallest fair 𝜀-net with respect to T.
+The algorithm from Theorem 18 works in general range spaces;
+however, assuming a range space (𝑋,R)with a bounded VC-dim
+would result in better approximation algorithms [ 22,27,40,56]. The
+Fair Geometric Hitting Set (FGHS) problem is discussed in detail in
+§ 5. Here, we only use the final result we get for the FGHS problem
+and use it to derive an approximation algorithm for constructing
+a fair𝜀-net satisfying CR constraints T. In Theorem 22, we show
+an𝑂(︂
+max{log1
+𝜑,𝑑log(OPT𝐹𝐺𝐻𝑆)}·log(𝑘
+𝜑))︂
+-approximation algo-
+rithm (with probability at least 1−𝜑) for the Fair Geometric Hitting
+Set problem (on CR constraints), where OPT FGHS is the optimum
+solution. By leveraging the algorithm from Theorem 22 on (𝑋,R𝜀),
+we return a fair 𝜀-netSwith respect to CR constraints Tof size
+𝑂(︂
+max{log1
+𝜑,𝑑log(OPT)}·log(𝑘
+𝜑)·OPT)︂
+with probability at least
+1−𝜑. The algorithm’s time complexity is 𝑂(𝑛·𝑚+M(𝑛,𝑚+𝑘)),
+whereM(𝑛,𝑚+𝑘)is the running time to solve a linear program
+with𝑂(𝑛)variables and 𝑂(𝑚+𝑘)constraints (Theorem 22).
+Theorem 19. Given a range space (𝑋,R), with|𝑋|=𝑛,|R|=𝑚,
+CR constraintsT, and a parameter 𝜀∈(0,1), there exists a random-
+ized algorithm that constructs a fair 𝜀-net with respect to T, of size
+𝑂(︂
+max{log1
+𝜑,𝑑log(OPT)}·log(𝑘
+𝜑)·OPT)︂
+with probability at least
+1−𝜑, in𝑂(𝑛·𝑚+M(𝑛,𝑚+𝑘))time, where OPT is the size of the
+smallest fair 𝜀-net with respect to T,𝑘is the number of colors in 𝑋,
+andM(𝑛,𝑚+𝑘)is the running time to solve a linear program with
+𝑂(𝑛)variables and 𝑂(𝑚+𝑘)constraints.
+It is worth mentioning that in § 5, the Fair Geometric Hitting
+Set is solved by a reduction to the weighted fair 𝜀-net with DP
+constraints. As a result, the whole algorithm reduces an instance
+of the fair𝜀-net with CR constraint to an instance of the weighted
+fair𝜀-net problem with DP constraints.
+Fair𝜀-net (CR)red.−→ FGHS (CR)red.−→ Weighted Fair 𝜀-net (DP)
+
+Figure 3: A counter-example for building an 𝜀-sample satisfying any
+CR constraints. In this example, any 𝜀-sample must contain1
+2±𝜀
+fraction of red points. The reason is that there exists a range 𝑅∗∈R
+that separates all reds from all blue points, and we have|𝑋𝑟𝑒𝑑|
+|𝑋|=1
+2.
+Algorithm 3 Fair Geometric Hitting Set through LP relaxation
+Require: Range space(𝑋,R), set of custom ratios T.
+Ensure: The Fair Geometric Hitting Set S.
+1:function FGLP (𝑋,R,T)
+2:𝜀,𝑤⃗← LPSolver(𝑋,R,T)
+3:S← Execute algorithm from Theorem 7 on (𝑋,R)with parameter
+𝜀and weights 𝑤⃗
+4: returnS
+5:function LPSolver (𝑋,R,T)
+6: Solves the LP in Equation 3.
+7: return𝜀and the weights 𝑤⃗={𝑤1,···,𝑤𝑛}.
+4.4 Fair𝜀-sample
+The fair𝜀-sample problem under both demographic parity (DP)
+and custom-ratio (CR) constraints is addressed by extending the
+techniques introduced for 𝜀-nets. For DP, fair 𝜀-samples can be
+constructed following similar principles as in Section 4. However,
+satisfying arbitrary CR constraints is not always feasible. For ex-
+ample, as shown in Figure 3, if a range in the space separates all
+members of a demographic group, then any fair 𝜀-sample must
+preserve the group’s proportion within an 𝜀margin, limiting the
+range of achievable target ratios. We present a formal argument
+and provide a counterexample illustrating this limitation in the
+technical report [32].
+5 FAIR GEOMETRIC HITTING SET
+In this section, we give an algorithm for satisfying the CR con-
+straints in the Geometric Hitting Set. The goal of FGHS is to find
+the smallest subset S∗⊆𝑋, given the ratiosT=(𝜏1,𝜏2,···,𝜏𝑘),
+such that:
+(1)∀𝑐ℓ∈𝐶,|S∗
+𝑐ℓ|
+|S∗|=𝜏𝑙,
+(2)∀𝑅∈R, 𝑅∩S∗≠∅.
+Equivalently, one can consider Fair Geometric Set Cover defined in
+the dual range space where sets are associated with colors. There are
+two popular algorithms for solving the (unfair) Geometric Hitting
+Set problem. The first approach relies on the Multiplicative Weight
+Update method [ 5,40,56]. This is a greedy algorithm that starts
+by choosing a subset of points. If this subset is not a hitting set
+forR, they re-weight all the points that belong to at least a range
+that is not hit by the current solution. Iteratively repeating thisprocess results in finding a logOPT GHS approximation solution,
+where OPT GHS is the optimum geometric hitting set [44].
+The second approach formulates the problem as an Integer Pro-
+gram, and solves the relaxed Linear Program [ 22,27,44,58]. Our
+algorithm is a variant of this approach that adds the fairness con-
+straints inside the LP formulation. Here, we assume that we have
+access to all ranges Rwith|R|=𝑚. The Integer Program (IP) for
+solving the FGHS problem is as follows:
+min∑︂
+𝑝𝑖∈𝑋𝑧𝑖 (1)
+s.t.∑︂
+𝑝𝑖∈𝑅𝑧𝑖≥1, ∀𝑅∈R
+∑︂
+𝑝𝑖∈𝑋𝑐ℓ𝑧𝑖=𝜏ℓ·∑︂
+𝑝𝑖∈𝑋𝑧𝑖,∀𝑐ℓ∈𝐶
+𝑧𝑖∈{0,1}, ∀𝑖∈[𝑛]
+In this formulation, 𝑧𝑖is a variable that indicates whether the
+point𝑝𝑖∈𝑋is selected in the final cover. The first type of con-
+straints ensures that all ranges are hit. The second type of con-
+straints ensures the CR fairness constraints. The equivalent Linear
+Program (LP) formulation considers the real domain [0,1]for vari-
+ables𝑧𝑖. By using a variable 𝑓=∑︁
+𝑖𝑧𝑖, we can rewrite it as:
+min𝑓 (2)
+s.t.∑︂
+𝑝𝑖∈𝑋𝑧𝑖=𝑓
+∑︂
+𝑝𝑖∈𝑅𝑧𝑖≥1, ∀𝑅∈R
+∑︂
+𝑝𝑖∈𝑋𝑐ℓ𝑧𝑖=𝜏ℓ·𝑓,∀𝑐ℓ∈𝐶
+𝑧𝑖∈[0,1], ∀𝑖∈[𝑛], 𝑓≥0
+Now, define 𝑤¯𝑖=𝑧𝑖
+𝑓and𝜀¯=1
+𝑓. We can rewrite the LP as:
+max𝜀¯ (3)
+s.t.∑︂
+𝑝𝑖∈𝑋𝑤¯𝑖=1
+∑︂
+𝑝𝑖∈𝑅𝑤¯𝑖≥𝜀¯, ∀𝑅∈R
+∑︂
+𝑝𝑖∈𝑋𝑐ℓ𝑤¯𝑖=𝜏ℓ,∀𝑐ℓ∈𝐶
+𝑤¯𝑖∈[0,1], ∀𝑖∈[𝑛], 𝜀¯≥0
+Interestingly, the LP in (3)is interpreted as follows. The LP sets
+some weights to the points such that every range in Rhas a total
+weight of at least 𝜀¯, and the total weight of the points with color
+𝑐ℓis𝜏ℓ. Intuitively, a weighted fair 𝜀¯-net as defined in 4.1.1. Using
+these observations, we are ready to describe our algorithm for the
+FGHS problem.
+Algorithm. Construct the instance of the LP (3). Use an LP solver
+to solve the LP (3). Let𝜀be the value of variable 𝜀¯in the optimum LP
+solution and 𝑤𝑖be the value of the variable 𝑤¯𝑖for every𝑝𝑖∈𝑋in
+the optimum LP solution. Let 𝑤⃗={𝑤1,...,𝑤𝑛}be the vector of all
+points’ weights. We run the algorithm from Theorem 7 on (𝑋,R)
+with DP constraints T, parameter 𝜀, assuming that each point
+𝑝𝑖∈𝑋has weight𝑤𝑖. LetSbe the weighted fair 𝜀-net returned by
+the algorithm from Theorem 7. We return S. The pseudocode is
+shown in Algorithm 3.
+
+Correctness and runtime analysis. LetOPT𝐹𝐺𝐻𝑆 be the size of
+the optimum solution for the FGHS problem on (𝑋,R).
+Lemma 20. The algorithm returns a hitting set of size
+𝑂(︃
+max{log1
+𝜑,𝑑log(OPT𝐹𝐺𝐻𝑆)}·log(𝑘
+𝜑)·OPT𝐹𝐺𝐻𝑆)︃
+with probability at least 1−𝜑.
+Proof. See the Technical Report [32] for the proof. □
+LetM(𝑥,𝑦)be the running time to solve an LP with 𝑂(𝑥)vari-
+ables and𝑂(𝑦)constraints.
+Lemma 21. Our algorithm has a time complexity of 𝑂(𝑛·𝑚+
+M(𝑛,𝑚+𝑘)).
+Proof. See the Technical Report [32] for the proof. □
+Putting everything together, we conclude with the next theorem.
+Theorem 22. Given a range space (𝑋,R)with|𝑋|=𝑛,|R|=
+𝑚, CR constraintsT, and a parameter 𝜑∈ (0,1), there exists a
+randomized algorithm that constructs a fair geometric hitting set
+of(𝑋,R), of𝑂(︂
+max{log1
+𝜑,𝑑log(OPT𝐹𝐺𝐻𝑆)}·log(𝑘
+𝜑)·OPT𝐹𝐺𝐻𝑆)︂
+size with probability at least 1−𝜑, in𝑂(𝑛·𝑚+M(𝑛,𝑚+𝑘))time,
+where OPT𝐹𝐺𝐻𝑆 is the size of the optimum FGHS solution, 𝑘is the
+number of different colors in set 𝑋, andM(𝑛,𝑚+𝑘)is the running
+time to solve an LP with 𝑂(𝑛)variables and 𝑂(𝑚+𝑘)constrains.
+6 RELATED WORK
+It is now almost a decade that fairness has become a central topic in
+data-driven systems, and has been studied across various domains,
+including AI and Machine Learning [ 16,63], data management [ 6,
+87], and in algorithms [51].
+Fairness-aware Data Management . Fairness in data-driven sys-
+tems has been extensively studied in responsible data manage-
+ment [ 87], and various data-centric fairness-aware approaches have
+been proposed for different components of the responsible data-
+analytics pipeline [ 67]. The research in this domain include causal
+data repair methods aimed at ensuring fairness [ 74,75], techniques
+for identifying and tuning problematic data slices [ 89], fairness-
+aware query adjustment [ 1,53,73,84,102], coverage-based meth-
+ods for addressing representation bias [ 10,78], label correction ap-
+proaches promoting individual fairness [ 100], methods for mining
+the underrepresented and underperforming minority groups [ 30],
+fair and privacy-preserving data generation techniques [ 71], as
+well as fairness-aware data imputation [ 76,103], entity match-
+ing [64,77,81], data cleaning [ 88], data integration [ 24,67], and data
+augmentation [ 36,82], among others. Beyond these, fairness has
+been investigated in approximate data processing (AQP) data struc-
+tures, including data-informed hashmaps [ 79], locality-sensitive
+hashing [12], and count-min [80].
+Algorithmic Fairness . This area includes satisfying fairness con-
+straints while optimizing sub-modular functions [ 93], and satisfying
+fairness in Coverage Maximization problems [ 7,14], Set Cover [ 31],
+Hitting Sets [ 49], and Facility Locations [ 50]. Fairness consider-
+ations have also been extended to a variety of other algorithmic
+domains, in related problems like Matching [ 37,41], Resource Allo-
+cation [ 61], Ranking [ 9,98], and Clustering [ 59,90]. To the best of
+our knowledge none of the prior work study 𝜀-nets,𝜀-samples, and
+geometric hitting set through the fairness lens.7 APPLICATION TO DATABASE SYSTEMS
+In Example 1, we highlighted the application of 𝜀-nets as dataset
+summaries for range queries , where the goal is to compress
+potentially very large datasets to a small subset that contains at
+least one tuple from any possible (axis-parallel) range query. The
+𝜀-net can then facilitate AQP by quickly identifying a tuple in the
+set that satisfies a query range. In the following, we briefly outline
+some other applications of 𝜀-nets,𝜀-samples, and geometric hitting
+set in database systems and beyond.
+𝜀-samples are foundational to Approximate Query Processing
+(AQP) because they provide small yet statistically representative
+subsets of the data. By ensuring that the selectivity of every query
+range deviates by at most 𝜀from that on the full data, they en-
+able consistent accuracy guarantees for aggregate functions such
+as COUNT, SUM, and AVG. Modern systems like VerdictDB [ 70]
+implement hierarchical sampling schemes that mirror the layered
+construction of 𝜀-samples, using them to propagate uncertainty esti-
+mates through query plans. Similarly, PASS[ 55] and JanusAQP [ 54]
+build multi-level uniform or stratified samples to estimate aggre-
+gates even in sparse data regions, effectively implementing hierar-
+chical𝜀-samples to capture both dense and under-represented areas.
+These structures form the bridge between classical VC-dim-based
+theory and practical data synopses, making 𝜀-samples the statistical
+backbone of scalable AQP engines. 𝜀-nets serve a complementary
+role: rather than approximating frequencies, they guarantee cover-
+age. In database terms, an 𝜀-net ensures that every “heavy” query
+range is hit by at least one representative in the synopsis. This prop-
+erty is directly applicable to range emptiness and range reporting
+queries in spatial or multi-dimensional databases, where the goal is
+to quickly determine whether any qualifying tuple exists without
+scanning the full dataset.
+Approximate Nearest Neighbor (ANN) is popular in various
+settings, including geospatial data management , where one would
+like to retrieve the 𝑘nearest tuples with minimum Euclidean dis-
+tance to a given query point 𝑞[33,72,97]. In such cases, the queries
+can be viewed as 𝑑-balls (𝑑-dimensional hyperspheres) centered
+at𝑞. In spatial indexing or geospatial search [62, 65], an 𝜀-net pro-
+vides a provable bound that every sufficiently dense region will be
+represented by at least one tuple, which can drastically reduce false
+negatives in ANN searches [ 29]. Given a large dataset of tuples, an
+𝜀-net provides a small subset that guarantees to hit the top- 𝑘(for
+the corresponding 𝜀) of any given 𝑑-ball. Hence, the NN of the 𝜀-net
+to𝑞belongs to the 𝑘NN of the complete dataset.
+Another application of 𝜀-nets is in Regret–minimizing repre-
+sentatives for top-k queries [3,8,11,52,66]: compact sets that
+minimize a notion of regret in approximate top- 𝑘query processing.
+By defining the range space as the universe of half-spaces, and
+setting𝜀=𝑘
+𝑛, the𝜀-net guarantees at least one tuple in the top-k
+results of any linear ranking function [ 8]. Furthermore, in [ 3,52],
+the𝑘-regret minimizing set is defined as geometric hitting set.
+Fair𝜀-nets extend the traditional “coverage” guarantee to incor-
+porate fairness—ensuring that the selected subset of items includes
+representatives from all groups in proportion to their desired ra-
+tios. In this context, the goal is to construct a small set of items
+that can “cover” the preferences of all potential users, while also
+satisfying group fairness among the items themselves. For example,
+
+in a movie recommendation system, we may want to select a set
+of movies such that every user finds at least one movie they like,
+but at the same time ensure that the selection contains a balanced
+representation of genres (e.g., comedies, dramas, documentaries).
+Thus, fair𝜀-nets provide a principled framework for ensuring both
+coverage and diversity in the selected set. For example, Zheng et
+al. [101] studied fair representative sets in database systems through
+a variation of the 𝑘-regret minimizing set problem. Building on tech-
+niques from [ 3,52], this task can be formulated as an instance of fair
+geometric hitting set, allowing our proposed algorithms to yield
+efficient solutions with provable theoretical guarantees.
+Beyond database systems, 𝜀-nets, geometric hitting Sets, and set
+covers have applications across other domains, including machine
+learning, such as sample-efficient learning, active learning, cluster-
+ing, and interoperability. For example, 𝜀-nets offer a principled way
+to select small informative subsets for active learning under geomet-
+ric and distributional assumptions, with applications in learning
+linear separators [ 13], convex bodies [ 45], and online settings [ 18].
+In clustering, coresets based on 𝜀-nets and hitting sets enable effi-
+cient approximations for 𝑘-means and 𝑘-median objectives [ 38,46].
+Hitting set formulations support interpretable and sparse models
+like the Set Covering Machines [ 48,60] and predictive checklists
+[99], where minimal feature sets capture key behaviors. They also
+find use in motion planning [ 83] and sensor network coverage [ 95].
+Integration Challenges .This work sets the foundation for inte-
+grating fair 𝜀-nets into the database systems. However, several
+challenges remain. Real-world database workloads involve multi-
+relational joins, non-Euclidean predicates, and dynamic updates
+that fall outside the static geometric assumptions of 𝜀-theory. Align-
+ing𝜀-samples or𝜀-nets with relational query optimizers, and balanc-
+ing fairness constraints with performance are non-trivial tasks. Fur-
+thermore, incorporating fairness-aware variants introduces multi-
+objective optimization trade-offs among accuracy, representative-
+ness, and runtime efficiency. Addressing these challenges will re-
+quire tighter coordination between database systems research and
+geometric approximation theory to build practical, fair, and theoret-
+ically sound summarization tools for next-generation data systems.
+8 EXPERIMENTS
+We evaluate the proposed algorithms on (a) real-world datasets from
+related applications and (b) synthetic data. Our code and artifacts
+are publicly available.3Due to the space constraints, a detailed
+discussion of the experiments and additional results is provided in
+the technical report [32].
+8.1 Experimental Setups
+We implemented the following four tasks to compare the proposed
+algorithms with baselines:
+•Database Summarization for Range Queries: As illustrated
+in Example 1, the goal in this setting is to find a small, represen-
+tative sample of the database table. Given a collection of range
+queriesQ=𝑞1,𝑞2,···,𝑞𝑚, the objective is to select a small fair
+representative subset of tuples such that each heavy query is hit
+by at least one tuple from the sample.
+•Neighborhood Hitting on Geographic Data: Given a set of
+geographic coordinates representing individual locations, we aim
+3Github repositoryto select a small fairsubset of individuals (or facility points) such
+that every neighborhood has at least one selected point within
+the sample — effectively hitting all heavy spatial neighborhoods.
+As further discussed in § 7, such a data summary facilitates
+approximate nearest neighbor search, where the goal is to return
+one of the top−𝜀closest tuples in the vicinity of a query point.
+•Rank Regret Representative: The goal of this task is to find
+a small subset of tuples that hit the top- 𝑙of any ranking func-
+tion [ 11]. A ranking function is defined as a linear combination of
+the dataset attributes. The top- 𝑙tuples are determined by comput-
+ing the dot product between each tuple and the weight vector 𝑓,
+followed by sorting based on the resulting scores. Our objective
+is to find a fairrank-regret representative of the dataset.
+•Synthetic Data: In this setup, we construct synthetic datasets
+with tunable parameters such as range size 𝑚, dataset size 𝑛,
+VC-dimension 𝑑, and demographic distributions. The goal is to
+evaluate algorithms under varying geometric complexity.
+Algorithms: We evaluate the following set of algorithms, as in-
+troduced in the previous sections and summarized in Table 1:
+•𝜀-net: As a set of baselines, for finding a standard (unfair) 𝜀-net,
+we consider Sampling ,Discrepancy , and Sketch-and-Merge (SM)
+– See § 3.4In all the reports, " Sampling " refers to the baseline
+unfair𝜀-net construction.
+•Fair𝜀-net: For fair𝜀-nets, we use Fair Monte-Carlo (FMC) algo-
+rithm and Fair Sketch-and-Merge (FSM) as introduced in § 4.
+•Hitting Set: For standard (unfair) hitting sets, we employ the
+Geometric LP (GLP) algorithm as a baseline, where LP relaxation
+is used to solve the geometric hitting set problem.
+•Fair Hitting Set: For the fair hitting set, we use the fair version,
+Fair Geometric LP (FGLP) as introduced in § 5.
+Measuring (un)fairness: Fairness constraints are enforced based
+on either demographic parity (DP) or custom-ratios (CR) fairness.
+We evaluate fairness in the final results by considering two mea-
+sures:ℓ2-norm andℓ∞-norm. AssumeN⊆𝑋is the output of one of
+the algorithms and 𝐶={𝑐1,𝑐2,···,𝑐𝑘}are the colors (demographic
+groups). The ℓ2-norm fairness calculates the ℓ2distance of colors in
+Nversus the desired constraint vector T:
+F2(N,T)=∥︁∥︁∥︁∥︁(︃|N𝑐1|
+|N|,...,|N𝑐𝑘|
+|N|)︃
+−T∥︁∥︁∥︁∥︁
+2=⌜⃓⎷∑︂
+𝑖≤𝑘(︃|N𝑐𝑖|
+|N|−𝜏𝑖)︃2
+(4)
+We also define ℓ∞-norm fairness:F∞(N,T)=max𝑖≤𝑘|︁|︁|︁|N𝑐𝑖|
+|N|−𝜏𝑖|︁|︁|︁.
+Similarly, we define F0as anℓ0-based unfairness measure that
+counts the number of groups not satisfying their target ratio5:
+F0(N,T)=1
+𝑘𝑘∑︂
+𝑖=1I(︃|N𝑐𝑖|
+|N|≠𝜏𝑖)︃
+.
+Usingℓ-norm distances to measure unfairness is a standard ap-
+proach in the fairness and resource allocation literature [ 19,57,96].
+As we will see in the experiments, our methods achieve almost
+zero-unfairness in most settings.6Byzero-unfairness , we mean that
+the value ofF2,F∞andF0is exactly 0. One can verify that this cor-
+responds to the best achievable fairness level under most commonly
+used unfairness metrics.
+4Whenever we don’t mention "Fair" in the name of an algorithm, we mean the baseline
+unfair version. We sometimes refer to unfair algorithms as "Standard".
+5In our experiments, the indicator function Ichecks equality up to three digits after
+the decimal point and the final unfairness value is normalized between 0 and 1.
+6When finding a fair sample is feasible.
+
+0.33:0.34:0.330.38:0.45:0.170.38:0.60:0.02
+Ratios 
+0.000.050.100.150.200.250.30Unfairness ()
+6924.50×
+951.62×
+831.01×COMPAS
+Sampling ()
+FMC ()
+Sampling (0)
+FMC (0)
+0.5:0.50.66:0.330.75:0.250.8:0.20.9:0.1
+Ratios 
+0.00.10.20.30.40.5Unfairness ()
+inf×
+8329.53×
+727.00×
+681.00×
+201.00×Adults
+0.5:0.50.525:0.4750.7:0.30.8:0.2
+Ratios 
+0.000.050.100.150.200.25Unfairness ()
+inf×1668.68×
+356.29×
+44.12×Admission
+0.00.20.40.60.81.0
+Unfairness (0)
+0.00.20.40.60.81.0
+Unfairness (0)
+0.00.20.40.60.81.0
+Unfairness (0)
+Figure 4: (Un)fairness of FMC and standard sampling on dataset summarization. The fairness constraint is CR with its ratios Ton the x-axis.
+=0.2
+=0.4
+=0.63
+=0.65
+=0.66
+Epsilon ()
+0.0000.0050.0100.0150.0200.0250.0300.0350.040Unfairness ()
+23.43×7.96×12.09×
+7.11×
+5.48×PopSim Dataset
+Sampling ()
+FMC ()
+Sampling (0)
+FMC (0)
+0.00.20.40.60.81.0
+Unfairness (0)
+Figure 5: Fairness of FMC and standard sam-
+pling on the PopSim dataset vs. the value of 𝜀.
+ = 0.2
+ = 0.4
+ = 0.63
+ = 0.65
+ = 0.66
+Value of 
+2004006008001000Average Size
+×0.67
+×0.67
+×0.67×0.67×0.67Average -net Size
+Sampling
+FMCFigure 6: Average size of output 𝜀-net for the
+PopSim dataset according to DP constraint.
+29210211212
+m0.0000.0050.0100.0150.0200.0250.030Fairness (2)
+Fairness vs. m
+FMC
+FSM
+SamplingFigure 7: Fairness comparison on Synthetic
+Sampling task. 𝑚is the number of 2D ranges.
+Table 3: Average running time of Fair Monte-Carlo and standard
+sampling algorithms for the dataset summarization task.
+Dataset Sampling Time (s) FMC Time (s)
+Adults 2.1244 2.2044 ( 1.03×)
+COMPAS 2.4343 2.5470 ( 1.05×)
+Admissions 0.0032 0.0038 ( 1.19×)
+Datasets: We use four real-world datasets in our experiments.
+PopSim [ 69], Adult [ 34], COMPAS [ 4], and College Admissions [ 23].
+We also use a synthetic dataset with axis-aligned rectangles in 2D
+and half-spaces in higher dimensions. A detailed description of
+these datasets is provided in the technical report [ 32]. PopSim [ 69]
+includes 2 million individual records annotated with racial informa-
+tion. The Adult [ 34] dataset contains approximately 50K records,
+each described by multiple demographic and employment attributes.
+The COMPAS [ 4] dataset comprises around 7,000 defendant records,
+with race used as the sensitive attribute.
+8.2 Experiment Results
+Database Summarization for Range Queries . For this task,
+we use three datasets: Adult, COMPAS, and College Admission.
+For each dataset, we generate a collection of range queries that
+must be hit by the output sample. These ranges are constructed as
+hyper-rectangles in the feature space. For each attribute, we select a
+threshold to partition the data into two groups, resulting in up to 2𝑑
+hyper-rectangles ( 𝑑is the number of features). We then compute an
+𝜀-net over the data points to hit these ranges for varying values of 𝜀.
+Figure 4 illustrates the fairness (F∞andF0) of the FMC algorithm
+compared to the baseline (unfair) sampling approach under CR con-
+straints. In the CR setting, the goal is to match a target ratio Tof
+demographic groups in the output. FMC successfully enforces the
+desired ratio with zero unfairness, while the baseline approach fails
+to do so. Notably, as the target ratio for the minority group increases
+(towards the left side of x-axis), the standard algorithm struggles
+even more to satisfy the fairness constraint. In these cases, the
+standard sampling might not even pick any point from the minor
+Adults COMPAS Admissions
+Datasets01000200030004000Average Size2408.02888.0
+368.03890.54331.0
+551.0Average Size of -nets
+Sampling
+FMCFigure 8: Comparing the average size of 𝜀-net produced by standard
+and fair algorithms for dataset summarization task.
+group, which results in higher average values of F∞. The average
+output size of each method is also reported in Figure 8, where we
+can observe that the fair variants of the algorithms achieve zero un-
+fairness while introducing a relatively small increase in the output
+size. Table 3 reports the average running time of both algorithms
+across the three datasets. The results show that the FMC algorithm
+shows only a minimal overhead compared to the standard sampling
+approach. Additional experimental results are presented in the tech-
+nical report [ 32], where we compare the fairness metrics of these
+methods across varying values of 𝜀(Figure 17). Consistent trends
+in the improvement of fairness achieved by FMC can be observed.
+Similar results were also observed on F2fairness.
+Neighborhood Hitting . For this task, we use the PopSim dataset,
+which contains the geographic locations of individuals. Each loca-
+tion is represented as a 2D point, and ranges are defined as balls of
+fixed radius centered around a randomly selected subset of points.
+The objective is to construct a fair 𝜀-net—a subset of individuals
+that hits all densely populated regions. We apply both the FMC algo-
+rithm and the standard sampling approach to this setting. We also
+construct the Fair Hitting Set for this range space. To compute the
+hitting set, we use the GLP algorithm and its fairness-aware variant,
+FGLP. Figure 5 shows that FMC achieves zero unfairness under the
+DP constraint, whereas the standard sampling method results in
+a significantly unfair sample. Figure 6 further illustrates how the
+average size of the output sample varies with different values of
+
+Sampling FMC SM FSM104
+103
+102
+101
+100101Log of Time (seconds)
+44.69 µs147.93 µs14.16 s 14.70 sTime ComparisonFigure 9: The running time of the standard
+methods and their fair variants on synthetic
+rectangle range space in 2D.
+2122232425
+k600700800900100011001200Average Size
+Average Size vs. k
+FMC
+Bounds: [c1log(k), c2log(k)]Figure 10: Average size of the 𝜀-net vs.𝑘on
+synthetic dataset with rectangle ranges and
+DP constraint. The gray area is the log trend.
+22232425
+Dimension500100015002000Average Size
+1.33x1.78x1.50x1.50xSize vs. Dimension with Improvement
+FGLP
+GLPFigure 11: Average size of the hitting set vs. 𝑑.
+In this setting, we consider half-spaces in R𝑑
+space with DP constraint and 𝑘=2.
+214216218220
+Data Size (n)0.0050.0100.0150.0200.025Unfairness ()
+5.97×7.52×
+3.85×20.60×Scalability (PopSim)
+Sampling ()
+FMC ()
+Sampling (0)
+FMC (0)
+0.50.60.70.80.91.0
+Unfairness (0)
+Figure 12: Unfairness on larger dataset size.
+214216218220
+Data Size (n)104
+103
+102
+101
+Runtime (seconds)
+Runtime Scalability (PopSim)
+Sampling
+FMC Figure 13: Runtime on larger dataset sizes.
+Adults COMPAS Admissions
+Datasets210
+28
+26
+24
+22
+ Fairness
+0.4182370.320916 0.302812
+0.0005070.0003750.001677 Fairness on Rank Regret Representatives
+Samplnig
+FMC Figure 14: Fairness in Rank Regret Task.
+Table 4: GLP v.s. FGLP on PopSim dataset for Neighborhood Hitting.
+Algorithm Output Size Fairness (F∞)Runtime (𝜇s)
+GLP 336 0.093 108
+FGLP 503 0.002 403
+Table 5: Comparing hitting set algorithms on synthetic data.
+Algorithm Half-space (𝑑>2)Rectangles (𝑑=2)
+FGLPF∞:0.00
+Time: 29.77sF∞:0.00
+Time: 1.31s
+GLPF∞: 0.06
+Time: 20.22sF∞: 0.28
+Time: 0.76s
+𝜀. As𝜀decreases, more points are required to construct an 𝜀-net
+that hits all heavy ranges. In addition, the fair method introduces
+only a minimal increase in sample size compared to the standard
+approach (logarithmic to 𝑘). A comparison of the running time of
+these two algorithms based on values 𝜀is provided in the techni-
+cal report [ 32]. Figures 12 and 13 show a comparison of the FMC
+and the sampling methods on larger datasets (larger instances of
+PopSim 5). As reflected in Figure 13, FMC ran in only 0.3 seconds
+for𝑛=1M, confirming its scalability. We also applied the GLP
+and FGLP algorithms to compute a hitting set for this range space.
+A comparison of their outputs is presented in Table 4. The results
+show that FGLP reduces unfairness 45 times, while maintaining
+a comparable sample size, especially considering the full dataset
+consists of 2M points.
+Synthetic Sampling . For this task, we generated a collection of
+synthetic datasets consisting of randomly sampled points and geo-
+metric ranges in the plane (rectangles) and higher dimensions (half-
+spaces). Details of the construction process are provided in the
+technical report [ 32]. We varied the dimensionality, the number of
+colors, and the number of ranges in these datasets.
+Results on𝜀-nets: Figure 7 compares the fairness (F2) of the
+standard Sampling method with two fair variants: Fair Monte
+Carlo (FMC) and Fair Sketch-and-Merge (FSM). Both FMC and
+FSM achieve near-zero unfairness, whereas the standard sampling
+method exhibits significantly higher unfairness. Figure 9 presents
+therunning time comparison between standard Sampling and FMC,as well as between standard Sketch-and-Merge (SM) and its fair
+counterpart, FSM. The results show that the additional computa-
+tional cost introduced by the fair methods is minimal while they
+significantly improve fairness. Additional results comparing the
+output size andruntime of standard sampling and Discrepancy-
+based methods are provided in the technical report [ 32]. Figure 10
+shows the output size of the FMC algorithm as the number of col-
+orsin the point set increases. The results show that an exponential
+increase in the number of colors leads to a linear growth in output
+size, aligning with the theoretical result ( log𝑘factor).
+Results on Geometric Set Cover: Table 5 presents a comparison of
+runtime andfairness of the two algorithms for hitting set problem.
+FGLP achieves zero unfairness with only a minimal increase in
+runtime. Figure 11 compares the output size of these algorithms
+across different𝑑. Overall, the fair setting results in a slightly larger
+output size compared to the standard version, while achieving near-
+zero unfairness. As 𝑑increases, the growth in size remains nearly
+constant since it depends on log𝑘rather than the VC-dim.
+Rank Regret Representatives . To generate Rank Regret Repre-
+sentatives, we use three real-world datasets: Adult, COMPAS, and
+Admissions. The goal is to construct an 𝜀-net that intersects the
+heavy top-𝑙regions of any ranking function defined over the dataset
+features. We evaluate this across different values of 𝜀=𝑙
+𝑛[11]. The
+results are consistent with previous settings. Figure 14 presents the
+fairness comparison across the datasets averaged over multiple 𝜀
+values. More results are provided in the technical report [32].
+9 CONCLUSION
+We studied the geometric approximation problems of 𝜀-net,𝜀-sample,
+and geometric hitting set through the lens of fairness. We formu-
+lated the problems using two notions of group fairness and proposed
+efficient randomized and deterministic algorithms with small ap-
+proximation factors to address them. In addition to the theoretical
+guarantees, our experimental evaluations further demonstrated the
+effectiveness of our algorithms across various tasks and datasets.
+
+REFERENCES
+[1] Chiara Accinelli, Simone Minisi, and Barbara Catania. 2020. Coverage-based
+Rewriting for Data Preparation.. In EDBT/ICDT Workshops .
+[2]Vladimir Agafonkin. 2016. Clustering millions of points on a map with Super-
+cluster . Mapbox. https://blog.mapbox.com/clustering-millions-of-points-on-a-
+map-with-supercluster-272046ec5c97 Accessed: 2025-07-06.
+[3]Pankaj K Agarwal, Nirman Kumar, Stavros Sintos, and Subhash Suri. 2017.
+Efficient algorithms for k-regret minimizing sets. arXiv preprint arXiv:1702.01446
+(2017).
+[4]Julia Angwin, Jeff Larson, Surya Mattu, and Lauren Kirchner. 2016. Ma-
+chine Bias – ProPublica. https://www.propublica.org/article/machine-bias-
+risk-assessments-in-criminal-sentencing. Accessed: 2025-04-16.
+[5] Sanjeev Arora, Elad Hazan, and Satyen Kale. 2012. The multiplicative weights
+update method: a meta-algorithm and applications. Theory of computing 8, 1
+(2012), 121–164.
+[6]Abolfazl Asudeh. 2021. Enabling responsible data science in practice. ACM
+SIGMOD Blog (2021).
+[7]Abolfazl Asudeh, Tanya Berger-Wolf, Bhaskar DasGupta, and Anastasios
+Sidiropoulos. 2023. Maximizing coverage while ensuring fairness: A tale of
+conflicting objectives. Algorithmica 85, 5 (2023), 1287–1331.
+[8] Abolfazl Asudeh, Gautam Das, HV Jagadish, Shangqi Lu, Azade Nazi, Yufei Tao,
+Nan Zhang, and Jianwen Zhao. 2022. On finding rank regret representatives.
+ACM Transactions on Database Systems (TODS) 47, 3 (2022), 1–37.
+[9] Abolfazl Asudeh, HV Jagadish, Julia Stoyanovich, and Gautam Das. 2019. De-
+signing fair ranking schemes. In Proceedings of the 2019 international conference
+on management of data . 1259–1276.
+[10] Abolfazl Asudeh, Zhongjun Jin, and HV Jagadish. 2019. Assessing and remedy-
+ing coverage for a given dataset. In 2019 IEEE 35th International Conference on
+Data Engineering (ICDE) . IEEE, 554–565.
+[11] Abolfazl Asudeh, Azade Nazi, Nan Zhang, Gautam Das, and HV Jagadish. 2019.
+RRR: Rank-regret representative. In Proceedings of the 2019 International Con-
+ference on Management of Data . 263–280.
+[12] Martin Aumuller, Sariel Har-Peled, Sepideh Mahabadi, Rasmus Pagh, and
+Francesco Silvestri. 2021. Fair near neighbor search via sampling. ACM SIGMOD
+Record 50, 1 (2021), 42–49.
+[13] Maria-Florina Balcan and Phil Long. 2013. Active and passive learning of linear
+separators under log-concave distributions. In Conference on Learning Theory .
+PMLR, 288–316.
+[14] Sayan Bandyapadhyay, Aritra Banik, and Sujoy Bhore. 2021. On fair covering
+and hitting problems. In Graph-Theoretic Concepts in Computer Science: 47th
+International Workshop, WG 2021, Warsaw, Poland, June 23–25, 2021, Revised
+Selected Papers 47 . Springer, 39–51.
+[15] Solon Barocas, Moritz Hardt, and Arvind Narayanan. 2017. Fairness in machine
+learning. Nips tutorial 1 (2017), 2017.
+[16] Solon Barocas, Moritz Hardt, and Arvind Narayanan. 2023. Fairness and machine
+learning: Limitations and opportunities . MIT Press.
+[17] Timothy Bates. 2006. The urban development potential of black-owned busi-
+nesses. Journal of the American Planning Association 72, 2 (2006), 227–237.
+[18] Sujoy Bhore, Devdan Dey, and Satyam Singh. 2024. Online Epsilon Net and
+Piercing Set for Geometric Concepts. arXiv preprint arXiv:2410.07059 (2024).
+[19] Asia J Biega, Krishna P Gummadi, and Gerhard Weikum. 2018. Equity of
+attention: Amortizing individual fairness in rankings. In The 41st international
+acm sigir conference on research & development in information retrieval . 405–414.
+[20] Hervé Brönnimann and Michael T Goodrich. 1994. Almost optimal set covers
+in finite VC-dimension: (preliminary version). In Proceedings of the tenth annual
+symposium on Computational geometry . 293–302.
+[21] Toon Calders, Faisal Kamiran, and Mykola Pechenizkiy. 2009. Building classifiers
+with independency constraints. In 2009 IEEE international conference on data
+mining workshops . IEEE, 13–18.
+[22] Timothy M Chan and Sariel Har-Peled. 2009. Approximation algorithms for
+maximum independent set of pseudo-disks. In Proceedings of the twenty-fifth
+annual symposium on Computational geometry . 333–340.
+[23] Eswar Chand. 2020. Admission Dataset. https://www.kaggle.com/datasets/
+eswarchandt/admission. Accessed: 2025-04-16.
+[24] Jiwon Chang, Bohan Cui, Fatemeh Nargesian, Abolfazl Asudeh, and HV Ja-
+gadish. 2024. Data distribution tailoring revisited: cost-efficient integration of
+representative data. The VLDB Journal 33, 5 (2024), 1283–1306.
+[25] B. Chazelle. 2000. The Discrepancy Method: Randomness and Complexity . Cam-
+bridge University Press. https://books.google.com/books?id=dmOPmEh6LdYC
+[26] Bernard Chazelle and Jiřı Matoušek. 1996. On linear-time deterministic algo-
+rithms for optimization problems in fixed dimension. Journal of Algorithms 21,
+3 (1996), 579–597.
+[27] Chandra Chekuri, Kenneth L Clarkson, and Sariel Har-Peled. 2012. On the set
+multicover problem in geometric settings. ACM Transactions on Algorithms
+(TALG) 9, 1 (2012), 1–17.
+[28] Valery Chupurnoff. 2024. Displaying a large number of objects on a map. Online
+blog post. https://mappable.world/blog/displaying-a-large-number-of-objects-
+on-a-map Accessed July 6, 2025.[29] Mohsen Dehghankar and Abolfazl Asudeh. 2025. HENN: A Hierarchical Epsilon
+Net Navigation Graph for Approximate Nearest Neighbor Search. arXiv preprint
+arXiv:2505.17368 (2025).
+[30] Mohsen Dehghankar and Abolfazl Asudeh. 2025. Mining the Minoria: Unknown,
+Under-represented, and Under-performing Minority Groups. Proceedings of the
+VLDB Endowment (2025).
+[31] Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh.
+2025. Fair Set Cover. In Proceedings of the 31st ACM SIGKDD Conference on
+Knowledge Discovery and Data Mining V.1 (Toronto ON, Canada) (KDD ’25) .
+Association for Computing Machinery, New York, NY, USA, 189–200. doi:10.
+1145/3690624.3709184
+[32] Mohsen Dehghankar, Stavros Sintos, and Abolfazl Asudeh. 2025. On Fair Epsilon
+Net and Geometric Hitting Set (Technical Report). CoRR, abs/2507.08758 (2025).
+https://arxiv.org/abs/2507.08758
+[33] Subramaniam Dhanabal and SJIJCA Chandramathi. 2011. A review of vari-
+ous k-nearest neighbor query processing techniques. International Journal of
+Computer Applications 31, 7 (2011), 14–22.
+[34] Dheeru Dua and Casey Graff. 2019. UCI Machine Learning Repository: Adult
+Data Set. https://archive.ics.uci.edu/ml/datasets/adult. Accessed: 2025-04-16.
+[35] Cynthia Dwork, Moritz Hardt, Toniann Pitassi, Omer Reingold, and Richard
+Zemel. 2012. Fairness through awareness. In Proceedings of the 3rd innovations
+in theoretical computer science conference . 214–226.
+[36] Mahdi Erfanian, HV Jagadish, and Abolfazl Asudeh. 2024. Chameleon: Founda-
+tion Models for Fairness-Aware Multi-Modal Data Augmentation to Enhance
+Coverage of Minorities. Proceedings of the VLDB Endowment 17, 11 (2024),
+3470–3483.
+[37] Seyed Esmaeili, Sharmila Duppala, Davidson Cheng, Vedant Nanda, Aravind
+Srinivasan, and John P Dickerson. 2023. Rawlsian fairness in online bipar-
+tite matching: Two-sided, group, and individual. In Proceedings of the AAAI
+Conference on Artificial Intelligence , Vol. 37. 5624–5632.
+[38] Dan Feldman and Michael Langberg. 2011. A unified framework for approximat-
+ing and clustering data. In Proceedings of the forty-third annual ACM symposium
+on Theory of computing . 569–578.
+[39] Sandra Fredman. 2017. Reversing discrimination. In Global Minority Rights .
+Routledge, 307–332.
+[40] Yoav Freund and Robert E Schapire. 1997. A decision-theoretic generalization
+of on-line learning and an application to boosting. Journal of computer and
+system sciences 55, 1 (1997), 119–139.
+[41] David García-Soriano and Francesco Bonchi. 2020. Fair-by-design matching.
+Data Mining and Knowledge Discovery 34 (2020), 1291–1335.
+[42] Shivam Gupta, Ganesh Ghalme, Narayanan C Krishnan, and Shweta Jain. 2023.
+Efficient algorithms for fair clustering with a new notion of fairness. Data
+Mining and Knowledge Discovery 37, 5 (2023), 1959–1997.
+[43] Rashida Hakim, Ana-Andreea Stoica, Christos H Papadimitriou, and Mihalis
+Yannakakis. 2024. The Fairness-Quality Tradeoff in Clustering. Advances in
+Neural Information Processing Systems 37 (2024), 117509–117542.
+[44] Sariel Har-Peled. 2011. Geometric approximation algorithms . Number 173.
+American Mathematical Soc.
+[45] Sariel Har-Peled, Mitchell Jones, and Saladi Rahul. 2021. Active-learning a
+convex body in low dimensions. Algorithmica 83 (2021), 1885–1917.
+[46] Sariel Har-Peled and Soham Mazumdar. 2004. On coresets for k-means and
+k-median clustering. In Proceedings of the thirty-sixth annual ACM symposium
+on Theory of computing . 291–300.
+[47] David Haussler and Emo Welzl. 1986. Epsilon-nets and simplex range queries. In
+Proceedings of the second annual symposium on Computational geometry . 61–71.
+[48] Zakria Hussain, Sandor Szedmak, and John Shawe-Taylor. 2004. The linear
+programming set covering machine. Pattern Analysis, Statistical Modelling and
+Computational Learning (2004).
+[49] Tanmay Inamdar, Lawqueen Kanesh, Madhumita Kundu, Nidhi Purohit, and
+Saket Saurabh. 2023. Fixed-Parameter Algorithms for Fair Hitting Set Problems.
+In48th International Symposium on Mathematical Foundations of Computer
+Science .
+[50] Christopher Jung, Sampath Kannan, and Neil Lutz. 2019. A center in your
+neighborhood: Fairness in facility location. arXiv preprint arXiv:1908.09041
+(2019).
+[51] Jon Kleinberg, Jens Ludwig, Sendhil Mullainathan, and Ashesh Rambachan.
+2018. Algorithmic fairness. In Aea papers and proceedings , Vol. 108. American
+Economic Association 2014 Broadway, Suite 305, Nashville, TN 37203, 22–27.
+[52] Nirman Kumar and Stavros Sintos. 2018. Faster approximation algorithm for
+the k-regret minimizing set and related problems. In 2018 Proceedings of the
+Twentieth Workshop on Algorithm Engineering and Experiments (ALENEX) . SIAM,
+62–74.
+[53] Jinyang Li, Yuval Moskovitch, Julia Stoyanovich, and HV Jagadish. 2023. Query
+refinement for diversity constraint satisfaction. Proceedings of the VLDB En-
+dowment 17, 2 (2023), 106–118.
+[54] Xi Liang, Stavros Sintos, and Sanjay Krishnan. 2023. Janusaqp: Efficient partition
+tree maintenance for dynamic approximate query processing. In 2023 IEEE 39th
+International Conference on Data Engineering (ICDE) . IEEE, 572–584.
+
+[55] Xi Liang, Stavros Sintos, Zechao Shang, and Sanjay Krishnan. 2021. Combining
+aggregation and sampling (nearly) optimally for approximate query processing.
+InProceedings of the 2021 International Conference on Management of Data .
+1129–1141.
+[56] Nick Littlestone. 1988. Learning quickly when irrelevant attributes abound: A
+new linear-threshold algorithm. Machine learning 2 (1988), 285–318.
+[57] Yiran Liu, Ke Yang, Zehan Qi, Xiao Liu, Yang Yu, and Chengxiang Zhai. 2024.
+Prejudice and caprice: A statistical framework for measuring social discrimina-
+tion in large language models. CoRR (2024).
+[58] Philip M Long. 2001. Using the pseudo-dimension to analyze approximation
+algorithms for integer programming. In Workshop on Algorithms and Data
+Structures . Springer, 26–37.
+[59] Yury Makarychev and Ali Vakilian. 2021. Approximation algorithms for socially
+fair clustering. In Conference on Learning Theory . PMLR, 3246–3264.
+[60] Mario Marchand, Mohak Shah, John Shawe-Taylor, and Marina Sokolova. 2003.
+The set covering machine with data-dependent half-spaces. In Proceedings of
+the 20th International Conference on Machine Learning (ICML-03) . 520–527.
+[61] Tasfia Mashiat, Xavier Gitiaux, Huzefa Rangwala, Patrick Fowler, and Sanmay
+Das. 2022. Trade-offs between group fairness metrics in societal resource
+allocation. In Proceedings of the 2022 ACM Conference on Fairness, Accountability,
+and Transparency . 1095–1105.
+[62] Jiří Matoušek. 1994. Geometric range searching. ACM Computing Surveys
+(CSUR) 26, 4 (1994), 422–461.
+[63] Ninareh Mehrabi, Fred Morstatter, Nripsuta Saxena, Kristina Lerman, and Aram
+Galstyan. 2021. A survey on bias and fairness in machine learning. ACM
+computing surveys (CSUR) 54, 6 (2021), 1–35.
+[64] Mohammad Hossein Moslemi and Mostafa Milani. 2024. Threshold-independent
+fair matching through score calibration. In Proceedings of the Conference on
+Governance, Understanding and Integration of Data for Effective and Responsible
+AI. 40–44.
+[65] Nabil H Mustafa and Kasturi Varadarajan. 2017. Epsilon-approximations &
+epsilon-nets. In Handbook of Discrete and Computational Geometry . Chapman
+and Hall/CRC, 1241–1267.
+[66] Danupon Nanongkai, Atish Das Sarma, Ashwin Lall, Richard J Lipton, and Jun
+Xu. 2010. Regret-minimizing representative databases. Proceedings of the VLDB
+Endowment 3, 1-2 (2010), 1114–1124.
+[67] Fatemeh Nargesian, Abolfazl Asudeh, and HV Jagadish. 2022. Responsible data
+integration: Next-generation challenges. In Proceedings of the 2022 international
+conference on management of data . 2458–2464.
+[68] Rostislav Netek, Jan Brus, and Ondrej Tomecka. 2019. Performance testing on
+marker clustering and heatmap visualization techniques: a comparative study
+on javascript mapping libraries. ISPRS international journal of geo-information
+8, 8 (2019), 348.
+[69] Khanh Duy Nguyen, Nima Shahbazi, and Abolfazl Asudeh. 2023. PopSim: An
+Individual-level Population Simulator for Equitable Allocation of City Resources.
+arXiv preprint arXiv:2305.02204 (2023).
+[70] Yongjoo Park, Barzan Mozafari, Joseph Sorenson, and Junhao Wang. 2018.
+Verdictdb: Universalizing approximate query processing. In Proceedings of the
+2018 International Conference on Management of Data . 1461–1476.
+[71] David Pujol, Amir Gilad, and Ashwin Machanavajjhala. 2023. PreFair: Privately
+Generating Justifiably Fair Synthetic Data. Proceedings of the VLDB Endowment
+16, 6 (2023), 1573–1586.
+[72] Nick Roussopoulos, Stephen Kelley, and Frederic Vincent. 1995. Nearest neigh-
+bor queries. In Proceedings of the 1995 ACM SIGMOD international conference on
+Management of data . 71–79.
+[73] Senjuti Basu Roy, Baruch Schieber, and Nimrod Talmon. 2024. Fairness in
+Preference Queries: Social Choice Theories Meet Data Management. Proceedings
+of the VLDB Endowment 17, 12 (2024), 4225–4228.
+[74] Babak Salimi, Bill Howe, and Dan Suciu. 2020. Database repair meets algorithmic
+fairness. ACM SIGMOD Record 49, 1 (2020), 34–41.
+[75] Babak Salimi, Luke Rodriguez, Bill Howe, and Dan Suciu. 2019. Interventional
+fairness: Causal database repair for algorithmic fairness. In Proceedings of the
+2019 international conference on management of data . 793–810.
+[76] Sebastian Schelter, Tammo Rukat, and Felix Biessmann. 2021. JENGA: A frame-
+work to study the impact of data errors on the predictions of machine learning
+models. (2021).
+[77] Nima Shahbazi, Nikola Danevski, Fatemeh Nargesian, Abolfazl Asudeh, and
+Divesh Srivastava. 2023. Through the Fairness Lens: Experimental Analysis
+and Evaluation of Entity Matching. Proceedings of the VLDB Endowment 16, 11
+(2023), 3279–3292.
+[78] Nima Shahbazi, Yin Lin, Abolfazl Asudeh, and HV Jagadish. 2023. Representa-
+tion bias in data: A survey on identification and resolution techniques. Comput.
+Surveys 55, 13s (2023), 1–39.
+[79] Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh. 2024. Fairhash: A fair and
+memory/time-efficient hashmap. Proceedings of the ACM on Management of
+Data 2, 3 (2024), 1–29.
+[80] Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh. 2025. Fair-Count-Min:
+Frequency Estimation under Equal Group-wise Approximation Factor. arXivpreprint arXiv:2505.18919 (2025).
+[81] Nima Shahbazi, Jin Wang, Zhengjie Miao, and Nikita Bhutani. 2024. Fairness-
+aware data preparation for entity matching. In 2024 IEEE 40th International
+Conference on Data Engineering (ICDE) . IEEE, 3476–3489.
+[82] Shubham Sharma, Yunfeng Zhang, Jesús M Ríos Aliaga, Djallel Bouneffouf,
+Vinod Muthusamy, and Kush R Varshney. 2020. Data augmentation for discrim-
+ination prevention and bias disambiguation. In Proceedings of the AAAI/ACM
+Conference on AI, Ethics, and Society . 358–364.
+[83] Seiji Shaw, Aidan Curtis, Leslie Pack Kaelbling, Tomás Lozano-Pérez, and
+Nicholas Roy. 2024. Towards practical finite sample bounds for motion planning
+in TAMP. arXiv preprint arXiv:2407.17394 (2024).
+[84] Suraj Shetiya, Ian P Swift, Abolfazl Asudeh, and Gautam Das. 2022. Fairness-
+aware range queries for selecting unbiased data. In 2022 IEEE 38th International
+Conference on Data Engineering (ICDE) . IEEE, 1423–1436.
+[85] Ashudeep Singh and Thorsten Joachims. 2018. Fairness of exposure in rankings.
+InProceedings of the 24th ACM SIGKDD international conference on knowledge
+discovery & data mining . 2219–2228.
+[86] Mohit Singhal, Javier Pacheco, Seyyed Mohammad Sadegh Moosavi Khorzooghi,
+Tanusree Debi, Abolfazl Asudeh, Gautam Das, and Shirin Nilizadeh. 2025. Au-
+diting Yelp’s Business Ranking and Review Recommendation Through the Lens
+of Fairness. In Proceedings of the International AAAI Conference on Web and
+Social Media , Vol. 19. 1798–1816.
+[87] Julia Stoyanovich, Bill Howe, and Hosagrahar Visvesvaraya Jagadish. 2020.
+Responsible data management. Proceedings of the VLDB Endowment 13, 12
+(2020).
+[88] Ki Hyun Tae, Yuji Roh, Young Hun Oh, Hyunsu Kim, and Steven Euijong
+Whang. 2019. Data cleaning for accurate, fair, and robust models: A big data-AI
+integration approach. In Proceedings of the 3rd international workshop on data
+management for end-to-end machine learning . 1–4.
+[89] Ki Hyun Tae and Steven Euijong Whang. 2021. Slice tuner: A selective data
+acquisition framework for accurate and fair machine learning models. In Pro-
+ceedings of the 2021 International Conference on Management of Data . 1771–1783.
+[90] Suhas Thejaswi, Bruno Ordozgoiti, and Aristides Gionis. 2021. Diversity-aware
+k-median: Clustering with fair center representation. In Machine Learning and
+Knowledge Discovery in Databases. Research Track: European Conference, ECML
+PKDD 2021, Bilbao, Spain, September 13–17, 2021, Proceedings, Part II 21 . Springer,
+765–780.
+[91] Vladimir N. Vapnik and Alexey Ya. Chervonenkis. 1971. On the uniform con-
+vergence of relative frequencies of events to their probabilities. Theory of
+Probability and its Applications 16, 2 (1971), 264–280. doi:10.1137/1116025
+[92] Volodymyr Agafonkin and contributors. 2025. Leaflet – a JavaScript library for
+interactive maps. https://leafletjs.com/. Accessed July 6, 2025.
+[93] Yanhao Wang, Yuchen Li, Francesco Bonchi, and Ying Wang. 2022. Balancing
+Utility and Fairness in Submodular Maximization (Technical Report). arXiv
+preprint arXiv:2211.00980 (2022).
+[94] Zeyu Wang, Klint Qinami, Ioannis Christos Karakozis, Kyle Genova, Prem Nair,
+Kenji Hata, and Olga Russakovsky. 2020. Towards fairness in visual recognition:
+Effective strategies for bias mitigation. In Proceedings of the IEEE/CVF conference
+on computer vision and pattern recognition . 8919–8928.
+[95] Weili Wu, Zhao Zhang, Wonjun Lee, Dingzhu Du, et al .2020. Optimal coverage
+in wireless sensor networks. (2020).
+[96] Yixuan Xu, Steven Jecmen, Zimeng Song, and Fei Fang. 2023. A one-size-fits-all
+approach to improving randomness in paper assignment. Advances in Neural
+Information Processing Systems 36 (2023), 14445–14468.
+[97] Bin Yao, Feifei Li, and Piyush Kumar. 2010. K nearest neighbor queries and
+knn-joins in large relational databases (almost) for free. In 2010 IEEE 26th
+International Conference on Data Engineering (ICDE 2010) . IEEE, 4–15.
+[98] Meike Zehlike, Francesco Bonchi, Carlos Castillo, Sara Hajian, Mohamed Mega-
+hed, and Ricardo Baeza-Yates. 2017. Fa* ir: A fair top-k ranking algorithm.
+InProceedings of the 2017 ACM on Conference on Information and Knowledge
+Management . 1569–1578.
+[99] Haoran Zhang, Quaid Morris, Berk Ustun, and Marzyeh Ghassemi. 2021. Learn-
+ing optimal predictive checklists. Advances in neural information processing
+systems 34 (2021), 1215–1229.
+[100] Hantian Zhang, Ki Hyun Tae, Jaeyoung Park, Xu Chu, and Steven Euijong
+Whang. 2023. iflipper: Label flipping for individual fairness. Proceedings of the
+ACM on Management of Data 1, 1 (2023), 1–26.
+[101] Jiping Zheng, Yuan Ma, Wei Ma, Yanhao Wang, and Xiaoyang Wang. 2022.
+Happiness maximizing sets under group fairness constraints. Proceedings of the
+VLDB Endowment 16, 2 (2022), 291–303.
+[102] Jiongli Zhu, Sainyam Galhotra, Nazanin Sabri, and Babak Salimi. 2023. Con-
+sistent Range Approximation for Fair Predictive Modeling. Proc. VLDB Endow.
+(2023).
+[103] Jiongli Zhu and Babak Salimi. 2024. Overcoming Data Biases: Towards Enhanced
+Accuracy and Reliability in Machine Learning. IEEE Data Eng. Bull. 47, 1 (2024),
+18–35.
+[104] Indre Zliobaite. 2015. On the relation between accuracy and fairness in binary
+classification. arXiv preprint arXiv:1505.05723 (2015).
+
+APPENDIX
+A FAIR𝜀-SAMPLE
+In this section, we discuss the Fair 𝜀-sample problem by addressing
+both DP and CR constraints. Most of the results are similar to
+Section 4, so we only rely on a brief discussion.
+Based on Theorem 2 in Background, an 𝜀-sample can be built by
+randomly sampling 𝛾≥𝑐0
+𝜀2(︂
+𝑑log𝑑
+𝜀+log1
+𝜑)︂
+from𝑋. As a result,
+both the Monte-Carlo sampling-based and the discrepancy-based
+algorithms discussed in Section 4 also apply here to build a fair
+𝜀-sample for satisfying DP. Specifically, The discrepancy-based
+algorithm for building 𝜀-samples follows similar steps to those in
+𝜀-nets [ 25]. By constructing the Fair Matchings (as discussed in
+Section 4.2), one can similarly build fair 𝜀-samples.
+However, it is not always possible to build an 𝜀-sample satisfying
+any arbitrary CR constraint. We provide a counter-example of a
+case where satisfying a large set of possible ratios Tis impossible.
+Assume that for a range space (𝑋,R), there is at least one range
+𝑅∗∈Rthat separates all the points of color 𝑐from others. In other
+words,
+𝑅∗∩𝑋=𝑋𝑐.
+This is a valid assumption in practice. For example, assume the
+range space(𝑋,R)where𝑋is a subset of points in R𝑑andRis
+the set of all possible half-spaces in R𝑑. There can be a hyper-plane
+that separates at least one of the demographic groups from others
+with a high accuracy (this is a classification task).
+LetAbe an𝜀-sample of this range space. Based on the Defini-
+tion 2 we have:
+|︁|︁|︁|︁|A∩𝑅∗|
+|A|−|𝑋∩𝑅∗|
+|𝑋||︁|︁|︁|︁≤𝜀 (5)
+→|︁|︁|︁|︁|A∩𝑋𝑐|
+|A|−|𝑋𝑐|
+|𝑋||︁|︁|︁|︁≤𝜀 (6)
+This means that|A∩𝑋𝑐|
+|A|, namely the ratio of points colored as 𝑐
+inA, can not deviate more than 𝜀from the original set. In other
+words, any ratio 𝜏ℓwith𝑡ℓ∉[(𝑋𝑐
+|𝑋|−𝜀),(𝑋𝑐
+|𝑋|+𝜀)]is not satisfiable,
+forℓ∈[𝑘].
+In fact, even if there is a range 𝑅∗thatapproximately separates
+one of the colors (demographic groups) from others, then, there
+always exists some ratios that cannot be satisfied by CR.
+An example of this situation is illustrated in Figure 3.
+B ADDITIONAL EXPERIMENTS
+B.1 Datasets Detail
+We use four real-world datasets in our experiments. PopSim[ 69] is
+a large semi-synthetic dataset of 2 million individuals from Illinois,
+annotated with geographic and racial information. Adult[ 34] is a
+UCI benchmark from the 1994 U.S. Census, where the task is to pre-
+dict income; we use gender as the sensitive attribute (66% male, 33%
+female). COMPAS[ 4] includes criminal and demographic data for
+over 7,000 defendants, using race as the sensitive attribute across
+three groups: African-American (48%), Caucasian (37%), and His-
+panic (14%). College Admission[ 23] contains application featuresfor international students, with gender as the sensitive attribute
+(52% male, 47% female).
+PopSim contains 2,000,000 rows and three columns: latitude, lon-
+gitude, and a categorical attribute representing race. Adult consists
+of 48,000 rows and 15 attributes, covering demographic and employ-
+ment information. COMPAS includes 60,000 rows and 28 features
+related to criminal history and risk assessment. College Admission
+has 400 entries with 7 features describing applicants’ academic and
+demographic information.
+All experiments were performed on a machine with an Intel i9-
+12900K CPU, 64GB RAM, NVIDIA RTX 3090 GPU (24GB), running
+Ubuntu 22.04 and Python 3.10.
+B.2 Synthetic Dataset Construction
+We constructed two classes of range spaces. In the 2D setting, the
+ranges were axis-aligned rectangles, and the point set consisted of
+randomly generated points within the unit square. Each point was
+randomly assigned a color from a set of 𝑘colors. The values of 𝜀
+were carefully chosen to produce 𝜀-nets that capture varying sizes
+of heavy range families, based on the selected 𝜀.
+For higher-dimensional settings, we used half-spaces in R𝑑as
+the range family. Points were uniformly sampled from the unit hy-
+percube, and each half-space was defined by a randomly generated
+normal vector and a constant. The constant was selected such that
+each half-space intersects at least one point from the generated
+point set. The total number of points and ranges generated in all
+these synthetic datasets varies between 212to216.
+B.3 Additional Results on Experiments
+B.3.1 Representative Database Sampling: Fairness comparison un-
+der Demographic Parity (DP) and constraints for the three datasets
+is presented in Figures 17.
+B.3.2 Neighborhood Hitting: Figure 15 shows the average running
+time of the two algorithms for finding 𝜀-net in the PopSim dataset
+across different values of 𝜀.
+B.3.3 More Results of Synthetic Sampling. Figure 18 presents a
+comparison of the average output size and running time of standard
+(unfair) algorithms for constructing 𝜀-nets. Among them, the Sketch-
+and-Merge (SM) algorithm outperforms the classic Discrepancy
+method in terms of runtime. The Sampling algorithm is the fastest
+overall, as it simply relies on drawing a random sample from the
+dataset.
+The output sizes of the Discrepancy and Sketch-and-Merge (SM)
+algorithms are identical. The larger output size observed for SM
+compared to Sampling is due to implementation constraints—specifically,
+SM produces outputs whose sizes are rounded up to the nearest
+power of two.
+Figure 16 compares the average output size of 𝜀-nets generated
+by fair and unfair algorithms. The fair variants incur only a slight
+increase in size compared to their standard counterparts.
+B.3.4 More Results on Rank Regret Representatives. Figure 19 shows
+the results of applying the Fair Monte Carlo (FMC) algorithm to com-
+pute Fair Rank Regret Representatives. Once again, FMC achieves
+near-zero unfairness.
+
+ = 0.2
+ = 0.4
+ = 0.63
+ = 0.65
+ = 0.66
+Value of 
+0.0000.0020.0040.0060.0080.0100.012Running Time (s)
+Running Time vs. 
+Sampling
+FMCFigure 15: Running time comparison of Fair Monte-Carlo (FMC)
+algorithm and standard Sampling on PopSim dataset for gener-
+ating𝜀-net.
+Sampling FMC FSM SM050100150200250300Average Size262.40279.26332.80 332.80Size of -net vs. Method
+Figure 16: Comparing the size of output 𝜀-net for different meth-
+ods on synthetic dataset.
+ = 0.01
+ = 0.015
+ = 0.02
+ = 0.025
+ = 0.03
+Value of 
+0.0000.0020.0040.006Fairness ()
+×236.62×218.42
+×45.50×227.52×282.12Fairness Based on 
+Sampling
+FMC
+(a) Adults Dataset
+ = 0.02
+ = 0.04
+ = 0.06
+ = 0.08
+ = 0.1
+Value of 
+0.0000.0020.0040.0060.0080.0100.012Fairness ()
+×inf×inf
+×inf×inf
+×infFairness Based on 
+Sampling
+FMC (b) COMPAS Dataset
+ = 0.02
+ = 0.04
+ = 0.06
+ = 0.08
+ = 0.1
+Value of 
+0.0000.0050.0100.0150.020Fairness ()
+×22.82
+×11.41×25.67
+×2.85×5.70Fairness Based on 
+Sampling
+FMC (c) College Admission Dataset
+Figure 17: Measuring the fairness ( F∞) of the output 𝜀-net across different values of 𝜀across three datasets on Representative Database
+Sampling task. Here, we compare the unfair Sampling and Fair Monte-Carlo sampling methods. Here, the fairness constraint is DP.
+0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60
+Value of 
+2004006008001000Average Size
+Size of -net vs. 
+Sampling
+Discrepancy
+SM
+Upper Bound (2 * Sampling)
+(a) Average size comparison.
+29210211212
+m: Number of ranges213
+210
+27
+24
+21
+222528Average Time (seconds)
+Running Time vs. m
+Sampling
+Discrepancy
+SM (b) Running time comparison.
+Figure 18: The comparison between the standard algorithms for building 𝜀-net. The Sketch-and-Merge (SM) algorithm achieves a better
+runtime compared to the classic Discrepancy algorithm, and Sampling is the fastest. This experiment is run on the synthetic dataset.
+ = 0.01
+  = 0.15
+  = 0.25
+Value of 
+0.00000.00250.00500.00750.01000.01250.0150Fairness ()
+×91.01×591.55
+×62.51Fairness Based on 
+Sampling
+FMC
+(a) Adults Dataset
+ = 0.01
+  = 0.15
+  = 0.25
+Value of 
+0.0000.0020.0040.0060.0080.0100.0120.014Fairness ()
+×inf
+×inf×92.21Fairness Based on 
+Sampling
+FMC (b) COMPAS Dataset
+ = 0.1
+  = 0.2
+  = 0.3
+Value of 
+0.0000.0050.0100.0150.0200.025Fairness ()
+×2.85×31.38
+×19.97Fairness Based on 
+Sampling
+FMC (c) College Admission Dataset
+Figure 19: The result of applying fair algorithms in finding the fair Rank Regret Representatives on the three datasets.
+
+Hierarchy To Score
+
+Paper
+  - Introduction
+    - Motivation
+      - Paragraph 1
+        - [86]
+        - [2]
+        - [28]
+        - [94]
+    - Technical Contributions
+      - Paragraph 1
+      - Paragraph 2
+  - Preliminaries
+    - [Section Lead-in]
+      - Paragraph 1
+    - Notations
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+    - Definitions
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+        - [20]
+        - [47]
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+      - Paragraph 10
+        - (1)
+      - Paragraph 11
+      - Paragraph 12
+      - Paragraph 13
+      - Paragraph 14
+    - Problems
+      - Paragraph 1
+        - [39]
+        - [17]
+        - [31]
+        - [42]
+        - [43]
+    - Fairness
+      - Paragraph 1
+        - [39]
+        - [17]
+        - [31]
+        - [42]
+        - [43]
+  - Background
+    - Paragraph 1
+  - Fair -nets
+    - [Section Lead-in]
+      - Paragraph 1
+    - Discrepancy-based Algorithms for Satisfying Demographic Parity
+      - Paragraph 1
+        - [44]
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+        - [32]
+      - Paragraph 6
+        - [32]
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+        - [47]
+        - [44]
+      - Paragraph 10
+      - Paragraph 11
+      - Paragraph 12
+      - Paragraph 13
+      - Paragraph 14
+        - [32]
+      - Paragraph 15
+        - [32]
+        - [25]
+        - [44]
+    - Satisfying Custom-Ratio Fairness
+      - Paragraph 1
+        - [25]
+        - [44]
+        - [31]
+      - Paragraph 2
+      - Paragraph 3
+    - Fair -sample
+      - Paragraph 1
+        - [32]
+  - Fair Geometric Hitting Set
+    - Paragraph 1
+      - [44]
+    - Paragraph 2
+      - (3)
+    - Paragraph 3
+    - Paragraph 4
+    - Paragraph 5
+      - [32]
+    - Paragraph 6
+      - [32]
+  - Related Work
+    - Paragraph 1
+      - [51]
+    - Paragraph 2
+      - [87]
+      - [67]
+      - [89]
+      - [100]
+      - [30]
+      - [71]
+      - [88]
+      - [79]
+      - [12]
+      - [80]
+    - Paragraph 3
+      - [93]
+      - [7]
+      - [14]
+      - [31]
+      - [49]
+      - [50]
+      - [37]
+      - [41]
+      - [61]
+  - Application to Database Systems
+    - Paragraph 1
+      - [70]
+      - [55]
+      - [54]
+      - [29]
+      - [8]
+      - [101]
+      - [13]
+      - [45]
+      - [18]
+      - [38]
+      - [46]
+      - [99]
+      - [83]
+      - [95]
+  - Experiments
+    - [Section Lead-in]
+      - Paragraph 1
+        - [32]
+    - Experimental Setups
+      - Paragraph 1
+        - [11]
+      - Paragraph 2
+        - (4)
+      - Paragraph 3
+      - Paragraph 4
+        - [69]
+        - [34]
+        - [4]
+        - [23]
+        - [32]
+    - Experiment Results
+      - Paragraph 1
+        - [32]
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+      - Paragraph 10
+      - Paragraph 11
+        - [32]
+      - Paragraph 12
+        - [32]
+      - Paragraph 13
+        - [11]
+        - [32]
+  - Conclusion
+    - Paragraph 1
+  - A Fair -sample
+    - Paragraph 1
+      - [25]
+    - Paragraph 2
+    - Paragraph 3
+    - Paragraph 4
+    - Paragraph 5
+  - B Additional Experiments
+    - B.1 Datasets Detail
+      - Paragraph 1
+        - [69]
+        - [34]
+        - [4]
+        - [23]
+      - Paragraph 2
+      - Paragraph 3
+    - B.2 Synthetic Dataset Construction
+      - Paragraph 1
+    - B.3 Additional Results on Experiments
+      - Paragraph 1
+[anthropic_full_paper_response] attempt=1/3
+Paper: 1.0 | 0.0
+
+Introduction: 0.06 | 0.0
+Motivation: 0.03 | 0.0
+Paragraph 1: 1.0 | 0.7
+[86]: 0.2
+[2]: 0.15
+[28]: 0.15
+[94]: 0.2
+Technical Contributions: 0.03 | 0.0
+Paragraph 1: 0.5 | 0.0
+Paragraph 2: 0.5 | 0.0
+
+Preliminaries: 0.05 | 0.0
+[Section Lead-in]: 0.05 | 0.0
+Paragraph 1: 1.0 | 0.0
+Notations: 0.2 | 0.0
+Paragraph 1: 0.2 | 0.0
+Paragraph 2: 0.2 | 0.0
+Paragraph 3: 0.2 | 0.0
+Paragraph 4: 0.2 | 0.0
+Paragraph 5: 0.2 | 0.0
+Definitions: 0.4 | 0.0
+Paragraph 1: 0.05 | 0.0
+Paragraph 2: 0.05 | 0.0
+Paragraph 3: 0.1 | 0.4
+[20]: 0.2
+[47]: 0.2
+Paragraph 4: 0.05 | 0.0
+Paragraph 5: 0.05 | 0.0
+Paragraph 6: 0.05 | 0.0
+Paragraph 7: 0.1 | 0.0
+Paragraph 8: 0.1 | 0.0
+Paragraph 9: 0.1 | 0.0
+Paragraph 10: 0.1 | 0.0
+(1): 0.0
+Paragraph 11: 0.05 | 0.0
+Paragraph 12: 0.05 | 0.0
+Paragraph 13: 0.05 | 0.0
+Paragraph 14: 0.05 | 0.0
+Problems: 0.2 | 0.0
+Paragraph 1: 1.0 | 0.3
+[39]: 0.05
+[17]: 0.05
+[31]: 0.1
+[42]: 0.05
+[43]: 0.05
+Fairness: 0.15 | 0.0
+Paragraph 1: 1.0 | 0.3
+[39]: 0.05
+[17]: 0.05
+[31]: 0.1
+[42]: 0.05
+[43]: 0.05
+
+Background: 0.03 | 0.0
+Paragraph 1: 1.0 | 0.0
+
+Fair -nets: 0.35 | 0.0
+[Section Lead-in]: 0.03 | 0.0
+Paragraph 1: 1.0 | 0.0
+Discrepancy-based Algorithms for Satisfying Demographic Parity: 0.45 | 0.0
+Paragraph 1: 0.04 | 0.3
+[44]: 0.3
+Paragraph 2: 0.04 | 0.0
+Paragraph 3: 0.04 | 0.0
+Paragraph 4: 0.04 | 0.0
+Paragraph 5: 0.06 | 0.2
+[32]: 0.2
+Paragraph 6: 0.06 | 0.2
+[32]: 0.2
+Paragraph 7: 0.06 | 0.0
+Paragraph 8: 0.06 | 0.0
+Paragraph 9: 0.06 | 0.3
+[47]: 0.15
+[44]: 0.15
+Paragraph 10: 0.06 | 0.0
+Paragraph 11: 0.06 | 0.0
+Paragraph 12: 0.06 | 0.0
+Paragraph 13: 0.06 | 0.0
+Paragraph 14: 0.1 | 0.2
+[32]: 0.1
+[25]: 0.05
+[44]: 0.05
+Paragraph 15: 0.1 | 0.3
+[32]: 0.1
+[25]: 0.1
+[44]: 0.1
+Satisfying Custom-Ratio Fairness: 0.25 | 0.0
+Paragraph 1: 0.5 | 0.5
+[25]: 0.1
+[44]: 0.1
+[31]: 0.3
+Paragraph 2: 0.3 | 0.0
+Paragraph 3: 0.2 | 0.0
+Fair -sample: 0.1 | 0.0
+Paragraph 1: 1.0 | 0.2
+[32]: 0.2
+
+Fair Geometric Hitting Set: 0.2 | 0.0
+Paragraph 1: 0.1 | 0.2
+[44]: 0.2
+Paragraph 2: 0.2 | 0.1
+(3): 0.1
+Paragraph 3: 0.2 | 0.0
+Paragraph 4: 0.2 | 0.0
+Paragraph 5: 0.15 | 0.2
+[32]: 0.2
+Paragraph 6: 0.15 | 0.2
+[32]: 0.2
+
+Related Work: 0.03 | 0.0
+Paragraph 1: 0.2 | 0.5
+[51]: 0.5
+Paragraph 2: 0.4 | 0.8
+[87]: 0.1
+[67]: 0.05
+[89]: 0.05
+[100]: 0.05
+[30]: 0.05
+[71]: 0.05
+[88]: 0.05
+[79]: 0.1
+[12]: 0.1
+[80]: 0.1
+Paragraph 3: 0.4 | 0.8
+[93]: 0.05
+[7]: 0.1
+[14]: 0.1
+[31]: 0.2
+[49]: 0.1
+[50]: 0.05
+[37]: 0.05
+[41]: 0.05
+[61]: 0.05
+
+Application to Database Systems: 0.04 | 0.0
+Paragraph 1: 1.0 | 0.7
+[70]: 0.05
+[55]: 0.05
+[54]: 0.05
+[29]: 0.05
+[8]: 0.1
+[101]: 0.1
+[13]: 0.05
+[45]: 0.05
+[18]: 0.05
+[38]: 0.05
+[46]: 0.05
+[99]: 0.05
+[83]: 0.05
+[95]: 0.05
+
+Experiments: 0.15 | 0.0
+[Section Lead-in]: 0.03 | 0.0
+Paragraph 1: 1.0 | 0.1
+[32]: 0.1
+Experimental Setups: 0.2 | 0.0
+Paragraph 1: 0.3 | 0.2
+[11]: 0.2
+Paragraph 2: 0.3 | 0.1
+(4): 0.1
+Paragraph 3: 0.2 | 0.0
+Paragraph 4: 0.2 | 0.5
+[69]: 0.1
+[34]: 0.1
+[4]: 0.1
+[23]: 0.1
+[32]: 0.1
+Experiment Results: 0.77 | 0.0
+Paragraph 1: 0.05 | 0.1
+[32]: 0.1
+Paragraph 2: 0.08 | 0.0
+Paragraph 3: 0.08 | 0.0
+Paragraph 4: 0.08 | 0.0
+Paragraph 5: 0.08 | 0.0
+Paragraph 6: 0.08 | 0.0
+Paragraph 7: 0.08 | 0.0
+Paragraph 8: 0.08 | 0.0
+Paragraph 9: 0.08 | 0.0
+Paragraph 10: 0.08 | 0.0
+Paragraph 11: 0.05 | 0.1
+[32]: 0.1
+Paragraph 12: 0.05 | 0.1
+[32]: 0.1
+Paragraph 13: 0.05 | 0.2
+[11]: 0.1
+[32]: 0.1
+
+Conclusion: 0.02 | 0.0
+Paragraph 1: 1.0 | 0.0
+
+A Fair -sample: 0.04 | 0.0
+Paragraph 1: 0.15 | 0.3
+[25]: 0.3
+Paragraph 2: 0.15 | 0.0
+Paragraph 3: 0.25 | 0.0
+Paragraph 4: 0.25 | 0.0
+Paragraph 5: 0.2 | 0.0
+
+B Additional Experiments: 0.03 | 0.0
+B.1 Datasets Detail: 0.3 | 0.0
+Paragraph 1: 0.5 | 0.5
+[69]: 0.1
+[34]: 0.1
+[4]: 0.1
+[23]: 0.2
+Paragraph 2: 0.3 | 0.0
+Paragraph 3: 0.2 | 0.0
+B.2 Synthetic Dataset Construction: 0.3 | 0.0
+Paragraph 1: 1.0 | 0.0
+B.3 Additional Results on Experiments: 0.4 | 0.0
+Paragraph 1: 1.0 | 0.0
+
+Citation Contributions
+
+[86]: 0.006
+[2]: 0.0045
+[28]: 0.0045
+[94]: 0.006
+[20]: 0.004
+[47]: 0.02
+[39]: 0.006
+[17]: 0.006
+[31]: 0.042
+[42]: 0.006
+[43]: 0.006
+[44]: 0.085
+[32]: 0.11
+[25]: 0.04
+[51]: 0.006
+[87]: 0.003
+[67]: 0.0015
+[89]: 0.0015
+[100]: 0.0015
+[30]: 0.0015
+[71]: 0.0015
+[88]: 0.0015
+[79]: 0.003
+[12]: 0.003
+[80]: 0.003
+[93]: 0.0015
+[7]: 0.003
+[14]: 0.003
+[49]: 0.003
+[50]: 0.0015
+[37]: 0.0015
+[41]: 0.0015
+[61]: 0.0015
+[70]: 0.003
+[55]: 0.003
+[54]: 0.003
+[29]: 0.003
+[8]: 0.006
+[101]: 0.006
+[13]: 0.003
+[45]: 0.003
+[18]: 0.003
+[38]: 0.003
+[46]: 0.003
+[99]: 0.003
+[83]: 0.003
+[95]: 0.003
+[11]: 0.018
+[69]: 0.012
+[34]: 0.012
+[4]: 0.012
+[23]: 0.015
+(1): 0.0
+(3): 0.008
+(4): 0.006

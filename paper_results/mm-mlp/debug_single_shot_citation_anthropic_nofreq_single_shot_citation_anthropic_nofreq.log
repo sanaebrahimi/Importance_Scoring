@@ -1,0 +1,1800 @@
+[single_shot_citation_anthropic_prompt]
+Assign direct citation contribution scores for the following paper.
+
+Goal:
+Score the cited references by how foundational they are to the paper's actual scientific contribution.
+
+Interpretation of score:
+A cited paper should receive a higher score if removing its ideas, methods, theory, framework, or evaluation role would substantially change the current paper's contribution.
+A cited paper should receive a lower score if it mainly provides background, motivation, peripheral comparison, or general context.
+
+Scoring rules:
+- Score all cited references that appear in the paper.
+- Scores must be non-negative.
+- Scores must sum to 1.0 across all cited references.
+- Use relative scoring: if one citation is about twice as foundational as another, its score should be about twice as large.
+- Do not output any citation that does not appear in the paper.
+- Use citation identifiers exactly as they appear in the paper.
+
+Output format:
+Return one JSON object with this exact shape:
+
+{
+  "citation_scores": {
+    "<citation identifier>": <score>,
+    "<citation identifier>": <score>
+  }
+}
+
+Paper text:
+Evaluating the Feasibility of Sampling-Based Techniques for
+Training Multilayer Perceptrons
+Sana Ebrahimi
+University of Illinois Chicago
+Department of Computer Science
+Chicago, Illinois, USA
+sebrah7@uic.eduRishi Advani
+University of Illinois Chicago
+Department of Computer Science
+Chicago, Illinois, USA
+radvani2@uic.eduAbolfazl Asudeh
+University of Illinois Chicago
+Department of Computer Science
+Chicago, Illinois, USA
+asudeh@uic.edu
+ABSTRACT
+The training process of neural networks is known to be time-
+consuming, and having a deep architecture only aggravates the
+issue. This process consists mostly of matrix operations, among
+which matrix multiplication is the bottleneck. Several sampling-
+based techniques have been proposed for speeding up the training
+time of deep neural networks by approximating the matrix prod-
+ucts. These techniques fall under two categories: (i) sampling a
+subset of nodes in every hidden layer as active at every itera-
+tion and (ii) sampling a subset of nodes from the previous layer
+to approximate the current layer’s activations using the edges
+from the sampled nodes. In both cases, the matrix products are
+computed using only the selected samples. In this paper, we eval-
+uate the feasibility of these approaches on CPU machines with
+limited computational resources. Making a connection between
+the two research directions as special cases of approximating
+matrix multiplications in the context of neural networks, we
+provide a negative theoretical analysis that shows feedforward
+approximation is an obstacle against scalability. We conduct com-
+prehensive experimental evaluations that demonstrate the most
+pressing challenges and limitations associated with the studied
+approaches. We observe that the hashing-based node selection
+method is not scalable to a large number of layers, confirming
+our theoretical analysis. Finally, we identify directions for future
+research.
+1 INTRODUCTION
+The database community has played a significant role in tackling
+the complexities of big data, developing advanced technologies
+for addressing scalability challenges in very large data. Many
+such technologies have been used to address big-data challenges
+across various domains. For example, Asudeh et al . [3,4]leverage
+sampling-based similarity joins [ 10] and selectivity estimation
+queries [ 7,24] for signal reconstruction at scale. Among such ex-
+amples, data management for machine learning (ML) [ 32,35,62]
+shines as an interdisciplinary domain that led to many key ad-
+vances, including SystemML [ 8,9,20], join optimization for fea-
+ture selection [ 33], federated learning [ 41], ML model materializa-
+tion [ 26,61], etc. Following the theme of Extended Database Tech-
+nologies for Machine Learning , this paper studies the extension of
+sampling-based techniques for efficient training of deep neural
+networks (DNNs) on CPU machines with limited resources.
+One of the crucial factors in developing DNN models with high
+performance is the network architecture. The task and dataset
+at hand determine the most appropriate architecture to use. In
+addition to a large number of layers, DNNs often have a high
+©2025 Copyright held by the owner/author(s). Published in Proceedings of the
+28th International Conference on Extending Database Technology (EDBT), 25th
+March-28th March, 2025, ISBN 978-3-98318-097-4 on OpenProceedings.org.
+Distribution of this paper is permitted under the terms of the Creative Commons
+license CC-by-nc-nd 4.0.number of nodes per layer. While large models can better gener-
+alize, training them can be computationally expensive, requiring
+extensive amounts of data and powerful hardware, including ex-
+pensive GPUs. On the other hand, “the ubiquity of CPUs provides
+a workaround to the GPU’s dominance” [ 49], motivating “democ-
+ratiz[ing] AI with CPUs” (Shrivastava as quoted by Smith [49]).
+Nevertheless, limited resources on personal computers with or-
+dinary CPUs or mobile devices leads to difficulties in training
+DNNs to a sufficient level of accuracy. DNNs need to compute
+“activation values” for every layer in a forward pass and calcu-
+late gradients to update weights in the backpropagation. This
+requires performing expensive matrix multiplications that make
+the training process inefficient. Furthermore, large matrices of-
+ten do not fit in the cache, and storing them in main memory
+necessitates constant communication between the processor and
+memory, which is even more time consuming.
+In this work, we explore the scalability of two directions in
+sampling-based approaches based on locality-sensitive hashing
+(LSH) [ 21,28] and Monte-carlo (MC) estimations [ 46] for ef-
+ficient training of DNNs, which can be applied on memory-
+and computation-constrained devices. LSH was introduced in
+VLDB’99 [ 21] for near-neighbor queries. Since then, there have
+been consistent contributions to this line of research, including
+recent publications [ 5,54,58]. Similarly, sampling-based Monte-
+carlo estimations and inner-product estimation (and search) have
+been two core techniques for approximate query processing [ 2,
+44] and Vector-DBs [ 43]. We hope that evaluating sampling-based
+techniques for efficient training of DNNs in this paper inspires
+(DB) researchers to address the open problems identified.
+Our contributions can be summarized as follows.
+•We make a connection between two separate sampling-based
+research directions for training DNNs by showing that both
+techniques can be viewed as special cases of matrix approxima-
+tion, where one samples rows of the weight matrix while the
+other sample its columns. To the best of our knowledge, there
+is no previous work in the literature to make this observation.
+•After careful exploration of different techniques, we provide
+negative theoretical results that show estimation errors during
+the feedforward step propagate across layers. In particular, for
+the model of [ 50], we prove that estimation error increases
+exponentially with the number of hidden layers.
+•We provide extensive experiments using five training approaches
+and six benchmark datasets to evaluate the scalability of sampling-
+based approaches. Our experimental results confirm our theo-
+retical analysis that feedforward approximation is an obstacle
+against scalability. In addition to other findings, our experi-
+ments reveal that while the model of [ 1] is scalable for mini-
+batch gradient decent when the batch size is relatively large,
+there is a research gap when it comes to designing scalable
+sampling-based approaches for stochastic gradient decent.
+The rest of our paper is organized as follows. We first discussExperiments & Analyses Paper 
+ 
+Series ISSN: 2367-2005 185 10.48786/edbt.2025.15
+
+some of the potential benefits of training DNNs on CPU machines
+in §2, followed by related work in §3.
+We define the problem formulation and provide a taxonomy
+of sampling-based approaches for efficient training in §4. We
+discuss two of these approaches in further detail in §5 and §6.
+We present our theoretical analysis in §7.
+We discuss the extensions to convolutional neural networks
+in our technical report [17].
+Experiment details and takeaways are discussed in §8–10, and
+we offer concluding remarks in §11.
+2 BENEFITS OF TRAINING NEURAL
+NETWORKS ON CPUS
+The pursuit of advancing DNN training on CPUs unveils a com-
+pelling avenue replete with practical advantages. Below, we
+briefly explain some of these potential benefits:
+Abundance of CPU Machines . CPU-equipped personal com-
+puting devices, including PCs and smartphones, enjoy wide-
+spread availability and accessibility among a vast segment of
+the population. Remarkably, the computational potential of these
+devices often remains underutilized. Leveraging such resources
+for DNN training introduces the opportunity to conduct this
+computational-intensive task at no additional hardware cost for
+personal endeavors. Furthermore, while individual devices pos-
+sess limited capacity, their collective potential can effectively
+address a multitude of moderate-sized artificial intelligence (AI)
+challenges. Recognizing this collective capability, recent endeav-
+ors have emerged to design client-side AI frameworks, exempli-
+fied by JavaScript packages like Tensorflow.js, facilitating ma-
+chine learning on the client-side. Advancements in DNN training
+on CPU machines directly benefit these platforms.
+Independence from Backend Servers . Personalized AI neces-
+sitates the training, or at the very least, fine-tuning of machine
+learning models with user-specific data. Opting for DNN training
+on CPU machines renders this process independent of backend
+GPU servers. Instead of transmitting data to the server, each per-
+sonal device can locally fine-tune the models using its own data.
+This approach instantly confers several additional advantages:
+Privacy By refraining from transmitting data to a server, con-
+cerns regarding data privacy are substantially alleviated.
+Reduced Backend Computation The computational burden
+is shifted to the client side, at no expense to the server.
+Offline Availability By localizing computations, the need for
+communication with a server is eliminated. This is es-
+pecially useful for users with limited/unreliable internet
+access.
+Democratizing DNN Training . GPU-equipped machines, while
+gradually becoming more affordable, still pose a considerable
+financial barrier. These costs manifest in the form of GPU access
+or enterprise APIs, especially in the context of large models like
+ChatGPT. Consequently, such resources remain inaccessible to
+a significant portion of the population. The facilitation of DNN
+training on CPU machines effectively dismantles this accessibility
+barrier.
+Incorporating these considerations into the discourse of DNN
+training on CPU machines not only enriches the academic dis-
+cussion but also underscores the profound implications of this
+research direction in addressing pressing real-world challenges
+and democratizing AI accessibility. It is evident that significant
+research efforts have been judiciously directed towards the princi-pal trajectory of DNN training on GPU systems. Conversely, the
+avenue of training DNNs on CPU machines remains relatively
+under-explored within the research landscape.
+3 RELATED WORK
+The increasing importance of DNN applications opened the door
+to a variety of challenges associated with training these mod-
+els. While there are numerous works on techniques for scaling
+DNNs, many of them have expensive hardware requirements
+and use GPUs to accelerate training [ 18]. Unlike GPUs, CPUs are
+available on any device, so optimizing training performance on
+CPUs is beneficial. There have been studies in which distributed,
+concurrent, or parallel programming on CPUs has been used to
+accelerate training [ 13,25,27,29,50,55], but these methods are
+not always applicable due to variation in hardware requirements.
+Thus, algorithms focused on algorithmic optimization of feedfor-
+ward and backpropagation are essential. Usually, methods with
+little to no special hardware requirements are preferred. Several
+algorithms apply a variety of sampling-based [ 1,6,19,36,37,50]
+or non-sampling-based approximations [ 25,38,39,63] to improve
+training for DNNs.
+Several studies have shown that one way to scale up DNNs
+is to simplify the matrix-matrix or vector-matrix operations in-
+volved [ 1,6,50,52,57]. The complexity of matrix multiplication
+dominates the computational complexity of training a neural
+network. The multiplication of large matrices is known to be
+the main bottleneck in training DNNs. Often, we try to sparsify
+the matrices, which can minimize the communication between
+the memory and the processors [ 60]. Pruning the network and
+limiting the calculations in both directions to a subset of nodes
+per layer is one solution to train DNNs efficiently. This is what
+dropout-type algorithms suggest [ 6,19,52]. Dropout-type meth-
+ods either use a data-dependent sampling distribution [ 1,6,57]
+or a predetermined sampling probability [ 50,52]. Note that these
+techniques are able to provide a good approximation only if
+used in the context of neural networks; they are not necessarily
+applicable to general matrix multiplication.
+4 PRELIMINARIES
+In this section, we describe the neural network model, feedfor-
+ward step, and backpropagation in the form of matrix operations.
+Finally, we discuss state-of-the-art sampling-based algorithms.
+4.1 Problem Description
+Many neural network architectures have been studied over the
+past decade. In this paper we focus on the standard multi-layer
+perceptron (MLP) model and analyze two major directions of
+sampling-based techniques for training neural networks.
+Consider a feedforward neural network with 𝑚𝑖inputs,𝑚𝑜
+outputs, and ℓhidden layers. In general, every hidden layer 𝑘
+contains𝑛𝑘hidden nodes while the nodes in the (𝑘−1)-th and
+𝑘-th layers are fully connected. Without loss of generality, for
+ease of explanation, we assume all hidden layers have exactly 𝑛
+hidden nodes (Figure 1). For each layer 𝑘, we denote the vector
+of outputs by 𝑎𝑘∈R1×𝑛. Similarly,𝑊𝑘∈R𝑛×𝑛and𝑏𝑘∈R1×𝑛
+are the weights and the biases of layer 𝑘,1respectively.
+Let𝑓be the activation function (e.g., sigmoid or ReLU). With
+input vector 𝑥∈R1×𝑚𝑖, the feedforward step is a chain of matrix
+products and activation functions that maps input vector 𝑥to
+1The first and last layer are exceptions: 𝑊1∈R𝑚𝑖×𝑛and𝑊ℓ∈R𝑛×𝑚𝑜.186
+
+𝑥1
+𝑥2
+...
+𝑥𝑚𝑖𝑛1,1
+𝑛1,2
+...
+𝑛1,𝑛𝑛2,1
+𝑛2,2
+...
+𝑛2,𝑛𝑛3,1
+...
+𝑛3,𝑚𝑜
+Input𝑊1
+𝑊1
+1,1
+𝑊1𝑚𝑖,𝑛
+Layer 1𝑊2
+𝑊2
+1,1
+𝑊2𝑛,𝑛
+Layer 2𝑊3
+𝑊3
+1,1
+𝑊3𝑛,𝑚𝑜
+Output
+Figure 1: Neural network with ℓ=3layers and 𝑛nodes per
+hidden layer.
+Table 1: Table of Notations
+Notation Description
+𝑎𝑘output vector of 𝑘-th layer
+𝑧𝑘input vector of the 𝑘-th layer
+𝑊𝑘weight matrix of the 𝑘-th layer
+𝑊𝑘
+𝑖,:row𝑖of𝑊𝑘
+𝑊𝑘
+:,𝑗column𝑗of𝑊𝑘
+⟨𝑥1,𝑥2⟩inner product of 𝑥1and𝑥2
+output vector 𝑦; it can be represented as follows (with 𝑎0=𝑥):
+𝑧𝑘=𝑎𝑘−1𝑊𝑘+𝑏𝑘𝑎𝑘=𝑓(𝑧𝑘)
+In the setting described above, matrix-vector multiplication
+can be done in Θ(𝑛2)time and applying the element-wise acti-
+vation function takes Θ(𝑛)time for each layer. Thus, the entire
+feedforward process for the whole network is in the order of
+Θ(ℓ𝑛2).
+The final aspect in the training of neural networks is back-
+propagation, an efficient method of computing gradients for the
+weights to move the network towards an optimal solution via
+stochastic gradient descent2(SGD) [ 22]. The weight gradients
+for the backpropagation step can be computed recursively using
+Equation 1, whereLis the loss function and ⊙is the Hadamard
+product.
+𝛿ℓ=∇𝑧ℓL=𝑓′(𝑧ℓ)⊙∇𝑎ℓL ∇𝑊𝑘L=𝑎𝑘𝛿𝑘+1
+𝛿𝑘=∇𝑧𝑘L=𝑓′(𝑧𝑘)⊙𝑊𝛿𝑘+1∇𝑏𝑘L=𝛿𝑘+1(1)
+With gradient 𝑎𝑘𝛿𝑘+1and learning rate 𝜂, the weight matrix 𝑊𝑘
+will be updated to 𝑊𝑘−𝜂𝑎𝑘𝛿𝑘+1. The gradient computation and
+update operations are also in form of vector-matrix operations
+that take Θ(𝑛2)time for each layer. As a result, the backpropaga-
+tion step in SGD also requires Θ(ℓ𝑛2)time.
+2While SGD uses only one data point to compute the gradients, an alternative
+approach is mini-batch gradient descent (MGD), where a small sample set (mini-
+batch) of the training set is used for estimations. Note that SGD can be viewed as a
+special case of MGD where the batch size is 1. Following our scope in this paper,
+SGD is considered for problem formulation, explaining the learning algorithm,
+and analysis. Nevertheless, as we shall later explain in §6.1, one of the evaluated
+approaches, MC-approx , is based on MGD, the generalization of SGD. While SGD
+operations are in form of vector to matrix multiplication, MGD operations are in
+form of matrix (vectors of samples in the mini-batch) to matrix multiplication.𝑎𝑘−1
+1···𝑎𝑘−1𝑛 𝑊𝑘
+1,1𝑊𝑘
+1,2𝑊𝑘
+1,3𝑊𝑘
+1,𝑛
+𝑊𝑘
+2,1𝑊𝑘
+2,2𝑊𝑘
+2,3𝑊𝑘
+2,𝑛
+𝑊𝑘
+3,1𝑊𝑘
+3,2𝑊𝑘
+3,3𝑊𝑘
+3,𝑛
+............
+𝑊𝑘
+𝑛,1𝑊𝑘
+𝑛,2𝑊𝑘
+𝑛,3𝑊𝑘𝑛,𝑛©­­­­­­­­­­­­­­
+«ª®®®®®®®®®®®®®®
+¬𝑎𝑘−1𝑊𝑘:,2Sampling from Current LayerSampling from Prev. Layer
+Figure 2: High-level idea of the sampling-based techniques.
+4.2 Taxonomy of Sampling-Based Techniques
+The computation bottleneck in the training of a DNN is matrix
+multiplication, in form of a (1×𝑛)to(𝑛×𝑛)vector-matrix
+product for SGD. Sampling-based approaches seek to speed up
+this operation by skipping a large portion of the scalar operations.
+SGD is a noisy algorithm by nature. As such, it is more tolerant
+of small amounts of noise [ 40], allowing for approximation. At
+a high level, these approaches fall in two categories, as shown
+below:
+Sampling-Based Techniques
+Sampling from
+Current Layer
+Dropout
+[6, 52]ALSH-approx
+[50]Sampling from
+Previous Layer
+MC-approx
+[1, 15]
+Sampling from Current Layer . The approaches in this cat-
+egory select a small subset of nodes in each layer during each
+feedforward–backpropagation step, and update the values of only
+those nodes. In Figure 2, each column 𝑊𝑘
+:,𝑗corresponds to the
+node𝑛𝑘
+𝑗in layer𝑘, while each cell 𝑊𝑘
+𝑖,𝑗in that column represents
+the weight of the edge from 𝑛𝑘−1
+𝑖to𝑛𝑘
+𝑗. As a result, these ap-
+proaches can be viewed as selecting a small subset of the columns
+of𝑊𝑘(e.g., the highlighted columns) and conducting the inner
+product only for those.
+Sampling from Previous Layer . Instead of selecting a subset
+of columns and computing the exact inner-product for them, the
+alternative is to select all columns but compute the inner-product
+approximately for them by selecting a small subset of rows of𝑊𝑘
+(e.g., highlighted rows in Figure 2). That is, instead of computing
+the sum for all 𝑛scalars in an inner-product, to estimate the sum
+by sampling a small number of scalars.
+5 EFFICIENT TRAINING BY SAMPLING
+FROM CURRENT LAYER
+5.1 Dropout
+Srivastava et al . [52] introduced Dropout , a computationally
+efficient training approach that reduces the risk of overfitting.
+During each feedforward step, the algorithm picks a subset of
+nodes uniformly at random in each hidden layer and drops the
+remaining nodes temporarily. The sampled nodes are then used
+for feedforward evaluation and backpropagation.
+While Dropout was originally introduced to fix overfitting,
+it introduced a computation reduction to the training process.187
+
+In many cases, Dropout improved the runtime efficiency com-
+pared to the standard training process on the same architecture.
+However, there are scenarios in which training under Dropout
+requires more training iterations and eventually hurts the run-
+time. One can observe that due to the randomness in sampling
+with a fixed probability (usually 𝑝=1/2), there is a risk of drop-
+ping nodes that significantly affect the output values. Ba and Frey
+[6]addressed this issue by proposing Adaptive-Dropout , which
+uses a data-dependent distribution that is an approximation of
+the Bayesian posterior distribution over the model architecture
+and updates the sampling ratio adaptively w.r.t the current net-
+work. This method avoids randomly dropping significant nodes
+in the model.
+5.2 Asymmetric Locality-Sensitive Hashing
+for Training Approximation
+Unlike in Dropout , one might want to intelligently select a small
+subset of so-called active nodes for each layer for computing the
+inner products. In particular, given the vector 𝑎𝑘−1, the goal is to
+find a small portion of nodes 𝑗in layer𝑘for which the value of
+𝑎𝑘−1𝑊𝑘
+:,𝑗is maximized in order to avoid computing inner prod-
+ucts for small values (estimating them as zero). Given a set 𝑆
+of vectors (in this case, the set of columns in 𝑊𝑘) and a query
+vector𝑎, the problem of finding a vector 𝑤∗∈𝑆with maxi-
+mum inner product ⟨𝑎,𝑤∗⟩is called maximum inner-product
+search (MIPS). To solve MIPS, Shrivastava and Li [48] employ
+asymmetric locality-sensitive hashing (ALSH).
+Definition 5.1 (Asymmetric Locality-Sensitive Hashing [ 48]).
+Given a similarity threshold 𝑆0and similarity function sim(·),
+a familyHof hash functions are (𝑆0,𝑐𝑆0,𝑝1,𝑝2)-sensitive for
+𝑐-NNS3with𝑎∈R𝑛as query and a set of 𝑤∈R𝑛vectors if
+for allℎ∈H chosen uniformly, the following conditions are
+satisfied:
+sim(𝑤,𝑎)≥𝑆0=⇒Pr[ℎ(𝑄(𝑎))=ℎ(𝑃(𝑤))]≥𝑝1
+sim(𝑤,𝑎)≤𝑐𝑆0=⇒Pr[ℎ(𝑄(𝑎))=ℎ(𝑃(𝑤))]≤𝑝2
+For𝑤,𝑎∈R𝑛with∥𝑤∥≤𝐶, where𝐶is a constant less than
+1, and∥𝑎∥=1, they define the transformations 𝑃and𝑄for the
+inner product as follows.
+𝑃:R𝑛→R𝑛+𝑚, 𝑤↦→
+𝑤;∥𝑤∥21,...,∥𝑤∥2𝑚
+𝑄:R𝑛→R𝑛+𝑚, 𝑎↦→
+𝑎; 1/2,..., 1/2 (2)
+In other words, to generate 𝑃,𝑤is padded with 𝑚terms, where
+term𝑖is theℓ2norm of𝑤to the power of 2𝑖.𝑄is generated by
+padding𝑎with𝑚copies of the constant 1/2. Shrivastava and Li
+[48] prove that NNS in the transformed space is equivalent to
+the maximum inner product in the original space:
+arg max
+𝑤⟨𝑤,𝑎⟩≈arg min𝑤∥𝑄(𝑎)−𝑃(𝑤)∥. (3)
+Equation 3 motivates using MIPS for efficient training of DNNs.
+Spring and Shrivastava [50] build their algorithm (referred to as
+ALSH-approx in this paper) upon Equation 3. As explained in
+§4, the feedforward step and backpropagation consist of many
+matrix multiplications, each of which involve a set of inner prod-
+ucts as large as each hidden layer. ALSH-approx uses ALSH to
+prune each layer by finding active nodes, in this case, nodes with
+maximum activation values. This is equivalent to solving MIPS
+in each layer.
+3𝑐-approximation of nearest neighbor search [28].Essentially, ALSH-approx uses ALSH to find active nodes 𝑗
+whose weight vector 𝑊𝑘
+:,𝑗collides with an input vector 𝑎𝑘−1under
+the same hash function. The probability of collision captures the
+similarity of vectors in each hidden layer. To do so, it sets the
+query vector as 𝑞=𝑎𝑘−1and the set of vectors using the columns
+of𝑊𝑘as𝑆=
+𝑊𝑘
+:,1,...,𝑊𝑘:,𝑛	
+. Then, after constructing 𝑄and𝑃
+based on Equation 2, we have
+arg max
+𝑗
+𝑊𝑘
+:,𝑗,𝑎𝑘−1
+≈arg min
+𝑗𝑄 𝑎𝑘−1−𝑃 𝑊𝑘
+:,𝑗.(4)
+ALSH-approx constructs𝐿independent hash tables with 2𝐾hash
+buckets and assigns a 𝐾-bit randomized hash function to every
+table. Each layer has been assigned 𝐿hash tables and a meta hash
+function to compute a hash signature for the weight vectors and
+fill all the hash tables before training. In this setting, 𝐾and𝐿
+are tunable hyperparameters that affect the active set’s size and
+quality.
+During training, ALSH-approx computes the hash signature
+of each incoming input using the existing hash functions. Then,
+a set of weight vectors will be returned using the hash values
+corresponding to the hash bucket. The active nodes in a layer are
+the union of their corresponding weight vectors from probing
+𝐿hash tables. Then, the model only performs the exact inner
+product on these active nodes and skips the rest. Finally, the
+gradient will only backpropagate through the active nodes and
+update the corresponding weights. In other words, ALSH is used
+to sample a subset of nodes with probability 1−(1−𝑝𝐾)𝐿if𝑝is
+the probability of collision.
+Updating the hash tables ensures that the modified weight
+vectors are recognized. Based on the results reported by Spring
+and Shrivastava [50], the number of active nodes for each input
+can be as small as 5% of the total nodes per layer. Thus, ALSH-
+approx performs a significantly smaller set of inner products in
+each iteration. Moreover, due to the sparsity of the active sets
+belonging to different data inputs, the overlap between them
+throughout the dataset is small, so the weight gradient updates
+corresponding to these inputs are sparse as well. Thus, the hash
+table updates are executed after processing a batch of inputs
+and can be executed in parallel. The main advantage of ALSH-
+approx is that, unlike Dropout , it finds the active nodes before
+computing the inner products.
+6 EFFICIENT TRAINING BY SAMPLING
+FROM PREVIOUS LAYER
+While techniques discussed in §5 reduce the vector-matrix mul-
+tiplication time by selecting a subset of columns (nodes) from
+each weight matrix 𝑊𝑘and computing the inner product exactly
+for them, an alternative approach is to select all columns but
+to compute inner products approximately. This idea has been
+proposed by Adelman et al . [1]. This paper is built on the MC
+method by Drineas et al . [15] for fast approximation of matrix
+multiplication. We first review the work of Drineas et al . [15] in
+§6.1 and then in §6.2 we explain how Adelman et al . [1]adapt the
+method to develop an algorithm for efficient training of DNNs.
+6.1 Fast Approximation of Matrix
+Multiplication
+For many applications, a fast estimation of the matrix product
+is good enough. In addition to hardware/software oriented opti-
+mizations such as cache management [ 18,23] or half-precision
+computations [ 40,55], MC methods [ 46] have been used for such188
+
+estimations. At a high level, MC methods use repeated sampling
+and the law of large numbers to estimate aggregate values.
+Recall that given two matrices 𝐴∈R𝑚×𝑛and𝐵∈R𝑛×𝑝, the
+product𝐴𝐵is an𝑚×𝑝matrix, where every element 𝐴𝐵𝑖,𝑗is the
+inner product of 𝑖-th row of𝐴with the𝑗-th column of 𝐵:
+𝐴𝐵𝑖,𝑗=⟨𝐴𝑇
+𝑖,:,𝐵:,𝑗⟩=𝑛∑︁
+𝑡=1𝐴𝑖,𝑡𝐵𝑡,𝑗 (5)
+In an MC estimation of 𝐴𝐵𝑖,𝑗, instead of computing the sum over
+all𝑡∈[1,𝑛], only a small sample of elements 𝜎⊂{1,...,𝑛},
+where𝑐=|𝜎|≪𝑛, are considered. Arguing that uniform sam-
+pling would add a high error in estimating 𝐴𝐵, Drineas et al . [15]
+introduce a nonuniform sampling method to generate 𝜎with a
+probability proportional to the magnitude of data. Specifically,
+they develop a randomized algorithm that samples each column
+𝑖of A and row 𝑖of B with probability
+𝑝𝑖=∥𝐴:,𝑖∥·∥𝐵𝑖,:∥Í𝑛
+𝑡=1∥𝐴:,𝑡∥·∥𝐵𝑡,:∥, (6)
+where∥·∥is theℓ2norm. They define the matrices 𝐶∈R𝑚×𝑐and
+𝑅∈R𝑐×𝑝as𝐶=𝐴𝑆𝐷 and𝑅=(𝑆𝐷)𝑇𝐵, respectively. 𝑆is then
+defined as an 𝑛×𝑐sampling matrix, with 𝑆𝑖𝑗=1if the𝑖th row
+of𝐴is the𝑗th sample.𝐷is a𝑐×𝑐diagonal scaling matrix with
+𝐷𝑗𝑗=1√𝑐𝑝𝑗. The authors prove that defining 𝑝𝑖as in Equation 6
+minimizes the expected estimation error, E
+∥𝐴𝐵−𝐶𝑅∥𝐹
+, where
+∥·∥𝐹is the Frobenius norm. Each element 𝐴𝐵𝑖,𝑗is estimated asÍ𝑐
+𝑡=1𝐶𝑖,𝑡𝑅𝑡,𝑗=Í𝑐
+𝑡=11
+𝑐𝑝𝑖𝐴𝑖,𝑡𝐵𝑡,𝑗≈𝐴𝐵𝑖,𝑗. Sampling row-column
+pairs w.r.t𝑝𝑖reduces the complexity of matrix multiplication to
+𝑂(𝑚𝑐𝑝).
+6.2 MC-approx
+Training DNNs involves computationally expensive matrix mul-
+tiplication operations. However, the gradients computed during
+backpropagation only approximate directions towards the op-
+timal solution, so the training process has a high tolerance to
+small amounts of noise. This makes approximation of matrix
+multiplication a reasonable choice to speed up training of DNNs.
+Following this idea, Adelman et al . [1] propose a MC approxima-
+tion method for fast training of DNNs (in this paper, referred to
+asMC-approx Mfor the mini-batch setting and MC-approx S
+for the stochastic setting) based on the MC estimation of matrix
+multiplication explained in §6.1. Despite the fact that Drineas
+et al. [15] provide an unbiased estimate for the matrix multipli-
+cation𝐴𝐵(i.e.,𝐸[𝐶𝑅]=𝐴𝐵), Adelman et al . [1] prove that the
+sampling distribution is not able to provide an unbiased estima-
+tion of the weight gradient if it is used for both the forward step
+and backward pass simultaneously.
+One way to eliminate the bias is to use MC approximation
+only in the forward pass, propagate the gradient through the
+entire network, and perform the exact computations. However,
+experiments show this approach results in lower accuracy in
+practice. Therefore, Adelman et al . [1] propose a new sampling
+distribution that yields an unbiased estimate of the weight gra-
+dient∇𝑊ˆLwhen it is used only during the feedforward step.
+Specifically, they sample column-row pairs independently from
+𝐴∈R𝑚×𝑛and𝐵∈R𝑛×𝑝.
+Let𝑘be the number of samples for estimation, let 𝑉∈R𝑛×𝑛
+be a diagonal sampling matrix with 𝑉𝑖,𝑖=𝑍𝑖∼Bernoulli(𝑝𝑖),
+whereÍ𝑛
+𝑖=0𝑝𝑖=𝑘, and let𝐷∈R𝑛×𝑛be a diagonal scaling ma-
+trix with𝐷𝑖,𝑖=1√𝑝𝑖. Then, the multiplication of matrices 𝐴and𝐵can be estimated as 𝐴𝐵≈Í𝑛
+𝑖=0𝑍𝑖
+𝑝𝑖𝐴:,𝑖𝐵𝑖,:=𝐴𝑉𝐷𝐷𝑇𝑉𝑇𝐵=
+𝐴′𝐵′. The estimation error in this case is 𝐸
+∥𝐴𝐵−𝐴′𝐵′∥2
+𝐹
+=
+Í𝑛
+𝑖=01−𝑝𝑖
+𝑝𝑖∥𝐴𝑖∥2∥𝐵𝑖∥2. Hence, the following assignment of prob-
+abilities minimizes the estimation error under the constraintÍ𝑛
+𝑖=0𝑝𝑖=𝑘.
+𝑝𝑖=min𝑘∥𝐴𝑖∥∥𝐵𝑖∥Í𝑛
+𝑡=0∥𝐴𝑡∥∥𝐵𝑡∥,1
+(7)
+The authors prove that training a neural network by approximat-
+ing matrix products in backpropagation converges with the same
+rate as standard SGD and results in an unbiased estimator when
+nonlinearities are not considered. When accounting for nonlin-
+earities, the results hold as long as the MC approximation of 𝑊𝑥
+is unbiased and the activation and loss functions are 𝛽-Lipschitz.
+7 THEORETICAL ANALYSIS
+As explained in §5.2 and §6.1, sampling-based approaches seek
+to speed up the training of DNNs by skipping a large number
+of computations and approximating matrix multiplications. In
+this section we provide negative theoretical results for scalabil-
+ity against the feedforward approximation. At a high level, we
+show that small estimation errors in the initial layers get prop-
+agated and compounded in subsequent layers. Adelman et al .
+[1]already observed the low performance of MC-approx when
+the feedforward step is approximated and therefore only applied
+approximation during backpropagation for MLPs. As such, we
+focus on ALSH-approx for our analysis. First, let us introduce the
+following notation, which we will use throughout this section.
+•¯𝑎𝑘
+𝑗: the estimation of 𝑎𝑘
+𝑗byALSH-approx .
+•𝑒𝑘
+𝑗=𝑎𝑘
+𝑗−¯𝑎𝑘
+𝑗: the activation value estimation error.
+•↑𝑘
+𝑗: the set of active nodes for 𝑛𝑘
+𝑗.
+Lemma 7.1. Let𝑓be a linear activation function such that 𝑎=
+𝑓(𝑧)=𝑧. Assuming the active nodes are detected exactly, the
+estimation error for the node 𝑛𝑘
+𝑗byALSH-approx is as follows.
+𝑒𝑘
+𝑗= 
+Í
+𝑖∉↑1
+𝑗𝑥𝑖𝑊1
+𝑖,𝑗if𝑘=1
+𝑒𝑘−1𝑊𝑘
+:,𝑗+Í
+𝑖∉↑𝑘
+𝑗¯𝑎𝑘−1
+𝑖𝑊1
+𝑖,𝑗otherwise
+Proof. We want to show that the estimation error for the
+node𝑛𝑘
+𝑗byALSH-approx is as follows.
+𝑒𝑘
+𝑗= 
+Í
+𝑖∉↑1
+𝑗𝑥𝑖𝑊1
+𝑖,𝑗if𝑘=1
+𝑒𝑘−1𝑊𝑘
+:,𝑗+Í
+𝑖∉↑𝑘
+𝑗¯𝑎𝑘−1
+𝑖𝑊1
+𝑖,𝑗otherwise
+First, for𝑘=1:
+𝑎1
+𝑗=𝑛∑︁
+𝑖=1𝑥𝑖𝑊1
+𝑖,𝑗=∑︁
+𝑙∈↑𝑘
+𝑗𝑥𝑙𝑊1
+𝑙,𝑗+∑︁
+𝑖∉↑𝑘
+𝑗𝑥𝑖𝑊1
+𝑖,𝑗=¯𝑎1
+𝑗+∑︁
+𝑖∉↑𝑘
+𝑗𝑥𝑖𝑊1
+𝑖,𝑗
+=⇒𝑒1
+𝑗=𝑎1
+𝑗−¯𝑎1
+𝑗=∑︁
+𝑖∉↑𝑘
+𝑗𝑥𝑖𝑊1
+𝑖,𝑗189
+
+Analogously, when 𝑘>1:
+𝑎𝑘
+𝑗=𝑛∑︁
+𝑖=1𝑎𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗=𝑛∑︁
+𝑖=1(¯𝑎𝑘−1
+𝑖+𝑒𝑘−1
+𝑖)𝑊𝑘−1
+𝑖,𝑗
+=∑︁
+𝑙∈↑𝑘
+𝑗¯𝑎𝑘−1
+𝑙𝑊𝑘−1
+𝑙,𝑗+∑︁
+𝑖∉↑𝑘
+𝑗¯𝑎𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗+𝑛∑︁
+𝑖=1𝑒𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗
+=¯𝑎𝑘
+𝑗+𝑒𝑘−1𝑊𝑘
+:,𝑗+∑︁
+𝑖∉↑𝑘
+𝑗¯𝑎𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗
+=⇒𝑒1
+𝑗=𝑎1
+𝑗−¯𝑎1
+𝑗=𝑒𝑘−1𝑊𝑘
+:,𝑗+∑︁
+𝑖∉↑𝑘
+𝑗¯𝑎𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗
+□
+Lemma 7.1 provides a recursive formula for the activation
+value estimation error in terms of the weighted summation over
+active nodes versus inactive nodes. To provide a non-recursive
+and easier to understand formula, in Theorem 7.2 we assume that
+the weighted summation over the active nodes is always 𝑐times
+that of the inactive nodes.
+Theorem 7.2. Let𝑓be a linear activation function such that
+𝑎=𝑓(𝑧)=𝑧. Suppose for any node 𝑛𝑙𝑝,
+∑︁
+𝑖∈↑𝑙
+𝑝𝑎𝑙−1
+𝑖𝑊𝑖,𝑝=𝑐∑︁
+𝑖∉↑𝑙
+𝑝𝑎𝑙−1
+𝑖𝑊𝑖,𝑝.
+Then,𝑎𝑘
+𝑗=¯𝑎𝑘
+𝑗
+𝑐+1
+𝑐𝑘
+. That is,𝑒𝑘
+𝑗=¯𝑎𝑘
+𝑗 𝑐+1
+𝑐𝑘−1
+.
+Proof. For any node 𝑛𝑙𝑝, we have
+∑︁
+𝑖∈↑𝑙
+𝑝𝑎𝑙−1
+𝑖𝑊𝑖,𝑝=𝑐∑︁
+𝑖∉↑𝑙
+𝑝𝑎𝑙−1
+𝑖𝑊𝑖,𝑝.
+We then use induction to prove 𝑎𝑘
+𝑗=¯𝑎𝑘
+𝑗
+𝑐+1
+𝑐𝑘
+.
+Base case. When𝑘=1:
+𝑎1
+𝑗=𝑛∑︁
+𝑖=1𝑥𝑖𝑊1
+𝑖,𝑗=∑︁
+𝑙∈↑𝑘
+𝑗𝑥𝑙𝑊1
+𝑙,𝑗+∑︁
+𝑖∉↑𝑘
+𝑗𝑥𝑖𝑊1
+𝑖,𝑗=¯𝑎1
+𝑗+1
+𝑐¯𝑎1
+𝑗=¯𝑎1
+𝑗𝑐+1
+𝑐
+Inductive step. Assuming𝑎𝑘−1
+𝑗=¯𝑎𝑘−1
+𝑗
+𝑐+1
+𝑐𝑘−1
+:
+𝑎𝑘
+𝑗=𝑛∑︁
+𝑖=1𝑎𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗=𝑛∑︁
+𝑖=1(¯𝑎𝑘−1
+𝑖+𝑒𝑘−1
+𝑖)𝑊𝑘−1
+𝑖,𝑗(8)
+=∑︁
+𝑙∈↑𝑘
+𝑗¯𝑎𝑘−1
+𝑙𝑊𝑘−1
+𝑙,𝑗+∑︁
+𝑖∉↑𝑘
+𝑗¯𝑎𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗+𝑛∑︁
+𝑖=1𝑒𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗
+=¯𝑎𝑘
+𝑗+1
+𝑐¯𝑎𝑘
+𝑗+𝑛∑︁
+𝑖=1𝑒𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗=𝑐+1
+𝑐¯𝑎𝑘
+𝑗+𝑛∑︁
+𝑖=1𝑒𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗
+Let𝐴=Í𝑛
+𝑖=1𝑒𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗. We have
+𝑒𝑘−1
+𝑖=𝑎𝑘−1
+𝑖−¯𝑎𝑘−1
+𝑖=𝑎𝑘−1
+𝑖−𝑎𝑘−1
+𝑖𝑐
+𝑐+1𝑘−1
+=𝑎𝑘−1
+𝑖
+1−𝑐
+𝑐+1𝑘−1
+.Thus,
+𝐴=𝑛∑︁
+𝑖=1𝑒𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗=𝑛∑︁
+𝑖=1𝑎𝑘−1
+𝑖
+1−𝑐
+𝑐+1𝑘−1
+𝑊𝑘−1
+𝑖,𝑗
+=
+1−𝑐
+𝑐+1𝑘−1𝑛∑︁
+𝑖=1𝑎𝑘−1
+𝑖𝑊𝑘−1
+𝑖,𝑗=
+1−𝑐
+𝑐+1𝑘−1
+𝑎𝑘
+𝑗.
+Now, plugging 𝐴back into Equation 8, we get:
+𝑎𝑘
+𝑗=𝑐+1
+𝑐¯𝑎𝑘
+𝑗+𝐴=𝑐+1
+𝑐¯𝑎𝑘
+𝑗+
+1−𝑐
+𝑐+1𝑘−1
+𝑎𝑘
+𝑗
+=⇒𝑎𝑘
+𝑗
+1−
+1−𝑐
+𝑐+1𝑘−1
+=𝑐+1
+𝑐¯𝑎𝑘
+𝑗=⇒𝑎𝑘
+𝑗=¯𝑎𝑘
+𝑗𝑐+1
+𝑐𝑘
+□
+Theorem 7.2 proves that the estimation error increases ex-
+ponentially with the number of layers. As a result, due to the
+sharp increase in the estimation error, ALSH-approx does not
+scale to DNNs. To better observe this, suppose 𝑐=5(i.e., the
+weighted sum for the active nodes is five times that of the inactive
+nodes). Then, using Theorem 7.2, the error-to-estimate ratios for
+different numbers of layers are as follows.
+k 1 2 3 4 5 6
+ek
+j/¯ak
+j0.2 0.44 0.72 1.07 1.48 1.98
+From the above table, it is evident that as soon as the depth of the
+network gets larger than 3, the estimation error dominates the
+estimation value. This is consistent with our experiment results,
+where ALSH-approx failed to scale with more than 3 hidden
+layers.
+8 EXPERIMENT SETUP
+8.1 Hardware
+This paper aims to evaluate sampling-based approaches for train-
+ing DNNs on regularly available machines; thus, we ran all exper-
+iments on a single-CPU machine (Intel Core i9-9920X machine
+with 128 GB of memory) without a GPU.
+8.2 Datasets
+We used the following six benchmark datasets for our experi-
+ments.
+MNIST [14] 70,000 handwritten digits, each in the form of a
+28×28grayscale image, and 10 classes (digits zero to
+nine).
+Kuzushiji-MNIST [11] 70,000 cursive Japanese characters, each
+in the form of a 28×28grayscale image, and 10 classes.
+Fashion-MNIST [59] 70,000 fashion products, each in the form
+of a28×28grayscale image, and 10 classes.
+EMNIST-Letters [12] 145,600 handwritten letters, each in the
+form of a 28×28grayscale image, and 26 classes.
+NORB [34] 48,600 photographs of 50 toys from different angles,
+each in the form of a 96×96grayscale image, and 5 classes.
+CIFAR-10 [31] 60,000 color images, each of dimensions 32×32,
+and 10 classes.
+We randomly partition the datasets as shown below:
+Dataset Train Test Validation
+(Kuzushiji/Fashion-)MNIST 55000 10000 5000
+EMNIST-Letters 104800 20800 20000
+NORB 22300 24300 2000
+CIFAR-10 45000 10000 5000190
+
+We obtained similar results across different datasets. For brevity,
+we provide a detailed discussion only using the results on the
+MNIST dataset, but extensive results for other datasets are pro-
+vided in our technical report [17].
+8.3 Methods Evaluated
+We evaluated four sampling-based approaches for training DNNs
+discussed in §5 and §6, namely Dropout [52],Adaptive-Dropout
+[6],MC-approx [1], and ALSH-approx [50], on fully connected
+DNNs. In addition, the regular training approach, referred to as
+Standard , has been implemented for comparison purposes. All
+implementations are in Python 3.9 using the PyTorch library.
+ForMC-approx ,4ALSH-approx ,5,6Dropout ,7andAdaptive-
+Dropout8we used the publicly available code.
+8.4 Default Values
+To train our models, we use SGD. The activation function used for
+hidden layers is ReLU due to its simplicity, ease of computation,
+and the fact that it helps with the vanishing gradients problem
+[22]. The output layer activation function is log softmax, and
+the loss function used throughout experiments is the negative
+log-likelihood. The learning rate is always either 10−4or10−3de-
+pending on the setting, and the models are trained for 50 epochs.
+In particular, we set the learning rate to 10−4forMC-approx S.9
+The hyperparameters of our implementation are the best values
+reported for each approach. For MC-approx the batch size is set
+to 20 and𝑘=10. For ALSH-approx ,𝐾=6,𝐿=5, and𝑚=3
+(Equation 2) as specified in [ 50]. In order to have a fair compari-
+son with ALSH-approx , we set the probability of picking nodes
+forDropout andAdaptive-Dropout to𝑝=0.05, and we use
+a network with 3 hidden layers and 1000 hidden units per layer
+across algorithms. The implementation of ALSH-approx pro-
+vided in [ 51] performs better with the Adam optimizer [ 30] than
+with Adagrad [ 16], which is used in the original implementation
+in [50]. Hence, we use Adam in our experiments.
+For the convolutional setting, we used ResNet-18 with two
+fully-connected layers as a classifier to run our experiments. We
+limit the approximation to the classifier and keep the convoluted
+operations exact. Also, for CIFAR-10, we use pure SGD instead
+of Adam.
+8.5 Experiment Plan
+We are mainly interested in evaluating the following.
+Accuracy How do the algorithms perform when training net-
+works with different depths?
+Time How scalable are the evaluated algorithms (in particular,
+ALSH-approx andMC-approx ) w.r.t training time?
+Hyperparameters How do hyper-parameter choices (e.g., batch
+size) affect training time and accuracy?
+Accuracy here refers to the percentage of correct predictions on
+the entire dataset. Since we focus on multi-class classification,
+we also provide confusion matrices.
+4github.com/acsl-technion/approx
+5github.com/rdspring1/LSH-Mutual-Information
+6github.com/rdspring1/LSH_DeepLearning
+7github.com/gngdb/adaptive-standout
+8see footnote 7.
+9Across all tables and plots we use the subscripts “S” and “M” to refer to the SGD
+and mini-batch SGD (with default batch size 20) settings, respectively. When there
+is no subscript, the default is MGD for MC-approx and SGD for all other methods.9 EXPERIMENT RESULTS
+9.1 Accuracy
+We begin our experiments by addressing the first question in §8.5.
+To do so, we generate models with different numbers of hidden
+layers (1 to 7) and evaluate each method on all six datasets dis-
+cussed in §8.2 for both stochastic10and mini-batch settings. The
+confusion matrices for all algorithms are provided in Figure 3.
+Every row in the figure shows the performance of an algorithm,
+while different columns represent networks with different num-
+bers of hidden layers. In all plots contained within the figure, the
+x-axis shows the model prediction and the y-axis shows the true
+labels. Consequently, the diagonal cells show correct predictions,
+while all other cells are incorrect predictions. Ideally, the models
+should have (near-)zero values on non-diagonal cells.
+Baselines .Standard ,11Dropout , and Adaptive-Dropout (the
+first three rows in Figure 3) are our baselines for comparisons.
+ForDropout , the nodes are sampled randomly with probability
+𝑝, and for Adaptive-Dropout ,𝑝is updated w.r.t the Bayesian
+posterior distribution of data input. In standard feedforward
+training, we expect to observe a decrease in generalization error
+over complex datasets as we add layers to the network and an
+increase in the ability to learn nonlinear functions. Clearly, this
+does not include the cases in which Standard overfits.
+ALSH-approx . The experiment results on ALSH-approx (Row 4
+in Figure 3) confirm a decrease in accuracy as the number of layers
+increases. In particular, Figures 3o and 3p show a sharp decrease
+in performance on 5 to 7 layers. This is confirmed in Figure 7,
+where the accuracy of ALSH-approx drops from 70.07% to 25.14%
+from 5 to 7 layers. Comparing ALSH-approx with Standard Sin
+Figure 3, though initially the two algorithms perform similarly
+on a small number of layers (Columns 1 and 2), the performance
+gap quickly increases with the number of layers — confirming
+thelack of scalability ofALSH-approx for DNNs. This is also
+observed in Figure 7. We can see from Table 2 that, compared
+with Dropout S,ALSH-approx performs better, but it does not
+outperform Standard SandAdaptive-Dropout S.
+MC-approx .MC-approx is designed for use with mini-batch
+SGD. As we shall further investigate in §9.3, even though MC-
+approx Soutperforms other methods evaluated (Table 2), the
+runtime for large numbers of layers and datasets is so high that
+it is infeasible for computation-limited systems. This is reflected
+in Table 3. Therefore, as indicated in §8.4, we use mini-batch
+SGD (with batch size 20) as the default setting in our experi-
+ments. The experiment results on MC-approx Mare provided
+in the last row of Figure 3. MC-approx Mshows equally good
+performance across different numbers of layers, confirming its
+scalability for DNNs. In particular, when varying the number
+of hidden layers (Figure 7), the minimum accuracy obtained by
+MC-approx Mis 92.71% for one hidden layer. Comparing the con-
+fusion matrices of MC-approx with Adaptive-Dropout and
+Standard in Figure 3, we can see that performance is consistent
+across the three algorithms. As shown in Figure 7, in most cases,
+MC-approx Moutperformed Standard Mwith 2–4% difference
+in accuracy. This is also evident in Table 2, where MC-approx M
+andMC-approx Soutperformed other algorithms on the MNIST
+and Fashion-MNIST datasets with 3 hidden layers. To further
+assess the scalability of MC-approx Min deeper networks, we
+10when the batch size is equal to 1.
+11training the neural network without sampling.191
+
+1 hidden layer 3 hidden layers 5 hidden layers 7 hidden layersStandard
+(a)
+ (b)
+ (c)
+ (d)Dropout
+(e)
+ (f)
+ (g)
+ (h)Adaptive-Dropout
+(i)
+ (j)
+ (k)
+ (l)ALSH-approx
+(m)
+ (n)
+ (o)
+ (p)MC-approx M
+(q)
+ (r)
+ (s)
+ (t)
+Figure 3: Confusion matrices of different algorithms for different numbers of hidden layers. In all plots, x-axis and y-axis
+are the predicted and true labels (0 to 9), respectively.192
+
+0
+ 10
+ 20
+ 30
+ 40
+ 50
+Number of epochs
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9Accuracy%
+7 hidden layers
+6 hidden layers
+5 hidden layers
+4 hidden layers3 hidden layers
+2 hidden layers
+1 hidden layerPowered by TCPDF (www.tcpdf.org)Powered by TCPDF (www.tcpdf.org)Figure 4: ALSH-approx : validation ac-
+curacy for different numbers of layers.
+0
+ 10
+ 20
+ 30
+ 40
+ 50
+Number of epochs
+9.2 × 101
+9.3 × 101
+9.4 × 101
+9.5 × 101
+9.6 × 101
+9.7 × 101
+9.8 × 101
+9.9 × 101Accuracy%
+7 hidden layer
+6 hidden layer
+5 hidden layer
+4 hidden layer3 hidden layers
+2 hidden layers
+1 hidden layerPowered by TCPDF (www.tcpdf.org)Powered by TCPDF (www.tcpdf.org)Figure 5: MC-approx : validation accu-
+racy for different numbers of layers.
+0
+ 10
+ 20
+ 30
+ 40
+ 50
+Number of epochs
+8 × 101
+9 × 101Accuracy%
+MC APPROX S
+ALSH-APPROX
+Standard S
+DropOut S
+Adaptive DropOut SPowered by TCPDF (www.tcpdf.org)Powered by TCPDF (www.tcpdf.org)Figure 6: Validation accuracies with 3
+hidden layers.
+1 2 3 4 5 6 7
+Number of hidden layers0102030405060708090Accuracy%
+MCAPPROXM
+StandardM
+ALSH-APPROX
+StandardS
+Figure 7: Test accuracy for different
+numbers of hidden layers.
+1 2 3 4 5 6 7
+Number of hidden layers103104105Time (s)
+MCAPPROXM
+StandardM
+ALSH-APPROX
+StandardSFigure 8: Training time for different
+numbers of hidden layers.
+90 91 92 93 94 95 96 97 98
+Accuracy%104105Time (s)
+MCAPPROXM
+DropOutS
+ALSH-APPROX
+StandardS
+AdaptiveDropoutS
+Figure 9: Accuracy vs. training time (3
+hidden layers).
+conducted additional experiments using 10- and 20-layer net-
+works. The obtained accuracy rates of 97.32% for 10 layers and
+95.71% for 20 layers validate our earlier findings. Finally, looking
+at Figure 7, the only case in which MC-approx Mfails to obtain
+the highest accuracy compared with ALSH-approx is when the
+model has only 1 hidden layer. ALSH-approx performs (94.4%)
+slightly better than MC-approx M(92.71%).
+9.2 Training Time
+After studying the impact of network depth on accuracy, we
+next turn our attention to efficiency (i.e., training time). The re-
+sults from all five methods on three hidden layers, on one CPU
+and without parallelization, are summarized in Table 3 and Ta-
+ble 4. Even though from Table 4 it is evident that MC-approx M
+significantly outperforms other approaches with batch size 20,
+MC-approx Sis slower than Adaptive-Dropout S,Standard S,
+andDropout S. Similarly, Figure 8 shows the runtime compar-
+ison of MC-approx MandALSH-approx with Standard Sand
+Standard M(baseline) for different numbers of layers. The re-
+sults confirm the superiority of MC-approx Mover the other
+algorithms up to 3 layers. Note that the observed increase in the
+training time of Adaptive-Dropout per epoch in comparison
+toStandard can be attributed to the additional computational
+overhead of the construction of dropout masks and their sub-
+sequent multiplication with the weight matrices in each layer
+(Table 4).
+ALSH-approx . Before discussing our efficiency results from
+ALSH-approx , let us emphasize that ALSH-approx is a scal-
+able algorithm that significantly benefits from parallelization [50].
+During training, the hash table construction, computing hashsignature, querying hash tables, and updating weight vectors
+by sparse weight gradients are parallelized, which makes the
+algorithm fast with parallel processing using multiple processing
+units. We refer interested readers to the details and results of
+Spring and Shrivastava [50].
+ALSH-approx needs to reconstruct the hash tables after a
+set of weight updates. Following the original implementation
+ofALSH-approx , in our experiments, for the first 10000 train-
+ing data points, we reconstruct hash tables every 100 images.
+Then gradually, we expand the set to avoid time-consuming table
+reconstructions and update the tables every 1000 images. This
+helps with directing the gradient and decreasing the redundancy
+in the dataset. Table 3 shows that ALSH-approx exhibits slower
+performance compared to all other methods in the statistic set-
+ting.
+Also, in models with additional hidden layers, we can see an
+increase in training time as shown in Figure 8 that is larger than
+other methods on the same network structure. This is consis-
+tent with the results presented by Spring and Shrivastava [50],
+where it is shown that the runtime significantly drops with par-
+allelization. Evidently, as shown by Spring and Shrivastava [50],
+parallelization has no impact on the accuracy of ALSH-approx .
+In other words, the accuracy scalability results of ALSH-approx
+discussed in the previous section are independent of paralleliza-
+tion.
+MC-approx . Due to the sampling ratio of MC-approx (𝑝≈0.1),
+MC-approx performs more atomic scalar operations than ALSH-
+approx with 5% of the nodes. However, based on the results from
+Figure 8 and Table 3, MC-approx MandMC-approx Sare around
+20 and 2 times faster than ALSH-approx , respectively. This is193
+
+Table 2: Test accuracy (%) for a network with 3 hidden layers.
+Dataset ALSH-approx MC-approx MMC-approx SDropout SAdaptive-Dropout SStandard S
+MNIST 94.15 98.10 98.38 90.21 98.06 96.46
+Kuzushiji-MNIST 72.87 91.78 96.50 9.84 90.73 83.86
+Fashion-MNIST 78.11 87.85 88.58 76.28 86.12 73.64
+EMNIST-Letters 64.97 89.84 90.75 4.96 89.50 85.34
+NORB 78.57 92.05 97.52 32.73 96.60 51.61
+CIFAR-10 10.31 73.26 62.11 67.85 75.55 93.02
+Table 3: Training time per epoch (sec.) with 3 hidden layers and batch size 1 on MNIST.
+Method ALSH-approx MC-approx S Dropout S Adaptive-Dropout S Standard S
+Total 807.50±22.92 422.23±3.36 196.15±0.55 225 .85±1.91 361 .51±5.13
+Feedforward 168.02±3.34 28.44±0.076 32.32±0.04 59 .03±0.10 28 .976±0.04
+Backpropagation 356.16±7.28 110.98±0.69 131.02±0.57 132 .68±1.89 61 .88±1.02
+Table 4: Training time per epoch (sec.) with 3 hidden layers and batch size 20 on MNIST.
+Method MC-approx M Dropout M Adaptive-Dropout M Standard M
+Total 35.141±0.385 42.818±0.108 53 .412±0.301 39 .310±1.087
+Feedforward 4.733±0.054 4.789±0.010 10 .539±0.024 4.213±0.052
+Backpropagation 11.323±0.071 7.957±0.029 8 .493±0.271 23 .143±1.080
+because of the significantly lower overhead of MC-approx com-
+pared to ALSH-approx . Figure 8 shows that MC-approx Mout-
+performs other methods while maintaining a training time com-
+parable to Standard M. Notably, despite the additional computa-
+tional load in the backpropagation process with MC-approx M, it
+achieves backpropagation times that are twice as fast as those
+ofStandard on the same architecture (Table 4). For networks
+with fewer than 4 hidden layers, MC-approx Mis slightly faster
+than Standard M, and for deeper networks, the opposite is true.
+Nevertheless, Figure 5 confirms the higher accuracy of the MC-
+approx Mfor various numbers of layers on MNIST. From Table 3,
+it is evident that Standard Sis faster than MC-approx S. The rea-
+son is that, in order to estimate probabilities based on Equation 7
+for each mini-batch, MC-approx makes a pass over the mini-
+batch and the matrix 𝑊. As a result, in SGD, where mini-batch
+size is one, the overhead time and the time to approximate the
+matrix multiplication exceeds the required time for exact multi-
+plication ( Standard S). In §9.4, we provide a thorough analysis of
+the runtime comparison between Dropout ,Adaptive-Dropout ,
+andMC-approx M.
+Finally, Figure 9 shows that MC-approx performs better in
+both speed and accuracy compared to other methods.
+9.3 Hyperparameters
+MC-approx is designed for mini-batch stochastic gradient de-
+scent, as it uses the set of samples in the mini-batch for error
+estimation in Equation 7 to identify which rows in 𝑊𝑘to select.
+In SGD, the estimations would be made using only one sample,
+and hence are not reliable. As a result, while MC-approx per-
+forms well for mini-batch SGD with a large-enough batch size
+(20), its efficiency drops significantly for SGD. In the stochastic
+setting, MC-approx Sis slower than Standard S(Table 3) and is
+prone to overfitting.
+To evaluate this, we run experiments on stochastic setting
+where batch size is set to 1 ( MC-approx S) along with differentbatch sizes. The results are provided in Figures 6, 10, 11, and 12
+and Tables 3 and 4. The results in Figure 10 show the decrease in
+accuracy for small mini-batches with the same learning rate: the
+accuracy drops from 98% to 84%. The optimal learning rate to use
+is smaller for smaller batch sizes [ 47], so to resolve the overfitting
+inMC-approx S, we decreased the learning rate from 10−3to10−4.
+As shown in Table 2 and Figure 6, MC-approx Sperforms well
+in terms of accuracy. Moreover, as the model gets more complex
+by adding hidden layers (Figure 12) and the variance increases,
+the model is unable to avoid overfitting even with decreasing
+the learning rate. We discussed in §6.2 that MC-approx chooses
+row-column pairs from matrices such that the columns are from
+the first input matrix 𝑋∈R𝑚×𝑛and the corresponding rows are
+sampled from the second matrix 𝑊∈R𝑛×𝑛. Figure 12 provides
+evidence of the lack of scalability of MC-approx Sfor deep net-
+works. This can be attributed to the specific sampling procedure
+employed by MC-approx S. In the stochastic setting, 𝑋:,𝑗is re-
+duced to a singleton set. As a result, the time overhead increases,
+while the reliability of probability estimation for row-column
+selection decreases.
+9.4 Memory Analysis
+Our computing architecture is equipped with a hierarchical mem-
+ory layout that includes a 384 KB Level 1 (L1) cache, 12 MB Level
+2 (L2) cache, and a 19.3 MB Level 3 (L3) cache. We find that the
+ALSH-approx algorithm initially requires 24 MB of memory for
+table setup and subsequently expands by 3,731.9 MB by the end
+of training. This substantial increase in memory usage indicates
+that the data that is not cache resident contributes to significant
+system overload. This plays a crucial role in the execution time
+of the ALSH-approx algorithm, as it necessitates frequent data
+retrieval from slower, non-cache memory sources. MC-approx
+demonstrates a 45 MB increment in memory usage by the end of
+training. Notably, memory usage decreases to 16.4 and 15.7 MB
+forDropout andAdaptive-Dropout , respectively. However,194
+
+0
+ 10
+ 20
+ 30
+ 40
+ 50
+Number of epochs
+0.800
+0.825
+0.850
+0.875
+0.900
+0.925
+0.950
+0.975Accuracy%
+Batch size = 2
+Batch size = 8
+Batch size = 12
+Batch size = 20
+Batch size = 35Powered by TCPDF (www.tcpdf.org)Powered by TCPDF (www.tcpdf.org)Figure 10: MC-approx : validation accu-
+racy for different batch sizes (learning
+rate = 0.001).
+0 10 20 30 40 50
+Number of epochs05000100001500020000wall clock (s)Batch size = 2
+Batch size = 8
+Batch size = 12
+Batch size = 20
+Batch size = 35Figure 11: MC-approx : training time
+for different batch sizes (learning rate
+= 0.001).
+0
+ 10
+ 20
+ 30
+ 40
+ 50
+Number of epochs
+0.2
+0.4
+0.6
+0.8
+1.0Accuracy%
+MC APPROX S lr = 0.001
+MC APPROX S lr = 0.0001
+ALSH-APPROX
+Standard S
+Adaptive DropOut S
+DropOut SPowered by TCPDF (www.tcpdf.org)Powered by TCPDF (www.tcpdf.org)Figure 12: Validation accuracies with 7
+hidden layers.
+the I/O traffic remains high, and the runtime still increases simi-
+larly to MC-approx . This phenomenon is attributable to cache
+misses during training with Dropout andAdaptive-Dropout .
+As Mohan et al . [42] illustrate, minimizing storage I/O per epoch
+is more critical than caching data. If data is evicted from the cache
+before use or is never cached, accessing it from memory increases
+the I/O overhead. Cache profiling results indicate a roughly 24%
+increase in cache misses with Dropout and a 27% increase with
+Adaptive-Dropout compared to MC-approx , explaining the
+rise in runtime.
+10 LESSONS AND DISCUSSION
+It is important to recognize that no single method serves as the
+optimal solution for optimizing training across all architectures
+and datasets. On the positive side though, our theoretical anal-
+ysis and experimental evaluations confirm the effectiveness of
+existing approaches under various settings. Specifically, our ex-
+perimental findings discussed in §9 confirm the superiority of
+MC-approx . When used on MLPs with an appropriately sized
+mini-batch larger than one, it offers enhanced accuracy, speed
+and memory efficiency. MC-approx effectively approximates the
+inner product at each layer by sampling nodes from the previous
+layer, and utilizing a batch of data point vectors significantly
+improves the sampling quality. Another notable observation is
+thatMC-approx decreases the number of cache misses which
+significantly contributes to its increased speed. Moreover, our
+theoretical analysis in § 7 demonstrate a small estimation error
+forALSH-approx , when the number of hidden layers is small.
+This was observed in our experiment in Figures 3m, Figure 3n,
+and Table 2. This confirm the effectiveness of ALSH-approx ,
+especially with parallel computing [50].
+10.1 Feedforward Approximation Scalability
+A major takeaway in this paper is the negative impact of approx-
+imation during the feedforward process. First, in §7, we theoreti-
+cally analyzed the error propagation effect from layer to layer.
+In particular, Theorem 7.2 highlights the exponential increase
+of gradient estimation error in ALSH-approx as the number of
+hidden layers increases. As a result, for neural networks with
+more than 3 hidden layers, the error can become even larger
+than the estimation value. Consequently, the gradient estimation
+can become utterly arbitrary, resulting in completely inaccurate
+weight updates during the backpropagation step, which leads
+to an inaccurate model. For MC-approx , Adelman et al . [1] did
+not observe consistent behavior across different models in theirexperiments. Interestingly, the authors provide the theoretical
+result that (i) approximating both feedforward and backpropaga-
+tion operations leads to biased estimates, and (ii) approximating
+only feedforward operations is unbiased. However, their method
+for feedforward approximation failed in experiments [ 1]. As a re-
+sult,MC-approx (the algorithm evaluated in this paper) only adds
+approximation during backpropagation. We observed similar re-
+sults for ALSH-approx in §9. It is evident in Figures 3, 7, 12, and 4
+thatALSH-approx failed to scale for DNNs, confirming our the-
+oretical analysis in Theorem 7.2.
+We observed that backpropagation generally took significantly
+longer than the feedforward step (Tables 3 and 4). Fortunately,
+backpropagation optimization can significantly improve train-
+ing time [ 22,53]; introducing approximation only during the
+backpropagation step has the potential to significantly reduce
+training time. Nevertheless, designing scalable sampling-based
+algorithms that introduce approximation on both feedforward
+and backpropagation in DNNs on CPU machines remains an
+open research direction.
+10.2 DNNs and Small Batch Size
+As observed in our theoretical analysis and experiment results,
+ALSH-approx does not scale to DNNs with more than a few hid-
+den layers. MC-approx , on the other hand, scales for DNNs, but
+it is designed based on mini-batch gradient descent and performs
+well when the batch size is reasonably large (greater than 10).
+However, the performance of MC-approx quickly drops for small
+batch sizes under the same setting. In particular, we observed a
+swift drop in time efficiency (Figure 11) under SGD. While MC-
+approx Sdemonstrated a high accuracy in some cases (Table 2),
+this comes at a cost of a significant increase in training time
+(even compared to Standard S) and a high risk of overfitting,
+especially for deep networks (Figure 12). Thus, designing scalable
+sampling-based algorithms for SGD on CPU remains an open
+research direction.
+10.3 ALSH-approx Prediction in DNNs
+We would like to conclude this section with an interesting obser-
+vation on ALSH-approx . Let us consider the confusion matrices
+ofALSH-approx in Figure 3 (Row 4) once again. From Figure 3m,
+one can confirm that (i) there is no class imbalance in the test
+set (approximately same number of samples in each class), and
+(ii) having high accuracy, the model predictions are uniformly
+distributed across different classes (approximately same number
+of samples predicted to be in each class). On the other hand, in195
+
+0123456789
+Predicted label1 2 3 4 5 6 7Number of hidden layers
+0.00.10.20.30.40.50.6
+Figure 13: ALSH-approx : impact of network depth on label
+prediction ratio distribution.
+Figure 3p, it seems not only the model is inaccurate, but inter-
+estingly only a few labels from the class labels are generated
+in predictions (all samples are labeled as either 0, 1, or 7). We
+repeated the experiment multiple times and observed consistent
+behavior. Furthermore, comparing Row 2 ( Dropout ) with Row 4
+(ALSH-approx ) in Figure 3, we note that, while both methods
+failed to scale with the number of hidden layers, Dropout main-
+tains the label diversity in its prediction, which demonstrates
+randomness. To better present this, in Figure 13, we provide the
+ratio of test-set samples predicted for each label (column) for
+networks with various numbers of hidden layers. It is clear that,
+while initially the label prediction distribution is uniform, as the
+number of layers increases, the predictions concentrate around a
+few arbitrary classes. The reason is that, while training the model
+using ALSH-approx , as the gradient estimation error increases
+for deeper networks, a small subset of nodes remains active in
+deeper layers, regardless of the input sample. As a result, the set
+of edges for which the weights get updated remains almost the
+same. Therefore, when predicting the label of an input sample,
+the same set of nodes is “activated”, resulting in a small set of
+predictions generated.
+10.4 Optimal Choice of Training Method
+Building on the insights and lessons from our study, we present a
+decision tree to guide users in selecting the most effective method
+for training DNNs on CPU machines:
+Setting
+# Layers
+Parallel Computing
+ALSH-approx ([50])yes
+Open Problem (Tab. 3)noShallow (≤4)
+Open Problem12(Fig. 3)Deep ( >4)SGD
+MC-approx (§9.3, Tab. 4)Mini-Batch SGD
+Our primary objective is to identify methods that deliver per-
+formance nearly comparable to standard training in terms of
+accuracy while ensuring faster execution on our CPU system
+across various settings. Our results, presented in Section 9.3 and
+Table 4, indicate that MC-approx surpasses other methods in
+mini-batch settings. In stochastic environments, the effective
+method varies with the network depth. The experimental evalua-
+12“Open problem” refers to settings where existing sampling-based algorithms
+failed; further research is needed to design algorithms for those settings.tion by Spring and Shrivastava [50] confirms that ALSH-approx
+scales effectively using parallel computing with multi-processors
+up to 26processors, for up to four layers. Therefore, we believe
+ALSH-approx performs optimally up to four layers under such
+conditions.
+11 CONCLUSION
+Many of the advanced technologies originally developed for ad-
+dressing big data challenges have been extended to solve scala-
+bility complexities across various domains. In this paper, we eval-
+uated one of these settings, where sampling-based techniques
+were proposed for training DNN on CPU machines with lim-
+ited resources. To this end, we made connection between two
+sampling-based research directions that can be viewed as matrix
+multiplication approximations. We provided theoretical analyses,
+followed by extensive empirical evaluations.
+Our results demonstrate a correlation between the number of
+hidden layers and approximation error in DNNs under hashing-
+based methods. In addition, we provided insights into the perfor-
+mance of fast training methods in different settings and highlight
+areas for further research.
+As a final note, energy consumption during DNN training
+raises environmental concerns. Recent studies have explored the
+significant carbon footprint associated with large-scale neural
+networks, primarily due to their energy consumption [ 45,56].
+One interesting direction for future work is to study the impact
+of sampling-based techniques on energy efficiency.
+ACKNOWLEDGMENTS
+This work was supported in part by the National Science Foun-
+dation, Grant No. 2107290, and the UIC University Fellowship.
+The authors would like to thank the anonymous reviewers and
+the meta-reviewer for their invaluable feedback.
+REFERENCES
+[1]Menachem Adelman, Kfir Levy, Ido Hakimi, and Mark Silberstein. 2021. Faster
+Neural Network Training with Approximate Tensor Operations. In Advances in
+Neural Information Processing Systems , M. Ranzato, A. Beygelzimer, Y. Dauphin,
+P.S. Liang, and J. Wortman Vaughan (Eds.), Vol. 34. Curran Associates, Inc.,
+27877–27889.
+[2]Thomas Dybdahl Ahle, Rasmus Pagh, Ilya Razenshteyn, and Francesco Sil-
+vestri. 2016. On the complexity of inner product similarity join. In Proceedings
+of the 35th ACM SIGMOD-SIGACT-SIGAI Symposium on Principles of Database
+Systems . 151–164.
+[3]Abolfazl Asudeh, Jees Augustine, Saravanan Thirumuruganathan, Azade Nazi,
+Nan Zhang, Gautam Das, and Divesh Srivastava. 2021. Scalable signal re-
+construction for a broad range of applications. Commun. ACM 64, 2 (2021),
+106–115.
+[4]Abolfazl Asudeh, Azade Nazi, Jees Augustine, Saravanan Thirumuruganathan,
+Nan Zhang, Gautam Das, and Divesh Srivastava. 2018. Leveraging similarity
+joins for signal reconstruction. Proceedings of the VLDB Endowment 11, 10
+(2018), 1276–1288.
+[5]Martin Aumüller and Matteo Ceccarello. 2022. Implementing Distributed
+Approximate Similarity Joins using Locality Sensitive Hashing. In EDBT:
+International Conference on Extending Database Technology .
+[6]Lei Jimmy Ba and Brendan Frey. 2013. Adaptive Dropout for Training Deep
+Neural Networks. In Proceedings of the 26th International Conference on Neural
+Information Processing Systems - Volume 2 (NIPS ’13) . Curran Associates Inc.,
+Red Hook, NY, USA, 3084–3092.
+[7]Kevin Beyer, Rainer Gemulla, Peter J Haas, Berthold Reinwald, and Yannis
+Sismanis. 2009. Distinct-value synopses for multiset operations. Commun.
+ACM 52, 10 (2009), 87–95.
+[8]Matthias Boehm, Michael W Dusenberry, Deron Eriksson, Alexandre V Ev-
+fimievski, Faraz Makari Manshadi, Niketan Pansare, Berthold Reinwald, Freder-
+ick R Reiss, Prithviraj Sen, Arvind C Surve, et al .2016. SystemML: Declarative
+machine learning on spark. PVLDB 9, 13 (2016), 1425–1436.
+[9]Matthias Boehm, Shirish Tatikonda, Berthold Reinwald, Prithviraj Sen,
+Yuanyuan Tian, Douglas R Burdick, and Shivakumar Vaithyanathan. 2014.
+Hybrid parallelization strategies for large-scale machine learning in systemml.
+Proceedings of the VLDB Endowment 7, 7 (2014), 553–564.196
+
+[10] Surajit Chaudhuri, Venkatesh Ganti, and Raghav Kaushik. 2006. A primitive
+operator for similarity joins in data cleaning. In ICDE . IEEE.
+[11] Tarin Clanuwat, Mikel Bober-Irizar, Asanobu Kitamoto, Alex Lamb, Kazuaki
+Yamamoto, and David Ha. 2018. Deep Learning for Classical Japanese Litera-
+ture. (Dec. 2018). https://doi.org/10.48550/arXiv.1812.01718
+[12] Gregory Cohen, Saeed Afshar, Jonathan Tapson, and Andre van Schaik. 2017.
+EMNIST: Extending MNIST to handwritten letters. In 2017 International Joint
+Conference on Neural Networks (IJCNN) . Institute of Electrical and Electronics
+Engineers (IEEE), 2921–2926. https://doi.org/10.1109/ijcnn.2017.7966217
+[13] Jeffrey Dean, Greg Corrado, Rajat Monga, Kai Chen, Matthieu Devin,
+Mark Mao, Marc’aurelio Ranzato, Andrew Senior, Paul Tucker, Ke Yang,
+Quoc Le, and Andrew Ng. 2012. Large Scale Distributed Deep Net-
+works. In Advances in Neural Information Processing Systems , F. Pereira,
+C.J. Burges, L. Bottou, and K.Q. Weinberger (Eds.), Vol. 25. Curran As-
+sociates, Inc. https://proceedings.neurips.cc/paper_files/paper/2012/file/
+6aca97005c68f1206823815f66102863-Paper.pdf
+[14] Li Deng. 2012. The MNIST Database of Handwritten Digit Images for Machine
+Learning Research. IEEE Signal Processing Magazine 29, 6 (Nov. 2012), 141–142.
+https://doi.org/10.1109/msp.2012.2211477
+[15] Petros Drineas, Ravi Kannan, and Michael W. Mahoney. 2006. Fast Monte
+Carlo Algorithms for Matrices i: Approximating Matrix Multiplication. SIAM J.
+Comput. 36, 1 (Jan. 2006), 132–157. https://doi.org/10.1137/s0097539704442684
+[16] John Duchi, Elad Hazan, and Yoram Singer. 2011. Adaptive Subgradient
+Methods for Online Learning and Stochastic Optimization. Journal of Machine
+Learning Research (JMLR) 12, 61 (2011), 2121–2159. http://jmlr.org/papers/
+v12/duchi11a.html
+[17] Sana Ebrahimi, Rishi Advani, and Abolfazl Asudeh. 2023. Sampling-Based
+Techniques for Training Deep Neural Networks with Limited Computational
+Resources: A Scalability Evaluation. arXiv preprint arXiv:2306.09293 (2023).
+[18] Kayvon Fatahalian, Jeremy Sugerman, and Pat Hanrahan. 2004. Understand-
+ing the Efficiency of GPU Algorithms for Matrix-Matrix Multiplication. In
+Proceedings of the ACM SIGGRAPH/EUROGRAPHICS Conference on Graphics
+Hardware (HWWS ’04) . Association for Computing Machinery, New York, NY,
+USA, 133–137.
+[19] Trevor Gale, Erich Elsen, and Sara Hooker. 2019. The state of sparsity in deep
+neural networks. (Feb. 2019).
+[20] Amol Ghoting, Rajasekar Krishnamurthy, Edwin Pednault, Berthold Rein-
+wald, Vikas Sindhwani, Shirish Tatikonda, Yuanyuan Tian, and Shivakumar
+Vaithyanathan. 2011. SystemML: Declarative machine learning on MapReduce.
+In2011 IEEE 27th International conference on data engineering . IEEE, 231–242.
+[21] Aristides Gionis, Piotr Indyk, and Rajeev Motwani. 1999. Similarity Search
+in High Dimensions via Hashing. In Proceedings of the 25th International
+Conference on Very Large Data Bases (VLDB ’99) . Morgan Kaufmann Publishers
+Inc., San Francisco, CA, USA, 518–529.
+[22] Ian J. Goodfellow, Yoshua Bengio, and Aaron Courville. 2016. Deep Learning .
+MIT Press, Cambridge, MA, USA. http://www.deeplearningbook.org.
+[23] Kazushige Goto and Robert A. van de Geijn. 2008. Anatomy of high-
+performance matrix multiplication. ACM Transactions on Mathematical Soft-
+ware (TOMS) 34, 3 (2008), 1–25.
+[24] Marios Hadjieleftheriou, Xiaohui Yu, Nick Koudas, and Divesh Srivastava.
+2008. Hashed samples: selectivity estimators for set similarity selection queries.
+PVLDB 1, 1 (2008), 201–212.
+[25] Song Han, Huizi Mao, and William J. Dally. 2016. Deep Compression: Com-
+pressing Deep Neural Networks with Pruning, Trained Quantization and
+Huffman Coding. ICLR .
+[26] Sona Hasani, Saravanan Thirumuruganathan, Abolfazl Asudeh, Nick Koudas,
+and Gautam Das. 2018. Efficient construction of approximate ad-hoc ML
+models through materialization and reuse. Proceedings of the VLDB Endowment
+11, 11 (2018), 1468–1481.
+[27] Yihui He, Ji Lin, Zhijian Liu, Hanrui Wang, Li-Jia Li, and Song Han. 2018.
+AMC: AutoML for Model Compression and Acceleration on Mobile Devices.
+InComputer Vision – ECCV 2018 . Springer International Publishing, 815–832.
+https://doi.org/10.1007/978-3-030-01234-2_48
+[28] Piotr Indyk and Rajeev Motwani. 1998. Approximate Nearest Neighbors:
+Towards Removing the Curse of Dimensionality. In Proceedings of the Thirtieth
+Annual ACM Symposium on Theory of Computing (STOC ’98) . Association for
+Computing Machinery, 604–613.
+[29] Dhiraj Kalamkar, Evangelos Georganas, Sudarshan Srinivasan, Jianping Chen,
+Mikhail Shiryaev, and Alexander Heinecke. 2020. Optimizing Deep Learning
+Recommender Systems Training on CPU Cluster Architectures. In SC20: In-
+ternational Conference for High Performance Computing, Networking, Storage
+and Analysis . 1–15. https://doi.org/10.1109/SC41405.2020.00047
+[30] Diederik P. Kingma and Jimmy Ba. 2014. Adam: A Method for Stochastic
+Optimization. (Dec. 2014). https://doi.org/10.48550/arXiv.1412.6980
+[31] Alex Krizhevsky. 2009. Learning Multiple Layers of Features from Tiny Images .
+Technical Report.
+[32] Arun Kumar, Matthias Boehm, and Jun Yang. 2017. Data management in
+machine learning: Challenges, techniques, and systems. In Proceedings of the
+2017 ACM International Conference on Management of Data . 1717–1722.
+[33] Arun Kumar, Jeffrey Naughton, Jignesh M Patel, and Xiaojin Zhu. 2016. To
+join or not to join?: Thinking twice about joins before feature selection. In
+Proceedings of the 2016 International Conference on Management of Data . ACM,
+19–34.
+[34] Yann LeCun, Fu Jie Huang, and Léon Bottou. 2004. Learning methods forgeneric object recognition with invariance to pose and lighting. In Proceedings
+of the 2004 IEEE Computer Society Conference on Computer Vision and Pattern
+Recognition, 2004. CVPR 2004. (CVPR ’04) , Vol. 2. Institute of Electrical and
+Electronics Engineers (IEEE). https://doi.org/10.1109/CVPR.2004.1315150
+[35] Guoliang Li, Xuanhe Zhou, and Lei Cao. 2021. AI meets database: AI4DB and
+DB4AI. In Proceedings of the 2021 International Conference on Management of
+Data . 2859–2866.
+[36] Zhe Li, Boqing Gong, and Tianbao Yang. 2016. Improved Dropout for Shallow
+and Deep Learning. In Proceedings of the 30th International Conference on
+Neural Information Processing Systems (NIPS ’16) . Curran Associates Inc., Red
+Hook, NY, USA, 2531–2539.
+[37] Yuzhe Ma, Ran Chen, Wei Li, Fanhua Shang, Wenjian Yu, Minsik Cho, and Bei
+Yu. 2019. A Unified Approximation Framework for Compressing and Accel-
+erating Deep Neural Networks. In 2019 IEEE 31st International Conference on
+Tools with Artificial Intelligence (ICTAI) . Institute of Electrical and Electronics
+Engineers (IEEE), 376–383. https://doi.org/10.1109/ictai.2019.00060
+[38] Alireza Makhzani and Brendan Frey. 2015. Winner-Take-All Autoencoders. In
+Proceedings of the 28th International Conference on Neural Information Process-
+ing Systems - Volume 2 (NIPS ’15) . MIT Press, Cambridge, MA, USA, 2791–2799.
+[39] Giosuè Cataldo Marinò, Flavio Furia, Dario Malchiodi, and Marco Frasca.
+2023. Efficient and Compact Representations of Deep Neural Networks via
+Entropy Coding. IEEE Access 11 (2023), 106103–106125. https://doi.org/10.
+1109/ACCESS.2023.3317293
+[40] Stefano Markidis, Steven W. D. Chien, Erwin Laure, Ivy Bo Peng, and Jeffrey S.
+Vetter. 2018. NVIDIA Tensor Core Programmability, Performance & Preci-
+sion. 2018 IEEE International Parallel and Distributed Processing Symposium
+Workshops (IPDPSW) (2018), 522–531.
+[41] B McMahan and Daniel Ramage. 2017. Federated learning: Collaborative ma-
+chine learning without centralized training data . Technical Report. Technical
+report, Google.
+[42] Jayashree Mohan, Amar Phanishayee, Ashish Raniwala, and Vijay Chi-
+dambaram. 2020. Analyzing and mitigating data stalls in DNN training. arXiv
+preprint arXiv:2007.06775 (2020).
+[43] James Jie Pan, Jianguo Wang, and Guoliang Li. 2023. Survey of vector database
+management systems. arXiv preprint arXiv:2310.14021 (2023).
+[44] Yongjoo Park, Barzan Mozafari, Joseph Sorenson, and Junhao Wang. 2018.
+Verdictdb: Universalizing approximate query processing. In Proceedings of the
+2018 International Conference on Management of Data . 1461–1476.
+[45] David Patterson, Joseph Gonzalez, Urs Hölzle, Quoc Le, Chen Liang, Lluis-
+Miquel Munguia, Daniel Rothchild, David R So, Maud Texier, and Jeff Dean.
+2022. The carbon footprint of machine learning training will plateau, then
+shrink. Computer 55, 7 (2022), 18–28.
+[46] Christian P. Robert. 2016. Monte Carlo Methods . Wiley. 1–13 pages. https:
+//doi.org/10.1002/9781118445112.stat03876.pub2
+[47] Christopher J. Shallue, Jaehoon Lee, Joseph Antognini, Jascha Sohl-Dickstein,
+Roy Frostig, and George E. Dahl. 2019. Measuring the Effects of Data Paral-
+lelism on Neural Network Training. Journal of Machine Learning Research
+(JMLR) 20, 112 (2019), 1–49.
+[48] Anshumali Shrivastava and Ping Li. 2014. Asymmetric LSH (ALSH) for Sublin-
+ear Time Maximum Inner Product Search (MIPS). In Advances in Neural Infor-
+mation Processing Systems , Z. Ghahramani, M. Welling, C. Cortes, N. Lawrence,
+and K.Q. Weinberger (Eds.), Vol. 27. Curran Associates, Inc.
+[49] Matthew S. Smith. 2023. The Case for Running AI on CPUs Isn’t Dead Yet.
+IEEE Spectrum (1 June 2023).
+[50] Ryan Spring and Anshumali Shrivastava. 2017. Scalable and Sustainable Deep
+Learning via Randomized Hashing. In Proceedings of the 23rd ACM SIGKDD
+International Conference on Knowledge Discovery and Data Mining (KDD ’17) .
+Association for Computing Machinery, New York, NY, USA, 445–454.
+[51] Ryan Spring and Anshumali Shrivastava. 2020. Mutual Information Estimation
+using LSH Sampling. In Proceedings of the Twenty-Ninth International Joint
+Conference on Artificial Intelligence, IJCAI-20 , Christian Bessiere (Ed.). Interna-
+tional Joint Conferences on Artificial Intelligence Organization, 2807–2815.
+https://doi.org/10.24963/ijcai.2020/389
+[52] Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, and Rus-
+lan Salakhutdinov. 2014. Dropout: A Simple Way to Prevent Neural Networks
+from Overfitting. Journal of Machine Learning Research (JMLR) 15, 1 (Jan.
+2014), 1929–1958.
+[53] Xu Sun, Xuancheng Ren, Shuming Ma, Bingzhen Wei, Wei Li, and Houfeng
+Wang. 2017. Training Simplification and Model Simplification for Deep Learn-
+ing : A Minimal Effort Back Propagation Method. IEEE Transactions on Knowl-
+edge and Data Engineering 32 (2017), 374–387.
+[54] Yao Tian, Xi Zhao, and Xiaofang Zhou. 2023. DB-LSH 2.0: Locality-Sensitive
+Hashing With Query-Based Dynamic Bucketing. IEEE Transactions on Knowl-
+edge and Data Engineering (2023).
+[55] Vincent Vanhoucke, Andrew Senior, and Mark Z. Mao. 2011. Improving the
+speed of neural networks on CPUs. (2011).
+[56] Roberto Verdecchia, June Sallou, and Luís Cruz. 2023. A systematic review
+of Green AI. Wiley Interdisciplinary Reviews: Data Mining and Knowledge
+Discovery 13, 4 (2023), e1507.
+[57] Sida Wang and Christopher Manning. 2013. Fast dropout training. In Proceed-
+ings of the 30th International Conference on Machine Learning (Proceedings of
+Machine Learning Research) , Sanjoy Dasgupta and David McAllester (Eds.),
+Vol. 28. PMLR, Atlanta, Georgia, USA, 118–126. https://doi.org/10.5555/
+3042817.3042907197
+
+[58] Ruidi Wei and Florian Kerschbaum. 2023. Cryptographically Secure Private
+Record Linkage using Locality-Sensitive Hashing. Proceedings of the VLDB
+Endowment 17, 2 (2023), 79–91.
+[59] Han Xiao, Kashif Rasul, and Roland Vollgraf. 2017. Fashion-MNIST: a Novel
+Image Dataset for Benchmarking Machine Learning Algorithms. (Sept. 2017).
+https://doi.org/10.48550/arXiv.1708.07747
+[60] Tiechui Yao, Jue Wang, Junyu Gu, Yumeng Shi, Fang Liu, Xiaoguang Wang,
+Yangang Wang, and Xuebin Chi. 2023. A Sparse Matrix Optimization Method
+for Graph Neural Networks Training. In International Conference on Knowledge
+Science, Engineering and Management . Springer, 114–123.[61] Ce Zhang, Arun Kumar, and Christopher Ré. 2016. Materialization optimiza-
+tions for feature selection workloads. ACM Transactions on Database Systems
+(TODS) 41, 1 (2016), 2.
+[62] Xuanhe Zhou, Chengliang Chai, Guoliang Li, and Ji Sun. 2020. Database meets
+artificial intelligence: A survey. IEEE Transactions on Knowledge and Data
+Engineering 34, 3 (2020), 1096–1116.
+[63] Xiaotian Zhu, Wengang Zhou, and Houqiang Li. 2018. Adaptive layerwise
+quantization for deep neural network compression. In 2018 IEEE International
+Conference on Multimedia and Expo (ICME) . Institute of Electrical and Elec-
+tronics Engineers (IEEE), 1–6.198
+[single_shot_citation_anthropic_response] attempt=1/3
+{
+  "citation_scores": {
+    "1": 0.14,
+    "50": 0.13,
+    "15": 0.10,
+    "52": 0.07,
+    "6": 0.06,
+    "48": 0.06,
+    "21": 0.03,
+    "28": 0.03,
+    "46": 0.02,
+    "22": 0.02,
+    "14": 0.02,
+    "11": 0.01,
+    "12": 0.01,
+    "31": 0.01,
+    "34": 0.01,
+    "59": 0.01,
+    "51": 0.01,
+    "30": 0.01,
+    "16": 0.01,
+    "47": 0.01,
+    "42": 0.01,
+    "53": 0.01,
+    "40": 0.01,
+    "13": 0.005,
+    "25": 0.005,
+    "55": 0.005,
+    "29": 0.005,
+    "27": 0.005,
+    "19": 0.005,
+    "36": 0.005,
+    "37": 0.005,
+    "57": 0.005,
+    "2": 0.005,
+    "44": 0.005,
+    "43": 0.005,
+    "3": 0.005,
+    "4": 0.005,
+    "5": 0.003,
+    "54": 0.003,
+    "58": 0.003,
+    "10": 0.003,
+    "7": 0.003,
+    "24": 0.003,
+    "8": 0.003,
+    "9": 0.003,
+    "20": 0.003,
+    "32": 0.003,
+    "33": 0.003,
+    "41": 0.003,
+    "26": 0.003,
+    "61": 0.003,
+    "35": 0.003,
+    "62": 0.003,
+    "18": 0.003,
+    "23": 0.003,
+    "38": 0.002,
+    "39": 0.002,
+    "63": 0.002,
+    "60": 0.002,
+    "45": 0.002,
+    "56": 0.002,
+    "49": 0.002,
+    "17": 0.002
+  }
+}

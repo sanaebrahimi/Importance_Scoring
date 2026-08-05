@@ -37,6 +37,7 @@ DEFAULT_MODEL_TAGS: Dict[str, str] = {
     "llama3.2:3b": "llama3_2_promptv2",
     "gemma2:2b": "gemma2_2b_promptv2",
     "gemma3:4b": "gemma3_4b_promptv2",
+    "qwen3:4b": "qwen3_4b_promptv2",
     "qwen3:1.7b": "qwen3_1_7_promptv2",
     "phi3:medium": "phi3_medium_promptv2",
     "qwen2.5:3b": "qwen2_5_3b_promptv2",
@@ -47,6 +48,7 @@ MODEL_COLORS: Dict[str, str] = {
     "llama3.2:3b": "#f28e2b",
     "gemma2:2b": "#e15759",
     "gemma3:4b": "#76b7b2",
+    "qwen3:4b": "#9c755f",
     "qwen3:1.7b": "#59a14f",
     "phi3:medium": "#edc948",
     "qwen2.5:3b": "#b07aa1",
@@ -101,6 +103,14 @@ def model_display_name(tag: str) -> str:
         if model_tag == tag:
             return display_name
     return tag
+
+
+def reference_display_name(tag: str) -> str:
+    if tag == "openai_full_paper":
+        return "OpenAI"
+    if tag == "anthropic_full_paper":
+        return "Anthropic"
+    return model_display_name(tag)
 
 
 def score_file_path(results_root: Path, paper_id: str, tag: str) -> Path:
@@ -531,12 +541,13 @@ def plot_metric_violin(
 def plot_kl_violin(
     path_prefix: Path,
     per_model_results: Dict[str, Sequence[dict]],
+    reference_label: str,
 ) -> None:
     plot_metric_violin(
         path_prefix=path_prefix,
         per_model_results=per_model_results,
         metric_key="kl_divergence",
-        title="KL Divergence to OpenAI Across Papers",
+        title=f"KL Divergence to {reference_label} Across Papers",
         y_label="KL Divergence",
     )
 
@@ -544,12 +555,13 @@ def plot_kl_violin(
 def plot_jsd_violin(
     path_prefix: Path,
     per_model_results: Dict[str, Sequence[dict]],
+    reference_label: str,
 ) -> None:
     plot_metric_violin(
         path_prefix=path_prefix,
         per_model_results=per_model_results,
         metric_key="jensen_shannon_divergence",
-        title="JSD to OpenAI Across Papers",
+        title=f"JSD to {reference_label} Across Papers",
         y_label="Jensen-Shannon Divergence",
     )
 
@@ -608,6 +620,7 @@ def build_report(
     n_bootstrap: int,
     bootstrap_seed: int,
 ) -> dict:
+    reference_label = reference_display_name(gpt_tag)
     comparable_papers: List[str] = []
     excluded_papers: List[dict] = []
     required_tags = [gpt_tag, *selected_models.values()]
@@ -679,8 +692,8 @@ def build_report(
             "KL and JSD are computed on citation-only score distributions normalized within each paper.",
             "Spearman and Kendall tau-b are computed on aligned raw citation-score vectors after canonical aggregation.",
             f"Top-k overlap uses k={top_k} on canonicalized citation targets.",
-            "Only models with the maximum OpenAI-overlap coverage are included so every selected model is evaluated on the same paper set.",
-            "Papers with empty or non-positive citation mass for OpenAI or any selected local model are excluded from the final citation benchmark.",
+            f"Only models with the maximum {reference_label}-overlap coverage are included so every selected model is evaluated on the same paper set.",
+            f"Papers with empty or non-positive citation mass for {reference_label} or any selected local model are excluded from the final citation benchmark.",
         ],
         "model_summaries": model_summaries,
         "selection_summary": selection_summary,
@@ -753,10 +766,12 @@ def main() -> None:
     plot_kl_violin(
         path_prefix=Path(args.plot_prefix),
         per_model_results=report["per_model_results"],
+        reference_label=reference_display_name(args.gpt_tag),
     )
     plot_jsd_violin(
         path_prefix=Path(str(args.plot_prefix).replace("_kl_violin", "_jsd_violin")),
         per_model_results=report["per_model_results"],
+        reference_label=reference_display_name(args.gpt_tag),
     )
 
     print(f"Saved JSON report to {output_json}")

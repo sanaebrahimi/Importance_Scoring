@@ -1,0 +1,1439 @@
+[single_shot_citation_anthropic_prompt]
+Assign direct citation contribution scores for the following paper.
+
+Goal:
+Score the cited references by how foundational they are to the paper's actual scientific contribution.
+
+Interpretation of score:
+A cited paper should receive a higher score if removing its ideas, methods, theory, framework, or evaluation role would substantially change the current paper's contribution.
+A cited paper should receive a lower score if it mainly provides background, motivation, peripheral comparison, or general context.
+
+Scoring rules:
+- Score all cited references that appear in the paper.
+- Scores must be non-negative.
+- Scores must sum to 1.0 across all cited references.
+- Use relative scoring: if one citation is about twice as foundational as another, its score should be about twice as large.
+- Do not output any citation that does not appear in the paper.
+- Use citation identifiers exactly as they appear in the paper.
+
+Output format:
+Return one JSON object with this exact shape:
+
+{
+  "citation_scores": {
+    "<citation identifier>": <score>,
+    "<citation identifier>": <score>
+  }
+}
+
+Paper text:
+Algorithmic Collective Action in Machine Learning
+Moritz Hardt* 1Eric Mazumdar* 2Celestine Mendler-D ¨unner* 1Tijana Zrnic* 3
+Abstract
+We initiate a principled study of algorithmic col-
+lective action on digital platforms that deploy ma-
+chine learning algorithms. We propose a simple
+theoretical model of a collective interacting with
+a firm’s learning algorithm. The collective pools
+the data of participating individuals and executes
+an algorithmic strategy by instructing participants
+how to modify their own data to achieve a collec-
+tive goal. We investigate the consequences of this
+model in three fundamental learning-theoretic set-
+tings: nonparametric optimal learning, parametric
+risk minimization, and gradient-based optimiza-
+tion. In each setting, we come up with coordi-
+nated algorithmic strategies and characterize natu-
+ral success criteria as a function of the collective’s
+size. Complementing our theory, we conduct sys-
+tematic experiments on a skill classification task
+involving tens of thousands of resumes from a
+gig platform for freelancers. Through more than
+two thousand model training runs of a BERT-like
+language model, we see a striking correspondence
+emerge between our empirical observations and
+the predictions made by our theory. Taken to-
+gether, our theory and experiments broadly sup-
+port the conclusion that algorithmic collectives of
+exceedingly small fractional size can exert signifi-
+cant control over a platform’s learning algorithm.
+1. Introduction
+Throughout the gig economy, numerous digital platforms
+algorithmically profile, control, and discipline workers that
+offer on-demand services to consumers. Data collection
+and predictive modeling are critical for a typical platform’s
+*Alphabetical ordering1Max Planck Institute for Intelligent
+Systems, T ¨ubingen, and T ¨ubingen AI Center2Caltech3UC Berke-
+ley. Correspondence to: Moritz Hardt <hardt@is.mpg.de >,
+Eric Mazumdar <mazumdar@caltech.edu >, Celestine Mendler-
+D¨unner <cmendler@tuebingen.mpg.de >, Tijana Zrnic <ti-
+jana.zrnic@berkeley.edu >.
+Proceedings of the 40thInternational Conference on Machine
+Learning , Honolulu, Hawaii, USA. PMLR 202, 2023. Copyright
+2023 by the author(s).business as machine learning algorithms power ranking,
+scoring, and classification tasks of various kinds (Woodcock
+& Graham, 2019; Gray & Suri, 2019; Schor, 2021).
+Troves of academic scholarship document the emergence
+and preponderance of precarity in the gig economy. Wood
+et al. (2019) argue that platform-based algorithmic control
+can lead to “low pay, social isolation, working unsocial and
+irregular hours, overwork, sleep deprivation and exhaustion.”
+This is further exacerbated by “high levels of inter-worker
+competition with few labor protections and a global over-
+supply of labor relative to demand.” In response, there have
+been numerous attempts by gig workers to organize in an
+effort to reconfigure working conditions. A growing reper-
+toire of strategies, as vast as it is eclectic, uses both physical
+and digital means towards this goal. Indeed, workers have
+shown significant ingenuity in creating platform-specific
+infrastructure, such as their own mobile apps, to organize
+the labor side of the platform (Chen, 2018; Rahman, 2021).
+Yet, “the upsurge of worker mobilization should not blind us
+to the difficulties of organizing such a diverse and spatially
+dispersed labor force.” (Vallas & Schor, 2020)
+Beyond the gig economy, evidence of consumers seeking to
+influence the algorithms that power a platform’s business is
+abundant. Examples include social media users attempting
+to suppress the algorithmic upvoting of harmful content
+by sharing screenshots rather than original posts (Burrell
+et al., 2019), or individuals creating bots to influence crowd-
+sourced navigation systems (Sinai et al., 2014). The ubiquity
+of such strategic attempts calls for a principled study of
+how coordinated groups can wield control over the digital
+platforms to which they contribute data.
+In this work, we study how a collective of individuals can
+algorithmically strategize against a learning platform. We
+envision a collective that pools the data of participating indi-
+viduals and executes an algorithmic strategy by instructing
+participants how to modify their own data. The firm in turn
+solves a machine learning problem over the resulting data.
+The goal of the collective is to redirect the firm’s optimiza-
+tion towards a solution that serves the collective. Notably,
+coordination is a crucial lever. When data are plentiful, a
+single individual lacks the leverage to unilaterally change
+the output of a learning algorithm; in contrast, we show that
+even small collectives can exert substantial influence.
+1
+
+Algorithmic Collective Action in Machine Learning
+1.1. Our Contribution
+We initiate a principled study of algorithmic collective ac-
+tion in digital platforms that deploy machine learning algo-
+rithms. We propose a simple theoretical model of a collec-
+tive interacting with a firm’s learning algorithm. The size of
+the collective is specified by a value α >0that corresponds
+to the fraction of participating individuals in a population
+drawn from a base distribution P0.The firm observes the
+mixture distribution
+P=αP∗+ (1−α)P0,
+where P∗depends on the strategy of the collective, and the
+firm runs a learning algorithm AonP.
+We investigate the consequences of this model in three fun-
+damental learning-theoretic settings, supported by a sys-
+tematic empirical evaluation on a real resume classification
+task from a gig platform. In each setting, we come up with
+algorithmic collective strategies and characterize different
+success criteria as a function of the collective’s size α. We
+exhibit critical thresholds for the value of αat which the
+collective succeeds. Our theory and experiments support the
+conclusion that collectives of vanishing fractional size can
+exert significant control over the firm’s learning algorithm.
+Classification. In line with economic theory, we start with
+the case of an optimal firm that has full knowledge of the
+distribution P. The firm chooses the Bayes optimal pre-
+dictor f=A(P)on the distribution P. In the context of
+classification, a natural class of objectives for the collective
+is to correlate a signal g(·)with a target label y∗: an individ-
+ual described by data point (x, y)succeeds if f(g(x)) =y∗
+at test time. For this goal, a natural strategy is to perturb
+each participating data point (x, y)by applying the signal
+g(·)toxand switching the label from ytoy∗at training
+time. That is, P∗is the distribution of (g(x), y∗)for a ran-
+dom draw of a labeled data point (x, y)fromP0. We prove
+that a collective of vanishing fractional size succeeds with
+high probability by implementing this strategy, provided
+that the signal g(x)is unlikely to be encountered in the base
+distribution P0. The success probability is maximized for
+an optimal classifier and deteriorates gracefully with the
+suboptimality of the classifier.
+In practice, the signal g(x)may correspond to adding a
+hidden watermark in image and video content, or subtle
+syntactic changes in text. It is reasonable to assume that
+individuals are indifferent to such inconsequential changes
+to their features. In fact, conventional wisdom in machine
+learning has it that such hidden signals are easy to come by
+in practice. The ability to change the label of an instance,
+however, is a more strenuous requirement. We therefore
+propose a variant of the strategy where a participating indi-
+vidual does not need to modify the label of their data point.
+We show that this strategy still succeeds, while quantifyingprecisely how it diminishes the collective’s success rate as a
+function of its size and a key parameter of P0.
+We provide analogous results when the collective’s goal is
+for the firm’s predictions to ignore some subset of the feature
+information. Given a map g(x), the collective succeeds if
+f(x) =f(g(x)). Here, g(x)is a summary of xthat, for
+example, removes private or sensitive information in x.
+Experimental evaluation. We conduct extensive experi-
+ments on a dataset of almost thirty thousand resumes from
+a gig platform for freelancers. The machine learning task is
+to tag resumes with a set of ten skills related to work in the
+IT sector. Through more than two thousand model training
+runs involving a BERT-like language model, we investigate
+the predictions made by our theory. What emerges is a strik-
+ing correspondence between our empirical findings and the
+theory. The ability to modify both resume and label leads to
+a near-perfect success rate at collective sizes of only a frac-
+tion of a percent of the population, corresponding to fewer
+than one hundred modified resumes. The label-free strategy
+still succeeds reliably, albeit at a higher threshold, corre-
+sponding to a few hundred resumes. The more well-trained
+the model is, the lower the threshold for the collective’s
+success. The placement pattern of the signal in the resume
+is largely irrelevant, so long as the token we plant is unique
+within the corpus of resumes.
+Our theory predicts that collectives, in a certain precise
+sense, must compete with the strongest alternative signal in
+the data. The weaker the alternative signals, the lower the
+threshold for success. To confirm this hypothesis experimen-
+tally, we randomize the labels of a random fraction of the
+data. Confirming our theory, we observe that increasing the
+fraction of randomized labels, and hence diminishing the
+strength of alternative signals, indeed lowers the threshold
+for success of the collective. This observation suggests a
+blessing of dimensionality: if the data contains many weak
+signals, as high-dimensional data tends to, algorithmic col-
+lectives are especially powerful.
+Risk minimization and gradient descent. Generalizing be-
+yond classification, we consider the power of collectives in
+convex risk minimization and gradient-based learning with
+possibly nonconvex objectives. In the first case, we show
+that collectives can force the firm to deploy any model with
+small suboptimality on P0of the collective’s choosing. In
+the second case, we show that given a more powerful inter-
+action model the collective can influence the firm to deploy
+any desired model even under nonconvexity, as long as the
+path from the initial model, computed on P0, to the desired
+model does not traverse large gradients when evaluated on
+P0. Moreover, despite the nonconvexity, convergence to the
+target is achieved at a convex rate. In both problem settings,
+the analyzed collective strategies rely on exerting influence
+on the gradients computed by the firm.
+2
+
+Algorithmic Collective Action in Machine Learning
+1.2. Related Work
+Our approach to algorithmic collective action is decidedly
+not adversarial. Instead, the strategic manipulations arise
+through a misalignment of the firm’s and the individuals’
+objectives. Individuals legitimately optimize their utility
+through data sharing and coordination. Yet, at a technical
+level our results relate to topics studied under the umbrella
+of adversarial machine learning. Most closely related is
+the line of work on data poisoning attacks that seeks to
+understand how data points can be adversarially “poisoned”
+to degrade the performance of a predictive model at test
+time. We refer to recent surveys for an overview of data
+poisoning attacks (Tian et al., 2022), and backdoor attacks
+more specifically (Guo et al., 2022). While the literature
+on poisoning attacks focuses predominantly on diminishing
+the performance of the learning algorithm, documented em-
+pirical successes (Cherepanova et al., 2021; Geiping et al.,
+2021) hint at the impact that algorithmic collective action
+can have on deep learning models. Despite the increasing
+number of studies on backdoor attacks and defenses, the-
+oretical work explaining how underlying factors affect the
+success of backdoor attacks has been limited (Grosse et al.,
+2022). We point out two recent works that study the rela-
+tionship between the number of manipulated data points and
+the success probability of the attack. Manoj & Blum (2021)
+show that a fixed number of points is sufficient for back-
+door attacks to succeed in binary classification problems,
+provided that the memorization capacity of the model is
+sufficiently large. Cin `a et al. (2021) empirically investigate
+backdoor learning curves across many image recognition
+tasks and they observe curves with diminishing returns, sim-
+ilar in shape to those in our experiments. Our analysis of
+Bayes optimal classification provides a new, complementary
+theoretical perspective and sheds light on the effectiveness
+of practical data manipulation strategies in a way that is
+surprisingly predictive of our empirical observations and
+previous empirical results in adversarial machine learning.
+Our analysis of risk minimization is reminiscent of model-
+targeted attacks (Suya et al., 2021; Farhadkhani et al., 2022),
+which aim to bias the learner towards a target model. Our
+gradient-control strategy resembles the counter-gradient at-
+tack in (Farhadkhani et al., 2022). While the insights from
+these prior works are valuable to inform the feasibility of
+collective action in convex risk minimization, our work dif-
+fers from these existing studies in its focus on the role of
+collective size and the analysis of nonconvex losses. Only
+a handful of works in the adversarial machine learning lit-
+erature have questioned the institution-centric perspective
+of the community and discussed the political dimension of
+adversarial machine learning (Albert et al., 2020; Vincent
+et al., 2021; Albert et al., 2021). In this context, a recent line
+of work considers the socially beneficial use of adversar-
+ial learning techniques (Delobelle et al., 2021; Shan et al.,2020; Abebe et al., 2022; Kulynych et al., 2020; Li et al.,
+2022).
+Our work can also be viewed as a conceptual reversal of
+strategic classification (Hardt et al., 2016). In strategic
+classification, a firm anticipates the optimal response of a
+strategic individual to a decision rule. Instead, we consider
+individuals that strategically anticipate the optimizing be-
+havior of the firm, something recently considered by Zrnic
+et al. (2021). Furthermore, our work is conceptually differ-
+ent from strategic classification in its focus on the role and
+objectives of workers and consumers on online platforms
+rather than the firm. Another crucial departure from the
+set of problems considered in strategic classification is our
+emphasis on collective rather than individual strategies.
+The idea of collective action on digital platforms has also
+been previously studied. Creager & Zemel (2021) show
+how algorithmic recourse can be improved through coor-
+dination. Vincent et al. (2019) examine the effectiveness
+ofdata strikes . Extending this work to the notion of data
+leverage , Vincent et al. (2021) describe various ways of
+“reducing, stopping, redirecting, or otherwise manipulating
+data contributions” for different purposes. See also Vincent
+& Hecht (2021). Our work provides a theoretical framework
+for understanding the effectiveness of such strategies, as
+well as studying more complex algorithmic strategies that
+collectives may deploy.
+Appendix A continues our discussion of related work.
+2. Problem Formulation
+We study the strategic interaction of a firm operating a pre-
+dictive system with a population of individuals. We assume
+that the firm deploys a learning algorithm Athat operates
+on data points in a universe Z=X × Y . Each individ-
+ual corresponds to a single data point z∈ Z, typically a
+feature–label pair. We model the population of individual
+participants as a distribution P0overZ.
+We say that a fraction α >0of the individuals form a col-
+lective in order to strategically respond to the firm’s learning
+behavior. The collective agrees on a potentially randomized
+strategy h:Z → Z from a space of available strategies H.
+The possible strategies Hcapture feasible changes to the
+data. For example, content creators on a video streaming
+platform may be indifferent between videos that differ only
+in a hidden watermark not visible to human viewers. Free-
+lancers may be indifferent between two resumes that differ
+only in inconsequential syntactic details.
+The firm therefore observes a mixture distribution
+P=αP∗+ (1−α)P0,
+where we use P∗to denote the distribution of h(z), z∼ P 0.
+3
+
+Algorithmic Collective Action in Machine Learning
+The collective strives to choose a strategy hso as to max-
+imize a measure of success over the solution f=A(P)
+chosen by the firm. Here, fis a mapping from features to
+labels, f:X → Y . Given a strategy, we use S(α)to denote
+the level of success achieved by a collective of size α. The
+central question we study is how the success S(α)grows as
+a function of collective size α,and how large αneeds to be
+in order to achieve a target success level.
+Definition 2.1 (Critical mass) .The critical mass for a target
+success level S∗is defined as the smallest αfor which there
+exists a strategy such that S(α)≥S∗.
+Note that, although motivated from the perspective of labor,
+our formal model can also serve as a basis for studying
+collective action on the consumer side of digital platforms.
+Before presenting our results we briefly discuss why we
+focus on collective strategies in this paper.
+Why collective action? By engaging in collective action,
+individuals can exert influence on the learning algorithm
+that they could not achieve by acting selfishly. In large-
+population settings such as online platforms, an individual
+contributes an infinitesimal fraction of the data used by
+the learning algorithm. Thus, under reasonable manipula-
+tion constraints, individual behavior is largely powerless
+in systematically changing the deployed model. Instead,
+individuals are limited to simple adversarial attacks or in-
+dividual strategies that do not have lasting effects on the
+learning outcome. By coordinating individuals, however,
+collectives can wield enough power to steer learning algo-
+rithms towards desired goals. In subsequent sections we
+show that collectives can often do so while only representing
+a small fraction of the training data.
+3. Collective Action in Classification
+We start with classification under the assumption that the
+firm chooses an approximately optimal classifier on the data
+distribution P.
+Definition 3.1 (ϵ-optimal classifier) .A classifier f:X →
+Yisϵ-optimal under the distribution Pif there exists a P′
+withTV(P,P′)≤ϵsuch that
+f(x) = argmax
+y∈YP′(y|x).
+Note that a 0-optimal classifier is the Bayes optimal classi-
+fier with respect to the zero–one loss.
+Under the above assumption, we focus on two general goals
+for the collective: planting a signal anderasing a signal .
+3.1. Planting a Signal
+Assume the collective wants the classifier to learn an asso-
+ciation between an altered version of the features g(x)anda chosen target class y∗. Formally, given a transformation
+g:X → X , the collective wants to maximize the following
+measure of success:
+S(α) = Pr
+x∼P0{f(g(x)) =y∗}.
+We call this objective “planting a signal” and X∗=
+{g(x):x∈ X} the signal set. For example, g(x)could
+be instance xwith an inconsequential trigger (such as a
+video with an imperceptible watermark or a resume with a
+unique formatting) and y∗could be a label indicating that
+the instance is of high quality (e.g., a high-quality video
+or a highly qualified individual). As another example, the
+collective may have an altruistic goal to help individuals
+in a vulnerable subpopulation X0⊆ X achieve a desired
+outcome y∗. In this case, g(x)could be a mapping from x
+to a randomly chosen instance in X0.
+We provide natural strategies for planting a signal and char-
+acterize their success as a function of α. The key parameter
+that we identify as driving success is the uniqueness of the
+signal.
+Definition 3.2 (ξ-unique signal) .We say that a signal is
+ξ-unique if it satisfies P0(X∗)≤ξ.
+In addition, success naturally depends on how suboptimal y∗
+is on the signal set under the base distribution. To formalize
+this dependence, we define the suboptimality gap of y∗as
+∆ = max
+x∈X∗(max
+y∈YP0(y|x)− P0(y∗|x)).
+We consider two possibilities for the space of available
+strategies H. First, we assume that the individuals can mod-
+ify both features and labels. We call the resulting strategies
+feature–label strategies. Modifying features by, say, plant-
+ing a trigger often comes at virtually no cost. Changing
+the label, however, may be hard, costly, or even infeasible.
+This is why we also consider feature-only strategies; such
+strategies only allow changes to features.
+Feature–label signal strategy. We define the feature–label
+signal strategy as
+h(x, y) = (g(x), y∗). (1)
+The result below quantifies the success of this strategy in
+terms of the collective size and the uniqueness of the signal.
+Theorem 3.3. Consider the feature–label signal strategy
+and suppose that the signal is ξ-unique. Then, the success
+against an ϵ-optimal classifier is lower bounded by
+S(α)≥1−1−α
+α·∆·ξ−ϵ
+1−ϵ.
+Rearranging the terms, we obtain an upper bound on the
+critical mass given a desired success probability (e.g., 90%).
+4
+
+Algorithmic Collective Action in Machine Learning
+0.0 0.5 1.0
+Collective fraction0.00.51.0Success ratesignal measure 
+0.01
+0.05
+0.1
+0.2
+0.0 0.5 1.0
+Collective fraction0.00.51.0Success ratesuboptimality 
+0.01
+0.05
+0.1
+0.2
+Figure 1. Illustration of the success rate predicted by Theorem 3.3.
+In the first we fix ϵ= 0and vary ξ, and in the second we fix ξand
+vary the classifier’s suboptimality, ϵ. We upper bound ∆by one.
+Corollary 3.4. Suppose the signal is ξ-unique. Then, the
+critical mass for achieving success S∗∈(0,1)with feature–
+label strategies against an ϵ-optimal classifier is bounded by
+α∗≤∆·ξ
+1−S∗−ϵ
+1−ϵ+ ∆·ξ. (2)
+Therefore, in order to achieve success it suffices to have a
+collective size proportional to the uniqueness of the signal
+and the suboptimality of y∗on the signal set, as long as
+these parameters are sufficiently small relative to the target
+error rate 1−S∗. This suggests that planting signals that are
+exceedingly “rare” under the base distribution can be done
+successfully by small collectives— a property of feature–
+label strategies that we empirically validate in Section 5.
+In the next result we consider feature-only strategies. An
+impediment to the success of such strategies is the situa-
+tion where there is overwhelmingly strong signal about a
+label y̸=y∗in the base distribution and hence little label
+uncertainty. This is the reason why we make one addi-
+tional assumption that there exists a number p >0such that
+P0(y∗|x)≥pfor all x∈ X.
+Feature-only signal strategy. We define the feature-only
+signal strategy as
+h(x, y) =(
+(g(x), y∗),ify=y∗,
+(x, y), otherwise .(3)
+This strategy achieves a similar success rate as the feature–
+label strategy, but the success diminishes with the constant p.
+Theorem 3.5. Consider the feature-only signal strategy and
+suppose that the signal is ξ-unique. Further, suppose there
+exists p >0such that P0(y∗|x)≥p,∀x∈ X. Then, the
+success against an ϵ-optimal classifier is lower bounded by
+S(α)≥1−1−p
+pα·ξ−ϵ
+1−ϵ.
+The critical mass for achieving a target success probability
+is thus bounded as follows.Corollary 3.6. Suppose the signal is ξ-unique. Then, the
+critical mass for achieving success S∗∈(0,1)with feature-
+only strategies against an ϵ-optimal classifier is bounded by
+α∗≤1−p
+pξ
+1−S∗−ϵ
+1−ϵ.
+The positivity constant p >0may be excessively small over
+the entire data universe. A standard fix to this problem is
+to restrict P0to a subset where the constant is larger, and
+pay a penalty for the amount of truncation in the bound. For
+example, if there exists R⊆ X such that P0(R)≥99%,
+but the positivity constant over Ris much larger than p, then
+one can obtain a more powerful version of Theorem 3.5.
+3.2. Erasing a Signal
+Next, we assume the collective wants the classifier to be
+invariant under a transformation g:X → X of the features.
+In particular, the success is measured with respect to:
+S(α) = Pr
+x∼P0{f(x) =f(g(x))}.
+In other words, the collective wants the classifier to output
+the same predictions for all xandx′that have g(x) =g(x′).
+The map gcan be thought of as a summary of xthat removes
+some feature information. We call this objective “erasing a
+signal.” For example, if the collective wants the deployed
+model to be insensitive to the value of a particular feature
+j∗, then it can use g(x) =x′where x′
+j=xjforj̸=j∗
+andx′
+j∗= 0. The feature j∗could be the length of a video
+that content creators do not want to affect the ranking of the
+content, or it could be a sensitive demographic feature that
+a collective wants to be independent of the predicted label.
+Erasure strategy. We define the erasure strategy as
+h(x, y) = (x,argmax
+y∈YP0(y|g(x))).
+As before, the success of the strategy depends on problem-
+dependent quantities. In this case, the quantity of interest is
+the sensitivity of the labels to the erased signal. We capture
+this sensitivity in the parameter τ, defined as
+τ:=E
+x∼P0max
+y∈Y|P0(y|x)− P0(y|g(x))|.
+Intuitively, τis small if observing the whole feature vector
+x, instead of just the summary g(x), reveals little additional
+information about the label.
+Theorem 3.7. Consider the erasure strategy. Then, the
+success against an ϵ-optimal classifier is lower bounded by
+S(α)≥1−2(1−α)
+α·τ−ϵ
+1−ϵ.
+5
+
+Algorithmic Collective Action in Machine Learning
+We rearrange the terms and derive a bound on the critical
+mass that guarantees a signal can be erased with a desired
+probability.
+Corollary 3.8. The critical mass for achieving success
+S∗∈(0,1)is bounded by
+α∗≤τ
+1
+2(1−S∗)−ϵ
+2(1−ϵ)+τ.
+The less sensitive the labels to the erased information, the
+smaller the collective needed to successfully enforce a deci-
+sion rule independent of the protected information.
+In contrast to the strategies in Section 3.1, the erasure strat-
+egy requires knowledge of statistics about P0. This high-
+lights an important benefit of collective action: information
+sharing. Information about the base distribution is typically
+difficult to obtain for individual platform users. However,
+a collective can pool their feature–label information to esti-
+mate properties of the distribution from samples; the larger
+the collective, the better the estimate and consequently the
+more effective the strategy.
+4. Collective Action in Risk Minimization
+We next study the effect of collective size when the learner
+is solving parametric risk minimization. Here the firm is
+choosing a model from a parameterized set {fθ}θ∈Θ. We
+will use A(P)to denote an element in Θthat determines
+the model chosen by the firm. We begin by studying convex
+risk minimizers. Then, motivated by nonconvex settings,
+we look at gradient-descent learners without imposing any
+convexity assumptions on the objective. Our main working
+assumption will be that of a risk-minimizing firm.
+Definition 4.1 (Risk minimizer) .Fix a loss function ℓ. The
+firm is a risk minimizer if under distribution Pit determines
+the parameter of the model fθaccording to
+θ= argmin
+θ′∈ΘE
+z∼Pℓ(θ′;z).
+4.1. Convex Risk Minimization
+To begin, we assume that ℓ(θ;z)is a convex function of
+θ, and that the collective’s goal is to move the model from
+θ0—the optimal model under the base distribution P0—to
+a target model θ∗. To that end, for a given target model
+θ∗∈Θ, we measure success in terms of
+S(α) =−∥θ−θ∗∥.
+Here,∥ · ∥ can be any norm (as long as it is kept fixed in the
+rest of the section). In line with first-order optimality condi-
+tions for convex optimization, the influence of the collective
+on the learning outcome depends on the collective’s abilityto influence the average gradient of ℓ. To simplify notation,
+letgP(θ′) =Ez∼P∇ℓ(θ′;z)denote the expected gradient
+of the loss over distribution Pmeasured at a point θ′∈Θ.
+Gradient-neutralizing strategy. Define the
+gradient-neutralizing strategy as follows. Find a
+gradient-neutralizing distribution P′forθ∗, meaning
+∠(gP′(θ∗),−gP0(θ∗)) = 0 . Then, draw z′∼ P′and let
+h(z) =(
+z′,with prob. min
+1,1
+α∥gP0(θ∗)∥
+∥gP′(θ∗)∥+∥gP0(θ∗)∥
+,
+z, else.
+For example, in generalized linear models (GLMs) gradients
+are given by ∇ℓ(θ; (x, y)) =x(µθ(x)−y), where µθ(·)is a
+mean predictor (see, e.g., Chapter 3 in (Efron, 2022)). There-
+fore, one can obtain a gradient-neutralizing distribution by
+simply letting h(x, y) = ( x′, y′), where x′=−gP0(θ∗)
+andy′is any value less than µθ(x′). Alternatively, if the
+collective is restricted to feature-only strategies, they can
+setx′=−gP0(θ∗)only if y < µ θ(x′), and x′= 0 oth-
+erwise. As long as the label distribution has sufficiently
+large support under P0, in particular y < µ θ(−gP0(θ∗))
+with nonzero probability, this strategy likewise results in a
+gradient-neutralizing distribution.
+Theorem 4.2. Suppose there exists a gradient-neutralizing
+distribution P′forθ∗. Then, if the loss is µ-strongly con-
+vex, the success of the gradient-neutralizing strategy is
+bounded by
+S(α)≥1
+µmin ( α∥gP′(θ∗)∥ −(1−α)∥gP0(θ∗)∥,0).
+The natural target success for the collective is for θ∗to be
+reached exactly; this is achieved when S(α) = 0 .
+Corollary 4.3. Suppose there exists a gradient-neutralizing
+distribution P′forθ∗. Then, for any µ≥0the critical mass
+for achieving target success S(α) = 0 is bounded by
+α∗≤∥gP0(θ∗)∥
+∥gP′(θ∗)∥+∥gP0(θ∗)∥. (4)
+Even if ℓis only strictly convex ( µ→0), the collective can
+reach θ∗withα∗as in (4). Note that this corollary reveals an
+intuitive relationship between α∗andgP0(θ∗)in the convex
+regime: target models θ∗that look more optimal to the
+learner under the base distribution are easier to achieve.
+If the collective has a utility function u(θ′)that specifies
+the participants’ preferences over different models θ′, a
+natural way to define success is via a desired gain in utility:
+S(α) =u(θ)−u(θ0), where θ0=A(P0). Corollary 4.3
+implies a bound on the critical mass for this measure of
+success, for all convex utilities (for example, linear utilities
+of the form u(θ) =θ⊤v, for some v).
+6
+
+Algorithmic Collective Action in Machine Learning
+0% 0.2% 0.4% 0.6% 0.8% 1%0.00.20.40.60.81.0
+Target class: 0
+0% 0.2% 0.4% 0.6% 0.8% 1%
+Target class: 1
+0% 0.2% 0.4% 0.6% 0.8% 1%
+Target class: 2
+trial
+sigmoid ﬁt
+Manipulated fraction across datasetTarget frequencyText and label manipulation across dataset
+0% 0.2% 0.4% 0.6% 0.8% 1%0.00.20.40.60.81.0
+Target class: 0
+0% 0.2% 0.4% 0.6% 0.8% 1%
+Target class: 1
+0% 0.2% 0.4% 0.6% 0.8% 1%
+Target class: 2
+trial
+sigmoid ﬁt
+Manipulated fraction across datasetTop-1 frequency
+Figure 2. Success rate of Strategy 1 as the collective size varies.
+Proposition 4.4. Suppose that u(θ′)is convex. Further,
+assume ℓisβ-smooth and that ∥·∥is the ℓ2-norm. Then, the
+critical mass for achieving u(θ)−u(θ0)≥Uis bounded by
+α∗≤β·U
+glb· ∥∇u(θ0)∥+β·U,
+where glb= min {∥gP′(θ′)∥:∥θ′−θ0∥ ≤U/∥∇u(θ0)∥}
+andP′is gradient-neutralizing for θ′.
+As a result, the critical mass required to achieve a utility
+gain of Udecreases as the gradient of the utility at θ0grows.
+Intuitively, large ∥∇u(θ0)∥means that small changes to θ0
+can lead to large improvements for the collective.
+4.2. Gradient-Based Learning
+So far we have assumed that exact optimization is computa-
+tionally feasible; with nonconvex objectives, this behavior is
+hardly realistic. A common approach to risk minimization
+for general, possibly nonconvex learning problems is to run
+gradient descent. Formally, at each step twe assume the
+learner observes the current data distribution Pt, computes
+the average gradient at the current iterate, and updates the
+model by taking a gradient step:
+θt+1=θt−η·gPt(θt),
+where η >0is a fixed step size. Given a target model θ∗,
+we define the success of the strategy after tsteps as
+St(α) =−∥θt−θ∗∥.
+Given the online nature of the learner’s updates, we assume
+that the collective can adaptively interact with the learner;
+that is, they can choose P∗
+tat every step t. This is a typicalinteraction model in federated learning (McMahan et al.,
+2017). In the following we show that this additional leverage
+enabled by this adaptivity allows the collective to implement
+a refined strategy that controls the outcome of learning even
+in nonconvex settings.
+Gradient-control strategy. We define the gradient-control
+strategy at θas follows. Given the observed model θand a
+target θ∗, the collective finds a gradient-redirecting distribu-
+tionP′forθ, meaning gP′(θ) =−1−α
+αgP0(θ) +ξ(θ−θ∗),
+for some ξ∈(0,1
+αη). Then, draw z′∼ P′and set
+h(z) =z′.
+Theorem 4.5. Assume the collective can implement the
+gradient-control strategy at all λθ0+ (1−λ)θ∗, λ∈[0,1].
+Then, there exists a C(α)>0such that the success of the
+gradient-control strategy after Tsteps is lower bounded by
+ST(α)≥ −(1−ηC(α))T· ∥θ0−θ∗∥.
+The above result implies that the collective can reach any
+model θ∗as long as there exists a path from θ0toθ∗that
+only traverses small gradients on the initial distribution P0.
+5. Experiments
+We report on experimental findings from over 2000 model
+training runs involving a BERT-like text transformer model
+on a resume classification task. The resume dataset consists
+of nearly 30000 resumes of freelancers on a major gig labor
+platform, introduced by (Jiechieu & Tsopze, 2021). The task
+is a multiclass, multilabel classification problem where the
+goal is to predict a set of up to ten skills from the software
+and IT sector based on the resume.
+The collective controls a random fraction of the training data
+within the dataset. Its goal is to plant a signal, that is, steer
+7
+
+Algorithmic Collective Action in Machine Learning
+0% 10% 20% 30% 40%0.00.20.40.60.81.0
+Target class: 0
+0% 10% 20% 30% 40%
+Target class: 1
+0% 10% 20% 30% 40%
+Target class: 2
+trial
+sigmoid ﬁt
+Maniuplated fraction within classTarget frequencyText only manipulation within class
+0% 10% 20% 30% 40%0.00.20.40.60.81.0
+Target class: 0
+0% 10% 20% 30% 40%
+Target class: 1
+0% 10% 20% 30% 40%
+Target class: 2
+trial
+sigmoid ﬁt
+Maniuplated fraction within classTop-1 frequency
+Figure 3. Success rate of Strategy 2 as the collective size varies.
+the model’s predictions on transformed data points g(x)
+toward a desired target label y∗. We evaluate the effective-
+ness of two simple strategies, which are instantiations of the
+feature–label and feature-only strategies from Section 3.1.
+Strategy 1 (Text and label manipulation across dataset).
+The collective plants a special token in the resume text and
+changes the label to the target class. This strategy closely
+mirrors the feature-label signal strategy in (1).
+Strategy 2 (Text-only manipulation within target class).
+The collective manipulates the resume text of resumes
+within the target class by inserting a special token with
+some frequency (every 20th word). This strategy closely
+follows the feature-only signal strategy in (3).
+Evaluation. To measure success we insert the special token
+in all test points and count how often the model (a) includes
+the target class in its set of predicted skills, (b) has the target
+class as its “top- 1” prediction.
+5.1. Experimental Setup
+We use ‘ distilbert-base-uncased ’, a standard pre-
+trained transformer model. We fine-tune it on the dataset for
+5epochs with standard hyperparameters. After 5epochs, the
+model plateaus at around 97% multi-label accuracy (defined
+as1minus Hamming loss), 93.8%precision, and 88.9%
+recall. The dataset contains 29783 resumes, of which we
+use25000 for training and 4783 for testing. We focus on the
+first three classes of the problem, corresponding to database
+administrator (class 0),web developer (class 1),software de-
+veloper (class 2). These three classes occur with frequency
+0.11,0.23, and 0.5, respectively, in the dataset. As the spe-
+cial token, we use an unused formatting symbol (token 1240
+being a small dash) that we insert every 20words.5.2. Experimental Findings
+Text and label manipulation across dataset. We find
+that Strategy 1 exerts significant control over the model’s
+prediction even when the collective is exceedingly small
+(Figure 2). In fact, we see consistent success in controlling
+the model’s output well below 0.5%of the dataset, i.e.,
+fewer than 125manipulated training data points.
+Text-only manipulation within target class. We find that
+Strategy 2 consistently succeeds in controlling the model
+so as to include the target class in its positive predictions.
+The strategy succeeds at a threshold of around 10% of the
+instances of the target class (Figure 3, top panel). This
+threshold corresponds to approximately 1%,2%, and5%of
+the dataset for class 0,1, and2, respectively. When it comes
+to controlling the model’s top prediction, the text-only strat-
+egy does notconsistently succeed (Figure 3, bottom panel).
+Effect of positivity constant. Our theory in Section 3.1
+suggests that the difficulty of controlling the model’s top
+prediction via the text-only strategy may be due to a small
+positivity constant p. To evaluate this hypothesis, we repeat
+our experiments after we randomize a random fraction of
+the labels in the training data. This randomization ensures
+that each feature vector is assigned the target label with
+nontrivial probability. Our findings confirm that even a small
+fraction of random labels dramatically increases the success
+of Strategy 2 in controlling the top prediction (Figure 4).
+Trade-offs between model optimality and success. Fig-
+ure 5 shows that the success of either strategy is sensitive to
+the number of epochs. Less optimization during the model
+training phase leads to a lower success rate. These find-
+ings mirror our theoretical results: as the model approaches
+optimality, small collectives have significant power.
+8
+
+Algorithmic Collective Action in Machine Learning
+0%10% 20% 30% 40%
+Manipulated0.00.20.40.60.81.0Top-1 frequency
+0%10% 20% 30% 40%
+ManipulatedTarget frequency
+random %
+0
+10
+20
+30Random labels (text only, target class 1)
+Figure 4. Random labels increase success of Strategy 2.
+0%10% 20% 30% 40%
+Manipulated % in class0.00.20.40.60.81.0Top-1 frequency
+0%10% 20% 30% 40%
+Manipulated % in classTarget frequency
+Epochs
+1
+2
+3
+4
+5Number of epochs (text only, target class 1)
+0%.2%.4%.6%.8%1%
+Manipulated % in data0.00.20.40.60.81.0Top-1 frequency
+0%.2%.4%.6%.8%1%
+Manipulated % in dataTarget frequency
+Epochs
+1
+2
+3
+4
+5Number of epochs (text and label, target class 1)
+Figure 5. Additional epochs of training increase the success rate.
+Robustness to trigger token placement. Figure 7 in the
+Appendix shows that the success rate of either strategy is
+insensitive to the spacing of the trigger token. Varying
+the token frequency from 10to50has little effect on the
+success rate. This experimental finding, too, is in line with
+our theory. Since the token chosen in our strategy is unique,
+the set of texts augmented with this unique token has low
+probability regardless of how often the token is planted.
+6. Discussion
+We conclude the paper with a short discussion highlight-
+ing the economic significance of understanding the critical
+mass α∗for pursuing collective targets. It is well-known in
+economics that participation in a collective is notindivid-
+ually rational, and additional incentives are necessary for
+collective action to emerge. Building on a classic model for
+collective action from economics (Olson, 1965), we illus-
+trate how similar conclusions hold for algorithmic collective
+action, and how they relate to the theoretical quantities stud-
+ied in this paper.
+Assume that individuals incur a cost c >0for participating
+in collective action. This cost might represent overheads ofαcritcB(αcrit)S(α)
+γS(α)
+α
+Figure 6. Visualization of the critical threshold αcritafter which a
+collective is self-sustaining and the principal’s required investment
+B(αcrit)to incentivize the whole population to join the collective.
+coordination, a membership fee, or other additional responsi-
+bilities. Furthermore, assume that the utility that individuals
+get from joining a collective of size αisS(α), and that other-
+wise they can partially “free ride” on the collective’s efforts:
+they get utility of γS(α)for some γ∈[0,1]. Given this
+setup, individually rational agents will join the collective if
+S(α)−c > γS (α),
+or equivalently, if S(α)>c
+1−γ. Therefore, joining the
+collective is rational if the size of the existing collective α
+is greater than the critical mass for S∗=c
+1−γ. Note that,
+once this critical threshold is reached, all individuals in the
+population are incentivized to join the collective and the
+collective is thus self-sustaining.
+Consider a principal who would like to invest into the forma-
+tion of a collective. The area B(αcrit)visualized in Figure 6
+provides an upper bound on the investment required to make
+the collective self-sustaining and thus achieve any target suc-
+cessS∗≤S(1).
+The derivation above, while simplistic, serves to highlight
+the importance of collective size in understanding how col-
+lectives can emerge both organically and through investment.
+We believe that there is a large potential in investigating
+these questions in a rigorous manner. Indeed, the focus of
+this paper has been on understanding the effect of the size of
+the collective on its success, but understanding more gener-
+ally how collectives form, which individuals have the most
+incentive to join collectives, whether selectively recruiting
+individuals provides additional leverage, and how collec-
+tives should use their informational advantage to optimize
+their strategies are important open questions in understand-
+ing the role of collectives on digital platforms.
+Acknowledgements
+The authors would like to thank Solon Barocas for pointers
+to related work, and attendees of the 2023 Annual Meeting
+of the Simons Collaboration on the Theory of Algorithmic
+Fairness for feedback. We thank Christos Papadimitriou for
+stimulating discussions about the work. This work was sup-
+ported by the T ¨ubingen AI Center and NSF Award 2240110.
+9
+
+Algorithmic Collective Action in Machine Learning
+References
+Abebe, R., Hardt, M., Jin, A., Miller, J., Schmidt, L., and
+Wexler, R. Adversarial scrutiny of evidentiary statistical
+software. In Conference on Fairness, Accountability, and
+Transparency , pp. 1733–1746, 2022.
+Albert, K., Penney, J., Schneier, B., and Kumar, R. S. S.
+Politics of adversarial machine learning. arXiv preprint
+arXiv:2002.05648 , 2020.
+Albert, K., Delano, M., Kulynych, B., and Kumar, R. S. S.
+Adversarial for good? How the adversarial ML commu-
+nity’s values impede socially beneficial uses of attacks.
+arXiv preprint arXiv:2107.10302 , 2021.
+Burrell, J., Kahn, Z., Jonas, A., and Griffin, D. When users
+control the algorithms: values expressed in practices on
+Twitter. Proc. ACM Hum.-Comput. Interact. , 3:1–20,
+2019.
+Cameron, L. The rise of algorithmic work: Implications for
+organizational control and worker autonomy . PhD thesis,
+University of Michigan, 2020.
+Cameron, L. D. and Rahman, H. Expanding the locus of
+resistance: Understanding the co-constitution of control
+and resistance in the gig economy. Organization Science ,
+33(1):38–58, 2022.
+Chen, J. Y . Thrown under the bus and outrunning it! The
+logic of Didi and taxi drivers’ labour and activism in
+the on-demand economy. New Media & Society , 20(8):
+2691–2711, 2018.
+Cherepanova, V ., Goldblum, M., Foley, H., Duan, S., Dick-
+erson, J. P., Taylor, G., and Goldstein, T. Lowkey: Lever-
+aging adversarial attacks to protect social media users
+from facial recognition. In International Conference on
+Learning Representations , 2021.
+Cin`a, A. E., Grosse, K., Vascon, S., Demontis, A., Biggio,
+B., Roli, F., and Pelillo, M. Backdoor learning curves: Ex-
+plaining backdoor poisoning beyond influence functions.
+arXiv preprint arXiv:2106.07214 , 2021.
+Creager, E. and Zemel, R. Online algorithmic recourse
+by collective action. ICML Workshop on Algorithmic
+Recourse , 2021.
+Cropanzano, R., Keplinger, K., Lambert, B. K., Caza, B.,
+and Ashford, S. J. The organizational psychology of
+gig work: An integrative conceptual review. Journal of
+Applied Psychology , 2022.
+Delobelle, P., Temple, P., Perrouin, G., Fr ´enay, B., Hey-
+mans, P., and Berendt, B. Ethical adversaries: Towards
+mitigating unfairness with adversarial machine learning.
+SIGKDD Explor. Newsl. , 23(1):32–41, 2021.Efron, B. Exponential Families in Theory and Practice .
+Cambridge University Press, 2022.
+Farhadkhani, S., Guerraoui, R., Hoang, L. N., and Ville-
+maud, O. An equivalence between data poisoning and
+Byzantine gradient attacks. In International Conference
+on Machine Learning , 2022.
+Geiping, J., Fowl, L. H., Huang, W. R., Czaja, W., Taylor,
+G., Moeller, M., and Goldstein, T. Witches’ brew: In-
+dustrial scale data poisoning via gradient matching. In
+International Conference on Learning Representations ,
+2021.
+Gray, M. L. and Suri, S. Ghost work: How to stop Silicon
+Valley from building a new global underclass . Eamon
+Dolan Books, 2019.
+Grosse, K., Lee, T., Biggio, B., Park, Y ., Backes, M., and
+Molloy, I. Backdoor smoothing: Demystifying backdoor
+attacks on deep neural networks. Computers & Security ,
+120:102814, 2022.
+Guo, W., Tondi, B., and Barni, M. An overview of back-
+door attacks against deep neural networks and possible
+defences. IEEE Open Journal of Signal Processing , 3:
+261–287, 2022.
+Hardt, M., Megiddo, N., Papadimitriou, C., and Wootters,
+M. Strategic classification. In Innovations in Theoretical
+Computer Science , pp. 111–122, 2016.
+Irani, L. C. and Silberman, M. S. Turkopticon: Interrupting
+worker invisibility in Amazon Mechanical Turk. In Asso-
+ciation for Computing Machinery , pp. 611–620, 2013.
+Jarrahi, M. H. and Sutherland, W. Algorithmic manage-
+ment and algorithmic competencies: Understanding and
+appropriating algorithms in gig work. In International
+conference on information , pp. 578–589. Springer, 2019.
+Jiechieu, K. F. F. and Tsopze, N. Skills prediction based on
+multi-label resume classification using cnn with model
+predictions explanation. Neural Computing and Applica-
+tions , 33:5069–5087, 2021.
+Kulynych, B., Overdorf, R., Troncoso, C., and G ¨urses, S.
+POTs: Protective optimization technologies. In Con-
+ference on Fairness, Accountability, and Transparency ,
+2020.
+Li, Y ., Bai, Y ., Jiang, Y ., Yang, Y ., Xia, S.-T., and Li, B.
+Untargeted backdoor watermark: Towards harmless and
+stealthy dataset copyright protection. In Advances in
+Neural Information Processing Systems , 2022.
+Manoj, N. S. and Blum, A. Excess capacity and backdoor
+poisoning. In Beygelzimer, A., Dauphin, Y ., Liang, P.,
+10
+
+Algorithmic Collective Action in Machine Learning
+and Vaughan, J. W. (eds.), Advances in Neural Informa-
+tion Processing Systems , 2021.
+McMahan, B., Moore, E., Ramage, D., Hampson, S., and
+Arcas, B. A. y. Communication-Efficient Learning of
+Deep Networks from Decentralized Data. In Proc. 20th
+International Conference on Artificial Intelligence and
+Statistics , 2017.
+Melucci, A. Challenging Codes: Collective Action in the
+Information Age . Cambridge University Press, 1996.
+Milan, S. When algorithms shape collective action: Social
+media and the dynamics of cloud protesting. Social Media
++ Society , 1(2), 2015.
+Olson, M. The logic of collective action: public goods and
+the theory of groups . Number 124 in Harvard economic
+studies. Harvard Univ. Press, 1965.
+O’Meara, V . Weapons of the chic: Instagram influencer
+engagement pods as practices of resistance to Insta-
+gram platform labor. Social Media+ Society , 5(4):
+2056305119879671, 2019.
+Rahman, H. A. The invisible cage: Workers’ reactivity to
+opaque algorithmic evaluations. Administrative Science
+Quarterly , 66(4):945–988, 2021.
+Robinson, H. C. Making a digital working class: Uber
+drivers in Boston, 2016-2017 . PhD thesis, Massachusetts
+Institute of Technology, 2017.
+Salehi, N., Irani, L. C., Bernstein, M. S., Alkhatib, A.,
+Ogbe, E., Milland, K., and Clickhappier. We are dynamo:
+Overcoming stalling and friction in collective action for
+crowd workers. In Association for Computing Machinery ,
+2015.
+Sanh, V ., Debut, L., Chaumond, J., and Wolf, T. Distilbert,
+a distilled version of bert: smaller, faster, cheaper and
+lighter. arXiv preprint arXiv:1910.01108 , 2019.
+Schor, J. After the gig: How the sharing economy got
+hijacked and how to win it back . University of California
+Press, 2021.
+Schor, J. B., Attwood-Charles, W., Cansoy, M., Ladegaard,
+I., and Wengronowitz, R. Dependence and precarity in the
+platform economy. Theory and Society , 49(5):833–861,
+2020.
+Shan, S., Wenger, E., Zhang, J., Li, H., Zheng, H., and Zhao,
+B. Y . Fawkes: Protecting privacy against unauthorized
+deep learning models. In Proceedings of the 29th USENIX
+Security Symposium , 2020.Sinai, M. B., Partush, N., Yadid, S., and Yahav, E. Exploit-
+ing social navigation. arXiv preprint arXiv:1410.0151 ,
+2014.
+Sun, P. Your order, their labor: An exploration of algorithms
+and laboring on food delivery platforms in China. Chinese
+Journal of Communication , 12(3):308–323, 2019.
+Sutherland, W. and Jarrahi, M. H. The sharing economy
+and digital platforms: A review and research agenda.
+International Journal of Information Management , 43:
+328–341, 2018.
+Suya, F., Mahloujifar, S., Suri, A., Evans, D., and Tian, Y .
+Model-targeted poisoning attacks with provable conver-
+gence. In International Conference on Machine Learning ,
+2021.
+Tian, Z., Cui, L., Liang, J., and Yu, S. A comprehensive sur-
+vey on poisoning attacks and countermeasures in machine
+learning. ACM Computing Surveys , 55(8), 2022.
+Vallas, S. and Schor, J. B. What do platforms do? Under-
+standing the gig economy. Annual Review of Sociology ,
+46(1):273–294, 2020.
+Van Doorn, N. Platform labor: on the gendered and racial-
+ized exploitation of low-income service work in the ‘on-
+demand’economy. Information, Communication & Soci-
+ety, 20(6):898–914, 2017.
+Vincent, N. and Hecht, B. Can “conscious data contribution”
+help users to exert “data leverage” against technology
+companies? Proc. ACM Hum.-Comput. Interact. , 2021.
+Vincent, N., Hecht, B., and Sen, S. “Data strikes”: evaluat-
+ing the effectiveness of a new form of collective action
+against technology companies. In The World Wide Web
+Conference , 2019.
+Vincent, N., Li, H., Tilly, N., Chancellor, S., and Hecht, B.
+Data leverage: A framework for empowering the public
+in its relationship with technology companies. In Con-
+ference on Fairness, Accountability, and Transparency ,
+2021.
+Wolf, T., Debut, L., Sanh, V ., Chaumond, J., Delangue, C.,
+Moi, A., Cistac, P., Rault, T., Louf, R., Funtowicz, M.,
+et al. Transformers: State-of-the-art natural language
+processing. In Empirical Methods in Natural Language
+Processing: System Demonstrations , 2020.
+Wood, A. J., Graham, M., Lehdonvirta, V ., and Hjorth, I.
+Good gig, bad gig: autonomy and algorithmic control in
+the global gig economy. Work, Employment and Society ,
+33(1):56–75, 2019.
+Woodcock, J. and Graham, M. The gig economy. A critical
+introduction. Cambridge: Polity , 2019.
+11
+
+Algorithmic Collective Action in Machine Learning
+Yu, Z., Trer ´e, E., and Bonini, T. The emergence of algo-
+rithmic solidarity: unveiling mutual aid practices and
+resistance among chinese delivery workers. Media Inter-
+national Australia , 183(1):107–123, 2022.
+Zrnic, T., Mazumdar, E., Sastry, S., and Jordan, M. Who
+leads and who follows in strategic classification? In Ad-
+vances in Neural Information Processing Systems , 2021.
+12
+
+Algorithmic Collective Action in Machine Learning
+A. Related Work
+The scholarly literature on the gig economy is vast and interdisciplinary, spanning economic, ethnographic, psychological,
+and sociological analysis. Gig labor is diverse and heterogeneous. Conditions of precarity and dependence differ widely
+depending on the type of work and platform (Schor et al., 2020). Reviewing and integrating more than two hundred
+articles on the topic, Cropanzano et al. (2022) define gig work as “labor contracted and compensated on a short-term
+basis to organizations or to individual clients through an external labor market,” and detail how gig work has changed
+the psychological contract between workers and employers. Vallas & Schor (2020) review existing scholarly accounts of
+the gig economy, arguing that “platforms represent a distinctive form of economic activity, [...] different from markets,
+hierarchies, and networks.” Platforms cede some forms of centralized managerial control over workers by exposing them
+to the disciplining effect of the market and evaluation by consumers, while retaining power over key functions, such as
+task allocation, data collection, pricing, and collection of revenues. In another review article, Sutherland & Jarrahi (2018)
+organize more than four hundred articles around the notion of platform centralization and decentralization.
+Several works examine the reality of gig labor, e.g., (Van Doorn, 2017; Sun, 2019; Gray & Suri, 2019). Based on a
+cross-regional survey, Wood et al. (2019) find that algorithmic control in the gig economy can lead to “low pay, social
+isolation, working unsocial and irregular hours, overwork, sleep deprivation and exhaustion”, “marked by high levels of
+inter-worker competition with few labour protections and a global oversupply of labour relative to demand”.
+Cameron & Rahman (2022) examine the interplay of control and resistance in the gig economy. There are several examples
+of successful worker organization in the gig economy, involving a range of strategies. For example, Rahman (2021) studies
+how freelancers on Upwork strategize against the evaluation metrics of the platform, sometimes in cooperation with clients
+on the platform. Also studying Upwork freelancers, Jarrahi & Sutherland (2019) discuss how freelancers cooperate in
+strategically feeding the algorithm data so as to improve their outcomes. Cooperative strategic behavior among drivers on
+ride-hailing platforms is common, e.g., (Cameron, 2020; Robinson, 2017; Yu et al., 2022), as are digital strategies involving
+bots, or multiple phone apps (Chen, 2018). Workers have also used forums, browser extensions, and online spaces to share
+information and strategize collectively, e.g., (Irani & Silberman, 2013; Salehi et al., 2015; O’Meara, 2019). We focus on the
+activities on the labor side of digital platforms, leaving out numerous examples of collective action from consumers and
+users on these platforms. However, as Vallas & Schor (2020) conclude, “the upsurge of worker mobilization should not
+blind us to the difficulties of organizing such a diverse and spatially dispersed labour force or the power of the companies to
+resist collective action.”
+There is extensive scholarship on the topic of collective action. For example, Melucci’s text (Melucci, 1996) examines
+collective action in the information society. Milan (2015) examines how social media platforms mediate social movements
+and collective action.
+B. Proofs
+The following lemma will be used to analyze suboptimal classifiers.
+Lemma B.1. Suppose that P,P′are two distributions such that TV(P,P′)≤ϵ. Take any two events E1, E2measurable
+underP,P′. IfP(E1)>P(E2) +ϵ
+1−ϵ, thenP′(E1)>P′(E2).
+Proof. It follows from the optimal coupling lemma for the total variation distance that we can write P′= (1−ϵ)P+ϵQ
+for some distribution Q. Therefore, if P(E1)>P(E2) +ϵ
+1−ϵ, then
+P′(E1) = (1 −ϵ)P(E1) +ϵQ(E1)>(1−ϵ)P(E2) +ϵ≥(1−ϵ)P(E2) +ϵQ(E2) =P′(E2).
+B.1. Proof of Theorem 3.3
+First consider the case ϵ= 0. We start with a sufficient condition for a target classification outcome. For a point x∈ X,we
+define
+∆x= max
+y∈YP0(y|x)− P0(y∗|x)
+as the suboptimality of a target class on the base data.
+13
+
+Algorithmic Collective Action in Machine Learning
+Claim B.2.For any x∈ X,we have f(x) =y∗provided that α >(1−α)∆xP0(x)/P∗(x).
+Proof. Note that f(x) =y∗if, for every y̸=y∗,P(y∗|x)>P(y|x).Equivalently, P(x, y∗)− P(x, y)>0.But,
+P(x, y∗) =αP∗(x, y∗) + (1 −α)P0(x, y∗) =αP∗(x) + (1 −α)P0(y∗|x)P0(x)
+In the last step we used the fact that all labels in the support of P∗equal y∗.Similarly, for y̸=y∗,
+P(x, y) =αP∗(x, y) + (1 −α)P0(x, y) = (1 −α)P0(y|x)P0(x).
+The claim follows by rearranging terms and dividing both sides by P∗(x).
+Now,
+S(α) = Pr
+x∼P0{f(g(x)) =y∗}
+= Pr
+x∼P∗{f(x) =y∗}
+≥Pr
+x∼P∗
+α >(1−α)P0(x)
+P∗(x)∆x
+(Claim B.2)
+=E
+x∼P∗1
+1−(1−α)
+αP0(x)
+P∗(x)∆x>0
+≥E
+x∼P∗
+1−(1−α)
+αP0(x)
+P∗(x)∆x
+= 1−1−α
+αE
+x∼P∗P0(x)
+P∗(x)∆x
+≥1−1−α
+αP0(X∗)∆,
+where the last step uses the definition ∆ = max x∈X∗∆x.
+Consider ϵ >0.By Lemma B.1, we have that P′(x, y∗)>P′(x, y), meaning f(x) =y∗, provided that P(x, y∗)>
+P(x, y) +ϵ
+1−ϵ. Repeating the steps in the proof for ϵ= 0with the additional ϵ/(1−ϵ)term, we conclude that
+S(α)≥1−ϵ
+1−ϵ−1−α
+αP0(X∗)∆.
+B.2. Proof of Theorem 3.5
+We prove the case where ϵ= 0.The extension to ϵ >0follows as in Theorem 3.3.
+Claim B.3.Fix a point x∗∈ X∗in the signal set. We have f(x∗) =y∗provided that
+α >1−p
+pP0(x∗)
+P0(g−1(x∗)).
+Here, g−1(x∗) ={x∈ X:g(x) =x∗}.
+Proof. Forf(x∗) =y∗to hold, we need P(y∗|x∗)>max y̸=y∗P(y|x∗).Equivalently, P(x∗, y∗)>max y̸=y∗P(x∗, y).
+By the definition of the feature-only signal strategy and the assumption that P0(y∗|x)≥pfor all x∈ X , each point
+x∈g−1(x∗)must have P0(y∗|x)≥p.Hence, for all x∗∈ X∗,
+P(x∗, y∗) =αP∗(x∗, y∗) + (1 −α)P0(x∗, y∗)≥αpP0(g−1(x∗)).
+On the other hand, for every y̸=y∗,we must have
+P(x∗, y) =P0(x∗, y) =P0(y|x∗)P0(x∗)≤(1−p)P0(x∗).
+The claim follows by rearranging.
+14
+
+Algorithmic Collective Action in Machine Learning
+We can lower bound the success rate as
+S(α) = Pr
+x∼P0{f(g(x)) =y∗}
+=X
+x∗∈X∗Pr
+x∼P0
+f(g(x)) =y∗|x∈g−1(x∗)	
+Pr
+x∼P0{x∈g−1(x∗)}
+=X
+x∗∈X∗1{f(x∗) =y∗}P0(g−1(x∗)). (5)
+Proceeding for fixed x∗∈ X∗,
+1{f(x∗) =y∗} ≥1
+α >1−p
+pP0(x∗)
+P0(g−1(x∗))
+(Claim B.3)
+=1
+1−1−p
+pαP0(x∗)
+P0(g−1(x∗))>0
+≥1−1−p
+pα·P0(x∗)
+P0(g−1(x∗)).
+Plugging this back into (5),
+Pr
+x∼P0{f(g(x)) =y∗}= 1−1−p
+pαX
+x∗∈X∗P0(x∗)
+P0(g−1(x∗))· P0(g−1(x∗))
+≥1−1−p
+pαP0(X∗).
+B.3. Proof of Theorem 3.7
+We again prove the case where ϵ= 0.The extension to ϵ >0follows by invoking Lemma B.1, as in Theorem 3.3.
+We start from the following claim.
+Claim B.4.For any x∈ X we have f(x) =f(g(x))provided that
+α >(1−α)2τ(x),
+where τ(x) = max y∈Y|P0(y|x)− P0(y|g(x))|.
+Proof. Denote y∗(x) = argmaxy∈YP0(y|g(x)). By construction of the strategy we know that f(g(x)) = y∗(x)and it
+remains to prove that f(x) =y∗(x)under the condition of the claim.
+We have f(x) =y∗(x)ifP(y∗(x)|x)>P(y|x)for any y̸=y∗(x). We have
+P(y∗(x)|x) = (1 −α)P0(y∗(x)|x) +αP∗(y∗(x)|x) = (1 −α)P0(y∗(x)|x) +α,
+P(y|x) = (1 −α)P0(y|x) +αP∗(y|x) = (1 −α)P0(y|x),
+where we used that the erasure strategy implies P∗(y∗(x)|x) = 1 . Together this means that, when
+α >(1−α)
+max
+y∈YP0(y|x)− P0(y∗(x)|x)
+,
+thenf(x) =y∗(x). Using the definition of y∗(x), we can bound the right-hand side by
+P0(y|x)− P0(y∗(x)|x)≤ P 0(y|x)− P0(y|g(x)) +P0(y∗(x)|g(x))− P0(y∗(x)|x)
+≤2τ(x).
+The claim follows.
+15
+
+Algorithmic Collective Action in Machine Learning
+It remains to bound the success of the strategy:
+S(α) = Pr
+x∼P0{f(x) =f(g(x))}.
+= Pr
+x∼P0{f(x) =y∗(x)}.
+≥Pr
+x∼P0{α >(1−α)2τ(x)}
+= Pr
+x∼P0
+1−1−α
+α2τ(x)>0
+≥E
+x∼P0
+1−2(1−α)
+α·τ(x)
+= 1−2(1−α)
+α·τ,
+where we use the fact that τ=Ex∼P0τ(x).
+B.4. Proof of Theorem 4.2
+LetP′be a gradient-cancelling distribution for θ∗. Denote p= min
+1,1
+α∥gP0(θ∗)∥
+∥gP′(θ∗)∥+∥gP0(θ∗)∥
+. Then,
+E
+z∼P∇ℓ(θ∗;z) = (1 −α)E
+z∼P0∇ℓ(θ∗;z) +αE
+z∼P∗∇ℓ(θ∗;z)
+= (1−αp)E
+z∼P0∇ℓ(θ∗;z) +αpE
+z∼P′∇ℓ(θ∗;z)
+= (1−αp)gP0(θ∗) +αp gP′(θ∗)
+=
+1−αp−αp∥gP′(θ∗)∥
+∥gP0(θ∗)∥
+gP0(θ∗)
+=
+1−αp∥gP0(θ∗)∥+∥gP′(θ∗)∥
+∥gP0(θ∗)∥
+gP0(θ∗)
+= max
+1−α∥gP0(θ∗)∥+∥gP′(θ∗)∥
+∥gP0(θ∗)∥,0
+gP0(θ∗)
+= max ((1 −α)∥gP0(θ∗)∥ −α∥gP′(θ∗)∥,0)gP0(θ∗)
+∥gP0(θ∗)∥.
+Therefore, ∥Ez∼P∇ℓ(θ∗;z)∥= max ((1 −α)∥gP0(θ∗)∥ −α∥gP′(θ∗)∥,0). Applying the definition of µ-strong convexity,
+we get
+∥θ∗−θ∥ ≤1
+µ∥E
+z∼P∇ℓ(θ∗;z)−E
+z∼P∇ℓ(θ;z)∥
+=1
+µ∥E
+z∼P∇ℓ(θ∗;z)∥
+=1
+µmax ((1 −α)∥gP0(θ∗)∥ −α∥gP′(θ∗)∥,0).
+The first equality follows because Ez∼P∇ℓ(θ;z) = 0 due to the loss being convex and the firm being a risk minimizer.
+Multiplying both sides by −1, we obtain a lower bound on the success S(α) =−∥θ∗−θ∥.
+B.5. Proof of Corollary 4.3
+To achieve S(α) = 0 , Theorem 4.2 shows that it suffices to have α∥gP′(θ∗)∥= (1−α)∥gP0(θ∗)∥, for any µ. Rearranging
+the terms and expressing αcompletes the proof.
+B.6. Proof of Proposition 4.4
+Ifuis convex, then for all θ′we know
+u(θ′)≥u(θ0) +∇u(θ0)⊤(θ′−θ0).
+16
+
+Algorithmic Collective Action in Machine Learning
+Letθ∗=θ0+∇u(θ0)
+∥∇u(θ0)∥2U. Then, u(θ∗)−u(θ0)≥U.
+Now, we apply Corollary 4.3 to upper bound the critical mass needed to reach θ∗. We have
+α∗≤∥gP0(θ∗)∥
+∥gP′(θ∗)∥+∥gP0(θ∗)∥≤β∥θ∗−θ0∥
+glb+β∥θ∗−θ0∥,
+where we apply smoothness and the definition of glb. Observing that ∥θ∗−θ0∥=U
+∥∇u(θ0)∥completes the proof.
+B.7. Proof of Theorem 4.5
+Fix a time step tand a model θt. Denote by P′
+tthe gradient-redirecting distribution found at step tand let ξ(θt) =
+∥gP′
+t(θt)+1−α
+αgP0(θt)∥
+∥θt−θ∗∥. Then, the gradient-redirecting strategy induces the following gradient evaluated on Pt:
+gPt(θt) =αgP′
+t(θt) + (1 −α)gP0(θt)
+=−α1−α
+αgP0(θt) +αξ(θt)(θt−θ∗) + (1 −α)gP0(θt)
+=αξ(θt)(θt−θ∗).
+Now let c= min λ∈[0,1]ξ(λθ0+ (1−λ)θ∗). Applying the strategy repeatedly across time steps yields
+∥θT−θ∗∥ ≤ ∥ θT−1−ηαξ(θT−1)(θT−1−θ∗)−θ∗∥
+≤(1−ηαξ(θT−1))∥θT−1−θ∗∥
+≤(1−ηαc)∥θT−1−θ∗∥
+≤(1−ηαc)T∥θ0−θ∗∥,
+which yields ST(α) =−∥θT−θ∗∥ ≥ − (1−ηαc)T∥θ0−θ∗∥. Setting C(α) =αcconcludes the proof.
+C. Additional Experimental Details
+The dataset introduced by Jiechieu & Tsopze (2021) is available at https://github.com/florex/resume_
+corpus . We preprocessed each resume by removing the first 20words of the resume. The reason is that the opening of the
+resume essentially encodes the associated skills, since the dataset creation process extracted the skills from the opening of
+the resume. Removing the first 20words leads to a more realistic classification task.
+We used the HuggingFace transformers open-source Python library (Wolf et al., 2020). We used the
+distilbert-base-uncased model from the library corresponding to the DistilBERT transformer model (Sanh
+et al., 2019). We used the HuggingFace Trainer module for training with its default settings. We also experimented with
+larger models, including RoBERTa (both roberta-base androberta-large ), but we did not see any improvements
+in classification accuracy from using these larger models.
+The DistilBERT tokenizer has a vocabulary of 30522 tokens of which thousands are unused in the resume corpus. We
+picked token 1240 corresponding to a small dash, which we inserted in the resume every 20words. Our findings are largely
+insensitive to the trigger spacing as Figure 7 shows.
+0%10% 20% 30% 40%
+Manipulated % in class0.00.20.40.60.81.0Top-1 frequency
+0%10% 20% 30% 40%
+Manipulated % in classTarget frequency
+Spacing
+10
+20
+30
+40
+50Trigger spacing (text only, target class 1)
+0%.2%.4%.6%.8%1%
+Manipulated % in data0.00.20.40.60.81.0Top-1 frequency
+0%.2%.4%.6%.8%1%
+Manipulated % in dataTarget frequency
+Spacing
+10
+20
+30
+40
+50Trigger spacing (text and label, target class 1)
+Figure 7. Trigger spacing is largely irrelevant.
+17
+[single_shot_citation_anthropic_response] attempt=1/3
+{
+  "citation_scores": {
+    "Jiechieu & Tsopze, 2021": 0.08,
+    "Manoj & Blum (2021)": 0.06,
+    "Cin`a et al. (2021)": 0.05,
+    "Farhadkhani et al., 2022": 0.06,
+    "Suya et al., 2021": 0.04,
+    "McMahan et al., 2017": 0.04,
+    "Hardt et al., 2016": 0.05,
+    "Zrnic et al. (2021)": 0.04,
+    "Sanh et al., 2019": 0.04,
+    "Wolf et al., 2020": 0.03,
+    "Efron, 2022": 0.03,
+    "Olson, 1965": 0.04,
+    "Vincent et al., 2019": 0.03,
+    "Vincent et al., 2021": 0.03,
+    "Vincent & Hecht (2021)": 0.02,
+    "Creager & Zemel (2021)": 0.02,
+    "Tian et al., 2022": 0.02,
+    "Guo et al., 2022": 0.02,
+    "Grosse et al., 2022": 0.02,
+    "Cherepanova et al., 2021": 0.02,
+    "Geiping et al., 2021": 0.02,
+    "Kulynych et al., 2020": 0.02,
+    "Shan et al., 2020": 0.02,
+    "Abebe et al., 2022": 0.01,
+    "Delobelle et al., 2021": 0.01,
+    "Li et al., 2022": 0.01,
+    "Albert et al., 2020": 0.01,
+    "Albert et al., 2021": 0.01,
+    "Woodcock & Graham, 2019": 0.01,
+    "Gray & Suri, 2019": 0.01,
+    "Schor, 2021": 0.01,
+    "Wood et al. (2019)": 0.01,
+    "Chen, 2018": 0.01,
+    "Rahman, 2021": 0.01,
+    "Vallas & Schor, 2020": 0.01,
+    "Burrell et al., 2019": 0.01,
+    "Sinai et al., 2014": 0.01,
+    "Melucci, 1996": 0.005,
+    "Milan (2015)": 0.005,
+    "Schor et al., 2020": 0.005,
+    "Cropanzano et al. (2022)": 0.005,
+    "Cameron & Rahman (2022)": 0.005,
+    "Jarrahi & Sutherland (2019)": 0.005,
+    "Irani & Silberman, 2013": 0.005,
+    "Salehi et al., 2015": 0.005,
+    "O'Meara, 2019": 0.005,
+    "Van Doorn, 2017": 0.005,
+    "Sun, 2019": 0.005,
+    "Cameron, 2020": 0.005,
+    "Robinson, 2017": 0.005,
+    "Yu et al., 2022": 0.005,
+    "Sutherland & Jarrahi (2018)": 0.005
+  }
+}

@@ -64,7 +64,7 @@ def ensure_parent(path: str) -> None:
 ROOT_DIR = Path(__file__).resolve().parents[1]
 HUMAN_ANNOTATION_INSTRUCTIONS_PATH = ROOT_DIR / "human_section_annotation_instructions.txt"
 NODE_SCORE_LINE_RE = re.compile(
-    r"^(?P<title>.+?)\s*(?::|[–—-])\s*"
+    r"^(?:(?:node\s+title)\s*:\s*)?(?P<title>.+?)\s*(?:(?::|[–—-])\s*|\|\s*)"
     r"(?:(?:total(?:\s+score)?)\s*:\s*)?"
     r"(?P<total>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\|\s*"
     r"(?:(?:citation(?:\s+score)?)\s*:\s*)?"
@@ -810,6 +810,25 @@ def build_leaf_paragraph_inventory(
     return inventory
 
 
+def collect_citation_inventory_from_paragraph_inventory(
+    paragraph_inventory: Sequence[Dict[str, Any]],
+) -> Dict[str, Dict[str, Any]]:
+    inventory: Dict[str, Dict[str, Any]] = {}
+    for leaf in paragraph_inventory:
+        section_path = " > ".join(str(part) for part in leaf.get("section_path", []))
+        for paragraph in leaf.get("paragraphs", []):
+            for citation_entry in paragraph.get("citations", []):
+                citation = canonicalize_inventory_citation(str(citation_entry.get("citation", "")))
+                if not citation:
+                    continue
+                mention_increment = max(1, int(safe_float(citation_entry.get("mention_count", 1), 1.0)))
+                entry = inventory.setdefault(citation, {"mention_count": 0, "sections": []})
+                entry["mention_count"] += mention_increment
+                if section_path and section_path not in entry["sections"]:
+                    entry["sections"].append(section_path)
+    return inventory
+
+
 def section_schema_from_content(content: Any) -> Dict[str, Any]:
     if not isinstance(content, dict):
         return {}
@@ -934,6 +953,8 @@ def normalize_openai_paragraph_scores(
     by_key: Dict[Tuple[Tuple[str, ...], int], Dict[str, Any]] = {}
     paragraphs_with_raw_citation_children: set[str] = set()
     paragraph_keys_with_raw_citation_children: set[Tuple[Tuple[str, ...], int]] = set()
+    child_citation_total_by_id: Dict[str, float] = defaultdict(float)
+    child_citation_total_by_key: Dict[Tuple[Tuple[str, ...], int], float] = defaultdict(float)
     for item in raw_items:
         if not isinstance(item, dict):
             continue
@@ -947,13 +968,17 @@ def normalize_openai_paragraph_scores(
     for item in raw_citation_items:
         if not isinstance(item, dict):
             continue
+        citation_score = max(0.0, safe_float(item.get("citation_score", item.get("score", 0.0)), 0.0))
         paragraph_id = str(item.get("paragraph_id", "")).strip()
         if paragraph_id:
             paragraphs_with_raw_citation_children.add(paragraph_id)
+            child_citation_total_by_id[paragraph_id] += citation_score
         section_path = item.get("section_path")
         paragraph_index = safe_float(item.get("paragraph_index"), -1)
         if isinstance(section_path, list) and paragraph_index >= 0:
-            paragraph_keys_with_raw_citation_children.add(_paragraph_lookup_key(section_path, int(paragraph_index)))
+            paragraph_key = _paragraph_lookup_key(section_path, int(paragraph_index))
+            paragraph_keys_with_raw_citation_children.add(paragraph_key)
+            child_citation_total_by_key[paragraph_key] += citation_score
 
     section_total_lookup = section_totals_by_path(normalized_section_scores)
     normalized_paragraphs: List[Dict[str, Any]] = []
@@ -968,18 +993,23 @@ def normalize_openai_paragraph_scores(
         for paragraph in expected_paragraphs:
             paragraph_id = str(paragraph.get("paragraph_id", ""))
             paragraph_index = int(paragraph.get("paragraph_index", 0))
-            raw_item = by_id.get(paragraph_id) or by_key.get(_paragraph_lookup_key(section_path, paragraph_index))
+            paragraph_key = _paragraph_lookup_key(section_path, paragraph_index)
+            raw_item = by_id.get(paragraph_id) or by_key.get(paragraph_key)
             raw_technical = _extract_channel_value(raw_item or {}, "technical_score", ("technical",))
             raw_citation = _extract_channel_value(raw_item or {}, "citation_score", ("citation",))
+            has_citations = bool(paragraph.get("has_citations"))
+            has_explicit_citation_children = (
+                paragraph_id in paragraphs_with_raw_citation_children
+                or paragraph_key in paragraph_keys_with_raw_citation_children
+            )
+            child_citation_total = child_citation_total_by_id.get(paragraph_id, 0.0) + child_citation_total_by_key.get(paragraph_key, 0.0)
+            if has_explicit_citation_children and raw_citation <= 0.0 and child_citation_total > 0.0:
+                raw_citation = child_citation_total
+
             raw_total = raw_technical + raw_citation
             if raw_total <= 0.0:
                 raw_total = float(max(1, token_count(str(paragraph.get("text", "")))))
 
-            has_citations = bool(paragraph.get("has_citations"))
-            has_explicit_citation_children = (
-                paragraph_id in paragraphs_with_raw_citation_children
-                or _paragraph_lookup_key(section_path, paragraph_index) in paragraph_keys_with_raw_citation_children
-            )
             if not has_citations and not has_explicit_citation_children:
                 tech_ratio, cit_ratio = 1.0, 0.0
             elif raw_technical + raw_citation > 0.0:
@@ -1339,6 +1369,7 @@ class BaselineModel(ABC):
     """Shared interface for deterministic and single-pass baseline models."""
     model_tag = "baseline"
     uses_llm = False
+    citation_only_output = False
 
     def __init__(
         self,
@@ -1692,15 +1723,14 @@ class OpenAIFullPaperBaseline(BaselineModel):
 
     SYSTEM_PROMPT = (
         "You are a scientific contribution-scoring assistant.\n\n"
-        "Follow the contribution-scoring framework exactly as described by the user.\n\n"
-        "Perform careful hierarchical reasoning over the document structure.\n\n"
+        "Score the provided hierarchy using the paper text.\n\n"
         "Use citation identifiers exactly as they appear in the paper.\n\n"
         "Return only the requested scores and format. Do not provide explanations, reasoning traces, commentary, or summaries unless explicitly requested."
     )
 
     def __init__(
         self,
-        model: str = "gpt-4.1",
+        model: str = "",
         host: str = "https://api.openai.com/v1",
         temperature: float = 0.0,
         max_retries: int = 3,
@@ -1713,6 +1743,10 @@ class OpenAIFullPaperBaseline(BaselineModel):
         max_output_tokens: int = 12000,
         api_response_format: str = "none",
     ) -> None:
+        if not model.strip():
+            raise ValueError(
+                "openai_full_paper requires an explicit model name; pass it via --model."
+            )
         super().__init__(
             model=model,
             host=host,
@@ -1775,102 +1809,29 @@ class OpenAIFullPaperBaseline(BaselineModel):
         hierarchy_text = render_authoritative_hierarchy(section_schema, paragraph_inventory)
         return (
             "Assign contribution scores to the provided hierarchy using the paper text.\n\n"
-            "The hierarchy provided below is authoritative.\n\n"
-            "Your task is to score the provided hierarchy, not reconstruct the paper structure.\n\n"
-            "Requirements\n\n"
-            "* Score every node in the hierarchy.\n"
-            "* Every node must appear exactly once in the output.\n"
-            "* Preserve the hierarchy exactly as provided.\n"
-            "* Do not add, remove, rename, merge, split, or reorder nodes.\n"
-            "* Do not invent sections, subsections, paragraphs, appendices, or aggregate nodes.\n"
-            "* Include nodes even if their contribution score or citation score is 0.\n"
-            "* Output nodes in the exact order they appear in the provided hierarchy.\n\n"
-            "Contribution Tree Structure\n\n"
-            "The Contribution Tree is a rooted hierarchical tree representing how scientific contribution flows through the paper.\n\n"
-            "The root node is the paper and has contribution score 1.0.\n\n"
-            "Document nodes correspond to the document structure:\n\n"
-            "* Sections\n"
-            "* Subsections\n"
-            "* Subsubsections\n"
-            "* Paragraphs\n\n"
-            "The provided hierarchy already specifies all document nodes.\n\n"
-            "Paragraphs are the lowest document-level nodes.\n\n"
-            "A paragraph without citations is a leaf node.\n\n"
-            "A paragraph containing citations is not a leaf node. Citations discussed within that paragraph are treated as child citation nodes.\n\n"
-            "Citation nodes represent individual cited references.\n\n"
-            "Only citation nodes may appear beneath paragraphs.\n\n"
-            "Hierarchical Scoring Procedure\n\n"
-            "Contribution scores must be assigned recursively through the hierarchy.\n\n"
-            "Do not assign scores directly from a section to descendant paragraphs if intermediate hierarchy levels exist.\n\n"
-            "For every parent node:\n\n"
-            "1. Consider only its immediate children.\n"
-            "2. Estimate the relative importance of those children.\n"
-            "3. Distribute the parent's score among those children.\n"
-            "4. Recursively repeat this process for each child.\n\n"
-            "Scoring must proceed level-by-level through the hierarchy:\n\n"
-            "Paper\n"
-            "→ Sections\n"
-            "→ Subsections\n"
-            "→ Subsubsections\n"
-            "→ Paragraphs\n\n"
-            "A node may only receive contribution from its immediate parent.\n\n"
-            "If a subsection exists beneath a section, score the subsection before scoring any paragraphs contained within that subsection.\n\n"
-            "If a subsubsection exists beneath a subsection, score the subsubsection before scoring any paragraphs contained within that subsubsection.\n\n"
-            "Do not skip hierarchy levels.\n\n"
-            "Do not distribute a parent's score directly to grandchildren or deeper descendants.\n\n"
-            "The contribution score of a paragraph must be derived from the contribution assigned to its immediate parent node.\n\n"
-            "Contribution Scoring\n\n"
-            "A node's score represents its contribution to the scientific value of the paper, not its length.\n\n"
-            "Contribution scores are assigned recursively top-down through the hierarchy, one parent-child level at a time.\n\n"
-            "The contribution score of a parent should approximately equal the sum of the contribution scores of its children. Exact normalization will be performed after output.\n\n"
-            "Sibling scores should reflect their relative scientific importance within the same parent.\n\n"
-            "Assign higher scores to content central to the paper's technical contribution, such as:\n\n"
-            "* methods\n"
-            "* algorithms\n"
-            "* theory\n"
-            "* experimental design\n"
-            "* technical analysis\n"
-            "* key findings\n\n"
-            "Assign lower scores to content primarily serving as:\n\n"
-            "* motivation\n"
-            "* background\n"
-            "* related work\n"
-            "* organizational text\n"
-            "* summaries\n\n"
-            "All scores must be global scores relative to the entire paper.\n\n"
-            "Citation Attribution\n\n"
-            "Citation contribution is computed bottom-up from citation-containing paragraphs.\n\n"
-            "For a paragraph without citations:\n\n"
-            "* Citation Score = 0.\n\n"
-            "For a paragraph containing citations:\n\n"
-            "* Estimate what fraction of the paragraph's contribution is derived from prior work.\n"
-            "* This becomes the paragraph Citation Score.\n"
-            "* The remaining contribution is considered original contribution.\n\n"
-            "Only paragraphs containing citations should be decomposed into original and citation-derived contribution.\n\n"
-            "After determining the paragraph Citation Score, identify citation contexts within the paragraph.\n\n"
-            "A citation context is text that discusses, compares against, extends, relies on, or describes one or more cited works.\n\n"
-            "Distribute the paragraph Citation Score across citation contexts according to their relative importance.\n\n"
-            "Within a citation context, divide contribution uniformly among all citations appearing in that citation context.\n\n"
-            "Examples:\n\n"
-            "[10]\n\n"
-            "→ all contribution goes to [10]\n\n"
-            "[1, 10]\n\n"
-            "→ contribution is divided equally between [1] and [10]\n\n"
-            "(Smith et al., 2020; Johnson et al., 2021)\n\n"
-            "→ contribution is divided equally between the cited references\n\n"
-            "The contribution score of a citation equals the sum of all contribution assigned to that citation across the paper.\n\n"
-            "If a citation appears multiple times, aggregate all assigned contribution into a single final citation score.\n\n"
-            "Use citation identifiers exactly as they appear in the paper.\n\n"
-            "Do not rewrite, expand, infer, or replace citation identifiers.\n\n"
-            "The sum of all citation contribution scores should approximately equal the root paper Citation Score.\n\n"
+            "Use the provided hierarchy exactly as given.\n"
+            "Do not add, remove, rename, merge, split, reorder, or invent nodes.\n"
+            "Output every node exactly once, including nodes with score 0.\n"
+            "Output nodes in the exact order they appear in the hierarchy.\n\n"
+            "Scoring rules\n\n"
+            "* The root paper node has total score 1.0.\n"
+            "* For each parent node, distribute its score only among its immediate children.\n"
+            "* Do not skip hierarchy levels or assign a parent's score directly to deeper descendants.\n"
+            "* Child scores should approximately sum to the parent score. Exact normalization is handled after output.\n"
+            "* Scores should be global scores relative to the entire paper, not local percentages.\n"
+            "* Score scientific contribution, not length.\n"
+            "* Assign higher scores to content central to the paper's technical contribution.\n"
+            "* Assign lower scores to background, motivation, related work, summaries, and organizational text.\n\n"
+            "Citation attribution\n\n"
+            "* For a paragraph without citations, Citation Score = 0.\n"
+            "* For a paragraph with citations, estimate what fraction of the paragraph's contribution depends on prior work. This is the paragraph Citation Score.\n"
+            "* Allocate that citation-derived contribution across the cited references according to their importance in that paragraph.\n"
+            "* If multiple citations play the same role, split them evenly.\n"
+            "* Aggregate repeated appearances of the same citation into one final citation score.\n"
+            "* Use citation identifiers exactly as they appear in the paper.\n\n"
             "Output Format\n\n"
-            "Output every node in the provided hierarchy.\n\n"
             "For each document node output:\n\n"
             "Node Title: Total Score | Citation Score\n\n"
-            "where:\n\n"
-            "* Total Score is the node's contribution score.\n"
-            "* Citation Score is the portion of the node's contribution attributed to cited prior work.\n"
-            "Nodes without citations must still be reported with Citation Score = 0.\n\n"
             "After all document nodes output:\n\n"
             "Citation Contributions\n\n"
             "Citation Identifier: Score\n\n"
@@ -2054,7 +2015,7 @@ class AnthropicFullPaperBaseline(OpenAIFullPaperBaseline):
 
     def __init__(
         self,
-        model: str = "global.anthropic.claude-sonnet-4-6",
+        model: str = "",
         host: str = "https://bedrock-mantle.us-east-2.api.aws",
         temperature: float = 0.0,
         max_retries: int = 3,
@@ -2067,6 +2028,10 @@ class AnthropicFullPaperBaseline(OpenAIFullPaperBaseline):
         max_output_tokens: int = 12000,
         api_response_format: str = "none",
     ) -> None:
+        if not model.strip():
+            raise ValueError(
+                "anthropic_full_paper requires an explicit model name; pass it via --model."
+            )
         super().__init__(
             model=model,
             host=host,
@@ -2198,9 +2163,281 @@ class AnthropicFullPaperBaseline(OpenAIFullPaperBaseline):
         return self._call_legacy_bedrock_transport(system_prompt, user_prompt)
 
 
+SINGLE_SHOT_CITATION_LINE_RE = re.compile(
+    r"^(?P<citation>.+?)\s*(?::|=|=>|->|\s-\s)\s*(?P<score>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*$"
+)
+
+
+class SingleShotCitationAPIBaseline(AnthropicFullPaperBaseline):
+    """One full-paper API pass that outputs citation scores only."""
+
+    model_tag = "single_shot_citation_api"
+    citation_only_output = True
+
+    SYSTEM_PROMPT = (
+        "You are a scientific contribution-scoring assistant.\n\n"
+        "Your task is to assign contribution scores directly to the cited references in a paper.\n\n"
+        "A citation's contribution score should reflect how much that cited work supports, grounds, shapes, "
+        "or is built upon by the paper's core scientific contribution.\n\n"
+        "Use higher scores for cited works that provide a method the paper builds on, provide a baseline "
+        "central to the evaluation, supply a theory or formulation the paper depends on, or strongly shape "
+        "the paper's technical design or claims.\n\n"
+        "Use lower scores for cited works that are broad background, generic motivation, mentioned only for "
+        "completeness, peripheral comparisons, or cited only briefly in passing.\n\n"
+        "Use citation identifiers exactly as they appear in the paper.\n\n"
+        "Return only the requested scores and format. Do not provide explanations, reasoning traces, commentary, or summaries."
+    )
+
+    def __init__(
+        self,
+        model: str = "",
+        host: str = "http://localhost:11434",
+        temperature: float = 0.0,
+        max_retries: int = 3,
+        debug_log_path: str = "",
+        pdf_path: str = "",
+        api_key: str = "",
+        api_key_env: str = "OPENAI_API_KEY",
+        api_endpoint: str = "",
+        request_timeout: int = 600,
+        max_output_tokens: int = 12000,
+        api_response_format: str = "none",
+        api_provider: str = "",
+    ) -> None:
+        if not model.strip():
+            raise ValueError(
+                "single_shot_citation_api requires an explicit model name; pass it via --model."
+            )
+        provider = api_provider.strip().lower()
+        if provider not in {"openai", "anthropic"}:
+            raise ValueError(
+                "single_shot_citation_api requires --api-provider to be either 'openai' or 'anthropic'."
+            )
+
+        resolved_host = host
+        resolved_api_key_env = api_key_env
+        if provider == "openai":
+            if host == "http://localhost:11434":
+                resolved_host = "https://api.openai.com/v1"
+            if not resolved_api_key_env.strip():
+                resolved_api_key_env = "OPENAI_API_KEY"
+        else:
+            if host == "http://localhost:11434":
+                resolved_host = "https://bedrock-mantle.us-east-2.api.aws"
+            if not resolved_api_key_env.strip() or resolved_api_key_env == "OPENAI_API_KEY":
+                resolved_api_key_env = "AWS_BEARER_TOKEN_BEDROCK"
+
+        OpenAIFullPaperBaseline.__init__(
+            self,
+            model=model,
+            host=resolved_host,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+            pdf_path=pdf_path,
+            api_key=api_key,
+            api_key_env=resolved_api_key_env,
+            api_endpoint=api_endpoint,
+            request_timeout=request_timeout,
+            max_output_tokens=max_output_tokens,
+            api_response_format=api_response_format,
+        )
+        self.api_provider = provider
+        self.model_tag = f"single_shot_citation_{provider}"
+
+    def raw_section_weights(
+        self,
+        records: Sequence[SectionRecord],
+        parent_path: Optional[List[str]] = None,
+    ) -> Dict[str, float]:
+        del records, parent_path
+        raise NotImplementedError("SingleShotCitationAPIBaseline outputs citation scores only.")
+
+    def leaf_citation_fraction(self, record: SectionRecord) -> float:
+        del record
+        raise NotImplementedError("SingleShotCitationAPIBaseline outputs citation scores only.")
+
+    def raw_citation_weight(self, record: SectionRecord, citation: str, mentions: int) -> float:
+        del record, citation, mentions
+        raise NotImplementedError("SingleShotCitationAPIBaseline outputs citation scores only.")
+
+    def _endpoint(self) -> str:
+        if self.api_endpoint:
+            return self.api_endpoint
+        if self.api_provider == "openai":
+            return self.host.rstrip("/") + "/chat/completions"
+        return self.host.rstrip("/") + "/anthropic/v1/messages"
+
+    def _build_prompt(
+        self,
+        paper_id: str,
+        full_paper_text: str,
+        citation_inventory: Dict[str, Dict[str, Any]],
+    ) -> str:
+        del paper_id, citation_inventory
+        return (
+            "Assign direct citation contribution scores for the following paper.\n\n"
+            "Goal:\n"
+            "Score the cited references by how foundational they are to the paper's actual scientific contribution.\n\n"
+            "Scoring rules:\n"
+            "- Score all cited references that appear in the paper.\n"
+            "- Scores must be non-negative.\n"
+            "- Scores must sum to 1.0 across all cited references.\n"
+            "- Use relative scoring: if one citation is about twice as foundational as another, its score should be about twice as large.\n"
+            "- Do not output any citation that does not appear in the paper.\n"
+            "- Use citation identifiers exactly as they appear in the paper.\n\n"
+            "Output format:\n"
+            "Return one JSON object with this exact shape:\n\n"
+            "{\n"
+            '  "citation_scores": {\n'
+            '    "<citation identifier>": <score>,\n'
+            '    "<citation identifier>": <score>\n'
+            "  }\n"
+            "}\n\n"
+            "Paper text:\n"
+            f"{full_paper_text}"
+        )
+
+    def _extract_json_citation_scores(self, response_text: str) -> Any:
+        payload = extract_json_payload(response_text)
+        if "citation_scores" in payload:
+            return payload["citation_scores"]
+        if "citations" in payload:
+            return payload["citations"]
+        if "scores" in payload:
+            return payload["scores"]
+        if all(
+            isinstance(value, (int, float, str, dict))
+            for value in payload.values()
+        ):
+            return payload
+        raise ValueError("JSON payload did not contain a citation_scores mapping.")
+
+    def _extract_text_citation_scores(self, response_text: str) -> Dict[str, Dict[str, float]]:
+        parsed: Dict[str, Dict[str, float]] = {}
+        for raw_line in str(response_text or "").splitlines():
+            line = _clean_scored_line(raw_line)
+            line = re.sub(r"^\d+[\.\)]\s*", "", line).strip()
+            if not line:
+                continue
+
+            normalized_line = normalize_for_match(line).lower()
+            if normalized_line in {
+                normalize_for_match("citation contributions").lower(),
+                normalize_for_match("citation scores").lower(),
+                normalize_for_match("citation identifier").lower(),
+                normalize_for_match("output format").lower(),
+            }:
+                continue
+
+            match = CITATION_SCORE_TABLE_ROW_RE.match(line)
+            if match and normalize_for_match(match.group("citation")).lower() == normalize_for_match("Citation Identifier").lower():
+                continue
+            if match and re.fullmatch(r"-+", match.group("citation").strip()):
+                continue
+            if not match:
+                match = SINGLE_SHOT_CITATION_LINE_RE.match(line)
+            if not match:
+                match = CITATION_SCORE_LINE_RE.match(line)
+            if not match:
+                continue
+
+            citation = str(match.group("citation")).strip()
+            if not citation:
+                continue
+            parsed.setdefault(citation, {"citation_score": 0.0})
+            parsed[citation]["citation_score"] += max(0.0, safe_float(match.group("score"), 0.0))
+
+        if not parsed:
+            raise ValueError("Response did not contain parseable citation score lines.")
+        return parsed
+
+    def _parse_citation_scores(
+        self,
+        response_text: str,
+        citation_inventory: Dict[str, Dict[str, Any]],
+    ) -> Dict[str, Dict[str, float]]:
+        raw_scores: Any
+        try:
+            raw_scores = self._extract_json_citation_scores(response_text)
+        except Exception:
+            raw_scores = self._extract_text_citation_scores(response_text)
+
+        normalized_scores = normalize_citation_scores(
+            citation_inventory,
+            raw_scores,
+            total_score=1.0,
+            fallback_to_mentions=False,
+        )
+        if sum(value["citation_score"] for value in normalized_scores.values()) <= 0.0:
+            raise ValueError("Parsed citation scores were empty after normalization.")
+        return normalized_scores
+
+    def _call_full_paper_api(self, system_prompt: str, user_prompt: str) -> str:
+        if self.api_provider == "openai":
+            return self._call_openai_compatible_api(system_prompt, user_prompt)
+        if self._uses_messages_api_transport():
+            return self._call_messages_api_transport(system_prompt, user_prompt)
+        return self._call_legacy_bedrock_transport(system_prompt, user_prompt)
+
+    def build_outputs(
+        self,
+        content_dict: Dict[str, Any],
+        citations_dict: Dict[str, Any],
+        paper_id: str,
+    ) -> Tuple[Dict[str, Any], Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
+        if not self.pdf_path:
+            raise ValueError("SingleShotCitationAPIBaseline requires a PDF path.")
+
+        citation_inventory = collect_citation_inventory(citations_dict)
+        paragraph_inventory = build_leaf_paragraph_inventory(content_dict, citations_dict, paper_id=paper_id)
+        if not citation_inventory:
+            citation_inventory = collect_citation_inventory_from_paragraph_inventory(paragraph_inventory)
+        if not citation_inventory:
+            raise ValueError(f"No citations were extracted for paper '{paper_id}'.")
+
+        full_paper_text = read_pdf_text(self.pdf_path)
+        user_prompt = self._build_prompt(
+            paper_id=paper_id,
+            full_paper_text=full_paper_text,
+            citation_inventory=citation_inventory,
+        )
+        append_debug_log(self.debug_log_path, f"[{self.model_tag}_prompt]\n{user_prompt}")
+
+        last_error = "no_valid_response"
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                response_text = self._call_full_paper_api(self.SYSTEM_PROMPT, user_prompt)
+            except Exception as api_exc:  # noqa: BLE001
+                last_error = f"api_error={api_exc}"
+                append_debug_log(
+                    self.debug_log_path,
+                    f"[{self.model_tag}_api_error] attempt={attempt}/{self.max_retries}\n{api_exc}",
+                )
+                continue
+
+            append_debug_log(
+                self.debug_log_path,
+                f"[{self.model_tag}_response] attempt={attempt}/{self.max_retries}\n{response_text}",
+            )
+            try:
+                citation_scores = self._parse_citation_scores(response_text, citation_inventory)
+                return citation_scores, {}, [], []
+            except Exception as parse_exc:  # noqa: BLE001
+                last_error = f"parse_error={parse_exc}"
+                append_debug_log(
+                    self.debug_log_path,
+                    f"[{self.model_tag}_parse_error] attempt={attempt}/{self.max_retries}\n{parse_exc}",
+                )
+
+        raise RuntimeError(
+            f"Failed to parse single-shot citation response after {self.max_retries} attempts: {last_error}"
+        )
+
+
 def build_baseline_model(
     baseline_name: str,
-    model: str = "llama3.2",
+    model: str = "",
     host: str = "http://localhost:11434",
     temperature: float = 0.0,
     max_retries: int = 3,
@@ -2212,20 +2449,24 @@ def build_baseline_model(
     request_timeout: int = 600,
     max_output_tokens: int = 12000,
     api_response_format: str = "none",
+    api_provider: str = "",
 ) -> BaselineModel:
     baseline_name = baseline_name.strip().lower()
     resolved_model = model
     resolved_host = host
     resolved_api_key_env = api_key_env
-    if baseline_name == "openai_full_paper" and model == "llama3.2":
-        resolved_model = "gpt-4.1"
-    if baseline_name == "anthropic_full_paper" and api_key_env == "OPENAI_API_KEY":
+    if (
+        baseline_name == "anthropic_full_paper"
+        or (baseline_name == "single_shot_citation_api" and api_provider.strip().lower() == "anthropic")
+    ) and api_key_env == "OPENAI_API_KEY":
         resolved_api_key_env = "AWS_BEARER_TOKEN_BEDROCK"
     if baseline_name == "anthropic_full_paper":
-        if model == "llama3.2":
-            resolved_model = "global.anthropic.claude-sonnet-4-6"
         if host == "http://localhost:11434":
             resolved_host = "https://bedrock-mantle.us-east-2.api.aws"
+    if baseline_name in {"single_pass_llm", "openai_full_paper", "anthropic_full_paper", "single_shot_citation_api"} and not resolved_model.strip():
+        raise ValueError(
+            f"{baseline_name} requires an explicit model name; pass it via --model."
+        )
     if baseline_name == "citation_frequency":
         return UniformBaseline(
             model=resolved_model,
@@ -2288,6 +2529,22 @@ def build_baseline_model(
             max_output_tokens=max_output_tokens,
             api_response_format=api_response_format,
         )
+    if baseline_name == "single_shot_citation_api":
+        return SingleShotCitationAPIBaseline(
+            model=resolved_model,
+            host=resolved_host,
+            temperature=temperature,
+            max_retries=max_retries,
+            debug_log_path=debug_log_path,
+            pdf_path=pdf_path,
+            api_key=api_key,
+            api_key_env=resolved_api_key_env,
+            api_endpoint=api_endpoint,
+            request_timeout=request_timeout,
+            max_output_tokens=max_output_tokens,
+            api_response_format=api_response_format,
+            api_provider=api_provider,
+        )
     raise ValueError(f"Unknown baseline '{baseline_name}'.")
 
 
@@ -2310,6 +2567,7 @@ def run_baseline_from_args(args: argparse.Namespace) -> Tuple[str, str, str, str
         request_timeout=args.request_timeout,
         max_output_tokens=args.max_output_tokens,
         api_response_format=args.api_response_format,
+        api_provider=args.api_provider,
     ).model_tag
 
     debug_log_path = args.debug_log
@@ -2331,6 +2589,7 @@ def run_baseline_from_args(args: argparse.Namespace) -> Tuple[str, str, str, str
         request_timeout=args.request_timeout,
         max_output_tokens=args.max_output_tokens,
         api_response_format=args.api_response_format,
+        api_provider=args.api_provider,
     )
     citation_scores, section_scores, paragraph_scores, paragraph_citation_scores = baseline.build_outputs(
         content_dict=content,
@@ -2348,16 +2607,22 @@ def run_baseline_from_args(args: argparse.Namespace) -> Tuple[str, str, str, str
     paragraph_path = f"{paragraph_prefix}_paragraph_scores.json"
     paragraph_citation_path = f"{paragraph_prefix}_paragraph_citation_scores.json"
 
-    for path in (citation_path, section_path, paragraph_path, paragraph_citation_path):
+    output_paths = [citation_path]
+    if not baseline.citation_only_output:
+        output_paths.extend([section_path, paragraph_path, paragraph_citation_path])
+
+    for path in output_paths:
         ensure_parent(path)
 
     with open(citation_path, "w", encoding="utf-8") as f:
         json.dump(citation_scores, f, indent=2)
-    with open(section_path, "w", encoding="utf-8") as f:
-        json.dump(section_scores, f, indent=2)
-    with open(paragraph_path, "w", encoding="utf-8") as f:
-        json.dump(paragraph_scores, f, indent=2)
-    with open(paragraph_citation_path, "w", encoding="utf-8") as f:
-        json.dump(paragraph_citation_scores, f, indent=2)
+    if not baseline.citation_only_output:
+        with open(section_path, "w", encoding="utf-8") as f:
+            json.dump(section_scores, f, indent=2)
+        with open(paragraph_path, "w", encoding="utf-8") as f:
+            json.dump(paragraph_scores, f, indent=2)
+        with open(paragraph_citation_path, "w", encoding="utf-8") as f:
+            json.dump(paragraph_citation_scores, f, indent=2)
+        return citation_path, section_path, paragraph_path, paragraph_citation_path
 
-    return citation_path, section_path, paragraph_path, paragraph_citation_path
+    return citation_path, "", "", ""

@@ -1,0 +1,412 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[6]",
+    "citation_score": 0.0009790892193308552
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[34]",
+    "citation_score": 0.0009790892193308552
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[44]",
+    "citation_score": 0.0009790892193308552
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[32]",
+    "citation_score": 0.0009790892193308552
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[30]",
+    "citation_score": 0.0019581784386617103
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[9]",
+    "citation_score": 0.003916356877323421
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[23]",
+    "citation_score": 0.0029372676579925653
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "While recent advances in data tooling have significantly trans- formed the landscape of data science, the challenges of the AI era have posed new obstacles in data exploration and visual analyt- ics [6]. Modern human-centered tools, such as spreadsheets, data science notebooks, visual analytics platforms, and interactive data science libraries, empower users with intuitive interfaces for seam- less data exploration and manipulation [ 15,43,46,52]. However, the exponential growth of data sizes due to the widespread adop- tion of big data technologies has placed unprecedented demands on the efficiency and responsiveness of these tools. As datasets scale to massive volumes, ensuring efficient and interactive user experiences becomes a critical yet challenging task. A common practice in interactive data exploration is ranked retrieval , where data is ordered according to a user-defined or al- gorithmically generated ranking function, while the user may be interested in accessing specific rank positions ora window of ranked tuples. To further clarify this, let us consider the following example.Example 1. In spreadsheet applications [ 34,44], data scientists frequently create new attributes as weighted sums of existing ones. Subsequently, they may \u201cjump\u201d to tuples at specific rank positions without explicitly enumerating preceding entries. Similar examples can be made for other applications. For instance, in Jupyter notebooks [ 32], analysts may need to directly retrieve tuples at particular ranks, effectively skipping over earlier-ranked items. Furthermore, recommendation systems frequently employ ranked retrieval for paged access, allowing users to directly navigate to specific result pages determined by complex ranking criteria. In all these scenarios, the ability to perform efficient direct-access ranked retrieval , i.e., to quickly access the tuple at an arbitrary rank position i, without the overhead of enumerating the entire dataset up to that position, is crucial for maintaining the interac- tivity andresponsiveness expected by users. Particularly, the large number of attributes in datasets within domains such as AI creates ahigh-dimensional space of possible ranking functions , potentially encompassing up to tens or hundreds of dimensions, particularly when ranking functions are machine-generated. Traditionally, the interest of the data management community in ranked retrieval has been on top-kquery processing, with the objective of finding the top-ranked tuples [ 30]. Such approaches, however, are tailored for a small value of k, and are ineffective for direct-access queries, with the goal of efficiently retrieving the tuple at an arbitrary ranking position i, whereican be inO(n). Direct access to conjunctive queries has recently been studied to directly access a specific position in the join result, without fully materializing the join [ 9,23,49]. These works, however, consider anprespecified ordering of the tuples (e.g., lexicographic order on an attribute), and focus on skipping the join operation. As a result, such approaches are not suitable for ranked-retrieval settings where the ranking function is part of the input query. Therefore, in this paper, we formalize and study the direct-access ranked retrieval (DAR ) problem. We also introduce the notion of conformal set for ranked retrieval as a small set that contains the tuple at the queried rank i. Next, focusing on linear ranking functions, we propose efficient algorithms for each of the proposed problems. Specifically, our first algorithm uses the computational geometric concepts of duality, arrangements, and levels of arrangements for answering the DAR problem. This algorithm, however, suffers from the curse of dimen- sionality, and its space complexity increases exponentially with the number of attributes. Consequently, we propose several algorithms with a linear space complexity, even for a large number of attributes. Specifically, start- ing fromd=2, we propose our algorithm based on the concept of",
+    "paragraph_id": "ranked-ret::Introduction::p1",
+    "citation": "[49]",
+    "citation_score": 0.0029372676579925653
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03b5-samples, and extend it to high-dimensional settings by combining it with the stripe-range searching. This approach offers an efficient solution for finding a conformal set for an arbitrary rank position. Finally, combining our approach with range counting, we extend it for the exact version ( DAR problem). Efficiently finding the tuples within a narrow stripe range is fundamental in the development of our \u03b5-sampling based solution. We formulate this as the problem of stripe range retrieval ( SRR), with a focus on developing efficient algorithms for the challenging narrow ranges that only contain a small number of tuples. Inspired by the Hierarchical Navigable Small World graphs for approximate nearest neighbor problems [ 19,35], our practical and scalable algorithm constructs a hierarchical sampling structure for stripe range searching, maintaining the neighborhood regions of points in the hierarchy using smallest enclosing balls. Theoretically, we show the near-optimal efficiency of our al- gorithms up to a logarithmic factor. Besides, we conduct exten- sive experiments on real-world and synthetic datasets to evaluate the performance of our algorithms in practice and compare them against the existing baselines. Our experiments confirm the effi- ciency and scalability of our proposed algorithms. In particular, the \u03b5-sampling algorithm, when combined with the hierarchical struc- ture, achieves the best scalability with respect to both dimension and dataset size in terms of query time and index size, whereas the baseline methods are mostly affected by the curse of dimensionality.",
+    "paragraph_id": "ranked-ret::Introduction::p2",
+    "citation": "[19]",
+    "citation_score": 0.0016059479553903345
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03b5-samples, and extend it to high-dimensional settings by combining it with the stripe-range searching. This approach offers an efficient solution for finding a conformal set for an arbitrary rank position. Finally, combining our approach with range counting, we extend it for the exact version ( DAR problem). Efficiently finding the tuples within a narrow stripe range is fundamental in the development of our \u03b5-sampling based solution. We formulate this as the problem of stripe range retrieval ( SRR), with a focus on developing efficient algorithms for the challenging narrow ranges that only contain a small number of tuples. Inspired by the Hierarchical Navigable Small World graphs for approximate nearest neighbor problems [ 19,35], our practical and scalable algorithm constructs a hierarchical sampling structure for stripe range searching, maintaining the neighborhood regions of points in the hierarchy using smallest enclosing balls. Theoretically, we show the near-optimal efficiency of our al- gorithms up to a logarithmic factor. Besides, we conduct exten- sive experiments on real-world and synthetic datasets to evaluate the performance of our algorithms in practice and compare them against the existing baselines. Our experiments confirm the effi- ciency and scalability of our proposed algorithms. In particular, the \u03b5-sampling algorithm, when combined with the hierarchical struc- ture, achieves the best scalability with respect to both dimension and dataset size in terms of query time and index size, whereas the baseline methods are mostly affected by the curse of dimensionality.",
+    "paragraph_id": "ranked-ret::Introduction::p2",
+    "citation": "[35]",
+    "citation_score": 0.0021412639405204463
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we summarize the key concepts and definitions used in the subsequent discussions. We assume a range space (D,R), whereDis the dataset, and Ris a collection of geometric ranges defined overD, such as all possible balls, half-spaces, or other regions in Rd. is a fundamental combinatorial measure of complexity for a range space. Formally, the VC-dimension is the size of the largest subset C\u2286D such that every subset of Ccan be realized as the intersection ofCwith some range in R. A low VC-dimension implies that the range space has limited expressive power, which in turn allows for efficient sampling-based approximations (see [ 27] for more details).",
+    "paragraph_id": "ranked-ret::Background::p1",
+    "citation": "[50]",
+    "citation_score": 0.0007704545454545453
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we summarize the key concepts and definitions used in the subsequent discussions. We assume a range space (D,R), whereDis the dataset, and Ris a collection of geometric ranges defined overD, such as all possible balls, half-spaces, or other regions in Rd. is a fundamental combinatorial measure of complexity for a range space. Formally, the VC-dimension is the size of the largest subset C\u2286D such that every subset of Ccan be realized as the intersection ofCwith some range in R. A low VC-dimension implies that the range space has limited expressive power, which in turn allows for efficient sampling-based approximations (see [ 27] for more details).",
+    "paragraph_id": "ranked-ret::Background::p1",
+    "citation": "[27]",
+    "citation_score": 0.003338636363636363
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "For more details on \u03b5-sampling, we refer the reader to [27]. We use the following foundational theorem on \u03b5-samples as a key tool in deriving our theoretical guarantees:",
+    "paragraph_id": "ranked-ret::Background::p3",
+    "citation": "[27]",
+    "citation_score": 0.0005090909090909091
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "\u25a1 \u03b5-Sample Construction. In addition to random sampling, which provides a probabilistic method for constructing \u03b5-samples, there also exist deterministic approaches based on discrepancy theory [ 12, 27]. These methods can achieve near-linear runtime while ensuring the desired approximation guarantees.",
+    "paragraph_id": "ranked-ret::Background::p5",
+    "citation": "[12]",
+    "citation_score": 0.0001890909090909091
+  },
+  {
+    "section_path": [
+      "Background"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "\u25a1 \u03b5-Sample Construction. In addition to random sampling, which provides a probabilistic method for constructing \u03b5-samples, there also exist deterministic approaches based on discrepancy theory [ 12, 27]. These methods can achieve near-linear runtime while ensuring the desired approximation guarantees.",
+    "paragraph_id": "ranked-ret::Background::p5",
+    "citation": "[27]",
+    "citation_score": 0.001229090909090909
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we provide a high-level overview of our proposed algorithms, with a summary of their theoretical guarantees. The baseline approach for answering the DAR queries uses the extension of the classic divide and conquer (D&C) median finding algorithm, which, instead of the median, finds the element at posi- tioni[7,16]. To do so, it first makes a linear pass over D, and for each pointp, computes scoref(p). Then, using the D&C algorithm, it finds rank\u22121 f(i)inO(n).",
+    "paragraph_id": "ranked-ret::Solution Overview::p1",
+    "citation": "[7]",
+    "citation_score": 0.0012948837209302325
+  },
+  {
+    "section_path": [
+      "Solution Overview"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we provide a high-level overview of our proposed algorithms, with a summary of their theoretical guarantees. The baseline approach for answering the DAR queries uses the extension of the classic divide and conquer (D&C) median finding algorithm, which, instead of the median, finds the element at posi- tioni[7,16]. To do so, it first makes a linear pass over D, and for each pointp, computes scoref(p). Then, using the D&C algorithm, it finds rank\u22121 f(i)inO(n).",
+    "paragraph_id": "ranked-ret::Solution Overview::p1",
+    "citation": "[16]",
+    "citation_score": 0.0019423255813953487
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[25]",
+    "citation_score": 0.0011085899513776348
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[8]",
+    "citation_score": 0.0003695299837925444
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[48]",
+    "citation_score": 0.0003695299837925444
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[10]",
+    "citation_score": 0.0003695299837925444
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[18]",
+    "citation_score": 0.0001847649918962722
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[29]",
+    "citation_score": 0.0001847649918962722
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[39]",
+    "citation_score": 0.0001847649918962722
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[41]",
+    "citation_score": 0.0001847649918962722
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[17]",
+    "citation_score": 0.0001847649918962722
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Top-kRetrieval. Top-kquery processing has been extensively studied across various settings. The foundational Threshold Algo- rithm (TA) [ 25] combines sorted and random access to efficiently identify top- kresults and has inspired numerous extensions, in- cluding cost-based optimizations and early stopping strategies [ 8]. Probabilistic top- kmethods [ 48] adapt this problem to uncertain data, ranking results based on expected scores or statistical con- fidence. Index-based approaches such as the onion layer [ 10] and view-based techniques [ 18,29] have been proposed to accelerate queries through structural or materialized reuse. In distributed en- vironments [ 39], algorithms aim to minimize communication while preserving correctness, and in streaming settings, continuous top- k monitoring [ 41] uses incremental updates to maintain results in real time. For comprehensive surveys, see [17, 31]. In top-kretrieval,kis a small constant , while in our setting, we aim to find the tuple at rank position i, whereiis inO(n). As a result, the algorithms proposed for top- kare inefficient for our setting, specifically when iis not a small constant.",
+    "paragraph_id": "ranked-ret::Related Work::p2",
+    "citation": "[31]",
+    "citation_score": 0.0001847649918962722
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Direct Access Queries in Databases. Recent work in database the- ory has explored the notion of direct access to query answers, aim- ing to support efficient access to the i-th ranked tuple withoutmaterializing the full result [ 9,23,49]. One line of research intro- duces ranked enumeration for database queries, where tuples can be accessed according to a predefined ranking attribute with prov- able delay guarantees [ 49]. Other work extends this to conjunctive queries with aggregation, designing algorithms that enable access to top-ranked answers without fully evaluating the query [ 23]. Further studies investigate structural conditions, such as bounded treewidth, under which ranked direct access remains tractable [ 9]. Our paper has a different objective. Specifically, rather than as- suming a predefined ordering, we consider a ranking function as part of the user query . As a result, the proposed algorithms for direct- access queries cannot be adapted to our setting.",
+    "paragraph_id": "ranked-ret::Related Work::p3",
+    "citation": "[9]",
+    "citation_score": 0.001166936790923825
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Direct Access Queries in Databases. Recent work in database the- ory has explored the notion of direct access to query answers, aim- ing to support efficient access to the i-th ranked tuple withoutmaterializing the full result [ 9,23,49]. One line of research intro- duces ranked enumeration for database queries, where tuples can be accessed according to a predefined ranking attribute with prov- able delay guarantees [ 49]. Other work extends this to conjunctive queries with aggregation, designing algorithms that enable access to top-ranked answers without fully evaluating the query [ 23]. Further studies investigate structural conditions, such as bounded treewidth, under which ranked direct access remains tractable [ 9]. Our paper has a different objective. Specifically, rather than as- suming a predefined ordering, we consider a ranking function as part of the user query . As a result, the proposed algorithms for direct- access queries cannot be adapted to our setting.",
+    "paragraph_id": "ranked-ret::Related Work::p3",
+    "citation": "[23]",
+    "citation_score": 0.0008752025931928688
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Direct Access Queries in Databases. Recent work in database the- ory has explored the notion of direct access to query answers, aim- ing to support efficient access to the i-th ranked tuple withoutmaterializing the full result [ 9,23,49]. One line of research intro- duces ranked enumeration for database queries, where tuples can be accessed according to a predefined ranking attribute with prov- able delay guarantees [ 49]. Other work extends this to conjunctive queries with aggregation, designing algorithms that enable access to top-ranked answers without fully evaluating the query [ 23]. Further studies investigate structural conditions, such as bounded treewidth, under which ranked direct access remains tractable [ 9]. Our paper has a different objective. Specifically, rather than as- suming a predefined ordering, we consider a ranking function as part of the user query . As a result, the proposed algorithms for direct- access queries cannot be adapted to our setting.",
+    "paragraph_id": "ranked-ret::Related Work::p3",
+    "citation": "[49]",
+    "citation_score": 0.0008752025931928688
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[3]",
+    "citation_score": 9.481361426256078e-05
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[21]",
+    "citation_score": 9.481361426256078e-05
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[14]",
+    "citation_score": 0.0005688816855753646
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[28]",
+    "citation_score": 0.0002844408427876823
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[36]",
+    "citation_score": 0.0015170178282009734
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[37]",
+    "citation_score": 0.0014222042139384115
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[13]",
+    "citation_score": 4.740680713128039e-05
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[1]",
+    "citation_score": 0.00023703403565640194
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[35]",
+    "citation_score": 0.0007585089141004862
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Range Searching. Range searching, specifically simplex range searching, is closely related to our work, particularly in solving the intermediate SRR problem. Some approaches achieve logarithmic query time at the cost of exponential space [ 3,21], while others aim for linear space and sublinear query time [ 14,28,36,37]. Spe- cialized variants have also been studied, including half-space range searching [ 14] and axis-aligned queries [ 13]. For a comprehensive overview, we refer the reader to the survey in [1]. To address the SRRproblem in practice, we develop a hierarchical sampling approach inspired by data structures commonly used for approximate nearest neighbor search [ 35]. Particularly, motivated as an intermediate problem for solving direct-access ranked re- trieval problem, our solutions are tailored for narrow ranges . While our methods do not offer formal theoretical guarantees, they per- formed efficiently in practical settings. Another indexing technique related to our proposed approach for the SRR problem is the Ball Tree structure [ 42]. This method constructs a hierarchy of balls over the dataset, where the root node encloses all data points and the points are recursively partitioned into smaller subsets down to the leaves. The key difference between Ball Trees and our hierarchical sampling approach lies in the construction and structure. In our method, each layer is generated by randomly sampling from the previous one, and each layer serves as a set of centroids for the preceding layer. In contrast, Ball Trees are typically binary trees built in a top-down manner. Moreover, our method is not restricted to spherical regions; any convex shape can be used to enclose the nodes, offering greater flexibility in the structure.",
+    "paragraph_id": "ranked-ret::Related Work::p4",
+    "citation": "[42]",
+    "citation_score": 0.0002844408427876823
+  },
+  {
+    "section_path": [
+      "A Lower Bounds and Optimality of Our Algorithms"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we analyze the complexity of the DAR problem and show the near-optimality of our proposed algorithms. Specifically, the well-studied half-space range counting problem [ 1,11] reduces to our problem. Hence, the complexity of the state-of-the-art algo- rithms for half-space range counting provides a lower bound for theDAR problem.",
+    "paragraph_id": "ranked-ret::A Lower Bounds and Optimality of Our Algorithms::p1",
+    "citation": "[11]",
+    "citation_score": 0.0024
+  }
+]

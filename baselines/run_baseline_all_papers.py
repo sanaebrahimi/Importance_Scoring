@@ -45,20 +45,21 @@ def load_assignment_names(assignments_path: Path) -> Dict[str, dict]:
     return assignments
 
 
-def output_files_exist(prefix: Path, model_tag: str) -> bool:
+def output_files_exist(prefix: Path, model_tag: str, citation_only: bool = False) -> bool:
     tagged_prefix = Path(f"{prefix}_{model_tag}")
-    return all(
-        path.exists()
-        for path in (
-            Path(f"{tagged_prefix}_citation_scores.json"),
-            Path(f"{tagged_prefix}_section_scores.json"),
-            Path(f"{tagged_prefix}_paragraph_scores.json"),
-            Path(f"{tagged_prefix}_paragraph_citation_scores.json"),
+    required = [Path(f"{tagged_prefix}_citation_scores.json")]
+    if not citation_only:
+        required.extend(
+            [
+                Path(f"{tagged_prefix}_section_scores.json"),
+                Path(f"{tagged_prefix}_paragraph_scores.json"),
+                Path(f"{tagged_prefix}_paragraph_citation_scores.json"),
+            ]
         )
-    )
+    return all(path.exists() for path in required)
 
 
-def default_model_tag(baseline_name: str) -> str:
+def default_model_tag(baseline_name: str, api_provider: str = "") -> str:
     mapping = {
         "citation_frequency": "citation_frequency",
         "length_weighted_frequency": "length_weighted_frequency",
@@ -66,12 +67,13 @@ def default_model_tag(baseline_name: str) -> str:
         "single_pass_llm": "single_pass_llm",
         "openai_full_paper": "openai_full_paper",
         "anthropic_full_paper": "anthropic_full_paper",
+        "single_shot_citation_api": f"single_shot_citation_{api_provider}" if api_provider else "single_shot_citation_api",
     }
     return mapping[baseline_name]
 
 
-def compose_model_tag(baseline_name: str, explicit_tag: str, run_suffix: str) -> str:
-    base_tag = explicit_tag.strip() or default_model_tag(baseline_name)
+def compose_model_tag(baseline_name: str, explicit_tag: str, run_suffix: str, api_provider: str = "") -> str:
+    base_tag = explicit_tag.strip() or default_model_tag(baseline_name, api_provider=api_provider)
     suffix = sanitize_tag_component(run_suffix)
     return f"{base_tag}_{suffix}" if suffix else base_tag
 
@@ -88,6 +90,7 @@ def main() -> None:
             "technical_section_prior",
             "openai_full_paper",
             "anthropic_full_paper",
+            "single_shot_citation_api",
         ],
         help="Baseline model to run across the full corpus.",
     )
@@ -114,8 +117,14 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default="llama3.2",
-        help="Ollama model name used only by the single_pass_llm baseline.",
+        default="",
+        help="Explicit model name used by the selected baseline. Required for single_pass_llm, openai_full_paper, anthropic_full_paper, and single_shot_citation_api.",
+    )
+    parser.add_argument(
+        "--api-provider",
+        choices=["openai", "anthropic"],
+        default="",
+        help="API provider used by single_shot_citation_api. Required for that baseline.",
     )
     parser.add_argument(
         "--host",
@@ -142,7 +151,7 @@ def main() -> None:
     parser.add_argument(
         "--api-key-env",
         default="OPENAI_API_KEY",
-        help="Environment variable that stores the API key. For anthropic_full_paper, the code automatically falls back to AWS_BEARER_TOKEN_BEDROCK when this is left at the OpenAI default.",
+        help="Environment variable that stores the API key. For anthropic baselines, the code automatically falls back to AWS_BEARER_TOKEN_BEDROCK when this is left at the OpenAI default.",
     )
     parser.add_argument(
         "--api-endpoint",
@@ -175,7 +184,7 @@ def main() -> None:
     parser.add_argument(
         "--skip-existing",
         action="store_true",
-        help="Skip a paper if its four baseline output JSON files already exist.",
+        help="Skip a paper if its expected baseline output JSON files already exist.",
     )
     parser.add_argument(
         "--dry-run",
@@ -194,7 +203,8 @@ def main() -> None:
     results_root = Path(args.results_root)
     results_root.mkdir(parents=True, exist_ok=True)
     assignments = load_assignment_names(sections_file)
-    model_tag = compose_model_tag(args.baseline, args.model_tag, args.run_suffix)
+    model_tag = compose_model_tag(args.baseline, args.model_tag, args.run_suffix, api_provider=args.api_provider)
+    citation_only = args.baseline == "single_shot_citation_api"
     manifest = []
 
     for pdf_path in sorted(papers_dir.glob("*.pdf")):
@@ -253,6 +263,8 @@ def main() -> None:
             "--api-response-format",
             args.api_response_format,
         ]
+        if args.api_provider:
+            command.extend(["--api-provider", args.api_provider])
 
         record = {
             "paper": pdf_path.name,
@@ -265,7 +277,7 @@ def main() -> None:
             "status": "pending",
         }
 
-        if args.skip_existing and output_files_exist(prefix, model_tag):
+        if args.skip_existing and output_files_exist(prefix, model_tag, citation_only=citation_only):
             record["skipped"] = True
             record["status"] = "skipped"
             manifest.append(record)
