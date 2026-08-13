@@ -4,6 +4,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import unicodedata
 from pathlib import Path
 from typing import Optional
 
@@ -25,27 +26,69 @@ def _read_pdf_text_with_pypdf(pdf_path: str) -> str:
         reader = PyPDF2.PdfReader(file)
         for page in reader.pages:
             pages.append(page.extract_text() or "")
-    return "\n\n".join(pages)
+    return _clean_extracted_text("\n\n".join(pages))
+
+
+def _clean_extracted_text(text: str) -> str:
+    text = unicodedata.normalize("NFKC", text.replace("\r\n", "\n").replace("\r", "\n"))
+    text = text.replace("\u00ad", "")
+    text = re.sub(r"[\uE000-\uF8FF]", "", text)
+    text = text.replace("\ufffd", "")
+    text = re.sub(r"(?<=\w)-\n(?=\w)", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+
+    cleaned_paragraphs = []
+    for raw_paragraph in re.split(r"\n\s*\n", text):
+        lines = []
+        for raw_line in raw_paragraph.splitlines():
+            line = raw_line.strip()
+            if not line or re.fullmatch(r"[.·•]+", line):
+                continue
+            lines.append(line)
+        if not lines:
+            continue
+        cleaned_paragraphs.append(" ".join(lines))
+
+    text = "\n\n".join(cleaned_paragraphs)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def clean_markdown_text_preserve_blocks(markdown: str) -> str:
+    text = markdown.replace("\r\n", "\n")
+    text = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", text)
+    text = re.sub(r"</?(sub|sup|span|code|pre|em|strong)\b[^>]*>", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"</?(td|th)\b[^>]*>", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"</?(summary|details|table|tr|thead|tbody|tfoot|ul|ol|li|p|div|br|hr)\b[^>]*>", "\n", text, flags=re.IGNORECASE)
+    # Only strip actual HTML-like tags; leave math/comparison text like "k < n" intact.
+    text = re.sub(r"</?[A-Za-z][A-Za-z0-9:-]*\b[^>]*>", " ", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = text.replace("```", "\n").replace("`", "")
+    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
+
+    text = unicodedata.normalize("NFKC", text)
+    text = text.replace("\u00ad", "")
+    text = re.sub(r"[\uE000-\uF8FF]", "", text)
+    text = text.replace("\ufffd", "")
+    text = re.sub(r"(?<=\w)-\n(?=\w)", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r" *\n *", "\n", text)
+
+    lines = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or re.fullmatch(r"[.·•]+", line):
+            lines.append("")
+            continue
+        lines.append(line)
+
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 def _normalize_markdown_text(markdown: str) -> str:
-    text = markdown.replace("\r\n", "\n")
-    text = re.sub(r"!\[[^\]]*\]\([^)]+\)", " ", text)
-    text = re.sub(r"<summary[^>]*>", "", text, flags=re.IGNORECASE)
-    text = re.sub(r"</summary>", "\n", text, flags=re.IGNORECASE)
-    text = re.sub(r"</?details[^>]*>", "\n", text, flags=re.IGNORECASE)
-    text = re.sub(r"</?table[^>]*>", "\n", text, flags=re.IGNORECASE)
-    text = re.sub(r"</?(tr|thead|tbody|tfoot|ul|ol|li|p|div|br|hr)[^>]*>", "\n", text, flags=re.IGNORECASE)
-    text = re.sub(r"</?(td|th|span|code|pre|em|strong)[^>]*>", " ", text, flags=re.IGNORECASE)
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
-    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
-    text = text.replace("```", "\n")
-    text = text.replace("`", "")
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r" *\n *", "\n", text)
-    return text.strip()
+    return _clean_extracted_text(clean_markdown_text_preserve_blocks(markdown))
 
 
 def _split_cli_command(command: str) -> list[str]:
@@ -81,6 +124,10 @@ def _expected_markdown_path(
     else:
         parse_dir = output_root / pdf_stem / mineru_method
     return parse_dir / f"{pdf_stem}.md"
+
+
+def _expected_clean_text_path(markdown_path: Path, pdf_stem: str) -> Path:
+    return markdown_path.with_name(f"{pdf_stem}_clean.txt")
 
 
 def _build_cache_dir(pdf_path: str, output_root: str) -> Path:
@@ -147,7 +194,11 @@ def read_pdf_text_with_mineru(
                 f"MinerU completed but no markdown output was found under {cache_dir}."
             )
 
-    return _normalize_markdown_text(markdown_path.read_text(encoding="utf-8", errors="ignore"))
+    markdown_text = markdown_path.read_text(encoding="utf-8", errors="ignore")
+    cleaned_text = clean_markdown_text_preserve_blocks(markdown_text)
+    clean_text_path = _expected_clean_text_path(markdown_path, pdf.stem)
+    clean_text_path.write_text(cleaned_text, encoding="utf-8")
+    return cleaned_text
 
 
 def read_pdf_text(

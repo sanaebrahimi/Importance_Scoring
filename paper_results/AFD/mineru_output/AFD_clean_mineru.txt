@@ -1,0 +1,287 @@
+Latest updates: hps://dl.acm.org/doi/10.1145/3711896.3736844
+
+RESEARCH-ARTICLE
+
+Anytime Algorithms for Approximate Functional Dependencies
+
+SANJIVNI RANA, The University of Texas at Arlington, Arlington, TX, United States JUNYA OGAWA, The University of Texas at Arlington, Arlington, TX, United States SURAJ SHETIYA, Indian Institute of Technology Bombay, Mumbai, MH, India SENJUTI BASU ROY, New Jersey Institute of Technology, Newark, NJ, United States GAUTAM DAS, The University of Texas at Arlington, Arlington, TX, United States
+
+Open Access Support provided by:
+
+The University of Texas at Arlington
+
+Indian Institute of Technology Bombay
+
+New Jersey Institute of Technology
+
+Published: 03 August 2025
+
+Citation in BibTeX format
+
+KDD '25: The 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining August 3 - 7, 2025 Toronto ON, Canada
+
+Conference Sponsors:
+
+SIGMOD
+
+SIGKDD
+
+Anytime Algorithms for Approximate Functional Dependencies
+
+Sanjivni Rana sxr0277@mavs.uta.edu University of Texas at Arlington Arlington, TX, USA
+
+Junya Ogawa jxo3564@mavs.uta.edu University of Texas at Arlington Arlington, TX, USA
+
+Senjuti Basu Roy senjutib@njit.edu New Jersey Institute of Technology Newark, NJ, USA
+
+Abstract
+
+We propose a computational framework for identifying approximate functional dependencies (AFDs) in a relation, leveraging the frequency distribution information of individual attributes. This framework operates without requiring access to the full database, processing records one at a time as necessary. Our approach gener- alizes existing measures for quantifying errors in perfect dependencies and formalizes two primary problems: finding top- AFDs and identifying all AFDs within a specified error threshold, . Our pro-posed framework provides anytime solutions, meaning it returns results after processing each record. A key innovation of our work lies in efectively estimating error bounds of the candidate AFDs, which allows to produce anytime solutions. We present an exact algorithm that delivers precise solutions when possible. We also develop an algorithm that always returns a solution albeit with some imprecision in the output. We demonstrate the applicabil ity of these algorithms under various data organization strategies, such as indexing by key or key-like attributes. Our experimental results, based on both real-world and synthetic datasets, validate the efectiveness of our approach and show that it outperforms state-of-the-art solutions.
+
+CCS Concepts
+
+Suraj Shetiya surajs@cse.iitb.ac.in Indian Institute of Technology, Bombay Mumbai, Maharastra, India
+
+• Information systems → Data cleaning; • Theory of computation → Database constraints theory; Linear programming.
+
+Keywords
+
+Approximate Functional Dependency, Data cleaning, Anytime Al-gorithm
+
+ACM Reference Format:
+
+Sanjivni Rana, Junya Ogawa, Suraj Shetiya, Senjuti Basu Roy, and Gautam Das. 2025. Anytime Algorithms for Approximate Functional Dependencies. In Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2 (KDD ’25), August 3–7, 2025, Toronto, ON, Canada. ACM, New York, NY, USA, 12 pages. https://doi.org/10.1145/3711896.3736844
+
+This work is licensed under a Creative Commons Attribution 4.0 International License. KDD ’25, Toronto, ON,Canada © 2025 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-1454-2/2025/08 https://doi.org/10.1145/3711896.3736844 Gautam Das gdas@uta.edu University of Texas at Arlington Computer Science and Engineering Arlington, TX, USA KDD Availability Link: The source code of this paper has been made publicly available at https: //github.com/SanjivniRana/Anytime-AFDs.
+
+1 Introduction
+
+Functional dependencies (FDs) state that some attribute(s) in a relational instance functionally determine the value of another at- tribute. They are useful for discovery of hidden patterns, data clean- ing [28–30, 33], or predictive modeling [26]. However, in real-world databases, functional dependencies are often approximate. The no- tion of approximate functional dependencies (AFDs) is defined by Kivinen et al. [21] to overcome this and has found significant research interests [5, 22, 23]. Given a set of attributes (on the left hand side) and the “right hand side" attribute , AFD measures the error of the given dependency ( → ). Kivinen et al. [21] propose three diferent error measures for error in AFDs - 1, 2 and 3.
+
+We approach the problem of identifying AFDs in scenarios, where some limited distributional information about the data is available, but accessing actual data records incurs cost. This setting is common in data marketplaces[7, 13], platforms like AWS Data Exchange, Datarade, and Data & Sons, etc. In these marketplaces, individual attribute distributions are provided to help potential buyers assess the usefulness of datasets, but accessing more records from the database incurs incremental costs. Our work is also rele- vant for analytics over deep web databases [3, 11, 46], where vast repositories of data are accessible only through restricted web inter- faces. Examples include platforms like Kayak, Expedia, Hotels.com, or Amazon, which display attribute-level metadata—such as distri- butions of flight prices, departure times, or number of stops—but limit direct access to data by showing only the top-k results per query. Moreover, these interfaces often impose constraints on the number of allowable queries, further restricting full data access. In such constrained environments, where accessing full datasets is impractical or expensive, our work provides techniques to discover AFDs without requiring extensive data access.
+
+We present a computational framework under the following settings: (a) frequency distributions of the individual attributes are known apriori to the framework; (b) access to the database is enabled through a getNext() [43] interface that returns the next data record, or the next small batch of data records when invoked, but how the actual data is stored and organized is unknown to the framework; and (c) more getNext() calls incur more cost and hence it is better to minimize those calls.
+
+Problems & Contributions. Anytime AFDs. We initiate the problem of designing anytime algorithms for computing AFDs in a relation considering three diferent error measures [21], where the actual records are read one by one, or in small batches. Anytime algorithms [2, 47] are designed to progressively improve the quality of their results as more computation time becomes available, while still being capable of returning a valid (though possibly suboptimal) solution if interrupted at any stage. Our proposed algorithms fall within a subclass of anytime algorithms that begin producing outputs after reading only a small portion of the data. A formal definition is provided in Section 2. We study two problem variants.
+
+• [top- length l-AFDs.] At any point during reading the records, retrieve the top- AFDs (i.e., the AFDs with the smallest errors), each with exactl l attributes at the left-hand side, where and l are application defined tunable input parameters.
+
+• [Minimal -AFDs.] At any point during reading the records, determine all minimal AFDs (an AFD is minimal when no proper subset of it has error ≤ ) where is an application defined threshold.
+
+Our proposed overarching solution framework designs a powerset lattice of all but the right hand size attribute , where each attribute set forms a candidate AFD, representing $X Z .$ To identify Minimal -AFDs, the search starts with the AFD candidates that are at the bottom of the lattice, gradually makes its way up level by level, and makes a decision whether to keep the candidate AFD or prune it. For top- length-l AFDs, the algorithm identifies all size-l AFD’s and makes decisions whether to prune a candidate AFD.
+
+Sub-problems and designed solutions. Recall that our goal is to design an anytime solution framework where we wish to return the top AFDs for the entire relation even when only a subset of records are read. This requires determining which AFDs are likely to be the solution and eliminating those that cannot be. This decision- making process is facilitated by calculating guaranteed upper and lower bounds for the errorfor the candidate AFDs, which is a central contribution ofour work.
+
+We define two core sub-problems: Given out of records have been read, the Maximum Error Estimate, which calculates the upper bound on the error of an AFD for a given error measure, and the Minimum Error Estimate, which calculates the lower bound. We explore various optimization techniques for both problems across three error measures (1, 2, and 3), using methods, like, mixed integer linear programming (MILP), linear programming, greedy algorithms, and quadratic programming. Additionally, we provide additive approximation guarantees for the $g _ { 3 }$ error measure and discuss strategies to further improve scalability.
+
+We then present algorithms for our two main problems that make use of the upper and lower bounds. We propose an exact al- gorithm ESCA for the top- length l-AFDs problem that generates a prefix (with $k ^ { \prime } \leq k )$ of AFDs, which grows as more records are processed. Additionally, we present an approximate solution based on estimations that consistently identifies AFDs, though they may not always be the true top-. This approach follows the uninformed prior principle, assuming uniform error in unread records, but ensuring the final frequency distribution matches individual attribute distributions.
+
+We propose an exact algorithm EXEA for the Minimal -AFDs problem that explores the powerset lattice bottom-up, making deci- sions on whether to keep or prune candidate AFDs at each level. Unlike classical minimal AFD algorithms that assume full knowl- edge of the relation, we establish monotonic relationships between the upper and lower bounds of candidate AFDs and their ancestors. This enables our algorithm to guarantee that at any point, a proper subset of -AFDs is returned, with the subset growing as more records are read. We also present a solution based on estimations, which may not always identify the true minimal -AFDs but works well in practice and are highly eficient, relying on the principle of uninformed prior.
+
+Experimental Evaluations. We conduct extensive experimental evaluations using 3 real world and multiple synthetic datasets. We note that there does not exist any related work [22, 23] that study anytime AFDs. Nevertheless, we adapt the state-of-the-art (SOTA) solution Pyro [23] which is not guaranteed to produce exact solutions, and compare against ours, wherever applicable. We also adapt a classical solution TANE [18] to produce exact solutions. We implement a machine learning based solution based on iterative pro-portional fitting for comparison [40]. Our evaluations reveal three key findings: (a) We illustrate the applicability of each algorithm across diferent data organization strategies, comparing scenarios where data is indexed by key or key-like attributes versus cases where it is not. Our findings indicate that our proposed solutions that estimate error based on both read and unread data outperform the others convincingly. (b) Our proposed algorithms are highly efective - after reading about 40% of the data, they achieve high pre- cision and NDCG score. (c) The eficiency opportunities discussed work well in practice and the bound computation becomes scalable.
+
+2 Data Model & Problem Definition
+
+We present our data model in Section 2.1, and formally define the problems in Section 2.2.
+
+Running Example. Table 1 shows our running example over a toy dataset of 6 records. Tuple ID is the unique primary key in this table. The other attributes are First Name, Gender, ZIP, and Town.
+
+Tuple ID First Name Gender ZIP Town
+
+t1 Alex f 12345 Linden
+
+t2 John m 12346 Linden
+
+t3 Jane f 12355 Hanover
+
+t4 John m 12346 Linden
+
+t5 Alex m 12345 Linden
+
+t6 Tia f 12345 Linden
+
+Table 1: A toy database
+
+2.1 Data model
+
+Database. Consider a database D with tuples and categorical attributes $( \mathcal { A } = \{ A _ { 1 } , A _ { 2 } , \cdot \cdot \cdot , A _ { d } \} )$ . We refer to the $i ^ { t h }$ tuple as $t _ { i }$ and value for the $j ^ { t h }$ attribute for tuple $t _ { i }$ as [].
+
+getNext(). The access to D is performed by making getNext() calls that returns the next record from the database. How data is stored in $\mathcal { D }$ is unknown, and getNext() calls are expensive.
+
+Domain of an attribute. $m _ { A }$ is the size of the domain of attribute which is the number of unique values can take. Domain size of $m _ { \mathrm { F i r s t N a m e } } = 4 .$
+
+Known Frequency/Marginal distributions. The frequency/ mar-ginal distribution of each $A \in { \mathcal { A } }$ is known to the framework. Let be the domain size of an attribute , where $f _ { \ell }$ represents the frequency of the l-th value of the domain, such that $\Sigma _ { \ell = 1 } ^ { m } f _ { \ell } = N$ . Using the running example, of Gender is $2 , f _ { m a l e } = \dot { 3 } , \dot { f } _ { f e m a l e } = 3 ,$ $f _ { m a l e } + f _ { f e m a l e } = 6 .$
+
+Attribute set $X ,$ attribute $Z , X$ is a set of attributes $X \subset A ,$ but $Z$ is a single special attribute, $Z \subset A , X \cap Z = \{ \} , | Z | = 1 . \ M _ { \mathcal { A } } ^ { X , Z }$ represents the set of marginal distributions of attribute X and Z. Using the running example, marginal distribution of (First Name) is $f _ { ( A l e x ) } ~ = ~ 2 , ~ f _ { ( J o h n ) } ~ = ~ 2 , ~ f _ { ( J a n e ) } ~ = ~ 1 , ~ f _ { ( T i a ) } ~ = ~ 1$ . Marginal distribution of Gender is $f _ { m a l e } = 3 , f _ { f e m a l e } = 3$ . However, the joint distribution of these two attributes are not known until the full database is read.
+
+Functional Dependency: Given a database $\mathcal { D } _ { : }$ , set of attributes $X \subset { \mathcal { A } }$ and $Z \in { \mathcal { A } } ,$ , a functional dependency from to is written as $X \ \ Z$ The dependency $X Z$ (read as determines ) holds, if for all pair of tuples that agree on also agree on , i.e., when $t _ { i } [ X ] = t _ { j } [ X ]$ , then $t _ { i } [ Z ] = t _ { j } [ Z ]$ . Using Example 1, the only FDs that exist are Tuple Id → any of the 4 other attributes. Clearly, FDs involving Tuple Id are not useful.
+
+Violation: For a given database D, set of attributes $X \subset { \mathcal { A } }$ and $Z \in { \mathcal { A } } ,$ , two tuples $t _ { i }$ and $t _ { j }$ are considered a violating pair if $t _ { i } [ X ] = t _ { j } [ X ]$ but $t _ { i } [ Z ] \neq t _ { j } [ Z ]$ . A tuple is called violating if it is a part of some violating pair. Using Table $1 , \left( t _ { 1 } , t _ { 5 } \right)$ is a violating pair: $t _ { 1 } \left[ F i r s t N a m e \right] = t _ { 5 } \left[ F i r s t N a m e \right]$ but $t _ { 1 } [ G e n d e r ] \neq t _ { 5 } [ G e n d e r ]$
+
+Approximate Functional Dependency: Given a dataset D, a set of attributes $X \subset \mathbb { A }$ and the (“right-hand side") attribute , AFD determines the error for the given dependency $( X \to Z )$
+
+In this work, we look at three diferent error measures defined in Kivinen et. al. [21]. The definitions of the three errors $G _ { 1 } , G _ { 2 }$ and $G _ { 3 }$ and their corresponding scaled measures $( g _ { 1 } , g _ { 2 }$ and 3) are defined below
+
+$G _ { 1 }$ error: The number of violating pairs in $\mathcal { D }$
+
+$$ G _ { 1 } ( X \to Z , { \mathcal { D } } ) = | \{ ( t _ { i } , t _ { j } ) \mid t _ { i } [ X ] = t _ { j } [ X ] , t _ { i } [ Z ] \neq t _ { j } [ Z ] \} | $$
+
+$$ g _ { 1 } ( X \to Z , { \mathcal { D } } ) = G _ { 1 } ( X \to Z , { \mathcal { D } } ) / N ^ { 2 } $$
+
+$G _ { 2 }$ error: the number of violating tuples in $\mathcal { D }$
+
+$$ G _ { 2 } ( X Z , { \mathcal { D } } ) = | \{ t _ { i } \ | \ \exists t _ { j } \in { \mathcal { D } } , t _ { i } [ X ] = t _ { j } [ X ] , t _ { i } [ Z ] \neq t _ { j } [ Z ] \} | $$
+
+$$ g _ { 2 } ( X Z , \mathcal { D } ) = G _ { 2 } ( X Z , \mathcal { D } ) / N $$
+
+$G _ { 3 }$ error: The number of tuples that have to be deleted to satisfy the functional dependency in D.
+
+$$ \begin{array} { r l } & { G _ { 3 } ( X Z , { \mathcal { D } } ) = N - m a x \{ | s | ~ | ~ s \in { \mathcal { D } } , ~ s \models X Z \} } \\ & { ~ g _ { 3 } ( X Z , { \mathcal { D } } ) = G _ { 3 } ( X Z , { \mathcal { D } } ) / N } \end{array} $$
+
+The |= operator refers to all for which the functional dependency $X \to Z$ holds. Note that the scaled errors $g _ { 1 } , g _ { 2 }$ and, $g _ { 3 }$ are in the range of [0, 1]. Additionally, $g _ { 1 }$ error has also been formulated [23] by normalizing with $N ( N - 1 )$ . While we use the notion from Kivinen et al. [21], our proposed approaches work with both measures.
+
+The AFD First name→ Gender has one violating pair (Alex,m) and (Alex, f). As $g _ { 1 }$ error counts the number of such pairs and there is only 1 violating pair the $g _ { 1 }$ error is $2 / 3 6 . \ g _ { 2 }$ error counts the number of records which are in violation and hence is $2 / 6 .$ For the FD to hold, deleting either (Alex,m) or (Alex, f) would sufice. Hence, 3 error is $1 / 6 .$
+
+2.2 Problem Definitions
+
+We define two broad classes of problems.
+
+[top- length l-AFDs.] Given out of records of the D are read, a tunable parameter l, marginal distributions $\boldsymbol { \mathcal { M } } _ { \mathcal { A } }$ of ${ \mathcal { A } } .$ , an error measure (1, 2 or 3), an integer , retrieve as a ranked list the top- AFDs having the least errors (along with their respective error scores, if possible) from among all AFDs having exactly l attributes in the left hand side (LHS).
+
+Practical choice of l: Note that as the attributes on the LHS grows, the error monotonically decreases. However, having more attributes on the LHS does not necessarily provide meaningful insights on data quality and correlation. For instance, when all but one attribute is on the LHS, a trivial full functional dependency exist. That is why we introduce an input parameter l, which constrains the maximum number of attributes allowed on the LHS. This parameter allows us to explore meaningful and compact dependencies while avoiding trivial cases.
+
+[Minimal -AFDs.] Given out of records of the D are read, marginal distributions $\boldsymbol { \mathcal { M } } _ { \mathcal { A } }$ of A, an error measure $( g _ { 1 } , g _ { 2 } \ \mathrm { o r } \ g _ { 3 } ) ;$ and an error threshold , retrieve all minimal AFDs which have an error score of at most along with their respective error scores. An AFD $X Z$ is a minimal -AFD if no proper subset of is also an -AFD to determine .
+
+2.3 Definition of Anytime Algorithms for AFDs
+
+Before proposing our solutions to the above problems, we would like to define the notion of Anytime Algorithms in the context of computing AFDs. Our definition hinges on a few observations.
+
+For each of the proposed problems, the output is a set of AFDs. Let AFD(D) represent the set of output AFDs that are identified after reading the entire database D. We refer to this as the optimal output. Consider an algorithm that has only read part of the data- base, say $\mathcal { D } ^ { \prime }$ , yet is able to output a set of $\mathrm { A F D } s ,$ say $\mathrm { A F D } ( { \mathcal { D } } ^ { \prime } )$ as the solution for the full database. Such an algorithm is called an Anytime Algorithm.
+
+For example, consider the scenario of reading the first three rows of the sample dataset from Table 1 and $g _ { 3 }$ error be the error measure and $\ell = 1 .$ . Let the set of AFDs being considered for the top- be First Name → Gender, $\mathrm { Z i p } \to$ Gender and Town→ Gender. Based on the first three rows and known $\boldsymbol { \mathcal { M } } _ { \mathcal { A } }$ , is it possible to get the top-1 AFD among the ones being considered? If not, which one is the most likely top-1 AFD among the ones being considered? These are the type of decisions an anytime algorithm has to consider.
+
+Furthermore, an anytime algorithm is well behaved if the “similarity” of $\mathrm { A F D } ( { \mathcal { D } } ^ { \prime } )$ to AFD(D) progressively improves as it reads more data. Similarity can be measured by several standard measures such as precision, recall, NDCG measure [45], etc.
+
+In this paper we design several anytime algorithms for solving our proposed AFD problems. Our exact approaches designed in Section 4.1 are well-behaved anytime algorithms whenever the precision is always 1, while the recall monotonically increases as more data are read. We also propose “approximate" approaches in Section 4.2 where the precision and recall do not always exhibit monotone behavior, but the recall is often better than the Exact approaches (See Experiments Section 5).
+
+3 Solution Framework: Bound Computation
+
+In this Section, we discuss the proposed solution framework and motivate the need for computing lower and upper bounds of the errors of AFDs for producing anytime answers. We conclude this section, by presenting our proposed algorithms for obtaining lower and upper bounds of $g _ { 3 }$ error, and add a pointer to the Appendix for our algorithms for the other error measures.
+
+3.1 Lattice Based Solution
+
+Our techniques rely on a lattice structure, which has been exten- sivel used in Fre uent Item-set Minin literature [25]. Our over-arching solution framework designs a powerset lattice of all but the right-hand size attribute $Z ,$ where each attribute set directly forms a candidate AFD, representing $X Z .$ . The first level of the lattice consists of single LHS AFDs (of the form $X Z )$ . The sec- ond level of the lattice consists of AFDs which have two attributes in the LHS. Each AFD $A _ { i } A _ { j } \to Z$ in the second level is connected to the AFDs $A _ { i } \to Z$ and $A _ { j } \to Z$ with two directed edges from the two level 1 nodes to the level 2 nodes. We refer to $A _ { i } \to Z$ and $A _ { j } \to Z$ as descendants of $A _ { i } A _ { j } \to Z .$ . The vice versa relation is termed as the ascendant relation. Based on our description, this lattice structure with $d - 1$ level forms a Directed Acyclic Graph.
+
+At a high level, the algorithms developed for both problems (described in Section 4) traverse the lattice and make decisions about whether to retain or prune candidate $\mathrm { { A F D s } }$ based on their error. However, the key challenge in enabling anytime decisionmaking is as follows: how to compute the error ofa candidate AFD, considering the data that has been read and the data that is yet to be read? This requires estimating how the unread data might influence the error ofa candidate AFD. For that, the framework utilizes error bounds, including both lower (minimum) and upper (maximum) bounds. These bounds are determined based on the data read thus far and the potential impact of the unread data, taking into account the global frequency distribution of the individual attributes.
+
+3.2 Compute Bounds for Anytime Answer
+
+Since the AFD algorithms (Section 4) generate solutions even when the entire data is not read, they must rely on the lower and upper bounds oferrors for candidate AFDs and based on that make a decision. We formally define error bounds next.
+
+3.2.1 Lower and Upper Bounds.
+
+Minimum/Maximum error estimate satisfying marginal dis- tribution constraints: Given tuples of the database D are read, for a given AFD $X Z ,$ and an error measure (1, 2 or 3), produce minimum or lower (respectively maximum or upper) bound of error, which is the smallest (respectively largest) possible error that $X \to Z$ can have, while satisfying the marginal distribution constraints $\mathcal { M } _ { \mathcal { A } } ^ { X , Z }$
+
+Knowing these upper and lower bounds at any time ofer pruning opportunities. For instance, given two AFDs $X \to Z$ and $Y Z ,$ if the upper bound of error of $X \to Z$ is not larger than the lower bound of error of $Y Z ,$ , then $X Z$ could be selected as the winner between these two.
+
+As an example, assume the first three records in the Table 1 have been read. For the AFD First Name→ Gender, the current 3 error is
+
+0, however, based on the marginal distributions of First Name and Gender - one possible assignment of the remaining three records satisfying the marginal constraints could be the following - John → m, Alex → f, Tia → m. This is the best possible arrangement and gives a lower bound of $g _ { 3 }$ error of 0. However, another possible assignment of the remaining three records satisfying the marginal constraints could be - John → m, the Alex → m, $\operatorname { T i a } \to \operatorname { f } ,$ giving rise to upper bound of 3 error to be 1.
+
+3.2.2 Bounds Computation Problem. Bound computation problems take “joint distribution frequency matrices" as inputs, one for every AFD $X \to Z$ under consideration based on the records it has read so far. A joint distribution frequency matrix of $X Z$ has $m _ { Z }$ columns and rows, where (similarly $m _ { X } )$ is the domain size of attribute (similarly ).
+
+Let a cell in the $r ^ { t h }$ row and $c ^ { t h }$ column of the matrix be denoted as $S [ r ] [ c ]$ . Given records are read so far, $S [ r ] [ c ]$ stores number of records out of , where has $r ^ { t h }$ and has $c ^ { t h }$ value from their respective domains. The designed lower and upper bound solutions need to consider marginal distributions $\mathcal { M } _ { \mathcal { A } } ^ { X , \dot { Z } }$ as well and estimate the smallest and largest of the given error measure, since $N - n$ records are yet to be read. Based on the error measures, the abstract problem is as follows: As the $N - n$ records are yet to be read, among all the unseen joint distribution frequency matrices which satisfy the marginal information $\mathcal { M } _ { \mathcal { A } } ^ { X , Z }$ , find that which minimizes (maximizes respectively) the given error measure thus finding the lower (upper respectively) bound.
+
+The problem is computationally intractable under certain set- tings (refer to Appendix A).
+
+We develop a suite of techniques leveraging Mixed Integer Linear Programming (MILP), Linear Programming (LP) relaxation, and Greedy strategies to derive the bounds. Our methods, includ- ing Greedy algorithms and MILP formulations implemented with solvers such as Gurobi [17], are designed to be both fast and practical. In contrast, approaches based on Dynamic Programming (DP) [4] tend to incur significantly higher computational costs. We defer the development of eficient and approximate DP-based solutions to future work (see Section 7).
+
+3.3 Bound Computation Algorithms
+
+For limitation of space, from now on, we primarily focus on 3 error and focus on minimization as long as its counterpart (maximization) could use the same technique.
+
+Mixed Integer linear programming (MILP) [44] can be used as a tool to formalize and solve the minimization/maximization problems. These problems are diferent from Integer Linear Pro-grams(ILP) [41] in a sense that MILP require only some of the variables to take integer values, whereas ILP problems require all variables to be integers.
+
+As part of the input, rows have been read into a joint distribution frequency matrix. The remaining $N - n$ rows which will be represented by an unseen joint distribution frequency matrix needs to satisfy the marginal information $\mathcal { M } _ { \mathcal { A } } ^ { X , Z }$ . The goal is to produce the unseen joint distribution frequency matrix.
+
+For AFD $X Z , U$ is a matrix of size × . [] [] is a variable that is defined on -th row and the -th column over that takes non-negative integer values, $U [ r ] [ c ] \in \mathbb { W }$
+
+$$ \begin{array} { r l } & { m a x i m i z e \ \sum _ { i = 0 } ^ { m \times 1 } m a x [ r ] } \\ & { \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad } \\ & { \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad } \\ & { \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad } \\ & { \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad } \\ & { \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad } \\ & { \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad } \\ & { \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad } \\ & \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \ \end{array} $$
+
+Figure 1: Mixed ILP for $g _ { 3 }$ error
+
+As the sum of the matrices $U + S$ must satisfy the marginal information, we add additional constraints to restrict the values in . The constraints that correspond to the marginal information on the attribute are defined below.
+
+$$ \forall r \in \{ 0 , . . , m _ { X } - 1 \} \quad \quad \mathcal { M } _ { \mathcal { A } } ^ { X } [ r ] = \sum _ { a = 0 } ^ { m _ { Z } - 1 } S [ r ] [ a ] + U [ r ] [ a ] $$
+
+Similar constraints for can be defined.
+
+We introduce a variable for each row of $U + S$ that counts of the records to be retained. In every row (which is a unique domain value) of $U + S ,$ the maximum value in the row represents the number of records that will be retained for that domain. Thus, we introduce variables max[0], · · · , max[-1] which counts these records in every row. Based on max, the optimization function can thus be expressed as,
+
+$N - \sum _ { r = 0 } ^ { m _ { X } - 1 } m a x [ r ]$
+
+This is equivalent to
+
+$$ m a x i m i z e ~ \sum _ { r = 0 } ^ { m _ { X } - 1 } m a x [ r ] $$
+
+We introduce constraints such that [] is greater than all values in the row of final joint distribution frequency matrix $S + U .$
+
+$$ \forall r \in \left\{ 0 , . . , m _ { X } - 1 \right\} \forall c \in \left\{ 0 , . . , m _ { Z } - 1 \right\} \ m a x [ r ] \geq S [ r ] [ c ] + U [ r ] [ c ] $$
+
+We need additional constraints to restrict max[] to be equal to the maximum value in row . To add this restriction, we introduce $m _ { X } \times m _ { Z }$ boolean variables B that indicate the location of the maximum value in each row of $S + U$ . As each row can only contain one maximum value, only one variable in each row can be true (1). The inequalities needed are listed below,
+
+$$ \begin{array} { c } { \forall r \in \left. 0 , \ldots , m _ { X } - 1 \right. \forall c \in \left. 0 , . . , m _ { Z } - 1 \right. } \\ { m a x [ r ] \leq S [ r ] [ c ] + U [ r ] [ c ] + \left( 1 - \mathcal { B } [ r ] [ c ] \right) * N } \\ { \forall c \in \left. 0 , . . , m _ { Z } - 1 \right. \mathcal { B } [ r ] [ c ] \in \left. 0 , 1 \right. } \\ { \forall r \in \left. 0 , . . . , m _ { X } - 1 \right. \sum _ { c = 0 } ^ { m _ { Z } - 1 } \mathcal { B } [ r ] [ c ] = 1 } \end{array} $$
+
+The final MILP is presented in Figure 1.
+
+3.3.1 Accuracy-Runtime Trade Ofs. The MILP in Figure 1 produces the exact result, but Mixed Integer Linear Programs are known to be computationally expensive.
+
+In this section, we discuss two eficiency opportunities that are likely to expedite the original optimization problem defined in Section 3.3 at the cost of producing “looser” bounds. The first one relaxes the MILP to a Linear Program (LP) and the second one relaxes some marginal distribution constraints.
+
+LP Relaxation: Note that the MILP for the lower bound of $g _ { 3 }$ error in 3.3 consists of two matrices of Integer variables, B (Boolean) and (non-negative integer). Hence, we relax the Boolean variables between 0 and 1. The non-negative integer variables are relaxed to take non-negative real values. Based on these modifications, the relaxed LP is written in Figure 10 in Appendix.
+
+We prove that the LP relaxation for the upper bound of $\dot { \mathbf { \nabla } } g _ { 3 }$ error has an additive error of at most $O ( m _ { X } )$
+
+Theorem 3.1. The relaxed Linear Programmingformulation finds the upper bound of 3 error with an additive error of at most $O ( m _ { X } )$
+
+The proof is moved to the Appendix B. Further details about optimizations is presented in Appendix C.2.1.
+
+4 Anytime AFD Algorithms
+
+In this section, we discuss two types of algorithms for the two main problem variants. These algorithms make use of the lattice structure (Section 3.1) and use the upper and lower bounds (Section 3.2).
+
+For the top- length l-AFDs problem, we propose an exact algorithm that progressively generates a prefix $\bar { k ^ { \prime } } ( \bar { k ^ { \prime } } \leq k )$ of the top- AFDs as more records are processed. We also ofer an approximate solution that always identifies AFDs, though not always the true top-, based on uniform error assumptions for unread records.
+
+For the Minimal -AFDs problem, we introduce an exact algorithm that explores the powerset lattice bottom-up, using upper and lower bounds to prune candidate AFDs. This approach en-sures that a proper subset of -AFDs is returned as records are read. Additionally, we present an approximate algorithm, based on uninformed prior, which works well in practice though it may not always identify the true minimal -AFDs.
+
+For simplicity, we use "top-" for finding top- AFDs with l attributes on the left side, and $" \epsilon \mathrm { - } \mathrm { A F D s ^ { \prime } }$ for the minimal -AFDs.
+
+4.1 Exact Algorithms
+
+The AFDs generated by the exact algorithms are always correct, meaning they belong to the actual top- or -AFDs. However, since these algorithms make decisions anytime without having access to the entire dataset, the results they identify may only represent a $( k ^ { \prime } \leq k )$ subset of the full outcomes, depending on the amount of data they have read at any given point in time.
+
+4.1.1 Top- AFDs. The algorithm ESCA (Early Stop Criteria based Top- AFD Algo) starts at level l of the lattice considering all nodes at that level. Since $( \mathbf { \Lambda } _ { \ell } ^ { d - 1 } )$ is likely to be larger than , it just has to find the top- from there. Since only a subset of the data is read, ESCA needs to determine the correct top- ranked order.
+
+ESCA constructs a directed graph with $\binom { d - 1 } { \ell }$ no of nodes (could be represented using Hasse diagram [12]), and the edges represent the partial order between every pair of AFDs. The nodes of the graph are the AFDs and a directed edge from vertex $( X \to Z )$ to vertex $( Y Z )$ indicates that $X Z$ has lower error than $Y Z .$ Initially, when no data is read, there are no edges in the graph. Edges are added as more data is read, and the order between AFDs could be established. As a simple optimization, if any vertex (AFD) in the graph has more than incoming edges, it is already dominated by other AFDs and thus it is eliminated from as it cannot be part of the solution. This ensures a precision of 1 as no false positives are added to the set of AFDs.
+
+However, the challenge is the following: When only a part of the data is read, ESCA will not be able to quantify the exact error of any node. Thus, it relies on the upper (largest) and lower (smallest) bounds of errors of AFDs for comparison and making decisions (formally defined and studied in Section 3.2). As an example, if the upper bounds of error of $X \to Z$ is smaller than the lower bound of error of $Y Z _ { : }$ , then $X \to Z$ is placed before $Y Z .$
+
+To find the next-best AFD, the algorithm does the following: (a) finds if there exists an AFD whose lower bound of error is not larger than the upper bound of errors of all other AFDs. (b) If the answer is yes, then that AFD is returned, and it is eliminated from the current graph. These steps are repeated until Top- AFDS are identified. (c) Steps (a) and (b) are repeated $k ^ { \prime } \left( \leq k \right)$ times to find top-′ AFDs in this fashion. If $k ^ { \prime } then 6 remove 7 else if ub ≤ then 8 T ← T ∪ {} 9 Add minimal ascendants of unresolved s to 10 return T
+
+C.3 Heuristic Approximate AFD Algorithms
+
+We present two eficient approaches based on the Uninformed prior assumption on the error distribution that work well in practice. Mean heuristic: Section 3 explains several ways of computing the lower/upper bound of error for a given AFD. For this discussion, consider the tight values for lower/upper bounds. If the PDF of the error is given/computed, the expected value can be computed exactly. But, as we have seen before, computing the PDF is very expensive and is not practical. Instead of exact computation of the expected value, a quick but inexact estimate of the error can be (+ ) computed by the mean of the (lower and upper) bounds, i.e. 2
+
+To summarize, mean heuristic is a simple and fast heuristic to estimate the error scores based on the mean of the lower and upper bounds. The eficacy and eficiency of the heuristic is illustrated in the experiments section.
+
+Sampling based approach A diferent heuristic we design is based on the assumption that the error is uniformly distributed between and , i.e. error∈ [, ]. Based on this assumption, the probability of the error value being equal to any integer in the range [, ] is 1/( − + 1) (normalized value).
+
+We leverage this by sampling error scores uniformly from each AFD’s range [, ] over all possible unread data distributions satisfying the marginals. These sampled scores will determine the top- AFDs for a potential future distribution.
+
+We repeat this process of sampling times and record the ordered top- AFDs for each sample. As each of these samples/runs are of uniform weight (we use unit weights), the set of top- AFDs with the highest counts across runs is the one that has the highest probability of being the actual-ordered top- AFDs. We produce that ordered top- as the output.
+
+We analyze the running time of our Uninformed Prior Approach in the Lemma C.1 below.
+
+Lemma C.1. Our sampling based algorithm consumes O (|S| ( + log (|S|) + ) time when is the number ofsamples, is the amount of total time needed to compute the lower and upper bounds.
+
+Proof. Let the number of samples used be . In each iteration, we generate a top- AFD by simulating the error generated based on the uninformed prior assumption. For the simulation, we need the lower/upper bounds for the |S| AFDs, each of which consumes time. Additionally, finding the top- AFDs after the individual errors are generated takes O (|S| log (|S|)) time. Thus, the total time needed is |S| + |S| log (|S|) + |S| for the |S|. Thus, the overall complexity is O (|S| ( + log (|S|) + ). □
