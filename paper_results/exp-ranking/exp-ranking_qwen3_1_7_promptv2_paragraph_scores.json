@@ -1,0 +1,400 @@
+[
+  {
+    "section_path": [
+      "Introduction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Ranking algorithms are central to numerous AI applications, includ- ing web search, recommender systems, and information retrieval. However, despite their pervasive use, the decision-making processes behind these algorithms often remain opaque, which raises critical concerns around trust, fairness, and accountability. As a result, ex- plainability in ranking has emerged as a pressing research challenge within the AI community. Several recent works have sought to adapt principles from interpretable machine learning to the ranking set- ting [ 12,13,26], aiming to generate faithful, user-understandable explanations for ranked outputs. Some approaches focus on post-hoc explanations, while others design models that are easier to interpret from the start [ 1,50]. There is also increasing attention to broader goals like fairness and trust in ranked results [ 16,44]. Yet, many basic questions remain open:what does it mean for a ranking to be explainable? How do we measure the quality of an explanation when the output is an ordered list instead of a single label? Modeling user preferences is a central challenge in multi-criteria decision-making. A common and effective approach is to formalize these preferences with autility functionthat assigns a numerical score/utility to each candidate, thereby inducing a natural ordering. Candidates are typically characterized by a set of features, which can be distinguished asscoring attributes\u2013 that directly contribute to utility, andsensitive attributes\u2013 used to enforce auxiliary goals such as fairness or diversity. Among various functional forms, linear utility models are arguably the most widely adopted. Their preva- lence stems from a powerful combination of simplicity and practical efficacy. The straightforward structure of a weighted sum not only facilitates deployment in large-scale systems like web search and recommender engines [ 24,37,53] but also offers inherent trans- parency [ 21,47]. This transparency, simplicity, and effectiveness make linear utility-based models a natural starting point for researcharXiv:2605.29444v2 [cs.DS] 30 Jun 2026",
+    "technical_score": 0.01,
+    "citation_score": 0.01
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Candidate GroupTest SATRankScore Score into explainability and learning to rank [ 4,10,11], interactive learn- and the integration of fairness and diversity mechanisms [ 23,31,58]. Despite their simplicity, linear utilities have demonstrated compet- itive performance, confirming their status as a robust and versatile modeling choice, e.g., [ 42,52]. We refer the readers to Section 7 for a more elaborate discussion on related works. Several works have studied how to quantify the distance between a given ranking and one induced by a (linear) utility function. Com- mon notions include the number of violated pairwise orders, the distance to a consistent utility vector, and the minimum perturbation needed to make the ranking \u201clinearizable\u201d. Exact computation is of- ten intractable in the presence of conflicting preferences, motivating the study of approximation and structural relaxations (e.g., [ 15,17]). In many real-life scenarios, a small additive bonus is essential to ensure that a linear utility-based ranking model aligns with observed outcomes. Such a bonus is primarily calculated based on the sensitive attributes [ 3,49,58] \u2013 separate from the scoring attributes used to compute utility \u2013 associated with each candidate or item. This often arises when external goals, such as affirmative action, fairness con- straints, or prior trust scores, must be incorporated uniformly across items of certain groups. The application of compensatory additive bonuses to linear utilities is an approach that has been explored for promoting fairness in ranking systems [ 22]. Without such a term, even simple adjustments to promote underrepresented groups may not be achievable within the linear feature space, making the additive bonus a minimal yet powerful mechanism for enforcing policy-driven interventions (see [34]). We motivate our problem with the following running example of diversity in University admissions. Example 1(University admissions).Consider a public university conducting its annual admissions, where applicants are ranked using alinear utility-based model. Academic performance is assessed through multiple indicators, such as entrance test and SAT scores, which are normalized, weighted, and linearly aggregated to compute a base utility score. As a public institution committed to diversity, equity, and inclusion (DEI), the university augments this model with anadditive incentive mechanism. Recognizing that applicants from underprivileged (UP) backgrounds may face structural disadvantages affecting academic performance, an expert committee assigns a group-specific bonus score. This bonus is added to the base utility score of each applicant in the corresponding group, yielding an adjusted utility score that determines the final ranking.For example, suppose eight applicants apply, as shown in Table 1. The candidates are ranked c2,c3,c1,c5,c6,c7,c4,c8based on their adjusted utility scores. Given only anonymized public data (academic indicators and rankings), third-party auditors aim to explain the observed outcomes under thislinear utility function with additive group-level bonuses. The sensitive attributes, such as group membership (Column 2 of Table 1), and the exact bonus values are not disclosed. Problem (Informal) Formulation.Given a ranking, can it be ex- plained by a linear utility function with a small number of addi- tive bonuses? In theSingleton Group Bonus Linear Ranking (SGBLR) version, arbitrary bonuses may be given to at mostkitems. In theg-Group Bonus Linear Ranking( g-GBLR ) version, there are g(special) groups each containing a limited number of items, and group-specific bonuses \u2013 each item of a particular group gets the same amount as a bonus, and bonus value for different groups could be different \u2013 are allowed. The goal is to find weights and bonus assignments that reproduce the ranking exactly. Note that Example 1 is for the1 -GBLR variant with one (special) group being UP \u2013 all the candidates of the UP group receive an additive bonus of the same amount. Our method conceptually builds upon seminal works LIME [ 45] and SHAP [ 33], which infer feature contributions to predictions, as our model learns weights for each feature, which provides an explanation for the observed ranking. It extends this line of work by modeling hidden additive bonuses beyond observable features as part of the explanation. We envision our technique as contributing to the broader area of trustworthy and responsible data science, partic- ularly in applications such as algorithmic auditing and explainability. For example, in an auditing setting, suppose a ranking model is used to evaluate candidates, and there is a requirement that all candidates within the same group receive identical bonuses. If our method is unable to recover a linear utility function with such additive bonuses that explains the observed ranking, this serves as evidence that the ranking violates the intended fairness constraint. Alternatively, our framework can be used for interpretability. If an observed ranking can be well-approximated by our model, the learned weights provide insight into the relative importance of different attributes, while the inferred additive bonuses reveal how much advantage may have been assigned to specific candidates. This can help assess whether such adjustments are reasonable within the given domain and context.",
+    "technical_score": 0.02333333333333333,
+    "citation_score": 0.02333333333333333
+  },
+  {
+    "section_path": [
+      "Introduction",
+      "Our Contributions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we initiate a formal study on the problem of learning a linear utility function with small additive group-wise bonuses that realizes a given ranking. On the theoretical side, we provide exact algorithms and establish computational hardness. Next, we address the question of designing scalable algorithms that work efficiently in practice. More specifically, we show the following results. \u2022We start by considering the singleton group variant ( SGBLR ) that captures the allowance of arbitrary (potentially different) additive bonuses to a few individual items. We design a hyperplane-based algorithm \u2013 enumerating over all the regions specified by a set of comparison hyperplanes, and then performing certainlongest com- mon subsequence (LCS)computation in each region. Our algorithm works in polynomial time for constant-dimensional points. We further extend our algorithm to a more general variant of group- wise bonuses ( g-GBLR ) by introducing a new auxiliary dimension per group, leading to an algorithm that runs in polynomial time for a constant number of groups and for constant-dimensional points. Note that often in practice, both the number of groups and the dimension of the feature vectors are indeed small (bounded by some constant). \u2022We complement our algorithmic results with computational hard- ness. The problem, even if in its simplest form of singleton groups, isNP-hard for arbitrary dimensions, establishing that the expo- nential dependency on dimension of our algorithm is unavoidable assumingP=\u0338NP. \u2022While the theoretical algorithm establishes tractability in principle at least for constant dimension, its high complexity motivates us to explore more practical alternatives using modern ILP solvers. We formulate the problem as an MILP and evaluate its performance using state-of-the-art solvers. \u2022We conduct extensive experiments on both real-world and syn- thetic datasets to demonstrate the efficacy and scalability of our methods. In case of SGBLR we observe that for two-dimensional data the MILP formulations scale well, whereas the computational hardness inherent in the hyperplane-based algorithm prevents it from scaling beyond small instances. In the case of g-GBLR with g=1, the MILP formulations exhibit strong scalability with respect to both dimensionality (up to d=17) and the number of tuples (up to approximately75 ,000). For the real-world dataset, containing around300,000tuples, the MILP formulations successfully handle theg-GBLR problem for both g=1andg=2, highlighting their practical applicability at large scale.",
+    "technical_score": 0.04444444444444445,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Preliminaries"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we briefly introduce the notations used in the paper and then formally describe the problem formulation. Data modelConsider a dataset D={t 1,t2,...,tn}ofntuples, each withdnumerical attributes A=A 1,A2,...,Adand additional categor- ical attributes (such asgenderandrace), some of which are sensitive and not revealed during the ranking process. We use ti[j]to denote the value of tuplet ifor attributeA j. Utility modelAs part of the black-box scoring process, each tuple ti\u2208Dis scored based on its values for the numerical attributes A. While there are numerous \u201cmodels\u201d that have been used to score tuples (such asmonotone[ 20],linear[ 8,14]), we adapt the widely used linear utility functions to this work, as in several previous works in the literature, e.g., [ 10,57,58].Linear utility function sw consists of a ddimensional weight vector w={w 1,w2,...,wd}. Given a linear function sw, the score/utility for tuple tis computed as sw(t)=I\u0301d j=1wj\u00b7t[j] . As each attribute in the dataset has a non-zero contribution towards scoring,\u2200 j\u2208[d]wj=\u03380. Without loss of generality, we assume that \u2200j\u2208[d]wj\u22650andI\u0301 j\u2208[d]wj=1; such assumptions are justified in [ 38,59]. For the sake of completeness, we provide a brief discussion on positive weights in Appendix B. Bonus-aware utility function: Based on certain attributes which are termed assensitive attributes, bonus scores may be allotted to items which belong to certain groups.Inourrunningexample,under-privilegedcandidatesinthedataset would receive an additive bonus based on historical biases. We model this as an additive bonus on top of the linear utility function score. All tuples sharing the same sensitive attribute \u03c4receive the same bonus, denoted bybonus(t[\u03c4]). Basedonthisformulation,thebonus-awareutilityfunction,which accounts for the sensitive attributes, is given by, fw(t)=bonus(t[\u03c4])+\u2211\ufe01d j=1wj\u00b7t[j](1) For simplicity, we denote the bonus-based utility function fwas fthroughout the paper. To illustrate, in Example 1, the bonus-based utility function for the tuples in the under-privileged group UPis given byfw(t)= 2\u00d7test+ 1\u00d7SAT+ 5, where5is the additive bonus given only to UPcandidates. Ranking: The scores of the tuples using the bonus-based linear utility function are used to rank the tuples. As a consequence of the ranking process, a complete ranking over the ninput tuples can be observed. We refer to this ranking as\u03c0. Realizable by linear functions: Given a dataset Dand a ranking \u03c0, we say that \u03c0isrealizableif there exists a linear utility function swsuch that applying swtoDproduces the ranking \u03c0. Importantly, this function swdoes not involve any additive bonuses. We denote such a function ass-1(\u03c0). If no such realizable linear function exists, it indicates that the ob- served ranking \u03c0must have been generated using the black-box rank- ing process that includes some form of additive bonus. In this case, we aim to explain \u03c0by constructing a linear function augmented with additive group-based bonuses. As part of this process, the dataset is partitioned into \u201cgroups\u201d and a fixed bonus is assigned to each group, such that a linear function with these bonuses can realize\u03c0. Without any constraint on the number of groups, one can trivially assign each tuple to its own \u201cunder-represented\u201d group and learn arbitrary bonuses. To avoid such degenerate solutions, we restrict the number of groups to at mostg. Realizable by bonus-aware linear functions: Given a dataset D, a ranking\u03c0, and a budget of g+1groups, we say that \u03c0isrealizable by a bonus-aware linear functionif there exists a partition of the tuples intog+1groups, where the majority group receives a bonus of0, such that a linear function fw, combined with these group bonuses, produces the ranking\u03c0. We denote such a function asf\u22121 g(\u03c0). We are now ready to formally introduce the two problems that form the focus of this work. Problem formulation.For our first problem setting, we consider finding a bonus-aware linear function that realizes a given ranking \u03c0where the number of tuples that receive a bonus is at mostk. Definition 2( SGBLR ).Given a set of tuples D={t 1,t2,...tn}where eachti\u2208Rd, a target ranking \u03c0over the tuples and an integer k, does there exist a linear utility function swwithw\u2208Rdand a bonus vector v\u2208Rnwith at most knon-zero values such that sorting the tuples bysw(ti)+viproduces the ranking\u03c0? In practice, an estimate of the number of tuples belonging to under-represented groups is often available. The SGBLR problem captures the lower bound on the number of tuples that need to be allotted a bonus for a linear function to realize\u03c0. The number of under-represented groups is typically a small known number (usually constant), and thus it would be of interest to find a bonus-based linear utility function that respects the number of groupsg. We now propose theg-GBLRproblem. Definition 3( g-GBLR ).Given a set of tuples D={t 1,t2,...tn}where eachti\u2208Rd, a ranking\u03c0overDand integer k. Does there exist a weight vector w\u2208Rd, bonus values v1,...,vg\u2208R+, and disjoint subsetsG1,...,Gg\u2286D whereI\u0301 i\u2208[g]|Gi|\u2264k, such that ranking \u03c0can be realized bys wusingvias bonus values for tuples inG i? Note, some tuples inDmay not belong to\u222a i\u2208[g]Gi.",
+    "technical_score": 0.05555555555555556,
+    "citation_score": 0.05555555555555556
+  },
+  {
+    "section_path": [
+      "Algorithmic Framework",
+      "Algorithmic Results for SGBLR"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We start by considering the SGBLR problem and provide an algorithm to solve this problem. Theorem 4.There exists a deterministic algorithm that, given a set of tuplesD={t 1,t2,...tn}where eachti\u2208Rd, a ranking\u03c0overD and an integer k, if there exists a satisfying solution to SGBLR , returns a linear utility function swwithw\u2208Rdand a bonus vector v\u2208Rnwith at mostknon-zero values such that sorting the tuples by sw(ti)+vi produces the ranking\u03c0, in timeO(n2d+1logn). We devote the rest of the subsection to proving the above the- orem. Before describing our approach, we introduce the notion of \u201ccomparison hyperplane\u201d and then propose algorithms which explore regions of the weight-space based oncomparison hyperplane. Definition 5(Comparison hyperplane).Consider two tuples ti\u2208Rd andtj\u2208Rd. The set of all weight vectors Ci,jwhere the tuple tihas a score equal to tjis defined as a comparison hyperplane. Formally,I\u0301d a=1wa\u00b7ti[a]=I\u0301d a=1wa\u00b7tj[a]. Given two tuples tiandtj, a comparison hyperplane divides the d-dimensional weight space into two parts such that for any weight vector inC+ i,j,tiis better thant j, i.e., C+ i,j={w\u2208Rd|\u2211\ufe01d a=1wa\u00b7ti[a]>\u2211\ufe01d a=1wa\u00b7tj[a]},(2) and for any weight vector on the other side C\u2212 i,j,tjis ranked better thanti. Our idea stems from a simple observation that, while there are n!orderings of ntuples, ind-dimensional space, not all of these are realizable through linear utility functions. Instead, we will soon see that onlyn2d\u22122rankings are realizable. We then exploit this property to design an efficient algorithm for both problems. Algorithm for SGBLR .We first present our approach, and then pro- vide an argument about its correctness. Consider the d-dimensional weight-space. For every pair of tuples ti,tjintroduce the comparison hyperplaneCi,jin this space. We term the set of these\u0000n 2\u0001hyper- planes asH. Introduction ofHto theRddimensional weight-space partitions it into numerous regions, which is termed the arrange- ment of hyperplanes [ 18]. As each weight-function in this space lies either below or above thecomparison hyperplanes, the ranking that is realized corresponds to a unique ranking. The set of all functions that have the same ranking in the ar- rangement can be shown to be a convex region and corresponds to a \u201ccell\" of the arrangement. To formalize this, consider a vector of\u0000n 2\u0001 boolean signs corresponding to each utility function termed as theAlgorithm 1 ERMB :Enumerate Rankings and Minimize Bonuses 1:procedureERMB(DatasetD, target ranking\u03c3) 2:InitializeH\u2190\u2205 3:for allpairs(t i,tj)where1\u2264i<j\u2264ndo 4:Add comparison hyperplaneC i,jtoH 5:Enumerate regions formed by the arrangement ofH 6:LetR\u2190all rankings\u03c1realizable in each region ofH 7:Initialize\u03c1\u2217\u2190null, maxLCS\u21900,G\u2190null 8:for allrankings\u03c1\u2208Rdo 9:ComputeL\u2190LCS(\u03c1,\u03c0) 10:if|L|>maxLCSthen 11:maxLCS\u2190|L|; 12:\u03c1\u2217\u2190\u03c1; 13:G\u2190[n]\u2212L; 14:returnlinear functions\u22121(\u03c1\u2217),G location vector. A location vector is of the form {+,\u2212}(n 2). For exam- ple, the(i,j)-th location contains the sign \u2212or+which represents the location of the weight vector with respect to Ci,j,i.e., if the sign is+, then the tuple tiis scored better than tj. A similar argument follows for\u2212. The set of ranking functions with the same location vector can be found by the intersection of\u0000n 2\u0001half-spaces; the set of ranking functions is convex. Also, note that this corresponds by definition to the cell of an arrangement [18]. Based on this, our approach to solve SGBLR is to enumerate the regions in space formed by H, and in turn, enumerate the realizable rankings,R. For every ranking \u03c1\u2208R , we compute the least number of tuples that need to be allotted a bonus to obtain the ranking \u03c0, which is equivalent to finding aLongest Common Subsequence (LCS) between\u03c0and\u03c1. Since both the inputs to the LCS problems are rank- ings, it is well-known that the problem is essentially the same as find- ing aLongest Increasing Subsequence (LIS)in \u03c1where the reference ranking is\u03c0\u2013 by renaming the tuples in ascending order based on \u03c0, i.e., we give the tuple located at \u03c0[0]a new number of t0and so forth. The tuples that are not part of the LIS need to be allotted a bonus so that the linear ranking function s\u22121(\u03c1)can realize\u03c0. Over the set of rankings\u03c1\u2208R , our algorithm outputs the linear function that had the longest value for the increasing subsequence. The tuples that are not part of the subsequence need to be added with a bonus to obtain \u03c0. We present the pseudo-code for our approach in ERMB (Algorithm 1). Analysis of ERMB .The analysis of our algorithm relies on two steps: (i) enumeration of the cells of the arrangement, and (ii) LIS of the sequences \u03c1. To prove the complexity of the enumeration step, we rely on Corollary 28.1.2 of [ 54]. The corollary states that the number of such regions with nhyperplanes in d-dimensional space is bounded byO(nd). We state the Corollary below for easy access. Proposition 6.[ 54] The maximum combinatorial complexity of an arrangement of nhyperplanes in RdisO(nd). Moreover, if the arrangement is simple, its complexity is indeed\u0398(nd). Observe that each hyperplane Ci,jas shown in Equation 2 has an intercept of0and hence passes through the origin. Therefore, the resulting arrangement is a special case of a hyperplane arrangement known as a central arrangement (see [ 46] for details). In a central arrangement, the combinatorial complexity of a central arrangement withmhyperplanes in ddimensions isO(md\u22121)(see [ 46] Chapter 5).",
+    "technical_score": 0.003504,
+    "citation_score": 0.003504
+  },
+  {
+    "section_path": [
+      "Algorithmic Framework",
+      "Algorithmic Results for SGBLR"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Thus, in our case, n2hyperplanes in d-dimensional weight space form a central arrangement, which bounds the number of unique rankings realizable toO(n2(d\u22121)). This helps us in establishing O(n2d+1logn) bound on the time complexity (see Appendix C). Next, we show the correctness of our algorithm ERMB (Algo- rithm 1), which will complete the proof of Theorem 4. Lemma 7. ERMB (Algorithm 1) returns a linear utility function with weight vectorw\u2208Rdwhich solves theSGBLRproblem.",
+    "technical_score": 0.0219,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithmic Framework",
+      "Algorithmic Results for SGBLR"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Proof. Suppose vectors w\u2217,v\u2217represent the optimal weight vec- tor and optimal bonus values, respectively. The linear function fw\u2217 with bonus of v\u2217ordersti\u2208Dby decreasing value such that the or- dering matches \u03c0andv\u2217is the most sparse among all such solutions. Now, consider the region of the arrangement of Ci,jwhere the vectorw\u2217lies in. Letwbe the vector in this region that our algorithm picks, and let \u03c1be the resulting ranking from ordering t\u2208D in decreasing order of their scores. For any pair of points t1,t2\u2208Dthat receive no bonus from v\u2217, it is clear that w\u00b7t 1>w\u00b7t 2if and only if w\u2217\u00b7 p1>w\u2217\u00b7t2. Therefore, both \u03c1and\u03c0must have the same total order over points inDthat receive no bonus from v\u2217. These points are a lowerboundonthelengthoftheLCSof \u03c0and\u03c1,soourapproachmust find aw,vwhich satisfiesSGBLRwithvat least as sparse asv\u2217.\u25a1 Improved Running Time for2-dimensions.We remark that in the special case of d=2, the enumeration step (line 4 of Algo- rithm 1) can be performed very efficiently as the weight space is now 1-dimensional. Therefore, each comparison hyperplane is a point partitioning the line. Enumeration of the regions can thus be done in O(n2logn) time by sorting the comparison hyperplanes, followed by a linear scan to obtain the ranking and then performing a LIS on each ranking, leading to an overall running time of O(n3logn) (compared to an worse bound of O(n5logn) implied from Theorem 4). We use this faster implementation in our experiments.",
+    "technical_score": 0.044092,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Algorithmic Framework",
+      "Algorithm for g-GBLR"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The budgeted group setting is more intriguing as Algorithm 1 cannot directly be adapted to this setting, because the notion of a fixed num- ber of groups is not modeled in SGBLR . In this section, we first embed the idea ofbonusinto the weight space and then design a polynomial- time algorithm for the fixed dimension, fixed group setting. We treat group bonuses asbonus dimensions, expanding the fea- ture space to d+g dimensions \u2013 one additional dimension per group. Then, to handle group membership, the algorithm generates g+1 copies of each tuple: one base version and one for each group mem- bership (whether it belongs to a particular group or not). It then uses hyperplane arrangements in this augmented space to enumerate all possible rankings of the expanded dataset. Unlike simpler cases that use Longest Increasing Subsequence, this approach requires us to employ a budgeted Longest Common Subsequence (LCS). A dynamic programming routine aligns the target ranking \u03c0with these candidate rankings to find the optimal solution that strictly respects the group size constraints. We provide a detailed description of the algorithm and analysis in Appendix D.",
+    "technical_score": 0.04866666666666667,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Hardness Results"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we show that the problem of linear realizability of a ranking with additive group bonuses isNP-hard.Theorem 8.SGBLRisNP-hard. To show the above, we provide a reduction from a variant of the classicalMax-2-SAT, namelyMax-1-in-2-SAT.",
+    "technical_score": 0.0365,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Hardness Results"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Definition 9(Max-1-in-2-SAT).Given a 2-CNF formula, and a non- negative integerr, the problem is to decide whether there exists an assignment of variables that satisfies at least rclauses by makingex- actly oneliteral (out of two literals) in each of these rclauses to be true. The above problem is known to be NP-hard by a straightforward reduction fromMaxCut\u2013 another classical NP-hard problem. In fact, the problem remainsNP-hard even for monotone formulas. Theorem 10 (Folklore).Max-1-in-2-SATisNP-hard.",
+    "technical_score": 0.0365,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Hardness Results"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Reduction fromMax-1-in-2-SAT.Suppose we are given an in- stance of theMax-1-in-2-SATproblem: A 2-CNF formula Fovern variablesx1,\u00b7\u00b7\u00b7,xn, withmclausesC1,C2,\u00b7\u00b7\u00b7,Cm(without loss of gen- erality assume that m<n2), and a non-negative integer r. Then we construct an instance of the decision version of the SGBLR problem as follows: For each clauseC i, create a pointp i\u2208Rnby setting, pi[j]=\uf8f1\uf8f4\uf8f4\uf8f4 \uf8f2 \uf8f4\uf8f4\uf8f4\uf8f31ifx jappears inC i \u22121if \u0304xjappears inC i 0otherwise.",
+    "technical_score": 0.024333333333333335,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Hardness Results"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Further, take l=(m+ 1)n2additional points: q1=\u00b7\u00b7\u00b7=ql=0n. Consider the dataset D:=\u222am i=1{pi}\u00d0\u222al i=1{qi}. Then, consider the following ranking \u03c0:=q1\u2aaf\u00b7\u00b7\u00b7\u2aafqn2\u2aafp1\u2aafqn2+1\u2aaf\u00b7\u00b7\u00b7\u2aafq2n2\u2aafp2\u2aaf\u00b7\u00b7\u00b7\u2aaf ql\u22122n2+1\u2aaf\u00b7\u00b7\u00b7\u2aafql\u2212n2\u2aafpm\u2aafql\u2212n2+1\u2aaf\u00b7\u00b7\u00b7\u2aafql.",
+    "technical_score": 0.012166666666666668,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Hardness Results"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "The instance of the decision version of the SGBLR problem would constituteD, ranking\u03c0, and the non-negative integer m\u2212r . We defer the soundness and completeness proof to Appendix E. Remark11.It is worth noting that SGBLR is a special case of the more generalg-GBLR problem, where each group could be of arbitrary size. ThusNP-hardness ofSGBLRimmediately establishes a similar hard- nessforg-GBLR .Furthermore,onemaynotethatourreductionworks even when there are only two (non-singleton) groups with bonuses.",
+    "technical_score": 0.012166666666666668,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Scalable Frameworks via MILP"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The geometric algorithm introduced earlier provides an exact, con- structive way of identifying valid rankings through hyperplane arrangements. However, such geometric reasoning scales poorly with the number of data points nand dimensions d, since the number of combinatorial regions grows exponentially. Even for moderate d, enumerating or traversing these regions becomes practically in- tractable. To design a more scalable alternative, we reformulate g-GBLR problem as aMixed Integer Linear Program (MILP)\u2014 a mature framework that allows us to express logical ordering and grouping constraints in a linear-algebraic form, solvable by powerful off-the-shelf engines. The MILP formulation represents ranking relationships through a set of linear inequalities defined over two classes of variables \u2014 continuous feature weights wand binary membership indicators \u03b4ir. Each inequality enforces the required order between tuples in terms of their weighted feature scores and group bonuses. This formula- tion connects combinatorial ranking constraints with continuous optimization, allowing discrete ordering relations to be reasoned about using standard MILP solvers.",
+    "technical_score": 0.016618887015177067,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Scalable Frameworks via MILP"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "5.1 MILP BaseFormulation We first define the base formulation, denoted as MILP Base, which represents the canonical encoding of the ranking constraints: minimize0 subject toI\u0301 j\u2208[d](ti[j]\u2212t(i+1)[j])\u00b7wj+I\u0301 r\u2208[g]\u03b4ir\u00b7vr \u2212I\u0301 r\u2208[g]\u03b4(i+1)r\u00b7vr\u22650\u2200i<nI\u0301 r\u2208[g]\u03b4ir\u22641\u2200i\u2208[n]I\u0301 i\u2208[n]I\u0301 r\u2208[g] \u03b4ir\u2264k \u03b4ir\u2208{0,1},vr\u22650\u2200i\u2208[n], r\u2208[g] |wj|\u22651\u2200j\u2208[d] Here,w\u2208Rddenotes the feature weights to be learned, vrdenotes the additive group bonus for group Gr. We introduce g\u00b7nbinary indicator variables \u03b4irfori\u2208[n] andr\u2208[g] , where\u03b4iris 1 if tupleti belongs to groupG r, otherwise0. The constraints encode ordering, group capacity, uniqueness, non-negativity, and weight-magnitude requirements. The objective is to minimize 0 (i.e., this is a feasibility problem), which means the ILP seeks any feasible solution satisfying all constraints that respects the ranking\u03c0. Notice that the MILP Baseformulation remains generic and domain- agnostic: it treats all features and groups symmetrically, without leveraging problem-specific insights. In many real-world settings, additional knowledge\u2014such as bounds on group influence, or on pre-identified boosted tuples\u2014can meaningfully restrict the feasible space and guide the solver toward more computationally efficient so- lutions. Incorporating such application-driven structure motivates a refined formulation,MILP Refined , described next. 5.2MILP Refined Formulation MILP Refined \u2013 The refined formulation tightens the feasible region by incorporating domain/application-informed assumptions and introducing solver-oriented constraints that eliminate redundant solutions and enhance numerical stability. MILP Refined introduces the following enhancements: (1)Strict ordering with tolerance:To ensure a clear and stable ranking, we introduce a small positive margin \u03b5between consec- utive tuples. This enforces a strictly decreasing order of adjusted scores rather than allowing equality, thereby avoiding ties and improving numerical stability during optimization. We adopt a strategy similar to that of prior work [ 11]. In our experiments, we set\u03b5as10\u22125, which ensured sufficient spacing between tuple scores, thus accommodating floating-point tolerances. (2)Bounded additive bonuses:Each group\u2019s additive bonus is con- strained within a predefined range to prevent it from dominating the linear utility function. These bounds capture realistic limi- tations on how much a group-specific adjustment can influence the overall ranking. We emphasize this bound is not a restriction ofMILP Refined , and can be changed based on expectations of the range using domain knowledge. (3)Non-negative feature weights:In many real-world settings, such as performance evaluation or credit scoring, features con- tribute positively to the final score. Accordingly, all feature weights are constrained to be non-negative, reflecting domain semantics and eliminating redundant sign symmetries in the optimization process. We emphasize that this assumption is not a limitation of MILP Refined ; if a feature is known to contributenegatively to the final utility, one can appropriately scale the feature values to ensure this. (4)Dominated tuples:Under the assumption that feature weights are non-negative, we use the standard idea of dominance fol- lowed in monotone functions [ 6]. If it is observed that there exists a pair of tuples where tjdominatesti, yettiis ranked before tj, then it is guaranteed that timust have received an additive bonus. Therefore, we add the constraint that timust belong to one of the groups receiving a bonus by adding a constraintI\u0301 r\u2208[g]\u03b4ir=1. Finding the set of points that dominate at least one other point yet are ranked lower can be formulated as a skyline query [ 6]. To this end, the dataset is augmented with an additional dimension representing the rank of each tuple. Specifically, for a tuple ti, we append its rank in \u03c0as the(d+1)thdimension. On the resulting augmented dataset, we compute the skyline\u2014where larger val- ues are preferred in every dimension\u2014using the Double Divide- and-Conquer ( DDC) algorithm, which runs in O(nlogd\u22121n+nd) time [ 29]. Any tuple that is dominated by another must necessar- ily receive a bonus. This procedure can be repeated iteratively until no additional dominated tuples are identified. The completeMILP Refined model is thus: minimize0 subject toI\u0301 j\u2208[d](ti[j]\u2212t(i+1)[j])\u00b7wj+I\u0301 r\u2208[g]\u03b4ir\u00b7vr \u2212I\u0301 r\u2208[g]\u03b4(i+1)r\u00b7vr\u2265\u03b5\u2200i<nI\u0301 r\u2208[g]\u03b4ir\u22641\u2200i\u2208[n]I\u0301 i\u2208[n]I\u0301 r\u2208[g]\u03b4ir\u2264k 0\u2264vr\u2264100\u2200r\u2208[g] wj\u22650\u2200j\u2208[d] Relationship Between MILP BaseandMILP Refined .The relationship between the two formulations is hierarchical. The feasible region ofMILP Refined is a strict subset of that of MILP Base, ensuring that every refined solution remains sound under the base model. While MILP Basedefines a broad feasibility space,MILP Refined incorporates additional structure\u2014such as bounded bonuses and restricted mem- bership subsets\u2014that enhances interpretability, aligns with domain semantics, and yields more realistic solutions. In essence, MILP Base serves as the foundational declarative model, whereas MILP Refined is its solver-optimized and practically scalable counterpart.",
+    "technical_score": 0.05777627880831928,
+    "citation_score": 0.047271500843170326
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We now present an empirical evaluation of our proposed formula- tions and algorithms. The primary goals of this experimental eval- uation are to assess scalability and practical applicability, and to compare the proposed methods with one another and with suitable baselines. We examined both real-world and synthetic datasets to understand how the models behave under diverse data distributions and parameter settings.",
+    "technical_score": 0.024333333333333335,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Experimental environment.All experiments were run on a server with an AMD EPYC 7763 CPU, with 128GB of RAM allocated for each experiment, running Ubuntu 24.04. All code is implemented using Python 3.12.3 with Gurobi version 12.0.2 as the MILP solver. Gurobi and implemented algorithms were allowed to use up to 16 threads. The timeout was considered 1800 seconds.",
+    "technical_score": 0.012409999999999997,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Datasets.We evaluate our methods on one real-world dataset and a set of synthetically generated datasets. Real-world data.The real-world dataset, introduced in prior work [ 7], contains examination scores of 384,977 candidates who took the Joint Entrance Examination (JEE) in India in 2009. After removing entries with missing values, 384,970 candidates remain, each described by three numerical attributes\u2014Mathematics, Physics, and Chemistry scores\u2014and categorical attributes such as gender and reservation category. We use the three numerical scores as equally weighted features. Categorical attributes define groups receiving additive bonuses. In single-group experiments, female candidates receive a bonus of 4, reflecting the median score difference from male candi- dates. In two-group experiments, candidates from underprivileged categories receive a bonus of 6, and female candidates receive a fur- ther bonus of 4, corresponding to their median differences from the general (GE) category. These data-driven adjustments preserve the original score distribution while modeling group-level advantages. Synthetic data.We also construct multiple synthetic datasets to systematically evaluate scalability. Each dataset D={t 1,t2,...,tn} consists ofntuples, where each tuple tiis addimensional feature vector. Each feature component ti[j]is sampled independently from a uniform distribution over [0,25)and rounded to two decimal places. A linear weight vector W=(w 1,...,wd)is sampled similarly. To in- troduce structured deviations from a purely linear ranking, additive bonuses are assigned to randomly generated groups of tuples. For each groupGr, a bonusvris sampled uniformly from [5d,10d). For MILP Refined , a random subsetD\u2032\u2286D is first selected, and groups are then formed by uniformly sampling tuples from D\u2032. Each tuple\u2019s augmented score is computed as f(ti)=I\u0301d j=1wjti[j]+vrif it belongs toGr, and asf(ti)=I\u0301d j=1wjti[j]otherwise. Finally, tuples are sorted in decreasing order of their augmented scores to yield the target ranking\u03c0. This generation process models ranking scenarios in which a base linear utility function is modified by sparse, group-level adjustments, providing a controlled ground truth for evaluation. Baselines.We consider three baselines for comparison. We use ordinal regression [ 51] as the first baseline, where ranks are used as the ordinal predictor values. As a second baseline, we apply logistic regression by creating a dataset of all pairs of tuples. For a pair ti ranked above tj, the tupleti\u2212tjis labeled1, and tj\u2212tilabeled0. This results in a supervised learning task with binary labels, on which standard logistic regression can be applied. Both of these baselines output a linear utility function, and given this function, the number of tuples that need to be given a bonus to realize the input function is computed. We also consider a simple baseline, called LocalSearch , which repeatedly samples a random unit vector as the weight func- tion within the given time limit. For each sampled weight vector, it computes the minimum number of tuples that must receive an additive bonus to realize the target ranking \u03c0. The best-performing weight vector \u2013 i.e., the one minimizing the number of required bonuses \u2013 is returned as the final output. The code is available at the following link1. Our experimental evaluation examines both the computational performance and the solution quality of the proposed formulations and algorithms. 1https://github.com/Trustworthy-Ranking-Data-Management-lab/explaining-",
+    "technical_score": 0.012045,
+    "citation_score": 0.012045
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Singleton Setting.",
+    "technical_score": 0.007604166666666667,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "RQ1: How do the algorithms perform in the singleton-groups set- ting, and how does their computational behavior vary with increasing instance size?",
+    "technical_score": 0.0063368055555555565,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "One Group of Sizek.",
+    "technical_score": 0.0038020833333333335,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "RQ2: How does varying the feature dimension daffect the runtime and scalability of the algorithms in the one-group setting? RQ3: How does changing the number of tuples ninfluence the computational performance of the algorithms in this setting? RQ4: How does the group size parameter kimpact the efficiency and scalability of the algorithms when there is a single protected group?",
+    "technical_score": 0.0025347222222222225,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Real-World Dataset.",
+    "technical_score": 0.0025347222222222225,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "RQ5: How do the algorithms behave with one group setting for a real-world dataset, and how does this configuration affect computational performance?",
+    "technical_score": 0.0025347222222222225,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "RQ6: How do the algorithms behave with a two-group setting for a real-world dataset, and how does this configuration affect computational performance compared with the one-group setting?",
+    "technical_score": 0.0025347222222222225,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Quality of Explanations.",
+    "technical_score": 0.0012673611111111112,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Research Questions"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "RQ7: Across the synthetic datasets, and the real world dataset, do algorithms recover a bonus-aware linear utility function that aligns with the observed ranking?",
+    "technical_score": 0.0012673611111111112,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experimental Evaluation",
+      "Results: Performance and Scalability"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Results: RQ1 \u2013 Singleton Groups Setting.We experimented with synthetic two-dimensional data, where the number of tuples given an additive bonus ( k) was set to 10% of the total number of tuples (0.1n). Figure 1a presents the results. As shown, within a time- out of 1800 seconds, ERMB scales only up to 5,000 tuples, highlighting its limited practical applicability. This behavior aligns with its theo- retical complexity of O(n3logn) and motivates the need for practical MILP-based reformulations. For the special case of two-dimensional data, the MILP-based ap- proach MILP Refined scales well, handling up to 75,000 tuples within 450 seconds. However, even MILP Refined fails to scale beyond two dimensions for singleton groups. Detailed results is shown in the appendix (Figure 5), aftern=5,000MILP Refined times out ford=5. For the quality analysis of the produced solutions, we compared the outputs of LocalSearch ,ERMB ,MILP Refined , ordinal regression, and logistic regression whenever solutions were available. Since LocalSearch operates under a fixed time budget and relies on ran- dom sampling, the solution quality depends on the allocated runtime. As shown in Figure 1c, for two-dimensional data, LocalSearch and MILP Refined select an almost identical number of tuples to receive an additive bonus (represented as the best value in the figure) for up to 15,000 tuples. However, as nincreases, the quality of LocalSearch begins to degrade, even for d=2. Therefore, we exclude LocalSearch from the comparison in the remaining research questions. We ob- serve that ordinal regression and logistic regression also find solu- tions of low quality, requiring a much larger number of tuples to be allocated an additive bonus to realize the observed function. This (a)[Singleton groups setting] Runtime analysis of ERMB andMILP Refined on 2D instances. n45090013501800Time taken (seconds) Time vs n (d = 2, k 10.0% of n) ERMB(b)[Singleton groups setting] Runtime analysis of ERMB on 2D instances. (c)[Singleton groups setting] Quality analysis for ERMB,MILP Refined andLocalSearchon 2D instances. is not unexpected given that these methods are not designed to ac- count for hidden additive bonuses. Therefore, we also exclude these baselines from the comparison in the remaining research questions. Results: RQ2, RQ3 and RQ4 \u2013 One Group Setting.Considering practical formulation of the MILP-based formulations, MILP Baseand MILP Refined , we now turn to RQ2\u2013RQ4, where we study the scalabil- ity of these approaches under varying parameters. In particular, we analyze their behavior as we vary the dimensionality d, the number of tuplesn, and the group sizek. Regarding RQ2\u2013 As shown in Figures 2a and 2b, for fixed tuple sizes ofn=10,000andn=50,000respectively (with kset to0.1n), the runtime of both MILP Refined andMILP Baseincreases as the dimen- sionalitydgrows. Forn=10,000, the impact is particularly evident forMILP Base, which times out beyond d=5. In contrast, MILP Refined remains tractable and scales up to d=17within 450 seconds. This demonstrates that incorporating domain-specific structure signif- icantly improves the scalability ofMILP Refined . However, when increasing the dataset size to n=50,000, even MILP Refined times out for dimensions above d=11. This indicates that while the refined formulation extends scalability, high-dimensional large instances remain computationally challenging at larger scales. An additional scalability challenge in higher dimensions is the degra- dation of the skyline pruning, which is part of MILP Refined . Skyline pruning is extremely effective at d=2, with around 95% of the tuples that are boosted being identified by skyline pruning. When d=5, the effect diminishes significantly, with around 5% of the tuples identi- fied, and atd\u22658the skyline pruning is unable to identify tuples that are definitely boosted. Regarding RQ3\u2013 For two-dimensional data, the increase in tuple size has only a modest impact on runtime. Although we ob- serve a slight increase in execution time as ngrows, both MILP Base andMILP Refined exhibit comparable performance in this setting. The detailed figure is presented in the appendix (Figure 7). However, for d=8, as shown in 2c, the situation changes markedly. Even atn=2,000,MILP Basealready times out, clearly indicating that dimensionality has a far more significant effect on computational cost than the number of tuples. For d=8,MILP Refined remains scal- able up to50 ,000tuples; beyond that point, solver-level heuristic changes introduce noticeable performance variance. RegardingRQ4\u2013MILPsolversexhibitirregularandnon-monotonic behavior: small changes in koften lead to substantial fluctuations in runtime. This behavior is typical for MILPs. Although modifying konly alters the tightness of the capacity constraintsI\u0301 i\u03b4ir\u2264k,such changes can significantly affect the strength of the MILP relax- ation, the size of the feasible region for the \u03b4-variables, the degree of symmetry in the model, and ultimately the structure of the branch- and-bound tree explored by the solver. As a result, the runtime may increase or decrease unpredictably. This phenomenon is also ob- served in our experiments. For example, with n=10,000andd=5, MILP Baseexhibits pronounced runtime peaks at intermediate values ofk(in the range of 10\u201350%), whereas MILP Refined remains consis- tently faster while still reflecting the same underlying variability. Similar patterns are observed for d=8and larger values of n. Overall, these results highlight the inherent sensitivity of MILP solvers to constraint tightness. Detailed results are presented in the appendix \u2013 Figures 8, 9, and 6. Results: RQ5, RQ6 \u2013 Real World Dataset.We now turn to the real-world dataset containing more than 300,000 tuples. Regarding RQ5\u2014 As shown in Figure 3, both MILP Baseand MILP Refined exhibit similar performance in the single-group setting. As the tuple size increases, the runtime grows approximately linearly withn. Notably, we are able to find a realizable function explaining the ranking for all 300,000 tuples within the 1800-second timeout. Regarding RQ6\u2014 As shown in Figure 4, in the two-group set- ting, the domain-knowledge constraints again provide a clear ad- vantage to MILP Refined . While MILP Basescales up to 150,000 tuples, MILP Refined remains tractable up to 275,000 tuples. Results: RQ7 \u2013 Quality of Explanations.Finally, we evaluate explanation quality across all datasets. As mentioned while dis- cussing datasets, for the synthetic datasets, both the data and the underlying linear function are known, allowing a precise assessment of reconstruction accuracy. Similarly, for the JEE dataset, the injected additive bonuses and affected tuples are also known, enabling direct evaluation of recovery accuracy. Across all synthetic datasets as well as the JEE dataset, the so- lutions produced by MILP Refined andMILP Baseexactly recover the added bonuses and the corresponding tuples. These results indicate that the MILP-based formulations scale effectively to large real-world datasets while maintaining high solution quality.",
+    "technical_score": 0.030416666666666668,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Utility functions: Many classes of utility functions have been ex- plored in prior work.Monotone utility functions[ 19] form one such class: given two tuples tiandtjwhereti[x]>tj[x]for every attribute x, the function assigns a higher score to tithan totj. Efficient Top- k evaluation for monotone functions was investigated by Fagin et al. [20], who proposed the Threshold and Fagin\u2019s algorithms. Along group setting] Runtime analysis of MILP Baseand MILP Refined on instances for two group settings for JEE-dataset. similar lines, Xin et al. [ 60] study Top- kcomputation under user preferences over selected attributes, modeled as convex functions. Beyond convexity,non-linear utility functionshave also been ex- amined, including quadratic functions [ 27] and more general polyno- mial functions [ 41] in multi-criteria Top- ksettings. Among the many families of utility functions,linear functionshave been especially influential, forming a core component of multi-criteria decision mak- ing [ 39], ranking and interactive scoring systems [ 58,59], and the interpretation of complex machine learning models [45]. While non-linear, monotone, and other function classes have been usedforTop- kgeneration,workonutilityandscoringframeworks[ 3, 48] has predominantly focused on linear functions. Following this well-established line of research, where linear functions serve as standard models for utility and scoring [ 39,48], we also uselinear functionsas the scoring model in our work with additive bonuses. Learning ranking functions: Chen et al. [ 11] propose RankHow , which explains an observed ranking using a linear function chosen to minimize Spearman\u2019s footrule distance from \u03c0. Their formula- tion, however, does not allow additive bonuses, and thus may fail to realize\u03c0when tuples must be organized into at most ggroups receiving group-wise boosts, as required in g-GBLR . Fair ranking ap- proaches [ 3,7] also learn linear utility functions but focus solely on satisfying group fairness constraints in the top- kpositions, without modeling additive adjustments. Work on reverse top- kqueries [ 56] is also related, seeking linear functions under which specified tuples appear in the top- k. Why-not queries [ 25] similarly search for a linear function that places a desig- nated tuple within the top- k, while other formulations [ 32] assume a fixed set of linear functions and aim to minimally modify tuples so that they enter or exit the top- k. These approaches, however, do not incorporate additive bonuses and thus do not generalize to our set- ting; moreover, they only explain top- kbehavior for selected tuples and do not address the problem of explaining a complete ranking.Traditional regression techniques \u2013 such as linear models [ 35], decision trees [ 9], and neural networks [ 30] \u2013 require numeric la- bels and thus cannot be applied when only an ordering is available. Additionally, extension of these techniques to make them bonus- aware is not straightforward and can be an interesting work in itself. Model-agnostic explanation tools like LIME [ 45] and its related IR approaches [ 55], produce explanations by querying the underlying modelthroughsamplingofdatapointsaroundthequerypoint,which is infeasible in our setting where the ranking function is unknown . Our work is the first to study the problem of bonus-aware linear ranking functions as a model of explanation of a given ranking.",
+    "technical_score": 0.04000000000000001,
+    "citation_score": 0.06
+  },
+  {
+    "section_path": [
+      "Conclusion and Future Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this work, we look at explanations to ranking problems based on linear scoring functions with an additive bonus model. An interest- ing direction is to extend or design new methods for other classes of ranking functions, such as quadratic/non-linear utility functions. Another promising open direction is to consider different models for bonus, for instance, a multiplicative bonus model, where each tuple\u2019s bonus would be computed byf w(t)=bonus(t[\u03c4])\u00b7\u0010I\u0301d j=1wj\u00b7t[j]\u0011 .",
+    "technical_score": 0.014611872146118721,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion and Future Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "While our ERMB approach and the hardness results apply also to the multiplicative model, our extension to g-GBLR , and the ILP-based approaches do not extend. An interesting avenue of research is to design efficient algorithms for the multiplicative-bonus setting. In this paper, we show that no efficient algorithm can exactly solve the bonus-aware linear ranking explanation problem. This hardness result suggests a natural next step: can we design algorithms that achieve a small approximation (in the number of bonus groups)? Or, under standard complexity assumptions, can we prove that even such approximations are impossible? The latter appears especially relevant given our MILP formulation, which points to a close con- nection with the classical Max-k-LIN problem, for which strong hardness-of-approximation results are known (e.g., [ 2,5,28,40]). This, in turn, raises the question of whether approximation algo- rithms for the bonus-aware linear ranking explanation problem are likewise unattainable.",
+    "technical_score": 0.035963470319634705,
+    "citation_score": 0.029424657534246574
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "A Additional experimental details We additionally performed experiments where the tuple feature components and weight vector components are sampled from a Zeta ysis of ERMB and MILP Refined ond=5instances for singleton group settings. kis fixed to 10% of tuples n. the impact of varying k.] Runtime analysis of MILP BaseandMILP Refined ond=8andn=50000 instances for one group settings. the impact of varying n.] Runtime analysis of MILP BaseandMILP Refined on 2D instances.",
+    "technical_score": 0.0037441813398097555,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Analysis of the impact of varying k.] Runtime analysis of MILP Baseand MILP Refined ond= 5andn= 10000 instances for one group settings.",
+    "technical_score": 0.0011131349929164138,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Analysis of the impact of varying k.] Runtime analysis of MILP Baseand MILP Refined ond= 8andn= 10000 instances for one group settings. (zipfian) distribution with parameter2. Figures 10a, 10b and 10c show the results. The running time of both MILP BaseandMILP Refined are significantly faster on these instances as compared to when data was drawn from the uniform distribution (as shown in figures 2a, 2b, 2c). The nature of the zipfian distribution increases the efficacy of the skyline pruning operation significantly, where at d=8approximately 80%of the boosted tuples can be identified. B Discussion on Positive Weights In practice, there are more restrictions on the weights in the function. In many applications, each attribute either positively or negatively contributes to the overall score. In our running example, a user would be interested in obtaining thebestquality computer at theleastprice. To uniformly deal with such cases, we normalize the attribute score of \u201cprice\" (in general, any negatively contributing attribute A), of each itemtby t[A]=maxj(tj[A])\u2212t[A] maxj(tj[A])\u2212min j(tj[A]) Once normalized, the weight of each attribute in the utility func- tion can be restricted to positive values. While our techniques in the paper can handle both positive and negative weights, careful obser- vations and optimizations based on this restriction are presented throughout the paper. C Missing Details ofERMB Lemma 12. ERMB (Algorithm 1) has a time complexity of O(n2d+1logn).",
+    "technical_score": 0.012042096741550296,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Proof. Algorithm 1 introduces a hyperplane for every pair of tuplesti,tj. As stated before, this forms a central arrangement and partitions the d-dimensional space into n2(d\u22121)disjoint regions. In our(d\u22121)dimensional space, enumeration of each of the cells canbe performed using the enumeration algorithm in Rada et al. [ 43]. [43] computes a Linear Program with dvariables and n2constraints in every cell. Meggido [ 36] proposes a linear-time algorithm for solving an LP in fixed dimension d. Combining the two results, the enumeration process consumes a total ofO(n2d)time. In every region, using the weight vector returned by the LP, the scores for the ntuples are computed in O(nd) time. Based on the scores, sorting is performed to obtain a ranking \u03c1. Thus, in every region,O(nlogn) time is consumed to construct the ranking \u03c1. Upon computing the ranking \u03c1, LIS is computed on \u03c1inO(nlogn) time. Thus, the overall time spent in a single region is O(nlogn) time. As there are n2d\u22122regions, our algorithm consumes a total of O(n2d+1logn)time.\u25a1 D Details of the Algorithms forg-GBLR Theorem 13.There exists a deterministic algorithm that, given a set of tuplesD={t 1,t2,...tn}where eachti\u2208Rd, a ranking\u03c0over Dand an integer k, if there exists a satisfying solution to g-GBLR , returns a vector w\u2208Rd,v1,...,vg\u2208R+and disjoint G1,...,Gg\u2286D with I\u0301 i\u2208[g]|Gi|\u2264kwhich satisfies the problem, in time O\u0010 g2(d+g)\u00b7n2(d+g)\u0011 . Embedding group bonus as new dimension: Consider a dataset D, ranking\u03c0and a budget gon the number of groups. Additionally, there is a budget on the sum of the sizes of the groups,I\u0301 i\u2208[g]|Gi|\u2264k. To illustrate our idea, consider all tuples tjthat belong to the group Giwith a bonus value of bi. If the unknown weight vector using the linear utility function was w\u2032={w\u2032 1,w\u2032 2,...,w\u2032 d}, then every tuple tj\u2208 Giwould be scored as follows:\u2200 tj\u2208Gi,fw\u2032(tj)=bi+I\u0301d a=1w\u2032 a\u00b7tj[a]. An observation about the above equation is that biis an additive bonus and thus for all tuples tjthat belong to Gi, we can imagine this as a \u201cbonus dimension\". Therefore, for every group Gi, we intro- duce a new dimension d+i. All tuplestj\u2208Giwould have the bonus dimension set to1while other tuples would have it set to0. Hence, there are a total ofd+gdimensions in our modified setting. But, two main things need to be handled (i) the tuples that belong to the different groups are not known beforehand, and (ii) the tuples ti\u2208Dare still ind-dimensional space. One observation is that we need a uniform treatment of all the tuples in the dataset. Thus, for every tuple tj, we createg+1copies of the tuple. The first copy corresponds to a version of the tuple tjwhich receives no bonus. For this version of the tuple, t(0) j, all bonus dimensions are set to0while the originalddimensions remain the same as before. For the gother versions, as tjcan only belong to at most one group, the version i of the tuple, t(i) jhas thed+idimension set to1and the remaining bonus dimensions set to0. For all versions of the tuple tiind+g",
+    "technical_score": 0.020926937866828577,
+    "citation_score": 0.017122040072859748
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "2 5 8 11 14 17 d45090013501800Time taken (seconds) Time vs d (n = 10000, k 10.0% of n) MILPbase MILPrefined (a)[One group setting, zipfian distribution. Impact of varying d.] Runtime analysis of MILP BaseandMILP Refined . 2 5 8 11 14 17 d45090013501800Time taken (seconds) Time vs d (n = 50000, k 10.0% of n) MILPbase MILPrefined(b)[One group setting, zipfian distribution. Impact of varying d.] Runtime analysis of MILP BaseandMILP Refined . n45090013501800Time taken (seconds) Time vs n (d = 8, k 10.0% of n) MILPbase MILPrefined(c)[One group setting, zipfian distribution. Impact of varying n.] Runtime analysis of MILP BaseandMILP Refined ond=8instances.",
+    "technical_score": 0.005413883829184376,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Algorithm 2MGRA: Multi-group Ranking Algorithm 1:procedureMGRA(DatasetD, ranking\u03c0, no. of groupsg, size boundk) 2:InitializeD G\u2190\u2205 3:for alltuplest j\u2208Ddo 4:Createt(0) jwithddims andgbonus dims set to0 5:Addt(0) jtoDG 6:fori=1togdo 7:Createt(i) jwith attributed+i\u21901, others0 8:Addt(i) jtoDG 9:Compute hyperplanesH GinRd+gfrom all pairs inD G 10:Enumerate all ranking regionsR Ginduced byH G 11:Initialize\u03c1\u2217\u2190null, maxLCS\u21900,G\u2190null 12:for all\u03c1\u2208R Gdo 13: ComputeL, constrained LCS between \u03c1and\u03c0with size bound k usingMultipleGroupLCS 14:if|L|>maxLCSthen 15:maxLCS\u2190|L|;\u03c1\u2217\u2190\u03c1;G\u2190Gfrom LCS output 16:returnlinear functions\u22121(\u03c1\u2217),G Algorithm 3MultipleGroupLCS 1:procedureMultipleGroupLCS(\u03c0,\u03c3) 2:Initialize table DP[n][(g+1)\u00b7n][k]to -1. 3:s\u2190Solve(n,(g+1)\u00b7n,k) 4:returns 5:procedureSolve(i,j,b) 6:ifi=0orj=0then 7:return0 8:ifDP[i][j][b]>\u22121then 9:returnDP[i][j][b]",
+    "technical_score": 0.007741347905282332,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Therefore, the overall runtime of the algorithm is upper bounded byO(g2(d+g)\u00b7n2(d+g)).\u25a1 Lemma 16.GivenD,\u03c0,k , if there exists a satisfying solution to g-GBLR , then MGRA (Algorithm 2) returns a vector w\u2208Rd,v1,...,vg\u2208R+ and disjoint G1,...,Gg\u2286D withI\u0301 i\u2208[g]|Gi|\u2264k which satisfies the problem.",
+    "technical_score": 0.002833434527423599,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Proof. Suppose that there does exist some vector w\u2217, groups G\u2217 1,...,G\u2217 g\u2282D, and additive values v\u2217 1,...,v\u2217 gthat satisfy the given input. Consider the region in the arrangement of Hwherew\u2217is located. Letv\u2217be the optimal bonus scores. Consider the ranking \u03c3overDG caused by this partition. As w\u2217andv\u2217must lie in one of the regions of the arrangement, an LCS of \u03c1and\u03c0must definitely be explored. The constrained LCS problem between \u03c1and\u03c0can be solved ex- actly. Based on this, we can obtain both the ranking function w\u2217and the bonus scores v\u2217along with the group information. Hence, our algorithm finds a satisfying solution if one exists.\u25a1 E Missing Details from the Hardness Results The following lemma establishes that a YES instance ofMax-1-in- 2-SATmaps to that ofSGBLR. Lemma 17.If there exists an assignment that satisfies at least r clauses of the formula Fby making exactly one literal in each of these rclauses true, then there exist a weight vector w\u2208Rnand at mostm\u2212r singleton groups such that \u03c0is realized by the linear utility function sw using an additive bonus of either2or \u22122to each point in those singleton groups.",
+    "technical_score": 0.010068811981380288,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Proof. Let\u03c4be an assignment that satisfies at least rclauses of the formula Fby making exactly one literal in each of these rclauses true. Then consider the followingw\u2208Rn: For eachj\u2208[n], w[j]=( 1if\u03c4sets the variablex jto true \u22121otherwise. Note, that for each clause CiinF, if\u03c4satisfies it by making exactly one literal true, then sw(pi)=0; otherwise, sw(pi)would be either \u22122or2. Further, for eachq s, fors\u2208[l],s w(qs)=0. Next, consider a singleton group for each point pisuch that sw(pi)=\u03380. Observe that the number of such singleton groups is at mostm\u2212r . Furthermore, an additive bonus of either2or \u22122suf- fices to make their score equal to0, and thus with those bonuses to at mostm\u2212r singleton group elements, \u03c0is realized by the utility functions w.\u25a1Next, we argue that a NO instance ofMax-1-in-2-SATmaps to that ofSGBLR. Lemma 18.If there exist a weight vector w\u2208{R\\{ 0}}nand at most m\u2212r singleton groups such that \u03c0is realized by the linear utility func- tionswusing an additive bonus to each point in those singleton groups, then there exists an assignment that satisfies at least rclauses of the formulaFby making exactly one literal in each of these rclauses true.",
+    "technical_score": 0.010675976522971059,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Proof. Let us consider a weight w\u2208{R\\{ 0}}nsuch that with additive bonuses to the minimum number of singleton groups, \u03c0 is realized by sw. LetGbe the set of such singleton groups. By our assumption in the lemma, |G|\u2264m\u2212r . We would like to claim that any such singleton group (i.e., \u2208G) must contain pi, for somei\u2208[m] , but not anyq j\u2019s. To argue that, for the sake of contradiction, let there exist G\u2208G such thatG={qj|for somej\u2208[l]} . Letj=j 1n2+j2, for some j1\u2208[m+ 1],j2\u2208[n2]. Then there must exist n2many groups inG\u2013 a group for each point qj1n2+t, for eacht\u2208[n2]. Otherwise, if any of these groups is not present in G, one can exclude G={qj}from the set of singleton bonus groups Gand still\u03c0is realized by sw(this is because for all qi,sw(qi)=0), thus violating the minimality of size ofG. Now, since|G|\u2264m\u2212r , it cannot contain any singleton group with pointq j, for somej\u2208[l]. Next, we claim that if for some pi,{pi}\u2208\u0338G , we must have that sw(pi)=0. Otherwise, by an argument similar to the above, we can show thatGmust contain n2many singleton groups, thus violating the assumption|G|\u2264m\u2212r. Now, consider any pi, such that{pi}\u2208\u0338G . By the construction, pi has two non-zero coordinates, say a,b\u2208[n] .",
+    "technical_score": 0.011890305606152602,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Appendix"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Thenwa=\u2212wb. Next, consider the corresponding clause Ci. Observe,Ciwould be satisfied by making exactly one literal of it true, by assigning xa=true and xb=false, orx a=falseandx b=true. Now, construct an assignment \u03c4as follows: It sets xa=true ifwa> 0; otherwise xa=false . Also, consider another assignment \u0304\u03c4, which is obtained by flipping the assignment of each variable in \u03c4. By the ar- gument in the previous paragraph, observe that either \u03c4or \u0304\u03c4satisfies all the clauses Cifor which{pi}\u2208\u0338G , by making exactly one literal of each of them to true, and this concludes the proof of the lemma. \u25a1 Proof of Theorem 8. It is straightforward to see that the reduc- tion from theMax-1-in-2-SATto SGBLR , which we have provided, is polynomial time. The correctness of the reduction immediately follows from Lemma 17 and Lemma 18, and that completes the proof of Theorem 8.\u25a1",
+    "technical_score": 0.007538959724752075,
+    "citation_score": 0.0
+  }
+]

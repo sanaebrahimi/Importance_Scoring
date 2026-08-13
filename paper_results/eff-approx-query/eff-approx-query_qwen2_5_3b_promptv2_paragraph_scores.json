@@ -1,0 +1,761 @@
+[
+  {
+    "section_path": [
+      "INTRODUCTION"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Several applications at the frontier of databases (DBs) and machine learning (ML) require support for query processing over ML mod- els. In image retrieval for instance, querying a DB corresponds to finding images whose neural representations are close to an input query image, given a distance measure [ 28,29]. Similarly, in the medical domain, a typical query would look for patients whose This work is licensed under the Creative Commons BY-NC-ND 4.0 International License. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to view a copy of this license. For any use beyond those covered by this license, obtain permission by emailing info@vldb.org. Copyright is held by the owner/author(s). Publication rights licensed to the VLDB Endowment.",
+    "technical_score": 0.0023665573405729206,
+    "citation_score": 0.04496458947088549
+  },
+  {
+    "section_path": [
+      "INTRODUCTION"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proceedings of the VLDB Endowment, Vol. 17, No. 1 ISSN 2150-8097. doi:XX.XX/XXX.XX predicted clinical condition is similar to an input patient (see Figure 1) using a Deep Neural Network (DNN) [ 27,44]. A straightforward way of answering these queries is to apply the neural models ex- haustively on all objects (e.g., images or patients) in the DB, and then return the objects that satisfy the query. This is prohibitive because applying DNNs and involving human expertise are both expensive. In this paper, we propose an approximate query processing approach with provable guarantees that leverages a cheap proxy for the neural model and uses a judicious combination of invoking the expensive oracle model on data samples and applying the cheap proxy on the DB. The main focus of query processing over ML models has been to ensure efficiency without compromising accuracy [ 51]. One line of work, query inference, provides native relational support for ML operators using containerized solutions such as Amazon Aurora,1 or in-application solutions such as Google\u2019s BigQuery ML2and Microsoft\u2019s Raven [ 30]. Another line develops adaptive predictions for NNs by pruning examples based on their classification in early layers [ 9].Our aim is to enable queries in a way that is agnostic to the underlying prediction model. Hence, we develop an in-application approach where queries can be invoked on any ML prediction model. Recent work [ 28,29,32,37] proposes to use cheap proxy mod- els that approximate ground truth oracle labels. Proxies are small neural models that either provide a confidence score [ 29,37,49] or distribution [ 32] for their predicted labels. Probabilistic predicates (PP) [ 37] and CORE [ 49] employ light-weight proxies to filter out unpromissing objects and empirically improve data reduction rates in query execution plans. Probabilistic Top-K [ 32] trains proxy mod- els to generate oracle label distribution and delivers approximate Top-K solutions. Recently, in [ 29], the authors study queries with 1https://aws.amazon.com/fr/sagemaker/ 2https://cloud.google.com/bigquery-ml/docsarXiv:2206.02845v4 [cs.DB] 17 Nov 2022 a minimum precision target (PT) or recall target (RT), and a fixed user-specified budget on the number of oracle calls. However, (i) setting an oracle budget is hard to get right. An underestimated budget may lead to trivial answers while overestimation causes unnecessary oracle usage, and (ii) setting only a minimum precision or only a minimum recall target, runs the risk of returning valid but uninformative answers: for RT, returning all objects in the DB is valid but has very poor precision; for PT, returning the empty set is valid but it has zero recall and is hence not useful in practice. In this work, we consider oracle/proxy models with multi dimen- sional outputs. We propose a more useful problem of minimizing oracle usage for finding answers that meet a precision or recall tar- get with provable statistical guarantees while achieving a maximal complementary rate (CR). The CR for an RT (resp. PT) query is pre- cision (resp. recall). More formally, given a PT (resp. RT) query, we seek answers that (1) satisfy a target precision (resp. recall) with a probability higher than a desired threshold and (2) incur a minimal number of oracle calls, and (3) achieve the maximal CR subject to the oracle usage incurred in (2). We aim to minimize oracle usage since the oracle is significantly more expensive than the proxy. Our problem raises three challenges: (1) identify high quality answers with statistical guarantees, (2) design strategies that exactly or approximately minimize oracle usage, and (3) achieve maximal CR subject to (2). We develop a class of strategies that are agnostic to the prediction model and are applicable both to RT and PT queries. The key idea of our approach is to approximate an oracle with a cheaper proxy model [ 28,29]. In practice, the proxy could be a smaller and lower latency neural model. We consider a general pipeline for query answering which consists of three stages: (1) apply proxy on the DB, (2) sample & probe with oracle, (3) compute and return answers (see Figure 1). We instantiate our pipeline under two alternative assumptions. Under the Proxy Quality assumption, the proxy quality w.r.t. the oracle is quantified in a probabilistic manner which allows us to return high quality answers right after applying the proxy on the DB. We develop Algorithm PQA which efficiently finds high probability valid answers of maximal expected CR with zero oracle calls. We additionally design Algorithm PQE, a heuristic extension to PQA, to calibrate the correlation between the oracle and the proxy by incurring some oracle calls. If the proxy quality is hard to quantify, we have the Core Set Closure assumption under which we uniformly sample and probe a subset of objects to estimate valid answers to a given query. We introduce the notion of core set to find the optimal sample size and number of samples so as to ensure a minimal expected oracle usage to identify a valid answer with high probability. We use the proxy to improve answer CR heuristically. This leads to Algorithm CSC, which efficiently returns high probability valid answers with a minimal expected number of oracle calls, and an empirically good CR. We also design Algorithm CSE, a generalization of CSC, which calibrates core sets with extra oracle calls and ensures high success probability. We conduct experiments on five real-world datasets and compare our algorithms to four baselines from recent work: (1) SUPG [ 29], (2) Top-K [ 32], a probabilistic Top-K approach that uses oracle score distribution to deliver approximate Top-K answers, (3) Sam- ple2Test, a sample-based baseline adapted from the literature [ 37],and (4) Scan2Test, a simple baseline that returns answers by ap- plying oracle on all objects, which is also compared with in [ 32]. Our experiments demonstrate that our algorithms find high qual- ity answers with statistical guarantees even when baselines fail. More specifically, we analyze PQA and verify the optimality of its CR and success probability guarantee under the Proxy Quality assumption. We compare PQA with Top-K on a synthetic dataset and demonstrate that PQA returns high quality answers with zero oracle call while Top-K incurs a huge oracle cost. We analyze CSC to demonstrate its minimal oracle usage and success probability guarantee under the Core Set Closure assumption. We compare PQE, CSE, and baselines in terms of success probability and CR, under various oracle settings. We find that for RT queries, CSE has the best oracle efficiency and for PT queries, PQE is the most oracle efficient approach. Finally, we study scalability and find that CSE is the most efficient approach outperforming the strongest baseline by up to 87.5%. In sum, we make the following contributions. \u2022We propose the problem of answering PT and RT queries with minimal oracle usage and maximal CR while meeting precision or recall targets with high probability (\u00a7 2). \u2022We propose two assumptions ( Proxy Quality andCore Set Closure ), around which we develop four algorithms (PQA, PQE, CSC, and CSE) to solve the problem efficiently (\u00a7 4). \u2022We run extensive experiments on five real-world datasets (\u00a7 5) and show that: (i) our approaches yield valid answers with high probability; (ii) our approaches significantly outperform the state of the art w.r.t.",
+    "technical_score": 0.021957748520779675,
+    "citation_score": 0.02683724819206405
+  },
+  {
+    "section_path": [
+      "INTRODUCTION"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "CR and cost. Complete details of proofs as well as additional experiments can be found in the full version [19].",
+    "technical_score": 0.0,
+    "citation_score": 0.0009758999342568745
+  },
+  {
+    "section_path": [
+      "PROBLEM STUDIED",
+      "Use Cases"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Example 1 ( Image Retrieval ).The problem is to find images similar to a query image [ 14,18,50]. Metadata-based approaches use textual descriptions of images for quickly measuring similarity, but their quality heavily relies on image annotations [ 18]. Current approaches for content-based image retrieval are built upon deep neural networks which provide high accuracy but are computationally expensive. Our goal is to support efficient high quality approximate image retrieval queries [12]. Example 2 ( Preventive Medicine ).One of the greatest ob- stacles of preventive medicine is the limited time a physician has [1,10,36,44]. Clinical Risk Prediction Models (CRPMs) are being developed to facilitate decision-making. CRPMs serve as prognosis prediction systems and predict the occurrence of specific diseases based on personalized medical records. Our goal is to extend queries to in- clude CRPMs while offering statistical guarantees [16, 34, 45]. Example 3 ( Video Analytics ).While DNNs have become ef- fective for querying videos [ 42], their inference cost becomes pro- hibitive as the model size increases. For example, to identify frames with a given class (e.g., ambulance) on a month-long traffic video, an advanced object detector such as YOLOv2 [ 43] needs about 190 GPU hours and $380 for a cloud service [ 25]. A specialized model can achieve high efficiency, e.g., up to 340\u00d7faster than the full DNN, with sacrificed accuracy [ 28]. Our goal is to efficiently generate high qual- ity query answers by balancing the use of expensive high-accuracy models and cheap low-accuracy proxies [25, 28, 29].",
+    "technical_score": 0.08187450100338778,
+    "citation_score": 0.04408626977105495
+  },
+  {
+    "section_path": [
+      "PROBLEM STUDIED",
+      "Query"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Our queries generalize Fixed-Radius Near Neighbor (FRNN) queries [6]. Given a dataset D, a query object q, a radiusr, and a distance functiondist, an FRNN query asks for all near neighbors ofqwithin radiusr, i.e.,NN(q,r)={x\u2208D|dist(x,q)\u2264r}.In this paper, we are mainly interested in near neighbors of objects w.r.t. latent features, using a distance function defined on these features. In preventive medicine [ 1,44], a latent feature may be the infection risk of a disease, which can be inferred from patient history, drug usage, and demographics. Latent features can be discovered by human experts [ 37] or powerful neural models, which we refer to as oracle , denotedO. The near neighbors of query object qw.r.t.Oand radius rare defined as NNO(q,r)={x\u2208D|dist(O(x),O(q))\u2264r}. We will use the notation NNOwhen the query object qand radiusrare clear from the context. An object x\u2208Dis an oracle neighbor of a query object w.r.t. radius rifx\u2208NNO. Retrieving the exact NNO requires calling the oracle on every single object in the DB, which is prohibitively expensive. Instead, we are interested in finding high quality answers with high probability (w.h.p.).",
+    "technical_score": 0.00531135114567348,
+    "citation_score": 0.00531135114567348
+  },
+  {
+    "section_path": [
+      "PROBLEM STUDIED",
+      "Query"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "For any subset S\u2286D, we denote by NS=|S\u2229NNO|the number of oracle neighbors in S.",
+    "technical_score": 0.012470128776798609,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM STUDIED",
+      "Query"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Define:",
+    "technical_score": 0.01385569864088734,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM STUDIED",
+      "Query"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Mpfor precision or Mrfor recall, to measure answer quality, and a target\u03b3\u2208(0,1). In the former case, it is called a Precision-Target (PT) query and in the latter, Recall-Target (RT) query. We call Ans\u2286D avalid answer iffM(Ans) \u2265\u03b3. ForM, we useMto denote its complementary rate (CR): when M=Mp(resp.,Mr),Mstands for Mr(resp.,Mp). Given a query, we are interested in returning valid answers w.h.p. For any S\u2286D, the probability of success forM(S) isPoS(S,M,\u03b3):=Pr[M(S)\u2265\u03b3]. We generalize FRNN queries to Approximate Oracle-Sensitive FRNN (AOS-FRNN ) queries . Definition 2.1 (AOS-FRNN Query). Given a dataset D, a query objectq, a radiusr, a failure rate \u03b4, a main measure Mand corre- sponding target \u03b3\u2208(0,1), an AOS-FRNN query asks for a valid answerAns\u2286Dw.h.p., i.e., such that PoS(Ans,M,\u03b3)\u22651\u2212\u03b4. Effectively processing an AOS-FRNN query requires determining:",
+    "technical_score": 0.0046185662136291146,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM STUDIED",
+      "Query"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "(1)How many oracle calls are required to find a valid answer w.h.p.? and (2) How good is the returned answer under a given CR? The first question is important since oracle invocations are expensive and must be reduced. The second question is important because a technically valid answer could be uninformative. For instance, if a user specifies M=Mpwith a high target \u03b3, the empty set is always a valid answer. Similarly, returning (nearly) the whole dataset is always a valid answer when M=Mr.",
+    "technical_score": 0.00020991383440944323,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM STUDIED",
+      "Query"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Problem 1 (AOS-FRNN Problem). Given a dataset Dand an AOS-FRNN query Q, find a valid answer Ans\u2286DtoQw.h.p. such that (i) the number of oracle calls incurred is minimal and (ii) the complementary rate M(Ans)achieved is maximal subject to (i).The AOS-FRNN Problem is challenging given that we want to optimize two objectives (i.e., oracle usage and CR) under validity and success probability constraints. We will show that under certain conditions, we can efficiently return high probability valid answers with minimal or zero oracle calls and maximal expected CR .",
+    "technical_score": 0.00020991383440944323,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPROACH OVERVIEW"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The key idea of our approach is to approximate an oracle with a cheaper proxy model [ 28,29]. In practice, compared to an expensive oracleO, a proxyPcould be a smaller and lower latency neural model. For brevity, when a query object qis clear from the context,",
+    "technical_score": 0.023683425233794884,
+    "citation_score": 0.023683425233794884
+  },
+  {
+    "section_path": [
+      "APPROACH OVERVIEW"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "NNO={x1,x2,x3,x5},\u03b3=0.9, and\u03b4=0.1.",
+    "technical_score": 0.003157790031172651,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPROACH OVERVIEW"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "NNO={x1,x2,x3,x5},\u03b3=0.9, and\u03b4=0.1. 1\u2212\u03b4=0.9. Next, we compute expected precision and return D5as the answer since E[Mp(D5)]=0.75\u2265E[Mp(Dk)]for anyk\u2264k\u2264|D|. For the PT query, we compute PoS(Dk,Mp,\u03b3=0.9)for0\u2264k\u2264|D| and returnD3as the answer since k=3is the largest Dksatisfying PoS(Dk,Mp,\u03b3=0.9)\u22651\u2212\u03b4=0.9. Assumption 2 (Core Set Closure) :When the proxy quality is hard to quantify, we aim to find k\u2217s.t.Dk\u2217is the optimal answer. Since computing k\u2217exactly is expensive, we estimate it by sample and probe. Specifically, we uniformly draw msamples of size seach, fromDto estimatek\u2217askSwhereSis the union of samples, and returnDkSas the answer.",
+    "technical_score": 0.037893480374071815,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPROACH OVERVIEW"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "For RT (resp. PT) queries, we set kSas the largest (resp. smallest) I(x), wherexis an oracle neighbor in S. We seek the optimal values s=s\u2217andm=m\u2217which ensure PoS(DkS,M,\u03b3)\u22651\u2212\u03b4with a minimal expected number of oracle calls. For that, we introduce the notion of core set , denotedC. Given a query, the core set comprises all oracle neighbors x\u2208NNO whose proxy prefix DI(x)is a valid answer. We say the core set is closed w.r.t. a query Qif one of the following holds: (i) Qis a RT query and for every x\u2208Cany oracle neighbor whose proxy index is larger than that of xis also inC; or (ii)Qis a PT query and for",
+    "technical_score": 0.03157790031172651,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPROACH OVERVIEW"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Success Prob. Oracle Usage CR Assumption PQA\u22651\u2212\u03b4 0 MAX Yes CSC\u22651\u2212\u03b4 MIN good Yes CSE\u22651\u2212\u03b4 small good No PQE high small good No with specified \u03b4. Provable guarantees are highlighted. Em- pirical performance is described by \u201chigh\u201d, \u201csmall\u201d, and \u201cgood\u201d. everyx\u2208Cany oracle neighbor whose proxy index is smaller than that ofxis also inC. Letcdenote the size of a given core set C. We show that if the core set Cis closed w.r.t. a query and cis known,s\u2217 andm\u2217can be found by solving an optimization problem with cas the input (\u00a7 4.2). We develop Algorithm CSC to efficiently solve this problem and return DkS. CSC returns valid answers w.h.p. with a minimal expected oracle usage and empirically good CR. Example 5. The (synthetic) example in Figure 3 illustrates the idea behind Algorithm CSC. Consider the same setting as in Figure 2, where D={x1,x2,\u00b7\u00b7\u00b7,x9}, and RT and PT queries with \u03b3=0.9,\u03b4=0.1, ground truth NNO={x1,x2,x3,x5}, andDk={x1,x2,\u00b7\u00b7\u00b7,xk}. For the RT query, x5is the only oracle neighbor whose proxy prefix is a valid answer. Therefore, C={x5}andCis closed. We can derive the optimal values s\u2217=3andm\u2217=2, and uniformly draw samples S1,S2 fromD. We then apply oracle on each xi\u2208S=S1\u222aS2and compute distO(xi)accordingly. At the end, we set kS=5and returnD5as the answer since x5has the largest proxy index among sampled oracle neighborsx1,x2,x5. For the PT query, the core set is C={x1,x2,x3}, which is closed. Similarly, we first derive the optimal values s\u2217=2 andm\u2217=2, and drawS1,S2accordingly. Next, we apply the oracle on samples and compute the corresponding oracle distance. At the end, we setkS=2and returnD2as the answer since x2has the smallest proxy index among sampled oracle neighbors x2,x3. In case these assumptions do not hold, we develop PQE and CSE. PQE is a heuristic extension to PQA which calibrates oracle distance distribution by incurring some oracle calls. CSE complements CSC and ensures high success probability in general. The workflow and performance of all four approaches are summarized in Figure 4 and Table 1. We will use MandMwhen results hold for both PT and RT. We next describe our algorithms and provide a theoretical analysis.",
+    "technical_score": 0.009473370093517954,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In \u00a7 4.1.1, we formally state the Proxy Quality assumption and show how the success probability of a set S\u2286Dcan be computed. Then, we develop Algorithm PQA based on this assumption (\u00a7 4.1.2)",
+    "technical_score": 0.02588917027775107,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Proxy Quality Assumption"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "data is collected in i.i.d. manner [ 32,37]. In our problem setting, the oracle and proxy are provided as input and serve as deterministic functions mapping a data object xi\u2208Dto its prediction O(xi) orP(xi). The difference between oracle and proxy distances to a given query object can be seen as i.i.d. random variables, whose i.i.d. property comes from the underlying data collection process. Formally, the assumption states that given a query, the deviations between the proxy and oracle distances of different objects xi\u2208D are i.i.d. random variables: for xi\u2208D,\u03b5i=distO(xi)\u2212distP(xi), where\u03b5iare i.i.d.,\u03b5i\u223cX. In Figure 5 we report the distribution of \u03b5ion two real-world datasets, Mimic-III [26] and night-street [11]. It is clear that, with high frequency, \u03b5itakes on values close to 0, which indicates that the proxy is of good quality and can properly approximate the oracle predictions. Under this assumption, we can compute the oracle distance distribution for any xi\u2208D, after observing the proxy distance. The conditional probability of xi\u2208Dbeing an oracle neighbor is: Pr[xi\u2208NNO|distP(xi)]=Pr[distO(xi)\u2264r|distP(xi)] =Pr[\u03b5i\u2264r\u2212distP(xi)](2) The RHS of Eq. 2 is the cdf of \u03b5i\u223cX evaluated at r\u2212distP(xi), i.e.,CDFX(r\u2212distP(xi)). For simplicity, define \u03c6(xi):=CDFX(r\u2212 distP(xi))and\u03a6(D):={\u03c6(xi)|xi\u2208D}. Notice,\u03c6(xi)provides the probability that xiis an oracle neighbor. The overall success probability uses the possible world semantics [39]. The success proba- bility of a subset S\u2286Dequals the sum of probabilities of all possible worlds in which Shas a high precision or recall w.r.t. the target \u03b3. To compute the success probability of S, we seek the likelihood of anyS\u2286Dcontaining a certain number of oracle neighbors. Recall that for any subset S\u2286D,NS=|S\u2229NNO|is the number of oracle neighbors in S.NSis thus a random variable equal to the sum of|S|independent Bernoulli trials, each of which has a success probability \u03c6(xi),xi\u2208S. LetpNS(k):=Pr[NS=k]be theprobability mass function for any S\u2286Dand0\u2264k\u2264|S|. We next discuss how to compute it efficiently. An important fact is that, given S\u2286D,xi\u2208\u0338S,pNS\u222a{xi}andpNS satisfy the following recurrence relation: for0\u2264k\u2264|S|+1.",
+    "technical_score": 0.007184244752075926,
+    "citation_score": 0.007184244752075926
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Proxy Quality Assumption"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Eq. 3 says how to compute the probability mass function pNS\u222a{xi}frompNS, for anyS\u2286Dandxi\u2208\u0338S. This recurrence relation directly suggests a way to compute pNSfor any Swith incremental updates, called direct convolution [8]. We start fromS=\u2205and apply Eq. 3 recursively to compute pNSfor any S\u2286D.pNSis implemented by an array (we abbreviate \u03c6(xi)as \u03c6i). We initialize the array pNS[0]=1. We then iteratively update pNSby including xi\u2208S,1\u2264i\u2264|S|, inanyorder. The distribution updates are a direct implementation of Eq. 3. We now discuss how to use pNSto compute PoS(S,M,\u03b3), the success probability for Sto be a valid answer. We have the following fact, whereS:=D\\S: Fact 1. GivenS\u2286Dand\u03b3\u2208(0,1), PoS(S,Mp,\u03b3)=Pr[NS |S|\u2265\u03b3]=|S|\u2211\ufe01 k=\u2308|S|\u03b3\u2309pNS(k) (4) PoS(S,Mr,\u03b3)=Pr[NS |NNO|\u2265\u03b3]=|S|\u2211\ufe01 j=0pNS(j)\u230aj(1\u2212\u03b3)/\u03b3\u230b\u2211\ufe01 k=0pNS(k)(5) For PT queries, the precision of S\u2286Dincreases as Scontains more oracle neighbors. The probability of Shaving a precision no less than\u03b3equals the probability of Scontaining at least|S|\u03b3oracle neighbors, i.e., Pr[NS\u2265|S|\u03b3].",
+    "technical_score": 0.010091188817615497,
+    "citation_score": 0.0007822626990399609
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Proxy Quality Assumption"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Eq. 4 gives this probability. For RT queries, the recall of S\u2286Dincreases as Scontains more oracle neighbors relative to the complement S=D\\S: ifScontains 0\u2264j\u2264|S|oracle neighbors, the conditional probability of Shav- ing a recall no less than \u03b3equals the probability that Scontains no more thanj(1\u2212\u03b3)/\u03b3oracle neighbors, i.e., Pr[NS\u2264j(1\u2212\u03b3)/\u03b3]. By the law of total probability [ 22], the overall success probability PoS(S,Mr,\u03b3)equals the summation of the product between the conditional success probability, Pr[NS\u2264j(1\u2212\u03b3)/\u03b3], and the mar- ginal probability, Pr[NS=j],0\u2264j\u2264|S|.",
+    "technical_score": 0.009708438854156657,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Proxy Quality Assumption"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Using Eq. 5, we use pNS andpNSto compute this probability. Fact 1 gives a direct way to compute PoS(S,M,\u03b3)for anyS\u2286D for a given query. We also leverage Eq. 4 and Eq. 5 iteratively.",
+    "technical_score": 0.0038833755416626627,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Algorithm PQA"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "turns high probability valid answers with zero oracle calls and max- imal expected CR, under the Proxy Quality assumption. For PT queries, PQA-PT computes the largest ks.t.PoS(Dk,Mp,\u03b3)\u22651\u2212\u03b4, 0\u2264k\u2264|D|, denotedk\u2217. Notice that PoS(S,Mp,\u03b3)can be derived frompNSin linear time, and pNScan be computed from pNS\\{xi} in linear time, for any xi\u2208S\u2286D. PQA-PT incrementally com- putespNDkfor each 0\u2264k\u2264|D|andPoS(Dk,Mp,\u03b3)accordingly. At the end, PQA-PT returns Dk\u2217wherek\u2217=max{0\u2264k\u2264|D|| PoS(Dk,Mp,\u03b3)\u22651\u2212\u03b4}. For RT queries, PQA-RT uses binary search to identify the smallest k=ksuch thatPoS(Dk,M,\u03b3)\u22651\u2212\u03b4. Next, PQA-RT computes the expected CR of Dkfor eachk\u2264k\u2264|D|, and returns Dk\u2217wherek\u2217=argmaxk\u2264k\u2264|D|E[Mp(Dk)]. The algorithm is presented in Algorithm 1. PQA-PT is given in lines 1-8. In lines 2-4, we incrementally compute pNDkfor0\u2264 k\u2264 |D|. In lines 6-8, we keep tracking the largest k=k\u2217,0\u2264 k\u2264|D|, such thatPoS(Dk,Mp,\u03b3)\u22651\u2212\u03b4, and return Dk\u2217as the answer. The overall time complexity is O(|D|2). PQA-RT is given in lines 9-26. In lines 10-18, we use binary search to find the smallest k=ksuch thatPoS(Dk,Mr,\u03b3)\u22651\u2212\u03b4. Next, in lines 20-26, we compute E[Mp(Dk)]for eachk\u2264k\u2264|D|and returnDk\u2217with the maximal expected CR. Binary search invokes O(log(|D|))times pNScomputation, each of which is of O(|D|2). The overall time complexity is therefore O(log(|D|)|D|2). Algorithm 1: PQA 1Function PQA-PT( \u03a6D=\u03a6(D),\u03b3,\u03b4): 2pNS[0]\u2190 1;k\u2217\u21900 3 fori\u21901,2,\u00b7\u00b7\u00b7,|D|do 4pNS\u2190IncrementalUpdate( pNS,\u03a6D[i],i) /* Eq.3 */ 5 ifPoS-Mp(pNS,\u03b3)\u22651\u2212\u03b4 /* Eq.4 */ 6 then 7 k\u2217\u2190i 8 returnDk\u2217 9Function PQA-RT( \u03a6D=\u03a6(D),\u03b3,\u03b4): 10k\u21901;k\u2190|D| 11 whilek<kdo 12mid\u2190\u230a(k+k)/2\u230b",
+    "technical_score": 0.009615496732859528,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Algorithm PQA"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "14 ifPoS-Mr(pNS,pNS,\u03b3)<1\u2212\u03b4 /* Eq.5 */ 15 then 16 k\u2190mid+1 17 else 18 k\u2190mid 19pNS\u2190pNs(\u03a6(Dk)) 20EM\u2190Sum({pNS[i]\u00b7i/k|1\u2264i\u2264k}) /* E[Mp(S)]*/ 21 fori\u2190k+1,k+2,\u00b7\u00b7\u00b7,|D|do 22pNS\u2190IncrementalUpdate( pNS,\u03a6D[i],i) /* Eq.3 */ 23EM\u2032\u2190Sum({pNS[j]\u00b7j/i|1\u2264j\u2264i}) 24 ifEM\u2032>EMthen 25 EM\u2190EM\u2032;k\u2217\u2190i 26 returnDk\u2217",
+    "technical_score": 0.001603143720832606,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "PQA Optimality"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "s.t. it is an optimal answer. We then explore the monotonicity rela- tion between DkandDk+1w.r.t. success probability and expected CR, to efficiently find Dk\u2217. Finally, we show that answers returned by PQA are optimal for any query (proofs in the full version [19]). ForS\u2286D, we are interested in two operations to generate new answers: (i) replacexi\u2208Swithxj\u2208\u0338S, and (ii) appendSwith a new objectx\u2208\u0338S. We first show that for any S\u2286D, both success probabilityPoS(S,M,\u03b3)and expected CR E(M(S))are monotone under the replacement operation.",
+    "technical_score": 0.0016180731423594424,
+    "citation_score": 0.0016180731423594424
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "PQA Optimality"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Lemma 1 (Monotonicity of Replacement). LetS\u2286D,xi\u2208S, andxj\u2208\u0338S. DenoteS\u2032=S\u222a{xj}\\{xi}. For all\u03b3\u2208 (0,1), if \u03c6(xi)\u2264\u03c6(xj), then PoS(S,M,\u03b3)\u2264PoS(S\u2032,M,\u03b3) and E[M(S)]\u2264E[M(S\u2032)] (6)Proof Sketch. The proof leverages the notion of usual stochas- tic order [40]. \u25a1 Lemma 1 says that, given S\u2286D, if we replace xi\u2208Swithxj\u2208\u0338S, wherexjis more likely to be an oracle neighbor, both the success probability and the expected CR of Swill monotonically increase, for a given query. Lemma 1 can be used to prune out a majority of unpromising solutions in the early stage of query processing. Specifically, given a query, we show that for any 0\u2264k\u2264|D|,Dkis optimal among all answers of size k. RecallDkis the set ofknearest neighbors of the query object w.r.t. the proxy distance. Formally, Theorem 4.1. For all\u03b3\u2208(0,1),\u22000\u2264k\u2264|D|,Dkhas the highest success probability and expected CR among all S\u2286Dwith|S|=k. Theorem 4.1 entails that, given a query, there exists some 0\u2264 k\u2217\u2264|D|such thatDk\u2217is guaranteed to be an optimal answer. We study the append operation and have the following result. Lemma 2 (Monotonicity of Append). For all\u03b3\u2208(0,1)and 0\u2264k\u2264|D|\u22121, PoS(Dk,Mr,\u03b3)\u2264PoS(Dk+1,Mr,\u03b3)E[Mr(Dk)]\u2264E[Mr(Dk+1)](7) Lemma 2 states that increasing kleads to an increase both in the probability for Dkto have a high recall and its expected recall. In other words, the success probability of Dkmonotonically increases for RT queries, and the expected CR of Dkmonotonically increases for PT queries, as kincreases.",
+    "technical_score": 0.0008090365711797212,
+    "citation_score": 0.0008090365711797212
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "PQA Optimality"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "By Theorem 4.1 and Lemma 2, for any given query, the answer Dk\u2217returned by Algorithm PQA clearly has high success probability and the maximal expected CR, implying it is an optimal answer.",
+    "technical_score": 0.003775503998838698,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Algorithm PQE"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "as an input. In a general setting, when \u03a6(D)is unknown or Proxy Quality Assumption does not hold, we heuristically fit a normal distribution by sampling and probing on a limited number of objects, where the limit is controlled by a budget parameter. The resulting algorithm is PQE (Algorithm 2).",
+    "technical_score": 0.00426409863398253,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Algorithm PQE"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "That is, in PQE, we employ \u03b5i\u223cN(\u03bc,\u03c3)for allxi\u2208D. Specifi- cally, we choose \u03bc=0, which amounts to assuming that the proxy is an unbiased estimator of the oracle. For \u03c3, given a budget b, we sample and probe bobjects to estimate \u03c3, denoted \u02c6\u03c3. We further introduce a hyper-parameter \u03c30to represent the deviation from theProxy Quality assumption. In the ideal case where Proxy Quality holds,\u03c30=0. We heuristically choose \u03c3=\u02c6\u03c3+\u03c30. We use N(\u03bc,\u03c3)to compute \u03a6(D)and pass it to PQA to find the answers.",
+    "technical_score": 0.00304578473855895,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Algorithm PQE"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "1 Function PQE(D,\u03b3,\u03b4,r,b,\u03c30): 6 return PQA-RT( \u03a6D,\u03b3,\u03b4) 8 return PQA-PT( \u03a6D,\u03b3,\u03b4)",
+    "technical_score": 0.00182747084313537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Proxy Quality",
+      "Algorithm PQE"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Algorithm 2 details the steps. In lines 2-4, we draw a sample S\u2286Dof|S|=bobjects to estimate \u03c3and compute \u03a6(D). In lines 5-8, we invoke Algorithm PQA with \u03a6(D)for PT or RT queries. The overall time complexity is dominated by Algorithm PQA: the additional time complexity on top of PQA is O(|D|). We now introduce Core Set Closure assumption, our second alternative assumption, and develop two algorithms CSC andCSE.",
+    "technical_score": 0.00121831389542358,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In \u00a7 4.2.1, we formally introduce the Core Set Closure assumption and show how to find the optimal sample and probe strategy when core set size is known. We also analyze the case when core set size is unknown and show how to ensure high success probability. In \u00a7 4.2.2, we develop Algorithms CSC and CSE based on this. In \u00a7 4.2.3, we discuss how to support progressive query processing.",
+    "technical_score": 0.033131369544991254,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "core set as the set of all oracle neighbors whose proxy prefix is a valid answer. We use cto denote the size of a given core set C. A core setCisclosed w.r.t. an RT (resp. PT) query if for any x\u2208C, any oracle neighbor whose proxy index is larger (resp. smaller) than that ofxis also an element of C.Core Set Closure assumption says that, for any given query, the core set is closed w.r.t. that query . For RT queries, the core set is always closed, because as the proxy index of oracle neighbors increases, the recall of correspond- ing proxy prefix monotonically increases. For PT queries, with a properly tuned proxy, the core set is likely to be closed in practice. In Figure 6, we report the average Precision(Dk)over 100random queries on two real datasets, Mimic-III [26] and night-street [11]. It is clear that the precision of proxy prefix Dkmonotonically de- crease askincreases on both datasets, which shows the core set closure property for PT queries.",
+    "technical_score": 0.002000911362969977,
+    "citation_score": 0.002000911362969977
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "We uniformly draw msamples of size sfromDto derivekS whereSis the union of samples, and return DkSas the answer. Recall thatkSis the largest (resp. smallest) I(x)for RT (resp. PT) queries, where xis determined to be an oracle neighbor by probing S(see \u00a7 3, Assumption 2). If the core set Cis closed w.r.t. a given query, the success probability of DkSis the likelihood ofSintersect- ing withC, i.e.,PoS(DkS,M,\u03b3)=Pr[S\u2229C=\u0338\u2205]. Since samples are drawn uniformly, we have Pr[S\u2229C=\u0338\u2205]=1\u2212(\u0000|D|\u2212c s\u0001)m= 1\u2212(I\u0302c\u22121 i=0|D|\u2212s\u2212i |D|\u2212i)m, wheresis the sample size and mis the number of samples. We denote f(|D|,s,m,c):=1\u2212(I\u0302c\u22121 i=0|D|\u2212s\u2212i |D|\u2212i)m.",
+    "technical_score": 0.0026678818172933025,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "When cis known .Givensandm, the expected number of or- acle calls made by the sample and probe strategy is EOC(s,m)= E[|S|]=|D|(1\u2212(1\u2212s |D|)m). Whencis known, we can determine s=s\u2217andm=m\u2217, which minimizes EOC(s,m)while ensuringf(|D|,s,m,c)\u22651\u2212\u03b4, by solving the following equation: mins,mEOC(s,m)=|D|(1\u2212(1\u2212s",
+    "technical_score": 0.0008892939390977676,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Such exhaustive search for the exact value of s\u2217andm\u2217, how- ever, can be expensive in a large DB. Instead, we are interested in approximation solutions with good guarantees, which we develop next. Given a query, let (s,m)denote the sample size and number of samples used by a strategy. Then |D|\u2212EOC(s,m)denotes the ex- pected number of saved oracle calls compared with the exhaustive approach of probing every object in the DB. Define the savings ratio as\u03be(s,m)=|D|\u2212EOC(s,m) |D|\u2212EOC(s\u2217,m\u2217). It denotes the fraction of oracle calls saved by strategy(s,m)compared to the optimal strategy (s\u2217,m\u2217). (s\u2217,m\u2217)yields\u03be(s\u2217,m\u2217)=1.",
+    "technical_score": 0.0006225057573684374,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Let us examine the special cases where either s=1orm=1. For s=1, we letm=m(1), and \u03bes=1:=\u03be(1,m(1))\u2265\u03b4\u22121 c(1",
+    "technical_score": 0.0005335763634586606,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "|D|\u22121)\u00b7(1\u22121/|D|) (9) Form=1, we sets=s1:=\u2308\u2212log(\u03b4)I\u0301c\u22121 i=01 |D|\u2212i\u2309to ensure high success probability, and \u03bem=1:=\u03be(s1,1)\u2265\u03b4\u22121 |D|c\u00b7(1\u22121/|D|+log(\u03b4)/c) (10) In practice where e.g., \u03b4=0.1,|D|=10,000, andc=100, we have both\u03bes=1and\u03bem=1being no less than 97.7%, that is, if we fix eithers=1orm=1as above, the saved oracle usage is at least 97.7%of what the optimal strategy (s\u2217,m\u2217)achieves. Thus, either of them can be used as an approximation to the optimal strategy. Whencis unknown .We incur extra oracle calls and apply Hoeffding Bounds [48] to ensure high success probability. Proposition 4.2 (Hoeffding Bounds). Let{Xi}n i=1be indepen- dent random variables, with Xi\u2208 {0,1}and let E[Xi]=\u03bc. Let \u02c6\u03bc=1 nI\u0301n i=1Xi. Then for\u2200\u03b5\u22650, we have the concentration bound Pr[\u02c6\u03bc\u2212\u03b5\u2264\u03bc]\u22651\u2212exp(\u22122n\u03b52) (11) For an RT query with target \u03b3, we can derive a probabilistic lower bound forcas follows. For an RT query, the core set Cconsists of the top(1\u2212\u03b3)\u00d7100% oracle neighbors of largest proxy indices. That is, we can write c=\u230a|NNO|(1\u2212\u03b3)\u230b+1. Whensandmare fixed,f(|D|,s,m,c)monotonically increases as cincreases. Given \u03b4r\u2208(0,1), letcdenote a probabilistic lower bound of c, i.e.,Pr[c\u2265 c]\u22651\u2212\u03b4r. We can solve Eq. 8, either exactly or approximately as needed, subject to a more stringent constraint f(|D|,s,m,c)\u22651\u2212\u03b4 1\u2212\u03b4rto findsandm, which ensures an overall success probability no less than 1\u2212\u03b4. We show how to derive such probabilistic lower boundcusing Hoeffding Bounds.",
+    "technical_score": 0.006865878468561246,
+    "citation_score": 0.002027060922416431
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Randomly draw xi\u2208D. DefineXi=1iffdistO(xi)\u2264r. We",
+    "technical_score": 0.00017785878781955355,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Core Set Closure Assumption"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "|D|. Randomly draw{xi}n i=1with replace- nI\u0301n i=1Xi. For any\u03b5r,\u03b4r\u2208(0,1), by Hoeffding Bounds, we have Pr[\u02c6\u03bcD\u2212\u03b5r\u2264\u03bcD]\u22651\u2212\u03b4rifn\u2265log(\u03b4r) an RT query with target \u03b3, sincec=\u230a|NNO|(1\u2212\u03b3)\u230b+1, and we havePr[c\u2265\u230a|D|(\u02c6\u03bcD\u2212\u03b5r)(1\u2212\u03b3)\u230b+1]\u22651\u2212\u03b4r, ifn\u2265log(\u03b4r) denote the probabilistic lower bound c:=\u230a|D|(\u02c6\u03bcD\u2212\u03b5r)(1\u2212\u03b3)\u230b+1. For PT queries, such cis hard to obtain. Given \u03b4andk, we apply Hoeffding Bounds in a similar way to derive a probabilistic lower bound for the precision Mp(Dk), denoted as \u03bcDk. That is, Pr[Mp(Dk)\u2265\u03bcDk]\u22651\u2212\u03b4. For a PT query with target \u03b3,Dkis a high probability valid answer if \u03bcDk\u2265\u03b3. We use heuristics to identifyDkof high\u03bcDkand good CR (details in \u00a7 4.2.2).",
+    "technical_score": 0.008892939390977676,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Algorithms with Core Set Closure"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Algorithm CSC .Algorithm CSC returns high probability valid answers with a minimal expected number of oracle calls and empiri- cally good CR, under Core Set Closure and takingcas input. CSC is presented in Algorithm 3. We compute s\u2217andm\u2217in line 2 either exactly or approximately, and draw samples in line 3. In lines 4 to 8, we compute kSaccording to the query type and return DkSas the answer. The exact solution to Eq.8 requires O(c|D|)operations while approximate solutions take O(c)operations. The time com- plexity is dominated by accessing proxy prefixes, which requires sorting all objects w.r.t. proxy distance taking O(|D|log(|D|)).",
+    "technical_score": 0.0067445220223775965,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Algorithms with Core Set Closure"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1 Function CSC(D,c,\u03b4):",
+    "technical_score": 0.0033722610111887982,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Algorithms with Core Set Closure"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "2 s\u2217,m\u2217\u2190getsm(|D|,c,\u03b4) /* Solve Eq.8 */ 3S\u2190 UniformSample( D,s\u2217,m\u2217)",
+    "technical_score": 0.004496348014918396,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Algorithms with Core Set Closure"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Algorithm CSE.Algorithm CSE incurs more oracle calls and returns high probability valid answers in general settings where c is unknown or Core Set Closure assumption does not hold. CSE is presented in Algorithm 4. CSE-RT is given in lines 1 to",
+    "technical_score": 0.0016861305055943991,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Algorithms with Core Set Closure"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "\u22122\u03b52r\u2309objects to derivec. Then, we invoke Algorithm CSC to process the query subject tof(|D|,s,m,c)\u22651\u2212\u03b4 1\u2212\u03b4r. CSE-PT is given in lines 5 to 15.",
+    "technical_score": 0.0014051087546619989,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Algorithms with Core Set Closure"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "We use CSC to find good answer candidates, and apply Hoeffding Bounds to return high probability valid answers. Specifically, given a query and budget b\u2032, we sample and probe b\u2032objects to estimate c, then invoke CSC with the estimation to compute Dk1(lines 6 to 8). We also use the same sample to estimate the largest k=k2such thatDkhas a sampled precision no less than \u03b3(line 9). To improveCR (i.e., recall for PT queries), we set \u02c6k=max{k1,k2}and consider D\u02c6kas the answer candidate (line 10). In lines 11 to 15, given \u03b5p, we draw samples and estimate a probabilistic lower bound for Mp(D\u02c6k) by applying Hoeffding Bounds. For a PT query with target \u03b3, we returnD\u02c6kif the probabilistic lower bound is no less than \u03b3. O/w, we return all oracle neighbors identified from samples. The overall time complexity is dominated by CSC and is also O(|D|log(|D|)).",
+    "technical_score": 0.0014051087546619989,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Progressive Query Processing"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "minimize the oracle usage, for some challenging queries the bare minimum of oracle calls can still be too high. We propose progressive query processing for that. Recall that, our CSC and CSE approaches drawmsamples of size sto compute kSand return DkSas the answer. Instead of computing kSafter seeing all the samples, we can derivek\u2032 Safter seeing each sample and use k\u2032 Sto select answers with adaptive success probability bounds that are progressively better and better. We can keep refining k\u2032 Swhen we see more samples, eventually approaching kS, but the user can terminate the evaluation at any time based on the oracle cost incurred thus far.",
+    "technical_score": 0.012438614169658224,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Progressive Query Processing"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "2 \u02c6\u03bcD\u2190HoeffdingEst( D,\u03b4r,\u03b5r) 4 return CSC(D,c,1\u2212\u03b4 1\u2212\u03b4r)",
+    "technical_score": 0.00016007290903759813,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Progressive Query Processing"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "|S|\u00b7the size of core set w.r.t. S 8Dk1\u2190CSC(D,\u02c6c,1\u2212\u03b4)",
+    "technical_score": 0.001482779957161316,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Progressive Query Processing"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "11\u03bcD\u02c6k\u2190HoeffdingEst( D\u02c6k,\u03b4,\u03b5p)\u2212\u03b5p",
+    "technical_score": 0.0009193764562408817,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "FORMAL ANALYSIS AND ALGORITHMS",
+      "Core Set Closure",
+      "Progressive Query Processing"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "16 Function HoeffdingEst( D,\u03b4,\u03b5): \u22122\u03b52\u2309)",
+    "technical_score": 0.0010064474116617934,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Our extensive experiments (1) assess the performance of PQA to demonstrate its optimality w.r.t. CR and success probability under Proxy Quality assumption (\u00a7 5.2), (2) assess the performance of CSC to demonstrate its minimal oracle usage and success probability under Core Set Closure assumption (\u00a7 5.3), (3) compare PQE, CSE with the baselines on CR and success probability under the same oracle usage (\u00a7 5.4) and under varied oracle budgets (\u00a7 5.5). (4) Compare PQE, CSE with the baselines w.r.t. query time (\u00a7 5.6). (5) Compare PQE, CSE with the baselines w.r.t. CPU overhead, CR, and success probability on datasets of various sizes and domains (\u00a7 5.7).",
+    "technical_score": 0.03470248631386064,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Datasets Oracle Proxy Query targets VOC&COCO Human labeler ML-GCN[15] Similar images Mimic-III&eICU Physicians LIG-Doctor[45] Similar patients night-street Mask R-CNN[23] ResNet-50[24] Car frames",
+    "technical_score": 0.0,
+    "citation_score": 0.006055877729573433
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup",
+      "Datasets and Proxy Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Multi-label Image Recognition . VOC [20] and COCO [35] are widely used benchmarks in multi-label recognition tasks. The vali- dation set of COCO consists of 40,504images from 80classes, and VOC contains 4,952images from 20object categories. We also uni- formly sample a 8000-image subset from COCO, denoted as COCO (small). We use COCO and COCO (small) in different experiments.",
+    "technical_score": 0.0010410745894158188,
+    "citation_score": 0.004164298357663275
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup",
+      "Datasets and Proxy Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Medical . Mimic-III [26] and eICU [41] are two publicly available clinical datasets, that include patient trajectories, demographics collected by daily ICU admissions, and clinical measurements. After pruning records with only one admission, we obtain a Mimic-III subset of 4,243records and an eICU subset of 8,235records. Video .We use the night-street dataset [ 11] to support queries over classification tasks. Each video frame has a Boolean label indicating whether or not it contains a car. We uniformly draw a subset of 10,000frames from the original dataset for evaluation.",
+    "technical_score": 0.0,
+    "citation_score": 0.0009083816594360149
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup",
+      "Baselines"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Probabilistic Top-K [32] . This baseline studies approximate Top-K queries and delivers solutions with statistical guarantees. Given a query, there exists a direct mapping from our FRNN query to a Top-K query. For example, given a query object qand radius r, an FRNN query asks for an answer Ans which comprises all near-neighbours within the radius rtoq. Naturally, we can re- write this query in Top-K semantics: given query object q, return the Top-Knearest neighbors to qwhereK=|Ans|according to the aforementioned FRNN query. Furthermore, this Top-K baseline relies on distribution over oracle predictions, which can be obtained from our Proxy Quality assumption in PQA.",
+    "technical_score": 0.0008602926124881977,
+    "citation_score": 0.0034411704499527906
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup",
+      "Baselines"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Scan2Test We also consider the naive approach which probes all objects with the oracle and selects the correct answer set for a given query. This approach is used as the baseline in [32].",
+    "technical_score": 0.0,
+    "citation_score": 6.550451364123332e-05
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup",
+      "Evaluation Measures"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "interested in three measures: (i) empirical success probability in relation to the required success probabilities; (ii) average CR of answers returned by different methods; and (iii) query processing time including (a) CPU overhead and (b) number of oracle calls. We do not compare proxy time since it is identical for all approaches and is only a fraction of the overall query processing time.",
+    "technical_score": 0.0026201805456493327,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup",
+      "Protocol"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "query objects from a dataset and aggregates our measures for those query objects. In Section 5.2, we randomly choose 200query ob- jects and aggregate their results. In other experiments, we randomly choose 50query objects and execute each query 10times and aggre- gate their results. This is because PQA is deterministic while other algorithms are subject to randomness, so we average over multi- ple trials. We use cosine distance whenever the model outputs are multi-dimensional vectors: distcos(y1,y2)=1\u2212y1\u00b7y2 \u2225y1\u2225\u00b7\u2225y2\u2225, given its wide application in proximity query processing [ 3,31,38]. When the output is scalar (e.g., Boolean labels), we use the absolute dif- ferencedistabs(y1,y2)=|y1\u2212y2|as the distance function, which allows us to generalize SUPG query with boolean oracle predicates. In all cases, the radius threshold is r=0.9. The choice of distances and thresholds has no impact on our statistical guarantees.",
+    "technical_score": 0.002783941829752416,
+    "citation_score": 0.0004912838523092499
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Experimental Setup",
+      "Protocol"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Default values. Unless otherwise stated, we set \u03b3(recall and precision targets) to 0.95and\u03b4to0.1in all our experiments. We add a black dashed line ( \u2212\u00b7\u2212 ) at the level of 1\u2212\u03b4in figures to help visually track the success probability of each approach. We empirically choose \u03c30=0.3for PQE,\u03b5p=0.1%andb\u2032=100 for CSE-PT, \u03b5r=10%and\u03b4r=0.05for CSE-RT according to our experiment results. We choose a small \u03b5pfor CSE-PT to improve the probabilistic lower bound for precision, and a relatively large \u03b5rfor CSE-RT to reduce the oracle usage incurred by applying Hoeffding Bounds. In addition, we only report results of CSE when m=1(see Eq. 10) given its dominating performance over other msettings. Our algorithms are implemented in Python 3.7 and experiments are conducted on a M1 Pro chip @ 3.22GHz with a 16GB RAM.",
+    "technical_score": 0.0010917418940205553,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "PQA Success at Maximal CR"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "PQA finds high probability valid answers of maximal expected CR with zero oracle calls, whenever Proxy Quality assumption holds (\u00a7 4.1). We test it on two semi-synthetic datasets. Specifically, we use real proxy distances from VOC and eICU, and synthesize oracle distances with a normal distribution N(0,\u03c3=0.1). We clip the normal distribution to [0,1]to agree with the output range of our distance measures. We demonstrate CR maximality and success probability guarantees of PQA by comparing it with a series of variants. Recall that PQA returns the top- k\u2217objects of smallest proxy distances as the answer. We measure the success probability and CR when using a perturbed k\u2217. We try perturbations ranging from\u221220%to20%by returning top-(1+perturb)\u00b7k\u2217for \u221220%\u2264perturb\u226420%. The results are shown in Figure 7. The two top plots summarize RT queries. Recall \u03b4=0.1, which requires success probability being no less than 90%. On VOC, with zero perturbation, PQA achieves a 92%empirical success probability and 39%CR for RT queries. On eICU, the empirical success probability and CR are 90%and38% respectively. With negative perturbation, empirical success prob- ability quickly shrinks to nearly zero; with positive perturbation, CR starts to drop. This observation clearly demonstrates that PQA gives the highest answer CR while respecting the success proba- bility constraint. The two bottom plots are for PT queries, and are similar to RT. The unperturbed PQA achieves 94%empirical success probability on both datasets, a 53%CR on VOC, and a 42%CR on eICU. Any perturbation to k\u2217either fails the success probability constraint or degrades CR. We compare PQA and Top-K on the same semi-synthetic VOC dataset (see Figure 8). Both approaches achieve desired success probability targets. However, Top-K suffers from huge oracle usage while PQA needs no oracle calls, indicating PQA is capable of effi- cient query processing when proxy quality distribution is known. Furthermore, we investigate the sensitivity of PQA to \u03c34, shown in Figure 9. We test PQA on VOC with various \u03c3values and report PQE performance5for comparison purposes. As \u03c3increases, for both query types, the success probability of PQA increases while CR decreases. This agrees with the intuition that, as the proxy qual- ity gets worse, PQA becomes more conservative to improve success probability at the cost of CR degradation. Since PQE does not rely on external\u03c3, both success probability and CR are constant and higher than PQA, given that PQE has the flexibility to probe samples with the oracle.",
+    "technical_score": 0.011645246869552593,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "CSC with Minimal Oracle Usage"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "CSC ensures high success probabilities with minimal oracle usage under Core Set Closure assumption (\u00a7 4.2). We implement an exact algorithm and two approximation algorithms to compute s\u2217andm\u2217(\u00a7 4.2.1), Approx-s1 andApprox-m1 . We compare these algorithms to two baselines, Rand-s andRand-sm . Specifically, Rand- srandomly chooses sand setsm=m(s), whereas Rand-sm chooses boths,mat random. For each query, we precompute the core set size and feed it to all approaches. We study the empirical success probability and oracle usage on VOC and eICU. The results for RT and PT queries are reported in Figure 10. Especially, we report standard deviation of oracle usage for both query types on both datasets. We also report CPU overheads in Figure 11. For RT queries, all approaches achieve high empirical success probability. The exact algorithm invokes the oracle on only 9.8% objects in VOC and 7.1%objects in eICU. The oracle usage of approx- imation algorithms is just up to 1.1%more than the exact algorithm. However, the baseline Rand-s applies the oracle on at least 49.3% objects and Rand-sm makes oracles calls on at least 94.6%objects. Results of PT queries are similar to RT. All approaches achieve high empirical success probability. The exact algorithm has the 4We assume a normal distribution \u03b5i\u223cN( 0,\u03c3)for PQA to compute \u03a6(D). 5Budget of PQE set equal to the oracle cost incurred by CSE for the given query. smallest oracle usage, which accounts for 8.1%objects in VOC and 5.2%objects in eICU. The approximation algorithms incur an oracle usage which is just up to 2.1%higher than the exact algorithm. The baseline method Rand-s calls the oracle on at least 39%objects, and Rand-sm makes oracle calls for at least 93.7%objects. We are also interested in the CPU overhead of the exact algo- rithm and the two approximation algorithms. Results on our five real-world datasets are summarized in Figure 11. Clearly, the exact algorithm has a larger CPU overhead in comparison to the two ap- proximation algorithms. Specifically, the approximation algorithms achieve a speedup up to 1466\u00d7for RT queries and 7391\u00d7for PT queries on CPU overheads, in comparison to the exact method. On VOC, we investigate how sensitive CSC is to the input core set sizecand include CSE performance for the same query for comparison (Figure 12). As cincreases, for both query types, success probability of CSC decreases and CR increases. Since CSE estimates cinternally, both success probability and CR are agnostic to external cchanges. Note that the CSE performance is generally better than CSC, which is attributed to the fact that CSE has more flexibility to probe objects with oracle for the additional cestimation.",
+    "technical_score": 0.011645246869552593,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "CSE and PQE vs SUPG and Sample2Test"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We implement CSE and PQE and compare them to SUPG and Sam- ple2Test. For a fair comparison, we use the oracle usage incurred by CSE as the budget for PQE, SUPG, and Sample2Test. We measure empirical success probability and CR on VOC and eICU (Figure 13). For RT, CSE and PQE achieve high empirical success probability on both datasets, while SUPG fails the success threshold empirically by a margin of 10%on VOC. On CR, PQE outperforms SUPG by a margin up to 26%, and CSE outperforms SUPG up to 33%. For PT, all approaches achieve high empirical success probability. On CR, PQE outperforms SUPG by up to 12%and CSE achieves comparable CR to SUPG. Sample2Test continuously fails the success probability for both query types on both datasets.",
+    "technical_score": 0.011470568166509303,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "CSE and PQE vs SUPG and Sample2Test"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Failures of SUPG on RT queries stem from the sample mean and variance it uses without error bounds , which introduces uncontrolled uncertainty and degrades statistical guarantees.",
+    "technical_score": 0.0001746787030432889,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Oracle Efficiency"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "To measure Oracle efficiency, we perturb the oracle usage incurred by CSE and use it as the budget for PQE, SUPG, Sample2Test. The CR of CSE is also plotted as a baseline. Results are in Figure 14. For RT queries, PQE achieves high empirical success probability on both datasets, while SUPG and Sample2Test fails frequently on VOC especially with small budgets. This indicates that CSE is the most oracle efficient approach for RT queries. For PT queries, all approaches except Sample2Test achieve high empirical success probability on both datasets.Time / Hours PQE CSE SUPG Scan2Test Sample2Test VOC 21.22 15.88 24.12 27.51 26.84 COCO(small) 32.21 19.66 30.46 44.44 44.06 MIMIC-III 124.3 108.1 865 1061 1045.08 eICU 1337.3 679.2 925 2059 2009.16 night-street 0.38 0.11 0.19 1.11 1.15",
+    "technical_score": 0.0012860597866506617,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Oracle Efficiency"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Time / Hours PQE CSE SUPG Scan2Test Sample2Test VOC 4.71 6.3 7.52 27.51 26.41 COCO(small) 11.93 13.18 19.45 44.44 39.97 MIMIC-III 997.3 132.7 158.4 1061 1060.69 eICU 569.4 617.3 871.1 2059 1973.64 night-street 0.28 0.25 0.35 1.11 1.17",
+    "technical_score": 0.0011562708066093204,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Oracle Efficiency"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "|D| Success Prob. CR PQE/CSE/SUPG/Sample2Test PQE/CSE/SUPG/Sample2Test 10034 1/0.99/0.78/0.69 0.72/0.74/0.46/0.53 20068 1/0.99/0.76/0.59 0.65/0.66/0.46/0.58 30102 1/0.99/0.76/0.65 0.63/0.65/0.44/0.5 40137 1/0.98/0.75/0.66 0.68/0.69/0.5/0.54",
+    "technical_score": 0.0009243893832651504,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Oracle Efficiency"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "|D| Success Prob. CR PQE/CSE/SUPG/Sample2Test PQE/CSE/SUPG/Sample2Test 10034 1/1/1/0.52 0.73/0.67/0.59/ 0.73 20068 1/1/1/0.48 0.69/0.65/0.59/ 0.71 30102 1/1/1/0.5 0.66/0.64/0.62/ 0.68 40137 1/1/1/0.51 0.67/0.64/0.66/ 0.74",
+    "technical_score": 0.00012685408434064436,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Time Efficiency"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The running time of a query is composed of CPU overhead and model usage including proxy and oracle calls. We measure CPU overhead for each approach locally and approximate model usage by timing the number of model calls and average time taken by each call. For instance, on medical datasets (MIMIC-III & eICU), the oracle is a human physician whose average diagnosis time is 15 minutes [ 46], while the proxy is a recurrent neural network taking roughly 1millisecond for each call [ 45]. Results are reported in Table 3, 4 with the best results in bold and saving ratios w.r.t.",
+    "technical_score": 0.0014847689758679553,
+    "citation_score": 0.0004949229919559851
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Time Efficiency"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "SUPG. For both query types, Sample2Test and Scan2Test are the two most time-consuming approaches.",
+    "technical_score": 0.00034935740608657773,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTS",
+      "Scalability"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We measure CPU overhead, success probability, and CR of PQE, CSE, SUPG, and Sample2Test. We uniformly draw subsets of the original COCO dataset ( 25%,50%,75%, and 100% ). To make a fair comparison, we use the oracle usage incurred by CSE as the budget for PQE and SUPG. Results are reported in Figure 15 and Table 5, 6. For RT queries, CSE, SUPG, and Sample2Test have a reasonably low CPU overhead. For PT queries, PQE has the highest CPU over- head, 2.5seconds per query, while the overhead of CSE, SUPG, and Sample2Test is less than 0.2seconds.",
+    "technical_score": 0.11645246869552592,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Query approximation. Query approximation techniques [ 33] can be categorized into (1) online aggregation: select samples online and use them to answer OLAP queries, and (2) offline synopses gen- eration to facilitate OLAP queries. Our work adopts a probabilistic top-k approach [47] and is significantly different from these.",
+    "technical_score": 0.011364046350042078,
+    "citation_score": 0.04545618540016831
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "FRNN query. FRNN query answering systems [6, 7] build spatial indexes on the whole DB, which requires oracle calls on every single object. Our work focuses on reducing the oracle usage and is clearly distinguished from this line of work.",
+    "technical_score": 0.007576030900028052,
+    "citation_score": 0.011364046350042078
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Optimizing ML inference. Several recent approaches were pro- posed to speed up the application of an ML model. Existing ap- proaches follow either an in-database [ 17] or in-application ap- proach [ 2]. Amazon Aurora is an example of an in-database con- tainerized solution that enables external calls from SQL queries to ML models in SageMaker6. Containerized execution introduces overhead in prediction latency. To mitigate that, Google\u2019s BigQuery ML7and Microsoft\u2019s Raven were developed [ 30]. Compared to Raven, BigQuery ML relies mostly on hard-coded models and tar- gets batch predictions, since it inherits a relatively high startup cost. Raven and its runtime environment ONNX [ 13] offer the additional ability to make tuple-level inference. able incremental predictions for neural networks. Computation time is reduced by pruning examples that are classified in earlier layers, selected adaptively. Kang et al. [ 28] present NOSCOPE, a system for querying videos that can reduce the cost of neural network video analysis by up to three orders of magnitude via inference-optimized model search. Lu et al. [ 37] and Yang et al. [ 49] use probabilistic predicates to filter data blobs that do not satisfy the query and empirically increase data reduction rates. Ander- son et al. [ 4] use a hierarchical model to reduce the runtime cost of queries over visual content. Gao et al. [ 21] introduce a Multi- Level Splitting Sampling to let one \"promising\" sample path prefix generate multiple \"offspring\" paths, and direct Monte-Carlo based simulations toward more promising paths. Lai et al. [ 32] studies approximate Top-K query with light-weight proxy models that generate oracle label distribution. Recent work that proposed to use cheap proxy models, such as image classifiers, to identify an approximate set of data points satisfying a query [ 29], is by far the closest to our work, albeit they require a budget.",
+    "technical_score": 0.010101374533370736,
+    "citation_score": 0.015152061800056104
+  },
+  {
+    "section_path": [
+      "CONCLUSION AND DISCUSSION"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We formalize and solve precision-target and recall-target queries, two paradigms that are well-suited for querying the results of ML predictions. We propose two assumptions and develop four algo- rithms. Our extensive experiments on five real-world datasets show that our approach enjoys statistical guarantees with a small cost and a good complementary rate, i.e., a good balance between recall and precision rates. Our framework can be extended to optimize a query workload using metric properties like triangle inequality [ 5]. Consider the ob- jects{q1,q2,x}. Suppose that we first choose q1as the query object, and compute the proxy distances distP(q1,q2)anddistP(q1,x)to find answers using our approaches. Next, when we choose q2as the query object, by leveraging triangle inequality, we can lower bounddistP(q2,x)asdistP(q2,x)\u2265|distP(q1,q2)\u2212distP(q1,x)|. If this bound is high, we can safely avoid applying the probe to xfor queryq2. We can extend our framework to multiple proxies at different accuracy and cost levels. This represents real-world scenarios where proxies are derived from huge neural models by activating specific subnetworks [ 9]. It is clear that, with multiple proxy models, the search space for our optimization problem will exponentially increase. Secondly, by introducing proxies with vari- ous cost and accuracy levels, optimizing efficiency would go beyond simply counting oracle calls, and would yield a linear programming problem. We are currently exploring possible solutions.",
+    "technical_score": 0.07438210733012537,
+    "citation_score": 0.02479403577670846
+  }
+]
