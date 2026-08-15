@@ -4557,36 +4557,9 @@ def main() -> None:
     parser.add_argument("--pdf", default=DEFAULT_PDF_PATH, help="Path to PDF file")
     parser.add_argument(
         "--pdf-text-backend",
-        choices=["auto", "pypdf", "mineru"],
-        default="auto",
-        help="PDF text extraction backend. 'auto' tries MinerU first when available, then falls back to pypdf.",
-    )
-    parser.add_argument(
-        "--mineru-cli",
-        default="mineru",
-        help="MinerU CLI command to use when --pdf-text-backend is 'mineru' or 'auto'.",
-    )
-    parser.add_argument(
-        "--mineru-output-root",
-        default=".mineru_cache/mineru",
-        help="Directory used to cache MinerU parsing outputs.",
-    )
-    parser.add_argument(
-        "--mineru-backend",
-        default="pipeline",
-        help="MinerU backend to use for parsing. 'pipeline' is CPU-friendly and works well as a clean-text extractor.",
-    )
-    parser.add_argument(
-        "--mineru-method",
-        choices=["auto", "txt", "ocr"],
-        default="auto",
-        help="MinerU parse method for PDF extraction.",
-    )
-    parser.add_argument(
-        "--mineru-timeout",
-        type=int,
-        default=1800,
-        help="Timeout in seconds for a single MinerU parsing run.",
+        choices=["pypdf"],
+        default="pypdf",
+        help="PDF text extraction backend.",
     )
     parser.add_argument("--paper-id", default=DEFAULT_PAPER_ID, help="Paper identifier used in paragraph ids")
     parser.add_argument(
@@ -4666,11 +4639,6 @@ def main() -> None:
     text = read_pdf_text(
         args.pdf,
         pdf_text_backend=args.pdf_text_backend,
-        mineru_cli=args.mineru_cli,
-        mineru_output_root=args.mineru_output_root,
-        mineru_backend=args.mineru_backend,
-        mineru_method=args.mineru_method,
-        mineru_timeout=args.mineru_timeout,
     )
     sections = DEFAULT_SECTIONS
     if args.sections_file and args.sections_var:

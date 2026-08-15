@@ -36,9 +36,15 @@ Quick start
 
 from __future__ import annotations
 
+import hashlib
 import difflib
 import json
+import os
 import re
+import shlex
+import shutil
+import subprocess
+import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -82,12 +88,192 @@ class ReferenceEntry:
 # PDF text extraction
 # ---------------------------------------------------------------------------
 
+DEFAULT_REFERENCES_TEXT_BACKEND = "mineru"
+DEFAULT_MINERU_CLI = "mineru"
+DEFAULT_MINERU_OUTPUT_ROOT = Path(".mineru_cache/mineru_references")
+DEFAULT_MINERU_BACKEND = "pipeline"
+DEFAULT_MINERU_METHOD = "auto"
+DEFAULT_MINERU_TIMEOUT_SECONDS = 1800
+
+
 def _pdf_full_text(pdf_path: str | Path) -> str:
     text = ""
     with open(pdf_path, "rb") as f:
         for page in PyPDF2.PdfReader(f).pages:
             text += (page.extract_text() or "") + "\n"
     return text
+
+
+def _clean_mineru_markdown_preserve_lines(markdown: str) -> str:
+    text = markdown.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", text)
+    text = re.sub(r"</?(sub|sup|span|code|pre|em|strong)\b[^>]*>", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"</?(td|th)\b[^>]*>", " ", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"</?(summary|details|table|tr|thead|tbody|tfoot|ul|ol|li|p|div|br|hr)\b[^>]*>",
+        "\n",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(r"</?[A-Za-z][A-Za-z0-9:-]*\b[^>]*>", " ", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = text.replace("```", "\n").replace("`", "")
+    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
+
+    text = unicodedata.normalize("NFKC", text)
+    text = text.replace("\u00ad", "")
+    text = re.sub(r"[\uE000-\uF8FF]", "", text)
+    text = text.replace("\ufffd", "")
+    text = re.sub(r"(?<=\w)-\n(?=\w)", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r" *\n *", "\n", text)
+
+    cleaned_lines: List[str] = []
+    blank_count = 0
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or re.fullmatch(r"[.·•]+", line):
+            blank_count += 1
+            if blank_count <= 1:
+                cleaned_lines.append("")
+            continue
+        blank_count = 0
+        cleaned_lines.append(line)
+
+    cleaned = "\n".join(cleaned_lines)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
+def _split_cli_command(command: str) -> List[str]:
+    parts = shlex.split(command)
+    if not parts:
+        raise ValueError("MinerU CLI command is empty.")
+    return parts
+
+
+def _resolve_cli_command(command: str) -> Optional[List[str]]:
+    parts = _split_cli_command(command)
+    executable = shutil.which(parts[0])
+    if executable is None:
+        candidate = Path(parts[0]).expanduser()
+        if not candidate.exists():
+            return None
+        executable = str(candidate.resolve())
+    return [executable, *parts[1:]]
+
+
+def _build_mineru_cache_dir(pdf_path: str | Path, output_root: str | Path) -> Path:
+    pdf = Path(pdf_path)
+    stat = pdf.stat()
+    identity = f"{pdf.resolve()}::{stat.st_size}::{stat.st_mtime_ns}"
+    digest = hashlib.sha1(identity.encode("utf-8")).hexdigest()[:12]
+    return Path(output_root) / f"{pdf.stem}_{digest}"
+
+
+def _expected_mineru_markdown_path(
+    cache_dir: Path,
+    pdf_stem: str,
+    mineru_backend: str,
+    mineru_method: str,
+) -> Path:
+    if mineru_backend == "pipeline":
+        parse_dir = cache_dir / pdf_stem / mineru_method
+    elif mineru_backend.startswith("hybrid"):
+        parse_dir = cache_dir / pdf_stem / f"hybrid_{mineru_method}"
+    elif mineru_backend.startswith("vlm"):
+        parse_dir = cache_dir / pdf_stem / "vlm"
+    else:
+        parse_dir = cache_dir / pdf_stem / mineru_method
+    return parse_dir / f"{pdf_stem}.md"
+
+
+def _extract_references_block(text: str) -> str:
+    lines = (text or "").splitlines()
+    start_idx: Optional[int] = None
+    for idx, line in enumerate(lines):
+        stripped = re.sub(r"\s+", " ", line).strip().lower()
+        stripped = re.sub(r"^(?:\d+(?:\.\d+)*|[ivxlcdm]+)[\.\)]\s+", "", stripped)
+        if stripped in {"references", "bibliography"}:
+            start_idx = idx + 1
+            break
+
+    if start_idx is None:
+        tail = "\n".join(lines[-400:]) if lines else text
+        return tail.strip()
+
+    refs_lines = lines[start_idx:]
+    while refs_lines and not refs_lines[0].strip():
+        refs_lines.pop(0)
+    return "\n".join(refs_lines).strip()
+
+
+def _read_references_text_with_mineru(
+    pdf_path: str | Path,
+    *,
+    mineru_cli: str = DEFAULT_MINERU_CLI,
+    mineru_output_root: str | Path = DEFAULT_MINERU_OUTPUT_ROOT,
+    mineru_backend: str = DEFAULT_MINERU_BACKEND,
+    mineru_method: str = DEFAULT_MINERU_METHOD,
+    mineru_timeout: int = DEFAULT_MINERU_TIMEOUT_SECONDS,
+    references_output_path: str | Path | None = None,
+) -> str:
+    resolved_cli = _resolve_cli_command(mineru_cli)
+    if resolved_cli is None:
+        raise FileNotFoundError(
+            f"MinerU CLI '{mineru_cli}' was not found. "
+            "Install MinerU or configure CitationResolver with a valid mineru_cli path."
+        )
+
+    pdf = Path(pdf_path)
+    cache_dir = _build_mineru_cache_dir(pdf, mineru_output_root)
+    markdown_path = _expected_mineru_markdown_path(cache_dir, pdf.stem, mineru_backend, mineru_method)
+
+    if not markdown_path.exists():
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        command = [
+            *resolved_cli,
+            "-p",
+            str(pdf),
+            "-o",
+            str(cache_dir),
+            "-b",
+            mineru_backend,
+            "-m",
+            mineru_method,
+        ]
+        result = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=max(1, mineru_timeout),
+            env=os.environ.copy(),
+        )
+        if result.returncode != 0:
+            stderr = (result.stderr or "").strip()
+            stdout = (result.stdout or "").strip()
+            detail = stderr or stdout or f"exit code {result.returncode}"
+            raise RuntimeError(f"MinerU extraction failed for {pdf.name}: {detail}")
+
+    if not markdown_path.exists():
+        matches = sorted(cache_dir.rglob(f"{pdf.stem}.md"))
+        if not matches:
+            raise FileNotFoundError(
+                f"MinerU completed but no markdown output was found under {cache_dir}."
+            )
+        markdown_path = matches[0]
+
+    markdown_text = markdown_path.read_text(encoding="utf-8", errors="ignore")
+    cleaned_text = _clean_mineru_markdown_preserve_lines(markdown_text)
+    references_text = _extract_references_block(cleaned_text)
+
+    if references_output_path:
+        output_path = Path(references_output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(references_text, encoding="utf-8")
+
+    return references_text
 
 
 def _normalize_title_key(text: str) -> str:
@@ -328,11 +514,7 @@ def _extract_pdf_title(pdf_path: str | Path) -> Optional[str]:
 def _extract_refs_text(pdf_path: str | Path) -> str:
     """Return text from the first 'References' heading to end of document."""
     text = _pdf_full_text(pdf_path)
-    for marker in ("References\n", "REFERENCES\n", "Bibliography\n", "BIBLIOGRAPHY\n"):
-        idx = text.rfind(marker)
-        if idx != -1:
-            return text[idx:]
-    return text[-8000:]   # fallback: last 8 000 chars
+    return _extract_references_block(text)
 
 
 # ---------------------------------------------------------------------------
@@ -698,6 +880,12 @@ class CitationResolver:
         llm_repair_host: str = "http://localhost:11434",
         llm_repair_min_confidence: float = 0.60,
         llm_repair_max_calls: int = 200,
+        references_text_backend: str = DEFAULT_REFERENCES_TEXT_BACKEND,
+        mineru_cli: str = DEFAULT_MINERU_CLI,
+        mineru_output_root: str | Path = DEFAULT_MINERU_OUTPUT_ROOT,
+        mineru_backend: str = DEFAULT_MINERU_BACKEND,
+        mineru_method: str = DEFAULT_MINERU_METHOD,
+        mineru_timeout: int = DEFAULT_MINERU_TIMEOUT_SECONDS,
     ) -> None:
         # (paper_id, citation_str) → ReferenceEntry  — scoped per paper so that
         # [2] in paper A and [2] in paper B are resolved independently.
@@ -726,6 +914,12 @@ class CitationResolver:
         self._llm_repair_calls = 0
         self._llm_client: Optional[Client] = None
         self._llm_repair_cache: Dict[str, Optional[ReferenceEntry]] = {}
+        self._references_text_backend = (references_text_backend or "pypdf").strip().lower()
+        self._mineru_cli = mineru_cli
+        self._mineru_output_root = str(mineru_output_root)
+        self._mineru_backend = mineru_backend
+        self._mineru_method = mineru_method
+        self._mineru_timeout = max(1, int(mineru_timeout))
 
     def _apply_exclusions(self, exclude_papers: set[str]) -> None:
         if not exclude_papers:
@@ -966,6 +1160,7 @@ class CitationResolver:
         paper_id: str,
         pdf_path: str | Path,
         citation_keys: List[str],
+        references_output_path: str | Path | None = None,
     ) -> int:
         """
         Parse the reference section of a PDF and resolve the given citation keys.
@@ -978,7 +1173,26 @@ class CitationResolver:
 
         Returns the number of keys successfully resolved.
         """
-        refs_text = _extract_refs_text(pdf_path)
+        if self._references_text_backend == "mineru":
+            refs_text = _read_references_text_with_mineru(
+                pdf_path,
+                mineru_cli=self._mineru_cli,
+                mineru_output_root=self._mineru_output_root,
+                mineru_backend=self._mineru_backend,
+                mineru_method=self._mineru_method,
+                mineru_timeout=self._mineru_timeout,
+                references_output_path=references_output_path,
+            )
+        elif self._references_text_backend == "pypdf":
+            refs_text = _extract_refs_text(pdf_path)
+            if references_output_path:
+                output_path = Path(references_output_path)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_text(refs_text, encoding="utf-8")
+        else:
+            raise ValueError(
+                f"Unsupported references_text_backend: {self._references_text_backend}"
+            )
         style = _detect_style(citation_keys)
         resolved = 0
 
@@ -1118,7 +1332,14 @@ class CitationResolver:
                     seen_keys.add(norm_key)
                     keys.append(citation)
 
-            self.parse_paper(paper_id, pdf_path, keys)
+            references_backend_suffix = "mineru" if self._references_text_backend == "mineru" else "pypdf"
+            references_output_path = paper_dir / f"{paper_id}_references_{references_backend_suffix}.txt"
+            self.parse_paper(
+                paper_id,
+                pdf_path,
+                keys,
+                references_output_path=references_output_path,
+            )
             print(
                 f"[CitationResolver] {paper_id}: discovered {len(citation_files)} citation-score files "
                 f"({', '.join(model_tags)})"

@@ -5,6 +5,7 @@ from pathlib import Path
 from citation_resolver import (
     CitationResolver,
     ReferenceEntry,
+    _extract_references_block,
     _extract_pdf_title,
     _looks_like_low_quality_title,
     _normalize_title_key,
@@ -180,6 +181,33 @@ class CitationResolverMatchingTests(unittest.TestCase):
         self.assertTrue(_looks_like_low_quality_title("a"))
         self.assertTrue(_looks_like_low_quality_title("12 Attention Visualizations Input-Input Layer5"))
         self.assertFalse(_looks_like_low_quality_title("Attention is all you need."))
+
+    def test_extract_references_block_starts_after_references_heading(self) -> None:
+        text = (
+            "Introduction\n"
+            "Some body text.\n\n"
+            "References\n"
+            "[1] First reference.\n"
+            "[2] Second reference.\n"
+        )
+
+        self.assertEqual(
+            _extract_references_block(text),
+            "[1] First reference.\n[2] Second reference.",
+        )
+
+    def test_extract_references_block_accepts_numbered_bibliography_heading(self) -> None:
+        text = (
+            "5 Conclusion\n"
+            "Closing text.\n\n"
+            "6. Bibliography\n"
+            "Smith, J. 2020. Example title.\n"
+        )
+
+        self.assertEqual(
+            _extract_references_block(text),
+            "Smith, J. 2020. Example title.",
+        )
 
 
 if __name__ == "__main__":

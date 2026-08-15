@@ -81,36 +81,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--pdf-text-backend",
-        choices=["auto", "pypdf", "mineru"],
-        default="auto",
-        help="PDF text extraction backend. 'auto' tries MinerU first when available, then falls back to pypdf.",
-    )
-    parser.add_argument(
-        "--mineru-cli",
-        default="mineru",
-        help="MinerU CLI command to use when --pdf-text-backend is 'mineru' or 'auto'.",
-    )
-    parser.add_argument(
-        "--mineru-output-root",
-        default=".mineru_cache/mineru",
-        help="Directory used to cache MinerU parsing outputs.",
-    )
-    parser.add_argument(
-        "--mineru-backend",
-        default="pipeline",
-        help="MinerU backend to use for parsing.",
-    )
-    parser.add_argument(
-        "--mineru-method",
-        choices=["auto", "txt", "ocr"],
-        default="auto",
-        help="MinerU parse method for PDF extraction.",
-    )
-    parser.add_argument(
-        "--mineru-timeout",
-        type=int,
-        default=1800,
-        help="Timeout in seconds for a single MinerU parsing run.",
+        choices=["pypdf"],
+        default="pypdf",
+        help="PDF text extraction backend.",
     )
     parser.add_argument("--model", default="llama3.2", help="Ollama model name to pass through.")
     parser.add_argument(
@@ -222,16 +195,6 @@ def main() -> None:
             str(pdf_path),
             "--pdf-text-backend",
             args.pdf_text_backend,
-            "--mineru-cli",
-            args.mineru_cli,
-            "--mineru-output-root",
-            args.mineru_output_root,
-            "--mineru-backend",
-            args.mineru_backend,
-            "--mineru-method",
-            args.mineru_method,
-            "--mineru-timeout",
-            str(max(1, args.mineru_timeout)),
             "--paper-id",
             pdf_path.stem,
             "--sections-file",
