@@ -102,8 +102,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Datasets and MetricsTo thoroughly assess our framework, we use a range of publicly available and logically demanding datasets covering both closed- and open-domain reasoning tasks: \u2022Closed-domain Tasks: These tasks require precise, objective reasoning and unambiguous answers, making them well-suited for evaluating core inference accuracy and mathematical rigor.GSM- Hard[ 18] features arithmetic problems involving unusually large numbers and complex multi-step calculations, challenging models\u2019 advanced mathematical reasoning and error-free execution. MMLU-Pro[ 67] is a comprehensive benchmark spanning diverse subjects and difficulty levels, using multiple-choice questions to assess both factual knowledge and logical deduction. Both benchmarks are designed to assess the model\u2019s ability in mathematical and commonsense reasoning and inference, withaccuracyas the evaluation metric. \u2022Open-domain Tasks: These tasks are inherently creative and open-ended, requiring multi- dimensional qualitative evaluation. They rigorously assess agents\u2019 ability to integrate information, understand context, and generate novel solutions.SRDD[ 44] consists of real-world textual software requirements and tasks agents with building the corresponding software, demanding proficiency in requirement comprehension, system/design reasoning, code generation, and testing. Its official evaluation metric combines completeness, executability, and consistency [ 44], reflecting the practi- cal demands of real-world software development workflows.CommonGen-Hard[ 39] challenges agents to generate coherent sentences that connect seemingly unrelated concepts, highlighting their abilities in commonsense reasoning, contextual understanding, and creative expression. Evaluation is based on an aggregate metric that incorporates grammar, relevance, logical consistency[ 32], as well as concept coverage [39], providing a nuanced assessment of generative quality. BaselinesTo mitigate performance interference\u2014where strong models may overshadow the con- tributions of weaker ones\u2014and to evaluate our method\u2019s adaptability across agents with varying capacities, we partition the agent pool based on the parameter scale of the underlying models. Specif- ically, we define aMimassubspace (smaller models:Qwen-2.5-7B,Qwen-2.5-14B,LLaMA-3.1-8B, LLaMA-3.2-3B,Mistral-7B,Mistral-Nemo-12B) and aTitansubspace (larger models:GPT-4-Turbo, LLaMA-3.1-405B), covering both closed- and open-source families. All experiments are performed under both the Titan and Mimas subspace settings. To ensure the rigor and credibility of our experi- mental study, we select a suite of representative and recent baselines that comprehensively span the spectrum from straightforward LLM generation to advanced agentic paradigms: \u2022Pure Models: This category evaluates foundation modelsin the absence of explicit agent struc- turing or workflow orchestration, serving as a baseline for generative inference performance. For Mimas, competitive open-source models includeLLaMA-3.1-8B,Mistral-Nemo-12B, and Qwen-2.5-14B.3For Titan, options such asLLaMA-3.1-405B,GPT-4o-mini, andGPT-4-turboare considered. \u2022Single-Agent Methods: This category explores paradigms where reasoning is performed by a single agent using a specific reasoning pattern or workflow.Self-refine[ 39] exemplifies iterative, self-corrective reasoning within a feedback loop, whereasAFlow[ 81] enhances agent reasoning efficiency by utilizing Monte Carlo Tree Search to optimize code-represented agent workflows. \u2022Multi-Agent Methods: We benchmark against the latest multi-agent reasoning systems, show- casing state-of-the-art capabilities in leveraging agent heterogeneity and dynamic collaboration. MacNet[ 45] orchestrates agents within topologically static directed acyclic graphs, facilitating collective intelligence driven by one foundation model to enhance reasoning performance.EvoA- gent[ 78] adopts evolutionary algorithms to automatically generate and optimize diverse multi-agent systems, adaptively improving collaboration and performance without manual intervention. Implementation DetailsDifferent agents are equipped with distinct reasoning patterns\u2014such astask decomposition,reflection,refinement,critique,modification,summarization, andtermina- BingSearch,arXivSearch,Code Interpreter, andFile Readerare also integrated [ 47]. Dynamic collaboration uses majority voting for output aggregation. The policy is initialized with a variant of \u03b3= 0.99. All baselines are rerun under identical settings.",
-    "technical_score": 0.0037954111200593746,
-    "citation_score": 0.06229709286718146
+    "technical_score": 0.0036972539359199073,
+    "citation_score": 0.06239525005132091
   },
   {
     "section_path": [
@@ -112,7 +112,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Many prior studies on multi-agent systems have employed the same base model to drive agent behavior [ 44,36,87]. To enable a more meaningful comparison and account for model heterogeneity, our method, referred to as Puppeteer, introduces two distinct configurations within each agent 3Other smaller-scale models in the same series (e.g., Qwen-2.0-7B) have also been experimentally validated, and their performance is generally weaker than that of the larger-scale model within the same series. 4https://huggingface.co/nvidia/Llama-3.1-Nemotron-70B-Reward-HF subspace: the Mono setting, wherein all agents are driven by the same model, and we useLLaMA- 3.1-405Bfor Titan subspace andLLaMA-3.1-8Bfor Mimas subspace, and the default setting, wherein agents are driven by a diverse set of models. As Puppeteer undergoes online reinforcement learning, we categorize its learning process into two distinct phases: an initial phase characterized by unrefined behavior, and an evolved phase marked by reinforced performance. subspaces respectively. For each dataset, the highest scores are highlighted in bold and the second- highest are underlined.",
-    "technical_score": 0.009036142478147324,
+    "technical_score": 0.008995418814074379,
     "citation_score": 0.0
   },
   {
@@ -122,7 +122,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Mimas GSM-Hard MMLU-Pro SRDD CommonGen-Hard A VG. Llama-3.1-8B 0.0000\u20200.5250 0.4615\u20200.6992\u20200.4214\u2020 Mistral-Nemo-12B 0.0350\u20200.4500\u20200.2097\u20200.7146\u20200.3523\u2020 Qwen-2.5-14B 0.0450\u20200.3800\u20200.5891\u20200.5747\u20200.3972\u2020 Self-Refine Llama-3.1-8B 0.4750 0.2600\u20200.5412\u20200.6018\u20200.4695\u2020 AFlow Llama-3.1-8B 0.2900\u20200.5000 0.6362\u20200.7194 0.5364\u2020 MacNet Llama-3.1-8B 0.0000\u20200.2000\u20200.2017\u20200.74340.2862\u2020 EvoAgentLlama-3.1-8B 0.1250\u20200.5000 0.2510\u20200.7167 0.3981\u2020 Initialized Evolved Initialized Evolved Initialized Evolved Initialized Evolved Initialized Evolved Puppeteer-MonoLlama-3.1-8B 0.2467 0.4800 0.4500 0.5200 0.6983 0.7249 0.6323 0.7341 0.5068 0.6147 Puppeteer0.56000.5400 0.5700 0.63000.6653 0.6266 0.7139 0.7333 0.6273 0.6324 Titan GSM-Hard MMLU-Pro SRDD CommonGen-Hard A VG. Llama-3.1-405B 0.1350\u20200.7600 0.6061\u20200.8116\u20200.5781\u2020 GPT-4o-Mini 0.1050\u20200.5950\u20200.6822\u20200.6691\u20200.5128\u2020 GPT-4-Turbo 0.2750\u20200.6800\u20200.6244\u20200.7632\u20200.5856\u2020 Self-Refine Llama-3.1-405B 0.5250 0.6000\u20200.6345\u20200.7033\u20200.6157\u2020 AFlow Llama-3.1-405B 0.5400\u20200.7500 0.6478\u20200.8218 0.6899\u2020 MacNet Llama-3.1-405B 0.2905\u20200.4800\u20200.4228\u20200.8817\u20200.5187\u2020 EvoAgentLlama-3.1-405B 0.4250\u20200.5400\u20200.1730\u20200.8599 0.4994\u2020 Initialized Evolved Initialized Evolved Initialized Evolved Initialized Evolved Initialized Evolved Puppeteer-MonoLlama-3.1-405B 0.5400 0.6100 0.6910 0.7600 0.6264 0.7697 0.8111 0.8417 0.6671 0.7453 Puppeteer 0.6600 0.70000.74000.83000.6191 0.7637 0.7381 0.7987 0.68930.7731 As detailed in Table 1, Puppeteer consistently achieves superior average performance during the evolved phase across all evaluated tasks, irrespective of domain type or model space size. Similarly, Puppeteer-Mono demonstrates robust performance across both large- and small-scale models. These results collectively underscore the exceptional capability of our centralized orchestrator in coordinat- ing both heterogeneous and single-model-driven agents to form highly effective MAS, highlighting its robustness in managing diverse agent configurations. Compared to various agent workflows and multi-agent baselines using the same base model, Puppeteer-Mono consistently outperforms competing methods across nearly all evaluated tasks. This result highlights the efficacy of our centralized orchestrator in coordinating single-model-driven agents with optimized reasoning strategies and strategic tool utilization, surpassing alternative frame- works. It underscores that superior performance stems from sophisticated organizational design and a context-aware, dynamically constructed multi-agent topology. Notably, despite Puppeteer-Mono leveraging near-optimal models within its respective subspaces, Puppeteer consistently achieves superior performance, likely benefiting from complementary interactions among heterogeneous agents driven by diverse models. Additionally, the expanded space in Puppeteer enables broader exploration of the solution landscape, thereby enhancing optimization opportunities. To illustrate Puppeteer\u2019s capability in organizing effective MAS, we compare performance between the initial and evolved phases. The results show that continued optimization yields substantial gains\u2014for example, Puppeteer in the Titan subspace improves from 0.6893 to 0.7731 on average, with a similar trend observed in the Mimas subspace. These findings highlight the critical role of continual optimization in enhancing coordination and task specialization, and further suggest promising directions for advancing beyond traditional, static agent paradigms toward more adaptive and collaborative agent systems.",
-    "technical_score": 0.007486983518662882,
+    "technical_score": 0.007527707182735828,
     "citation_score": 0.0
   },
   {
@@ -221,8 +221,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "The rapid advancement of LLMs [ 69,3,48,28,31,4] has spurred the development of autonomous LLM-based agents [ 71,49,42,29,72,58], which exhibit strong capabilities in planning [ 66,21,24], memory [ 42,25,41], and tool usage [ 51,47,5,75]. These agents demonstrate growing proficiency in addressing complex tasks [ 19,80,44,20,62], adapting to dynamic real-world environments [ 83, 38,84], and exhibiting human-like behaviors such as collaboration and decision-making [ 10,42,52]. Given that a single LLM-based agent may struggle to handle the diverse and complex range of real-world tasks [ 16,29,64], recent research has increasingly focused on constructing LLM-based multi-agent systems [ 11,44,22,61,12] for software development[ 44,22], social simulation[ 42,25], medical treatment[61, 30], scientific discovery [79].",
-    "technical_score": 0.0004989185291997118,
-    "citation_score": 0.009479452054794522
+    "technical_score": 0.0004930353280461429,
+    "citation_score": 0.009367671232876715
   },
   {
     "section_path": [
@@ -230,8 +230,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Early MAS designs relied on fixed, handcrafted structures,e.g.,mirroring software engineering paradigms like waterfall models [ 42,11,44]. These static approaches led to rigid coordination [ 87, 45], limited workflow flexibility [ 23,81], and suboptimal agent composition [ 15,42,37,35]. To address these issues, more adaptive orchestration methods have emerged: network-style organizations dynamically select agents (Dylan [ 36]) as optimizable graphs enable prompt refinement and better cooperation (GPT-Swarm [ 87], MacNet [ 45]); and code-based representations allow modeling of dynamic, task-specific processes. Recent approaches employ code-space search (ADAS [ 23], AFlow [ 81]) or train LLMs to generate MAS configurations on demand (MAS-GPT [ 77]). Beyond LLM-based MAS, classical MARL (Multi Agent Reinforcement Learning) works [ 26,65,34,63] have long explored coordination and role specialization, offering key inspirations for our RL-driven orchestration in LLM-based multi-agent systems.",
-    "technical_score": 0.004429704397981254,
-    "citation_score": 0.00664455659697188
+    "technical_score": 0.004476770007209804,
+    "citation_score": 0.0067151550108147055
   },
   {
     "section_path": [
@@ -259,7 +259,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "To demonstrate the overall improvement in reasoning performance along with the associated reduction in token consumption\u2014both attributed to the effectiveness of our reward design\u2014we track the performance costscore for each sample throughout the entire optimization process. This score is defined as the ratio between task performance (e.g.,accuracy or success rate) and token cost, serving as a comprehensive indicator that jointly reflects solution quality and reasoning efficiency. In the evaluation presented in the main paper, we divide the optimization trajectory into two phases: the initial phase and the evolved phase. This division is introduced solely for evaluation convenience, and does not correspond to any intrinsic change in model behavior. In practice, the online optimization process exhibits a generally monotonic upward trend inperformance cost, apart from minor fluctuations caused by the stochastic nature of model generation. This consistent improvement further substantiates the effectiveness of our reinforcement learning approach and the benefits of our reward shaping strategy under both mono-agent and multi-agent settings. Across most tasks, from Figure 9, we observe a clear upward trend in the performance/cost score, indicating that the optimization process leads to both better solutions and more efficient use of tokens. This improvement reflects the ability of the system to identify more suitable agent organizations and reasoning pathways over time. In some cases, the score increases steadily throughout the process, suggesting a smooth convergence toward optimal or near-optimal multi-agent coordination strategies. In other cases, the score initially drops before rising again, which implies that the optimization process explores some less effective multi-agent configurations in early stages but is ultimately able to recover and identify improved structures through continued exploration. This pattern highlights the importance of allowing sufficient exploration in the early optimization phase. However, for a small subset of tasks, the score does not show a significant upward trend throughout the optimization. We consider two possible reasons for this. First, the number of optimization samples used in our current experiments is limited to 200, which may not be sufficient to fully explore the search space or discover high-quality MAS configurations, especially for tasks with more complex reasoning requirements. Second, the current hyperparameter settings, such as the maximum length of agent sequence allowed, may not be well-suited for tasks involving weaker base models. In such cases, achieving high performance may require larger MAS configurations or higher upper bounds on relevant parameters to allow for more extensive coordination and tool usage.",
-    "technical_score": 0.003157894736842105,
+    "technical_score": 0.0025263157894736842,
     "citation_score": 0.0
   },
   {
@@ -269,7 +269,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline GSM-Hard Data Points GSM-Hard Trendline CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Mimas Subspace Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Mono-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDD Mono-base in Mimas Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDDFigure 8: Evolution of token consumption and the number of orchestrated agents per task for all settings. Trends are fitted using LOWESS (Locally Weighted Scatterplot Smoothing). per agent chain across different subspaces and variants of Puppeteer . Trend lines are smoothed using LOWESS (Locally Weighted Scatterplot Smoothing). These observations suggest that while our reward design provides strong guidance for optimizing agent behavior and token efficiency, further gains may be achieved by increasing the optimization budget or dynamically adapting hyperparameters based on task difficulty or model capability.",
-    "technical_score": 0.003157894736842105,
+    "technical_score": 0.003789473684210526,
     "citation_score": 0.0
   },
   {
@@ -279,7 +279,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "To further illustrate the behavioral diversity and coordination capabilities of our multi-agent system (MAS), we present visualizations of several representative MAS trajectories guided by the puppeteer. As shown in the figure, these trajectories reveal a variety of emergent patterns, including both previously validated structures and novel organizational behaviors that arise from agent interactions. The visualizations in Figure 10 highlight how the policy organizes into distinct formations and adapt agents dynamically in response to high-level guidance. These patterns not only reflect the effectiveness of the puppeteer in orchestrating agent collaboration, but also demonstrate the capacity of the system to generalize and generate new behaviors beyond those explicitly encoded in the training process. Such structural emergence further underscores the interpretability and robustness of our MAS design.",
-    "technical_score": 0.008287762434111015,
+    "technical_score": 0.008084648604983532,
     "citation_score": 0.0
   },
   {
@@ -289,7 +289,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Reasoning Agent_Llama -3.1-8b Terminator(a) Chain-of-Thought",
-    "technical_score": 0.005153529735496853,
+    "technical_score": 0.004974703540034019,
     "citation_score": 0.0
   },
   {
@@ -299,7 +299,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "QuestionAgent_ Llama -3.1-8bSummarizerAgent_ Llama -3.1-8bReflectAgent_ Llama -3.1-8b (c) Reasoning then Termination ReflectAgent_Gemini -1.5-pro ReflectAgent_Gemini -1.5-flash",
-    "technical_score": 0.004384230349555497,
+    "technical_score": 0.004336578882339426,
     "citation_score": 0.0
   },
   {
@@ -309,7 +309,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "ReflectAgent_mistral -nemo SummirizerAgent_Qwen -2.5-7b (e) Three-Agent Communication QuestionAgent _Llama -3.2-3bReflectAgent_mistral -nemoQuestionAgent_Qwen -2.5-14b ConcluderAgent_Qwen -2.5-7b (f) Four-Agent Communication",
-    "technical_score": 0.0033457867040868118,
+    "technical_score": 0.0034527129013192217,
     "citation_score": 0.0
   },
   {
@@ -319,7 +319,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "ReflectAgent _Qwen -2.5-72b (h) Divergent Pattern",
-    "technical_score": 0.0028323381436322205,
+    "technical_score": 0.002961230254667998,
     "citation_score": 0.0
   },
   {
@@ -329,7 +329,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "PlannerAgent_Llama -3.1-405b ArxivAgentReasoningAgent_Llama -3.1-405b",
-    "technical_score": 0.00235775119874036,
+    "technical_score": 0.0024346563362085787,
     "citation_score": 0.0
   },
   {
@@ -339,7 +339,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "QuestionAgent_Llama -3.1-405b (i) Complex Topology",
-    "technical_score": 0.0020596540659561908,
+    "technical_score": 0.0021765221120261732,
     "citation_score": 0.0
   },
   {
@@ -359,8 +359,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We organize all agent actions into two categories:Tool-use Agent[ 47,85,51] andReasoning Agent[ 21,43] as seen in Table 2. For tool-use agents, their actions involve interacting with external environments, such as querying the web or invoking a code interpreter. In contrast, reasoning patterns reflect the internal cognitive processes of LLMs. Drawing inspiration from prior studies on human reasoning strategies [ 43,7,27,21], we revisit how humans approach complex reasoning tasks. In practice, individuals adopt diverse strategies: some decompose problems into sub-questions, others solve them directly, and some reframe the problem to emphasize critical constraints. More importantly, humans dynamically adapt their strategies based on the evolving context and problem state. Motivated by these observations, we accordingly design a set of specialized reasoning agents to emulate diverse human strategies. Each agent is equipped with a distinct cognitive role, contributing to a collaborative and adaptive reasoning process.",
-    "technical_score": 0.005511578947368424,
-    "citation_score": 0.10472000000000001
+    "technical_score": 0.005618947368421053,
+    "citation_score": 0.10676
   },
   {
     "section_path": [
@@ -369,7 +369,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In a multi-agent system, to motivate each agent to act in the desired manner, we define its role through a role prompt and combine it with an action prompt to guide the agent in using tools or following specific reasoning patterns. As inllustrated in Fig 12 and Fig 13, role-conditioned prompts specify the agent\u2019s identity, domain expertise, and intended responsibilities, guiding the behavior of different agents. And we have designed a set of structured prompts to guide the behavior of our prompt-based agent system, which can be categorized into two major types: tool-augmented action prompts and reasoning-mode prompts. Each prompt specifies a well-defined agent action, accompanied by a template for language model invocation.",
-    "technical_score": 0.051536842105263145,
+    "technical_score": 0.04460084210526316,
     "citation_score": 0.0
   },
   {
@@ -379,7 +379,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Category Name Tool-Useread_file search_arxiv search_bing access_website run_python Reasoning Patternsreasoning critique reflect question summarize conclude modify planning Tool-augmented action promptsin Fig 14 are designed to determine the parameters required for invoking external tools through the agent\u2019s environment interface. The goal of these prompts is not to execute the tool directly but to generate structured output that specifies the parameters for tool invocation. For example, such prompts may guide the generation of a search query (e.g.,a paper title or keyword) when retrieving academic papers from arXiv search_arxiv , or determine the URL to be accessed when invoking a web tool access_website . These prompts enable the agent to interface with external systems in a modular and verifiable way by generating the precise input needed to trigger tool execution. Reasoning-patterns promptsin Fig 15 and Fig 16 focus on internal cognitive processes, such as planning, reasoning, critique, reflection, or sub-question generation. These prompts do not rely on external tools but activate structured thinking patterns within the model, enabling complex problem-solving and decision-making through purely generative means.",
-    "technical_score": 0.01717894736842105,
+    "technical_score": 0.021967578947368425,
     "citation_score": 0.0
   },
   {
@@ -406,7 +406,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Our work introduces a centralized mechanism, the Puppeteer, to organize and optimize multi-agent systems (MAS), progressively improving reasoning performance, and efficiency. However, several limitations remain. The Puppeteer\u2019s optimization currently depends on coarse-grained rewards based only on final outputs and token usage, lacking informative intermediate feedback. Incorporating fine- grained supervision, such as step-level correctness, could enhance optimization efficiency. Moreover, the framework assumes a fixed set of agents and tools, limiting adaptability and responsiveness to task variations. Enabling dynamic agent or tool modification during inference would improve flexibility and robustness. Finally, occasional mis-coordination or deceptive agreement among agents suggests the need for more robust interaction protocols and incentive designs. Future efforts may focus on reward shaping and adaptive mechanisms to refine both orchestration and agent-level behaviors, allowing the Puppeteer to make more context-aware and efficient decisions.",
-    "technical_score": 0.007398286298884664,
+    "technical_score": 0.01061187806078832,
     "citation_score": 0.0
   },
   {
@@ -415,7 +415,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "FileAgent FileAgent:You are an expert in file handling. Responsible for reading files and extracting relevant information (read_file). ArxivAgent ArxivAgent:You are an expert in academic research. Responsible for searching relevant papers on arXiv (search_arxiv). BingAgent BingAgent:You are an expert in web search. Responsible for retrieving information via Bing (search_bing). WebsiteAgent WebsiteAgent:You are an expert in accessing and parsing websites. Responsible for extracting data from specific URLs (access_website). PythonAgent PythonAgent:You are an expert in Python programming. Responsible for executing Python code and returning results (run_python).",
-    "technical_score": 0.011097429448326993,
+    "technical_score": 0.013286238143814058,
     "citation_score": 0.0
   },
   {
@@ -424,7 +424,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "PlannerAgent PlannerAgent:You are an expert in task decomposition and planning. Responsible for generating structured plans to solve complex tasks (planning). ReasoningAgent ReasoningAgent:You are an expert in logical reasoning. Responsible for synthesizing solutions to sub-problems (reasoning). CriticAgent CriticAgent:You are an expert in critique and verification. Responsible for identifying flaws and providing feedback on prior reasoning (critique). ReflectAgent ReflectAgent:You are an expert in metacognitive reflection. Responsible for analyzing the overall reasoning trajectory and proposing improvements (reflect). QuestionAgent QuestionAgent:You are an expert in problem decomposition. Responsible for generating clarifying or follow-up sub-questions (question). SummarizerAgent SummarizerAgent:You are an expert in summarization. Responsible for generating concise summaries of intermediate results (summarize). ConcluderAgent ConcluderAgent:You are an expert in synthesis. Responsible for producing the final conclusions based on collective reasoning outcomes (conclude). ModifierAgent ModifierAgent:You are an expert in error analysis and correction. Responsible for identify- ing errors and revising prior outputs accordingly (modify). search_arxiv You have chosen to search for academic papers on arXiv. Please provide specific terms related to academic research, such as the title of a paper, keywords, or topics in fields like physics, mathematics, computer science, or machine learning. Return in json format. Example: {\"action\": \"search_arxiv\", \"parameter\": \"quantum computing\"} search_wiki You have chosen to search for information on Wikipedia. Please provide specific terms like a concept, name, event, or technical term for best results. Return in json format. Example: {\"action\": \"search_wiki\", \"parameter\": \"Albert Einstein\"} search_bing You have chosen to search for information using Bing. Please provide descriptive phrases or keywords related to your query, including concepts, names, events, or specific questions to get a broad range of results, including news, articles, and websites. Return in json format. Example: {\"action\": \"search_bing\", \"parameter\": \"latest advancements in AI\"} access_website You have chosen to access a website. Please provide the URL you want to access or the URL most relevant to the current question. Return in json format. Example: {\"action\": \"access_website\", \"parameter\": \"https://www.example.com\"} run_python You have chosen to write and run Python code. Please write generic Python code in the parameter to solve this type of problems using only standard python libraries. Make sure you use the print function for all output when relevant. Return in json format. Example: {\"action\": \"run_python\", \"parameter\": \"print(\u2019Hello, World!\u2019)\"} read_file You have chosen to read a file. Please provide the filename you want to read. Return in json format. Example:{\"action\": \"read_file\", \"parameter\": \"data.txt\"} planning Decompose the question and plan the next steps to address the question. You should complete your planning using the following template: REASONING RESULT: [YOUR REASONING RESULT]. *Your previous reasoning was: {}.* Your planning should include: reasoning Now, you need to continue the reasoning to get closer to the correct answer. You should finish your reasoning with the following template: REASONING RESULT: [YOUR REASONING RESULT]. Finish your answer with: FINAL ANSWER: [YOUR FINAL ANSWER]. *Your previous reasoning was: {}.* You need to follow the direction of the reasoning path and go forward: critique You need to critique the previous reasoning. Complete your reasoning using: REASONING RESULT: [YOUR REASONING RESULT].",
-    "technical_score": 0.005616892989629846,
+    "technical_score": 0.012825649237084976,
     "citation_score": 0.0
   },
   {
@@ -433,7 +433,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Conclude with: FINAL ANSWER: [YOUR FINAL ANSWER]. *Your previous reasoning was: {}.* Consider the following when critiquing: 1. Plausibility: reflect You will be provided with a previous reasoning attempt where you had access to relevant context and were tasked with answering a question. The attempt was unsuccessful either due to an incorrect answer or a phrasing mismatch with the answer key. In a few sentences, diagnose the potential cause of failure or discrepancy, and outline a new, concise, high-level plan to prevent the same issue. Use complete sentences. Reflect on the current state of the task and propose the next steps.",
-    "technical_score": 0.012807553493952453,
+    "technical_score": 0.008885428061720331,
     "citation_score": 0.0
   },
   {
@@ -442,7 +442,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Conclude with: REASONING RESULT: [YOUR REASONING RESULT].",
-    "technical_score": 0.01956040784978192,
+    "technical_score": 0.0114729466425489,
     "citation_score": 0.0
   },
   {
@@ -451,7 +451,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "FINAL ANSWER: [YOUR FINAL ANSWER]. *Your previous reasoning was: {}.* question Your task is to propose the next sub-question along with its answer. Ensure it logically follows from the previous reasoning and addresses any gaps. Provide a well-reasoned answer, supported by evidence or logical arguments.",
-    "technical_score": 0.021093074816127565,
+    "technical_score": 0.014311962014883665,
     "citation_score": 0.0
   },
   {
@@ -460,7 +460,7 @@
     ],
     "paragraph_index": 7,
     "paragraph": "Conclude with: REASONING RESULT: [YOUR REASONING RESULT].",
-    "technical_score": 0.018671639920687107,
+    "technical_score": 0.01221838006241916,
     "citation_score": 0.0
   },
   {
@@ -469,7 +469,7 @@
     ],
     "paragraph_index": 8,
     "paragraph": "FINAL ANSWER: [YOUR FINAL ANSWER]. *Your previous reasoning was: {}.* summarize You need to summarize previous results and provide some intermediate conclusions. Finish your reasoning with: REASONING RESULT: [YOUR REASONING RESULT].",
-    "technical_score": 0.016632222087479782,
+    "technical_score": 0.010662513674064397,
     "citation_score": 0.0
   },
   {
@@ -478,7 +478,7 @@
     ],
     "paragraph_index": 9,
     "paragraph": "Then: FINAL ANSWER: [YOUR FINAL ANSWER]. *Your previous reasoning was: {}.* Summarize the reasoning paths and provide a final conclusion. conclude You need to conclude the task and provide a final answer.",
-    "technical_score": 0.015559023443322667,
+    "technical_score": 0.018346743937085234,
     "citation_score": 0.0
   },
   {
@@ -487,7 +487,7 @@
     ],
     "paragraph_index": 10,
     "paragraph": "Finish with: REASONING RESULT: [YOUR REASONING RESULT].",
-    "technical_score": 0.013519605610115346,
+    "technical_score": 0.01889614070662521,
     "citation_score": 0.0
   },
   {
@@ -496,7 +496,7 @@
     ],
     "paragraph_index": 11,
     "paragraph": "Then: FINAL ANSWER: [YOUR FINAL ANSWER]. *Your previous reasoning was: {}.* modify You need to identify and correct errors in the previous reasoning. Use this template: REASONING RESULT: [Clearly state: 1. Which part of the previous reasoning was incorrect 2. Why it was incorrect 3. What is the correct understanding]. Then: FINAL ANSWER: [Provide the complete corrected answer]. *Your previous reasoning was: {}.* Please explicitly point out and correct any errors, misconceptions, or inaccuracies.",
-    "technical_score": 0.01593860088379691,
+    "technical_score": 0.026376856301071006,
     "citation_score": 0.0
   }
 ]

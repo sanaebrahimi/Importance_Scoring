@@ -15,7 +15,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We first provide the problem formulation and two common types of ensembling methods. Next, we",
-    "technical_score": 0.011249860915138084,
+    "technical_score": 0.012656093529530343,
     "citation_score": 0.0
   },
   {
@@ -25,7 +25,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Comparison Result LLM N LLM 1 LLM 2....Input: xy1y2yNx+y1+y2x+yN+yN$1x+y1+y3....x+y1+yN........ PairRankerCandidate PairsCandidatesx+y(1st)+y2nd+y(3rd) Input + Top K Cand. Output: $y GenFuser Models 1234561,1N,12,3N,Nrankfuse",
-    "technical_score": 0.006328046764765172,
+    "technical_score": 0.004921814150372912,
     "citation_score": 0.0
   },
   {
@@ -105,8 +105,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Previous reranking methods primarily focus on computing the score si=f\u03c6(x, yi)for each can- didate yi\u2208Yindependently, where siis solely determined by yi. Notably, the reward model in in- struction tuning for GPT-3.5 (Ouyang et al., 2022) also belongs to this category. Figure 3 illustrates these baseline methods, which are further detailed in the following paragraphs.",
-    "technical_score": 0.00028883987274655335,
-    "citation_score": 0.005487957582184513
+    "technical_score": 0.00026125316412113853,
+    "citation_score": 0.0049638101183016314
   },
   {
     "section_path": [
@@ -115,8 +115,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "MLM-Scoring (Salazar et al., 2020) assesses the quality of a candidate by calculating its pseudo-log- likelihood, which is obtained by masking tokens one by one and computing the log-likelihood for the masked token using masked LMs (e.g., BERT).",
-    "technical_score": 0.001594574761399787,
-    "citation_score": 0.0037206744432661696
+    "technical_score": 0.0040190203343845946,
+    "citation_score": 0.000709238882538458
   },
   {
     "section_path": [
@@ -125,7 +125,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Given a candidate yias a sequence of words W= {w1, ..., w\u2223W\u2223}, the pseudo-log-likelihood is: si= t=1logP(wt\u2223W\\t). This unsupervised method is effective for reranking outputs in NLG tasks such as machine translation and speech recognition.",
-    "technical_score": 0.006357454931071047,
+    "technical_score": 0.005892442329674563,
     "citation_score": 0.0
   },
   {
@@ -135,8 +135,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "SimCLS (Liu and Liu, 2021) encodes the in- putxand each generated candidate yi\u2208Yus-ing the same encoder H, resulting in H(x)and H(yi). The cosine similarity between them, si= cos(H(x), H(yi)), serves as the predicted score, asH(x)andH(yi)share the same embedding space induced by the language encoder. In training, marginal ranking loss is used to optimize H.",
-    "technical_score": 0.000461548250265111,
-    "citation_score": 0.001846193001060444
+    "technical_score": 0.0004540716971257794,
+    "citation_score": 0.0018162867885031177
   },
   {
     "section_path": [
@@ -145,8 +145,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "SummaReranker (Ravaut et al., 2022a) con- catenates the input xand each candidate yi, using a cross-attention encoder to learn ranking. Specifi- cally, they employ H([x;yi])to predict the score si, where His a Transformer model. In the training stage, binary cross-entropy (BCE) loss is employed to differentiate the best candidate from the others.",
-    "technical_score": 0.0034243902439024367,
-    "citation_score": 0.005136585365853655
+    "technical_score": 0.0035996026221922274,
+    "citation_score": 0.00497087981159879
   },
   {
     "section_path": [
@@ -155,7 +155,7 @@
     ],
     "paragraph_index": 6,
     "paragraph": "Limitations. Despite using contrastive loss in training, these methods rely on individual scoring for inference. The encoders have not been exposed to pairs of candidates for direct comparison learn- ing. We argue that such pointwise ranking methods may be insufficient for selecting the best candidates in the context of LLMs and instruction-following tasks. One reason is that the quality of LLM out- puts is generally high when the chosen LLMs are popular and competitive. Moreover, the responses for instruction tasks can be quite open-ended, un- like summarization tasks. Therefore, merely ex- amining individual candidates may not yield a re- liable score. This issue becomes more prominent for shorter responses, where sequences may dif- fer by only a few words but vary significantly in helpfulness, harmfulness, and fairness. Given these limitations, we contend that individual scoring ap- proaches may fail to capture crucial nuances.",
-    "technical_score": 0.0007146553552492042,
+    "technical_score": 0.002346268058558619,
     "citation_score": 0.0
   },
   {
@@ -165,7 +165,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In order to address the limitations of pointwise ranking, we aim to train a ranker fwith parameter \u03c6that can compare a pair of output candidates by encoding them together with the input text. Our ranker module should focus on learning to capture the differences between the two candidates and prefer the ones of higher quality. Given a pair of candidates yi, yj, we obtain their pair-specific scores: si (i,j)andsj (i,j). We denote the model\u2019s confidence in thinking yiis better than yj assij=si (i,j)\u2212sj (i,j). We can use these scores for all pairs induced from Yto infer the final ranking. To learn this ability, we concatenate the input xand the two candidates to form a sequence [x;yi;yj] and feed it into a cross-attention Transformer to get the features: f\u03c6([x;yi;yj])for modeling sij. We assume multiple Qfunctions to optimize",
-    "technical_score": 0.04471062566277834,
+    "technical_score": 0.05283983032873805,
     "citation_score": 0.0
   },
   {
@@ -175,7 +175,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "PairRankerffPPPP yy11yymmxxyyiiyyjj MLM -Scoringffmmmmmm yy yymm yii SimCLSffSSSS yy yymmxx yyii SummaRerank erffSSPP xxyyii xx xx yy11yymm xx ss11 ssmmssii cosine ss11 ssmmssiiranking loss ss(ii,jj)iiss(ii,jj)jjBCE loss ss11 ssmmssiissbbbbssbb ssoobboobboossBCE loss shuffleunsupervisedFigure 3: The architectures of typical reranking methods. xis an input and yiis a certain candidate, and its score issi. MLM-Scoring is an unsupervised method that uses an external masked LM to score a candidate; SimCLS uses the same encoder to encode xand each candidate yi; SummaReranker instead employs a cross-encoder to encode bothxandyiat the same time; PAIRRANKER encodes a pair of candidates ( yi,yj) at the same time for pairwisely scoring them, and the final score of each candidate is produced as shown in Fig. 4. for, such as BERTScore, BARTScore, etc., and consider the learning problem as a multi-task clas- sification problem: LQ=\u2212zilog\u03c3(si (i,j))\u2212zjlog\u03c3(sj (i,j)), where \u03c3denotes the sigmoid function and (zi, zj)={(1,0), Q(yi, y)\u2265Q(yj, y) (0,1), Q(yi, y)<Q(yj, y). For optimizing towards multiple Q, we take the av- erage as the final multi-objective loss: L=\u2211LQ.",
-    "technical_score": 0.023032746553552478,
+    "technical_score": 0.01490354188759278,
     "citation_score": 0.0
   },
   {
@@ -185,7 +185,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We discuss the concrete designs for the PAIR- RANKER module in this subsection.",
-    "technical_score": 0.014236413043478256,
+    "technical_score": 0.01248620165162281,
     "citation_score": 0.0
   },
   {
@@ -195,7 +195,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Encoding. We employ Transformer layers to encode an input and a pair of candidates, en- abling the attentions to capture the difference be- tween candidates in the context of the input. We concatenate the three segments sequentially and form a single input sequence with special tokens as separators: <source> ,<candidate1> , and<candidate2> . The resulting input se- quences to Transformers are in the form of \u201c<s><source> x</s> <candidate1> yi </s> <candidate2> yj</s> \u201d, where xis the text of a source input and yiandyjare thetext of two output candidates. The embeddings of special tokens <source> ,<candidate1> , and <candidate2> are used as the representations ofx,yi, andyjrespectively, denoted as x,yi,yj.",
-    "technical_score": 0.011480978260869561,
+    "technical_score": 0.012085177144479417,
     "citation_score": 0.0
   },
   {
@@ -205,7 +205,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Training. To determine the scores for the two candidates, we concatenate the embeddings of x withyiandyjrespectively, and pass them through a single-head layer, which is a multi-layer percep- tron with the final layer\u2019s dimension equal to the number of Qfunctions to be optimized. Each value within this dimension represents a computed Q score for a specific Qfunction. We derive the final score si (i,j)orsj (i,j)for the candidate by averaging these Qscores. Since there are O(N2)unique pair combinations, we apply an effective sub-sampling strategy during the training stage to ensure learning efficiency. During training, we randomly select some com- binations from the candidate pool Y2, instead of all the N(N\u22121)/2pairs. We also compare the target text with other candidates by extending the candidate pool by mixing the ground truth yintoY. In practice, we found that using 5 pairs per input is sufficient for obtaining decent results. Due to the position embeddings of the lan- guage model, the order of the candidates in a pair(x, yi, yj)matters, as the comparison result of (x, yi, yj)and(x, yj, yi)might not be consistent. Thus, we shuffle the order of candidates within each training pair so that the model learns to be consistent with itself.",
-    "technical_score": 0.010920930540827144,
+    "technical_score": 0.011231124656607739,
     "citation_score": 0.0
   },
   {
@@ -215,7 +215,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Inference. During the inference stage, we obtain scores sijfor each pair of candidates (yi, yj)\u2208Y2. After N(N\u22121)iterations, we obtain a matrix M, where Mj i=sijrepresents the confidence thatyiis better than yj. To identify the best candidate based onM, we introduce three aggregation functions for determining the final ranking of Y. We propose two scoring methods, MaxLogits andMaxWins , which utilize all elements in the matrix. Let M\u2217 iandMj \u2217denote the i-th row and j-th column of the matrix as vectors. For each candidate yi, itsMaxLogits score is defined as si=\u2211(M\u2217 i\u2212Mi \u2217), while its MaxWins score is defined as si=\u2223{sij\u2208M\u2217 i\u2223sij>0}\u2223+\u2223{sji\u2208 Mi \u2217\u2223sji<0}\u2223, where\u2223\u2223denotes the set size. In essence, MaxLogits computes the confi- dence that yiis superior to all other candidates, whereas MaxWins calculates the number of victo- ries in comparisons with other candidates. However, these two methods necessitate O(N2) iterations for Ncandidates, which can be compu- tationally burdensome. Thus, we propose a more efficient aggregation method, performing a single bubble sort run with pairwise comparisons to se- lect the best candidate. We first shuffle the order of candidates in Yto obtain a default order, and initial- ize the best candidate index kto 1. We iteratively update the best candidate index as follows: k={k,Mi k\u2212Mk i>0 i,Mk i\u2212Mi k>0. After N\u22121comparisons, we select ykas the best candidate. This method reduces the inference time complexity from O(N2)toO(N), aligning with previous pointwise methods. Regardless of the aggregation method, we can rank all candidates in Y. Our experiments (shown in the appendix) reveal that MaxLogits yields the best performance, so we use MaxLogits as the default aggregator for P AIRRANKER .",
-    "technical_score": 0.011749801166489921,
+    "technical_score": 0.012585619558954915,
     "citation_score": 0.0
   },
   {
@@ -336,8 +336,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Category Methods BERTScore \u2191BARTScore \u2191BLEURT \u2191 GPT-Rank \u2193\u2265Vic(%)\u2191\u2265OA(%)\u2191Top-3(%) \u2191 LLMsOpenAssistant (LAION-AI, 2023) 74.68 -3.45 -0.39 3.90 62.78 N/A 51.98 Vicuna (Chiang et al., 2023) 69.60 -3.44 -0.61 4.13 N/A 64.77 52.88 Alpaca (Taori et al., 2023) 71.46 -3.57 -0.53 4.62 56.70 61.35 44.46 Baize (Xu et al., 2023) 65.57 -3.53 -0.66 4.86 52.76 56.40 38.80 MOSS (Sun and Qiu, 2023) 64.85 -3.65 -0.73 5.09 51.62 51.79 38.27 ChatGLM (Du et al., 2022) 70.38 -3.52 -0.62 5.63 44.04 45.67 28.78 Koala (Geng et al., 2023) 63.96 -3.85 -0.84 6.76 39.93 39.01 22.55 Dolly V2 (Conover et al., 2023) 62.26 -3.83 -0.87 6.90 33.33 31.44 16.45 Mosaic MPT (MosaicML, 2023) 63.21 -3.72 -0.82 7.19 30.87 30.16 16.24 StableLM (Stability-AI, 2023) 62.47 -4.12 -0.98 8.71 21.55 19.87 7.96 Flan-T5 (Chung et al., 2022) 64.92 -4.57 -1.23 8.81 23.89 19.93 5.32 AnalysisOracle (BERTScore) 77.67 -3.17 -0.27 3.88 54.41 38.84 53.49 Oracle (BLEURT) 75.02 -3.15 -0.15 3.77 55.61 45.80 55.36 Oracle (BARTScore) 73.23 -2.87 -0.38 3.69 50.32 57.01 57.33 Oracle ( GPT-Rank ) 70.32 -3.33 -0.51 1.00 100.00 100.00 100.00 RankersRandom 66.36 -3.76 -0.77 6.14 37.75 36.91 29.05 MLM-Scoring 64.77 -4.03 -0.88 7.00 33.87 30.39 21.46 SimCLS 73.14 -3.22 -0.38 3.50 52.11 49.93 60.72 SummaReranker 71.60 -3.25 -0.41 3.66 55.63 48.46 57.54 PairRanker 72.97 -3.14 -0.37 3.20 54.76 57.79 65.12 LLM-B L E N D E R PR (K=3) + GF 79.09 -3.02 -0.17 3.01 70.73 77.72 68.59 (i.e.,MaxWins aggregation). We name this GPT- based ranking metric with GPT-Rank .",
-    "technical_score": 0.012050686770140437,
-    "citation_score": 0.0032679828529194404
+    "technical_score": 0.01378680266075389,
+    "citation_score": 0.0015318669623059882
   },
   {
     "section_path": [
@@ -346,8 +346,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Model training. We use the DeBERTa (He et al., 2021) (400m) as the backbone for PAIRRANKER , and GENFUSER is based on Flan-T5-XL (3b). According to our ablation studies, we choose to use BARTScore for its superior correlation with GPT-Rank as shown in 5.2.",
-    "technical_score": 0.0032552172949002235,
-    "citation_score": 0.013020869179600894
+    "technical_score": 0.0,
+    "citation_score": 0.016276086474501118
   },
   {
     "section_path": [
@@ -356,7 +356,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In Table 2, we present the overall performance ofN=11 LLMs as well as other methods on MixInstruct . In addition to the three auto met- rics and GPT-Rank, we also show the percentage of examples where each method can produce outputs that are better than or same good as the two top LLMs, namely OpenAssistant ( \u2265OA) and Vicuna (\u2265Vic), in terms of GPT-Rank . LLMs have diverse strengths and weakness. The table presents the LLMs in a sorted order based on their average rank as determined by Chat- GPT (GPT-Rank). Among these models, Open Assistant, Vicuna, and Alpaca are the top-3 per- formers. Following them, three renowned LLMs, namely Baize, Moss, and ChatGLM, which have been fine-tuned using both Chinese and English in- struction data, also exhibit impressive performance onMixInstruct . Conversely, Mosaic MPT, Sta- bleLM, and Flan-T5 rank at the bottom-3 in the evaluation. Nevertheless, the average GPT-Rank of top/bottom models maintain a noticeable dis- tance from the first/last position (1 or 11), high-lighting the importance of ensembling LLMs. Top LLMs are not always good. It is evident that although OA and Vic perform remarkably well, there is still a substantial percentage of examples where other LLMs are considered to outperform them. For instance, despite Koala having an av- erage GPT-Rank of6.76, approximately 40% of the examples demonstrate that Koala produces re- sponses that are better or equally as good as both OA and Vic. This further emphasizes the signif- icance of employing our LLM-B L E N D E R frame- work for ranking and fusion purposes.",
-    "technical_score": 0.004798051548667964,
+    "technical_score": 0.003712297285239792,
     "citation_score": 0.0
   },
   {
@@ -366,7 +366,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "NLG Metrics. Moreover, we conduct a com- prehensive analysis of the performance of ora- cle (top-1) selections based on each of the met- rics themselves. The findings demonstrate that these selections also exhibit favorable performance across other metrics as well. For example, the or- acle selections derived from GPT-Rank achieve a BARTScore of \u22123.33, surpassing that of OA (\u22123.45). Conversely, the oracle selections of BARTScore yield 3.69inGPT-Rank , also signifi- cantly outperforming OA ( 3.90). This observation substantiates the rationality of using BARTScore to provide supervision for PAIRRANKER , which is also suggested by Table 3. PAIRRANKER outperforms other rankers. MLM-Scoring fails to outperform even random selection, highlighting the limitations of its un- supervised paradigm. On the contrary, SimCLS, SummaReranker, and PAIRRANKER exhibit su-",
-    "technical_score": 0.017807133115652022,
+    "technical_score": 0.020534487468500066,
     "citation_score": 0.0
   },
   {
@@ -376,7 +376,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Ranking MethodsPearson Correlation \u2191Spearman\u2019s Correlation \u2191Spearman\u2019s Footrule \u2193 Random 0.00 0.00 48.27 BLEU 28.70 26.92 33.57 Rouge2 29.17 27.77 32.96 BERTScore 32.25 30.33 33.34 BLEURT 34.14 32.31 32.17 BARTScore 38.49 36.76 30.93 MLM-Scoring -0.02 -0.01 47.16 SimCLS 39.89 38.13 29.32 SummaReranker 41.13 39.10 29.69 PairRanker 46.98 44.98 27.52 and oracle ranking (GPT-Rank). perior performance compared to the best model (OA) across BARTScore and GPT-Rank . No- tably, the average GPT-rank of the responses selected by PAIRRANKER (3.20) significantly out- performs the best model by 0.70(a 18% relative performance gain) and also all other rankers. More- over, it achieves impressive results in metrics such as BARTScore ( \u22123.14) with a substantial advan- tage. PAIRRANKER \u2019s selections are better than or equal to Vic/OA on 54.76%/57.79% examples re- spectively, and ranks in top 3 for 65.12% examples. LLM-B L E N D E R is the best. We use top-3 selec- tions from the PAIRRANKER and feed them as candidates for GENFUSER . Based on this inte- gration, LLM-B L E N D E R demonstrates remarkable capabilities as expected. In terms of GPT-Rank , it achieves 3.01, surpassing both the best model OA ( 3.90) by a significant margin. The scores for BERTScore ( 79.09), BARTScore ( \u22123.02), and BELURT (\u22120.17) all exceed the best model by 4.41,0.43, and 0.22respectively, showcasing sub- stantial advantages. Moreover, LLM-B L E N D E R also performs well in surpassing the top two mod- els, Vic ( 70.73) and OA ( 77.72), thereby comple- menting the weaknesses of P AIRRANKER .",
-    "technical_score": 0.018247501977279545,
+    "technical_score": 0.017924155152313045,
     "citation_score": 0.0
   },
   {
@@ -386,8 +386,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Ranking correlation. In addition to focusing solely on the top-1 selection of each ranker, we present a comprehensive analysis of the overall rank correlation among all the candidates with GPT-Rank (see Table 3). The correlation metrics used here include the Pearson Correlation Coef- ficient, Spearman\u2019s Correlation, and Spearman\u2019s Footrule distance(Diaconis and Graham, 1977). It turns out that BARTScore gets the highest correlation with GPT-Rank against other metrics, which suggests we use BARTScore to provide su- pervision for training. For rankers, MLM-Scoringstill falls short of outperforming random permuta- tions. On the other side, SummaReranker demon- strates better correlation in terms of the Pearson Correlation ( 41.13) and Spearman\u2019s Correlation (39.10), while SimCLS gets a better Spearman\u2019s Footrule distance ( 29.32) Notably, PAIRRANKER achieves the highest correlation with GPT-Rank across all correlation types, which is even way bet- ter than the BARTScore.",
-    "technical_score": 0.019569516840966167,
-    "citation_score": 0.0021743907601073516
+    "technical_score": 0.018576226465964147,
+    "citation_score": 0.0020640251628849054
   },
   {
     "section_path": [
@@ -396,7 +396,7 @@
     ],
     "paragraph_index": 5,
     "paragraph": "More analysis. We leave many other ablation studies and analyses in Appendix, where we ap- plyPAIRRANKER to the three typical natural lan- guage generation (NLG) tasks: summarization (CNN/DM), machine translation (WMT18-zh-en), and constrained text generation (CommonGen). We find that P AIRRANKER still outperforms other methods by a large margin in the context of us- ing a single same base model to decode Ncandi- dates (with different algorithms). We also show thatMaxLogits is much better than MaxWins and the bubble sort method is very cost-effective if the inference efficiency is a big concern.",
-    "technical_score": 0.03393200886153987,
+    "technical_score": 0.03371741156931096,
     "citation_score": 0.0
   },
   {
@@ -405,8 +405,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "LLM evaluation As open-source large language models (LLMs) continue to flourish and demon- strate remarkable competitiveness across various natural language generation (NLG) tasks, assessing the capabilities of LLMs has become an exceed- ingly challenging endeavor. To address this issue, Zheng et al. (2023) pioneered the creation of a chat- bot arena, enabling users to provide pairwise eval- uations of responses generated by two randomly selected LLMs. Based on these evaluations, they established an LLM Elo rating leaderboard. In a similar vein, Cabrera and Neubig (2023) conducted an evaluation study on a customer service dataset, leveraging automated metrics such as BERTScore and ChrF (Popovi \u0301c, 2015). This approach yielded similar LLM ranking results. Instead of relying solely on human evaluation, Yidong et al. (2023) developed a fine-tuned model called PandaLM to compare responses generated by different LLMs. AlpacaFarm (Dubois et al., 2023) also aims to eval- uate LLMs with pairwise feedback. Pairwise ranking Pairwise ranking, known for its long-standing effectiveness, has demonstrated exceptional performance across a wide array of NLP tasks (Jamieson and Nowak, 2011). No- tably, Ranknet (Burges et al., 2005) and Lamb- daRank (Burges, 2010) have emerged as pow- erful techniques for various ranking problems. Furthermore, within the renowned RLHF proce- dure(Ouyang et al., 2022), these methods incorpo- rate pairwise training of their reward model based on OPT. However, these approaches still compute scores individually and solely undergo pairwise training at the loss level. In contrast, our proposed PAIRRERANKER not only employs pairwise train- ing but also utilizes the attention mechanism for pairwise inference during the inference stage. We posit that this approach better captures the sub- tleties between candidates and yields superior re- sults, as demonstrated in Section 5.2. Ensemble learning Ensemble learning is a widely employed technique to enhance a model\u2019s capabilities by leveraging multiple weaker mod- els (Sagi and Rokach, 2018; Anio\u0142 and Pietro \u0301n, 2019). Typically, ensemble learning is performed either by considering model weights or by com- bining diverse outputs. Mix-of-Experts (MoE) is a type of ensemble approach that combines the predictions of multiple specialized sub-models to improve overall performance. It has been success- fully applied in various domains, such as natural language processing and computer vision (Jacobs et al., 1991; Shazeer et al., 2017). As for fusing multiple candidates, Izacard and Grave (2021) in- troduced a framework named Fusion-in-Decoder (FiD) to improve the quality of question answer- ing by fusing retrieved text. Building upon FiD, Ravaut et al. (2022b) further investigated the ef- fectiveness of fusion in the context of text summa- rization. However, they neglected to incorporate a selection process prior to feeding the candidates into the fusion module, resulting in only moderate improvements. In contrast, our proposed approach, referred to as LLM-B L E N D E R , initially utilizes the PAIRRANKER algorithm to filter out candidates of poor quality. Subsequently, fusion is performed exclusively on the top-ranked candidates, leading to superior performance.",
-    "technical_score": 0.003897609273122435,
-    "citation_score": 0.06927312243419466
+    "technical_score": 0.003977300169041295,
+    "citation_score": 0.0691934315382758
   },
   {
     "section_path": [
@@ -414,7 +414,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "In this paper, we formulated the motivation to exploit the diverse strengths and weaknesses of open-source large language models (LLMs), aim- ing to create an ensembling framework that lever- ages their complementary capabilities to generate consistently superior results on various instruction- following tasks. By dynamically ensemblingLLMs, we aimed to reduce biases, errors, and un- certainties in individual models, yielding outputs better aligned with human feedback.",
-    "technical_score": 0.03117549972492205,
+    "technical_score": 0.03254836576785441,
     "citation_score": 0.0
   },
   {
@@ -423,7 +423,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Our major contributions are as follows: \u2022A new framework: post-hoc ensemble learning method for rank- ing and fusing the outputs from multiple LLMs. It is composed of two modules:",
-    "technical_score": 0.03759398496240608,
+    "technical_score": 0.03634057172467982,
     "citation_score": 0.0
   },
   {
@@ -432,7 +432,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "PAIRRANKER andGENFUSER , and both are straightforward yet effective. \u2022A new dataset: benchmark dataset, created for training and evaluating LLM ensembling methods on instruction-following tasks. \u2022Promising results: We show that our method can significantly improve the overall results on various metrics, and our findings indicates that this direction is promising for both re- search community and practitioners. \u2022Toolkit: By open-sourcing our framework, we aim to make it easier for others to lever- age our approach, enabling the development of more advanced AI systems that achieve robustness, generalization, and enhanced ac- curacy in a wide variety of tasks.",
-    "technical_score": 0.022923161562442687,
+    "technical_score": 0.023708858182601284,
     "citation_score": 0.0
   },
   {
@@ -441,7 +441,7 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Future directions. Potential future directions in- clude extending the LLM-B L E N D E R framework to more types of models or even non-text modalities, developing more sophisticated ranking and fusion techniques, and investigating the transferability of our ensembling approach to other domains and tasks. Additionally, exploring ways to minimize computational overhead and incorporating active learning strategies for rapid adaptation to new spe- cialized domains and data sources represent fruit- ful areas for further research. Overall, our work underscores the value of combining the unique con- tributions of multiple models.",
-    "technical_score": 0.03025857326242435,
+    "technical_score": 0.029353423837059647,
     "citation_score": 0.0
   },
   {

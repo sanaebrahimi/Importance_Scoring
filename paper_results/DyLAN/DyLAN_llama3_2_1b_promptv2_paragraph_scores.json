@@ -23,8 +23,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Team Optimization of LLM-Powered Agents The construction of agent teams is the essen- tial and initial step for LLM-powered agent collaboration. TPTU (Ruan et al., 2023) and Chameleon (Lu et al., 2023) decompose tasks to choose or create tools accordingly. Recent studies also use LLMs to generate a fixed number of role prompts for agents in response to a task query (Wang et al., 2023c; Suzgun & Tauman Kalai, 2024), or for each round of discussion (Chen et al., 2024). However, manual prompts require careful design, which is impractical for adaptation on each task or domain, and prompting LLMs with predefined or generated descriptions may not result in the desired abilities of the agents without verifi- cation. Therefore, posteriorly selecting a team of agents based on their actual behaviors in the collaboration according to the task becomes essential. While team optimization for LLM agents is a relatively new area, human-team optimization has been studied for a long time. For instance, Liu et al. (2015) show that skill contribution is essential for selecting crowd workers to solve outsourced tasks efficiently. Based on peer rating, researchers have devel- oped an algorithm for managing online workers in an optimal organization (Lykourentzou et al., 2022). Drawing inspirations, we introduce an unsupervised algorithm to select a team of agents by quantifying their contributions based on peer ratings in Section 3.4. Communication Structures in LLM-Powered Agent Collaboration Collaboration between multiple LLM agents has demonstrated strong performance on various tasks in recent years and has emerged as a promising approach to enhance the capabilities of individual LLMs. To enable collaborations between multiple agents, recent studies have developed different communication structures and assigned agents in pre-defined architecture. For instance, researchers have found taking multiple LLM instances to debate for a fixed number of rounds can boost their factuality and reasoning capacities (Du et al., 2023; Liang et al., 2023; Xiong et al., 2023). To aggregate multiple LLM responses, LLM-Blender (Jiang et al., 2023) calls different LLMs in one round and uses pairwise ranking to combine the top responses. It has also been shown effective in distributing workloads to LLMs and concatenating their answers, thus producing better results (Ning et al., 2024; Suzgun & Tauman Kalai, 2024; Qiao et al., 2024). It is worth noting that existing studies (Hao et al., 2023; Zhang et al., 2023b) have tried organizing LLM instances into linear layers, but they mainly studied supervised learning in context space and LLM evaluation, respectively, not the scenario in which we are interested. However, running LLMs in a static architecture may limit the performance and generalization. On specific reasoning tasks, adopting a dynamic directed acyclic graph structure for LLMs has been shown effective (Zhang et al., 2023).Also, recent studies (Yin et al., 2023; Chen et al., 2024; Zhang et al., 2023a; Zhuge et al., 2024) have demonstrated that optimal communication structures vary with tasks and compositions of agents. Aligned with the findings, we propose a structure that adjusts dynamically based on selecting agents according to the tasks and the construction of the agent team in Section 3.3.2. Evaluation of the Contribution of LLM-Powered Agents It is non-trivial to evaluate the contribution of each LLM agent in a multi-agent system, especially when they communicate over multiple rounds. In the single-round setting, existing methods use LLMs heavily for evaluation. To overcome the over confidence of LLMs (Xiong et al., 2024), pairwise",
-    "technical_score": 0.002883696623152229,
-    "citation_score": 0.022960754244721524
+    "technical_score": 0.0026418771998270945,
+    "citation_score": 0.02320257366804666
   },
   {
     "section_path": [
@@ -42,8 +42,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "We introduce a framework for LLM-powered agent collaboration named Dynamic LLM- Powered Agent Network ( DyLAN ), facilitating dynamic communication structures and automatically task-oriented agent selection in a two-stage fashion (Figure 1): an optimized agent team is constructed in the first stage \u201cTeam Optimization\u201d through a preliminary trial and then the team collaborates to solve the task in the second stage \u201cTask Solving\u201d. denote agents and edges denote the communication channels between agents (Figure 2 left). T-FFNs serve not only as the abstraction of communication structures but also the computation graph. From this perspective, as shown in Table 1, various LLM-powered agent collaboration systems (Jiang et al., 2023; Shinn et al., 2023; Du et al., 2023; Li et al., 2023; Chen et al., 2024) can be represented by similar network structures as T-FFNs. DyLAN is the only framework that supports multiple agents with roles and tools, early stopping (Section 3.3.2), dynamic communication structures and team optimization simultaneously. To be specific, for team optimization, our agent selection algorithm is performed as a backward message passing algorithm on the T-FFN (Figure 2 right), and for task solving, agent team reformation expands the T-FFN dynamically with messages passing forward. To make it easier to understand, we will start by explaining the formulation of T-FFNs. Then, we will move on to the task solving stage, and finally, we will explain the team optimization stage, which relies on components of task solving.",
-    "technical_score": 0.002601478013388383,
-    "citation_score": 0.04403819809997194
+    "technical_score": 0.0025963060889084857,
+    "citation_score": 0.04404337002445184
   },
   {
     "section_path": [
@@ -73,7 +73,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Task solving involves performing inference on the T-FFNs, jointly with agent team reformation , which be elaborated on in the subsequent two sections.",
-    "technical_score": 0.020987854251012142,
+    "technical_score": 0.019938461538461537,
     "citation_score": 0.0
   },
   {
@@ -84,7 +84,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Before details, we first introduce the formulation of message passing on T-FFNs. Definition 5 (Message Passing) Given a T-FFN, a node vt,j, a set of adjacent nodes U= {u1,\u00b7 \u00b7 \u00b7,uK}, and the messages M={mu1,\u00b7 \u00b7 \u00b7,muK}received by vt,j, where Kis the size ofU, and mukis the message sent from uktovt,j, message passing aggregates all the messages Mto produce a updated message \u02c6mvt,jfor v t,j, which is formally defined as \u02c6mvt,j=fmp\u0000M,vt,j\u0001 , (5) where f mp(\u00b7,\u00b7)is the aggregator function.",
-    "technical_score": 0.011893117408906884,
+    "technical_score": 0.006436275303643725,
     "citation_score": 0.0
   },
   {
@@ -95,7 +95,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at COLM 2024 Definition 6 We refer the algorithm as forward message passing whenUis the set of all adjacent nodes of vt,jfrom the previous time step, i.e., U={uk|\u2200uk,(uk,vt,j)\u2208Et\u22121,t}. Similarly, it is referred as backward message passing whenUis the set of all adjacent nodes from the next time step:U={uk|\u2200uk,(vt,j,uk)\u2208Et,t+1}. With the above formulation, we can describe the inference process of a T-FFN Gin the manner of forward message passing . During collaborations on a given task, an agent at a specific time step takes the responses, i.e., messages, from other agents at the previous time step as input and generates responses based on the task query. Based on different types of agents at vt,j, we can implement fmp(\u00b7,vt,j)respectively: (I) concatenating input messages along with the task query into prompt templates (refer to task instructions in Appendix D) and take the response from LLM after generation or tool calling, or (II) filter the input that the tool can process, e.g., code completions and structured text. During inference, we begin feeding the task query q\u2208 Q into agents at time step 1 ( V1), where Qdenotes the dataset. By passing responses of nodes Vt\u22121at time step t\u22121 to nodes Vtatt, agents can perceive responses from all nodes at the previous time step and perform collaborative behavior, which might include criticizes, advice, refinement, or quality reviews, depending on the implementation of agents. Formally, the inference process is defined as fInfer(q,G) =o, (6) where o=argmax {M T}andMTdenotes the responses from VT. Please refer to Algo- rithm 1 for detailed procedure.",
-    "technical_score": 0.005596761133603238,
+    "technical_score": 0.009654412955465588,
     "citation_score": 0.0
   },
   {
@@ -106,7 +106,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Given a set of agents A,agent team reformation aims to identify more contributory agents and construct a dynamic communication structure accordingly. To this end, we leverage an additional LLM instance, referred as the \u201cLLM Ranker\u201d, to analyze responses from the agents participate in the current time step and give out a ranking, prompted by the template of \u201cRanker\u201d in Appendix D. Then, the top-ranked agents are allowed to participate in the next time step. In other words, edges will only be added for these top-ranked agents, resulting in a dynamic communication structure.",
-    "technical_score": 0.004732555370326267,
+    "technical_score": 0.006250102051058988,
     "citation_score": 0.0
   },
   {
@@ -117,8 +117,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Formally, suppose the set of agents participates in time step tisAt={ak}, and the top- ranked agents are At+1={al}, where kand lare the indices of the agents as defined in Equation (1), then we can obtain two nodes sets V\u2032 t={vt,k|\u2200ak\u2208 A t}andV\u2032 t+1= {vt+1,l|\u2200al\u2208 A t+1}, and the edge set Et,t+1is defined as t+1. (7) The process progresses iteratively until the stop condition is met, and finally, we get a T-FFN qfor the query input q. We use function fIASto denote the entire computation: q=fIAS(A,q). (8) To further enhance efficiency, we introduce an early-stopping mechanism . Inspired by the Byzantine Consensus theory (Castro & Liskov, 1999), at least 3 p+1 agents are needed to tolerate pfaulty agents in a single round of communication. Following the theory, the inference process will be terminated when over 2/3 of agents in a single layer have a consistent answer. In practice, the inference process will also be terminated when the maximum time step is reached. Note that none of the consistency measures used in prior work (Wang et al., 2023b; Aggarwal et al., 2023; Yin et al., 2023) applies to multi-round multi-agent interaction since their theories are assumed to execute a single LLM instance multiple times or expect all agents to reach the same answer.",
-    "technical_score": 0.007870445344129555,
-    "citation_score": 0.0013889021195522743
+    "technical_score": 0.008661826212065448,
+    "citation_score": 0.001528557566835079
   },
   {
     "section_path": [
@@ -157,8 +157,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Code Generation (CG) We use the HumanEval benchmark, with 164 human-labeled function-level completion codes and unit tests (Chen et al., 2021). Unit tests are used to validate the correctness of generated codes. We leverage two strong baselines CodeT (Chen et al., 2023a) and Reflexion (Shinn et al., 2023) along with the single execution. For multi- agent baselines, we re-implement CAMEL (Li et al., 2023) and AgentVerse (Chen et al., 2024) under their original configurations for fair comparisons. Decision Making (DM) We evaluate our methods in the WebShop environment, selecting 50 environments in its test set (Chen et al., 2021) following the setting of LATS (Zhou et al., 2023). WebShop requires to find the item given an instruction of the customer. It provides \u201creward\u201d as an intrinsic metric for item-instruction relevance, and \u201csuccess\u201d is marked when the reward is 1.0. Besides ReAct (Yao et al., 2023) and Reflexion, we re-ran a multi-agent method BOLAA (Liu et al., 2023), and a single-agent method LATS as strong baselines. General Reasoning (GR) For the general reasoning task, we use the MMLU dataset (Hendrycks et al., 2021a), which contains four categories of a vast amount of prob- lems in 57 subjects. We down-sample 1/5 of the problems in the test set because of its huge quantity. We choose LLM Debate (Du et al., 2023), LLM-Blender (Jiang et al., 2023), and the single execution on LLM as baselines. Arithmetic Reasoning (AR) We leverage the test set of MATH (Hendrycks et al., 2021b) for evaluation, which consists of 7 subareas and 5,000 questions in total. To draw a fair comparison and verify the robustness, we categorize methods by different prompting strategies and select strong baselines accordingly. Preliminary experiments show that collaborating agents in different domains (e.g., algebra and geometry experts) does not make significant improvement, therefore we adopt agents with same prompts for all methods. DyLAN Setup In Table 5, we elaborate the setup of DyLAN. To keep in line with baseline methods, we only equipped DyLAN with code interpreters as tools in the CG task. It is worth noting that agent selection is performed for each subject in the GR task, for each web page in the DM task, and directly for CG task in the team optimization stage. Due to space limitations, please refer to Appendix B.1 for details.",
-    "technical_score": 0.0008580609418282548,
-    "citation_score": 0.016303157894736842
+    "technical_score": 0.0009543859649122807,
+    "citation_score": 0.018133333333333335
   },
   {
     "section_path": [
@@ -167,7 +167,7 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at COLM 2024 1 2 3 4 5 6 7 8Number of Agents68.068.569.069.570.070.571.0Accuracy 68.469.970.5 69.5 DyLAN LLM Debate (4 agents) 8 7 4 3 2 1Number of Agents02468101214#API Calls 2.833.904.398.30LLM Debate (4 agents) DyLAN are selected from 7 candidate agents based on Agent Im- portance Score . Accuracy (left) and #API calls (right) on the GR task are visualized.MethodAR GR Acc.",
-    "technical_score": 0.0022692520775623266,
+    "technical_score": 0.0022456140350877196,
     "citation_score": 0.0
   },
   {
@@ -177,7 +177,7 @@
     ],
     "paragraph_index": 3,
     "paragraph": "#API Acc. #API DyLAN 35.7 7.15 70.5 4.39 w/o es 35.0 13.00 70.1 13.00 w/o atr 33.8 8.20 69.9 7.05 MethodCG DM Pass@1 #API Reward #API DyLAN 82.9 16.85 68.3 24.85 w/o es 80.5 19.00 67.5 54.25 w/o atr 76.2 17.98 66.0 48.90 stopping mechanism ( es) and agent team reformation ( atr).",
-    "technical_score": 0.00302566943674977,
+    "technical_score": 0.0011228070175438598,
     "citation_score": 0.0
   },
   {
@@ -283,8 +283,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at COLM 2024 Common Settings In all experiments, we use gpt-35-tubo-0301 for every method if not specified. The version of GPT-4 is GPT-4-0613 . In Table 2, \u201c(Codex)\u201d denotes code-davinci-002 from OpenAI (Chen et al., 2021; OpenAI, 2023). All experiments with non-zero temperature is repeated for three times and the median is reported. To avoid the context length issue in prior work (Du et al., 2023; Liu et al., 2024), we set memory space for agents in DyLAN to 1 only to keep the freshest responses of predecessors. We setmax tokens to 2048 for GR and AR tasks and 1024 for CG and DM tasks to avoid ex- ceeding the maximum context length. The construction of candidates are demonstrated in Appendix D. We set N=4 in T-FFN after team optimization because the early-stopping mechanism requires at least four agents to tolerate one different response at a specific time step (Section 3.3.2); when reaching consensus over 2/3 of agents, it allows for 4 \u2212\u00062 3N\u0007=1 excetional response. We use a listwise ranker in the agent team reformation of DyLAN because of the effectiveness and efficiency, compared to ELo rating (Herbrich et al., 2006) or Sliding Window (Qin et al., 2023) we have tested in Appendix C.5. We use the same ranker to implement LLM-Blender (Jiang et al., 2023) in experiments. We set k=2 in the agent team reformation , because it\u2019s the minimal number for collaborations and we empirically found it brings great trade-off between effectiveness and efficiency. To avoid positional bias, for each time step t, we shuffle the responses from agents at t\u22121 when passing messages towards agents at t. The detailed inference algorithm is in Algorithm 1. To implement the early-stopping mechanism, we need to determine whether the answers from the nodes in the same layer of DyLAN are consistent. For classification and decision-making problems, the answers are consistent if identical, and for open-ended generation, the consistency is determined by a threshold of BLEU score. Experiments on Reasoning Tasks In general reasoning, we extract the answer from the response by matching the last \u201c(X\u201d or \u201c(X)\u201d, where \u201cX\u201d represents A, B, C or D. On average, Agent team reformation functions on the third time step. They could go through at maximum T=4 rounds of interaction. We also searched temperature in{0, 0.2, 0.8, 1.0 } for the best configuration for each system. In arithmetic reasoning, we set temperature to 0 for the single execution and PHP , 0.2 for LLM Debate, LLM-Blender, and DyLAN with Complex CoT prompts, and 1.0 for DyLAN with simple CoT prompts in Table 3, since systems with the same prompts will give all the same responses if temperature is zero, causing degradation. Prompting templates are replicated from their original studies, including normal CoT prompts (Wei et al., 2022) from the MATH dataset (Hendrycks et al., 2021b) and Complex CoT from PHP (Zheng et al., 2023). We follow the answer extraction method from the origin paper (Hendrycks et al., 2021b). We construct DyLAN with 4 agents assigned no specific roles and let agents to interact for at maximum T=4 rounds under T-FFN formulation. We reported the classification accuracy of each category averaged across subjects and the numbers of API calls of running DyLAN on the optimized team of agents. Experiments on Code Generation Tasks In the code generation task, we set temperature to 0 for the single execution, Reflexion, and 0.8 for LLM Debate, LLM-Blender, CodeT, and DyLAN in Table 2. In DyLAN, we optimized four agents to write code and four agents to give code reviews from 12 candidates in Appendix D. The selected code writers are \u201cPython Assistant\u201d, \u201cAlgorithm Developer\u201d, \u201cComputer Scientist\u201d, and \u201cProgrammer\u201d; and the selected code reviewers are \u201cSyntax Checker\u201d, \u201cUnit Tester\u201d, \u201cReflector\u201d, and \u201cRanker\u201d. \u201cSyntax Checker\u201d is pure external tools using a code interpreter for syntax checking without LLMs, and \u201cUnit Tester\u201d is equipped with a code interpreter. The tool is triggered when LLM generated codes inside the format ```python\\n(code)\\n ```. In DyLAN, solutions given by code writers are reviewed by code reviewers in at maximum T=6 rounds. At time step t=1, 3, 4, 6, code writers gives solutions and code reviewers review it at t=2, 5. And agent team reformation occurs at t=4. To ensure the participation of each agent, early- stopping mechanism functions at the third layer and later ( t\u22653). We use BLEU score in the early-stopping mechanism. We calculate BLEU bysacreBLEU2(Post, 2018). For answer post-processing, we store all unit tests from the unit tester (if exists in the system) and randomly select the final output from the top 5 code completions from all nodes that pass most tests. 2The signature of sacreBLEU is \u201cnrefs:1 |case:mixed |eff:no|tok:13a |smooth:exp |version:2.3.1\u201d.",
-    "technical_score": 0.004294736842105262,
-    "citation_score": 0.010021052631578944
+    "technical_score": 0.005869473684210525,
+    "citation_score": 0.008446315789473684
   },
   {
     "section_path": [
@@ -543,8 +543,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "Published as a conference paper at COLM 2024 Humanities, \u201cEconomist\u201d and \u201cPsychologist\u201d in Social Science, and \u201cDoctor\u201d for clinical questions in the \u201cOther\u201d category. During experiment with a T-FFN with at least one agent matches the category of the question, it is called a In-Domain scenario; vice versa. In Appendix C.6, we report the correlations between Shapley Values and Agent Importance Scores . We are curious whether Agent Importance Score is an unsupervised substitution for Shapley Value . So, we calculated two list-wise metrics for the similarity between distributions: the KL divergence and ListMLE (Xia et al., 2008), between Agent Importance Scores andShapley Value . It indeed shows a high correlation between the distributions of the two metrics during in-domain scenarios. In summary, we use Shapley Value as a self-evident metric for measuring individual contribu- tion, showing that Agent Importance Score emerges as a promising, unsupervised alternative with light computational complexity. MetricIn-Domain Off-Domain DKL LListMLE DKL LListMLE Shapley Value 0 0.673 0 0.674 Agent Importance Score 0.229\u00d710\u221230.686 0.347\u00d710\u221230.693 Uniform Distribution 0.359\u00d710\u221230.693 0.327\u00d710\u221230.693",
-    "technical_score": 0.002596358440321288,
-    "citation_score": 0.002211712745458875
+    "technical_score": 0.0020193898980276686,
+    "citation_score": 0.002788681287752495
   },
   {
     "section_path": [
