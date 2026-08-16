@@ -2186,6 +2186,57 @@ def citation_fallback_token_count(text: str) -> int:
     return max(1, len(re.findall(r"[A-Za-z0-9_]+", text or "")))
 
 
+def repair_partial_citation_scores(
+    parsed_scores: Dict[str, float],
+    citation_ids: List[str],
+    citation_id_to_name: Dict[str, str],
+    total_score: float,
+    citation_base_weights: Optional[Dict[str, float]] = None,
+) -> Optional[Dict[str, float]]:
+    if not citation_ids:
+        return {}
+
+    valid_ids = set(citation_ids)
+    cleaned = {
+        citation_id: max(0.0, safe_float(value, 0.0))
+        for citation_id, value in parsed_scores.items()
+        if citation_id in valid_ids
+    }
+    positive_present = {
+        citation_id: value
+        for citation_id, value in cleaned.items()
+        if value > 0.0
+    }
+    if not positive_present:
+        return None
+
+    present_count = len(cleaned)
+    missing_ids = [citation_id for citation_id in citation_ids if citation_id not in cleaned]
+    if len(citation_ids) >= 4 and present_count < max(2, len(citation_ids) // 2):
+        return None
+    if len(missing_ids) > max(1, len(citation_ids) // 2):
+        return None
+
+    repaired_raw = {
+        citation_id_to_name[citation_id]: cleaned[citation_id]
+        for citation_id in citation_ids
+        if citation_id in cleaned
+    }
+    if not missing_ids:
+        return normalize_distribution(repaired_raw, total_score)
+
+    present_values = list(positive_present.values())
+    fallback_unit = max(1.0, min(present_values) * 0.5)
+    fallback_weights = citation_base_weights or {}
+
+    for citation_id in missing_ids:
+        citation_name = citation_id_to_name[citation_id]
+        raw_weight = max(0.0, safe_float(fallback_weights.get(citation_name, 1.0), 1.0))
+        repaired_raw[citation_name] = fallback_unit * max(1.0, raw_weight)
+
+    return normalize_distribution(repaired_raw, total_score)
+
+
 def assert_close(actual: float, expected: float, context: str, tol: float = 1e-8) -> None:
     if abs(actual - expected) > tol:
         print(
@@ -3432,6 +3483,7 @@ def direct_allocate_citation_scores(
     paragraph_id: str,
     paragraph_text: str,
     citation_to_context: Dict[str, str],
+    citation_base_weights: Optional[Dict[str, float]],
     total_score: float,
     model: str,
     temperature: float,
@@ -3500,6 +3552,24 @@ def direct_allocate_citation_scores(
             }
             return normalize_distribution(parsed_scores, total_score)
 
+        repaired_scores = repair_partial_citation_scores(
+            parsed_scores=parsed_scores,
+            citation_ids=citation_ids,
+            citation_id_to_name=citation_id_to_name,
+            total_score=total_score,
+            citation_base_weights=citation_base_weights,
+        )
+        if repaired_scores is not None:
+            missing_ids = [citation_id for citation_id in citation_ids if citation_id not in parsed_scores]
+            append_debug_log(
+                debug_log_path,
+                (
+                    f"[citation_split_partial_accept] paragraph_id={paragraph_id} sample={sample_idx} "
+                    f"attempt={attempt + 1}/{max(1, max_retries)} missing_ids={missing_ids}"
+                ),
+            )
+            return repaired_scores
+
         prompt = (
             f"{base_prompt}\n\n"
             "Your previous answer was incomplete or invalid.\n"
@@ -3529,6 +3599,7 @@ def allocate_citation_scores_for_paragraph(
     paragraph_id: str,
     paragraph_text: str,
     citation_to_context: Dict[str, str],
+    citation_base_weights: Optional[Dict[str, float]],
     total_score: float,
     model: str,
     n_samples: int,
@@ -3552,6 +3623,7 @@ def allocate_citation_scores_for_paragraph(
                     paragraph_id=paragraph_id,
                     paragraph_text=paragraph_text,
                     citation_to_context=citation_to_context,
+                    citation_base_weights=citation_base_weights,
                     total_score=total_score,
                     model=model,
                     temperature=sample_temperature(temperature, s),
@@ -4373,8 +4445,10 @@ def assign_importance_scores(
                 citation_split = fallback_paragraph_allocations[paragraph_name]
             else:
                 citation_contexts: Dict[str, List[str]] = {}
+                citation_counts: Dict[str, int] = {}
                 for citation, _, context in mentions:
                     citation_contexts.setdefault(citation, []).append(normalize_for_match(str(context)))
+                    citation_counts[citation] = citation_counts.get(citation, 0) + 1
 
                 citation_to_context: Dict[str, str] = {}
                 for citation, contexts in citation_contexts.items():
@@ -4388,6 +4462,7 @@ def assign_importance_scores(
                         paragraph_id=f"{' > '.join(section_path)}::p{meta['paragraph_index']}",
                         paragraph_text=meta["text"],
                         citation_to_context=citation_to_context,
+                        citation_base_weights=citation_counts,
                         total_score=paragraph_c,
                         model=model,
                         n_samples=max(1, n_samples),
