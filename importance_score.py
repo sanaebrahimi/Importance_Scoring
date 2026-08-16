@@ -176,10 +176,8 @@ CITATION_SPLIT_SYSTEM_PROMPT = (
 CITATION_SPLIT_USER_PROMPT_TEMPLATE = """Paragraph id:
 {paragraph_id}
 
-Paragraph citation score to distribute later in code: {paragraph_citation_score}
-
-Paragraph text:
-{paragraph_text}
+Citation-focused paragraph text:
+{paragraph_focus_text}
 
 Task:
 - Divide percentage importance among the citations below.
@@ -191,7 +189,9 @@ Task:
   citation is peripheral or only mentioned briefly
 - Percentages must be non-negative.
 - Percentages must sum to 100.
+- Output only citation percentages on a 0-100 scale.
 - Do not copy decimal values from the paragraph or citation contexts.
+- Do not output the paragraph's score; code will rescale your percentages later.
 
 Citation entries (citation_id -> citation and context):
 {citations_json}
@@ -2921,6 +2921,35 @@ def build_citation_focus_text(
     return focus[:limit]
 
 
+def build_citation_split_focus_text(
+    paragraph_text: str,
+    mentions: List[Tuple[str, str, str]],
+    limit: int = 1200,
+) -> str:
+    sentences = split_into_sentences(paragraph_text)
+    if not sentences:
+        return normalize_for_match(paragraph_text)[:limit]
+
+    focus_sentences = extract_citation_focus_sentences(paragraph_text, mentions)
+    if not focus_sentences:
+        return " ".join(sentences[: min(3, len(sentences))])[:limit]
+
+    focus_set = set(focus_sentences)
+    selected_indexes: List[int] = []
+    for idx, sentence in enumerate(sentences):
+        if sentence not in focus_set:
+            continue
+        for neighbor_idx in (idx - 1, idx, idx + 1):
+            if 0 <= neighbor_idx < len(sentences) and neighbor_idx not in selected_indexes:
+                selected_indexes.append(neighbor_idx)
+
+    if not selected_indexes:
+        return " ".join(focus_sentences)[:limit]
+
+    selected_text = " ".join(sentences[idx] for idx in selected_indexes)
+    return selected_text[:limit]
+
+
 def citation_focus_ratio(paragraph_text: str, mentions: List[Tuple[str, str, str]]) -> float:
     sentences = split_into_sentences(paragraph_text)
     if not sentences:
@@ -3481,7 +3510,7 @@ def heuristic_top_level_scores(
 def direct_allocate_citation_scores(
     client: Client,
     paragraph_id: str,
-    paragraph_text: str,
+    paragraph_focus_text: str,
     citation_to_context: Dict[str, str],
     citation_base_weights: Optional[Dict[str, float]],
     total_score: float,
@@ -3509,8 +3538,7 @@ def direct_allocate_citation_scores(
 
     base_prompt = CITATION_SPLIT_USER_PROMPT_TEMPLATE.format(
         paragraph_id=paragraph_id,
-        paragraph_citation_score=total_score,
-        paragraph_text=paragraph_text[:1200],
+        paragraph_focus_text=paragraph_focus_text[:1200],
         citations_json=json.dumps(citation_payload, indent=2),
     )
     prompt = base_prompt
@@ -3597,7 +3625,7 @@ def direct_allocate_citation_scores(
 def allocate_citation_scores_for_paragraph(
     client: Client,
     paragraph_id: str,
-    paragraph_text: str,
+    paragraph_focus_text: str,
     citation_to_context: Dict[str, str],
     citation_base_weights: Optional[Dict[str, float]],
     total_score: float,
@@ -3621,7 +3649,7 @@ def allocate_citation_scores_for_paragraph(
                 direct_allocate_citation_scores(
                     client=client,
                     paragraph_id=paragraph_id,
-                    paragraph_text=paragraph_text,
+                    paragraph_focus_text=paragraph_focus_text,
                     citation_to_context=citation_to_context,
                     citation_base_weights=citation_base_weights,
                     total_score=total_score,
@@ -4449,6 +4477,11 @@ def assign_importance_scores(
                 for citation, _, context in mentions:
                     citation_contexts.setdefault(citation, []).append(normalize_for_match(str(context)))
                     citation_counts[citation] = citation_counts.get(citation, 0) + 1
+                paragraph_focus_text = build_citation_split_focus_text(
+                    paragraph_text=meta["text"],
+                    mentions=mentions,
+                    limit=1200,
+                )
 
                 citation_to_context: Dict[str, str] = {}
                 for citation, contexts in citation_contexts.items():
@@ -4460,7 +4493,7 @@ def assign_importance_scores(
                     citation_split = allocate_citation_scores_for_paragraph(
                         client=client,
                         paragraph_id=f"{' > '.join(section_path)}::p{meta['paragraph_index']}",
-                        paragraph_text=meta["text"],
+                        paragraph_focus_text=paragraph_focus_text,
                         citation_to_context=citation_to_context,
                         citation_base_weights=citation_counts,
                         total_score=paragraph_c,

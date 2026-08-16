@@ -18,6 +18,7 @@ from importance_score import (  # noqa: E402
     SECTION_LEAD_IN_NODE,
     allocate_leaf_citation_scores_length_fallback,
     allocate_paragraph_citation_scores_length_fallback,
+    build_citation_split_focus_text,
     detect_dominant_citation_style,
     extract_citations_by_section,
     find_heading_line_offsets_global,
@@ -233,6 +234,25 @@ class SectionHeadingRecoveryTests(unittest.TestCase):
         self.assertAlmostEqual(sum(local_fallback.values()), 0.2, places=8)
         self.assertGreater(local_fallback["(Smith, 2020)"], 0.0)
         self.assertGreater(local_fallback["(Jones, 2021)"], 0.0)
+
+    def test_citation_split_focus_text_prefers_citation_sentences_with_neighbors(self) -> None:
+        paragraph = (
+            "This opening sentence is unrelated setup. "
+            "We compare against Smith et al. (2020) and Jones et al. (2021) on benchmark tasks. "
+            "These baselines define the main comparison setting for the paragraph. "
+            "A final sentence discusses an unrelated implementation detail."
+        )
+        mentions = [
+            ("(Smith et al., 2020)", "(Smith et al., 2020)", "We compare against Smith et al. (2020) and Jones et al. (2021) on benchmark tasks."),
+            ("(Jones et al., 2021)", "(Jones et al., 2021)", "We compare against Smith et al. (2020) and Jones et al. (2021) on benchmark tasks."),
+        ]
+
+        focus = build_citation_split_focus_text(paragraph, mentions, limit=1200)
+
+        self.assertIn("This opening sentence is unrelated setup.", focus)
+        self.assertIn("We compare against Smith et al. (2020) and Jones et al. (2021) on benchmark tasks.", focus)
+        self.assertIn("These baselines define the main comparison setting for the paragraph.", focus)
+        self.assertNotIn("A final sentence discusses an unrelated implementation detail.", focus)
 
 
 if __name__ == "__main__":
