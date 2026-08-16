@@ -1,0 +1,1294 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For multi-agent collaboration, following [ 45], a MAS is naturally formalized as a directed graph G= (V,E) , where each node v\u2208 V corresponds to an agent a\u2208 A , and each directed edge (vi, vj)\u2208 E encodes a dependency or information flow, conveying intermediate context from agent aito agent aj. Typically, this graph presents a single-source, single-sink configuration: the source node represents the input task, while the sink node yields the unified task output (i.e., artifact). This formalism underlies a unified and temporal modeling framework for LLM-based reasoning systems and is analogous to a \"graph-of-thought\" [2] that captures the deep thinking process. 2.1 Dynamic Orchestration Centralized PuppeteerA challenge in multi-agent reasoning is achieving efficient orchestration as task complexity and agent diversity increase. In previous approaches, each agent autonomously selects collaborators, but this incurs coordination overhead and poor scalability, particularly as agents increase or change [ 87,45]. Instead, inspired by centralized coordination (e.g.,a puppeteer managing multiple puppets), we model the system as driven by a centralized orchestrator. This orchestrator dynamically selects which agents to activate in each step, based on the dynamic task state, and delegates reasoning to the selected agents. Such centralization decouples agent selection from internal agent behaviors, greatly enhancing adaptability and scalability without extensive parameter retraining. Serialized OrchestrationAnother challenge stems from the combinatorially large space of possible collaboration topologies among agents. Exhaustive search is infeasible, thus prior work focuses only on canonical graphs (e.g.,chains, trees, graphs) [ 76,70,2]. Instead, we propose to serialize the collaborative reasoning process: rather than searching the entire topological space, the orchestrator \"unfolds\" the graph into a reasoning sequence guided by a topological traversal strategy. By maintaining a topological ordering, the reasoning steps follow the partial order implied by the problem dependencies. It is important to note that although the orchestration of agents appears to be serialized and \"unfolded\", when this episode is restored through folding, it can be reconstructed as a directed graph (with agents as nodes and orchestration partial order relations as edges). Building on the two concepts above, we formalize the multi-agent collaboration as a sequential decision process governed by a centralized policy \u03c0. At each time step t, the orchestrator selects a single agent at\u2208 A to activate, conditioned on the current global system state Stand the task specification \u03c4. The global state Stconsists of all relevant agent states and aggregated contextual information up to stept: at\u223c\u03c0(S t, \u03c4) =P(a|S t, \u03c4)(1) where the policy \u03c0is a function mapping the observable context\u2014such as the current state and task description\u2014to a distribution over candidate agents [ 73,74] (e.g.,via neural scoring, embeddingbased models, or Bradley-Terry style approaches [68]). Upon activation, agent atreceives its state st(at)(extracted from St) and generates its output by a generative reasoning mappingf at, after which the system state is updated (\u03a6) as: ot=fat(st(at), St), S t+1= \u03a6(S t, ot)(2) The process continues iteratively: at each step, the orchestrator observes the updated system state St+1and selects the next agent at+1to activate, again using the policy \u03c0conditioned only on St+1 and\u03c4. This sequential agent selection process explicitly satisfies the Markov property [17]: P(at+1|S0, . . . , S t+1, \u03c4) =P(a t+1|St+1, \u03c4)(3) The process terminates when a stopping criterion is met (e.g.,when the selected agent is a designated terminator or when the task-solving resource is exhausted). At that point, a final aggregation function Faggcombines all agent outputs across timesteps to yield the overall solution: o\u2217=F agg({o0, o1, . . . , o T}) = \u03a6(S T, oT)(4) whereTdenotes the total number of reasoning steps. 2.2 Adaptive Evolution While dynamic orchestration enables flexible agents\u2019 long-chain reasoning, naive implementations may invoke redundant or unhelpful agents, resulting in unacceptable inefficiency. To address this, 3 thanks to the Markov property, a learnable policy is considered for continuously learning to make agent selection decisions adaptively. After each reasoning episode, the system receives feedback jointly evaluating solution quality and resource consumption, enabling the policy to learn which agent is most valuable based on real-time task states. Practically, this facilitates dynamic pruning of agents: the orchestration process adapts to increasingly favor compact reasoning chains by reducing reliance on agents that offer little incremental gain or incur excessive cost. Over time, the orchestrator policy evolves to organize more effective agent sequences, balancing expressive collaboration with computational efficiency. Thus, the evolvable puppeteer not only orchestrates agent collaboration, but also distills the reasoning process to its most essential components, enabling robust and scalable performance. Policy OptimizationTo systematically optimize both the effectiveness and efficiency of collaboration, we employ REINFORCE [ 60], a reinforcement learning (RL) technique, as our underlying optimization framework [ 40,31,73,54]. By doing so, the orchestration policy learns from previous executions, adaptively refining agent selection and pruning strategies to achieve more robust and cost-efficient multi-agent reasoning. Concretely, the optimization objective is to maximize the expected return over complete reasoning trajectories, where the return reflects both overall effectiveness and inference efficiency: J(\u03b8) =E \u03c0\u03b8\u0002 R(\u03c4)\u0003 ,\u2207 \u03b8J(\u03b8)\u22481 NNX n=1 TX t=1\u2207\u03b8log\u03c0 \u03b8(at|St)! \u00b7R(\u03c4)(5) withR(\u03c4) denoting the total reward accrued for trajectory \u03c4={S 0, a0, o0, S1, . . . , S T, aT, oT}, and otthe output generated by agent atat state St,Nis the sample size, and Tis the total number of steps in one trajectory. The orchestrator\u2019s parameters \u03b8are updated iteratively via gradient ascent: \u03b8\u2190\u03b8+\u03b1\u2207 \u03b8J(\u03b8) , with learning rate \u03b1. Through such RL-driven optimization, the orchestrator leverages accumulated cross-task experience to refine agent selection, dynamically suppressing unhelpful or costly agents and converging toward more compact, high-performing collaboration structures. Reward DesignTo effectively guide the orchestrator\u2019s optimization, we design a reward function that jointly accounts for both solution quality and computational efficiency. Upon completion of each task trajectory, a terminal reward ris assigned: for tasks with ground-truth answers, r\u2208 {0,1} indicates correctness; for open-ended tasks, r\u2208[0,1] quantifies answer quality. The overall reward is defined recursively over time steps [ 59]. At the terminal state ( t=T ), the cumulative reward incorporates both solution quality and total computational cost: Rt=\u001ar\u2212\u03bb\u00b7C T,ift=T \u03b3\u00b7R t+1\u2212\u03bb\u00b7C t,ift < T, C t=F\u00b7log\u0012 1 +t \u03c6\u0013 (6) where \u03bbcontrols the trade-off between accuracy and efficiency, \u03b3\u2208(0,1] is the discount factor. To encourage economical reasoning, we penalize excessive computational expenditure. Specifically, for each reasoning step t, we define a step-wise cost Ctbased on FLOPs or token-level metrics [ 50], denoted by F, and a step factor normalized by the maximum step budget \u03c6, i.e.,t/\u03c6. This composite reward formulation incentivizes the orchestrator to achieve correct and high-quality solutions while minimizing unnecessary computation, ultimately driving the MAS to discover reasoning structures that are both effective and cost-efficient. 3 Experiments Datasets and MetricsTo thoroughly assess our framework, we use a range of publicly available and logically demanding datasets covering both closed- and open-domain reasoning tasks: \u2022Closed-domain Tasks: These tasks require precise, objective reasoning and unambiguous answers, making them well-suited for evaluating core inference accuracy and mathematical rigor.GSMHard[ 18] features arithmetic problems involving unusually large numbers and complex multi-step calculations, challenging models\u2019 advanced mathematical reasoning and error-free execution. MMLU-Pro[ 67] is a comprehensive benchmark spanning diverse subjects and difficulty levels, 4 using multiple-choice questions to assess both factual knowledge and logical deduction. Both benchmarks are designed to assess the model\u2019s ability in mathematical and commonsense reasoning and inference, withaccuracyas the evaluation metric. \u2022Open-domain Tasks: These tasks are inherently creative and open-ended, requiring multidimensional qualitative evaluation. They rigorously assess agents\u2019 ability to integrate information, understand context, and generate novel solutions.SRDD[ 44] consists of real-world textual software requirements and tasks agents with building the corresponding software, demanding proficiency in requirement comprehension, system/design reasoning, code generation, and testing. Its official evaluation metric combines completeness, executability, and consistency [ 44], reflecting the practical demands of real-world software development workflows.CommonGen-Hard[ 39] challenges agents to generate coherent sentences that connect seemingly unrelated concepts, highlighting their abilities in commonsense reasoning, contextual understanding, and creative expression. Evaluation is based on an aggregate metric that incorporates grammar, relevance, logical consistency[ 32], as well as concept coverage [39], providing a nuanced assessment of generative quality. BaselinesTo mitigate performance interference\u2014where strong models may overshadow the contributions of weaker ones\u2014and to evaluate our method\u2019s adaptability across agents with varying capacities, we partition the agent pool based on the parameter scale of the underlying models. Specifically, we define aMimassubspace (smaller models:Qwen-2.5-7B,Qwen-2.5-14B,LLaMA-3.1-8B, LLaMA-3.2-3B,Mistral-7B,Mistral-Nemo-12B) and aTitansubspace (larger models:GPT-4-Turbo, GPT-4o-Mini,Gemini-1.5-Pro,Gemini-1.5-Flash,Claude-3-Sonnet,Claude-3-Haiku,Qwen-2.5-72B, LLaMA-3.1-405B), covering both closed- and open-source families. All experiments are performed under both the Titan and Mimas subspace settings. To ensure the rigor and credibility of our experimental study, we select a suite of representative and recent baselines that comprehensively span the spectrum from straightforward LLM generation to advanced agentic paradigms: \u2022Pure Models: This category evaluates foundation modelsin the absence of explicit agent structuring or workflow orchestration, serving as a baseline for generative inference performance. For Mimas, competitive open-source models includeLLaMA-3.1-8B,Mistral-Nemo-12B, and Qwen-2.5-14B.3For Titan, options such asLLaMA-3.1-405B,GPT-4o-mini, andGPT-4-turboare considered. \u2022Single-Agent Methods: This category explores paradigms where reasoning is performed by a single agent using a specific reasoning pattern or workflow.Self-refine[ 39] exemplifies iterative, self-corrective reasoning within a feedback loop, whereasAFlow[ 81] enhances agent reasoning efficiency by utilizing Monte Carlo Tree Search to optimize code-represented agent workflows. \u2022Multi-Agent Methods: We benchmark against the latest multi-agent reasoning systems, showcasing state-of-the-art capabilities in leveraging agent heterogeneity and dynamic collaboration. MacNet[ 45] orchestrates agents within topologically static directed acyclic graphs, facilitating collective intelligence driven by one foundation model to enhance reasoning performance.EvoAgent[ 78] adopts evolutionary algorithms to automatically generate and optimize diverse multi-agent systems, adaptively improving collaboration and performance without manual intervention. Implementation DetailsDifferent agents are equipped with distinct reasoning patterns\u2014such astask decomposition,reflection,refinement,critique,modification,summarization, andtermination\u2014enabling flexible problem-solving [ 43,21,82,39]. External tools likeWebViewer,WikiSearch, BingSearch,arXivSearch,Code Interpreter, andFile Readerare also integrated [ 47]. Dynamic collaboration uses majority voting for output aggregation. The policy is initialized with a variant of Llama-3.14, using default settings: episode length to 4, parallel exploration up to 3, \u03bb= 0.1 , and \u03b3= 0.99. All baselines are rerun under identical settings. 3.1 Does Our Method Lead To Elevated Performance? Many prior studies on multi-agent systems have employed the same base model to drive agent behavior [ 44,36,87]. To enable a more meaningful comparison and account for model heterogeneity, our method, referred to as Puppeteer, introduces two distinct configurations within each agent 3Other smaller-scale models in the same series (e.g., Qwen-2.0-7B) have also been experimentally validated, and their performance is generally weaker than that of the larger-scale model within the same series. 4https://huggingface.co/nvidia/Llama-3.1-Nemotron-70B-Reward-HF 5",
+    "technical_score": 0.004867626072186358,
+    "citation_score": 0.0032450840481242386
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Early MAS designs relied on fixed, handcrafted structures,e.g.,mirroring software engineering paradigms like waterfall models [ 42,11,44]. These static approaches led to rigid coordination [ 87, 45], limited workflow flexibility [ 23,81], and suboptimal agent composition [ 15,42,37,35]. To address these issues, more adaptive orchestration methods have emerged: network-style organizations dynamically select agents (Dylan [ 36]) as optimizable graphs enable prompt refinement and better cooperation (GPT-Swarm [ 87], MacNet [ 45]); and code-based representations allow modeling of dynamic, task-specific processes. Recent approaches employ code-space search (ADAS [ 23], AFlow [ 81]) or train LLMs to generate MAS configurations on demand (MAS-GPT [ 77]). Beyond LLM-based MAS, classical MARL (Multi Agent Reinforcement Learning) works [ 26,65,34,63] have long explored coordination and role specialization, offering key inspirations for our RL-driven orchestration in LLM-based multi-agent systems. 5 Conclusion We proposed a novel framework for adaptive multi-agent LLM collaboration inspired by puppet show orchestration, where a centralized, learnable \"puppeteer\" orchestrator dynamically activated agents within a directed graph-of-thoughts. Unlike previous methods with static or manually designed topologies, our approach incorporated context-sensitive orchestration and reinforcement learningdriven policy adaptation, enabling more principled and efficient collaboration. Experiments on diverse tasks showed that our method achieved superior solution quality and reduced computational cost. Analyses further revealed that the orchestrator promoted compact, cyclic reasoning structures, underpinning the performance improvements. We hope this work can constitute a valuable step toward dynamic and scalable coordination in multi-agent collaboration. Acknowledgement The work was supported by the Tencent Rhino-Bird Focused Research Program. References [1]Michael Ahn, Anthony Brohan, Noah Brown, Yevgen Chebotar, Omar Cortes, Byron David, Chelsea Finn, Chuyuan Fu, Keerthana Gopalakrishnan, Karol Hausman, Alex Herzog, Daniel Ho, Jasmine Hsu, Julian Ibarz, Brian Ichter, Alex Irpan, Eric Jang, Rosario Jauregui Ruano, Kyle Jeffrey, Sally Jesmonth, Nikhil Joshi, Ryan Julian, Dmitry Kalashnikov, Yuheng Kuang, Kuang-Huei Lee, Sergey Levine, Yao Lu, Linda Luu, Carolina Parada, Peter Pastor, Jornell Quiambao, Kanishka Rao, Jarek Rettinghouse, Diego Reyes, Pierre Sermanet, Nicolas Sievers, Clayton Tan, Alexander Toshev, Vincent Vanhoucke, Fei Xia, Ted Xiao, Peng Xu, Sichun Xu, Mengyuan Yan, and Andy Zeng. Do as i can and not as i say: Grounding language in robotic affordances. InarXiv:2204.01691, 2022. [2]Maciej Besta, Nils Blach, Ales Kubicek, Robert Gerstenberger, Micha\u0142 Podstawski, Lukas Gianinazzi, Joanna Gajda, Tomasz Lehmann, Hubert Niewiadomski, Piotr Nyczyk, and Torsten Hoefler. Graph of thoughts: solving elaborate problems with large language models. In Proceedings of the Thirty-Eighth AAAI Conference on Artificial Intelligence and Thirty-Sixth Conference on Innovative Applications of Artificial Intelligence and Fourteenth Symposium on Educational Advances in Artificial Intelligence (AAAI), 2024. [3]Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini Agarwal, Ariel Herbert-V oss, Gretchen Krueger, Tom Henighan, Rewon Child, Aditya Ramesh, Daniel Ziegler, Jeffrey Wu, Clemens Winter, Chris Hesse, Mark Chen, Eric Sigler, Mateusz Litwin, Scott Gray, Benjamin Chess, Jack Clark, Christopher Berner, Sam McCandlish, Alec Radford, Ilya Sutskever, and Dario Amodei.",
+    "technical_score": 0.0012169065180465896,
+    "citation_score": 0.0008112710120310597
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Language Models are Few-Shot Learners. InAdvances in Neural Information Processing Systems (NeurIPS), 2020. [4]Se\u0301bastien Bubeck, Varun Chandrasekaran, Ronen Eldan, Johannes Gehrke, Eric Horvitz, Ece Kamar, Peter Lee, Yin Tat Lee, Yuanzhi Li, Scott Lundberg, Harsha Nori, Hamid Palangi, Marco Tulio Ribeiro, and Yi Zhang. Sparks of Artificial General Intelligence: Early experiments with GPT-4. InarXiv:2303.12712, 2023. 10",
+    "technical_score": 0.006936367152865562,
+    "citation_score": 0.0021904317324838614
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "[5]Tianle Cai, Xuezhi Wang, Tengyu Ma, Xinyun Chen, and Denny Zhou.",
+    "technical_score": 0.0009066602576256716,
+    "citation_score": 0.0005099963949144402
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Large Language Models as Tool Makers. InThe Twelfth International Conference on Learning Representations (ICLR), 2023. [6]Mert Cemri, Melissa Z.",
+    "technical_score": 0.00624678679263916,
+    "citation_score": 0.0008518345626326127
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Pan, Shuyi Yang, Lakshya A. Agrawal, Bhavya Chopra, Rishabh Tiwari, Kurt Keutzer, Aditya Parameswaran, Dan Klein, Kannan Ramchandran, Matei Zaharia, Joseph E.",
+    "technical_score": 0.003042266295116474,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Gonzalez, and Ion Stoica. Why Do Multi-Agent LLM Systems Fail? InarXiv:2503.13657, 2025. [7]Guoxin Chen, Minpeng Liao, Chengxi Li, and Kai Fan.",
+    "technical_score": 0.004461990566170828,
+    "citation_score": 0.0006084532590232947
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "AlphaMath Almost Zero: Process Supervision without Process. InThe Thirty-eighth Annual Conference on Neural Information Processing Systems (NeurIPS), 2024. [8]Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Ion Stoica, Matei Zaharia, and James Zou. Are More LLM Calls All You Need?",
+    "technical_score": 0.005354388679404994,
+    "citation_score": 0.0007301439108279537
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Towards the Scaling Properties of Compound AI Systems. InThe Thirty-eighth Annual Conference on Neural Information Processing Systems (NeurIPS), 2024. [9]Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Matei Zaharia, James Zou, and Ion Stoica.",
+    "technical_score": 0.0035695924529366625,
+    "citation_score": 0.0004867626072186358
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Optimizing Model Selection for Compound AI Systems. InarXiv:2502.14815, 2025. [10] Liting Chen, Lu Wang, Hang Dong, Yali Du, Jie Yan, Fangkai Yang, Shuang Li, Pu Zhao, Si Qin, Saravan Rajmohan, Qingwei Lin, and Dongmei Zhang.",
+    "technical_score": 0.0030422662951164734,
+    "citation_score": 0.002028177530077649
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Introspective Tips: Large Language Model for In-Context Decision Making. InarXiv:2305.11598, 2023. [11] Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chi-Min Chan, Heyang Yu, Yaxi Lu, Yi-Hsin Hung, Chen Qian, Yujia Qin, Xin Cong, Ruobing Xie, Zhiyuan Liu, Maosong Sun, and Jie Zhou.",
+    "technical_score": 0.0015211331475582367,
+    "citation_score": 0.0010140887650388244
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "AgentVerse: Facilitating Multi-Agent Collaboration and Exploring Emergent Behaviors. InThe Twelfth International Conference on Learning Representations (ICLR), 2024. [12] Weize Chen, Ziming You, Ran Li, yitong guan, Chen Qian, Chenyang Zhao, Cheng Yang, Ruobing Xie, Zhiyuan Liu, and Maosong Sun. Internet of Agents: Weaving a Web of Heterogeneous Agents for Collaborative Intelligence. InThe Thirteenth International Conference on Learning Representations (ICLR), 2025. [13] Weize Chen, Jiarui Yuan, Chen Qian, Cheng Yang, Zhiyuan Liu, and Maosong Sun. Optima: Optimizing effectiveness and efficiency for llm-based multi-agent system. InarXiv:2410.08115, 2025. [14] William S.",
+    "technical_score": 0.0021295864065815316,
+    "citation_score": 0.0014197242710543546
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Cleveland. LOWESS: A Program for Smoothing Scatterplots by Robust Locally Weighted Regression. InThe American Statistician, 1981. [15] Ameet Deshpande, Vishvak Murahari, Tanmay Rajpurohit, Ashwin Kalyan, and Karthik Narasimhan. Toxicity in chatgpt: Analyzing persona-assigned language models. In Houda Bouamor, Juan Pino, and Kalika Bali, editors,Findings of the Association for Computational Linguistics (EMNLP), 2023. [16] Yilun Du, Shuang Li, Antonio Torralba, Joshua B.",
+    "technical_score": 0.0027380396656048267,
+    "citation_score": 0.0018253597770698845
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Tenenbaum, and Igor Mordatch.",
+    "technical_score": 0.005577488207713535,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "Improving Factuality and Reasoning in Language Models through Multiagent Debate. InProceedings of the 41st International Conference on Machine Learning (ICML), 2024. [17] S.",
+    "technical_score": 0.005800587736022076,
+    "citation_score": 0.0007909892367302832
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "N.",
+    "technical_score": 0.007605665737791184,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Ethier and T.",
+    "technical_score": 0.008619754502830007,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "G.",
+    "technical_score": 0.008477782075724572,
+    "citation_score": 0.0011560611921442598
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "Kurtz.",
+    "technical_score": 0.009126798885349422,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "Markov Processes: Characterization and Convergence. InWiley Series in Probability and Statistics, 1986. [18] Luyu Gao, Aman Madaan, Shuyan Zhou, Uri Alon, Pengfei Liu, Yiming Yang, Jamie Callan, and Graham Neubig. PAL: program-aided language models. InProceedings of the 40th International Conference on Machine Learning (ICML), 2023. [19] Yingqiang Ge, Wenyue Hua, Kai Mei, Jianchao Ji, Juntao Tan, Shuyuan Xu, Zelong Li, and Yongfeng Zhang.",
+    "technical_score": 0.004259172813163063,
+    "citation_score": 0.002839448542108709
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 21,
+    "paragraph": "OpenAGI: When LLM Meets Domain Experts. InarXiv:2304.04370, 2023. 11",
+    "technical_score": 0.006084532590232948,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 22,
+    "paragraph": "[81] Jiayi Zhang, Jinyu Xiang, Zhaoyang Yu, Fengwei Teng, Xiong-Hui Chen, Jiaqi Chen, Mingchen Zhuge, Xin Cheng, Sirui Hong, Jinlin Wang, Bingnan Zheng, Bang Liu, Yuyu Luo, and Chenglin Wu.",
+    "technical_score": 0.002433813036093179,
+    "citation_score": 0.0016225420240621193
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 23,
+    "paragraph": "AFlow: Automating Agentic Workflow Generation. InThe Thirteenth International Conference on Learning Representations (ICLR), 2025. [82] Andy Zhou, Kai Yan, Michal Shlapentokh-Rothman, Haohan Wang, and Yu-Xiong Wang. Language agent tree search unifies reasoning, acting, and planning in language models. In Proceedings of the 41st International Conference on Machine Learning (ICML), 2024. [83] Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng, Tianyue Ou, Yonatan Bisk, Daniel Fried, Uri Alon, and Graham Neubig.",
+    "technical_score": 0.0030422662951164734,
+    "citation_score": 0.002028177530077649
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 24,
+    "paragraph": "WebArena: A Realistic Web Environment for Building Autonomous Agents. InarXiv:2307.13854, 2024. [84] Wangchunshu Zhou, Yuchen Eleanor Jiang, Long Li, Jialong Wu, Tiannan Wang, Shi Qiu, Jintian Zhang, Jing Chen, Ruipu Wu, Shuai Wang, Shiding Zhu, Jiyu Chen, Wentao Zhang, Xiangru Tang, Ningyu Zhang, Huajun Chen, Peng Cui, and Mrinmaya Sachan.",
+    "technical_score": 0.001825359777069884,
+    "citation_score": 0.0012169065180465896
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 25,
+    "paragraph": "Agents: An Open-source Framework for Autonomous Language Agents. InarXiv:2309.07870, 2023. [85] Yuchen Zhuang, Xiang Chen, Tong Yu, Saayan Mitra, Victor Bursztyn, Ryan A.",
+    "technical_score": 0.00312339339631958,
+    "citation_score": 0.00042591728131630634
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 26,
+    "paragraph": "Rossi, Somdeb Sarkhel, and Chao Zhang. ToolChain*: Efficient Action Space Navigation in Large Language Models with A* Search. InThe Twelfth International Conference on Learning Representations (ICLR), 2024. [86] Yuchen Zhuang, Yue Yu, Kuan Wang, Haotian Sun, and Chao Zhang.",
+    "technical_score": 0.004015791509553746,
+    "citation_score": 0.0005476079331209653
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 27,
+    "paragraph": "ToolQA: A Dataset for LLM Question Answering with External Tools. InThirty-seventh Conference on Neural Information Processing Systems Datasets and Benchmarks Track (NeurIPS), 2023. [87] Mingchen Zhuge, Wenyi Wang, Louis Kirsch, Francesco Faccio, Dmitrii Khizbullin, and Ju\u0308rgen Schmidhuber.",
+    "technical_score": 0.004238891037862287,
+    "citation_score": 0.0013385971698512483
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 28,
+    "paragraph": "GPTSwarm: Language Agents as Optimizable Graphs. InForty-first International Conference on Machine Learning (ICML), 2024. 16",
+    "technical_score": 0.00659157697275236,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 29,
+    "paragraph": "NeurIPS Paper Checklist 1.Claims Question: Do the main claims made in the abstract and introduction accurately reflect the paper\u2019s contributions and scope? Answer: [Yes] Justification: The main claims made in the abstract and introduction accurately reflect the paper\u2019s contributions and scope. Guidelines: \u2022The answer NA means that the abstract and introduction do not include the claims made in the paper. \u2022The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers. \u2022The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. \u2022It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper.",
+    "technical_score": 0.007605665737791184,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 30,
+    "paragraph": "2. Limitations Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: The paper elaborates the limitations in section D. Guidelines: \u2022The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. \u2022 The authors are encouraged to create a separate \"Limitations\" section in their paper. \u2022The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g.,independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be. \u2022The authors should reflect on the scope of the claims made,e.g.,if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated. \u2022The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon. \u2022The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size. \u2022If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness. \u2022While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren\u2019t acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.",
+    "technical_score": 0.008619754502830007,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 31,
+    "paragraph": "3. Theory assumptions and proofs Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof? Answer: [NA] 17",
+    "technical_score": 0.009633843267868833,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 32,
+    "paragraph": "Answer: [Yes] Justification: The code and data are provided in the supplementary materials under the file name code.zip. Guidelines: \u2022 The answer NA means that paper does not include experiments requiring code. \u2022Please see the NeurIPS code and data submission guidelines ( https://nips.cc/ public/guides/CodeSubmissionPolicy) for more details. \u2022While we encourage the release of code and data, we understand that this might not be possible, so \u201cNo\u201d is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g.,for a new open-source benchmark). \u2022The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines ( https: //nips.cc/public/guides/CodeSubmissionPolicy) for more details. \u2022The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc. \u2022The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why. \u2022At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable). \u2022Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.",
+    "technical_score": 0.009126798885349422,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 33,
+    "paragraph": "6. Experimental setting/details Question: Does the paper specify all the training and test details (e.g.,data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results? Answer: [Yes] Justification: Details are listed in the method part. Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them. \u2022The full details can be provided either with the code, in appendix, or as supplemental material.",
+    "technical_score": 0.007098621355271772,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 34,
+    "paragraph": "7. Experiment statistical significance Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments? Answer: [Yes] Justification: We performed significance testing on the data presented in our table 1, and we use the\u2020symbol in the table to denote statistically significant results. Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The authors should answer \"Yes\" if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper. \u2022The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions). \u2022The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.) \u2022 The assumptions made should be given (e.g.,Normally distributed errors). 19",
+    "technical_score": 0.006084532590232948,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 35,
+    "paragraph": "\u2022It should be clear whether the error bar is the standard deviation or the standard error of the mean. \u2022It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis of Normality of errors is not verified. \u2022For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates). \u2022If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.",
+    "technical_score": 0.0040563550601552985,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 36,
+    "paragraph": "8. Experiments compute resources Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments? Answer: [Yes] Justification: The token cost is specifically discussed in Fig 2, and the full results are listed in A.1 Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage. \u2022The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. \u2022The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g.,preliminary or failed experiments that didn\u2019t make it into the paper).",
+    "technical_score": 0.005070443825194122,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 37,
+    "paragraph": "9. Code of ethics Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethicshttps://neurips.cc/public/EthicsGuidelines? Answer: [Yes] Justification: The research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics. Guidelines: \u2022The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics. \u2022If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics. \u2022The authors should make sure to preserve anonymity (e.g.,if there is a special consideration due to laws or regulations in their jurisdiction).",
+    "technical_score": 0.003042266295116474,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 38,
+    "paragraph": "10. Broader impacts Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed? Answer: [NA] Justification: This paper presents a technical contribution without immediate real-world deployment, and thus discussion of societal impacts is not applicable at this stage. Guidelines: \u2022 The answer NA means that there is no societal impact of the work performed. \u2022If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact. \u2022Examples of negative societal impacts include potential malicious or unintended uses (e.g.,disinformation, generating fake profiles, surveillance), fairness considerations (e.g.,deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations. 20",
+    "technical_score": 0.003549310677635886,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 39,
+    "paragraph": "\u2022The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster. \u2022The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology. \u2022If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g.,gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).",
+    "technical_score": 0.004563399442674711,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 40,
+    "paragraph": "11. Safeguards Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g.,pretrained language models, image generators, or scraped datasets)? Answer: [NA] Justification: The paper has no such risks. Guidelines: \u2022 The answer NA means that the paper poses no such risks. \u2022Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. \u2022Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images. \u2022We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort.",
+    "technical_score": 0.005577488207713535,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 41,
+    "paragraph": "12. Licenses for existing assets Question: Are the creators or original owners of assets (e.g.,code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [Yes] Justification: The paper cites all the papers related. Guidelines: \u2022 The answer NA means that the paper does not use existing assets. \u2022 The authors should cite the original paper that produced the code package or dataset. \u2022The authors should state which version of the asset is used and, if possible, include a URL. \u2022 The name of the license (e.g.,CC-BY 4.0) should be included for each asset. \u2022For scraped data from a particular source (e.g.,website), the copyright and terms of service of that source should be provided. \u2022If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, paperswithcode.com/datasets has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset. \u2022For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided. 21",
+    "technical_score": 0.00659157697275236,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 42,
+    "paragraph": "\u2022If this information is not available online, the authors are encouraged to reach out to the asset\u2019s creators.",
+    "technical_score": 0.007605665737791184,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 43,
+    "paragraph": "13. New assets Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets? Answer: [NA] Justification: The paper does not release new assets. Guidelines: \u2022 The answer NA means that the paper does not release new assets. \u2022Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. \u2022The paper should discuss whether and how consent was obtained from people whose asset is used. \u2022At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.",
+    "technical_score": 0.008619754502830007,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 44,
+    "paragraph": "14. Crowdsourcing and research with human subjects Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. Guidelines: \u2022The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. \u2022Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper. \u2022According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 15.Institutional review board (IRB) approvals or equivalent for research with human subjects Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. Guidelines: \u2022The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. \u2022Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. \u2022We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. \u2022For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review. 16.Declaration of LLM usage 22",
+    "technical_score": 0.009633843267868833,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 45,
+    "paragraph": "Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required. Answer: [Yes] Justification: The paper focuses on LLM-based agents, and the use of LLMs is clearly described as an essential and original part of the core method. Guidelines: \u2022The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components. \u2022Please refer to our LLM policy ( https://neurips.cc/Conferences/2025/LLM ) for what should or should not be described. 23",
+    "technical_score": 0.009126798885349422,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 46,
+    "paragraph": "Appendix This appendix complements the main paper by presenting extended evaluation results, detailed implementation configurations of the agents, and a discussion of current limitations. A Supplementary Evaluation A.1 Token Cost Analysis As discussed in Section 3.2, we present here the full set of cost-related results under both the monoagent and multi-agent settings, covering the Titan and Mimas subspaces. While the main text only reports the results for the multi setting on the Titan subspace, we provide here the remaining three sets of results for completeness: (1) mono on Titan, (2) mono on Mimas, and (3) multi on Mimas. These supplementary results allow for a more comprehensive comparison across different agent configurations and subspace settings. As discussed in Section 3.2, we focus on two key metrics: token consumption and the number of orchestrated agents per reasoning trajectory. While the multi setting has already been analyzed in the main paper, here we focus on the mono setting. In the Titan subspace, the observed reduction in token consumption across most tasks in Figure 8 can be primarily attributed to shorter reasoning paths. However, for GSM-hard tasks, the number of agents involved remains relatively stable. This suggests that the cost reduction may stem not from fewer agents but from selecting agents that are prompted with fewer tokens, or from utilizing more concise prompts for the same agents. In the Mimas space, token consumption in Figure 8 decreases for certain tasks, while for others, no consistent downward trend is observed. This can be attributed to the fact that, under the mono-agent setting, all agents share the same base model, making it more challenging to identify agents that are significantly more token-efficient. A.2 Performance\u2013Cost Trade-off Improvement To demonstrate the overall improvement in reasoning performance along with the associated reduction in token consumption\u2014both attributed to the effectiveness of our reward design\u2014we track the performance costscore for each sample throughout the entire optimization process. This score is defined as the ratio between task performance (e.g.,accuracy or success rate) and token cost, serving as a comprehensive indicator that jointly reflects solution quality and reasoning efficiency. In the evaluation presented in the main paper, we divide the optimization trajectory into two phases: the initial phase and the evolved phase. This division is introduced solely for evaluation convenience, and does not correspond to any intrinsic change in model behavior. In practice, the online optimization process exhibits a generally monotonic upward trend inperformance cost, apart from minor fluctuations caused by the stochastic nature of model generation. This consistent improvement further substantiates the effectiveness of our reinforcement learning approach and the benefits of our reward shaping strategy under both mono-agent and multi-agent settings. Across most tasks, from Figure 9, we observe a clear upward trend in the performance/cost score, indicating that the optimization process leads to both better solutions and more efficient use of tokens. This improvement reflects the ability of the system to identify more suitable agent organizations and reasoning pathways over time. In some cases, the score increases steadily throughout the process, suggesting a smooth convergence toward optimal or near-optimal multi-agent coordination strategies. In other cases, the score initially drops before rising again, which implies that the optimization process explores some less effective multi-agent configurations in early stages but is ultimately able to recover and identify improved structures through continued exploration. This pattern highlights the importance of allowing sufficient exploration in the early optimization phase. However, for a small subset of tasks, the score does not show a significant upward trend throughout the optimization. We consider two possible reasons for this. First, the number of optimization samples used in our current experiments is limited to 200, which may not be sufficient to fully explore the search space or discover high-quality MAS configurations, especially for tasks with more complex reasoning requirements. Second, the current hyperparameter settings, such as the maximum length of agent sequence allowed, may not be well-suited for tasks involving weaker base models. In such cases, achieving high performance may require larger MAS configurations or higher upper bounds on relevant parameters to allow for more extensive coordination and tool usage. 24",
+    "technical_score": 0.007098621355271772,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 47,
+    "paragraph": "CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline GSM-Hard Data Points GSM-Hard Trendline CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Mimas Subspace Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Mono-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDD Mono-base in Mimas Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDDFigure 8: Evolution of token consumption and the number of orchestrated agents per task for all settings. Trends are fitted using LOWESS (Locally Weighted Scatterplot Smoothing). 25 grained supervision, such as step-level correctness, could enhance optimization efficiency. Moreover, the framework assumes a fixed set of agents and tools, limiting adaptability and responsiveness to task variations. Enabling dynamic agent or tool modification during inference would improve flexibility and robustness. Finally, occasional mis-coordination or deceptive agreement among agents suggests the need for more robust interaction protocols and incentive designs. Future efforts may focus on reward shaping and adaptive mechanisms to refine both orchestration and agent-level behaviors, allowing the Puppeteer to make more context-aware and efficient decisions. 30",
+    "technical_score": 0.005354388679404994,
+    "citation_score": 0.0007301439108279537
+  },
+  {
+    "section_path": [
+      "Method",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "For multi-agent collaboration, following [ 45], a MAS is naturally formalized as a directed graph G= (V,E) , where each node v\u2208 V corresponds to an agent a\u2208 A , and each directed edge (vi, vj)\u2208 E encodes a dependency or information flow, conveying intermediate context from agent aito agent aj. Typically, this graph presents a single-source, single-sink configuration: the source node represents the input task, while the sink node yields the unified task output (i.e., artifact). This formalism underlies a unified and temporal modeling framework for LLM-based reasoning systems and is analogous to a \"graph-of-thought\" [2] that captures the deep thinking process.",
+    "technical_score": 0.0009553872053872053,
+    "citation_score": 0.0181523569023569
+  },
+  {
+    "section_path": [
+      "Method",
+      "Dynamic Orchestration"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "thanks to the Markov property, a learnable policy is considered for continuously learning to make agent selection decisions adaptively. After each reasoning episode, the system receives feedback jointly evaluating solution quality and resource consumption, enabling the policy to learn which agent is most valuable based on real-time task states. Practically, this facilitates dynamic pruning of agents: the orchestration process adapts to increasingly favor compact reasoning chains by reducing reliance on agents that offer little incremental gain or incur excessive cost. Over time, the orchestrator policy evolves to organize more effective agent sequences, balancing expressive collaboration with computational efficiency. Thus, the evolvable puppeteer not only orchestrates agent collaboration, but also distills the reasoning process to its most essential components, enabling robust and scalable performance. Policy OptimizationTo systematically optimize both the effectiveness and efficiency of collaboration, we employ REINFORCE [ 60], a reinforcement learning (RL) technique, as our underlying optimization framework [ 40,31,73,54]. By doing so, the orchestration policy learns from previous executions, adaptively refining agent selection and pruning strategies to achieve more robust and cost-efficient multi-agent reasoning. Concretely, the optimization objective is to maximize the expected return over complete reasoning trajectories, where the return reflects both overall effectiveness and inference efficiency: J(\u03b8) =E \u03c0\u03b8\u0002 R(\u03c4)\u0003 ,\u2207 \u03b8J(\u03b8)\u22481 NNX n=1 TX t=1\u2207\u03b8log\u03c0 \u03b8(at|St)! \u00b7R(\u03c4)(5) withR(\u03c4) denoting the total reward accrued for trajectory \u03c4={S 0, a0, o0, S1, . . . , S T, aT, oT}, and otthe output generated by agent atat state St,Nis the sample size, and Tis the total number of steps in one trajectory. The orchestrator\u2019s parameters \u03b8are updated iteratively via gradient ascent: \u03b8\u2190\u03b8+\u03b1\u2207 \u03b8J(\u03b8) , with learning rate \u03b1. Through such RL-driven optimization, the orchestrator leverages accumulated cross-task experience to refine agent selection, dynamically suppressing unhelpful or costly agents and converging toward more compact, high-performing collaboration structures. Reward DesignTo effectively guide the orchestrator\u2019s optimization, we design a reward function that jointly accounts for both solution quality and computational efficiency. Upon completion of each task trajectory, a terminal reward ris assigned: for tasks with ground-truth answers, r\u2208 {0,1} indicates correctness; for open-ended tasks, r\u2208[0,1] quantifies answer quality. The overall reward is defined recursively over time steps [ 59]. At the terminal state ( t=T ), the cumulative reward incorporates both solution quality and total computational cost: Rt=\u001ar\u2212\u03bb\u00b7C T,ift=T \u03b3\u00b7R t+1\u2212\u03bb\u00b7C t,ift < T, C t=F\u00b7log\u0012 1 +t \u03c6\u0013 (6) where \u03bbcontrols the trade-off between accuracy and efficiency, \u03b3\u2208(0,1] is the discount factor. To encourage economical reasoning, we penalize excessive computational expenditure. Specifically, for each reasoning step t, we define a step-wise cost Ctbased on FLOPs or token-level metrics [ 50], denoted by F, and a step factor normalized by the maximum step budget \u03c6, i.e.,t/\u03c6. This composite reward formulation incentivizes the orchestrator to achieve correct and high-quality solutions while minimizing unnecessary computation, ultimately driving the MAS to discover reasoning structures that are both effective and cost-efficient.",
+    "technical_score": 0.014110334110334105,
+    "citation_score": 0.011366658033324697
+  },
+  {
+    "section_path": [
+      "Method",
+      "Adaptive Evolution"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "thanks to the Markov property, a learnable policy is considered for continuously learning to make agent selection decisions adaptively. After each reasoning episode, the system receives feedback jointly evaluating solution quality and resource consumption, enabling the policy to learn which agent is most valuable based on real-time task states. Practically, this facilitates dynamic pruning of agents: the orchestration process adapts to increasingly favor compact reasoning chains by reducing reliance on agents that offer little incremental gain or incur excessive cost. Over time, the orchestrator policy evolves to organize more effective agent sequences, balancing expressive collaboration with computational efficiency. Thus, the evolvable puppeteer not only orchestrates agent collaboration, but also distills the reasoning process to its most essential components, enabling robust and scalable performance. Policy OptimizationTo systematically optimize both the effectiveness and efficiency of collaboration, we employ REINFORCE [ 60], a reinforcement learning (RL) technique, as our underlying optimization framework [ 40,31,73,54]. By doing so, the orchestration policy learns from previous executions, adaptively refining agent selection and pruning strategies to achieve more robust and cost-efficient multi-agent reasoning. Concretely, the optimization objective is to maximize the expected return over complete reasoning trajectories, where the return reflects both overall effectiveness and inference efficiency: J(\u03b8) =E \u03c0\u03b8\u0002 R(\u03c4)\u0003 ,\u2207 \u03b8J(\u03b8)\u22481 NNX n=1 TX t=1\u2207\u03b8log\u03c0 \u03b8(at|St)! \u00b7R(\u03c4)(5) withR(\u03c4) denoting the total reward accrued for trajectory \u03c4={S 0, a0, o0, S1, . . . , S T, aT, oT}, and otthe output generated by agent atat state St,Nis the sample size, and Tis the total number of steps in one trajectory. The orchestrator\u2019s parameters \u03b8are updated iteratively via gradient ascent: \u03b8\u2190\u03b8+\u03b1\u2207 \u03b8J(\u03b8) , with learning rate \u03b1. Through such RL-driven optimization, the orchestrator leverages accumulated cross-task experience to refine agent selection, dynamically suppressing unhelpful or costly agents and converging toward more compact, high-performing collaboration structures. Reward DesignTo effectively guide the orchestrator\u2019s optimization, we design a reward function that jointly accounts for both solution quality and computational efficiency. Upon completion of each task trajectory, a terminal reward ris assigned: for tasks with ground-truth answers, r\u2208 {0,1} indicates correctness; for open-ended tasks, r\u2208[0,1] quantifies answer quality. The overall reward is defined recursively over time steps [ 59]. At the terminal state ( t=T ), the cumulative reward incorporates both solution quality and total computational cost: Rt=\u001ar\u2212\u03bb\u00b7C T,ift=T \u03b3\u00b7R t+1\u2212\u03bb\u00b7C t,ift < T, C t=F\u00b7log\u0012 1 +t \u03c6\u0013 (6) where \u03bbcontrols the trade-off between accuracy and efficiency, \u03b3\u2208(0,1] is the discount factor. To encourage economical reasoning, we penalize excessive computational expenditure. Specifically, for each reasoning step t, we define a step-wise cost Ctbased on FLOPs or token-level metrics [ 50], denoted by F, and a step factor normalized by the maximum step budget \u03c6, i.e.,t/\u03c6. This composite reward formulation incentivizes the orchestrator to achieve correct and high-quality solutions while minimizing unnecessary computation, ultimately driving the MAS to discover reasoning structures that are both effective and cost-efficient.",
+    "technical_score": 0.0018287939905101617,
+    "citation_score": 0.030017446189063345
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "using multiple-choice questions to assess both factual knowledge and logical deduction. Both benchmarks are designed to assess the model\u2019s ability in mathematical and commonsense reasoning and inference, withaccuracyas the evaluation metric. \u2022Open-domain Tasks: These tasks are inherently creative and open-ended, requiring multidimensional qualitative evaluation. They rigorously assess agents\u2019 ability to integrate information, understand context, and generate novel solutions.SRDD[ 44] consists of real-world textual software requirements and tasks agents with building the corresponding software, demanding proficiency in requirement comprehension, system/design reasoning, code generation, and testing. Its official evaluation metric combines completeness, executability, and consistency [ 44], reflecting the practical demands of real-world software development workflows.CommonGen-Hard[ 39] challenges agents to generate coherent sentences that connect seemingly unrelated concepts, highlighting their abilities in commonsense reasoning, contextual understanding, and creative expression. Evaluation is based on an aggregate metric that incorporates grammar, relevance, logical consistency[ 32], as well as concept coverage [39], providing a nuanced assessment of generative quality. BaselinesTo mitigate performance interference\u2014where strong models may overshadow the contributions of weaker ones\u2014and to evaluate our method\u2019s adaptability across agents with varying capacities, we partition the agent pool based on the parameter scale of the underlying models. Specifically, we define aMimassubspace (smaller models:Qwen-2.5-7B,Qwen-2.5-14B,LLaMA-3.1-8B, LLaMA-3.2-3B,Mistral-7B,Mistral-Nemo-12B) and aTitansubspace (larger models:GPT-4-Turbo, GPT-4o-Mini,Gemini-1.5-Pro,Gemini-1.5-Flash,Claude-3-Sonnet,Claude-3-Haiku,Qwen-2.5-72B, LLaMA-3.1-405B), covering both closed- and open-source families. All experiments are performed under both the Titan and Mimas subspace settings. To ensure the rigor and credibility of our experimental study, we select a suite of representative and recent baselines that comprehensively span the spectrum from straightforward LLM generation to advanced agentic paradigms: \u2022Pure Models: This category evaluates foundation modelsin the absence of explicit agent structuring or workflow orchestration, serving as a baseline for generative inference performance. For Mimas, competitive open-source models includeLLaMA-3.1-8B,Mistral-Nemo-12B, and Qwen-2.5-14B.3For Titan, options such asLLaMA-3.1-405B,GPT-4o-mini, andGPT-4-turboare considered. \u2022Single-Agent Methods: This category explores paradigms where reasoning is performed by a single agent using a specific reasoning pattern or workflow.Self-refine[ 39] exemplifies iterative, self-corrective reasoning within a feedback loop, whereasAFlow[ 81] enhances agent reasoning efficiency by utilizing Monte Carlo Tree Search to optimize code-represented agent workflows. \u2022Multi-Agent Methods: We benchmark against the latest multi-agent reasoning systems, showcasing state-of-the-art capabilities in leveraging agent heterogeneity and dynamic collaboration. MacNet[ 45] orchestrates agents within topologically static directed acyclic graphs, facilitating collective intelligence driven by one foundation model to enhance reasoning performance.EvoAgent[ 78] adopts evolutionary algorithms to automatically generate and optimize diverse multi-agent systems, adaptively improving collaboration and performance without manual intervention. Implementation DetailsDifferent agents are equipped with distinct reasoning patterns\u2014such astask decomposition,reflection,refinement,critique,modification,summarization, andtermination\u2014enabling flexible problem-solving [ 43,21,82,39]. External tools likeWebViewer,WikiSearch, BingSearch,arXivSearch,Code Interpreter, andFile Readerare also integrated [ 47]. Dynamic collaboration uses majority voting for output aggregation. The policy is initialized with a variant of Llama-3.14, using default settings: episode length to 4, parallel exploration up to 3, \u03bb= 0.1 , and \u03b3= 0.99. All baselines are rerun under identical settings. 3.1 Does Our Method Lead To Elevated Performance? Many prior studies on multi-agent systems have employed the same base model to drive agent behavior [ 44,36,87]. To enable a more meaningful comparison and account for model heterogeneity, our method, referred to as Puppeteer, introduces two distinct configurations within each agent 3Other smaller-scale models in the same series (e.g., Qwen-2.0-7B) have also been experimentally validated, and their performance is generally weaker than that of the larger-scale model within the same series. 4https://huggingface.co/nvidia/Llama-3.1-Nemotron-70B-Reward-HF 5",
+    "technical_score": 0.006042911231715786,
+    "citation_score": 0.004028607487810524
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Early MAS designs relied on fixed, handcrafted structures,e.g.,mirroring software engineering paradigms like waterfall models [ 42,11,44]. These static approaches led to rigid coordination [ 87, 45], limited workflow flexibility [ 23,81], and suboptimal agent composition [ 15,42,37,35]. To address these issues, more adaptive orchestration methods have emerged: network-style organizations dynamically select agents (Dylan [ 36]) as optimizable graphs enable prompt refinement and better cooperation (GPT-Swarm [ 87], MacNet [ 45]); and code-based representations allow modeling of dynamic, task-specific processes. Recent approaches employ code-space search (ADAS [ 23], AFlow [ 81]) or train LLMs to generate MAS configurations on demand (MAS-GPT [ 77]). Beyond LLM-based MAS, classical MARL (Multi Agent Reinforcement Learning) works [ 26,65,34,63] have long explored coordination and role specialization, offering key inspirations for our RL-driven orchestration in LLM-based multi-agent systems. 5 Conclusion We proposed a novel framework for adaptive multi-agent LLM collaboration inspired by puppet show orchestration, where a centralized, learnable \"puppeteer\" orchestrator dynamically activated agents within a directed graph-of-thoughts. Unlike previous methods with static or manually designed topologies, our approach incorporated context-sensitive orchestration and reinforcement learningdriven policy adaptation, enabling more principled and efficient collaboration. Experiments on diverse tasks showed that our method achieved superior solution quality and reduced computational cost. Analyses further revealed that the orchestrator promoted compact, cyclic reasoning structures, underpinning the performance improvements. We hope this work can constitute a valuable step toward dynamic and scalable coordination in multi-agent collaboration. Acknowledgement The work was supported by the Tencent Rhino-Bird Focused Research Program. References [1]Michael Ahn, Anthony Brohan, Noah Brown, Yevgen Chebotar, Omar Cortes, Byron David, Chelsea Finn, Chuyuan Fu, Keerthana Gopalakrishnan, Karol Hausman, Alex Herzog, Daniel Ho, Jasmine Hsu, Julian Ibarz, Brian Ichter, Alex Irpan, Eric Jang, Rosario Jauregui Ruano, Kyle Jeffrey, Sally Jesmonth, Nikhil Joshi, Ryan Julian, Dmitry Kalashnikov, Yuheng Kuang, Kuang-Huei Lee, Sergey Levine, Yao Lu, Linda Luu, Carolina Parada, Peter Pastor, Jornell Quiambao, Kanishka Rao, Jarek Rettinghouse, Diego Reyes, Pierre Sermanet, Nicolas Sievers, Clayton Tan, Alexander Toshev, Vincent Vanhoucke, Fei Xia, Ted Xiao, Peng Xu, Sichun Xu, Mengyuan Yan, and Andy Zeng. Do as i can and not as i say: Grounding language in robotic affordances. InarXiv:2204.01691, 2022. [2]Maciej Besta, Nils Blach, Ales Kubicek, Robert Gerstenberger, Micha\u0142 Podstawski, Lukas Gianinazzi, Joanna Gajda, Tomasz Lehmann, Hubert Niewiadomski, Piotr Nyczyk, and Torsten Hoefler. Graph of thoughts: solving elaborate problems with large language models. In Proceedings of the Thirty-Eighth AAAI Conference on Artificial Intelligence and Thirty-Sixth Conference on Innovative Applications of Artificial Intelligence and Fourteenth Symposium on Educational Advances in Artificial Intelligence (AAAI), 2024. [3]Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini Agarwal, Ariel Herbert-V oss, Gretchen Krueger, Tom Henighan, Rewon Child, Aditya Ramesh, Daniel Ziegler, Jeffrey Wu, Clemens Winter, Chris Hesse, Mark Chen, Eric Sigler, Mateusz Litwin, Scott Gray, Benjamin Chess, Jack Clark, Christopher Berner, Sam McCandlish, Alec Radford, Ilya Sutskever, and Dario Amodei.",
+    "technical_score": 0.0019267835264040196,
+    "citation_score": 0.0012845223509360133
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Language Models are Few-Shot Learners. InAdvances in Neural Information Processing Systems (NeurIPS), 2020. [4]Se\u0301bastien Bubeck, Varun Chandrasekaran, Ronen Eldan, Johannes Gehrke, Eric Horvitz, Ece Kamar, Peter Lee, Yin Tat Lee, Yuanzhi Li, Scott Lundberg, Harsha Nori, Hamid Palangi, Marco Tulio Ribeiro, and Yi Zhang. Sparks of Artificial General Intelligence: Early experiments with GPT-4. InarXiv:2303.12712, 2023. 10",
+    "technical_score": 0.006839880707527763,
+    "citation_score": 0.0045599204716851765
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "[5]Tianle Cai, Xuezhi Wang, Tengyu Ma, Xinyun Chen, and Denny Zhou.",
+    "technical_score": 0.0012051349872981751,
+    "citation_score": 0.0006778884303552234
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Large Language Models as Tool Makers. InThe Twelfth International Conference on Learning Representations (ICLR), 2023. [6]Mert Cemri, Melissa Z.",
+    "technical_score": 0.008426305973175043,
+    "citation_score": 0.0011490417236147785
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Pan, Shuyi Yang, Lakshya A. Agrawal, Bhavya Chopra, Rishabh Tiwari, Kurt Keutzer, Aditya Parameswaran, Dan Klein, Kannan Ramchandran, Matei Zaharia, Joseph E.",
+    "technical_score": 0.0037074769000765206,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Gonzalez, and Ion Stoica. Why Do Multi-Agent LLM Systems Fail? InarXiv:2503.13657, 2025. [7]Guoxin Chen, Minpeng Liao, Chengxi Li, and Kai Fan.",
+    "technical_score": 0.005844442822621191,
+    "citation_score": 0.0007969694758119805
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "AlphaMath Almost Zero: Process Supervision without Process. InThe Thirty-eighth Annual Conference on Neural Information Processing Systems (NeurIPS), 2024. [8]Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Ion Stoica, Matei Zaharia, and James Zou. Are More LLM Calls All You Need?",
+    "technical_score": 0.0052450883082761635,
+    "citation_score": 0.0007152393147649315
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Towards the Scaling Properties of Compound AI Systems. InThe Thirty-eighth Annual Conference on Neural Information Processing Systems (NeurIPS), 2024. [9]Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Matei Zaharia, James Zou, and Ion Stoica.",
+    "technical_score": 0.0064437973369662165,
+    "citation_score": 0.0008786996368590293
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Optimizing Model Selection for Compound AI Systems. InarXiv:2502.14815, 2025. [10] Liting Chen, Lu Wang, Hang Dong, Yali Du, Jie Yan, Fangkai Yang, Shuang Li, Pu Zhao, Si Qin, Saravan Rajmohan, Qingwei Lin, and Dongmei Zhang.",
+    "technical_score": 0.004100439329803656,
+    "citation_score": 0.002733626219869104
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Introspective Tips: Large Language Model for In-Context Decision Making. InarXiv:2305.11598, 2023. [11] Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chi-Min Chan, Heyang Yu, Yaxi Lu, Yi-Hsin Hung, Chen Qian, Yujia Qin, Xin Cong, Ruobing Xie, Zhiyuan Liu, Maosong Sun, and Jie Zhou.",
+    "technical_score": 0.0031980439705771775,
+    "citation_score": 0.0021320293137181185
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "AgentVerse: Facilitating Multi-Agent Collaboration and Exploring Emergent Behaviors. InThe Twelfth International Conference on Learning Representations (ICLR), 2024. [12] Weize Chen, Ziming You, Ran Li, yitong guan, Chen Qian, Chenyang Zhao, Cheng Yang, Ruobing Xie, Zhiyuan Liu, and Maosong Sun. Internet of Agents: Weaving a Web of Heterogeneous Agents for Collaborative Intelligence. InThe Thirteenth International Conference on Learning Representations (ICLR), 2025. [13] Weize Chen, Jiarui Yuan, Chen Qian, Cheng Yang, Zhiyuan Liu, and Maosong Sun. Optima: Optimizing effectiveness and efficiency for llm-based multi-agent system. InarXiv:2410.08115, 2025. [14] William S.",
+    "technical_score": 0.00328866002751202,
+    "citation_score": 0.002192440018341347
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Cleveland. LOWESS: A Program for Smoothing Scatterplots by Robust Locally Weighted Regression. InThe American Statistician, 1981. [15] Ameet Deshpande, Vishvak Murahari, Tanmay Rajpurohit, Ashwin Kalyan, and Karthik Narasimhan. Toxicity in chatgpt: Analyzing persona-assigned language models. In Houda Bouamor, Juan Pino, and Kalika Bali, editors,Findings of the Association for Computational Linguistics (EMNLP), 2023. [16] Yilun Du, Shuang Li, Antonio Torralba, Joshua B.",
+    "technical_score": 0.003939539350592482,
+    "citation_score": 0.002626359567061655
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Tenenbaum, and Igor Mordatch.",
+    "technical_score": 0.005783153568969508,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "Improving Factuality and Reasoning in Language Models through Multiagent Debate. InProceedings of the 41st International Conference on Machine Learning (ICML), 2024. [17] S.",
+    "technical_score": 0.007276377333398207,
+    "citation_score": 0.000992233272736119
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "N.",
+    "technical_score": 0.006863350517287899,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Ethier and T.",
+    "technical_score": 0.010285717339797034,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "G.",
+    "technical_score": 0.008291829401886327,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "Kurtz.",
+    "technical_score": 0.011244172494172493,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "Markov Processes: Characterization and Convergence. InWiley Series in Probability and Statistics, 1986. [18] Luyu Gao, Aman Madaan, Shuyan Zhou, Uri Alon, Pengfei Liu, Yiming Yang, Jamie Callan, and Graham Neubig. PAL: program-aided language models. InProceedings of the 40th International Conference on Machine Learning (ICML), 2023. [19] Yingqiang Ge, Wenyue Hua, Kai Mei, Jianchao Ji, Juntao Tan, Shuyuan Xu, Zelong Li, and Yongfeng Zhang.",
+    "technical_score": 0.004166079492929587,
+    "citation_score": 0.002777386328619725
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 21,
+    "paragraph": "OpenAGI: When LLM Meets Domain Experts. InarXiv:2304.04370, 2023. 11",
+    "technical_score": 0.00868006440112702,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 22,
+    "paragraph": "[81] Jiayi Zhang, Jinyu Xiang, Zhaoyang Yu, Fengwei Teng, Xiong-Hui Chen, Jiaqi Chen, Mingchen Zhuge, Xin Cheng, Sirui Hong, Jinlin Wang, Bingnan Zheng, Bang Liu, Yuyu Luo, and Chenglin Wu.",
+    "technical_score": 0.0028550333284678635,
+    "citation_score": 0.0019033555523119093
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 23,
+    "paragraph": "AFlow: Automating Agentic Workflow Generation. InThe Thirteenth International Conference on Learning Representations (ICLR), 2025. [82] Andy Zhou, Kai Yan, Michal Shlapentokh-Rothman, Haohan Wang, and Yu-Xiong Wang. Language agent tree search unifies reasoning, acting, and planning in language models. In Proceedings of the 41st International Conference on Machine Learning (ICML), 2024. [83] Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng, Tianyue Ou, Yonatan Bisk, Daniel Fried, Uri Alon, and Graham Neubig.",
+    "technical_score": 0.004171601801108442,
+    "citation_score": 0.002781067867405628
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 24,
+    "paragraph": "WebArena: A Realistic Web Environment for Building Autonomous Agents. InarXiv:2307.13854, 2024. [84] Wangchunshu Zhou, Yuchen Eleanor Jiang, Long Li, Jialong Wu, Tiannan Wang, Shi Qiu, Jintian Zhang, Jing Chen, Ruipu Wu, Shuai Wang, Shiding Zhu, Jiyu Chen, Wentao Zhang, Xiangru Tang, Ningyu Zhang, Huajun Chen, Peng Cui, and Mrinmaya Sachan.",
+    "technical_score": 0.0016845550085588042,
+    "citation_score": 0.001123036672372536
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 25,
+    "paragraph": "Agents: An Open-source Framework for Autonomous Language Agents. InarXiv:2309.07870, 2023. [85] Yuchen Zhuang, Xiang Chen, Tong Yu, Saayan Mitra, Victor Bursztyn, Ryan A.",
+    "technical_score": 0.006392255793963572,
+    "citation_score": 0.0008716712446313962
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 26,
+    "paragraph": "Rossi, Somdeb Sarkhel, and Chao Zhang. ToolChain*: Efficient Action Space Navigation in Large Language Models with A* Search. InThe Twelfth International Conference on Learning Representations (ICLR), 2024. [86] Yuchen Zhuang, Yue Yu, Kuan Wang, Haotian Sun, and Chao Zhang.",
+    "technical_score": 0.005962436140709386,
+    "citation_score": 0.0008130594737330981
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 27,
+    "paragraph": "ToolQA: A Dataset for LLM Question Answering with External Tools. InThirty-seventh Conference on Neural Information Processing Systems Datasets and Benchmarks Track (NeurIPS), 2023. [87] Mingchen Zhuge, Wenyi Wang, Louis Kirsch, Francesco Faccio, Dmitrii Khizbullin, and Ju\u0308rgen Schmidhuber.",
+    "technical_score": 0.0059738238095448735,
+    "citation_score": 0.0018864706766983813
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 28,
+    "paragraph": "GPTSwarm: Language Agents as Optimizable Graphs. InForty-first International Conference on Machine Learning (ICML), 2024. 16",
+    "technical_score": 0.008011321247801325,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 29,
+    "paragraph": "NeurIPS Paper Checklist 1.Claims Question: Do the main claims made in the abstract and introduction accurately reflect the paper\u2019s contributions and scope? Answer: [Yes] Justification: The main claims made in the abstract and introduction accurately reflect the paper\u2019s contributions and scope. Guidelines: \u2022The answer NA means that the abstract and introduction do not include the claims made in the paper. \u2022The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers. \u2022The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. \u2022It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper.",
+    "technical_score": 0.009563006174723443,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 30,
+    "paragraph": "2. Limitations Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: The paper elaborates the limitations in section D. Guidelines: \u2022The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. \u2022 The authors are encouraged to create a separate \"Limitations\" section in their paper. \u2022The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g.,independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be. \u2022The authors should reflect on the scope of the claims made,e.g.,if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated. \u2022The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon. \u2022The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size. \u2022If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness. \u2022While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren\u2019t acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.",
+    "technical_score": 0.008002117400836565,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 31,
+    "paragraph": "3. Theory assumptions and proofs Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof? Answer: [NA] 17",
+    "technical_score": 0.010331945752960934,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 32,
+    "paragraph": "Answer: [Yes] Justification: The code and data are provided in the supplementary materials under the file name code.zip. Guidelines: \u2022 The answer NA means that paper does not include experiments requiring code. \u2022Please see the NeurIPS code and data submission guidelines ( https://nips.cc/ public/guides/CodeSubmissionPolicy) for more details. \u2022While we encourage the release of code and data, we understand that this might not be possible, so \u201cNo\u201d is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g.,for a new open-source benchmark). \u2022The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines ( https: //nips.cc/public/guides/CodeSubmissionPolicy) for more details. \u2022The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc. \u2022The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why. \u2022At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable). \u2022Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.",
+    "technical_score": 0.0075059463781000785,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 33,
+    "paragraph": "6. Experimental setting/details Question: Does the paper specify all the training and test details (e.g.,data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results? Answer: [Yes] Justification: Details are listed in the method part. Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them. \u2022The full details can be provided either with the code, in appendix, or as supplemental material.",
+    "technical_score": 0.009487492793944407,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 34,
+    "paragraph": "7. Experiment statistical significance Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments? Answer: [Yes] Justification: We performed significance testing on the data presented in our table 1, and we use the\u2020symbol in the table to denote statistically significant results. Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The authors should answer \"Yes\" if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper. \u2022The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions). \u2022The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.) \u2022 The assumptions made should be given (e.g.,Normally distributed errors). 19",
+    "technical_score": 0.006169924319829443,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 35,
+    "paragraph": "\u2022It should be clear whether the error bar is the standard deviation or the standard error of the mean. \u2022It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis of Normality of errors is not verified. \u2022For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates). \u2022If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.",
+    "technical_score": 0.006923384700898931,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 36,
+    "paragraph": "8. Experiments compute resources Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments? Answer: [Yes] Justification: The token cost is specifically discussed in Fig 2, and the full results are listed in A.1 Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage. \u2022The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. \u2022The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g.,preliminary or failed experiments that didn\u2019t make it into the paper).",
+    "technical_score": 0.005775413970385506,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 37,
+    "paragraph": "9. Code of ethics Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethicshttps://neurips.cc/public/EthicsGuidelines? Answer: [Yes] Justification: The research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics. Guidelines: \u2022The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics. \u2022If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics. \u2022The authors should make sure to preserve anonymity (e.g.,if there is a special consideration due to laws or regulations in their jurisdiction).",
+    "technical_score": 0.006305471884219512,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 38,
+    "paragraph": "10. Broader impacts Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed? Answer: [NA] Justification: This paper presents a technical contribution without immediate real-world deployment, and thus discussion of societal impacts is not applicable at this stage. Guidelines: \u2022 The answer NA means that there is no societal impact of the work performed. \u2022If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact. \u2022Examples of negative societal impacts include potential malicious or unintended uses (e.g.,disinformation, generating fake profiles, surveillance), fairness considerations (e.g.,deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations. 20",
+    "technical_score": 0.003921675520347247,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 39,
+    "paragraph": "\u2022The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster. \u2022The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology. \u2022If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g.,gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).",
+    "technical_score": 0.006894099733283794,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 40,
+    "paragraph": "11. Safeguards Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g.,pretrained language models, image generators, or scraped datasets)? Answer: [NA] Justification: The paper has no such risks. Guidelines: \u2022 The answer NA means that the paper poses no such risks. \u2022Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. \u2022Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images. \u2022We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort.",
+    "technical_score": 0.004656728207487221,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 41,
+    "paragraph": "12. Licenses for existing assets Question: Are the creators or original owners of assets (e.g.,code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [Yes] Justification: The paper cites all the papers related. Guidelines: \u2022 The answer NA means that the paper does not use existing assets. \u2022 The authors should cite the original paper that produced the code package or dataset. \u2022The authors should state which version of the asset is used and, if possible, include a URL. \u2022 The name of the license (e.g.,CC-BY 4.0) should be included for each asset. \u2022For scraped data from a particular source (e.g.,website), the copyright and terms of service of that source should be provided. \u2022If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, paperswithcode.com/datasets has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset. \u2022For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided. 21",
+    "technical_score": 0.00901600481534068,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 42,
+    "paragraph": "\u2022If this information is not available online, the authors are encouraged to reach out to the asset\u2019s creators.",
+    "technical_score": 0.009305716816390442,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 43,
+    "paragraph": "13. New assets Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets? Answer: [NA] Justification: The paper does not release new assets. Guidelines: \u2022 The answer NA means that the paper does not release new assets. \u2022Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. \u2022The paper should discuss whether and how consent was obtained from people whose asset is used. \u2022At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.",
+    "technical_score": 0.010857401743312557,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 44,
+    "paragraph": "14. Crowdsourcing and research with human subjects Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. Guidelines: \u2022The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. \u2022Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper. \u2022According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 15.Institutional review board (IRB) approvals or equivalent for research with human subjects Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. Guidelines: \u2022The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. \u2022Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. \u2022We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. \u2022For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review. 16.Declaration of LLM usage 22",
+    "technical_score": 0.009296512969425682,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 45,
+    "paragraph": "Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required. Answer: [Yes] Justification: The paper focuses on LLM-based agents, and the use of LLMs is clearly described as an essential and original part of the core method. Guidelines: \u2022The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components. \u2022Please refer to our LLM policy ( https://neurips.cc/Conferences/2025/LLM ) for what should or should not be described. 23",
+    "technical_score": 0.010516859405616521,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 46,
+    "paragraph": "Appendix This appendix complements the main paper by presenting extended evaluation results, detailed implementation configurations of the agents, and a discussion of current limitations. A Supplementary Evaluation A.1 Token Cost Analysis As discussed in Section 3.2, we present here the full set of cost-related results under both the monoagent and multi-agent settings, covering the Titan and Mimas subspaces. While the main text only reports the results for the multi setting on the Titan subspace, we provide here the remaining three sets of results for completeness: (1) mono on Titan, (2) mono on Mimas, and (3) multi on Mimas. These supplementary results allow for a more comprehensive comparison across different agent configurations and subspace settings. As discussed in Section 3.2, we focus on two key metrics: token consumption and the number of orchestrated agents per reasoning trajectory. While the multi setting has already been analyzed in the main paper, here we focus on the mono setting. In the Titan subspace, the observed reduction in token consumption across most tasks in Figure 8 can be primarily attributed to shorter reasoning paths. However, for GSM-hard tasks, the number of agents involved remains relatively stable. This suggests that the cost reduction may stem not from fewer agents but from selecting agents that are prompted with fewer tokens, or from utilizing more concise prompts for the same agents. In the Mimas space, token consumption in Figure 8 decreases for certain tasks, while for others, no consistent downward trend is observed. This can be attributed to the fact that, under the mono-agent setting, all agents share the same base model, making it more challenging to identify agents that are significantly more token-efficient. A.2 Performance\u2013Cost Trade-off Improvement To demonstrate the overall improvement in reasoning performance along with the associated reduction in token consumption\u2014both attributed to the effectiveness of our reward design\u2014we track the performance costscore for each sample throughout the entire optimization process. This score is defined as the ratio between task performance (e.g.,accuracy or success rate) and token cost, serving as a comprehensive indicator that jointly reflects solution quality and reasoning efficiency. In the evaluation presented in the main paper, we divide the optimization trajectory into two phases: the initial phase and the evolved phase. This division is introduced solely for evaluation convenience, and does not correspond to any intrinsic change in model behavior. In practice, the online optimization process exhibits a generally monotonic upward trend inperformance cost, apart from minor fluctuations caused by the stochastic nature of model generation. This consistent improvement further substantiates the effectiveness of our reinforcement learning approach and the benefits of our reward shaping strategy under both mono-agent and multi-agent settings. Across most tasks, from Figure 9, we observe a clear upward trend in the performance/cost score, indicating that the optimization process leads to both better solutions and more efficient use of tokens. This improvement reflects the ability of the system to identify more suitable agent organizations and reasoning pathways over time. In some cases, the score increases steadily throughout the process, suggesting a smooth convergence toward optimal or near-optimal multi-agent coordination strategies. In other cases, the score initially drops before rising again, which implies that the optimization process explores some less effective multi-agent configurations in early stages but is ultimately able to recover and identify improved structures through continued exploration. This pattern highlights the importance of allowing sufficient exploration in the early optimization phase. However, for a small subset of tasks, the score does not show a significant upward trend throughout the optimization. We consider two possible reasons for this. First, the number of optimization samples used in our current experiments is limited to 200, which may not be sufficient to fully explore the search space or discover high-quality MAS configurations, especially for tasks with more complex reasoning requirements. Second, the current hyperparameter settings, such as the maximum length of agent sequence allowed, may not be well-suited for tasks involving weaker base models. In such cases, achieving high performance may require larger MAS configurations or higher upper bounds on relevant parameters to allow for more extensive coordination and tool usage. 24",
+    "technical_score": 0.0065813781148221385,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments"
+    ],
+    "paragraph_index": 47,
+    "paragraph": "CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline GSM-Hard Data Points GSM-Hard Trendline CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Mimas Subspace Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Mono-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDD Mono-base in Mimas Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDDFigure 8: Evolution of token consumption and the number of orchestrated agents per task for all settings. Trends are fitted using LOWESS (Locally Weighted Scatterplot Smoothing). 25 grained supervision, such as step-level correctness, could enhance optimization efficiency. Moreover, the framework assumes a fixed set of agents and tools, limiting adaptability and responsiveness to task variations. Enabling dynamic agent or tool modification during inference would improve flexibility and robustness. Finally, occasional mis-coordination or deceptive agreement among agents suggests the need for more robust interaction protocols and incentive designs. Future efforts may focus on reward shaping and adaptive mechanisms to refine both orchestration and agent-level behaviors, allowing the Puppeteer to make more context-aware and efficient decisions. 30",
+    "technical_score": 0.007087882547559966,
+    "citation_score": 0.0009665294383036317
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "[5]Tianle Cai, Xuezhi Wang, Tengyu Ma, Xinyun Chen, and Denny Zhou.",
+    "technical_score": 0.0009661164856378718,
+    "citation_score": 0.00030508941651722265
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Large Language Models as Tool Makers. InThe Twelfth International Conference on Learning Representations (ICLR), 2023. [6]Mert Cemri, Melissa Z.",
+    "technical_score": 0.0003872491828724275,
+    "citation_score": 9.522520890305593e-06
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Pan, Shuyi Yang, Lakshya A. Agrawal, Bhavya Chopra, Rishabh Tiwari, Kurt Keutzer, Aditya Parameswaran, Dan Klein, Kannan Ramchandran, Matei Zaharia, Joseph E.",
+    "technical_score": 0.0011158908422915764,
+    "citation_score": 0.0003221128204553004
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Gonzalez, and Ion Stoica. Why Do Multi-Agent LLM Systems Fail? InarXiv:2503.13657, 2025. [7]Guoxin Chen, Minpeng Liao, Chengxi Li, and Kai Fan.",
+    "technical_score": 0.00016558123908308423,
+    "citation_score": 6.439270408786608e-05
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "AlphaMath Almost Zero: Process Supervision without Process. InThe Thirty-eighth Annual Conference on Neural Information Processing Systems (NeurIPS), 2024. [8]Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Ion Stoica, Matei Zaharia, and James Zou. Are More LLM Calls All You Need?",
+    "technical_score": 0.0007820258179534887,
+    "citation_score": 0.0004171465974785742
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Towards the Scaling Properties of Compound AI Systems. InThe Thirty-eighth Annual Conference on Neural Information Processing Systems (NeurIPS), 2024. [9]Lingjiao Chen, Jared Quincy Davis, Boris Hanin, Peter Bailis, Matei Zaharia, James Zou, and Ion Stoica.",
+    "technical_score": 0.00033480092787901766,
+    "citation_score": 0.00013400426260674664
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Optimizing Model Selection for Compound AI Systems. InarXiv:2502.14815, 2025. [10] Liting Chen, Lu Wang, Hang Dong, Yali Du, Jie Yan, Fangkai Yang, Shuang Li, Pu Zhao, Si Qin, Saravan Rajmohan, Qingwei Lin, and Dongmei Zhang.",
+    "technical_score": 0.0005122169205008415,
+    "citation_score": 0.00032177188245807194
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Introspective Tips: Large Language Model for In-Context Decision Making. InarXiv:2305.11598, 2023. [11] Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chi-Min Chan, Heyang Yu, Yaxi Lu, Yi-Hsin Hung, Chen Qian, Yujia Qin, Xin Cong, Ruobing Xie, Zhiyuan Liu, Maosong Sun, and Jie Zhou.",
+    "technical_score": 0.0004429847061073074,
+    "citation_score": 0.00024473245005500065
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "AgentVerse: Facilitating Multi-Agent Collaboration and Exploring Emergent Behaviors. InThe Twelfth International Conference on Learning Representations (ICLR), 2024. [12] Weize Chen, Ziming You, Ran Li, yitong guan, Chen Qian, Chenyang Zhao, Cheng Yang, Ruobing Xie, Zhiyuan Liu, and Maosong Sun. Internet of Agents: Weaving a Web of Heterogeneous Agents for Collaborative Intelligence. InThe Thirteenth International Conference on Learning Representations (ICLR), 2025. [13] Weize Chen, Jiarui Yuan, Chen Qian, Cheng Yang, Zhiyuan Liu, and Maosong Sun. Optima: Optimizing effectiveness and efficiency for llm-based multi-agent system. InarXiv:2410.08115, 2025. [14] William S.",
+    "technical_score": 0.0005682348478098929,
+    "citation_score": 0.0004120256019456264
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Cleveland. LOWESS: A Program for Smoothing Scatterplots by Robust Locally Weighted Regression. InThe American Statistician, 1981. [15] Ameet Deshpande, Vishvak Murahari, Tanmay Rajpurohit, Ashwin Kalyan, and Karthik Narasimhan. Toxicity in chatgpt: Analyzing persona-assigned language models. In Houda Bouamor, Juan Pino, and Kalika Bali, editors,Findings of the Association for Computational Linguistics (EMNLP), 2023. [16] Yilun Du, Shuang Li, Antonio Torralba, Joshua B.",
+    "technical_score": 0.0004150789248462208,
+    "citation_score": 0.00033555700895064947
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Tenenbaum, and Igor Mordatch.",
+    "technical_score": 0.000730063808867845,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "Improving Factuality and Reasoning in Language Models through Multiagent Debate. InProceedings of the 41st International Conference on Machine Learning (ICML), 2024. [17] S.",
+    "technical_score": 0.0005971296636271921,
+    "citation_score": 8.142677231279892e-05
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "N.",
+    "technical_score": 0.0008597424894228406,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Ethier and T.",
+    "technical_score": 0.0005755416900842826,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "G.",
+    "technical_score": 0.0009894211699778362,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "Kurtz.",
+    "technical_score": 0.000666438132904161,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Markov Processes: Characterization and Convergence. InWiley Series in Probability and Statistics, 1986. [18] Luyu Gao, Aman Madaan, Shuyan Zhou, Uri Alon, Pengfei Liu, Yiming Yang, Jamie Callan, and Graham Neubig. PAL: program-aided language models. InProceedings of the 40th International Conference on Machine Learning (ICML), 2023. [19] Yingqiang Ge, Wenyue Hua, Kai Mei, Jianchao Ji, Juntao Tan, Shuyuan Xu, Zelong Li, and Yongfeng Zhang.",
+    "technical_score": 0.0007800170994426459,
+    "citation_score": 0.0005200113996284305
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "OpenAGI: When LLM Meets Domain Experts. InarXiv:2304.04370, 2023. 11",
+    "technical_score": 0.0007515461820322304,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "[81] Jiayi Zhang, Jinyu Xiang, Zhaoyang Yu, Fengwei Teng, Xiong-Hui Chen, Jiaqi Chen, Mingchen Zhuge, Xin Cheng, Sirui Hong, Jinlin Wang, Bingnan Zheng, Bang Liu, Yuyu Luo, and Chenglin Wu.",
+    "technical_score": 0.0007697248270838445,
+    "citation_score": 0.000513149884722563
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "AFlow: Automating Agentic Workflow Generation. InThe Thirteenth International Conference on Learning Representations (ICLR), 2025. [82] Andy Zhou, Kai Yan, Michal Shlapentokh-Rothman, Haohan Wang, and Yu-Xiong Wang. Language agent tree search unifies reasoning, acting, and planning in language models. In Proceedings of the 41st International Conference on Machine Learning (ICML), 2024. [83] Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng, Tianyue Ou, Yonatan Bisk, Daniel Fried, Uri Alon, and Graham Neubig.",
+    "technical_score": 0.00043858443426192313,
+    "citation_score": 0.0002923896228412821
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 21,
+    "paragraph": "WebArena: A Realistic Web Environment for Building Autonomous Agents. InarXiv:2307.13854, 2024. [84] Wangchunshu Zhou, Yuchen Eleanor Jiang, Long Li, Jialong Wu, Tiannan Wang, Shi Qiu, Jintian Zhang, Jing Chen, Ruipu Wu, Shuai Wang, Shiding Zhu, Jiyu Chen, Wentao Zhang, Xiangru Tang, Ningyu Zhang, Huajun Chen, Peng Cui, and Mrinmaya Sachan.",
+    "technical_score": 0.0005918389623957775,
+    "citation_score": 0.0003945593082638517
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 22,
+    "paragraph": "Agents: An Open-source Framework for Autonomous Language Agents. InarXiv:2309.07870, 2023. [85] Yuchen Zhuang, Xiang Chen, Tong Yu, Saayan Mitra, Victor Bursztyn, Ryan A.",
+    "technical_score": 0.0005315330766134076,
+    "citation_score": 7.248178317455558e-05
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 23,
+    "paragraph": "Rossi, Somdeb Sarkhel, and Chao Zhang. ToolChain*: Efficient Action Space Navigation in Large Language Models with A* Search. InThe Twelfth International Conference on Learning Representations (ICLR), 2024. [86] Yuchen Zhuang, Yue Yu, Kuan Wang, Haotian Sun, and Chao Zhang.",
+    "technical_score": 0.0008021668850176504,
+    "citation_score": 0.00010938639341149778
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 24,
+    "paragraph": "ToolQA: A Dataset for LLM Question Answering with External Tools. InThirty-seventh Conference on Neural Information Processing Systems Datasets and Benchmarks Track (NeurIPS), 2023. [87] Mingchen Zhuge, Wenyi Wang, Louis Kirsch, Francesco Faccio, Dmitrii Khizbullin, and Ju\u0308rgen Schmidhuber.",
+    "technical_score": 0.000302810494710408,
+    "citation_score": 9.562436675065515e-05
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 25,
+    "paragraph": "GPTSwarm: Language Agents as Optimizable Graphs. InForty-first International Conference on Machine Learning (ICML), 2024. 16",
+    "technical_score": 0.0008350911396341851,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 26,
+    "paragraph": "NeurIPS Paper Checklist 1.Claims Question: Do the main claims made in the abstract and introduction accurately reflect the paper\u2019s contributions and scope? Answer: [Yes] Justification: The main claims made in the abstract and introduction accurately reflect the paper\u2019s contributions and scope. Guidelines: \u2022The answer NA means that the abstract and introduction do not include the claims made in the paper. \u2022The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers. \u2022The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. \u2022It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper.",
+    "technical_score": 0.0007034524748689881,
+    "citation_score": 9.592533748213474e-05
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 27,
+    "paragraph": "2. Limitations Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: The paper elaborates the limitations in section D. Guidelines: \u2022The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. \u2022 The authors are encouraged to create a separate \"Limitations\" section in their paper. \u2022The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g.,independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be. \u2022The authors should reflect on the scope of the claims made,e.g.,if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated. \u2022The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon. \u2022The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size. \u2022If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness. \u2022While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren\u2019t acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.",
+    "technical_score": 0.0009805638658339727,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 28,
+    "paragraph": "3. Theory assumptions and proofs Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof? Answer: [NA] 17",
+    "technical_score": 0.0006963630664954145,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 29,
+    "paragraph": "Answer: [Yes] Justification: The code and data are provided in the supplementary materials under the file name code.zip. Guidelines: \u2022 The answer NA means that paper does not include experiments requiring code. \u2022Please see the NeurIPS code and data submission guidelines ( https://nips.cc/ public/guides/CodeSubmissionPolicy) for more details. \u2022While we encourage the release of code and data, we understand that this might not be possible, so \u201cNo\u201d is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g.,for a new open-source benchmark). \u2022The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines ( https: //nips.cc/public/guides/CodeSubmissionPolicy) for more details. \u2022The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc. \u2022The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why. \u2022At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable). \u2022Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.",
+    "technical_score": 0.0009770134408222922,
+    "citation_score": 0.0001332291055666762
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 30,
+    "paragraph": "6. Experimental setting/details Question: Does the paper specify all the training and test details (e.g.,data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results? Answer: [Yes] Justification: Details are listed in the method part. Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them. \u2022The full details can be provided either with the code, in appendix, or as supplemental material.",
+    "technical_score": 0.0007872595093152926,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 31,
+    "paragraph": "7. Experiment statistical significance Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments? Answer: [Yes] Justification: We performed significance testing on the data presented in our table 1, and we use the\u2020symbol in the table to denote statistically significant results. Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The authors should answer \"Yes\" if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper. \u2022The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions). \u2022The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.) \u2022 The assumptions made should be given (e.g.,Normally distributed errors). 19",
+    "technical_score": 0.001278703464679081,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 32,
+    "paragraph": "\u2022It should be clear whether the error bar is the standard deviation or the standard error of the mean. \u2022It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis of Normality of errors is not verified. \u2022For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates). \u2022If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.",
+    "technical_score": 0.0006753414481818726,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 33,
+    "paragraph": "8. Experiments compute resources Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments? Answer: [Yes] Justification: The token cost is specifically discussed in Fig 2, and the full results are listed in A.1 Guidelines: \u2022 The answer NA means that the paper does not include experiments. \u2022The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage. \u2022The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. \u2022The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g.,preliminary or failed experiments that didn\u2019t make it into the paper).",
+    "technical_score": 0.0011359962328528952,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 34,
+    "paragraph": "9. Code of ethics Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethicshttps://neurips.cc/public/EthicsGuidelines? Answer: [Yes] Justification: The research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics. Guidelines: \u2022The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics. \u2022If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics. \u2022The authors should make sure to preserve anonymity (e.g.,if there is a special consideration due to laws or regulations in their jurisdiction).",
+    "technical_score": 0.0007049169545608248,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 35,
+    "paragraph": "10. Broader impacts Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed? Answer: [NA] Justification: This paper presents a technical contribution without immediate real-world deployment, and thus discussion of societal impacts is not applicable at this stage. Guidelines: \u2022 The answer NA means that there is no societal impact of the work performed. \u2022If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact. \u2022Examples of negative societal impacts include potential malicious or unintended uses (e.g.,disinformation, generating fake profiles, surveillance), fairness considerations (e.g.,deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations. 20",
+    "technical_score": 0.0008395197917061171,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 36,
+    "paragraph": "\u2022The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster. \u2022The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology. \u2022If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g.,gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).",
+    "technical_score": 0.0006932481449095113,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 37,
+    "paragraph": "11. Safeguards Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g.,pretrained language models, image generators, or scraped datasets)? Answer: [NA] Justification: The paper has no such risks. Guidelines: \u2022 The answer NA means that the paper poses no such risks. \u2022Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. \u2022Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images. \u2022We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort.",
+    "technical_score": 0.0008910271646339711,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 38,
+    "paragraph": "12. Licenses for existing assets Question: Are the creators or original owners of assets (e.g.,code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [Yes] Justification: The paper cites all the papers related. Guidelines: \u2022 The answer NA means that the paper does not use existing assets. \u2022 The authors should cite the original paper that produced the code package or dataset. \u2022The authors should state which version of the asset is used and, if possible, include a URL. \u2022 The name of the license (e.g.,CC-BY 4.0) should be included for each asset. \u2022For scraped data from a particular source (e.g.,website), the copyright and terms of service of that source should be provided. \u2022If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, paperswithcode.com/datasets has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset. \u2022For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided. 21",
+    "technical_score": 0.00045884554966662915,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 39,
+    "paragraph": "\u2022If this information is not available online, the authors are encouraged to reach out to the asset\u2019s creators.",
+    "technical_score": 0.000766383968307814,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 40,
+    "paragraph": "13. New assets Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets? Answer: [NA] Justification: The paper does not release new assets. Guidelines: \u2022 The answer NA means that the paper does not release new assets. \u2022Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. \u2022The paper should discuss whether and how consent was obtained from people whose asset is used. \u2022At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.",
+    "technical_score": 0.0006201123215112084,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 41,
+    "paragraph": "14. Crowdsourcing and research with human subjects Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. Guidelines: \u2022The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. \u2022Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper. \u2022According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 15.Institutional review board (IRB) approvals or equivalent for research with human subjects Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. Guidelines: \u2022The answer NA means that the paper does not involve crowdsourcing nor research with human subjects. \u2022Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. \u2022We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. \u2022For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review. 16.Declaration of LLM usage 22",
+    "technical_score": 0.0010855911966003125,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 42,
+    "paragraph": "Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required. Answer: [Yes] Justification: The paper focuses on LLM-based agents, and the use of LLMs is clearly described as an essential and original part of the core method. Guidelines: \u2022The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components. \u2022Please refer to our LLM policy ( https://neurips.cc/Conferences/2025/LLM ) for what should or should not be described. 23",
+    "technical_score": 0.0008171844429065463,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 43,
+    "paragraph": "Appendix This appendix complements the main paper by presenting extended evaluation results, detailed implementation configurations of the agents, and a discussion of current limitations. A Supplementary Evaluation A.1 Token Cost Analysis As discussed in Section 3.2, we present here the full set of cost-related results under both the monoagent and multi-agent settings, covering the Titan and Mimas subspaces. While the main text only reports the results for the multi setting on the Titan subspace, we provide here the remaining three sets of results for completeness: (1) mono on Titan, (2) mono on Mimas, and (3) multi on Mimas. These supplementary results allow for a more comprehensive comparison across different agent configurations and subspace settings. As discussed in Section 3.2, we focus on two key metrics: token consumption and the number of orchestrated agents per reasoning trajectory. While the multi setting has already been analyzed in the main paper, here we focus on the mono setting. In the Titan subspace, the observed reduction in token consumption across most tasks in Figure 8 can be primarily attributed to shorter reasoning paths. However, for GSM-hard tasks, the number of agents involved remains relatively stable. This suggests that the cost reduction may stem not from fewer agents but from selecting agents that are prompted with fewer tokens, or from utilizing more concise prompts for the same agents. In the Mimas space, token consumption in Figure 8 decreases for certain tasks, while for others, no consistent downward trend is observed. This can be attributed to the fact that, under the mono-agent setting, all agents share the same base model, making it more challenging to identify agents that are significantly more token-efficient. A.2 Performance\u2013Cost Trade-off Improvement To demonstrate the overall improvement in reasoning performance along with the associated reduction in token consumption\u2014both attributed to the effectiveness of our reward design\u2014we track the performance costscore for each sample throughout the entire optimization process. This score is defined as the ratio between task performance (e.g.,accuracy or success rate) and token cost, serving as a comprehensive indicator that jointly reflects solution quality and reasoning efficiency. In the evaluation presented in the main paper, we divide the optimization trajectory into two phases: the initial phase and the evolved phase. This division is introduced solely for evaluation convenience, and does not correspond to any intrinsic change in model behavior. In practice, the online optimization process exhibits a generally monotonic upward trend inperformance cost, apart from minor fluctuations caused by the stochastic nature of model generation. This consistent improvement further substantiates the effectiveness of our reinforcement learning approach and the benefits of our reward shaping strategy under both mono-agent and multi-agent settings. Across most tasks, from Figure 9, we observe a clear upward trend in the performance/cost score, indicating that the optimization process leads to both better solutions and more efficient use of tokens. This improvement reflects the ability of the system to identify more suitable agent organizations and reasoning pathways over time. In some cases, the score increases steadily throughout the process, suggesting a smooth convergence toward optimal or near-optimal multi-agent coordination strategies. In other cases, the score initially drops before rising again, which implies that the optimization process explores some less effective multi-agent configurations in early stages but is ultimately able to recover and identify improved structures through continued exploration. This pattern highlights the importance of allowing sufficient exploration in the early optimization phase. However, for a small subset of tasks, the score does not show a significant upward trend throughout the optimization. We consider two possible reasons for this. First, the number of optimization samples used in our current experiments is limited to 200, which may not be sufficient to fully explore the search space or discover high-quality MAS configurations, especially for tasks with more complex reasoning requirements. Second, the current hyperparameter settings, such as the maximum length of agent sequence allowed, may not be well-suited for tasks involving weaker base models. In such cases, achieving high performance may require larger MAS configurations or higher upper bounds on relevant parameters to allow for more extensive coordination and tool usage. 24",
+    "technical_score": 0.00073863835368006,
+    "citation_score": 0.0004924255691200399
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 44,
+    "paragraph": "CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline GSM-Hard Data Points GSM-Hard Trendline CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Mimas Subspace Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Mono-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDD Mono-base in Mimas Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDDFigure 8: Evolution of token consumption and the number of orchestrated agents per task for all settings. Trends are fitted using LOWESS (Locally Weighted Scatterplot Smoothing). 25 grained supervision, such as step-level correctness, could enhance optimization efficiency. Moreover, the framework assumes a fixed set of agents and tools, limiting adaptability and responsiveness to task variations. Enabling dynamic agent or tool modification during inference would improve flexibility and robustness. Finally, occasional mis-coordination or deceptive agreement among agents suggests the need for more robust interaction protocols and incentive designs. Future efforts may focus on reward shaping and adaptive mechanisms to refine both orchestration and agent-level behaviors, allowing the Puppeteer to make more context-aware and efficient decisions. 30",
+    "technical_score": 0.0009080808857264246,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Supplementary Evaluation",
+      "Token Cost Analysis"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline GSM-Hard Data Points GSM-Hard Trendline CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Mimas Subspace Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Mono-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDD Mono-base in Mimas Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDDFigure 8: Evolution of token consumption and the number of orchestrated agents per task for all settings. Trends are fitted using LOWESS (Locally Weighted Scatterplot Smoothing). 25 grained supervision, such as step-level correctness, could enhance optimization efficiency. Moreover, the framework assumes a fixed set of agents and tools, limiting adaptability and responsiveness to task variations. Enabling dynamic agent or tool modification during inference would improve flexibility and robustness. Finally, occasional mis-coordination or deceptive agreement among agents suggests the need for more robust interaction protocols and incentive designs. Future efforts may focus on reward shaping and adaptive mechanisms to refine both orchestration and agent-level behaviors, allowing the Puppeteer to make more context-aware and efficient decisions. 30",
+    "technical_score": 0.003888888888888888,
+    "citation_score": 0.07388888888888888
+  },
+  {
+    "section_path": [
+      "Supplementary Evaluation",
+      "Performance\u2013Cost Trade-off Improvement"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline GSM-Hard Data Points GSM-Hard Trendline CommonGenHard GSM-Hard MMLU-Pro SRDDMulti-base in Mimas Subspace Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Mono-base in Titan Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDD Mono-base in Mimas Subspace Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineGSM-Hard Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineMMLU-Pro Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length Trendline Token Cost Data Points Token Cost Trendline Chain Length Data Points Chain Length TrendlineCommonGenHard SRDDFigure 8: Evolution of token consumption and the number of orchestrated agents per task for all settings. Trends are fitted using LOWESS (Locally Weighted Scatterplot Smoothing). 25 grained supervision, such as step-level correctness, could enhance optimization efficiency. Moreover, the framework assumes a fixed set of agents and tools, limiting adaptability and responsiveness to task variations. Enabling dynamic agent or tool modification during inference would improve flexibility and robustness. Finally, occasional mis-coordination or deceptive agreement among agents suggests the need for more robust interaction protocols and incentive designs. Future efforts may focus on reward shaping and adaptive mechanisms to refine both orchestration and agent-level behaviors, allowing the Puppeteer to make more context-aware and efficient decisions. 30",
+    "technical_score": 0.009074074074074073,
+    "citation_score": 0.17240740740740737
+  }
+]
