@@ -1,0 +1,2102 @@
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+Use the provided hierarchy exactly as given.
+Do not add, remove, rename, merge, split, reorder, or invent nodes.
+Output every node exactly once, including nodes with score 0.
+Output nodes in the exact order they appear in the hierarchy.
+
+Scoring rules
+
+* The root paper node has total score 1.0.
+* For each parent node, distribute its score only among its immediate children.
+* Do not skip hierarchy levels or assign a parent's score directly to deeper descendants.
+* Child scores should approximately sum to the parent score. Exact normalization is handled after output.
+* Scores should be global scores relative to the entire paper, not local percentages.
+* Score scientific contribution, not length.
+* Assign higher scores to content central to the paper's technical contribution.
+* Assign lower scores to background, motivation, related work, summaries, and organizational text.
+
+Citation attribution
+
+* For a paragraph without citations, Citation Score = 0.
+* For a paragraph with citations, estimate what fraction of the paragraph's contribution depends on prior work. This is the paragraph Citation Score.
+* Allocate that citation-derived contribution across the cited references according to their importance in that paragraph.
+* If multiple citations play the same role, split them evenly.
+* Aggregate repeated appearances of the same citation into one final citation score.
+* Use citation identifiers exactly as they appear in the paper.
+
+Output Format
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+Interactive Learning for Diverse Top-k Set
+Weicheng Wang1, Raymond Chi-Wing Wong1, Jinyang Li2, H.V . Jagadish2
+1Hong Kong University of Science and Technology2University of Michigan
+wwangby@connect.ust.hk raywong@cse.ust.hk jinyli@umich.edu jag@umich.edu
+Abstract —The top- kquery is a representative multi-criteria
+decision-making operator that assists users in finding the best k
+tuples based on their criteria. However, it has certain limitations
+in the query process and the final output. First, the query process
+requires users to specify their criteria explicitly and accurately
+in advance, which may be difficult for some users. Second, the
+final output often lacks diversity, which potentially leads to user
+dissatisfaction. To address these limitations, in this paper, we
+propose an enhanced top- kquery by incorporating an interactive
+learning framework and a diversity mechanism, expecting to
+return a diverse output that aligns with the user’s criterion, even
+if the criterion is not specified in advance.
+We study our problem progressively. Initially, we examine a
+special case where tuples are described by two scoring attributes.
+We present the TDIA algorithm that is asymptotically optimal
+regarding the user effort needed for interaction. Then, we move
+on to the general case where tuples are described by multiple
+scoring attributes. We propose the HDIA algorithm which is
+asymptotically optimal w.r.t. the number of questions asked in
+expectation. Experiments were conducted on synthetic and real
+datasets. The results show that our algorithms can return a
+diverse output while requiring less user effort than existing ones.
+Index Terms —top- kquery, interactive query, diversity
+I. I NTRODUCTION
+One major task of database systems is to help users search
+for tuples in the database that align with their criteria, such as
+purchasing clothes, admitting college students, and selecting
+job candidates [1]–[4]. Take the scenario of purchasing clothes
+for illustration. Consider a clothes database in Table I. Each
+clothes tuple is described by some attributes, e.g., quality,
+recyclability, and brand. Suppose that a user named Alice
+wants to buy some clothes. It can be a daunting task for her
+to manually review each tuple in the database. If the database
+system could recommend personalized candidates for Alice, it
+would significantly streamline her search process. This would
+not only save her valuable time by filtering out unsuitable
+clothes but also assist her in making a well-informed decision.
+In the literature, various operators [5]–[8], referred to as the
+multi-criteria decision-making operators, have been proposed
+for this scenario. They characterize each user’s criterion by a
+utility function fu. Each tuple pin the database is then asso-
+ciated with a utility fu(p)(i.e., a function score), reflecting
+how well the tuple aligns with the user’s criterion. Guided by
+these utilities, the operators find tuples as the output.
+There are two critical limitations of these operators. First,
+they assume that users’ utility functions are known in advance.
+However, in real-world scenarios, users often face difficulty in
+precisely quantifying their individual criteria. For instance, Al-
+ice might struggle to articulate her exact trade-off between theTable I: The Clothes Database ( u= (0.7,0.3))
+Clothes Quality Recyclability Brand fu(·)
+p1 4.0 5.0 Nike 4.30
+p2 4.7 4.8 H&M 4.73
+p3 4.8 4.3 H&M 4.65
+p4 5.0 4.0 H&M 4.70
+quality and recyclability attributes. This uncertainty presents a
+significant challenge for these operators in returning accurate
+recommendations. Second, these operators tend to overlook
+the importance of diversity in the output. In Table I, tuples
+p2,p3, and p4have the highest utilities but belong to the
+same brand. If they are recommended to Alice, she might feel
+dissatisfied due to the lack of variety. In market research, this
+is commonly known as brand fatigue [9], [10], where repeated
+exposure to the same brand diminishes user interest, even if the
+tuples meet users’ criteria. The need for diversity is pervasive
+in many real-life scenarios. For example, fellowship programs
+might demand diverse nominees to ensure representation from
+underrepresented demographic groups in a particular field [11].
+Given these limitations, it is desirable if the database system
+can search for a diverse set of tuples with high utilities, even
+if the user’s criterion is not known in advance.
+In this paper, we study how a well-established interactive
+learning framework [4], [12], [13] and a widely used diversity
+mechanism [14], [15] could help to address these limitations.
+In line with prior work [16], [17], we distinguish the attributes
+of tuples into two types: (1) scoring attributes which are used
+by the utility function in the interactive learning framework
+(e.g., quality and recyclability) and (2) sensitive attributes
+which are used by the diversity mechanism (e.g., brand).
+The interactive learning framework engages users through
+a series of questions. Each question presents two tuples (with
+scoring attributes only) and asks the user to pick the one s/he
+prefers, where the two tuples are selected from the database
+based on the user’s answers to previous questions. Following
+the user’s answers, the user’s utility function is learned.
+The diversity mechanism operates by grouping tuples based
+on their sensitive attributes and restricting the number of tuples
+from each group in the output. For example, consider Table I.
+The clothes can be divided into two groups: one with the Nike
+brand and the other with the H&M brand. Let us restrict the
+output to include at least one clothes from each group. Then,
+set{p1,p2}is considered diverse with respect to brand since
+it contains one clothes p1from the Nike group and one clothes
+p2from the H&M group. Note that diversity can be assessed
+in various ways [18], [19]. In this paper, we primarily follow
+
+the popular method of restricting the number of returned tuples
+from each group. However, our algorithms proposed later can
+be adapted to different diversity methods (see Section VII-A).
+By incorporating the interactive learning framework and
+thediversity mechanism , we propose problem Interactive
+Learning for D iverse T op-kSet (Problem IDT) . The goal is to
+interact with a user to find a diverse top- ksetwhile minimizing
+the number of questions asked to the user. The diverse top- k
+set, following [14], [20], is defined as a set of ktuples that (1)
+have the highest utilities and (2) meet the diversity constraints,
+i.e., the number of tuples from each group satisfies the given
+restrictions. Besides, it is crucial that the questions should be
+as few as possible since excessive questioning can overwhelm
+users, leading to frustration and negatively impacting the
+interaction results, as shown in marketing research [21], [22].
+Our proposed algorithms are built upon two phases: explo-
+ration and interaction. In the exploration phase, they process
+the database to gather relevant information for interaction.
+Subsequently, in the interaction phase, they select tuples based
+on this information to interact with the user and then implicitly
+learn the user’s utility function. Once the utility function is suf-
+ficiently learned, they derive the top-ranked tuples and identify
+the user’s diverse top- kset based on the diversity constraints.
+A key insight behind our algorithms is that we can construct
+hyper-planes based on any two tuples in the database (details
+are postponed in Section III-B). These hyper-planes divide the
+domain of all possible utility functions, guiding the selection
+of tuples for interaction. Moreover, the hyper-planes based on
+the tuples presented in each question progressively narrow the
+domain of the utility function. When the narrowed domain is
+sufficiently small, the diverse top- kset can be determined.
+To the best of our knowledge, we are the first to study prob-
+lem IDT. While some closely related studies [12]–[14], [16],
+[23]–[25] involve interactive learning or consider the diversity
+issue, they differ significantly from us. [23] aims to rank tuples
+by interacting with users, and [24] proposes to learn the user’s
+utility function via interaction. [12], [13] target to find a single
+tuple such that the regret ratio , evaluating user dissatisfaction
+with the tuple, is minimized by user interaction. These studies
+learn the user criteria through interactive learning but do not
+incorporate a diversity constraint. As a result, some questions
+they ask might be redundant in our setting due to diversity
+considerations. For example, we do not need to ask Alice to
+compare two clothes if they are known to be excluded from
+the diverse output set, but this comparison might be needed by
+[23], [24]. Other studies such as [14], [16], [25] concentrate
+on providing a diverse tuple set to users. However, [16], [25]
+assume the users’ criteria are known in advance, which is often
+impractical. [14] considers all possible users’ criteria collec-
+tively to recommend tuples, leading to less personalized rec-
+ommendations since they aim at accommodating a broad range
+of user criteria rather than being tailored to individual users.
+Contributions. Our contributions are listed as follows.
+•To the best of our knowledge, we are the first to propose
+the problem of returning the diverse top- kset by interactingwith the user (problem IDT). We prove a lower bound
+Ω(log2n)on the number of questions asked to a user.
+•We propose algorithm TDIA for a special case of problem
+IDT where tuples are described by two scoring attributes. It
+asks an asymptotically optimal number of questions.
+•We propose algorithm HDIA for the general case of prob-
+lem IDT where tuples are described by multiple scoring
+attributes. It is asymptotically optimal w.r.t. the number of
+questions asked in expectation.
+•We conducted experiments to demonstrate the superiority of
+our algorithms. The results show that our algorithms are able
+to return the diverse top- kset by asking approximately 30%
+fewer questions than existing ones under typical settings.
+In the following, we discuss the related work in Section II
+and formally define our problem in Section III. In Section IV,
+we propose an asymptotically optimal algorithm TDIA for a
+special case. In Section V, we propose an algorithm HDIA
+for the general case that performs well theoretically and
+empirically. Section VII presents our experimental results and
+Section VIII concludes this paper.
+II. R ELATED WORK
+Utility-based Query. The regret-minimizing query [26]–[29]
+does not require prior knowledge of the user’s utility function.
+It considers all possible utility functions and returns a small set
+of tuples, expecting that each user can find at least one tuple
+that aligns with his/her criterion. Specifically, it minimizes a
+criterion called regret ratio that evaluates the user’s dissatis-
+faction when comparing the returned set to the entire database.
+However, it is hard to achieve a small output size and a small
+regret ratio simultaneously. When the output size is small, the
+regret ratio is typically large [12], [28], [30]. Besides, since
+the query considers all possible utility functions, it returns the
+same tuples to all users. In contrast, our problem IDT requires
+the returned tuples to align with each user individually.
+To overcome the deficiencies, several existing studies [12],
+[13] incorporate user interaction. [13] proposes the interactive
+regret-minimizing query, which aims to reduce the regret ratio
+while maintaining a small size of output by interacting with
+the user. However, this query displays fake tuples during the
+interaction, which are artificially constructed (not selected
+from the database). This might produce unrealistic tuples (e.g.,
+a car priced at 10dollars with 50,000horsepower), leading to
+potential user disappointment [12]. To resolve this issue, [12]
+proposes the strongly truthful interactive regret-minimizing
+query, which utilizes real tuples (selected from the database).
+However, this query requires heavy user effort during the
+interaction, i.e., asking many questions. Besides, since both
+[13] and [12] focus on finding the user’s (close to) best tuple,
+to some extent, their studied problems can be seen as a special
+case of our problem IDT when k= 1.
+To reduce user effort, [31] reduces the quality of the output.
+Instead of finding the (close to) best tuple, it only searches
+for one of the user’s top- ktuples. This lessens the precision
+required to learn the user’s criterion, and thus, reduces the
+number of questions asked to the user. Further developments
+2
+
+can be seen in [3], [4], which explore the integration of differ-
+ent types of attributes into the interactive learning framework.
+Nevertheless, none of these studies [3], [4], [12], [13], [31]
+consider the diversity in the output.
+In the field of machine learning, the problem of learning to
+rank [23] and preference learning [24] are similar to our prob-
+lem IDT. However, they either learn the full ranking of tuples
+or approximate the user’s criterion, which may require asking
+some questions that are unnecessary to our problem. For in-
+stance, if Alice prefers tuple p1to both p2andp3, her criterion
+between p2andp3is less interesting in our problem IDT, but
+this additional comparison might be needed in [23], [24].
+Compared to existing studies, our problem IDT offers sev-
+eral advantages. (1) We use real tuples during the interaction,
+unlike [13] which incorporates fake tuples. (2) We require low
+user effort during the interaction. Contrary to existing studies
+that ask many questions to learn either a full ranking [23] or an
+exact user criterion [24], we only search for a set of ktuples.
+(3) We consider the diversity of output, addressing potential
+biases overlooked in other studies [3], [4], [12], [31].
+Diversity-based Query. Query result diversification [32]–[35]
+is a line of study in information retrieval, aiming to provide a
+diverse output that covers different aspects or interpretations
+of the query, rather than returning multiple similar tuples [36]–
+[45]. There are two widely considered categories [33], [46]–
+[48] of diversity definitions in query result diversification:
+content-based , to include dissimilar tuples in the output; and
+coverage-based , to retrieve tuples of different categories or
+from different interpretations of the query [49].
+Content-based diversity [18], [19] focuses on minimizing
+the similarity between tuples in the output. This is achieved
+through pairwise similarity measures, with the goal of ensuring
+that the aggregated similarity among the tuples in the output
+is as low as possible. There are multiple algorithms proposed,
+ranging from heuristics to dynamic programming.
+For coverage-based query, a representative one is the group
+diversity query [14]–[16], which is closely related to our
+problem IDT. It groups tuples in the database based on the
+sensitive attributes. For example, the students with the same
+gender are in the same group. The goal is to ensure that (1) the
+proportion of each group in the output is identical or similar
+to that in the whole database (e.g., if there are 40% female
+students in the database, the output should contain about 40%
+female students), or (2) the number of tuples of each group
+in the output should be in a given range (e.g., the number of
+female students in the output should be within a given range
+of 10-20). Our problem IDT utilizes the second type since the
+first one can be seen as a special case of the second type.
+There are many algorithms proposed to enhance the diver-
+sity of output while maintaining relevance [47], [48], [50]. The
+algorithms in [47], [48] are designed in a greedy manner. In
+each round, they extract the tuple with the highest score . Ini-
+tially, the score is determined by the query only (e.g., the user’s
+criterion). Subsequently, the score involves both the query and
+the diversity conditioned on the selected tuples. [14], [50]
+propose dynamic programming-based algorithms. Some recentstudies [25], [51], [52] aim to minimally refine the query to
+satisfy constraints on the size of specific groups in the output.
+This line of study differs from our problem IDT since they
+return tuples relevant to a pre-specified query (e.g., the user’s
+criterion). If the query is unknown or not explicitly defined,
+the proposed algorithms are not applicable. In contrast, our
+problem IDT can learn the query via user interaction, making
+it adaptable to cases where the query is initially unspecified .
+III. P ROBLEM DEFINITION
+A. Problem IDT
+Data. The input dataset Dcontains ntuples, i.e., |D|=n.
+Each tuple pis described by dnon-negative scoring attributes.
+We denote the value of pin the i-th scoring attribute by p[i],
+where i∈[1, d]. Without loss of generality, following [3], [12],
+[53], we assume that each scoring attribute is normalized to
+(0,1]and a larger attribute value is preferred.
+Utility Function. Following [12], [31], [54], we model the
+user’s criterion by a linear scoring function, called the utility
+function , which is a popular and effective representation for
+modeling users’ criteria [55], [56]. As verified in [3], [24], it
+can effectively capture how real users assess the multi-attribute
+tuples. Formally, the utility function is defined as follows.
+fu(p) =u·p=Pd
+i=1u[i]p[i]
+Here, u= (u[1], u[2], ..., u [d])is a d-dimensional vector,
+called the utility vector . Each u[i]denotes the importance of
+thei-th scoring attribute to the user, where i∈[1, d]. Without
+loss of generality, following [12], [13], [31], we assume thatPd
+i=1u[i] = 1 and each u[i]≥0. Function score fu(p)is
+called the utility ofpw.r.t. u. It represents to what extent a user
+prefers tuple p. A higher utility means that pis more preferred.
+Consider Table I. Suppose that fu(p) = 0 .7p[1] + 0 .3p[2],
+i.e.,u= (0.7,0.3). The utility of p3w.r.t. uisfu(p3) =
+0.7×4.8 + 0 .3×4.3 = 4 .65. Similarly for the other tuples.
+Diversity Model. We adopt a well-established diversity model
+in the existing literature [14], [20], [57]. Except for the scoring
+attributes, each tuple pis also described by several sensitive
+attributes. Table I shows an example. It contains four tuples
+with two scoring attributes and one sensitive attribute. In the
+diversity model, a group is a set of tuples in Dwith the
+same value in at least one sensitive attribute. For instance,
+{p2,p3,p4}is a group in Table I since the tuples in it have
+the same value H&M. Note that if the sensitive attributes are
+continuous, we can handle them by discretizing their values
+through established methods [52], [58]. For example, consider
+attribute ageas a sensitive attribute. It can be discretized into
+three values: Young ( <30), Middle (30-60), and Old ( >60).
+Given a dataset Dandcgroups G={G1,G2, ...,Gc}, the
+diversity constraint in the diversity model [14], [20], [57] is
+established by specifying a lower bound ljand an upper bound
+bjfor each group Gj, where j∈[1, c]. Formally, a subset
+S ⊆ D is considered diverse in terms of Gif and only if
+lj≤ |S ∩ G j| ≤bj
+3
+
+for each group Gj∈G. For example, consider Table I. Assume
+thatG={G1,G2}, where the tuples in G1have the same value
+Nike and the tuples in G2have the same value H&M. Let
+l1=l2= 1 andb1=b2= 5. SetS={p1,p3}is a diverse
+set since |S ∩ G 1|=|{p1}| ≥1and|S ∩ G 2|=|{p3}| ≥1.
+Given groups G, we define the diverse top- ksetof a utility
+function fu(·)to be a set S∗⊆ D ofktuples that have the
+highest utilities and satisfy the diversity constraint, i.e.,
+S∗= arg max
+S⊆D :|S|=kX
+p∈Sfu(p)s.t.lj≤ |S ∩ G j| ≤bj,∀Gj∈G
+Given a utility vector u, there are existing algorithms [20],
+[48], [50] finding set S∗. We apply the one discussed in [20]
+to our work. Let us denote it by ∇·(·), i.e.,S∗=∇u(D).
+Note that there are various ways to define the diverse top- k
+set. Our definition follows [14], [20], which has gained wide
+acceptance in the literature. We also adapted our algorithms to
+accommodate different diversity models. The comparison can
+be found in Section VII-A.
+Problem Definition. Our objective is to find the user’s diverse
+top-kset with the help of user interaction. Specifically, our
+interactive learning framework follows [3], [12], [31]. The sys-
+tem interacts with a user for rounds. In each interactive round,
+(1) (Tuple Selection ) it adaptively selects two tuples and asks
+the user to pick the one s/he prefers; (2) ( Information Mainte-
+nance ) based on the user feedback, the information maintained
+for finding the user’s diverse top- kset is updated; (3) ( Stopping
+Condition ) it checks if the stopping condition is satisfied. If it
+is satisfied, the interaction process ends, and the diverse top- k
+set is returned to the user. Otherwise, another interactive round
+begins. Formally, we are interested in the problem below.
+Problem 1.(Interactive L earning for Diverse T op-k Set
+(IDT) ) Given a dataset D, a diversity constraint (i.e., a lower
+bound land an upper bound bfor each group), and an integer
+k, we want to interact with a user in as few rounds as possible
+to find the user’s diverse top- kset.
+B. Problem Characteristics
+We formalize our problem IDT from a geometric perspec-
+tive. With a slight abuse of notations, we use pto represent the
+scoring-attribute part of tuple p, i.e., p= (p[1], p[2], ..., p [d]).
+In ad-dimensional geometric space Rd,pcan be regarded as
+a point. Each dimension corresponds to a scoring attribute.
+Consider any pair of tuples pi,pj∈D, based on the scoring
+attributes, we can build a hyper-plane as shown in Figure 1.
+hi,j={r∈Rd
++|r·(pi−pj) = 0}
+Hyper-plane hi,jpasses through the origin with its unit normal
+in the same direction as vector pi−pj. It divides space Rdinto
+two half-spaces. The positive half-space h+
+i,j(resp. negative
+half-space h−
+i,j) contains all utility vectors u∈Rdsuch that
+u·(pi−pj)>0(resp. u·(pi−pj)<0).
+Apolyhedron Pis defined to be the intersection of a finite
+number of hyper-planes and half-spaces [59]. In space Rd,each utility vector can be seen as a point. Recall that we as-
+sume that (1) u[i]≥0for each dimension and (2)Pd
+i=1u[i] =
+1. The domain of the utility vector, called the utility space and
+denoted by U, is a polyhedron in space Rd, e.g., a shaded trian-
+gle when d= 3as shown in Figure 1 or a bolded line segment
+when d= 2 as shown in Figure 2. If a hyper-plane hi,jinter-
+sects with the utility space U, we denote the intersection by
+∧i,j. The lemma below establishes our foundation for learning
+the user’s utility function, more specifically, the user’s utility
+vector. Due to the lack of space, the proofs for some theorems
+and lemmas can be found in our technical report [60].
+Lemma 1.( [31]) Given Uand tuples pi,pj∈ D, if and only
+if a user prefers pitopj, the user’s utility vector is in h+
+i,j∩U.
+Based on Lemma 1, our idea is to interact with a user to
+narrow down the utility space. When the narrowed utility space
+is sufficiently small, the diverse top- kset can be determined.
+IV. SPECIAL CASE OF IDT
+We consider a special case of problem IDT, where tuples are
+described by two scoring attributes. In this case, the utility vec-
+toru= (u[1], u[2])is a two-dimensional vector, and the utility
+spaceUis a line segment in space R2(since u[1], u[2]≥0and
+u[1] + u[2] = 1 ). We propose a t wo-d imensional i nteractive
+algorithm TDIA that finds the user’s diverse top- kset within
+an asymptotically optimal number of interactive rounds.
+Algorithm TDIA consists of two phases: exploration and
+interaction . In the exploration phase, it scans all utility vectors
+ualong the utility space from one side to another, and records
+the diverse top- ksets w.r.t. uin a list Cbased on the scanning
+sequence. Note that if adjacent utility vectors correspond to
+the same diverse top- kset, we only record that set once in C.
+Subsequently, in the interaction phase, it interacts with a user
+to identify which one in Cis the user’s diverse top- kset.
+Exploration. Since there are infinite utility vectors in utility
+space U, when scanning utility vectors, it is impractical to
+check the diverse top- kset w.r.t. each utility vector one by one.
+The following lemma provides a theoretical foundation that
+makes it feasible to consider multiple utility vectors together.
+Lemma 2.Given a line segment [u1,u2], where u1,u2∈ U,
+if∄pi,pj∈ D such that hyper-plane hi,jintersects [u1,u2],
+the diverse top- ksets w.r.t. any u∈[u1,u2]are the same.
+Following Lemma 2, during the scanning process, we main-
+tain the diverse top- kset w.r.t. the currently scanned utility
+vector. The set may change only if the scanned utility vector
+uis the intersection of a hyper-plane hi,jand the utility space,
+i.e.,u=∧i,j, where pi,pj∈ D.
+The exploration phase works as follows. Initially, we rank
+all the intersections ∧i,j, where pi,pj∈ D, along the utility
+space from one endpoint (0,1)to the other (1,0). The scan
+begins at utility vector (0,1). We find the diverse top- kset
+w.r.t. this utility vector by ∇(0,1)(D)and insert it into C.
+Note that the latest inserted set in Calso denotes the diverse
+top-kset w.r.t. the currently scanned utility vector. Then, we
+scan the ranked intersections sequentially. Suppose that we
+reach an intersection ∧i,jand line segment [∧i,j,(1,0)]⊆h−
+i,j
+4
+
+𝑢[2]𝑢[3]
+𝑢[1]ℎ𝑖,𝑗
+ℎ𝑖,𝑗−𝑝𝑖−𝑝𝑗 Utility space
+ℎ𝑖,𝑗+Figure 1: Hyper-plane
+11
+𝑢[1] 0ℎ1,4𝑢[2]
+𝐶1
+𝐶2ℎ2,4
+∧2,4ℎ1,3
+ℎ3,4ℎ1,2
+ℎ2,3
+Utility space Figure 2: Algorithm TDIATable II: The Car Database
+pHP
+(×102)MPG
+(×10)Torque
+(×102)Brand
+p1 2.6 2.4 2.3 Tesla
+p2 3.4 1.6 2.3 Ford
+p3 2.8 1.8 2.3 Ford
+𝑋2𝑋3
+𝑋1
+ℎ1,2Θ1Θ2Θ3Θ4
+ℎ2,3ℎ1,3Figure 3: Partitions in Rd
+(similarly for [∧i,j,(1,0)]⊆h−
+j,i). Since [∧i,j,(1,0)]⊆h−
+i,j,
+we have fu(pi)< fu(pj)w.r.t. any u∈[∧i,j,(1,0)]. LetC
+be the latest diverse top- kset inserted into C. Ifpi∈ C and
+pj/∈ C, we check whether set C′=C ∪ { pj} \ {pi}satisfies
+the diversity constraint. If it satisfies, set C′is a new diverse
+top-kset. We append C′toC. This process terminates when
+all the intersections have been scanned.
+Consider Table I. For each pair of clothes tuples in it, we
+build a hyper-plane, as shown in Figure 2. The norms of the
+hyper-planes are towards their positive half-spaces. Assume
+G={G1,G2}, where the tuples in G1(resp.G2) have the same
+brand Nike (resp. H&M). Let k= 2,l1=l2= 1 (i.e., each
+brand should have at least one tuple), and b1=b2= 2 (i.e.,
+each brand should have at most two tuples). Initially, we find
+the diverse top- ksetC1={p1,p2}w.r.t. utility vector (0,1)
+and insert it into C. Then, we reach the first intersection ∧1,2.
+Since p1andp2are in set C1, we directly move to the second
+intersection ∧1,3. Here, given that p1∈ C 1andp3/∈ C 1, we
+build set C′={p2,p3}. However, |C′∩ G 1|< l 1makes C′
+unable to meet the diversity constraint. We do not insert C′into
+C. For the other interactions, we perform similar steps. For
+∧1,4, we build set C′′={p2,p4}. Since C′′does not meet the
+diversity constraint, it is not inserted into C. For∧3,4, since
+p3,p4/∈ C 1, there is no set built. For ∧2,4, since p2∈ C 1and
+p4/∈ C 1, setC2={p1,p4}is built and inserted into C. For
+∧2,3, since p2,p3/∈ C 2, there is no set built. The final result
+isC=<C1,C2>, where C1={p1,p2}andC2={p1,p4}.
+Remark. Although there exist a few scan algorithms [31], [54],
+they pursue entirely different objectives and cannot be easily
+adapted to our problem. Note that the exploration phase can
+be precomputed before the interaction phase. It does not affect
+the real-time interaction experience.
+Interaction. LetC=<C1,C2,C3, ... > be all diverse top-
+ksets found in the exploration phase. They are listed based
+on the scanning sequence. The interaction phase determines
+which one is the user’s diverse top- kset by a binary search .
+In each interactive round, (1) ( Tuple Selection ) it finds the
+median sets Cx,Cx+1∈Cand presents a user with two tuples
+piandpj, where piis inCxbut not in Cx+1, and pjis
+inCx+1but not in Cx. (2) ( Information Maintenance ) If the
+user prefers pitopj, based on Lemma 3, half of the sets
+<Cx+1,Cx+2,Cx+3, ... > inCcan be deleted. Otherwise, the
+other half can be deleted from C. (3) ( Stopping Condition )
+The interaction process stops when |C|= 1 and the diverse
+top-kset finally left in Cis returned as the output.
+Lemma 3.If a user prefers pitopj, the user’s diverse top- k
+set cannot be the one among <Cx+1,Cx+2,Cx+3, ... > .Algorithm 1: Algorithm TDIA
+1Input: Dataset D, setG, parameters k,l1,l2, ...,b1,b2, ...
+2Output: The user’s diverse top- kset
+3Initialize C=∅and rank all the intersections;
+4Insert the diverse top- kset w.r.t. vector (0,1)intoC;
+5foreach intersection ∧i,jdo
+6 ifpi∈ C andpj/∈ C orpi/∈ C andpj∈ C then
+7 Build set C′based on set C,pi, and pj;
+8 ifsetC′satisfies the diversity constraint then
+9 Append C′to list C;
+10while|C|>1do
+11 Find the median sets CxandCx+1inC;
+12 Display piandpjto the user;
+13 ifthe user prefers pitopjthen
+14 C←< ...,Cx−2,Cx−1,Cx>;
+15 else
+16 C←<Cx+1,Cx+2,Cx+3... > ;
+17return The set finally left in C
+In Figure 2, initially, set C=<{p1,p2},{p1,p4}>.
+We present a user with p2andp4(because Cx={p1,p2},
+Cx+1={p1,p4},p2∈ Cx(notCx+1) and p4∈ Cx+1(not
+Cx)). Assume that the user’s utility vector is u= (0.7,0,3).
+The user will tell that p2is preferred. Following the feedback,
+setCis updated to be <{p1,p2}>. Since |C|= 1, we stop
+the interaction process and return set {p1,p2}.
+Summary. The pseudocode of TDIA is shown in Algorithm 1.
+Initially, set Cis empty and all intersections are ranked (line
+3). Based on these intersections, we scan the utility space to
+obtain all diverse top- ksetsC={C1,C2, ...}(lines 4-9). Then,
+we interact with a user to delete half of the sets in Cin each
+interactive round (lines 11-16). When there is only one set left
+inC(line 10), we stop the interaction and return this set as out-
+put (line 17). The theoretical analysis is shown in Section VI.
+V.GENERAL CASE OF IDT
+We consider the general case of problem IDT, where each
+tuple is described by dscoring attributes ( d≥2). In this
+case, the utility vector is a high-dimensional vector, and the
+utility space is a polyhedron in a high-dimensional space Rd,
+e.g., a triangle when d= 3as shown in Figure 1. We propose
+a high-d imensional i nteractive a lgorithm HDIA that finds
+the user’s diverse top- kset within an asymptotically optimal
+number of interactive rounds in expectation.
+At a high level, our algorithm HDIA follows and extends
+the framework of algorithm TDIA. It maintains a polyhedron
+R ⊆ U , called utility range , which contains the user’s utility
+5
+
+vector. Initially, Ris set to be the entire utility space, i.e.,
+R={u∈Rd
++|Pd
+i=1u[i] = 1}. Algorithm HDIA repeats
+two phases in iterations :exploration andinteraction . In the ex-
+ploration phase, it divides utility range Rinto several smaller
+polyhedrons, termed partitions . Then, in the interaction phase,
+it interacts with the user to delete the partitions that cannot
+contain the user’s utility vector. Utility range Ris the union
+of the left partitions. If there is only one partition left in R,
+another iteration proceeds. Algorithm HDIA terminates if all
+utility vectors in Rcorrespond to the same diverse top- ksetC.
+There are several challenges. The first challenge lies in how
+to divide utility range Rinto partitions; the second challenge
+involves how to strategically select tuples for user interaction;
+and the third challenge concerns how to determine whether all
+utility vectors in Rcorrespond to the same diverse top- kset.
+In the following, we address these challenges respectively.
+Challenge 1. We randomly sequence all hyper-planes hi,jand
+separate them into batches, where pi,pj∈ D. Each batch con-
+tainsγhyper-planes. In each iteration, a single batch of hyper-
+planes is utilized to divide utility range Rinto partitions. Each
+partition, denoted by Θ, is an intersection of O(γ)positive
+or negative half-spaces. The randomized strategy ensures that
+each batch contains a balanced distribution of hyper-planes,
+leading to a more uniform division of the utility range.
+For example, Table II contains three cars that are described
+by three scoring and one sensitive attribute. Suppose that the
+current utility range Ris the whole utility space, and there
+are three hyper-planes in the current batch based on the car
+tuples in Table II. As shown in Figure 3, utility range Ris
+divided into four partitions by these three hyper-planes whose
+norms are towards their positive half-spaces. Partition Θ4is
+the intersection of one positive and two negative half-spaces,
+i.e.,Θ4=h−
+1,2∩h−
+1,3∩h+
+2,3. Similarly for the other partitions.
+To learn if a partition is in either positive or negative half-
+spaces (i.e., Θ⊆h+orΘ⊆h−), it suffices to check the
+relationship of a utility vector u∈Θand hyper-plane h. If
+u∈h+(resp. u∈h−), then Θ⊆h+(resp. Θ⊆h−).
+For the batch size γ, a small one might necessitate more
+iterations (i.e., repeating more times the exploration and inter-
+action phases), prolonging the whole process, while a large one
+could lead to a large number of partitions, causing a high com-
+putational cost. We will discuss the setting of γin Section VII.
+Challenge 2. In the exploration phase, utility range Ris
+divided into partitions by the hyper-planes in the current batch.
+Then, in the interaction phase, we expect to delete partitions
+until there is only one left with a minimal number of interac-
+tive rounds. Let us formalize the interaction phase by a binary
+tree, called decision tree orD-Tree for short. In the D-Tree,
+•Each internal node Ncontains i) two tuples pi,pj∈ D ,
+ii) a partition set Θ(N), and iii) two children Nposand
+Nneg. IfNis the root node, Θ(N)contains all the partitions
+divided by the hyper-planes in the current batch. The hyper-
+plane hi,jofpiandpjdecides the partition sets in children
+NposandNneg. The partition set Θ(Npos)(resp. Θ(Nneg))
+in child Npos(resp. Nneg) contains all the partitions inΘ(N)that are in positive half-space h+
+i,j(resp. negative
+half-space h−
+i,j), i.e., Θ(Npos) ={Θ∈Θ(N)|Θ⊆h+
+i,j}
+(resp. Θ(Nneg) ={Θ∈Θ(N)|Θ⊆h−
+i,j}).
+•Each leaf Nhas a partition set Θ(N), where |Θ(N)|= 1.
+Figure 4 shows a D-Tree that is based on the partitions and
+hyper-planes in Figure 3 (set H(N)in the internal node is used
+for construction only, which will be introduced later). Each
+leaf node contains a partition set Θ(N)with|Θ(N)|= 1.
+For the root node N, it contains two tuples p1andp2and
+its partition set Θ(N)includes all the partitions Θ1,Θ2,Θ3,
+andΘ4. Based on the hyper-plane h1,2ofp1andp2, the
+partitions can be separated into two sets Θ1,Θ2⊆h+
+1,2and
+Θ3,Θ4⊆h−
+1,2. Thus, for child N1,Θ(N1) ={Θ1,Θ2}; for
+child N2,Θ(N2) ={Θ3,Θ4}. Similarly, for the other nodes.
+The interaction phase can proceed with the D-Tree in a
+top-down manner by starting from the root node. In each
+interactive round, we interact with the user by using the two
+tuples piandpjthat are contained in the current node N.
+Following the user feedback, based on Lemma 1, we learn
+that the user’s utility vector is in one of the half-spaces, i.e.,
+either h+
+i,jorh−
+i,j. Then, we move to the child of N, where
+the partitions contained in the child are in the inferred half-
+space. For example, in the first interactive round (i.e., at the
+root node), if the user prefers p1top2, the user’s utility vector
+must be in h+
+1,2, and thus, we move to node N1. The interaction
+process stops when we reach a leaf. The partition contained
+in the leaf must include the user’s utility vector.
+It is easy to see that the number of interactive rounds de-
+pends on the height of the D-Tree. To achieve the best tuple se-
+lection strategy, i.e., the minimal number of interactive rounds,
+we need to ensure that the height of the D-Tree is the smallest.
+We employ a recursive method to construct the shortest D-
+tree. Specifically, for each node N, we add two data structures
+for construction: a number LNand a hyper-plane set H(N).
+LNdenotes the length of the longest path from node Nto
+any of its reachable leaves. H(N)contains the hyper-planes
+that can be used to separate the partitions in Θ(N).
+The construction starts at the root node and gradually builds
+nodes downwards. Initially, the root node contains all hyper-
+planes in the current batch and all partitions divided by these
+hyper-planes. Suppose that the construction process reaches a
+node N. If|Θ(N)|= 1,LNis set to 0. Otherwise, we derive
+LNbased on the hyper-planes in H(N). Specifically, for each
+hyper-plane h∈ H(N), we build two children NposandNneg
+such that (1) the partition sets Θ(Npos)andΘ(Nneg)contain
+the partitions Θ∈Θ(N)inh+andh−, respectively, and (2)
+H(Npos) =H(Nneg) =H(N)\ {h}. Then, we set
+LN= min
+h∈H(N)max{LNpos, LNneg}+ 1.
+Intuitively, max{LNpos, LNneg}represents the length of the
+longest path (from node Nto any of its reachable leaves) if
+we choose a hyper-plane hto separate the partitions in node
+N.minh∈H(N)means that we want to find the hyper-plane in
+H(N)so that the longest path can be the shortest. Node N
+only remains the two children which lead to the smallest LN.
+6
+
+Θ𝑁2=Θ3,Θ4
+ℋ𝑁2={ℎ1,3,ℎ2,3}
+{𝒑1,𝒑3}Θ𝑁1=Θ1,Θ2
+ℋ𝑁1={ℎ1,3,ℎ2,3}
+{𝒑2,𝒑3}ℎ𝟏,𝟐+Θ𝑁=Θ1,Θ2,Θ3,Θ4
+ℋ𝑁={ℎ1,2,ℎ1,3,ℎ2,3}
+{𝒑1,𝒑2}
+N3𝑁
+Θ𝑁3=Θ2 Θ𝑁4=Θ1 Θ𝑁5=Θ3 Θ𝑁6=Θ4ℎ𝟏,𝟐−
+N4 N5 N6N1 N2
+ℎ𝟐,𝟑+ℎ𝟐,𝟑−ℎ𝟏,𝟑+ℎ𝟏,𝟑−Figure 4: D-Tree
+Since building D-Trees recursively can be time-consuming,
+we propose several strategies in the following to accelerate.
+Our first focus is to reduce the construction of the D-Tree. To
+illustrate, consider Figure 4. Let us only build nodes N,N1,
+andN2of the D-Tree. Utilizing the incomplete D-Tree, we
+can interact with the user. Without loss of generality, suppose
+that we move to a node, say N1, based on the user feedback.
+Then, we can use node N1as a root to construct a new D-
+Tree, which only includes nodes N3andN4(without N5and
+N6). Based on this idea, we do not wait for the complete D-
+Tree before starting the interaction. Let us relax the second
+requirement in the definition of the D-Tree.
+•Each leaf Ncontains a partition set Θ(N), where |Θ(N)|
+is smaller than or equal to a given threshold (threshold ≥1).
+Our strategy is to construct several small D-Trees in loops,
+each of which is part of the complete D-Tree. Every time a
+small D-Tree is constructed, we interact with the user based
+on it. Specifically, in each loop, assume that the root node has
+mpartitions. We construct a D-Tree by allowing each leaf to
+contain at most m/β partitions (instead of one partition) where
+βis a user parameter and is a positive integer. The setting of β
+is discussed in Section VII. Then, we follow the D-Tree to in-
+teract with the user, leading to a leaf node N. IfΘ(N) = 1 , we
+stop. Otherwise, we proceed with another loop by using node
+Nas a root to build a new D-Tree and interacting with the user.
+Our second focus is to reduce the number of hyper-planes in
+H(N)that are considered to derive LNfor each node N. We
+limit our consideration to a few hyper-planes that divide the
+partitions in Θ(N)the most evenly. The idea behind this is
+that if each half-space of the hyper-plane contains half of the
+partitions in Θ(N), the number of partitions in each child of
+Ncan be reduced by half, potentially leading to a significant
+reduction in the height of the D-tree. To implement, we define
+Mhto be min{M(h+), M(h−)}, where M(h+)andM(h−)
+represents the number of partitions in half-space h+andh−,
+respectively. Then, we only consider αhyper-planes with the
+largest Mh, where αis a user parameter and is a positive
+integer. The setting of αwill be discussed in Section VII.
+We also propose a lower bound for LN. Suppose that we
+find a hyper-plane h. If using hto divide the partitions in N
+results in LNreaching the lower bound, we can skip checking
+the remaining hyper-planes. This is because using other hyper-
+planes to divide the partitions in Nwill not make LNsmaller.
+Lemma 4.For any node N, we have LN≥ ⌈log2β|Θ(N)|
+m⌉,
+where mis the number of partitions in the root node and βAlgorithm 2: Algorithm HDIA
+1Input: Dataset D, setG, parameters k,l1,l2, ...,b1,b2, ...
+2Output: The user’s diverse top- kset
+3Randomly sequence all hi,j, where pi,pj∈ D;
+4Separate the hyper-planes into batches; R ← U ;
+5foreach batch Hido
+6 Divide Rinto partitions Θi={Θ1, ...}based on Hi;
+7 Set root node NwithLN← ∞ ,H(N)←Hi, and
+Θ(N)←Θi;
+8 while Θ(N)>1do
+9 SearchLN (N,|Θ(N)|/β);
+10 N′←the root of the D-Tree;
+11 while N′is not a leaf do
+12 UsepiandpjinN′to interact with a user;
+13 ifthe user prefers pitopjthen
+14 R ← R ∩ h+
+i,j;N′←Npos;
+15 else
+16 R ← R ∩ h−
+i,j;N′←Nneg;
+17 ifthe stopping condition is satisfied then
+18 return The diverse top- kset;
+19 N←N′;
+SearchLN (node N,β∗)
+20if|Θ(N)| ≤β∗then
+21 LN←0;return ;
+22Select αhyper-planes h∈ H(N)with the largest Mh.
+23foreach selected hyper-plane hi,jdo
+24 ifhi,jseparates the partitions in Θinto two sets then
+25 Build two children NposandNnegforN;
+26 Θ(Npos)← {Θ∈Θ(N)|Θ⊆h+
+i,j};
+27 LNpos← ∞ ;
+28 H(Npos)← H(N)\ {hi,j}
+29 SearchLN( Npos,β∗);
+30 Θ(Nneg)← {Θ∈Θ(N)|Θ⊆h−
+i,j};
+31 LNneg← ∞ ;
+32 H(Nneg)← H(N)\ {hi,j};
+33 SearchLN( Nneg,β∗);
+34 ifLN>max{LNpos, LNneg}+ 1 then
+35 LN= max {LNpos, LNneg}+ 1;
+36 Remove children except NposandNneg;
+37 ifLN≤ ⌈log2|Θ(N)|/β∗⌉then
+38 break;
+39 else
+40 Remove the two children NposandNneg;
+is a parameter (which is a positive integer). Note that m/β
+indicates the number of partitions allowed in leaves.
+Proof. Let us build an optimal sub-tree that is rooted at node
+N. For each internal node N′in the optimal sub-tree, there is
+a hyper-plane that separates the partitions in |Θ(N′)|into two
+equal sets of partitions, i.e., the numbers of partitions in the
+positive and negative half-spaces are the same. In this case,
+the height of the optimal sub-tree is ⌈log2β|Θ(N)|
+m⌉.
+Challenge 3. We verify if the diverse top- ksets w.r.t. any
+utility vectors in utility range Rare the same based on the
+7
+
+extreme utility vectors ofR. The extreme utility vectors are
+the corner points of a polyhedron. For example, in Figure 2,
+the extreme utility vectors of the utility space are (0,1)and
+(1,0). The diverse top- kset w.r.t. each extreme utility vector
+eofRcan be obtained by ∇e(D).
+Lemma 5.If the diverse top- ksets w.r.t. any extreme utility
+vectors of utility range Rare the same, all utility vectors in
+Rcorrespond to the same diverse top- kset.
+Summary. We summarize our algorithm HDIA by combining
+the strategies presented. The pseudocode is shown in Algo-
+rithm 2. In the beginning, utility range Ris set to be the entire
+utility space. All hyper-planes are randomly sequenced and
+separated into batches (lines 3-4). For each batch Hi(i≥1),
+we conduct two phases: exploration and interaction. In the
+exploration phase, the hyper-planes in Hidivide utility range
+Rinto partitions Θi={Θ1,Θ2, ...}(line 6). Then, in the in-
+teraction phase, we build D-Trees and use them for interaction.
+For the first D-Tree, we initialize the root node to contain all
+hyper-planes in Hiand all partitions in Θi(line 7). Assume
+that the construction process reaches a node N. If|Θ(N)| ≤
+β∗(β∗represents the number of partitions allowed in the leaf),
+we set Nto be a leaf and LN= 0 (lines 20-21). Otherwise,
+we select αhyper-planes in H(N)(line 22). Based on the
+selected hyper-planes, we build children for Nand derive LN
+(lines 23-40). Note that we can skip the checking of some
+hyper-planes based on Lemma 4 (lines 37-38).
+After constructing the D-Tree, we interact with the user by
+conducting a top-down traverse on the D-Tree. Suppose that
+we are at a node N′. (1) If it is a leaf and Θ(N′) = 1 , we
+turn to the next batch of hyper-planes. (2) If it is a leaf and
+Θ(N′)>1, we turn to build a new D-Tree by using node
+N′as the root node (line 8). (3) If N′is an internal node, we
+use the two tuples piandpjcontained in N′to interact with
+the user ( Tuple Selection ). When obtaining the user feedback,
+following Lemma 1, we build a hyper-plane hi,jand update
+R(either R ← R ∩ h+
+i,jorR ← R ∩ h−
+i,j). In this way,
+Rbecomes smaller ( Information Maintenance ). We move to
+the child N′′ofN′, where the partitions contained in Θ(N′′)
+are in R(lines 11-16). If all the extreme utility vectors in R
+correspond to the same diverse top- kset, the algorithm stops
+and the diverse top- kset is returned (lines 17-18) ( Stopping
+Condition ). The theoretical analysis is presented in Section VI.
+Consider Figures 3 and 4. Suppose that there is only one
+batch of hyper-planes H={h1,2, h1,3, h2,3}based on the car
+tuples in Table II. In the exploration phase, the utility range is
+divided into four partitions Θ={Θ1,Θ2,Θ3,Θ4}by these
+hyper-planes. Then, in the interaction phase, we set the root
+node Nof the D-Tree by Θ(N) ={Θ1,Θ2,Θ3,Θ4}and
+H(N) ={h1,2, h1,3, h2,3}. Assume that the number of parti-
+tions allowed in the leaf node is 2. Consider hyper-plane h1,2.
+It can separate the partitions in Θ(N)into two sets. We build
+two children N1andN2forN, where Θ(N1) ={Θ1,Θ2},
+Θ(N2) ={Θ3,Θ4}, andH(N1) =H(N2) ={h1,3, h2,3}.
+Since|Θ(N1)| ≤2and|Θ(N2)| ≤2, nodes N1andN2are
+set to be leaves. We have LN1=LN2= 0. Consequently,LN= 1. Because |Θ(N)|= 4,LNachieves lower bound
+⌈log2|Θ(N)|/2⌉= 1. We do not need to consider other hyper-
+planes to derive LNforN. The D-Tree construction stops.
+Then, we interact with the user based on the D-Tree. Let
+k= 2,l1=l2= 1 (i.e., each brand should have at least
+one car), and b1=b2= 2 (i.e., each brand should have at
+most two cars). The root node contains car tuples p1andp2.
+We present them to the user as a question. Assume that the
+user’s utility vector is u= (0.6,0,2,0.2). The user will tell
+thatp2is preferred. We move to node N2and update Rto
+beR∩h−
+1,2, i.e., Θ3∪Θ4. Since any extreme utility vector in
+Θ3∪Θ4corresponds to the same diverse top- kset{p1,p3},
+we stop the interaction and return the set as the output.
+VI. T HEORETICAL ANALYSIS
+We analyze the complexity of the problem IDT and establish
+theoretical guarantees for our proposed algorithms.
+Problem IDT. We provide a lower bound on the number of
+interactive rounds needed to find the user’s diverse top- kset.
+Theorem 1.There exists a dataset Dof size nsuch that any
+algorithm needs to interact with a user in Ω(log2n)rounds to
+find the user’s diverse top- kset.
+TDIA. The theoretical analysis of TDIA is shown as follows.
+Theorem 2.The exploration phase of TDIA runs in
+O(n2logn+Y1+Y2n2)time, where Y1is the time complexity
+of∇·(·)[20] and Y2is the time complexity of checking if a
+set satisfies the diversity constraint [16].
+Theorem 3.Algorithm TDIA solves the special case of prob-
+lem IDT by interacting with a user within O(log2n)rounds.
+Corollary 1.Algorithm TDIA is asymptotically optimal in
+terms of the number of interactive rounds for the special case
+of problem IDT.
+HDIA. The theoretical analysis of HDIA is shown as follows.
+Theorem 4.Constructing a D-Tree needs O((2m)κγ!
+(γ−κ)!)
+time, where mis the total number of partitions, γis the size
+of the hyper-plane batch, and κis the height of the D-Tree.
+Note that although the time complexity appears large due
+to the exponential expression, it remains manageable in prac-
+tice. First, our strategy only constructs several small D-Trees
+(instead of a complete one), each representing a part of the
+complete D-Tree. This keeps the height κof the small D-
+Tree low (e.g., 3). Second, we introduce a lower bound for
+LN. It helps eliminate certain hyper-planes from consideration
+(instead of considering all γhyper-planes). As a result, the D-
+Tree construction remains efficient, as shown in Section VII-A.
+Theorem 5.Algorithm HDIA solves the general case of
+problem IDT by interacting with a user within O(cdlog2n)
+rounds in expectation, where c >1is a parameter used to
+bound the size of partitions.
+Corollary 2.Algorithm HDIA is asymptotically optimal in
+terms of the number of interactive rounds for the general case
+of problem IDT in expectation if canddare fixed.
+8
+
+VII. E XPERIMENT
+We conducted experiments on a machine with 3.10GHz
+CPU and 16GB RAM. Programs were implemented in C/C++.
+Datasets. The experiments were conducted on synthetic and
+real datasets that were commonly used in existing studies [12],
+[30], [61], [62]. The synthetic datasets were anti-correlated .
+They were constructed by the generator developed for skyline
+operators [61], [63]. Following [14], we separated tuples into g
+equal-sized groups, where g≥1. The real datasets were Adult
+[14], Bank [64] and Car[65]. Dataset Adult consists of 32,561
+individual tuples, each of which is described by two sensitive
+attributes (gender and race) and five scoring attributes (educa-
+tion years, capital gain, etc.) Dataset Bank consists of 45,211
+individual tuples, each of which is described by one sensitive
+attribute (marital) and six scoring attributes (age, balance,
+duration, etc.). Dataset Car consists of 1,294,759individual
+car tuples. We use one sensitive attribute (transmission type:
+manual, automatic, and others) and three scoring attributes
+(mileage, power, and price). The tuples in the two real datasets
+were separated into groups based on their sensitive attributes.
+For all the datasets, each scoring attribute is normalized
+to(0,1]. Note that existing studies [12], [66] preprocessed
+datasets to contain skyline tuples only (which are all possible
+top-1tuples w.r.t. at least a utility function) since they look
+for the (close to) top- 1tuple. Consistent with their setting, we
+also preprocessed all the datasets to enable a fair comparison.
+For each group of the dataset, we only included k-skyband
+tuples (which are all possible top- ktuples w.r.t. at least a utility
+function) [62] since we were interested in the diverse top- kset.
+Algorithms. We evaluated our algorithms TDIA and HDIA
+against existing ones: A CTIVE RANKING [23], UH-S IMPLEX
+[12], S INGLE PASS [67], P REFERENCE -LEARNING (denoted
+by P REF-LEARNING for short in the following) [24], and RH
+[31]. Since none of the existing algorithms are designed to
+solve our problem directly, we adapted them as follows:
+•Algorithm A CTIVE RANKING focuses on learning the full
+ranking of tuples by interacting with the user. We find the
+diverse top- kset by ∇u(D)when the ranking is obtained.
+•Algorithms UH-S IMPLEX and S INGLE PASS are proposed
+to return the user’s (close to) top-1 tuple by interacting with
+the user. We maintain a set Sthat is initialized to be ∅
+and perform the algorithm iteratively. At each iteration, the
+algorithm learns the top-1 tuple of dataset D \ S and adds
+it toS. This is achieved by re-using the information about
+the utility function that is learned from previous iterations
+and interacting with the user to refine the information based
+on dataset D \ S . After the iteration, we check whether S
+contains ktuples that satisfy the diversity constraint. If yes,
+we return the ktuples; otherwise, we start another iteration.
+•Algorithm P REF-LEARNING approximates the user’s utility
+vector by interacting with the user. After the approximated
+utility vector uis obtained, we find the diverse top- kset
+based on the approximated utility vector uby∇u(D).
+•Algorithms RH is proposed to achieve two goals based on
+its designed stopping conditions: returning desired tuplesTable III: Parameters and Values
+Parameter Meaning Default Value
+n The dataset size. 100,000
+d The number of scoring attributes. 4
+g The number of groups. 3
+k The size of output. 10
+λIt controls the upper/lower bounds of the
+diversity constraint.0.1
+γ The batch size. 30
+αThe number of hyper-planes in H(N)
+that can be used to derive LN.3
+βIt is related to the number of partitions
+allowed in the leaf of the D-Tree.6
+and learning the ranking of tuples by interacting with the
+user. We follow its design for the second goal. After the
+ranking is obtained, we find the diverse top- kset by∇u(D).
+Parameter Setting. We evaluated the performance of each
+algorithm by varying different parameters. (1) The dataset
+sizen. (2) The number of scoring attributes d. (3) The
+number of groups g(as discussed in Section III, tuples can
+be divided into groups based on their sensitive attributes).
+Unless stated explicitly, following [12], [14], [31], the default
+setting of parameters on synthetic datasets is n= 100 ,000,
+d= 4 , and g= 3 . (4) The parameter k, which decides
+the size of the output. We set k= 10 by default. For the
+diversity constraint, following [14], [68], we set the bounds
+proportionally. That is, we require the proportion of each group
+in the output to be approximately equal to that in the dataset
+D. Specifically, for each group Gi, where i∈ {1,2, ..., g}, we
+setli=⌊(1−λ)k·|Gi|
+|D|⌋andbi=⌈(1 + λ)k·|Gi|
+|D|⌉, where
+λ= 0.1by default. (5) We also varied parameter λ. Table III
+summarizes the parameters used in the experiments.
+Performance Measurement. We evaluated algorithms with
+two measurements: (1) the execution time , which is the pro-
+cessing time; (2) the number of questions asked , which is the
+number of rounds interacting with users. Each algorithm was
+conducted 10times with different randomly generated user
+utility vectors, and the average performance was reported.
+A. Performance on Synthetic Datasets
+Parameter Setting of HDIA. We explored several parame-
+ters’ setting of HDIA on a 4-dimensional synthetic dataset.
+Parameter γ.In Figure 5, we varied parameter γfrom 10
+to 60, and evaluated the execution time and the number of
+questions asked. Parameter γdecides the batch size (intro-
+duced in Section V). The results show that when γincreased,
+the execution time rose, but the number of questions asked
+decreased. This is because a large batch of hyper-planes pro-
+vides a broader selection of candidate hyper-planes for tuple
+selection, which enhances the likelihood of asking effective
+questions to users, and thus, reduces the overall number of
+questions asked. However, it also results in a great number
+of partitions, causing a high computational cost. To achieve a
+balance, we set γ= 30 in the rest of our experiments.
+Parameter α.As shown in Section V, parameter αdetermines,
+for each node N, the number of hyper-planes in H(N)that can
+be used to derive LN. In Figure 6, we varied parameter αfrom
+9
+
+γ = 10
+γ = 20γ = 30
+γ = 40γ = 50
+γ = 60
+102030405060
+ 5 10 15 20 25 30 35 40Execution Time (s)
+k202530354045505560
+510152025303540# of Questions
+k(a) (b)
+Figure 5: Batch Size γ
+α = 2
+α = 3α = 4
+α = 5α = 6
+α = 7
+101520253035404550
+ 5 10 15 20 25 30 35 40Execution Time (s)
+k20253035404550
+510152025303540# of Questions
+k(a) (b)
+Figure 6: Parameter α
+β = 6
+β = 12β = 18
+β = 24β = 30
+β = 36
+101520253035404550
+ 5 10 15 20 25 30 35 40Execution Time (s)
+k20253035404550
+510152025303540# of Questions
+k(a) (b)
+Figure 7: Parameter β
+Pref-Learning
+Active-RankingSinglePass
+TDIAHDIA
+RHUH-Simplex
+012345678
+ 5 10 15 20 25 30 35 40Execution Time (s)
+k051015202530
+510152025303540# of Questions
+k50%60%70%80%90%100%
+510152025303540Accuracy
+k
+(a) (b) (c)
+Figure 8: 2D Dataset
+Pref-Learning
+Active-RankingSinglePass
+HDIARH
+UH-Simplex
+050100150200250300
+ 5 10 15 20 25 30 35 40Execution Time (s)
+k163264128256
+510152025303540# of Questions
+k50%60%70%80%90%100%
+510152025303540Accuracy
+k(a) (b) (c)
+Figure 9: 4D Dataset
+Pref-Learning
+Active-RankingSinglePass
+HDIARH
+UH-Simplex
+050100150200250300
+ 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8Execution Time (s)
+λ163264128256
+0.10.20.30.40.50.60.70.8# of Questions
+λ
+(a) (b)
+Figure 10: Vary λ
+Pref-Learning
+Active-RankingSinglePass
+HDIARH
+UH-Simplex
+050100150200250300
+10k 50k 100k 500k 1MExecution Time (s)
+Size163264128256
+10k 50k 100k 500k 1M# of Questions
+Size(a) (b)
+Figure 11: Vary Size n
+Pref-Learning
+Active-RankingSinglePass
+HDIARH
+UH-Simplex
+050100150200250300
+ 2  3  4  5Execution Time (s)
+Dim8163264128256
+2 3 4 5# of Questions
+Dim(a) (b)
+Figure 12: Vary # of scoring attributes d
+Pref-Learning
+Active-RankingSinglePass
+HDIARH
+UH-Simplex
+050100150200250300
+ 2  3  4  5  6  7  8Execution Time (s)
+Group163264128256
+ 2  3  4  5  6  7  8# of Questions
+Group
+(a) (b)
+Figure 13: Vary Group g
+Pref-Learning
+Active-RankingSinglePass
+HDIARH
+UH-Simplex
+0510152025303540
+ 10 15 20  25 30 35 40Execution Time (s)
+k163264128256
+10152025303540# of Questions
+k(a) (b)
+Figure 14: Adult
+Pref-Learning
+Active-RankingSingPass
+HDIARH
+UH-Simplex
+100101102103104
+ 5 10 15 20 25 30 35 40Execution Time (s)
+k3264128256512
+510152025303540# of Questions
+k(a) (b)
+Figure 15: Bank
+2 to 7, and evaluated the execution time and the number of
+questions asked. Both measurements fluctuated slightly, which
+indicated that we only needed to consider a small set of hyper-
+planes to derive LNfor each node N. Thus, we set α= 3 in
+the rest of our experiments.
+Parameter β.As shown in Section V, parameter βis related to
+the number of partitions allowed in the leaf of the D-Tree. The
+partitions in the leaf should be no more than 1/βpartitions
+in the root node. In Figure 7, we varied βfrom 6 to 36,
+and evaluated the execution time and the number of questions
+asked. As can be seen, the execution time rose with the
+increasing β, while the number of questions asked remained
+almost the same. This indicated that constructing several small
+D-Trees was better than constructing a big completed D-Tree.
+Thus, we set β= 6 in the rest of our experiments.
+Remark. When kincreased, there was an upward trend in the
+execution time and the number of questions asked. This is
+expected since a larger knecessitates a smaller utility range todistinguish more top-ranked tuples. However, occasional dips
+may happen (e.g., when k= 25 ). This could be attributed
+to our dataset preprocessing, where the dataset was restricted
+to only include k-skyband tuples. When kincreased, there
+were more tuples included. This introduced more hyper-planes,
+potentially leading to better questions for interaction.
+Vary k.We studied the impact of kon all algorithms.
+2D Dataset. In Figure 8, we evaluate the performance of algo-
+rithms on a 2-dimensional synthetic dataset by varying kfrom
+5 to 40. The other parameters were set by default. Figure 8(a)
+depicts the execution time. All algorithms could finish within
+7 seconds, indicating high overall efficiency. TDIA and P REF-
+LEARNING took slightly longer times than the others. This is
+because TDIA has to find all possible diverse top- ksets in
+the exploration phase, and P REF-LEARNING requires building
+aspherical tree data structure at the beginning. Nevertheless,
+the additional execution time is minimal and occurs before
+the interaction phase, ensuring it does not affect the user
+10
+
+RH UH-Simplex HDIA
+ 2 4 8 16 32
+# of Questions Satisfaction BoredomValue
+MeasurementFigure 16: User Study
+HDIA HDIA-1 HDIA-2
+ 2 4 8 16 32
+# of Questions Satisfaction BoredomValue
+Measurement Figure 17: Diversity Study
+interaction. Figure 8(b) presents the number of questions
+asked. We do not show S INGLE PASSsince it asked over 1,838
+questions in all cases, which was two orders of magnitude
+more than the others. Our algorithm TDIA asked the fewest
+questions. It reduced at least 31% questions compared to
+the best existing one UH-S IMPLEX . Figure 8(c) validates all
+algorithms returned the exact diverse top- kset. We compared
+the set Sof tuples returned by each algorithm with the ground
+truthS∗. The accuracy was defined as |S∗∩ S|/|S∗|. We
+observed that all algorithms achieved 100% accuracy.
+4D Dataset. Figure 9 presents the performance of algorithms
+on a 4-dimensional synthetic dataset by varying kfrom 5 to
+40. The other parameters were set by default. S INGLE PASS
+achieved significantly shorter execution times. However, this
+speed came at the cost of a large number of questions (exceed-
+ing 2,052), which was two to three orders of magnitude more
+than the others. Given that the number of questions mainly
+determines user satisfaction during interaction (as discussed in
+Section I), this trade-off results in a less favorable balance. To
+better highlight the performance of the remaining algorithms,
+SINGLE PASS is omitted from Figure 9(b). A CTIVE RANKING
+and RH also asked many questions since they needed to
+learn the full ranking of tuples. For example, when k= 40 ,
+they asked 159.1 and 152.8 questions, respectively. Among
+existing algorithms, UH-S IMPLEX asked the fewest questions
+However, its execution time could extend to hundreds of
+seconds. In contrast, our algorithm HDIA required a much
+shorter execution time than UH-S IMPLEX for arbitrary k.
+For instance, it took 81% less time than UH-S IMPLEX when
+k= 40 . Additionally, HDIA asked fewer questions than
+existing ones. Compared to the best algorithm UH-S IMPLEX ,
+it asked 15.4 fewer questions on average. Figure 9(c) shows
+that all the algorithms returned the exact diverse top- kset.
+Vary λ.In Figure 10, we studied the impact of the tightness of
+the diversity constraint on the algorithms. We varied parameter
+λfrom 0.1 to 0.8, which is used to restrict the proportion of
+each group in the output as introduced at the beginning of
+Section VII. We excluded algorithm S INGLE PASS from Fig-
+ure 10(b) since it asked more than two thousand questions in
+all cases. The performances of P REF-LEARNING , ACTIVE R-
+ANKING , and RH remained unaffected with the variation of
+parameter λ. This is because these algorithms either learn
+the ranking of tuples or approximate the user’s utility vector,
+which are independent of the diverse constraints. For the
+other algorithms, when λincreased, the number of questions
+asked showed a downward trend. For example, algorithmSINGLE PASSdropped from 4,579.9 to 2,909.4. The underlying
+reason is that a larger λcorresponds to a more relaxed
+constraint, and thus, the algorithms are required to collect
+less information about the user’s utility vector to identify the
+diverse top- kset. Our algorithm HDIA was affected slightly,
+and it consistently asked the fewest questions in all cases.
+Scalability. We evaluated the scalability of algorithms by
+varying three parameters n,d, and g, respectively.
+Varying n.In Figure 11, we varied the dataset size nfrom
+10k to 1M on 4-dimensional datasets. Figure 11(a) shows
+the execution time. Except for P REF-LEARNING and RH,
+the other algorithms displayed relatively similar execution
+times. Figure 11(b) displays the number of questions asked
+by each algorithm. We omitted S INGLE PASS since it asked
+more than 3,471.8 questions. Our algorithm HDIA scaled the
+best. The number of questions it asked is significantly small.
+For instance, HDIA asked 38 questions when n= 500 ,000,
+whereas S INGLE PASS asked 5,087.50 questions. The results
+highlight the effectiveness of HDIA in handling large datasets.
+Varying d.In Figure 12, we varied the number of scoring
+attributes (i.e., dimensions) dfrom 2 to 5 on 4-dimensional
+datasets. S INGLE PASS consistently spent the shortest execu-
+tion time across all dimensions. However, S INGLE PASS asked
+a significantly large number of questions, which was two to
+three orders of magnitude more than the other algorithms.
+For better demonstrations, we omitted S INGLE PASS in Fig-
+ure 12(b). For the other algorithms, the execution time and the
+number of questions asked increased with high dimensions, as
+expected. This can be attributed to the increased complexity of
+learning the user’s utility vector in high-dimensional spaces.
+Our algorithm HDIA consistently outperformed the others
+regarding the number of questions asked across all dimensions.
+For example, when d= 5, HDIA asked 40% fewer questions
+than the best existing algorithm P REF-LEARNING . The results
+show the usefulness of HDIA in high-dimensional spaces.
+Varying g.In Figure 13, we varied the number of groups g
+from 2 to 8 on 4-dimensional datasets. We excluded S IN-
+GLEPASS from Figure 13(b) since it asked thousands of ques-
+tions (more than 2,789.4 questions in all cases). The results
+show that except for P REF-LEARNING , both the execution
+time and the number of questions asked by each algorithm
+reduced when the number of groups decreased. This trend
+was caused by the complexity of diversity constraints. When
+the number of groups decreased, algorithms were required
+to collect less information on the user’s utility vector to
+accurately identify the diverse top- kset. Conversely, P REF-
+11
+
+LEARNING is designed to approximate the user’s utility vector
+directly. Its core mechanism is not influenced by the diversity
+constraints associated with g. Our algorithm HDIA scaled the
+best among all algorithms. For instance, when g= 8, HDIA
+asked 37% fewer questions than the best existing algorithm
+UH-S IMPLEX . The results underscore HDIA’s adaptability in
+different diversity constraints.
+Diversity Models. Our algorithm HDIA can be adapted to
+different diversity models. We implemented and evaluated it
+with two widely-used diversity models proposed by [18] and
+[19]. Due to space limitations, the details can be found in [60].
+B. Performance on Real Datasets
+Vary k.We evaluated algorithms on the three real datasets by
+varying parameter k. Figures 14 and 15 show the results on
+datasets Adult andBank , respectively. Due to the lack of space,
+the results on dataset Car can be found in [60]. We excluded
+SINGLE PASS from Figures 14(b) and 15(b) since it asked
+thousands of questions. The results show that our algorithm
+performed well regarding the execution time and the number of
+questions asked. For example, when k= 10 , compared to the
+best existing algorithm P REF-LEARNING , HDIA made 57.9%
+and 36.0% reduction in terms of the number of questions asked
+onAdult andBank , respectively.
+User Study. We conducted a user study on dataset Carto show
+our effectiveness on real users. Following existing settings in
+[3], [12], [31], we randomly selected 1000 candidate cars from
+the dataset. Each car was described by four attributes: price,
+horsepower, used mileage, and transmission type. During the
+interaction, only the first three attributes were shown, while
+all attributes were shown in the final results. We recruited 30
+participants and reported their average results.
+To reduce the burden on participants, we compared our
+algorithm HDIA against two existing ones: RH and UH-
+SIMPLEX . Both existing algorithms asked very few questions.
+SINGLE PASS was excluded due to the excessive number of
+questions it required. P REF-LEARNING was excluded from the
+comparison since its stopping condition assumes that the user’s
+utility function is known, making it unsuitable for user study
+(where the user’s utility function is unknown). Fixing k= 10 ,
+each algorithm was evaluated by three measurements. (1) The
+number of questions asked . (2) Satisfaction . It is a score from
+1 to 10 given by each participant (the higher, the better),
+indicating how satisfied the participant is by considering one
+aspect: the returned cars. (3) Boredom . It is a score from 1 to
+10 given by each participant (the lower, the better), showing
+how bored the participant feels by considering two aspects:
+the returned cars and the number of questions asked.
+Figure 16 shows the average results and standard devia-
+tions. Our algorithm HDIA achieved the smallest standard
+deviations. As for the average results, our algorithm HDIA
+performed the best across all measurements. The number of
+questions asked by HDIA was 13.7, while existing algorithms
+RH and UH-S IMPLEX asked 23.3 and 16.8 questions, respec-
+tively. The boredom of our algorithm was also better thanexisting ones by at least 10%. This verifies the effectiveness
+of our algorithms on real users.
+Diversity Model Study. We conducted a study on dataset Car
+to compare our algorithms equipped with different diversity
+modes. For clarity, we denote our algorithm with the diversity
+models in [14], [18], and [19] by HDIA, HDIA-1, and HDIA,
+respectively. The settings and measurements were consistent
+with those used in our previous user study.
+Figure 17 summarizes the average results along with their
+standard deviations. As shown there, all three versions of
+our algorithm asked only a few questions. This indicates the
+effectiveness of our algorithm regardless of the diversity model
+applied. The satisfaction and boredom across all three versions
+were close. Nevertheless, the standard deviations indicate
+individual participants expressed various preferences. This
+suggests that user preferences for diversity may be subjective.
+Given the adaptability of our algorithm to different diversity
+models, it has the potential for various scenarios.
+C. Summary
+The experiments showed the superiority of our algorithms
+over the best-known existing ones: (1) We are effective and
+efficient. Our algorithms TDIA and HDIA ask fewer ques-
+tions within less time than existing algorithms (e.g., on a 2-
+dimensional dataset with k= 10 , while existing algorithm
+RH asks 20.7 questions, TDIA requires only 6.3 questions).
+(2) Our algorithms scale well on the dataset size, the number
+of dimensions, and the number of groups (e.g., HDIA asks
+40% fewer questions than the best existing algorithm when
+d= 5 ). (3) Our algorithms show great promise for real-
+world applications (e.g., on dataset Adult with k= 10 ,
+HDIA achieves a 57.9% reduction in the number of questions
+compared to existing algorithms). In summary, TDIA asks
+the fewest questions in a 2-dimensional space with a small
+execution time. In a d-dimensional space, HDIA runs within
+a few seconds and asks the fewest questions.
+VIII. C ONCLUSION
+In this paper, we incorporate an interactive learning frame-
+work and a diversity mechanism, presenting interactive algo-
+rithms for finding the user’s diverse top- kset. For the special
+case, where the dataset is described by two scoring attributes,
+we propose algorithm TDIA, which is asymptotically optimal
+w.r.t. the number of questions asked. For the general case,
+where the dataset is described by multiple scoring attributes,
+we present algorithm HDIA, which is asymptotically optimal
+w.r.t. the number of questions asked in expectation. Extensive
+experiments showed that our algorithms are efficient and
+effective. As for future work, we consider the case that users
+cannot answer the question or equally prefer the presented
+tuples during the interaction.
+ACKNOWLEDGMENT
+We are grateful to the anonymous reviewers for their con-
+structive comments. The research is supported in part by NSF
+grant 2312931.
+12
+
+REFERENCES
+[1] M. Xie, T. Chen, and R. C.-W. Wong, “Findyourfavorite: An interactive
+system for finding the user’s favorite tuple in the database,” in Proceed-
+ings of the ACM SIGMOD International Conference on Management of
+Data . New York, NY , USA: ACM, 2019, p. 2017–2020.
+[2] M. Xie, R. C.-W. Wong, P. Peng, and V . J. Tsotras, “Being happy with
+the least: Achieving α-happiness with minimum number of tuples,” in
+Proceedings of the International Conference on Data Engineering , 2020,
+pp. 1009–1020.
+[3] M. X. Weicheng Wang, Raymond Chi-Wing Wong, “Interactive search
+with mixed attributes,” in In IEEE ICDE International Conference on
+Data Engineering , 2023.
+[4] W. Wang and R. C.-W. Wong, “Interactive mining with ordered and
+unordered attributes,” Proceedings of the VLDB Endowment , vol. 15,
+no. 11, pp. 2504–2516, 2022.
+[5] J. Lee, G.-w. You, and S.-w. Hwang, “Personalized top-k skyline queries
+in high-dimensional space,” Information Systems , vol. 34, pp. 45–61,
+2009.
+[6] M. A. Soliman and I. F. Ilyas, “Ranking with uncertain scores,” in
+Proceedings of the International Conference on Data Engineering , 2009,
+pp. 317–328.
+[7] P. Peng and R. C.-W. Wong, “K-hit query: Top-k query with prob-
+abilistic utility function,” in Proceedings of the 2015 ACM SIGMOD
+International Conference on Management of Data , ser. SIGMOD ’15.
+New York, NY , USA: Association for Computing Machinery, 2015, p.
+577–592.
+[8] Z. Song and N. Roussopoulos, “K-nearest neighbor search for moving
+query point,” in International Symposium on Spatial and Temporal
+Databases . Berlin, Heidelberg: Springer, 2001, pp. 79–96.
+[9] D. Mandaliya, “The what, why, and how of brand
+fatigue,” 2024. [Online]. Available: https://www.marketingmonk.so/
+p/the-what-why-and-how-of-brand-fatigue
+[10] O. Bukun-Joseph, “Navigating brand weariness, and paving the path
+forward,” 2024. [Online]. Available: https://tosinloluwa.medium.com/
+navigating-brand-weariness-and-paving-the-path-forward-8ffaf9bb9dcb
+[11] https://www.microsoft.com/en-us/research/academic-program/
+phd-fellowship/canada-us/.
+[12] M. Xie, R. C.-W. Wong, and A. Lall, “Strongly truthful interactive
+regret minimization,” in Proceedings of the ACM SIGMOD International
+Conference on Management of Data . New York, NY , USA: ACM, 2019,
+p. 281–298.
+[13] D. Nanongkai, A. Lall, A. Das Sarma, and K. Makino, “Interactive
+regret minimization,” in Proceedings of the ACM SIGMOD International
+Conference on Management of Data . New York, NY , USA: ACM, 2012,
+p. 109–120.
+[14] J. Zheng, Y . Ma, W. Ma, Y . Wang, and X. Wang, “Happiness maximizing
+sets under group fairness constraints,” Proc. VLDB Endow. , vol. 16,
+no. 2, p. 291–303, oct 2022.
+[15] E. Pitoura, K. Stefanidis, and G. Koutrika, “Fairness in rankings and
+recommendations: An overview,” The VLDB Journal , vol. 31, no. 3, p.
+431–458, oct 2021.
+[16] A. Asudeh, H. V . Jagadish, J. Stoyanovich, and G. Das, “Designing fair
+ranking schemes,” ser. SIGMOD ’19. New York, NY , USA: Association
+for Computing Machinery, 2019.
+[17] J. Stoyanovich, K. Yang, and H. V . Jagadish, “Online set selection
+with fairness and diversity constraints,” in Proceedings of the 21st
+International Conference on Extending Database Technology, EDBT
+2018, Vienna, Austria, March 26-29, 2018 , M. H. B ¨ohlen, R. Pichler,
+N. May, E. Rahm, S. Wu, and K. Hose, Eds. OpenProceedings.org,
+2018, pp. 241–252.
+[18] P. Fraternali, D. Martinenghi, and M. Tagliasacchi, “Top-k bounded
+diversification,” in Proceedings of the 2012 ACM SIGMOD International
+Conference on Management of Data , ser. SIGMOD ’12. New York,
+NY , USA: Association for Computing Machinery, 2012, p. 421–432.
+[19] L. Qin, J. X. Yu, and L. Chang, “Diversifying top-k results,” Proc. VLDB
+Endow. , vol. 5, no. 11, p. 1124–1135, jul 2012.
+[20] M. Zehlike, K. Yang, and J. Stoyanovich, “Fairness in ranking, part i:
+Score-based ranking,” ACM Comput. Surv. , vol. 55, no. 6, dec 2022.
+[21] “Alchemer llc,” Last accessed on 02/2025. [Online]. Available:
+https://www.alchemer.com/resources/blog/how-many-survey-questions/
+[22] “Questionpro,” Last accessed on 02/2025. [Online]. Available: https:
+//www.questionpro.com/blog/optimal-number-of-survey-questions/[23] K. G. Jamieson and R. D. Nowak, “Active ranking using pairwise
+comparisons,” in Proceedings of the 24th International Conference on
+Neural Information Processing Systems . Red Hook, NY , USA: Curran
+Associates Inc., 2011, p. 2240–2248.
+[24] L. Qian, J. Gao, and H. V . Jagadish, “Learning user preferences by
+adaptive pairwise comparison,” in Proceedings of the VLDB Endowment ,
+vol. 8, no. 11. VLDB Endowment, 2015, p. 1322–1333.
+[25] J. Li, Y . Moskovitch, J. Stoyanovich, and H. Jagadish, “Query refinement
+for diversity constraint satisfaction,” Proceedings of the VLDB Endow-
+ment , vol. 17, no. 2, pp. 106–118, 2023.
+[26] D. Nanongkai, A. D. Sarma, A. Lall, R. J. Lipton, and J. Xu, “Regret-
+minimizing representative databases,” in Proceedings of the VLDB
+Endowment , vol. 3, no. 1–2. VLDB Endowment, 2010, p. 1114–1124.
+[27] P. Peng and R. C.-W. Wong, “Geometry approach for k-regret query,”
+inProceedings of the International Conference on Data Engineering ,
+2014, pp. 772–783.
+[28] S. Chester, A. Thomo, S. Venkatesh, and S. Whitesides, “Computing k-
+regret minimizing sets,” in Proceedings of the VLDB Endowment , vol. 7,
+no. 5. VLDB Endowment, 2014, p. 389–400.
+[29] P. K. Agarwal, N. Kumar, S. Sintos, and S. Suri, “Efficient algorithms
+for k-regret minimizing sets,” arXiv preprint arXiv:1702.01446 , 2017.
+[30] G. Koutrika, E. Pitoura, and K. Stefanidis, “Preference-based query
+personalization,” Advanced Query Processing , pp. 57–81, 2013.
+[31] W. Wang, R. C.-W. Wong, and M. Xie, “Interactive search for one of the
+top-k,” in Proceedings of the ACM SIGMOD International Conference
+on Management of Data . New York, NY , USA: ACM, 2021.
+[32] M. R. Vieira, H. L. Razente, M. C. Barioni, M. Hadjieleftheriou, D. Sri-
+vastava, C. Traina, and V . J. Tsotras, “On query result diversification,” in
+2011 IEEE 27th International Conference on Data Engineering . IEEE,
+2011, pp. 1163–1174.
+[33] K. Zheng, H. Wang, Z. Qi, J. Li, and H. Gao, “A survey of query result
+diversification,” Knowledge and Information Systems , vol. 51, no. 1, pp.
+1–36, 2017.
+[34] F. Radlinski, R. Kleinberg, and T. Joachims, “Learning diverse rankings
+with multi-armed bandits,” in Proceedings of the 25th international
+conference on Machine learning , 2008, pp. 784–791.
+[35] R. H. Van Leuken, L. Garcia, X. Olivares, and R. van Zwol, “Visual
+diversification of image search results,” in Proceedings of the 18th
+international conference on World wide web , 2009, pp. 341–350.
+[36] C. Yu, L. V . Lakshmanan, and S. Amer-Yahia, “Recommendation
+diversification using explanations,” in 2009 IEEE 25th international
+conference on data engineering . IEEE, 2009, pp. 1299–1302.
+[37] C. Yu, L. Lakshmanan, and S. Amer-Yahia, “It takes variety to make
+a world: diversification in recommender systems,” in Proceedings of
+the 12th international conference on extending database technology:
+Advances in database technology , 2009, pp. 368–378.
+[38] Q. Wu, Y . Liu, C. Miao, Y . Zhao, L. Guan, and H. Tang,
+“Recent advances in diversified recommendation,” arXiv preprint
+arXiv:1905.06589 , 2019.
+[39] D. Rafiei, K. Bharat, and A. Shukla, “Diversifying web search results,”
+inProceedings of the 19th international conference on World wide web ,
+2010, pp. 781–790.
+[40] G. Capannini, F. M. Nardini, R. Perego, and F. Silvestri, “Efficient
+diversification of web search results,” arXiv preprint arXiv:1105.4255 ,
+2011.
+[41] R. L. Santos, C. Macdonald, and I. Ounis, “Selectively diversifying web
+search results,” in Proceedings of the 19th ACM international conference
+on Information and knowledge management , 2010, pp. 1179–1188.
+[42] Z. Liu, P. Sun, and Y . Chen, “Structured search result differentiation,”
+Proceedings of the VLDB Endowment , vol. 2, no. 1, pp. 313–324, 2009.
+[43] E. Demidova, P. Fankhauser, X. Zhou, and W. Nejdl, “Divq: diversifica-
+tion for keyword search over structured databases,” in Proceedings of the
+33rd international ACM SIGIR conference on Research and development
+in information retrieval , 2010, pp. 331–338.
+[44] B. Eravci and H. Ferhatosmanoglu, “Diversity based relevance feedback
+for time series search,” Proceedings of the VLDB Endowment , vol. 7,
+no. 2, pp. 109–120, 2013.
+[45] T. N. Nguyen and N. Kanhabua, “Leveraging dynamic query subtopics
+for time-aware search result diversification,” in European Conference on
+Information Retrieval . Springer, 2014, pp. 222–234.
+[46] T. Deng and W. Fan, “On the complexity of query result diversification,”
+Proceedings of the VLDB Endowment , vol. 6, no. 8, pp. 577–588, 2013.
+13
+
+[47] J. Carbonell and J. Goldstein, “The use of mmr, diversity-based rerank-
+ing for reordering documents and producing summaries,” in Proceedings
+of the 21st Annual International ACM SIGIR Conference on Research
+and Development in Information Retrieval , ser. SIGIR ’98. New York,
+NY , USA: Association for Computing Machinery, 1998, p. 335–336.
+[48] M. Drosou, H. V . Jagadish, E. Pitoura, and J. Stoyanovich, “Diversity
+in big data: A review,” Big data , vol. 5, no. 2, pp. 73–84, 2017.
+[49] M. Drosou and E. Pitoura, “Search result diversification,” ACM SIGMOD
+Record , vol. 39, no. 1, pp. 41–47, 2010.
+[50] L. E. Celis, D. Straszak, and N. K. Vishnoi, “Ranking with fairness
+constraints,” arXiv preprint arXiv:1704.06840 , 2017.
+[51] S. Shetiya, I. P. Swift, A. Asudeh, and G. Das, “Fairness-aware range
+queries for selecting unbiased data,” in Proc. of the Int. Conf. on Data
+Engineering, ICDE , 2022.
+[52] J. Li, A. Silberstein, Y . Moskovitch, J. Stoyanovich, and H. Jagadish,
+“Erica: Query refinement for diversity constraint satisfaction,” Proceed-
+ings of the VLDB Endowment , vol. 16, no. 12, pp. 4070–4073, 2023.
+[53] M. Xie, R. C.-W. Wong, J. Li, C. Long, and A. Lall, “Efficient k-regret
+query algorithm with restriction-free bound for any dimensionality,”
+inProceedings of the ACM SIGMOD International Conference on
+Management of Data . New York, NY , USA: ACM, 2018, p. 959–974.
+[54] A. Asudeh, A. Nazi, N. Zhang, G. Das, and H. V . Jagadish, “Rrr: Rank-
+regret representative,” in Proceedings of the ACM SIGMOD Interna-
+tional Conference on Management of Data . New York, NY , USA:
+ACM, 2019, pp. 263–280.
+[55] J. Dyer and R. Sarin, “Measurable multiattribute value functions,”
+Operations Research , vol. 27, pp. 810–822, 08 1979.
+[56] R. Keeney, H. Raiffa, and D. Rajala, “Decisions with multiple objectives:
+Preferences and value trade-offs,” Systems, Man and Cybernetics, IEEE
+Transactions on , vol. 9, pp. 403 – 403, 08 1979.
+[57] L. E. Celis, L. Huang, and N. K. Vishnoi, “Multiwinner voting with
+fairness constraints,” in Proceedings of the 27th International Joint
+Conference on Artificial Intelligence , ser. IJCAI’18. AAAI Press, 2018,
+p. 144–151.
+[58] H. Liu, R. C.-W. Wong, Z. Zhang, M. Xie, and B. Tang, “Fair top-k
+query on alpha-fairness,” in 2024 IEEE 40th International Conference
+on Data Engineering (ICDE) . IEEE, 2024, pp. 2338–2350.[59] M. De Berg, O. Cheong, M. Van Kreveld, and M. Overmars, Com-
+putational geometry: Algorithms and applications . Springer Berlin
+Heidelberg, 2008.
+[60] W. Wang, R. C.-W. Wong, J. Li, and H. Jagadish,
+“Interactive learning for diverse top-k set,” Tech. Rep.,
+2025. [Online]. Available: https://github.com/WANGWC1996/
+2025ICDE-Interactive-Learning-for-Diverse-Top-k-Set
+[61] D. Papadias, Y . Tao, G. Fu, and B. Seeger, “Progressive skyline com-
+putation in database systems,” ACM Transactions on Database Systems ,
+vol. 30, no. 1, p. 41–82, 2005.
+[62] Y . Gao, Q. Liu, B. Zheng, L. Mou, G. Chen, and Q. Li, “On processing
+reverse k-skyband and ranked reverse skyline queries,” Information
+Sciences , vol. 293, pp. 11–34, 2015.
+[63] S. B ¨orzs¨onyi, D. Kossmann, and K. Stocker, “The skyline operator,”
+inProceedings of the International Conference on Data Engineering ,
+2001, p. 421–430.
+[64] “Dataset bank,” Last accessed on 02/2025. [Online]. Available:
+https://archive.ics.uci.edu/dataset/222/bank+marketing
+[65] “Dataset car,” Last accessed on 11/2024. [Online]. Avail-
+able: https://www.kaggle.com/datasets/ekibee/car-sales-information?
+select=region25 en.csv
+[66] W. Cao, J. Li, H. Wang, K. Wang, R. Wang, R. C.-W. Wong, and
+W. Zhan, “k-Regret Minimizing Set: Efficient Algorithms and Hard-
+ness,” in 20th International Conference on Database Theory . Dagstuhl,
+Germany: Schloss Dagstuhl–Leibniz-Zentrum fuer Informatik, 2017, pp.
+11:1–11:19.
+[67] G. Zhang, N. Tatti, and A. Gionis, “Finding favourite tuples on data
+streams with provably few comparisons,” in Proceedings of the 29th
+ACM SIGKDD Conference on Knowledge Discovery and Data Mining ,
+ser. KDD ’23. New York, NY , USA: Association for Computing
+Machinery, 2023, p. 3229–3238.
+[68] M. El Halabi, S. Mitrovi ´c, A. Norouzi-Fard, J. Tardos, and J. Tarnawski,
+“Fairness in streaming submodular maximization: Algorithms and hard-
+ness,” in Proceedings of the 34th International Conference on Neural
+Information Processing Systems , ser. NIPS’20. Red Hook, NY , USA:
+Curran Associates Inc., 2020.
+14
+
+Hierarchy To Score
+
+Paper
+  - INTRODUCTION
+    - Paragraph 1
+      - [1]
+      - [4]
+      - [5]
+      - [8]
+      - [9]
+      - [10]
+      - [11]
+      - [12]
+      - [13]
+      - [14]
+      - [15]
+      - [16]
+      - [17]
+      - [18]
+      - [19]
+      - [20]
+      - [21]
+      - [22]
+      - [23]
+      - [25]
+      - [24]
+    - Paragraph 2
+  - RELATED WORK
+    - Paragraph 1
+      - [26]
+      - [29]
+      - [12]
+      - [28]
+      - [30]
+      - [13]
+      - [31]
+      - [3]
+      - [4]
+      - [23]
+      - [24]
+    - Paragraph 2
+      - [32]
+      - [35]
+      - [36]
+      - [45]
+      - [33]
+      - [46]
+      - [48]
+      - [49]
+      - [18]
+      - [19]
+      - [14]
+      - [16]
+      - [47]
+      - [50]
+      - [25]
+      - [51]
+      - [52]
+  - PROBLEM DEFINITION
+    - Problem IDT
+      - Paragraph 1
+        - [3]
+        - [12]
+        - [53]
+      - Paragraph 2
+        - [3]
+        - [12]
+        - [31]
+        - [54]
+        - [55]
+        - [56]
+        - [24]
+        - [1]
+        - [2]
+        - [13]
+      - Paragraph 3
+        - [1]
+      - Paragraph 4
+        - [14]
+        - [20]
+        - [57]
+        - [52]
+        - [58]
+        - [48]
+        - [50]
+      - Paragraph 5
+        - [3]
+        - [12]
+        - [31]
+    - Problem Characteristics
+      - Paragraph 1
+        - [1]
+        - [2]
+      - Paragraph 2
+        - [59]
+        - [60]
+        - [31]
+      - Paragraph 3
+  - SPECIAL CASE OF IDT
+    - Paragraph 1
+      - [1]
+      - [2]
+    - Paragraph 2
+      - [1]
+      - [2]
+      - [3]
+    - Paragraph 3
+    - Paragraph 4
+    - Paragraph 5
+      - [31]
+      - [54]
+    - Paragraph 6
+    - Paragraph 7
+      - (1)
+      - (2)
+      - (3)
+    - Paragraph 8
+  - GENERAL CASE OF IDT
+    - Paragraph 1
+    - Paragraph 2
+  - THEORETICAL ANALYSIS
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+      - [20]
+      - [16]
+    - Paragraph 4
+    - Paragraph 5
+    - Paragraph 6
+  - EXPERIMENT
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+        - [12]
+        - [30]
+        - [61]
+        - [62]
+        - [63]
+        - [14]
+        - [23]
+        - [67]
+        - [24]
+        - [31]
+      - Paragraph 3
+        - [12]
+        - [14]
+        - [31]
+        - [68]
+      - Paragraph 4
+      - Paragraph 5
+        - (5)
+      - Paragraph 6
+        - (1)
+        - (2)
+    - Performance on Synthetic Datasets
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+      - Paragraph 10
+      - Paragraph 11
+      - Paragraph 12
+      - Paragraph 13
+      - Paragraph 14
+      - Paragraph 15
+      - Paragraph 16
+      - Paragraph 17
+      - Paragraph 18
+      - Paragraph 19
+      - Paragraph 20
+        - [18]
+        - [19]
+        - [60]
+    - Performance on Real Datasets
+      - Paragraph 1
+        - [60]
+      - Paragraph 2
+        - [3]
+        - [12]
+        - [31]
+      - Paragraph 3
+        - [14]
+        - [18]
+        - [19]
+    - Summary
+      - Paragraph 1
+        - (1)
+      - Paragraph 2
+        - (2)
+        - (3)
+  - CONCLUSION
+    - Paragraph 1
+[anthropic_full_paper_response] attempt=1/3
+Paper: 1.0 | 0.0
+
+INTRODUCTION: 0.07 | 0.0
+Paragraph 1: 0.05 | 0.04
+[1]: 0.002
+[4]: 0.003
+[5]: 0.001
+[8]: 0.001
+[9]: 0.002
+[10]: 0.001
+[11]: 0.002
+[12]: 0.005
+[13]: 0.004
+[14]: 0.004
+[15]: 0.002
+[16]: 0.003
+[17]: 0.001
+[18]: 0.002
+[19]: 0.002
+[20]: 0.002
+[21]: 0.002
+[22]: 0.002
+[23]: 0.003
+[25]: 0.002
+[24]: 0.003
+Paragraph 2: 0.02 | 0.0
+
+RELATED WORK: 0.04 | 0.0
+Paragraph 1: 0.02 | 0.018
+[26]: 0.002
+[29]: 0.001
+[12]: 0.003
+[28]: 0.001
+[30]: 0.001
+[13]: 0.003
+[31]: 0.002
+[3]: 0.002
+[4]: 0.001
+[23]: 0.001
+[24]: 0.001
+Paragraph 2: 0.02 | 0.018
+[32]: 0.001
+[35]: 0.001
+[36]: 0.001
+[45]: 0.001
+[33]: 0.001
+[46]: 0.001
+[48]: 0.001
+[49]: 0.001
+[18]: 0.002
+[19]: 0.002
+[14]: 0.002
+[16]: 0.001
+[47]: 0.001
+[50]: 0.001
+[25]: 0.001
+[51]: 0.001
+[52]: 0.001
+
+PROBLEM DEFINITION: 0.08 | 0.0
+Problem IDT: 0.06 | 0.0
+Paragraph 1: 0.008 | 0.005
+[3]: 0.002
+[12]: 0.002
+[53]: 0.001
+Paragraph 2: 0.015 | 0.01
+[3]: 0.002
+[12]: 0.002
+[31]: 0.002
+[54]: 0.001
+[55]: 0.001
+[56]: 0.001
+[24]: 0.001
+[1]: 0.0
+[2]: 0.0
+[13]: 0.0
+Paragraph 3: 0.005 | 0.001
+[1]: 0.001
+Paragraph 4: 0.02 | 0.012
+[14]: 0.003
+[20]: 0.003
+[57]: 0.002
+[52]: 0.001
+[58]: 0.001
+[48]: 0.001
+[50]: 0.001
+Paragraph 5: 0.012 | 0.006
+[3]: 0.002
+[12]: 0.002
+[31]: 0.002
+
+Problem Characteristics: 0.02 | 0.0
+Paragraph 1: 0.005 | 0.001
+[1]: 0.0
+[2]: 0.001
+Paragraph 2: 0.01 | 0.006
+[59]: 0.001
+[60]: 0.001
+[31]: 0.004
+Paragraph 3: 0.005 | 0.0
+
+SPECIAL CASE OF IDT: 0.2 | 0.0
+Paragraph 1: 0.01 | 0.0
+[1]: 0.0
+[2]: 0.0
+Paragraph 2: 0.02 | 0.003
+[1]: 0.0
+[2]: 0.0
+[3]: 0.003
+Paragraph 3: 0.03 | 0.0
+Paragraph 4: 0.03 | 0.0
+Paragraph 5: 0.01 | 0.005
+[31]: 0.003
+[54]: 0.002
+Paragraph 6: 0.04 | 0.0
+Paragraph 7: 0.04 | 0.0
+(1): 0.0
+(2): 0.0
+(3): 0.0
+Paragraph 8: 0.02 | 0.0
+
+GENERAL CASE OF IDT: 0.25 | 0.0
+Paragraph 1: 0.05 | 0.0
+Paragraph 2: 0.2 | 0.0
+
+THEORETICAL ANALYSIS: 0.1 | 0.0
+Paragraph 1: 0.02 | 0.0
+Paragraph 2: 0.02 | 0.0
+Paragraph 3: 0.02 | 0.004
+[20]: 0.002
+[16]: 0.002
+Paragraph 4: 0.01 | 0.0
+Paragraph 5: 0.02 | 0.0
+Paragraph 6: 0.01 | 0.0
+
+EXPERIMENT: 0.2 | 0.0
+[Section Lead-in]: 0.04 | 0.0
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.02 | 0.015
+[12]: 0.002
+[30]: 0.001
+[61]: 0.002
+[62]: 0.002
+[63]: 0.001
+[14]: 0.002
+[23]: 0.001
+[67]: 0.002
+[24]: 0.001
+[31]: 0.001
+Paragraph 3: 0.01 | 0.006
+[12]: 0.002
+[14]: 0.002
+[31]: 0.001
+[68]: 0.001
+Paragraph 4: 0.003 | 0.0
+Paragraph 5: 0.001 | 0.0
+(5): 0.0
+Paragraph 6: 0.001 | 0.0
+(1): 0.0
+(2): 0.0
+
+Performance on Synthetic Datasets: 0.1 | 0.0
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.005 | 0.0
+Paragraph 5: 0.005 | 0.0
+Paragraph 6: 0.005 | 0.0
+Paragraph 7: 0.005 | 0.0
+Paragraph 8: 0.01 | 0.0
+Paragraph 9: 0.01 | 0.0
+Paragraph 10: 0.005 | 0.0
+Paragraph 11: 0.005 | 0.0
+Paragraph 12: 0.005 | 0.0
+Paragraph 13: 0.005 | 0.0
+Paragraph 14: 0.005 | 0.0
+Paragraph 15: 0.005 | 0.0
+Paragraph 16: 0.005 | 0.0
+Paragraph 17: 0.005 | 0.0
+Paragraph 18: 0.005 | 0.0
+Paragraph 19: 0.005 | 0.0
+Paragraph 20: 0.005 | 0.003
+[18]: 0.0015
+[19]: 0.0015
+[60]: 0.0
+
+Performance on Real Datasets: 0.05 | 0.0
+Paragraph 1: 0.015 | 0.001
+[60]: 0.001
+Paragraph 2: 0.02 | 0.006
+[3]: 0.002
+[12]: 0.002
+[31]: 0.002
+Paragraph 3: 0.015 | 0.003
+[14]: 0.001
+[18]: 0.001
+[19]: 0.001
+
+Summary: 0.01 | 0.0
+Paragraph 1: 0.005 | 0.0
+(1): 0.0
+Paragraph 2: 0.005 | 0.0
+(2): 0.0
+(3): 0.0
+
+CONCLUSION: 0.03 | 0.0
+Paragraph 1: 0.03 | 0.0
+
+Citation Contributions
+
+[1]: 0.006
+[2]: 0.001
+[3]: 0.014
+[4]: 0.006
+[5]: 0.001
+[8]: 0.001
+[9]: 0.002
+[10]: 0.001
+[11]: 0.002
+[12]: 0.022
+[13]: 0.007
+[14]: 0.016
+[15]: 0.002
+[16]: 0.008
+[17]: 0.001
+[18]: 0.007
+[19]: 0.007
+[20]: 0.007
+[21]: 0.002
+[22]: 0.002
+[23]: 0.005
+[24]: 0.008
+[25]: 0.003
+[26]: 0.002
+[28]: 0.001
+[29]: 0.001
+[30]: 0.002
+[31]: 0.016
+[32]: 0.001
+[33]: 0.001
+[35]: 0.001
+[36]: 0.001
+[45]: 0.001
+[46]: 0.001
+[47]: 0.001
+[48]: 0.002
+[49]: 0.001
+[50]: 0.002
+[51]: 0.001
+[52]: 0.002
+[53]: 0.001
+[54]: 0.003
+[55]: 0.001
+[56]: 0.001
+[57]: 0.002
+[58]: 0.001
+[59]: 0.001
+[60]: 0.002
+[61]: 0.002
+[62]: 0.002
+[63]: 0.001
+[67]: 0.002
+[68]: 0.001

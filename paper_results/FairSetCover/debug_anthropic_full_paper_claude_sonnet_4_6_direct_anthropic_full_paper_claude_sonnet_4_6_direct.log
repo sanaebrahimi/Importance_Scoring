@@ -1,0 +1,1909 @@
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+Use the provided hierarchy exactly as given.
+Do not add, remove, rename, merge, split, reorder, or invent nodes.
+Output every node exactly once, including nodes with score 0.
+Output nodes in the exact order they appear in the hierarchy.
+
+Scoring rules
+
+* The root paper node has total score 1.0.
+* For each parent node, distribute its score only among its immediate children.
+* Do not skip hierarchy levels or assign a parent's score directly to deeper descendants.
+* Child scores should approximately sum to the parent score. Exact normalization is handled after output.
+* Scores should be global scores relative to the entire paper, not local percentages.
+* Score scientific contribution, not length.
+* Assign higher scores to content central to the paper's technical contribution.
+* Assign lower scores to background, motivation, related work, summaries, and organizational text.
+
+Citation attribution
+
+* For a paragraph without citations, Citation Score = 0.
+* For a paragraph with citations, estimate what fraction of the paragraph's contribution depends on prior work. This is the paragraph Citation Score.
+* Allocate that citation-derived contribution across the cited references according to their importance in that paragraph.
+* If multiple citations play the same role, split them evenly.
+* Aggregate repeated appearances of the same citation into one final citation score.
+* Use citation identifiers exactly as they appear in the paper.
+
+Output Format
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+Fair Set Cover
+Mohsen Dehghankar
+University of Illinois Chicago
+Chicago, IL, USA
+mdehgh2@uic.eduRahul Raychaudhury
+Duke University
+Durham, NC, USA
+rahul.raychaudhury@duke.edu
+Stavros Sintos
+University of Illinois Chicago
+Chicago, IL, USA
+stavros@uic.eduAbolfazl Asudeh
+University of Illinois Chicago
+Chicago, IL, USA
+asudeh@uic.edu
+Abstract
+The potential harms of algorithmic decisions have ignited algo-
+rithmic fairness as a central topic in computer science. One of the
+fundamental problems in computer science is Set Cover, which has
+numerous applications with societal impacts, such as assembling a
+small team of individuals that collectively satisfy a range of exper-
+tise requirements. However, despite its broad application spectrum
+and significant potential impact, set cover has yet to be studied
+through the lens of fairness.
+Therefore, in this paper, we introduce Fair Set Cover, which aims
+not only to cover with a minimum-size set but also to satisfy de-
+mographic parity in its selection of sets. To this end, we develop
+multiple versions of fair set cover, study their hardness, and de-
+vise efficient approximation algorithms for each variant. Notably,
+under certain assumptions, our algorithms always guarantee zero-
+unfairness, with only a small increase in the approximation ratio
+compared to regular set cover. Furthermore, our experiments on
+various data sets and across different settings confirm the negligible
+price of fairness, as (a) the output size increases only slightly (if
+any) and (b) the time to compute the output does not significantly
+increase.
+CCS Concepts
+•Theory of computation →Packing and covering problems.
+Keywords
+set cover, group fairness, approximation algorithms, selection bias,
+𝑘-color cover
+ACM Reference Format:
+Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl
+Asudeh. 2025. Fair Set Cover. In Proceedings of the 31st ACM SIGKDD
+Conference on Knowledge Discovery and Data Mining V.1 (KDD ’25), Au-
+gust 3–7, 2025, Toronto, ON, Canada. ACM, New York, NY, USA, 12 pages.
+https://doi.org/10.1145/3690624.3709184
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada.
+©2025 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM ISBN 979-8-4007-1245-6/25/08
+https://doi.org/10.1145/3690624.37091841 Introduction
+The abundance of data, coupled with AI and advanced algorithms,
+has revolutionized almost every aspect of human life. As data-driven
+technologies take root in our lives, their drawbacks and potential
+harms become increasingly evident. Subsequently, algorithmic fair-
+ness has become central in computer science research to minimize
+machine bias. However, despite substantial focus on fairness in pre-
+dictive analysis and machine learning [ 6,36,39], traditional combi-
+natorial optimization has received limited attention [ 49]. Neverthe-
+less, combinatorial problems such as ranking [ 3], matching [ 19,20],
+resource allocation [ 9,17,27], and graph problems of influence
+maximization [ 46] and edge recommendation [ 8,43] have massive
+societal impact.
+In this paper, we study the Set Cover problem through the lens
+of fairness. As one of Karp’s 21 NP-complete problems with various
+forms, set cover models a large set of real-world problems [ 40,47],
+ranging from airline crew scheduling [ 41] and facility location (such
+as placing cell towers) to computational biology [ 13] and network
+security [ 21], to name only a few. Given a ground set 𝑈of elements
+and a family of subsets of 𝑈, calledS, in the Set Cover problem,
+the final goal is to cover all the elements of 𝑈by picking the least
+number of sets from S. Beyond its classical application examples, in
+the real world, set cover is frequently used to model problems that
+(either directly or indirectly) impact societies and human beings. In
+such settings, it is vital to ensure that the set cover optimization (a)
+does not cause bias and discrimination against some (demographic)
+groups, and (b) promotes social values such as equity and diversity.
+We further motivate the problem with a real-world application in
+Example 1 for Team of Experts Formation.
+Example 1: Consider an institution that wants to assemble a team
+of experts (e.g., a data science company that wants to hire em-
+ployees) that collectively satisfy a set of skills (e.g., { python ,sql,
+data-visualization ,statistics ,deep-learning ,···}), i.e., for any
+skill, there must be at least one team member who has expertise
+in that skill. Naturally, the institution’s goal is to cover all the
+skills with the smallest possible team. However, due to historical
+biases in society, solely optimizing for the team size may cause
+discrimination by mostly selecting team members from privileged
+groups. Unfortunately, many such biased selections have happened
+in the real world. For instance, investigating an incident where HP
+webcams failed to track black individuals [ 42], revealed that HP
+engineers were mostly white-male and that caused the issue [ 45].
+On the flip side, promoting social values such as diversity are al-
+ways desirable in problems such as team formation (e.g., the data
+189
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada. Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh
+science company would like to ensure diversity in their hiring). In
+other words, not only do they want to satisfy all skills, but they also
+want to have an equal (or proportionate) representation of various
+demographic groups in the assembled team. □
+Motivated by Example 1 and other social applications of set cover,
+outlined in § 2, in this paper we introduce fair set cover, where the
+objective is to find a smallest collection of sets to cover a universe of
+items, while ensuring (weighted) parity in the selection of sets from
+various groups. More specifically, given a set of groups G, a set of
+elements𝑈, a family of setsSsuch that each set belongs to a group,
+and a coefficient 𝑓ℎfor each group gℎ∈Gwith∑︁
+gℎ∈G𝑓ℎ=1, the
+goal is to select the minimum number of sets from Sto cover all
+elements in 𝑈, such that, for each group gℎ∈Gthe fraction of the
+number of sets from group gℎin the final solution is 𝑓ℎ. The formal
+definitions of our problems are given in § 3.
+In this paper, we revisit the set cover problem through the lens
+of group fairness. Our main contributions are as follows.
+•(§ 2, § 3) Demonstrating some of its applications, we propose
+the (unweighted and weighted) fair set cover problem, and study its
+complexity and hardness of approximation. We formulate fairness
+based on demographic parity in a general form that can be used
+to enforce count parity, as well as ratio parity, in selection among
+a set of binary or non-binary demographic groups. While various
+related problems have been studied in the literature (see § 8), to
+the best of our knowledge, we are the first to formulate and study
+the problem of fair set cover and its variations (such that the
+weighted case or the 𝜀-unfairness) over multiple groups.
+•(§ 4, § 6) In the unweighted setting, we first propose a naive
+algorithm that achieves zero-unfairness but at a (large) cost of
+increasing the approximation ratio by a factor of the number of
+groups. Next, we propose a greedy algorithm that, while guarantee-
+ing fairness, has the same approximation ratio as of the regular set
+cover; however, its running time is exponential in the number of
+groups. Therefore, we propose a faster (polynomial) algorithm that
+still guarantees fairness but slightly increases the approximation
+ratio by a fixed factor of𝑒
+𝑒−1. Furthermore, we discuss a relaxed ver-
+sion of fairness constraints (called 𝜀-unfairness) and the trade-offs
+in the approximation ratios achieved by our algorithms.
+•(§ 5, § 6) In the weighted setting, we follow the same sequence
+by first proposing a naive algorithm that guarantees fairness but at a
+cost of a major increase in the output size (approximation ratio). We
+then propose a greedy algorithm that improves the approximation
+ratio but runs in exponential time relative to the number of groups.
+Finally, we propose a faster algorithm but at the expense of a minor
+increase in the approximation ratio.
+•(§ 7) To validate our theoretical findings, we conduct compre-
+hensive experiments on real and synthetic datasets, across various
+settings, including binary vs. non-binary groups and fairness based
+on equal count vs. ratio parity. In summary, our experiments verify
+that our algorithms can achieve fairness with a negligible (if any)
+increase in the output size, and a small increase in the run time.
+2 Application Demonstration
+In Example 1, we demonstrated an application of fair set cover for
+Team of Experts Formation. To demonstrate the application-spanof our formulation, in the following, we briefly mention a few more
+applications.
+Eqal Base-rate in representative data sets. An equal base
+rate is defined as having an equal number of objects for different
+subgroups in the data set [ 30]. Satisfying equal base-rate is im-
+portant for satisfying multiple fairness metrics in down-stream
+machine learning task. Consider the schema of a dataset of individ-
+ual records (e.g., Chicago breast-cancer examination data), with a
+set of attributes x={𝑥1,···,𝑥𝜂}, where dom(𝑥𝑖)>1is the domain
+of𝑥𝑖. In order to ensure representativeness in the data, suppose
+we would like to collect a minimal set that contains at least one
+instance from all possible level- ℓvalue combinations. A level- ℓ
+combination is a value-combination containing ℓattributes in x.
+Each individual belongs to a demographic group (e.g., White ,Black ).
+In order to reduce potential unfairnesses for various groups (e.g.,
+Chicago breast-cancer detection disparities [ 23]), it is required to
+satisfy equal base-rate in the dataset. This is an instance of fair set
+cover, where each row (individual record) in the data set, covers
+all level-ℓcombinations it matches with.
+Business license distribution. Issuing a minimum number
+of business licences (e.g., cannabis dispensary) while covering the
+population of a city is a challenging task for the City Office. Each
+business location covers regions within a certain (travel time) range.
+Besides coverage, equity is a critical constraint in these settings. For
+example, disparity against Black -owned cannabis dispensaries in
+Chicago is a well-known issue [ 48]. Formulating and solving this
+problem as a fair set cover instance will resolve the disparity issues.
+In Social Networks a similar application is influencer selec-
+tion, where companies would like to select a small set of “innflu-
+encers” to reach out to their target application. Specifically, once
+an influencer (aka content creator) post a content about a product,
+their followers view it. However, the company might also want to
+send their products to a diverse set of influencers, to prevent vi-
+sual biases in their advertisement [ 34]. Each influencer has a "cost"
+which is the amount of money that they should get to advertise a
+product. The company should minimize the advertising budget so
+the problem is mapped to the fair weighted set cover problem.
+Fair Clustering. Clustering is a fundamental problem in Com-
+puter Science with many applications in as social network analysis,
+medical imaging, and anomaly detection [ 50]. We are given a set
+of𝑛elements, where each element belongs to a group. We are also
+given a clustering objective function that measures the clustering
+error. The goal is to compute a set of 𝑘centers to minimize the
+clustering error, ensuring that a specific fraction of centers is se-
+lected from each group. Interestingly some of the known clustering
+problems can be modeled as a set cover instance (for example
+𝑘-center clustering). While fair clustering has been studied over
+different clustering objective functions, such as 𝑘-center,𝑘-median,
+and𝑘-means [ 24,28,31], there are still interesting open problems
+in the area. In the sum of radii clustering the goal is to choose a set
+of𝑘balls (where the centers of the balls are elements in the input
+set) that cover all elements minimizing the sum of radii of the balls.
+This problem is more useful than the 𝑘-center clustering because
+it reduces this dissection effect [ 22,37]. The standard (unfair) ver-
+sion of this clustering problem has been thoroughly studied in the
+literature [ 11,16]. Known constant approximation fixed parameter
+190
+
+Fair Set Cover KDD ’25, August 3–7, 2025, Toronto, ON, Canada.
+tractable algorithms are known for the fair sum of radii cluster-
+ing [ 12,26], however their running time depends exponentially
+on𝑘. The problem can be mapped to an instance of the fair set
+cover problem with 𝑛elements and 𝑂(𝑛2)sets: The elements in
+fair set cover are exactly the elements in the clustering problem.
+For every element 𝑒we construct 𝑂(𝑛)balls/sets with center 𝑒and
+radii all possible distances from 𝑒to any other element. Each set
+is assigned a weight which is equal to the radius of the ball. It is
+not hard to show that any solution of the weighted fair set cover
+instance is a valid solution for the fair sum of radii clustering and
+vice versa. Hence, our new algorithms for the (weighted) fair set
+cover problem can be used to derive an approximation algorithm
+for the fair sum of radii clustering in 𝑂(poly(𝑛,𝑘))time. In the
+technical report [ 14], we provide additional applications of the fair
+set cover problem.
+3 Preliminaries
+Problem definition. We are given a universe of 𝑛elements
+𝑈={𝑒1,𝑒2,...,𝑒𝑛}, a family of 𝜇setsS={𝑆1,𝑆2,...,𝑆𝜇}, where
+∪𝜇
+𝑖=1𝑆𝑖=𝑈. We are also given a set of 𝑘demographic groups
+G={g1,..., g𝑘}(e.g., { white-male ,black-female ,...}), while each
+set𝑆𝑗in the familySbelongs to a specific demographic group
+g(𝑆𝑗)∈G . In the rest of this paper, we interchangeably refer to the
+group of a set as its color. LetSℎ⊆S be the family of sets from S
+with color gℎ∈G. Let𝑚ℎbe the number of sets of color gℎinS,
+i.e.,𝑚ℎ=|Sℎ|. Acover𝑋⊆S is a subset ofSsuch that for any
+𝑒∈𝑈there exists a set 𝑆∈𝑋with𝑒∈𝑆. In other words, 𝑋is a
+cover if⋃︁
+𝑠𝑖∈𝑋=𝑈. To simplify the notation, for a family of sets
+𝑋⊆S, we define𝑋∩𝑈=(⋃︁
+𝑆∈𝑋𝑆)∩𝑈.
+Fairness definition. Following Example 1 and the applications
+demonstrated in § 2, we adopt the group-fairness notion of demo-
+graphic parity, as the (weighted) parity between the number of
+sets selected from each group. Specifically, given the non-negative
+coefficients{𝑓1,···,𝑓𝑘}such that𝑘∑︁
+ℎ=1𝑓ℎ=1, a cover𝑋is called a
+fair cover if, for all groups gℎ∈G:|︁|︁𝑋∩Sℎ|︁|︁=𝑓ℎ|︁|︁𝑋|︁|︁.
+Two special cases based on this definition are the following:
+•Count-parity: when 𝑓ℎ=1
+𝑘,∀gℎ∈G, a fair set cover contains
+equal number from each group.
+•Ratio-parity: when 𝑓ℎ=𝑚ℎ
+𝜇,∀gℎ∈G, a fair set cover maintains
+the original ratios of groups in S.
+Note that our fairness definition is not limited to the above cases,
+and includes any fractions (represented as rational numbers) speci-
+fied by non-negative coefficients 𝑓ℎsuch that∑︁𝑘
+ℎ=1𝑓ℎ=1.
+Next, we define the main problem studied in this paper. Let
+𝑤:S→R+be a weighted function over the sets in S. By slightly
+abusing the notation, for a family of sets 𝐶⊆S, we define𝑤(𝐶)=∑︁
+𝑆∈𝐶𝑤(𝑆). The goal is to find a fair cover such that the selected
+sets in the cover has the smallest sum of weights.
+Definition 1 (Generalized Fair Weighted Set Cover prob-
+lem (GFWSC)). Given a universe of 𝑛elements𝑈, a set of𝑘groups
+G={g1,..., g𝑘}, a fraction𝑓ℎfor each gℎ∈G such that their sum is
+equal to 1, a family of 𝜇subsetsS, such that each 𝑆∈S is associated
+with a group g(𝑆)∈G , and a weighted function 𝑤:S→R+the goal
+is to compute a fair cover 𝑋𝑤such that∑︁
+𝑆∈𝑋𝑤𝑤(𝑆)is minimized.If all weights are equal to 1, i.e.,𝑤(𝑆)=1, for every set 𝑆∈S,
+then we call it the Generalized Fair Set Cover problem (GFSC). In
+the next sections, we denote the optimum fair cover with 𝑋∗.
+Under the count-parity fairness model, we call our problems, the
+Fair Set Cover (FSC) problem, and the Fair Weighted Set Cover
+(FWSC) problem, respectively. Even though the GFSC and GFWSC
+problems are more general than FSC and FWSC, respectively, the al-
+gorithmic techniques to solve FSC and FWSC can straightforwardly
+be extended to handle GFSC and GFWSC with (almost) the same
+guarantees. In order to simplify the analysis, in the next sections
+we focus on FSC and FWSC. Then in § 6, we describe how our
+algorithms can be extended to handle GFSC and GFWSC.
+Hardness and Assumption. It is straightforward to show that
+FSC is NP-Complete. Recently, Barnabò et al. [ 5] showed that FSC
+cannot be approximated with any sublinear approximation factor
+in polynomial time unless P=NP. However, if there are enough
+sets from each group, then in the next sections we design efficient
+algorithms with provable approximation guarantees. More formally,
+for the FSC problem, we assume that every group contains at least
+Ω(log𝑛)|𝑋∗|
+𝑘sets. For simplicity, in the next sections we also as-
+sume that every group has the same number of sets, i.e., for every
+group g𝑗it holds that 𝑚𝑗=𝑚. Hence,𝜇=𝑚𝑘. This only helps
+us to analyze our algorithms with respect to only three variables,
+𝑚,𝑘,𝑛 . All our algorithms can be extended to more general cases
+(where each color does not contain the same number of sets). We
+further highlight it in § 7, where we run experiments on datasets
+with𝑚𝑖≠𝑚𝑗for𝑖≠𝑗.
+𝜀-unfairness. In some applications, the definition of fair cover
+might be too restrictive. Recall, that a cover 𝑋is fair if there are
+exactly𝑓ℎ|𝑋|elements from color gℎin cover𝑋(zero-unfairness).
+Instead, we define the notion of 𝜀-unfair cover. Given a parameter
+𝜀∈(0,1), a cover𝑋is called an 𝜀-unfair cover if, for each group
+gℎ∈G, it holds that(1−𝜀)𝑓ℎ|𝑋|≤|𝑋∩Sℎ|≤( 1+𝜀)𝑓ℎ|𝑋|. In
+other words, instead of requesting exactly 𝑓ℎ|𝑋|elements from
+each group gℎ, we request any number of elements in the range
+[(1−𝜀)𝑓ℎ|𝑋|,(1+𝜀)𝑓ℎ|𝑋|]. Notice that any fair cover is also an 𝜀-
+unfair cover. All our defined problems can be studied in this setting.
+For example, we consider the 𝜀-GFSC problem that has the same
+objective with GFSC problem, but the returned cover should be an
+𝜀-unfair cover instead of a fair cover. In § 6.1, we show how our
+new approximation algorithms for the GFSC problem can be used
+to approximate the 𝜀-GFSC problem.
+4 Fair Set Cover
+4.1 Naive Algorithm
+We first describe a naive algorithm for the FSC problem with large
+approximation ratio. We execute the well-known greedy algorithm
+for the standard set cover problem (its pseudocode is shown in the
+technical report [ 14]) and let𝑋be the set cover we get. If 𝑋does not
+satisfy the fairness requirements, we arbitrarily add the minimal
+number of sets from each color to equalize the number of sets
+from each color in our final cover. The pseudocode is shown in the
+technical report [14].
+Lemma 1. There exists a(︁𝑘(ln𝑛+1))︁-approximation algorithm
+for the FSC problem that runs in 𝑂(𝑚·𝑘·𝑛)time.
+191
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada. Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh
+S
+1
+S
+7S
+2
+S
+3S
+4
+S
+5S
+6
+P oints
+R ed sets
+Blue sets
+Figure 1: An illustration of a set system for the Fair Set Cover
+(FSC) problem, consisting of 16 points and 7 sets: 4 red sets
+and 3 blue sets. The Greedy Fair Set Cover algorithm (§ 4.2)
+selects(𝑆1,𝑆5)as the first pair of red and blue sets, followed by
+the pairs(𝑆3,𝑆6)and(𝑆4,𝑆1). The standard greedy algorithm
+selects the sets 𝑆1,𝑆2,𝑆3,𝑆4, and𝑆7, resulting in 4 red sets and
+1 blue set, highlighting its lack of fairness.
+4.2 Greedy Algorithm
+In this subsection we propose an algorithm for the FSC problem
+whose approximation ratio does not depend on𝑘. For simplicity
+of explanation, we describe our algorithm for the case we have
+only two demographic groups, i.e., G={g1,g2}. In the end, our
+algorithm can be extended almost verbatim to 𝑘>2groups.
+Let𝑋=∅be the cover we construct and let 𝑈−=𝑈be the
+set of uncovered elements. We repeat the following steps until
+𝑈−=∅. In each iteration, we find the pair of sets(𝑆𝐴,𝑆𝐵)such that
+i) sets𝑆𝐴,𝑆𝐵cover the maximum number of uncovered elements,
+i.e.,𝑈−∩(𝑆𝐴∪𝑆𝐵)is maximized, and ii) set 𝑆𝐴has color g1and
+𝑆𝐵has color g2, i.e., g(𝑆𝐴)=g1andg(𝑆𝐵)=g2. Once we find
+𝑆𝐴,𝑆𝐵we update the set 𝑈−removing the new covered element,
+𝑈−←𝑈−\(𝑆𝐴∪𝑆𝐵), and we add 𝑆𝐴,𝑆𝐵in𝑋. In the end, after
+covering all elements ( 𝑈−=∅), we return 𝑋. The pseudocode of
+our algorithm is shown in the technical report [14].
+Analysis. First, it is straightforward to see that 𝑋is a fair cover.
+The algorithm stops when there is no uncovered element so 𝑋is
+a cover. In every iteration, we add exactly one set of color g1and
+one set of color g2, so𝑋is a fair cover.
+Lemma 2.|𝑋|≤( ln𝑛+1)·|𝑋∗|.
+Proof: For each pair 𝑆𝐴,𝑆𝐵∈S, let𝑆𝐴,𝐵=𝑆𝐴∪𝑆𝐵. We consider
+the following instance of the set cover problem. We define the set
+𝑈′=𝑈andS′={𝑆𝑖,𝑗|𝑆𝑖∈S1,𝑆𝑗∈S2}. Let𝐶∗be the optimum
+solution of the set cover instance (𝑈′,S′). Any fair cover returned
+by our algorithm can be straightforwardly mapped to a valid set
+cover for(𝑈′,S′). Hence, by definition, we have |𝐶∗|≤1
+2|𝑋∗|.
+Recall that the standard greedy algorithm for the set cover prob-
+lem returns a(ln𝑛+1)-approximation. We show that our algo-
+rithm implements such a greedy algorithm and returns a (ln𝑛+1)-
+approximation in the set cover instance (𝑈′,S′). At the beginning
+of an iteration 𝑖, without loss of generality, assume that our algo-
+rithm has selected the pairs (𝑆𝐴1,𝑆𝐵1),...,(𝑆𝐴𝑖−1,𝑆𝐵𝑖−1), so the sets
+𝑆𝐴1,𝐵1,...,𝑆𝐴𝑖−1,𝐵𝑖−1have been selected for the set cover instance(𝑈′,S′). Let𝑈−be the set of uncovered elements in 𝑈′at the be-
+ginning of the 𝑖-th iteration. Let 𝑆𝐴𝑗,𝐵𝑗be the set inS′that covers
+the maximum number of elements in 𝑈−. We consider two cases.
+If𝑆𝐴𝑗∉{𝑆𝐴1,...,𝑆𝐴𝑖−1}and𝑆𝐵𝑗∉{𝑆𝐵1,...,𝑆𝐵𝑖−1}, then by
+definition our greedy algorithm selects the pair (𝑆𝐴𝑗,𝑆𝐵𝑗)so the
+set𝑆𝐴𝑗,𝐵𝑗is added in the cover of the set cover instance (𝑈′,S′).
+Next, consider the case where 𝑆𝐴𝑗∉{𝑆𝐴1,...,𝑆𝐴𝑖−1}and𝑆𝐵𝑗∈
+{𝑆𝐵1,...,𝑆𝐵𝑖−1}(the proof is equivalent if the set 𝑆𝐴𝑗has been
+selected before). Since there are enough sets from each group, let
+𝑆𝐵ℎbe a set with color g2such that𝑆𝐵ℎ∉{𝑆𝐵1,...,𝑆𝐵𝑖−1}. By
+definition, we have |𝑆𝐴𝑗,𝐵ℎ∩𝑈−| ≥ |𝑆𝐴𝑗,𝐵𝑗∩𝑈−|. Our greedy
+algorithm selects the pair 𝑆𝐴∗,𝑆𝐵∗such that|(𝑆𝐴∗∪𝑆𝐵∗)∩𝑈−|
+is maximized, and 𝑆𝐴∗∉{𝑆𝐴1,...,𝑆𝐴𝑖−1},𝑆𝐵∗∉{𝑆𝐵1,...,𝑆𝐵𝑖−1}.
+Hence,|𝑆𝐴∗,𝐵∗∩𝑈−|=|(𝑆𝐴∗∪𝑆𝐵∗)∩𝑈−|≥|(𝑆𝐴𝑗∪𝑆𝐵ℎ)∩𝑈−|≥
+|(𝑆𝐴𝑗∪𝑆𝐵𝑗)∩𝑈−|=|𝑆𝐴𝑗,𝐵𝑗∩𝑈−|.
+In every iteration, our greedy algorithm computes a set 𝑆𝐴,𝐵that
+covers the most uncovered elements in 𝑈′. Let𝐶be the family of
+sets returned by the greedy algorithm executed on (𝑈′,S′). Every
+selected set in 𝐶is a pair of sets inS. Hence,|𝑋|≤2(ln𝑛+1)|𝐶∗|.
+Furthermore,|𝐶∗|≤1
+2|𝑋∗|as shown in the first paragraph of the
+proof. We conclude that |𝑋|≤( ln𝑛+1)|𝑋∗|. □
+Notice that there exists 𝑂(𝑚1𝑚2)=𝑂(𝑚2)pairs of sets with
+different colors. At the beginning of the algorithm, for every pair
+of sets we compute the number of elements they cover in 𝑂(𝑚2𝑛)
+time. Each time we cover a new element we update the counters
+in𝑂(𝑚2)time. In total, our algorithm runs in 𝑂(𝑚2𝑛)time. This
+algorithm can be extended to 𝑘groups, straightforwardly. In each
+iteration, we find the 𝑘sets of different color that cover the the
+most uncovered elements. The running time increases to 𝑂(𝑚𝑘𝑛).
+Theorem 1. There exists an(ln𝑛+1)-approximation algorithm
+for the FSC problem that runs in 𝑂(𝑚𝑘𝑛)time.
+While our algorithm returns an 𝑂(log𝑛)-approximation, which
+is the best that someone can hope for the FSC, the running time
+depends exponentially on the number of groups 𝑘. Next, we propose
+two faster𝑂(poly(𝑛,𝑚,𝑘))time randomized algorithms with the
+same asymptotic approximation.
+4.3 Faster algorithms
+The expensive part of the greedy algorithm is the selection of 𝑘
+sets of different color that cover the most uncovered elements, in
+every iteration. We focus on one iteration of the greedy algorithm.
+Intuitively, we need to find 𝑘sets, each from a different color, that
+maximizes the coverage over the uncovered elements. We call this
+problem, max 𝑘-color cover. Formally,
+Definition 2 (max 𝑘-color cover). Consider a set 𝑈−⊆𝑈,
+called the set of uncovered elements, a family of sets S−⊆S, called
+the sets not selected so far, and the value 𝑘showing the number colors
+(groups) that sets belong to. Our goal is to select 𝑘sets𝑋⊆S−, one
+from each color, such that|︁|︁𝑋∩𝑈−|︁|︁is maximized.
+The max𝑘-color cover problem is NP-complete. The proof is
+straight-forward using the reduction from the traditional max 𝑘-
+cover (MC) problem by creating 𝑘copies of each original set, while
+assigning each copy to a unique color. Now the max-cover problem
+has a solution with coverage ℓ, if and only if the 𝑘-color MC has a
+192
+
+Fair Set Cover KDD ’25, August 3–7, 2025, Toronto, ON, Canada.
+solution with coverage ℓ. Since max 𝑘-color cover is NP-complete,
+we propose constant-approximation polynomial algorithms for it.
+1
+2- approximation algorithm. Inspired by [ 32], where the au-
+thors also study a version of the max 𝑘-color cover problem (to
+design efficient algorithms for the fair regret minimizing set prob-
+lem), we propose the following algorithm. We run the standard
+greedy algorithm for the max 𝑘-cover problem. Let 𝑌=𝑈−be
+the current set of uncovered elements in 𝑈−and let𝐶=∅be the
+family of𝑘sets we return. The next steps are repeated until |𝐶|=𝑘
+or𝑌=∅. In each iteration, the algorithm chooses the set 𝑆∈S−
+such that|𝑆∩𝑌|is maximized. If 𝐶contains another set with color
+g(𝑆), then we remove 𝑆and we continue with the next iteration.
+Otherwise, we add 𝑆in𝐶and we update 𝑌=𝑌\𝑆. If𝑌=∅and𝐶
+does not contain sets from all groups, we add in 𝐶exactly one set
+per missing group.
+Theorem 2. There exists an1
+2-approximation algorithm for the
+max𝑘-color cover problem that runs in 𝑂(𝑛𝜇)time.
+Proof: By definition, 𝐶contains one set from each group in G,
+so it is a valid 𝑘-color cover. Let 𝑆ℎbe theℎ-th set added in 𝐶.
+Without loss of generality, assume g(𝑆ℎ)=gℎ, forℎ=1,...,𝑘 .
+Let𝑂∗={𝑂1,...,𝑂𝑘} ⊆ S−be the optimum solution for the
+max𝑘-color cover problem. Without loss of generality, assume that
+g(𝑂ℎ)=gℎ, forℎ=1,...,𝑘 . We have,
+|𝐶|=𝑘∑︂
+𝑖=1|𝑆𝑖\(∪ℎ=1..𝑖−1𝑆ℎ)|≥𝑘∑︂
+𝑖=1|︁|︁𝑂𝑖\∪𝑖−1
+ℎ=1𝑆ℎ|︁|︁≥𝑘∑︂
+𝑖=1|𝑂𝑖\𝐶|
+≥|𝑂∗|−|𝐶|.
+Hence|𝐶|≥1
+2|𝑂∗|. Each time we cover a new element, we update
+the number of uncovered elements in each set in 𝑂(𝜇)time. Hence,
+the algorithm runs in 𝑂(𝑛𝜇)time. □
+(1−1
+𝑒)-approximation algorithm. We design a randomized
+LP-based algorithm for the max 𝑘-color cover problem with better
+approximation ratio. For every element 𝑒𝑗∈𝑈−we define the
+variable𝑦𝑗. For every set 𝑆𝑖∈S−we define the variable 𝑥𝑖. Let
+S−
+ℎ={𝑆∈S−|𝑆∈Sℎ}. The next Integer Program represents an
+instance of the max 𝑘-color cover problem.
+max∑︂
+𝑗𝑦𝑗
+∑︂
+𝑖:𝑆𝑖∈S−
+ℎ𝑥𝑖=1,∀gℎ∈G
+∑︂
+𝑖:𝑒𝑗∈𝑆𝑖𝑥𝑖≥𝑦𝑗,∀𝑒𝑗∈𝑈−
+𝑥𝑖∈{0,1},∀𝑆𝑖∈S−, 𝑦𝑗∈{0,1},∀𝑒𝑗∈𝑈−
+We then replace the integer variables to continuous ( 𝑥𝑖∈[0,1]and
+𝑦𝑗∈[0,1]) and use a polynomial time LPsolver to compute the
+solution of the LPrelaxation. Let 𝑥∗
+𝑖,𝑦∗
+𝑗be the values of the variables
+in the optimum solution. For every group gℎ∈G, we sample exactly
+one set fromS−
+ℎ, using the probabilities {𝑥∗
+𝑖|𝑆𝑖∈S−
+ℎ}. Let𝐶be
+the family of 𝑘sets we return.
+Analysis. By definition 𝐶contains exactly one set from every
+group g𝑖. Next, we show the approximation factor.Lemma 3. An element𝑒𝑗is covered by a set in 𝐶with probability
+at least(1−1
+𝑒)𝑦∗
+𝑗.
+Proof: By definition, 𝑒𝑗is not covered by a set in S−
+ℎwith proba-
+bility
+1−∑︂
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖≤𝑒−∑︁
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖.
+The inequality holds because of the well know inequality 1+𝑥≤
+𝑒𝑥for every𝑥∈R. Hence,
+𝑃𝑟[𝑒𝑗∉𝐶]=∏︂
+gℎ∈G(1−∑︂
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖)≤∏︂
+gℎ∈G𝑒−∑︁
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖
+=𝑒−∑︁
+gℎ∈G∑︁
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖=𝑒−∑︁
+𝑖:𝑒𝑗∈𝑆𝑖𝑥∗
+𝑖≤𝑒−𝑦∗
+𝑗.
+We conclude that 𝑃𝑟[𝑒𝑗∈𝐶]≥1−𝑒−𝑦∗
+𝑗≥(1−1
+𝑒)𝑦∗
+𝑗. □
+Lemma 4. The expected number of elements covered by sets in 𝐶
+is at least(1−1
+𝑒)OPT , where OPT is the number of covered elements
+in the optimum solution for the max 𝑘-color cover problem.
+Proof: LetOPT𝐿𝑃=∑︁
+𝑗𝑦∗
+𝑗be the optimum solution of the LP
+above. Let𝑍𝑗be a random variable which is 1if𝑒𝑗is covered in 𝐶,
+and0otherwise. We have
+𝐸[︂∑︂
+𝑗𝑍𝑗]︂
+=∑︂
+𝑗𝐸[𝑍𝑗]=∑︂
+𝑗𝑃𝑟[𝑍𝑗=1]=∑︂
+𝑗𝑃𝑟[𝑒𝑗∈𝐶]
+≥∑︂
+𝑗(1−1
+𝑒)𝑦∗
+𝑗=(1−1
+𝑒)OPT𝐿𝑃≥(1−1
+𝑒)OPT.
+□
+LetL(𝑎,𝑏)be the running time to solve an LPwith𝑎constraints
+and𝑏variables. Our algorithm for the max 𝑘-color cover problem
+runs in𝑂(L(𝑛+𝑘,2𝑛+2𝜇))time.
+Putting everything together, we conclude with the next theorem.
+Theorem 3. There exists a randomized (1−1
+𝑒)-approximation
+algorithm for the max 𝑘-color cover problem that runs in 𝑂(L(𝑛+
+𝑘,2𝑛+2𝜇))time. The approximation factor holds in expectation.
+Faster algorithm for FSC. We combine the results from Theo-
+rem 1 and Theorem 3 (or Theorem 2) to get a faster algorithm for the
+FSC problem. In each iteration of the greedy algorithm from Theo-
+rem 1 we execute the algorithm from Theorem 3 (or Theorem 2).
+The pseudocode of the overall method is shown in the technical
+report [14].
+It is known [ 51] that the greedy algorithm for the standard Set
+Cover problem, where in each iteration it selects a set that covers a
+𝛽-approximation (for 𝛽<1) of the maximum number of uncovered
+elements returns a1
+𝛽(ln𝑛+1)-approximation. From the proof of
+Lemma 2 we mapped the FSC problem to an instance of the standard
+set cover problem, so the approximation ratio of our new algorithm
+is𝑒
+𝑒−1(ln𝑛+1)(or2(ln𝑛+1)).
+The algorithm from Theorem 3 runs in 𝑂(L(𝑛+𝑘,2𝑛+2𝑚·𝑘)).
+We execute this algorithm in every iteration of the greedy algorithm.
+In the worst case the greedy algorithm selects all sets in S, so a loose
+upper bound on the number of iterations is 𝑂(𝑚). The number of
+iterations can also be bounded as follows. If 𝐼Greedy is the number
+of iterations of the greedy algorithm, then by definition it holds
+that𝑘·𝐼Greedy≤𝑒
+𝑒−1(ln𝑛+1)|𝑋∗|⇔𝐼Greedy =𝑂(|𝑋∗|
+𝑘log𝑛).
+193
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada. Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh
+Theorem 4. There exists a randomized𝑒
+𝑒−1(ln𝑛+1)-approximation
+algorithm for the FSC problem that runs in 𝑂(|𝑋∗|
+𝑘L(𝑛+𝑘,2𝑛+2𝑚·
+𝑘)log𝑛)time. The approximation factor holds in expectation. Fur-
+thermore, there exists a 2(ln𝑛+1)-approximation algorithm that runs
+in𝑂(|𝑋∗|·𝑛·𝑚·log𝑛)time.
+5 Weighted Fair Set Cover
+Throughout this section we define Δ=𝑤max
+𝑤min, where𝑤max=
+max{𝑤(𝑆𝑖)|𝑆𝑖∈S} and𝑤min=min{𝑤(𝑆𝑖)|𝑆𝑖∈S} . In this section
+we need the assumption that for every group gℎ∈Gthere are at
+leastΩ(Δlog𝑛)·|𝑋∗|
+𝑘sets. In Appendix A, we show that a naive
+algorithm for the FWSC, similar to the naive algorithm we proposed
+for the FSC returns a 𝑘Δ(ln𝑛+1)-approximation algorithm that
+runs in𝑂(𝑚·𝑘·𝑛)time.
+Theorem 5. There exists a 𝑘Δ(ln𝑛+1)-approximation algorithm
+for the FWSC problem that runs in 𝑂(𝑚·𝑘·𝑛)time.
+5.1 Greedy Algorithm
+For simplicity, we describe our algorithm for the case we have
+only two demographic groups, i.e., G={g1,g2}. In the end, our
+algorithm can be extended almost verbatim to 𝑘>2groups. Let
+𝑋𝑤=∅be the cover we construct and let 𝑈−=𝑈be the set of
+uncovered elements. We repeat the following steps until 𝑈−=∅.
+In each iteration, we find the pair of sets (𝑆𝐴,𝑆𝐵)such that i) the
+ratio𝑤(𝑆𝐴)+𝑤(𝑆𝐵)
+|(𝑆𝐴∪𝑆𝐵)∩𝑈−|is minimized, and ii) g(𝑆𝐴)=g1andg(𝑆𝐵)=
+g2. Once we find 𝑆𝐴,𝑆𝐵we update the set 𝑈−removing the new
+covered element, 𝑈−←𝑈−\(𝑆𝐴∪𝑆𝐵), and we add 𝑆𝐴,𝑆𝐵in𝑋𝑤.
+In the end, after covering all elements we return 𝑋𝑤.
+The proof of the next Theorem can be found in Appendix A.
+Theorem 6. There exists a Δ(ln𝑛+1)-approximation algorithm
+for the FWSC problem that runs in 𝑂(𝑚𝑘𝑛)time.
+5.2 Faster algorithm
+The expensive part of the previous greedy algorithm is the selection
+of𝑘sets of different color to minimize the ratio of the weight over
+the number of new covered elements, in every iteration. We focus
+on one iteration of the greedy algorithm, solving an instance of
+theweighted max 𝑘-color cover problem. We are given a set of 𝑛
+elements𝑈−⊆𝑈, a family of 𝜇setsS−⊆S, a weight function
+𝑤:S−→R+, and a set of 𝑘groupsGsuch that every set belongs
+to a group. The goal is to select a family of exactly 𝑘sets𝑋𝑤⊆S−
+such that i)𝑤(𝑋𝑤)
+|𝑋𝑤∩𝑈−|is minimized, and ii) there exists exactly one
+set from every color gℎ∈G. An efficient constant approximation
+algorithm for the weighted max 𝑘-color cover problem could be
+used in every iteration of the greedy algorithm to get an 𝑂(Δlog𝑛)-
+approximation in 𝑂(poly(𝑛,𝑚,𝑘))time.
+Algorithm. We design a randomized LP-based algorithm for
+the weighted max 𝑘-color cover problem. We note that our new
+algorithm has significant changes compared to the LP-based algo-
+rithm we proposed for the unweighted case. The reason is that the
+objective of finding a fair cover 𝑋𝑤that minimizes𝑤(𝑋𝑤)
+|𝑋𝑤∩𝑈−|can not
+be represented as a linear constraint. Instead, we iteratively solve
+a constrained version of the weighted max 𝑘-color cover problem:
+For a parameter 𝜏∈[1,𝑛], the goal is to select a family of exactly 𝑘
+sets𝑋𝑤⊂S−such that i)𝑤(𝑋𝑤)is minimized, ii)|𝑋𝑤∩𝑈−|≥𝜏,
+and iii) there exists exactly one set from every color gℎ∈Gin𝑋𝑤.The main idea of our algorithm is that for each 𝜏=1,...,𝑛 , we
+compute efficiently an approximate solution for the constrained
+weighted max 𝑘-color cover problem. In the end, we return the best
+solution over all 𝜏’s.
+For every𝜏=1,...,𝑛 , we solve an instance of the constrained
+weighted max 𝑘-color cover problem. The next Integer Program
+represents an instance of the constrained weighted max 𝑘-color
+cover problem with respect to 𝜏.
+min∑︂
+𝑆𝑖∈S−𝑤(𝑆𝑖)𝑥𝑖
+∑︂
+𝑖:𝑆𝑖∈S−
+ℎ𝑥𝑖=1,∀gℎ∈G
+∑︂
+𝑖:𝑒𝑗∈𝑆𝑖𝑥𝑖≥𝑦𝑗,∀𝑒𝑗∈𝑈−
+∑︂
+𝑒𝑗∈𝑈−𝑦𝑗≥𝜏
+𝑥𝑖∈{0,1},∀𝑆𝑖∈S−, 𝑦𝑗∈{0,1},∀𝑒𝑗∈𝑈−
+We then replace the integer variables to continuous ( 𝑥𝑖∈[0,1]and
+𝑦𝑗∈[0,1]), and use a polynomial time LPsolver to compute the
+solution of the LPrelaxation.
+Let𝑥(𝜏)
+𝑖,𝑦(𝜏)
+𝑗be the values of the variables in the optimum
+solution. For every group gℎ∈G, we sample exactly one set from
+S−
+ℎ, using the probabilities 𝑥(𝜏)
+𝑖. Let𝐶(𝜏)be the sampled family of
+𝑘sets. If|𝐶(𝜏)∩𝑈−|<1
+2(1−1
+𝑒)𝜏, then we skip the sampled family
+𝐶(𝜏)and we re-sample from scratch. In the end, let 𝐶(𝜏)be a family
+of𝑘sets returned by the sampling procedure such that |𝐶(𝜏)∩
+𝑈−| ≥1
+2(1−1
+𝑒)𝜏. Finally, we compute 𝑟(𝜏)=∑︁
+𝑆𝑖∈S−𝑤(𝑆𝑖)𝑥(𝜏)
+𝑖
+|𝐶(𝜏)∩𝑈−|.
+We repeat the algorithm for every 𝜏=1,...,𝑛 , and we set 𝜏∗=
+arg min𝜏=1,...,𝑛𝑟(𝜏). We return the family of 𝑘sets𝐶(𝜏∗).
+We show the proof of the next theorem in Appendix A.
+Theorem 7. There exists a randomized𝑒
+𝑒−1-approximation al-
+gorithm for the weighted max 𝑘-color cover problem that runs in
+𝑂(𝑛L(𝑛+𝑘,2𝑛+2𝜇+1)+𝑘𝑛3)time. The approximation factor and
+the running time hold in expectation.
+Faster algorithm for FWSC. We combine the results from The-
+orem 6 and Theorem 7 and we get the following theorem.
+Theorem 8. There exists a randomized𝑒
+𝑒−1Δ(ln𝑛+1)-approximation
+algorithm for the FWSC problem that runs in 𝑂(𝑚𝑛·L(𝑛+𝑘,2𝑛+
+2𝑚·𝑘+1)+𝑚𝑘𝑛3)time. The approximation factor and the running
+time hold in expectation.
+6 Generalized Fair Set Cover
+Due to space limitations, we defer the details of our algorithms for
+GFSC and GFWSC problems to Appendix B. Recall that in these
+problems, each color gℎis associated with a fraction 𝑓ℎ∈[0,1], such
+that∑︁
+gℎ∈G𝑓ℎ=1, and the goal is to return a (fair) cover 𝑋such
+that|𝑋∩Sℎ|
+|𝑋|=𝑓ℎ, for every color gℎ∈G. Our greedy (and faster
+greedy) algorithms from the previous sections (for the FSC and
+FWSC problems) easily extend to GFSC and GFWSC with similar
+theoretical guarantees. The high level idea is the following: In each
+iteration of the greedy algorithm, instead of selecting exactly one
+set from each group, the algorithm selects 𝑝ℎsets for group gℎ. The
+194
+
+Fair Set Cover KDD ’25, August 3–7, 2025, Toronto, ON, Canada.
+selection is made such that 𝑓ℎ=𝑝ℎ∑︁
+g𝑗∈G𝑝𝑗is satisfied for each group
+gℎ. As the greedy algorithm operates for integral rounds, the final
+set cover also satisfies the ratio constraints.
+6.1 The𝜀-GFSC problem
+Our algorithms for the GFSC problem can be used for the less
+constrained 𝜀-GFSC problem, where, instead of zero unfairness,
+the goal is to ensure a maximum unfairness of 𝜀. Particularly, in
+Theorem 9, we show that a solver for the GFSC problem provides a
+good approximation for the 𝜀-GFSC problem.
+Theorem 9. Any𝛼-approximation algorithm for the GFSC prob-
+lem is an((1+𝜀)𝛼)-approximation for the 𝜀-GFSC problem.
+Proof: Let𝑋∗be the optimum solution to the GFSC problem and
+let𝑋∗𝜀be the optimum solution to the 𝜀-GFSC problem. Starting
+from𝑋∗𝜀we find a feasible cover 𝑋′𝜀for the GFSC problem. Initially,
+𝑋′𝜀=𝑋∗𝜀. Then, we add(1+𝜀)𝑓ℎ|𝑋∗𝜀|−|𝑋∗𝜀∩Sℎ|sets from group
+gℎ, in𝑋∗𝜀. In the end, notice that |𝑋′𝜀∩Sℎ|=(1+𝜀)𝑓ℎ|𝑋∗𝜀|for
+every group gℎ, and|𝑋′𝜀|=(1+𝜀)|𝑋∗𝜀|. Hence,|𝑋′
+𝜀∩Sℎ|
+|𝑋′𝜀|=𝑓ℎ,
+so𝑋′𝜀is a solution for the GFSC problem and |𝑋∗| ≤ |𝑋′𝜀|, by
+definition. We conclude that |𝑋∗|≤|𝑋′𝜀|=(1+𝜀)|𝑋∗𝜀|. LetAbe an
+𝛼-approximation algorithm for the GFSC and 𝑋be the output of
+A. We have,|𝑋|≤𝛼|𝑋∗|≤( 1+𝜀)𝛼|𝑋∗𝜀|. □
+As a result, all the approximation algorithms proposed in the pre-
+vious sections also approximate the 𝜀-GFSC problem with asymp-
+totically the same approximation ratio of 𝑂(ln𝑛).
+7 Experiments
+Having theoretically analyzed the proposed algorithms, in this
+section we experimentally evaluate the efficiency and efficacy of
+our algorithms on real and synthetic datasets.
+Datasets: We use 3 real datasets, one semi-synthesized, and one
+synthesized dataset to evaluate our methods. Our first set of ex-
+periments (§ 7.1 and § 7.2) are motivated by Example 1 (Team of
+Experts Formation), for which we use the Strategeion Resume
+Skills dataset1. It consists of 1986 rows as candidates with differ-
+ent skills. The skill of a candidate is shown as 218 binary columns
+each corresponding to one skill. As an AI Ethics benchmark, the
+dataset also contains demographic group information, including
+the (binary) gender. The male-to-female ratio in this dataset is 0.8.
+Motivated by the "Fair survey data collection" application demon-
+strated in § 2, we use two additional real datasets: Adult Income
+andCOMPAS (§ 7.3). The Adult Income Dataset [ 18] consists
+of demographic information for individuals, which was extracted
+from the 1994 Census database. The dataset is primarily used to
+predict whether a person earns more than $50,000 per year based
+on various attributes (14 columns and 48,842 rows). Gender is the
+sensitive attribute in this dataset. The COMPAS dataset [ 1] con-
+tains data used to evaluate the effectiveness and fairness of the
+COMPAS recidivism prediction algorithm. This dataset includes
+criminal history, jail and prison time, demographics, and COM-
+PAS risk scores for defendants from Broward County, Florida (52
+columns and 18,316 rows), while race is the sensitive attribute.
+The third set of experiments (§ 7.4) are using the POPSIM [38]
+dataset. POPSIM is a semi-synthetic dataset that combines popu-
+lation statistics along with a geo-database. It is used to represent
+1http://bit.ly/2SeS4xoindividual-level data with demographic information for the state of
+Illinois. Race is used as the sensitive attribute (5 groups). It contains
+2,000,000 locations represented as points in R2.
+For the last set of experiments, (§ 7.5), we synthesized a dataset
+consisting of a number of points as ground set and a family of sub-
+sets with different coverage distributions on this ground set. More
+details about this dataset is provided in the technical report [14].
+Algorithms: We compare four algorithms over all the experi-
+ments: Standard Greedy Set Cover (SC), Naive Algorithm (Naive),
+Fair Greedy Algorithm (AllPick), Efficient or Faster Fair Greedy
+Algorithm (EffAllPick). We also compare these algorithms with
+the optimum solution (using the brute-force algorithm for Standard
+Set Cover (Opt-SC) and a brute-force algorithm for Fair Set Cover
+(Opt-Fair)). These algorithms simply check all possible covers to
+find the best optimum solution. For the generalized version of the
+problem, we compared the General Fair Set Cover (GFSC) algo-
+rithm and the Efficient or Faster GFSC algorithm (EffGFSC) along
+with Naive and Standard Greedy (SC) algorithms.
+Evaluation metrics: We used three metrics for evaluating the
+algorithms: (a) Output Cover Size, (b) Fairness Ratio, and (c)
+Running Time. Following our (general) fairness definition in § 3,
+let the ratio of each group gℎ∈ G in the cover 𝑋be𝑅(gℎ)=
+1
+𝑓ℎ|︁|︁{𝑋∩Sℎ}|︁|︁. Then, the Fairness ratio is computed asmin gℎ∈G𝑅(gℎ)
+max gℎ∈G𝑅(gℎ).
+This formula for count-parity, for example, computes the least
+common group size divided by the most common group size in the
+output cover of an algorithm. A fair algorithm with zero unfairness
+should return a fairness ratio of 1, while the smaller the fairness
+ratio, the more unfair the algorithm.
+All implementations have been run on a server with 24 core CPU
+and 128 GB memory with Ubuntu 18 as the OS. The code is publicly
+available2.
+7.1 Validation
+We begin our experiments by validating the problem we study. To
+do so, we used the Resume Skills dataset. Using all of its 1986 rows,
+we sampled different set of skills 𝑁varying from 10 to 20 out of all
+218 available skills as the ground set. We run the brute-force algo-
+rithms opt-SC andopt-FSC to find the optimal solutions for the set
+cover and the fair set cover, respectively. Next, we used the greedy
+algorithm for set cover and EffAllPick to find the approximate fair
+set cover. The results are shown in the following.
+Algorithm Avg. Fairness Ratio Avg. Cover Size
+Opt-SC 0.48 3.32
+Greedy-SC 0.55 3.42
+Opt-FSC 1.00 3.75
+EffAllPick 1.00 3.90
+First, we observe that both optimal and approximation solutions for
+the set cover were significantly unfair. This verifies that without
+considering fairness, set cover can cause major biases. On the other
+hand, formulating the problem as the fair set cover, both the optimal
+and the approximation algorithms have zero unfairness. Second,
+comparing the average cover size for Opt-SC andOpt-FSC, one can
+verify a negligible price of fairness as the avg. cover size increased
+by only 0.43 (less than half a set). Last but not least, even though
+EffAllPick has a log(𝑛)approximation ratio, in practice, its cover
+2https://github.com/UIC-InDeXLab/fair_set_cover
+195
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada. Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh
+(a) Output size
+ (b) Fairness
+ (c) Time
+Figure 2: Resume Skills: Comparing (a) the size of output cover, (b) fairness (1 is the max fairness), and (c) running time for
+various ground set sizes 𝑁. The results are averaged over 20 samples for each 𝑁.
+(a) Output size
+ (b) Fairness
+ (c) Time
+Figure 3: Comparing (a) the size of output cover, (b) fairness based on ratio-parity, and (c) running time (averaged over 20
+samples) on Adult dataset. The x-axis shows different values of 𝑀(size of family of subsets or rows in the sampled dataset).
+size is close to the optimal, since its avg. cover size was only 0.15
+sets more than the optimal (Opt-FSC).
+7.2 Resume Skills
+In this experiment, we run experiments of team of experts forma-
+tion, using the Resume Skills dataset on various settings, while
+using gender to specify the demographic groups male andfemale .
+Let𝑁denote the size of the ground set (i.e., the skill sets to cover).
+For each𝑁∈{15,20,···,50}, we sample 𝑁skills 20 times. We ran
+the experiments on 20 different sample sets (each sample set has a
+random set of 𝑁skills) and averaged the results. The goal is to find
+a fair and minimal set of candidates that cover the ground set. The
+results, aggregated on all 20 samples, are presented in Fig. 2. The
+error bounds in all plots show the standard deviation.
+Size of the output cover. From Fig. 2a, while the output size of
+the Naive Algorithm is noticeably larger than the greedy set cover
+(SC), the output sizes for AllPick and EffAllPick algorithms are very
+close to SC, as the error bars of the three algorithms highly overlap.
+Also, it is worth to note that, despite the fact that EffAllPick has
+a slightly worse approximation ratio than AllPick, in practice, the
+two algorithms performed near-identical.
+Fairness Ratio. As one can see in Fig. 2b, all our algorithms
+(Naive, AllPick, and EffAllPick) guarantee a fairness ratio of 1,
+but the standard greedy set cover algorithm returned significantly
+unfair outputs in all cases, all having a fairness ratio less than 0.8.
+The Running Time. From Fig. 2c, we can see that the AllPick
+Algorithm takes a significantly longer time to find a fair cover. Thisis not surprising because its time complexity is exponential to the
+number of colors. On the other hand, using the LPand Randomized
+Rounding in EffAllPick significantly reduces this running time.
+7.3 Fair Survey Collection
+In this part, we used two real datasets Adult andCOMPAS. In the
+Adult dataset, the gender is the sensitive attribute. The female-to-
+male ratio is almost 0.5 in this dataset. We aim to select a subset
+of individuals (rows) from this dataset to form a set of candidates
+for a survey that is fair and covers a set of all 30 available criteria.
+For example, we want to have at least one individual with ’High
+Income’ and at least one with ’Low Income’. Similarly, we want
+to cover all categories of ’Marital Status’ in the final cover. These
+30 criteria are our ground-set and the individuals are the family
+of sets that build the cover. The same procedure is followed for
+theCOMPAS dataset. We considered 3 races, "African-American,"
+"Caucasian," and "Hispanic," as the demographic groups (colors)
+and defined a set of 30 criteria to satisfy in the final cover (i.e.,
+the set of individuals chosen for a survey). We picked a sample of
+size𝑀from the rows of these datasets. This sample corresponds
+to a set of individuals covering the ground set (the criteria). In
+other words,|S|=𝑀whereSis the family of subsets defined in
+the Set Cover problem. We repeated the experiments on different
+values of𝑀={2000,3000,..., 10000}. The results of these runs are
+illustrated in Fig 3 and in the technical report [ 14]. The results are
+similar to the previous experiment § 7.2.
+196
+
+Fair Set Cover KDD ’25, August 3–7, 2025, Toronto, ON, Canada.
+(a) Output size
+ (b) Fairness
+ (c) Time
+Figure 4: Comparing (a) the size of output cover, (b) fairness based on ratio-parity, and (c) running time (averaged over 5 samples)
+on POPSIM dataset. The x-axis shows different values of 𝑁(size of the ground set).
+7.4 POPSIM
+This dataset contains a set of colored points in R2. Our coverage
+problem on this dataset can be defined as selecting a subset of
+points (e.g. for business license distribution or survey collection) to
+cover all the neighbors. Two points are considered neighbors if their
+distance is less than 𝑟for a fixed radius 𝑟. Based on this definition,
+each individual is a subset that covers a circle with a radius 𝑟of
+other individuals around it. For example, Fig. 12 in the technical
+report [ 14] shows an example of a fair cover and an unfair cover
+on a sampled subset of this dataset. Each point is an individual, and
+each circle shows a selected individual and its coverage.
+Similar to the previous experiments, we ran our methods on
+different number of elements (size of ground set). In Fig 4, we show
+the output size, fairness and running time of the algorithms over
+different sizes of the ground set (from 0.25M to 2M). The algorithm
+AllPick did not finish within 1hour so we exclude it from the
+figure. All observations are the same as in the other datasets: Our
+EffAillPick algorithm satisfies zero-fairness and it is competitive
+to SC with respect to the size of the output cover and the running
+time. The SC algorithm returns highly unfair outputs with fairness
+ratio less than 0.2in most cases.
+7.5 Extended results
+We use our synthetic data to verify our methods in different settings
+like Generalized Fair Set Cover and more demographic groups
+(colors). Due to space limitations, these experiments and the details
+of our synthetic datasets are provided in the technical report [ 14].
+8 Related Work
+Algorithmic fairness has received a lot of attention in the last few
+years. However, most of the recent work focuses on the intersection
+of fairness and Machine Learning [7, 36].
+Despite its importance, limited work has been done on algorith-
+mic fairness in the context of combinatorial problems [ 49]. Satisfy-
+ing fairness constraints while optimizing sub-modular functions
+is studied in [ 49]. Further examples include satisfying fairness in
+Coverage Maximization problems [ 2,4] and Facility Locations [ 29].
+In the red-blue set cover problem [ 10], the goal is to select a family
+of sets to cover all red points, while minimizing the number of blue
+points covered. In this body of work, the focus is on defining fair-
+ness on the point set (ground set). In other words, they assume the
+points belong to different demographic groups. In contrast, in thiswork, we define fairness on the family of sets. Fairness is also stud-
+ied in problems like Matching [ 19,20], Resource Allocation [ 35],
+Ranking [3, 52], Queue Systems [15], and Clustering [33, 44].
+There has been recent work studying fairness in the Hitting
+Set problem [ 25]. Although hitting set is the dual of the set cover
+problem, the definition of fairness used is different from ours. We
+define and guarantee perfect fairness based on demographic parity
+(count and ratio parity). In other words, we require an exact equal-
+ity (e.g., equality of count equality or exact color ratio) between
+demographic groups. By contrast, in [ 25], a hitting set is defined
+to be fair if does not contain many points from a color. They have
+upper bounds on the number of points (equivalent to the subsets in
+the set cover problem) that can be picked from any particular color.
+Furthermore, they design exact (fixed-parameter) algorithms with
+running time exponential in 𝑘and/or exponential on maximum
+number of sets that an element belongs to.
+The Fair Team Formation Problem and the fair set cover problem
+with two groups are also discussed in [ 5]. The authors form a fair
+team of experts, covering a specific set of skills and, at the same time,
+being fair in terms of sensitive attributes. They focus on the binary
+case where individuals only belong to one of the two demographic
+groups. They present inapproximability results and some some
+heuristics. The practical experiments are limited to a dataset of
+around 6 skills and 1211 individuals.
+9 Conclusion
+Set cover has an extended scope for solving real-world problems
+with societal impact. In this paper we revisited this problem through
+the lens of fairness. We adopted the group fairness notion of demo-
+graphic parity, and proposed a general formulation that extends
+to various cases such as count-parity and ratio-parity for binary
+and non-binary demographic groups. We formulated set cover and
+weighted set cover under fairness constraint and proposed approx-
+imation algorithms that (a) always guarantee fairness, (b) have
+(almost) the same approximation ratio and similar time complexity
+with the the greedy algorithm for set cover (without fairness). Our
+experiments on real and synthetic data across different settings
+demonstrated the high performance of our algorithms.
+Acknowledgments
+This work was supported in part by the National Science Founda-
+tion, Grant No. 2348919 and 2107290.
+197
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada. Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh
+References
+[1]J. Angwin, J. Larson, S. Mattu, and L. Kirchner. Propublica compas dataset, 2016.
+[2]A. Asudeh, T. Berger-Wolf, B. DasGupta, and A. Sidiropoulos. Maximizing
+coverage while ensuring fairness: A tale of conflicting objectives. Algorithmica,
+85(5):1287–1331, 2023.
+[3]A. Asudeh, H. Jagadish, J. Stoyanovich, and G. Das. Designing fair ranking
+schemes. In Proceedings of the 2019 international conference on management of
+data, pages 1259–1276, 2019.
+[4]S. Bandyapadhyay, A. Banik, and S. Bhore. On fair covering and hitting problems.
+InGraph-Theoretic Concepts in Computer Science: 47th International Workshop,
+WG 2021, Warsaw, Poland, June 23–25, 2021, Revised Selected Papers 47, pages
+39–51. Springer, 2021.
+[5]G. Barnabò, A. Fazzone, S. Leonardi, and C. Schwiegelshohn. Algorithms for fair
+team formation in online labour marketplaces. In Companion Proceedings of The
+2019 World Wide Web Conference, pages 484–490, 2019.
+[6]S. Barocas, M. Hardt, and A. Narayanan. Fairness in machine learning. Nips
+tutorial, 1:2017, 2017.
+[7] S. Barocas, M. Hardt, and A. Narayanan. Fairness and machine learning: Limita-
+tions and opportunities. MIT Press, 2023.
+[8]A. Bashardoust, S. Friedler, C. Scheidegger, B. D. Sullivan, and S. Venkatasubra-
+manian. Reducing access disparities in networks using edge augmentation. In
+Proceedings of the 2023 ACM Conference on Fairness, Accountability, and Trans-
+parency, pages 1635–1651, 2023.
+[9]V. Blanco and R. Gázquez. Fairness in maximal covering location problems.
+Computers & Operations Research, 157:106287, 2023.
+[10] R. D. Carr, S. Doddi, G. Konjevod, and M. Marathe. On the red-blue set cover
+problem. In Proceedings of the eleventh annual ACM-SIAM symposium on Discrete
+algorithms, pages 345–353, 2000.
+[11] M. Charikar and R. Panigrahy. Clustering to minimize the sum of cluster diam-
+eters. In Proceedings of the thirty-third annual ACM symposium on Theory of
+computing, pages 1–10, 2001.
+[12] X. Chen, D. Xu, Y. Xu, and Y. Zhang. Parameterized approximation algorithms
+for sum of radii clustering and variants. In Proceedings of the AAAI Conference
+on Artificial Intelligence, volume 38, pages 20666–20673, 2024.
+[13] D.-Y. Cho, Y.-A. Kim, and T. M. Przytycka. Chapter 5: Network biology approach
+to complex diseases. PLoS computational biology, 8(12):e1002820, 2012.
+[14] M. Dehghankar, R. Raychaudhury, S. Sintos, and A. Asudeh. Fair set cover. arXiv
+preprint arXiv:2405.11639, 2024.
+[15] A. Demers, S. Keshav, and S. Shenker. Analysis and simulation of a fair queueing
+algorithm. ACM SIGCOMM Computer Communication Review, 19(4):1–12, 1989.
+[16] S. R. Doddi, M. V. Marathe, S. S. Ravi, D. S. Taylor, and P. Widmayer. Approxima-
+tion algorithms for clustering to minimize the sum of diameters. In Scandinavian
+Workshop on Algorithm Theory, pages 237–250. Springer, 2000.
+[17] K. Donahue and J. Kleinberg. Fairness and utilization in allocating resources with
+uncertain demand. In Proceedings of the 2020 conference on fairness, accountability,
+and transparency, pages 658–668, 2020.
+[18] D. Dua and C. Graff. Uci machine learning repository: Adult data set, 2019.
+Accessed: 2024-05-20.
+[19] S. Esmaeili, S. Duppala, D. Cheng, V. Nanda, A. Srinivasan, and J. P. Dickerson.
+Rawlsian fairness in online bipartite matching: Two-sided, group, and individual.
+InProceedings of the AAAI Conference on Artificial Intelligence, volume 37, pages
+5624–5632, 2023.
+[20] D. García-Soriano and F. Bonchi. Fair-by-design matching. Data Mining and
+Knowledge Discovery, 34:1291–1335, 2020.
+[21] X. Ge. An application of covering approximation spaces on network security.
+Computers & Mathematics with Applications, 60(5):1191–1199, 2010.
+[22] P. Hansen and B. Jaumard. Cluster analysis and mathematical programming.
+Mathematical programming, 79(1-3):191–215, 1997.
+[23] J. Hirschman, S. Whitman, and D. Ansell. The black: white disparity in breast
+cancer mortality: the example of chicago. Cancer Causes & Control, 18:323–333,
+2007.
+[24] S. S. Hotegni, S. Mahabadi, and A. Vakilian. Approximation algorithms for
+fair range clustering. In International Conference on Machine Learning, pages
+13270–13284. PMLR, 2023.
+[25] T. Inamdar, L. Kanesh, M. Kundu, N. Purohit, and S. Saurabh. Fixed-parameter
+algorithms for fair hitting set problems. In 48th International Symposium on
+Mathematical Foundations of Computer Science, 2023.
+[26] T. Inamdar and K. Varadarajan. Capacitated sum-of-radii clustering: An fpt
+approximation. In 28th Annual European Symposium on Algorithms (ESA 2020),
+2020.
+[27] Y. Jiang, X. Wu, B. Chen, and Q. Hu. Rawlsian fairness in push and pull supply
+chains. European Journal of Operational Research, 291(1):194–205, 2021.
+[28] M. Jones, H. Nguyen, and T. Nguyen. Fair k-centers via maximum matching. In
+International conference on machine learning, pages 4940–4949. PMLR, 2020.
+[29] C. Jung, S. Kannan, and N. Lutz. A center in your neighborhood: Fairness in
+facility location. arXiv preprint arXiv:1908.09041, 2019.
+[30] J. Kleinberg, S. Mullainathan, and M. Raghavan. Inherent trade-offs in the fair
+determination of risk scores. In 8th Innovations in Theoretical Computer ScienceConference (ITCS 2017), 2017.
+[31] M. Kleindessner, P. Awasthi, and J. Morgenstern. Fair k-center clustering for
+data summarization. In International Conference on Machine Learning, pages
+3448–3457. PMLR, 2019.
+[32] Y. Ma and J. Zheng. Fair regret minimization queries. In International Conference
+on Intelligent Data Engineering and Automated Learning, pages 511–523. Springer,
+2021.
+[33] Y. Makarychev and A. Vakilian. Approximation algorithms for socially fair
+clustering. In Conference on Learning Theory, pages 3246–3264. PMLR, 2021.
+[34] C. Marcelle. Analysis of influencer marketing and social media diversity reflects
+visual bias. chantellemarcelle.com/influencer-marketing-reflects-social-media-
+diversity-issue/.
+[35] T. Mashiat, X. Gitiaux, H. Rangwala, P. Fowler, and S. Das. Trade-offs between
+group fairness metrics in societal resource allocation. In Proceedings of the 2022
+ACM Conference on Fairness, Accountability, and Transparency, pages 1095–1105,
+2022.
+[36] N. Mehrabi, F. Morstatter, N. Saxena, K. Lerman, and A. Galstyan. A survey on
+bias and fairness in machine learning. ACM computing surveys (CSUR), 54(6):1–35,
+2021.
+[37] C. Monma and S. Suri. Partitioning points and graphs to minimize the maximum
+or the sum of diameters. In Graph Theory, Combinatorics and Applications (Proc.
+6th Internat. Conf. Theory Appl. Graphs), volume 2, pages 899–912, 1989.
+[38] K. D. Nguyen, N. Shahbazi, and A. Asudeh. Popsim: An individual-level popula-
+tion simulator for equitable allocation of city resources. Algorithmic Fairness
+in Artificial intelligence, Machine learning and and Decision making (AFair-
+AMLD23), 2023.
+[39] D. Pessach and E. Shmueli. A review on fairness in machine learning. ACM
+Computing Surveys (CSUR), 55(3):1–44, 2022.
+[40] C. ReVelle, C. Toregas, and L. Falkson. Applications of the location set-covering
+problem. Geographical analysis, 8(1):65–76, 1976.
+[41] J. Rubin. A technique for the solution of massive set covering problems, with
+application to airline crew scheduling. Transportation Science, 7(1):34–48, 1973.
+[42] M. Simon. HP looking into claim webcams can’t see black people. CNN, 2009.
+[43] I. P. Swift, S. Ebrahimi, A. Nova, and A. Asudeh. Maximizing fair content spread
+via edge suggestion in social networks. Proceedings of the VLDB Endowment,
+15(11):2692–2705, 2022.
+[44] S. Thejaswi, B. Ordozgoiti, and A. Gionis. Diversity-aware k-median: Clustering
+with fair center representation. In Machine Learning and Knowledge Discovery in
+Databases. Research Track: European Conference, ECML PKDD 2021, Bilbao, Spain,
+September 13–17, 2021, Proceedings, Part II 21, pages 765–780. Springer, 2021.
+[45] T. Townsend. Most engineers are white and so are the faces they use to train
+software. Recode, 2017.
+[46] A. Tsang, B. Wilder, E. Rice, M. Tambe, and Y. Zick. Group-fairness in influence
+maximization. In Proceedings of the Twenty-Eighth International Joint Conference
+on Artificial Intelligence, IJCAI, pages 5997–6005. ijcai.org, 2019.
+[47] R. R. Vemuganti. Applications of set covering, set packing and set partitioning
+models: A survey. Handbook of Combinatorial Optimization: Volume1–3, pages
+573–746, 1998.
+[48] A. Vinicky. While a black-owned cannabis dispensary opens in chicago, critics
+say state’s equity work still falling short. WTTW, 2022.
+[49] Y. Wang, Y. Li, F. Bonchi, and Y. Wang. Balancing utility and fairness in submod-
+ular maximization (technical report). arXiv preprint arXiv:2211.00980, 2022.
+[50] R. Xu and D. Wunsch. Survey of clustering algorithms. IEEE Transactions on
+neural networks, 16(3):645–678, 2005.
+[51] N. E. Young. Greedy set-cover algorithms (1974-1979, chvátal, johnson, lovász,
+stein). Encyclopedia of algorithms, pages 379–381, 2008.
+[52] M. Zehlike, F. Bonchi, C. Castillo, S. Hajian, M. Megahed, and R. Baeza-Yates. Fa*
+ir: A fair top-k ranking algorithm. In Proceedings of the 2017 ACM on Conference
+on Information and Knowledge Management, pages 1569–1578, 2017.
+A Missing algorithms and proofs from § 5
+A.1 Naive Algorithm
+We first design a naive algorithm for the FWSC, similar to the naive
+algorithm we proposed for the FSC. We execute the well-known
+greedy algorithm for the weighted set cover problem in the instance
+(𝑈,S)without considering the colors of the sets. Let 𝐶be the family
+of sets returned by the greedy algorithm. Then we add arbitrary
+sets from each color to equalize the number of sets from each color
+in the final cover. Let 𝑋𝑤be the final set we return.
+If𝛼is the approximation factor of the greedy algorithm in the
+weighted set cover, we show that the naive algorithm returns
+an𝛼𝑘Δ-approximation. Let 𝐶∗be the optimum solution for the
+weighted set instance (𝑈,S)and𝑋∗𝑤be the optimum solution for
+198
+
+Fair Set Cover KDD ’25, August 3–7, 2025, Toronto, ON, Canada.
+the FWSC in the instance (𝑈,S,𝑤). Notice that 𝑤(𝑋∗𝑤)≥𝑤(𝐶∗).
+In the worst case, 𝐶contains all the sets from one of the colors g𝑡.
+As a result, for all other colors, we should add |𝐶|arbitrary sets. For
+eachℎ≤𝑘andℎ≠𝑡, let𝐴ℎbe the family of sets we added to 𝐶to
+form𝑋𝑤. Based on the definition, |𝐴ℎ|=𝑘for everyℎ=1,...,𝑘 ,
+and𝑋𝑤=𝐶∪(⋃︁
+ℎ≤𝑘,ℎ≠𝑡𝐴𝑗). We have:
+𝑤(𝑋𝑤)
+𝑤(𝑋∗𝑤)=𝑤(𝐶∪(⋃︁
+ℎ≤𝑘,ℎ≠𝑡𝐴𝑗))
+𝑤(𝑋∗𝑤)
+=𝑤(𝐶)
+𝑤(𝑋∗𝑤)+∑︂
+ℎ≤𝑘,ℎ≠𝑡𝑤(𝐴𝑗)
+𝑤(𝑋∗𝑤)≤𝑤(𝐶)
+𝑤(𝐶∗)+∑︂
+ℎ≤𝑘,ℎ≠𝑡𝑤(𝐴𝑗)
+𝑤(𝐶∗)
+≤𝛼+𝛼∑︂
+ℎ≤𝑘,ℎ≠𝑡𝑤(𝐴𝑗)
+𝑤(𝐶)≤𝛼(1+∑︂
+ℎ≤𝑘,ℎ≠𝑡Δ)=𝛼(1+(𝑘−1)Δ)=𝑘Δ𝛼
+We know that 𝛼=ln𝑛+1, so we conclude with Theorem 5.
+A.2 Proof of Theorem 6
+First, it is straightforward to see that 𝑋𝑤is a fair cover. The algo-
+rithm stops when there is no uncovered element so 𝑋𝑤is a cover.
+In every iteration, we add exactly one set of color g1and one set of
+color g2, so𝑋𝑤is a fair cover.
+Next, we show that our algorithm computes an Δ(ln𝑛+1)-
+approximation solution for the FWSC problem.
+Lemma 5.𝑤(𝑋𝑤)≤Δ(ln𝑛+1)·𝑤(𝑋∗𝑤).
+Proof: If𝑆𝐴,𝑆𝐵∈S, let𝑆𝐴,𝐵=𝑆𝐴∪𝑆𝐵. We define the set 𝑈′=𝑈
+andS′={𝑆𝑖,𝑗|𝑆𝑖∈S 1,𝑆𝑗∈S 2}. We also define the weighted
+function𝑤′:S′→R+such that𝑤′(𝑆𝐴,𝐵)=𝑤(𝑆𝐴)+𝑤(𝑆𝐵).
+Let𝐶∗be the optimum solution of the weighted set cover in-
+stance(𝑈′,S′,𝑤′). Any fair cover returned by our algorithm can
+be straightforwardly mapped to a valid weighted set cover for
+(𝑈′,S′). For example, if our algorithm selects a pair 𝑆𝐴,𝑆𝐵then
+it always holds that 𝑆𝐴,𝐵∈S′,|(𝑆𝐴∩𝑆𝐵)∩𝑈|=|𝑆𝐴,𝐵∩𝑈′|, and
+𝑤′(𝑆𝐴,𝐵)=𝑤(𝑆𝐴)+𝑤(𝑆𝐵). We have𝑤′(𝐶∗)≤𝑤(𝑋∗).
+Recall that the standard greedy algorithm for the weighted set
+cover problem returns an (ln𝑛+1)-approximation. We show that
+our algorithm implements a variation of such a greedy algorithm
+and returns a Δ(ln𝑛+1)-approximation in the weighted set cover in-
+stance(𝑈′,S′,𝑤′). In particular, we show that in any iteration, our
+algorithm chooses a pair of sets 𝑆𝐴,𝑆𝐵such that the set𝑤′(𝑆𝐴,𝐵)
+|𝑆𝐴,𝐵∩𝑈−|
+is aΔ-approximation of the best ratio among the available sets.
+At the beginning of an iteration 𝑖, assume that our algorithm has
+selected the pairs(𝑆𝐴1,𝑆𝐵1),...,(𝑆𝐴𝑖−1,𝑆𝐵𝑖−1), so the sets𝑆𝐴1,𝐵1,...,
+𝑆𝐴𝑖−1,𝐵𝑖−1have been selected for the set cover instance (𝑈′,S′). Let
+𝑈−be the set of uncovered elements in 𝑈′at the beginning of the
+𝑖-th iteration. Let 𝑆𝐴𝑗,𝐵𝑗be the set inS′(at the beginning of the 𝑖-th
+iteration) with the minimum𝑤′(𝑆𝐴𝑗,𝐵𝑗)
+|𝑆𝐴𝑗,𝐵𝑗∩𝑈−|. We consider two cases.
+If𝑆𝐴𝑗∉{𝑆𝐴1,...,𝑆𝐴𝑖−1}and𝑆𝐵𝑗∉{𝑆𝐵1,...,𝑆𝐵𝑖−1}, then by
+definition our greedy algorithm selects the pair (𝑆𝐴𝑗,𝑆𝐵𝑗)so the
+set𝑆𝐴𝑗,𝐵𝑗is added in the cover (𝑈′,S′).
+Next, consider the second case where 𝑆𝐴𝑗∉{𝑆𝐴1,...,𝑆𝐴𝑖−1}
+and𝑆𝐵𝑗∈{𝑆𝐵1,...,𝑆𝐵𝑖−1}. Since there are enough sets from each
+group, let𝑆𝐵ℎbe a set with color g2such that𝑆𝐵ℎ∉{𝑆𝐵1,...,𝑆𝐵𝑖−1}.
+By definition, we have |(𝑆𝐴𝑗∪𝑆𝐵ℎ)∩𝑈−|≥|(𝑆𝐴𝑗∪𝑆𝐵𝑗)∩𝑈−|.
+Hence, it holds that 𝑤(𝑆𝐵ℎ)≥𝑤(𝑆𝐵𝑗), otherwise we would have
+𝑤′(𝑆𝐴𝑗,𝐵ℎ)
+|𝑆𝐴𝑗,𝐵ℎ∩𝑈−|<𝑤′(𝑆𝐴𝑗,𝐵𝑗)
+|𝑆𝐴𝑗,𝐵𝑗∩𝑈−|, which is contradiction. By definitionit holds that Δ≥𝑤(𝑠𝐵ℎ)
+𝑤(𝑠𝐵𝑗). Our algorithm selects the pair such that
+𝑤(𝑆𝐴∗)+𝑤(𝑆𝐵∗)
+|(𝑆𝐴∗∪𝑆𝐵∗)∩𝑈−|is minimized. Putting everything together, we have,
+𝑤′(𝑆𝐴∗,𝐵∗)
+|𝑆𝐴∗,𝐵∗∩𝑈−|=𝑤(𝑆𝐴∗)+𝑤(𝑆𝐵∗)
+|(𝑆𝐴∗∪𝑆𝐵∗)∩𝑈−|≤𝑤(𝑆𝐴𝑗)+𝑤(𝑆𝐵ℎ)
+|(𝑆𝐴𝑗∪𝑆𝐵ℎ)∩𝑈−|
+≤𝑤(𝑆𝐴𝑗)+𝑤(𝑆𝐵ℎ)
+|(𝑆𝐴𝑗∪𝑆𝐵𝑗)∩𝑈−|≤𝑤(𝑆𝐴𝑗)+Δ·𝑤(𝑆𝐵𝑗)
+|(𝑆𝐴𝑗∪𝑆𝐵𝑗)∩𝑈−|≤Δ𝑤(𝑆𝐴𝑗)+𝑤(𝑆𝐵𝑗)
+|(𝑆𝐴𝑗∪𝑆𝐵𝑗)∩𝑈−|.
+It is known [ 51] that if a greedy algorithm for the weighted set
+cover computes a 𝛽-approximation of the best ratio in each iteration,
+then the algorithm returns a 𝛽(ln𝑛+1)-approximation. Hence,
+𝑤(𝑋𝑤)≤Δ(ln𝑛+1)𝑤′(𝐶∗)≤Δ(ln𝑛+1)𝑤(𝑋∗𝑤)⇔𝑤(𝑋𝑤)≤
+Δ(ln𝑛+1)𝑤(𝑋∗𝑤). □
+At the beginning of the algorithm, for every pair of sets we
+compute the number of elements they cover in 𝑂(𝑚2𝑛)time. Each
+time we cover a new element we update the counters in 𝑂(𝑚2)
+time. In total, our algorithm runs in 𝑂(𝑚2𝑛)time.
+Our algorithm can be extended to 𝑘groups, straightforwardly.
+In each iteration, we find the 𝑘sets𝑆𝐴1∈S1,...,𝑆𝐴𝑘∈S𝑘such
+that the ratio∑︁
+1≤𝑖≤𝑘𝑤(𝑆𝐴𝑖)
+|(⋃︁
+1≤𝑖≤𝑘𝑆𝐴𝑖)∩𝑈−|is minimized. The running time
+increases to 𝑂(𝑚𝑘𝑛).
+A.3 Proof of Theorem 7
+First, by definition, 𝐶(𝜏∗)contains exactly one set from every group
+g𝑖. Hence𝐶(𝜏∗)always satisfies the fairness requirement. Next, we
+show the approximation factor and the running time.
+We introduce some useful notation. Assume that the optimum
+solution for the weighted max 𝑘-color cover instance (𝑈−,S−,𝑤)
+has value OPT=OPT w
+𝜏′be the optimum solution covers 𝜏′elements
+in𝑈−and the sum of weights of all sets in the optimum solution
+isOPT𝑤. For any𝜏∈[1,𝑛], letOPT(𝜏)
+LP=∑︁
+𝑆𝑖∈S−𝑤(𝑆𝑖)𝑥(𝜏)
+𝑖, i.e.,
+the optimum solution of the LPwith parameter 𝜏. Finally, for 𝜏=
+1,...,𝑛 , let𝑍(𝜏)
+𝑖be the random variable which is 1if𝑆𝑖is selected
+in the cover, otherwise it is 0.
+Lemma 6. The expected weight of the family of sets 𝐶(𝜏)isOPT(𝜏)
+LP.
+Proof: The expected weight of 𝐶is𝐸[∑︁
+𝑖𝑍(𝜏)
+𝑖𝑤(𝑆𝑖)]=∑︁
+𝑖𝑤(𝑆𝑖)𝐸[𝑍(𝜏)
+𝑖]=
+∑︁
+gℎ∈G∑︁
+𝑆𝑖∈S−
+ℎ𝑤(𝑆𝑖)𝐸[𝑍(𝜏)
+𝑖]=∑︁
+gℎ∈G∑︁
+𝑆𝑖∈S−
+ℎ𝑤(𝑆𝑖)𝑥(𝜏)
+𝑖=OPT(𝜏)
+LP.
+□
+Lemma 7. Our randomized algorithm returns an𝑒
+𝑒−1-approximation
+for the weighted max 𝑘-color cover problem. The approximation factor
+holds in expectation.
+Proof:𝐸[∑︁
+𝑖𝑍(𝜏∗)
+𝑖𝑤(𝑆𝑖)]
+|𝐶(𝜏∗)∩𝑈−|=OPT(𝜏∗)
+LP
+|𝐶(𝜏∗)∩𝑈−|≤OPT(𝜏′)
+LP
+|𝐶(𝜏′)∩𝑈−|≤OPT(𝜏′)
+LP
+(1−1
+𝑒)𝜏′≤
+OPT𝑤
+(1−1
+𝑒)𝜏′=𝑒
+𝑒−1OPT. □
+Next, we focus on the running time analysis. In total we need
+to solve𝑛linear programs with 𝑛+𝑘variables and 2𝑛+2𝜇+1
+constraints, so the running time to execute all the linear programs
+is𝑂(𝑛L(𝑛+𝑘,2𝑛+2𝜇+1)). For each𝐶(𝜏)we sample, we compute
+|𝐶(𝜏)∩𝑈−|in𝑂(𝑘𝑛)time.
+It remains to bound the number of times we sample for every 𝜏
+to get|𝐶(𝜏)∩𝑈−|≥1
+2(1−1/𝑒)𝜏. Let𝑀(𝜏)
+𝑗be a random variable
+which is 1if𝑒𝑗is covered, and 0otherwise, if sampling according
+to𝑥(𝜏)
+𝑖is applied.
+Lemma 8.𝑃𝑟[∑︁
+𝑗𝑀(𝜏)
+𝑗≥1
+2(1−1
+𝑒)𝜏]≥1−1/𝑒
+2𝑛.
+199
+
+KDD ’25, August 3–7, 2025, Toronto, ON, Canada. Mohsen Dehghankar, Rahul Raychaudhury, Stavros Sintos, and Abolfazl Asudeh
+Proof: We first compute the expected value 𝐸[∑︁
+𝑗𝑀(𝜏)
+𝑗]. As we
+had in the proof of Lemma 3, 𝑃𝑟[𝑒𝑗is covered after sampling ]≥
+(1−1/𝑒)𝑦(𝜏)
+𝑗. We have𝐸[∑︁
+𝑒𝑗∈𝑈−𝑀(𝜏)
+𝑗]=∑︁
+𝑒𝑗∈𝑈−𝐸[𝑀(𝜏)
+𝑗] ≥
+∑︁
+𝑒𝑗∈𝑈−(1−1/𝑒)𝑦(𝜏)
+𝑗≥(1−1
+𝑒)𝜏.
+Let𝑀(𝜏)=∑︁
+𝑗𝑀(𝜏)
+𝑗. Using the reverse Markov inequality (for
+a random variable 𝑉such that𝑃𝑟[𝑉≤𝑎]=1for a number 𝑎∈
+R, then for𝑏<𝐸[𝑉], it holds𝑃𝑟[𝑉>𝑏] ≥𝐸[𝑉]−𝑏
+𝑎−𝑏), we have
+𝑃𝑟[𝑀(𝜏)>1
+2(1−1/𝑒)𝜏]≥𝐸[𝑀(𝜏)]−1
+2(1−1/𝑒)𝜏
+𝑛−1
+2(1−1/𝑒)𝜏
+≥(1−1/𝑒)𝜏−1
+2(1−1/𝑒)𝜏
+𝑛−1
+2(1−1/𝑒)𝜏=1
+2(1−1/𝑒)𝜏
+𝑛−1
+2(1−1/𝑒)𝜏≥1−1/𝑒
+2𝑛. □
+Notice that 𝑃𝑟[∑︁
+𝑗𝑀(𝜏)
+𝑗≥1
+2(1−1
+𝑒)𝜏]can be seen as a prob-
+ability of success in a geometric distribution. In expectation we
+need1
+𝑃𝑟[∑︁
+𝑗𝑀(𝜏)
+𝑗≥1
+2(1−1
+𝑒)𝜏]=𝑂(𝑛)trials to get a family of sets 𝐶(𝜏)
+that cover at least1
+2(1−1
+𝑒)𝜏elements in 𝑈−. Hence, we need to
+repeat the sampling procedure 𝑂(𝑛)times in expectation. Each
+time that we sample a family of 𝑘sets𝐶(𝜏), we spend𝑂(𝑘𝑛)time
+to compute|𝐶(𝜏)∩𝑈−|, so for each 𝜏we spend𝑂(𝑘𝑛2)expected
+time in addition to solving the LP. In total, our algorithm runs in
+𝑂(𝑛L(𝑛+𝑘,2𝑛+2𝜇+1)+𝑘𝑛3)expected time.
+B Missing algorithms and proofs from § 6
+As a pre-processing step, our algorithm computes 𝑝ℎfor each gℎas
+follows. Recall that each 𝑓ℎis rational. Without loss of generality,
+we can assume that each 𝑓ℎis represented in its simplest form. Let
+𝑝represent the least common multiple (LCM) of the denominators
+within the set of fractions 𝑓1,...,𝑓ℎ. Using standard techniques, 𝑝
+can be computed efficiently. Set 𝑝ℎ=𝑓ℎ·𝑝for each group 𝑔ℎ∈G.
+The performance of our algorithm will have a dependence on 𝑝.
+Hence, it is important to observe that 𝑝cannot exceed|S|=𝜇. This
+is because in order to satisfy the given fractional constraints, the
+size of any cover must be at least 𝑝. However, if 𝑝>𝜇, then this
+implies the given instance cannot admit such a fractional cover.
+In this section, we need the assumption that every group gℎ∈G
+contain at least Ω(log𝑛)𝑓ℎ|𝑋∗|sets. For simplicity, we also assume
+that every group contains the same number of sets, denoted by 𝑚.
+B.1 Greedy Algorithm
+The greedy algorithm for the generalized FSC is similar to the
+greedy algorithm from § 4.2. Instead of choosing one set from each
+color, in each iteration, we choose a family 𝐶of𝑝sets such that i) 𝐶
+contains𝑝ℎsets from group gℎ, and ii)𝐶covers the most uncovered
+elements in 𝑈. The proof of Lemma 2 can be applied straightfor-
+wardly to the generalized FSC, getting the same approximation
+guarantee. In each iteration we visit 𝑂(∏︁
+ℎ𝑚𝑝ℎ)=𝑂(𝑚𝑝)families
+of𝑝sets. We conclude to the next theorem.
+Theorem 10. There exists an(ln𝑛+1)-approximation algorithm
+for the Generalized FSC problem that runs in 𝑂(𝑚𝑝𝑛)time.
+B.2 Faster Algorithm
+In order to make the above algorithm faster, we use a generalized
+version of the randomized rounding introduced for the FSC. We
+define the next Integer Program. The only difference with the IP in
+§ 4.3 is that for every group gℎ, we should satisfy∑︁
+𝑖:𝑆𝑖∈S−
+ℎ𝑥𝑖=𝑝ℎ
+instead of∑︁
+𝑖:𝑆𝑖∈S−
+ℎ𝑥𝑖=1.
+max∑︂
+𝑗𝑦𝑗 (1)∑︂
+𝑖:𝑆𝑖∈S−
+ℎ𝑥𝑖=𝑝ℎ,∀gℎ∈G (2)
+∑︂
+𝑖:𝑒𝑗∈𝑆𝑖𝑥𝑖≥𝑦𝑗,∀𝑒𝑗∈𝑈−(3)
+𝑥𝑖∈{0,1},∀𝑆𝑖∈S−(4)
+𝑦𝑗∈{0,1},∀𝑒𝑗∈𝑈−(5)
+We then replace the integer variables to continuous, as following,
+and use a polynomial time LPsolver to compute the solution of the
+LPrelaxation. 𝑥𝑖∈[0,1],∀𝑆𝑖∈S−(6)
+𝑦𝑗∈[0,1],∀𝑒𝑗∈𝑈−(7)
+Let𝑥∗
+𝑖and𝑦∗
+𝑗be the values of variables in the optimum solution.
+We normalize the values 𝑥∗
+𝑖defining𝑧∗
+𝑖=𝑥∗
+𝑖/𝑝ℎfor every color
+gℎ∈G, and every𝑆𝑖∈S−
+ℎ. For each color gℎ, we sample uniformly
+at random𝑝ℎsets with replacement according to the probabilities
+𝑧∗
+𝑖. Let𝐶be the family of sets we sample.
+If for a color gℎ, the number of distinct sets picked from the
+sampling procedure is less than 𝑝ℎ, then we add arbitrary sets from
+this color in order to have exactly 𝑝ℎsets. Similarly to the proof of
+Lemma 3, we have,
+𝑃𝑟[𝑒𝑗not covered by a set in 𝐶]≤∏︂
+gℎ∈G⎛⎜
+⎝1−∑︂
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖
+𝑝ℎ⎞⎟
+⎠𝑝ℎ
+≤∏︂
+gℎ∈G⎛⎜
+⎝1
+𝑒∑︁
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖
+𝑝ℎ⎞⎟
+⎠𝑝ℎ
+=∏︂
+gℎ∈G1
+𝑒∑︁
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖
+=1
+𝑒∑︁
+gℎ∈G∑︁
+𝑖:𝑒𝑗∈𝑆𝑖,𝑆𝑖∈S−
+ℎ𝑥∗
+𝑖=1
+𝑒∑︁
+𝑖:𝑒𝑗∈𝑆𝑖𝑥∗
+𝑖≤1
+𝑒𝑦∗
+𝑗.
+Let𝑍𝑖be a random variable that returns 1if𝑒𝑗∈𝐶, and 0otherwise.
+We have,𝐸[∑︁
+𝑗𝑍𝑗]≥( 1−1
+𝑒)𝑂𝑃𝑇𝐿𝑃≥(1−1
+𝑒)𝑂𝑃𝑇 .
+After solving the LPinL(𝑛+𝑘,2𝑛+2𝑚·𝑘)time, we sample 𝑝ℎ
+times from each color gℎ. Overall, we spend 𝑂(L(𝑛+𝑘·2𝑛+2𝑚·𝑘)+
+𝑝)time. The randomized rounding algorithm is executed in every
+iteration of the greedy algorithm. The greedy algorithm executes
+𝑂(𝑚)iterations. Using an analysis similar to § 4.3, we bound the
+expected number of iterations to 𝑂(|𝑋∗|
+𝑝log𝑛). Following the same
+arguments as in § 4.3, we conclude with the next theorem.
+Theorem 11. There is a randomized𝑒
+𝑒−1(ln𝑛+1)-approximation
+algorithm for the Generalized FSC problem that runs in 𝑂(𝑚(𝑝+L(𝑛+
+𝑘,2𝑛+2𝑚·𝑘)))time. The approximation factor holds in expectation.
+The same algorithm also runs in 𝑂(|𝑋∗|
+𝑝L(𝑛+𝑘,2𝑛+2𝑚·𝑘)log𝑛)
+expected time.
+B.3 Extensions to GFWSC
+Using the results in § 5, all our algorithms for the weighted case
+can be extended to the generalized FSC. Skipping the details, we
+have the following theorem.
+Theorem 12. There exists a Δ(ln𝑛+1)-approximation algorithm
+for the Generalized FWSC problem that runs in 𝑂(𝑚𝑝𝑛)time.
+Furthermore, there exists a randomized𝑒
+𝑒−1Δ(ln𝑛+1)-approximation
+algorithm for the Generalized FWSC problem that runs in 𝑂(𝑚𝑛·
+L(𝑛+𝑘,2𝑛+2𝑚·𝑘+1)+𝑚𝑝𝑛3)time. The approximation factor
+and the running time hold in expectation.
+200
+
+Hierarchy To Score
+
+Paper
+  - Introduction
+    - Paragraph 1
+      - [6]
+      - [36]
+      - [39]
+      - [49]
+      - [3]
+      - [19]
+      - [20]
+      - [9]
+      - [17]
+      - [27]
+      - [46]
+      - [8]
+      - [43]
+      - [40]
+      - [47]
+      - [41]
+      - [13]
+      - [21]
+      - [42]
+      - [45]
+  - Application Demonstration
+    - Paragraph 1
+      - [30]
+      - [23]
+      - [48]
+      - [34]
+    - Paragraph 2
+      - [50]
+      - [24]
+      - [28]
+      - [31]
+      - [22]
+      - [37]
+      - [11]
+      - [16]
+      - [12]
+      - [26]
+      - [14]
+  - Preliminaries
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+      - [5]
+    - Paragraph 4
+  - Fair Set Cover
+    - Naive Algorithm
+      - Paragraph 1
+        - [14]
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+    - Greedy Algorithm
+      - Paragraph 1
+        - [14]
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+    - Faster algorithms
+      - Paragraph 1
+      - Paragraph 2
+        - [32]
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+        - [14]
+        - [51]
+      - Paragraph 6
+  - Weighted Fair Set Cover
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+    - Greedy Algorithm
+      - Paragraph 1
+    - Faster algorithm
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+  - Generalized Fair Set Cover
+    - [Section Lead-in]
+      - Paragraph 1
+    - The -GFSC problem
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+  - Experiments
+    - [Section Lead-in]
+      - Paragraph 1
+        - [18]
+        - [1]
+        - [38]
+        - [14]
+      - Paragraph 2
+    - Validation
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+    - Resume Skills
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+    - Fair Survey Collection
+      - Paragraph 1
+        - [14]
+    - POPSIM
+      - Paragraph 1
+      - Paragraph 2
+        - [14]
+    - Extended results
+      - Paragraph 1
+        - [14]
+  - Related Work
+    - Paragraph 1
+      - [7]
+      - [36]
+    - Paragraph 2
+      - [49]
+      - [2]
+      - [4]
+      - [29]
+      - [10]
+      - [19]
+      - [20]
+      - [35]
+      - [15]
+      - [33]
+      - [44]
+      - [25]
+    - Paragraph 3
+      - [5]
+  - Conclusion
+    - Paragraph 1
+[anthropic_full_paper_response] attempt=1/3
+Paper: 1.0
+
+Introduction: 0.06
+Paragraph 1: 0.06
+[6]: 0.004
+[36]: 0.004
+[39]: 0.004
+[49]: 0.006
+[3]: 0.004
+[19]: 0.003
+[20]: 0.003
+[9]: 0.003
+[17]: 0.003
+[27]: 0.003
+[46]: 0.003
+[8]: 0.003
+[43]: 0.003
+[40]: 0.004
+[47]: 0.004
+[41]: 0.002
+[13]: 0.002
+[21]: 0.002
+[42]: 0.002
+[45]: 0.002
+
+Application Demonstration: 0.05
+Paragraph 1: 0.02
+[30]: 0.004
+[23]: 0.003
+[48]: 0.003
+[34]: 0.003
+Paragraph 2: 0.03
+[50]: 0.002
+[24]: 0.003
+[28]: 0.003
+[31]: 0.003
+[22]: 0.002
+[37]: 0.002
+[11]: 0.002
+[16]: 0.002
+[12]: 0.003
+[26]: 0.003
+[14]: 0.003
+
+Preliminaries: 0.08
+Paragraph 1: 0.03
+Paragraph 2: 0.02
+Paragraph 3: 0.02
+[5]: 0.01
+Paragraph 4: 0.01
+
+Fair Set Cover: 0.30
+Naive Algorithm: 0.04
+Paragraph 1: 0.005
+[14]: 0.002
+Paragraph 2: 0.005
+Paragraph 3: 0.005
+Paragraph 4: 0.005
+Paragraph 5: 0.005
+Paragraph 6: 0.005
+Paragraph 7: 0.01
+Greedy Algorithm: 0.12
+Paragraph 1: 0.005
+[14]: 0.001
+Paragraph 2: 0.015
+Paragraph 3: 0.015
+Paragraph 4: 0.02
+Paragraph 5: 0.02
+Paragraph 6: 0.02
+Paragraph 7: 0.025
+Faster algorithms: 0.14
+Paragraph 1: 0.01
+Paragraph 2: 0.03
+[32]: 0.01
+Paragraph 3: 0.02
+Paragraph 4: 0.03
+Paragraph 5: 0.03
+[14]: 0.003
+[51]: 0.01
+Paragraph 6: 0.02
+
+Weighted Fair Set Cover: 0.18
+[Section Lead-in]: 0.03
+Paragraph 1: 0.015
+Paragraph 2: 0.015
+Greedy Algorithm: 0.06
+Paragraph 1: 0.06
+Faster algorithm: 0.09
+Paragraph 1: 0.01
+Paragraph 2: 0.01
+Paragraph 3: 0.01
+Paragraph 4: 0.02
+Paragraph 5: 0.01
+Paragraph 6: 0.01
+Paragraph 7: 0.01
+Paragraph 8: 0.01
+
+Generalized Fair Set Cover: 0.07
+[Section Lead-in]: 0.03
+Paragraph 1: 0.03
+The -GFSC problem: 0.04
+Paragraph 1: 0.005
+Paragraph 2: 0.005
+Paragraph 3: 0.02
+Paragraph 4: 0.01
+
+Experiments: 0.15
+[Section Lead-in]: 0.03
+Paragraph 1: 0.02
+[18]: 0.003
+[1]: 0.003
+[38]: 0.003
+[14]: 0.002
+Paragraph 2: 0.01
+Validation: 0.04
+Paragraph 1: 0.01
+Paragraph 2: 0.02
+Paragraph 3: 0.01
+Resume Skills: 0.03
+Paragraph 1: 0.005
+Paragraph 2: 0.01
+Paragraph 3: 0.005
+Paragraph 4: 0.005
+Paragraph 5: 0.005
+Fair Survey Collection: 0.02
+Paragraph 1: 0.02
+[14]: 0.003
+POPSIM: 0.02
+Paragraph 1: 0.005
+Paragraph 2: 0.015
+[14]: 0.003
+Extended results: 0.01
+Paragraph 1: 0.01
+[14]: 0.003
+
+Related Work: 0.03
+Paragraph 1: 0.005
+[7]: 0.002
+[36]: 0.001
+Paragraph 2: 0.015
+[49]: 0.002
+[2]: 0.001
+[4]: 0.001
+[29]: 0.001
+[10]: 0.001
+[19]: 0.001
+[20]: 0.001
+[35]: 0.001
+[15]: 0.001
+[33]: 0.001
+[44]: 0.001
+[25]: 0.002
+Paragraph 3: 0.01
+[5]: 0.008
+
+Conclusion: 0.01
+Paragraph 1: 0.01
+
+Citation Contributions
+
+[6]: 0.004
+[36]: 0.005
+[39]: 0.004
+[49]: 0.008
+[3]: 0.004
+[19]: 0.004
+[20]: 0.004
+[9]: 0.003
+[17]: 0.003
+[27]: 0.003
+[46]: 0.003
+[8]: 0.003
+[43]: 0.003
+[40]: 0.004
+[47]: 0.004
+[41]: 0.002
+[13]: 0.002
+[21]: 0.002
+[42]: 0.002
+[45]: 0.002
+[30]: 0.004
+[23]: 0.003
+[48]: 0.003
+[34]: 0.003
+[50]: 0.002
+[24]: 0.003
+[28]: 0.003
+[31]: 0.003
+[22]: 0.002
+[37]: 0.002
+[11]: 0.002
+[16]: 0.002
+[12]: 0.003
+[26]: 0.003
+[14]: 0.013
+[5]: 0.018
+[32]: 0.010
+[51]: 0.010
+[18]: 0.003
+[1]: 0.003
+[38]: 0.003
+[7]: 0.002
+[2]: 0.001
+[4]: 0.001
+[29]: 0.001
+[10]: 0.001
+[15]: 0.001
+[33]: 0.001
+[44]: 0.001
+[25]: 0.002
+[35]: 0.001

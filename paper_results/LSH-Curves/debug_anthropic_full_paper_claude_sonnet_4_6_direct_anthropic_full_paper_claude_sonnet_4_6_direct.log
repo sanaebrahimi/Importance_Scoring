@@ -1,0 +1,1770 @@
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+Use the provided hierarchy exactly as given.
+Do not add, remove, rename, merge, split, reorder, or invent nodes.
+Output every node exactly once, including nodes with score 0.
+Output nodes in the exact order they appear in the hierarchy.
+
+Scoring rules
+
+* The root paper node has total score 1.0.
+* For each parent node, distribute its score only among its immediate children.
+* Do not skip hierarchy levels or assign a parent's score directly to deeper descendants.
+* Child scores should approximately sum to the parent score. Exact normalization is handled after output.
+* Scores should be global scores relative to the entire paper, not local percentages.
+* Score scientific contribution, not length.
+* Assign higher scores to content central to the paper's technical contribution.
+* Assign lower scores to background, motivation, related work, summaries, and organizational text.
+
+Citation attribution
+
+* For a paragraph without citations, Citation Score = 0.
+* For a paragraph with citations, estimate what fraction of the paragraph's contribution depends on prior work. This is the paragraph Citation Score.
+* Allocate that citation-derived contribution across the cited references according to their importance in that paragraph.
+* If multiple citations play the same role, split them evenly.
+* Aggregate repeated appearances of the same citation into one final citation score.
+* Use citation identifiers exactly as they appear in the paper.
+
+Output Format
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+arXiv:1703.04040v1  [cs.CG]  11 Mar 2017Locality-sensitive hashing of curves∗
+Anne Driemel1and Francesco Silvestri2
+1 Department of Mathematics and Computer Science, Eindhove n University of
+Technology, The Netherlands
+adriemel@tue.nl
+2 Department of Information Engineering, University of Pad ova, Italy
+Theoretical Computer Science, IT University of Copenhagen , Denmark
+silvestri@dei.unipd.it
+Abstract
+We study data structures for storing a set of polygonal curve s in I Rdsuch that, given a query
+curve, we can eﬃciently retrieve similar curves from the set , where similarity is measured using
+the discrete Fréchet distance or the dynamic time warping di stance. To this end we devise the ﬁrst
+locality-sensitive hashing schemes for these distance mea sures. A major challenge is posed by the
+fact that these distance measures internally optimize the a lignment between the curves. We give
+solutions for diﬀerent types of alignments including const rained and unconstrained versions. For
+unconstrained alignments, we improve over a result by Indyk from 2002 [17] for short curves. Let
+nbe the number of input curves and let mbe the maximum complexity of a curve in the input. In
+the particular case where m≤α
+4dlogn, for some ﬁxed α >0, our solutions imply an approximate
+near-neighbor data structure for the discrete Fréchet dist ance that uses space in O(n1+αlogn)
+and achieves query time in O(nαlog2n) and constant approximation factor. Furthermore, our
+solutions provide a trade-oﬀ between approximation qualit y and computational performance: for
+any parameter k∈[m], we can give a data structure that uses space in O(22kmk−1nlogn+nm),
+answers queries in O(22kmklogn) time and achieves approximation factor in O(m/k).
+1998 ACM Subject Classiﬁcation F.2.2 Nonnumerical Algorithms and Problems
+Keywords and phrases Locality-Sensitive Hashing, Fréchet distance, Dynamic Ti me Warping
+1 Introduction
+We study nearest-neighbor searching for polygonal curves u nder the discrete Fréchet distance
+or the dynamic time warping distance. This problem has vario us applications in machine
+learning, information retrieval and classiﬁcation where t he recorded instances are curves.
+Dynamic time warping has shown to be useful for classiﬁcatio n of various types of data: sur-
+gical processes [10], whale singing [5], chromosomes [23], ﬁngerprints [22], electrocardiogram
+(ECG) frames [14], and vessel trajectories [30]. Originall y conceived for speech recognition,
+it is now being deployed as universal similarity measure for time series in the ﬁeld of data
+mining. The Fréchet distance is considered a useful similar ity measure for trajectories of
+moving objects [6, 11, 20, 31].
+Indyk and Motwani [19, 13] introduced the idea that hashing c ould enable faster nearest-
+neighbor searching in high-dimensional Euclidean spaces u sing a hashing scheme where near
+points are more likely to collide than far ones. They showed t hat such an approach can
+be used for the ( c, r)-near neighbor problem which is deﬁned as follows. Preprocess a set S
+∗Driemel has been supported by NWO Veni project “Clustering t ime series and trajectories (10019853)” .
+Silvestri has been supported by the European Research Counc il project “Scalable Similarity Search”
+(no. 614331) and by MIUR of Italy under project AMANDA.
+
+2 Locality-sensitive hashing of curves
+ofnpoints into a data structure that answers queries in the foll owing way: if there exists
+a point p∈Sthat lies within distance rfrom the query point q, then the data structure
+reports a point p′∈Sthat lies within distance crfrom q. In this paper, we study such
+locality-sensitive hashing schemes for the space of curves .
+1.1 State of the art
+In 2002, Indyk gave a deterministic and approximate near-ne ighbor data structure for the
+discrete Fréchet distance [17]. This data structure is to da te the only result known for
+this task and represents the state of the art. The data struct ure achieves approximation
+factor O(logm+ log log n), where mis the maximum length of a curve and nis the max-
+imum number of elements in the data structure. Further, the d ata structures uses space in
+O/parenleftBig
+|X|√m(m√mn)2/parenrightBig
+, where |X|is the size of the domain on which the curves are deﬁned.
+The query time is O/parenleftbig
+mO(1)logn/parenrightbig
+. The data structure precomputes all answers to queries
+with curves of length√m, leading to a very high space consumption.1
+In the group of ℓpdistances, the Fréchet distance most resembles the ℓ∞-distance, which
+is notoriously hard to embed into a low-dimensional ℓp-space, see also the discussion by Indyk
+in [15]. Indyk’s data structure for the discrete Fréchet dis tance is in fact an extension of his
+data structure for the ℓ∞-distance [15]. Any subset of ℓd
+∞can be embedded into the Fréchet
+metric2[18]. This embedding implies that, unless the strong expone ntial-time hypothesis
+fails, there exists no data structure for near-neighbor sea rching under the discrete Fréchet
+distance that achieves preprocessing time in O/parenleftbig
+n2−εpolym/parenrightbig
+, query time in O/parenleftbig
+n1−εpolym/parenrightbig
+for any ε >0, and approximation factor c <3. (see Appendix A for details). This suggests
+that the problem becomes hard for long curves, i.e., m∈ω(logn). Recently, Backurs
+and Sidiropoulos showed how to embed ﬁnite subsets of the Hau sdorﬀ distance into ℓ∞
+using constant distortion and constant dimension of the hos t space [2]. However, for the
+Fréchet distance, no non-trivial embeddings are known, see also the discussion in [18]. It is
+possible to embed any ﬁnite metric space into ℓp, for example, using the embedding due to
+Bourgain [25]. However, the high cost of computing the embed ding makes it unﬁt for use in a
+nearest-neighbor data structure. Another known approach t o proximity searching in metric
+spaces is to exploit a low doubling-dimension [1, 12]. Howev er, the doubling dimension of
+the Fréchet distance is inﬁnite, even if the metric space is r estricted to curves of constant
+length [9]. Recently Bartal et al. [3] gave lower bounds for embedding doubling spaces. Their
+result implies that a metric embedding of the Fréchet distan ce into an ℓp-space would have
+at least super-constant distortion. However, as noted earl ier, it is not even known how to
+obtain such an embedding.
+In general, there is little known in terms of data structures for the Fréchet distance.
+The authors are aware of the following few results which were developed for the classic
+(continuous) Fréchet distance. De Berg, Cook and Gudmundss on [7] study range counting
+queries for the set of subcurves that lie within distance rto a query line segment. Their data
+structure uses a partition tree to store compressed subcurv es. For any parameter n≤s≤n2,
+the space used by the data structure is in O(spoly log n). The queries are computed in time
+1Indyk also claims (without proof) a slightly diﬀerent bound using a trade-oﬀ parameter t≥2: approx-
+imation factor O((log m+ log log n)(t−1)), space O/parenleftBig/parenleftbig
+m2|X|/parenrightbigtm1/t
+n2t/parenrightBig
+and query time ( m+ log n)O(t).
+The space bound decreases at the cost of approximation and qu ery time as soon as t <logm; however,
+the trade-oﬀ disappear for larger values of tsince all bounds increase in tas soon as t≥logm.
+2In particular, one can use 3 dvertices to express each d-dimensional vector as a curve on a real line.
+
+A. Driemel and F. Silvestri 3
+inO/parenleftBig
+n√spoly log n/parenrightBig
+and uses a constant approximation factor. However, the data structure
+does not support more complex query curves than line segment s. A second data structure
+is due to Driemel and Har-Peled [8]. This data structure answ ers queries for the Fréchet
+distance of a subcurve to a query curve (the subcurve is speci ﬁed in the query). If the queries
+are line segments, an approximation factor of (1+ ε) can be achieved with logarithmic query
+time and linear space. Unlike the ℓ∞-metric, which can be evaluated in time that is linear
+in the dimension, evaluating a single Fréchet distance is be lieved to take time that is at
+least roughly quadratic in the complexity of the curves (the number of vertices) in the worst
+case [4]. The high time complexity can be credited to the fact that the distance measure
+optimizes over all possible monotone alignments of the two i nput sequences. Computing
+the discrete Fréchet distance, as well as dynamic time warpi ng, can be solved via dynamic
+programming. In both cases, the naive linear scan leads to O(nm2) query time for ﬁnding
+the nearest neighbor. For dynamic time warping (DTW) no data structures exist that give
+provable guarantees, however there exist many heuristics, see the work of Rakthanmanon
+et al. [26] (and references therein). Since DTW does not satisfy th e triangle inequality, it
+cannot be embedded into an ℓp-space.
+1.2 Our results
+Our ﬁrst result is a basic LSH scheme for the discrete Fréchet distance, which leads to a
+very eﬃcient LSH with approximation factor that is linear in the number of curve vertices.
+The scheme is described in Section 3 and it is surprisingly si mple: We snap the curves to
+a randomly shifted grid and remove consecutive duplicate ve rtices. It turns out that this
+simple scheme alleviates the alignment problem which sets t he Fréchet distance computation
+apart from the ℓ∞-distance. Next, we show in Section 4 that it is even possible to get
+constant approximation, at the cost of a lower collision pro bability for near curves. The
+second scheme randomly perturbs the vertices of the input cu rves independently and snaps
+the vertices to a ﬁxed grid instead of a randomly shifted grid . It is natural to ask if there
+exists an LSH scheme exhibiting a full-spectrum trade-oﬀ be tween collision probability and
+approximation. We positively answer to this question in Sec tion 5, with a scheme based on
+a random partition of the input curves, inspired by Indyk’s d ata structure [17], followed by
+the application of the basic scheme to each subsequence inde pendently.3
+All the LSH schemes achieve zero false-positives, meaning t hat no collisions happen
+between far curves. When applied to solve the ( c, r)-near neighbor problem, we obtain the
+results summarized in Table 1 (see also Section 2.3). It is in teresting to compare our bounds
+with the state of the art. The basic scheme of Theorem 7 provid es a data structure using
+almost linear space and O(mlogn) query time by allowing a linear approximation c=O(m).
+This query time always beats the trivial exact solution of sc anning all input curves for each
+query, which needs O/parenleftbig
+nm2/parenrightbig
+time. In comparison, Indyk’s result [17] provides a better
+approximation when m= Ω(log log n) but it uses exponential space and slightly higher
+query time. More generally, when curves are short m=o(logn), our basic result provides a
+good alternative to Indyk’s result due to the improved space . In the particular case where
+m≤α
+4dlognfor some ﬁxed α >0, we can answer queries using a constant approximation
+factor in O(nαlog2n) time and using O(n1+αlogn) space, using Theorem 9. When curves
+3Indeed, in Theorem 10, the collision probability for near cu rves is bounded by 2−3MforK=M(using
+Stirlings approximation for the binomial coeﬃcient), howe ver when summarizing our bounds we use
+the simpliﬁed bound from Corollary 11.
+
+4 Locality-sensitive hashing of curves
+Table 1 Our approximate near-neighbor data structure results for t he discrete Fréchet distance
+in comparison with the result by Indyk, assuming d=O(1) for simplicity. The ﬁrst four rows
+refer to the standard discrete Fréchet distance dF, while the last two rows dw,aFanddw,sFrefer to
+the anchored and speed constraints respectively. The input consists of npolygonal curves in I Rd,
+each of complexity at most m. The corresponding query results are achieved with high pro bability.
+The parameters k≥1 and ℓ≥1 trade-oﬀ space/query time and approximation, and paramet erw
+constrains the possible alignments. The ﬁrst entry in bi-cr iteria ( ·,·) denotes the distance approx-
+imation, while the second is the alignment approximation.
+Space Query time Approximation Reference
+dFO/parenleftbig
+|X|√m(m√mn)2/parenrightbig
+O/parenleftbig
+mO(1)logn/parenrightbig
+O(logm+ log log n) [17]
+O(nlogn+nm) O(mlogn) O(m) Thm. 7
+O(24mdnlogn+nm) O(24mdmlogn) O(1) Thm. 9
+O(22kmk−1nlogn+nm) O(22kmklogn) O(m/k) Cor. 11
+dw,aFO/parenleftBig/parenleftbig√
+2w/parenrightbig2m/ℓnlogn+nm/parenrightBig
+O/parenleftBig/parenleftbig√
+2w/parenrightbig2m/ℓmlogn/parenrightBig
+bi-criteria/parenleftBig
+4d3
+2ℓ,2ℓ−2/parenrightBig
+Thm. 14
+dw,sFO/parenleftBig/parenleftbig√
+2wℓ/parenrightbig2m/ℓnlogn+nm/parenrightBig
+O/parenleftBig/parenleftbig√
+2wℓ/parenrightbig2m/ℓmlogn/parenrightBig
+bi-criteria/parenleftBig
+4d3
+2ℓ, ℓ/parenrightBig
+Thm. 17
+have constant complexity, the basic LSH gives the ﬁrst eﬃcie nt data structure with constant
+approximation.
+We then address LSH for the discrete Fréchet distance under a lignment constraints in
+Section 6. It is natural to constrain the alignments between the vertices of a curve: this
+preserves important characteristics of the input curves an d it also reduces the actual time
+to compute the distance between curves (see e.g., [27, 21]). We target the anchored and
+bounded speed constraints that require, respectively, a ve rtex to be aligned with at most w
+vertices or to be aligned with vertices whose indices diﬀer b y at most w/2, for a suitable
+parameter w≥1 (for formal deﬁnitions see Section 2.2). Our scheme provid es the ﬁrst data
+structures for the ( c, r)-near neighbor problem with alignment constraints. Furth er, they
+exhibit a bi-criteria approximation: it is possible to redu ce space and query time with a
+weaker approximation on the distance but also on the alignme nt parameter w. Bounds are
+summarized in Table 1.
+In Section 7, we study which one of our schemes work for DTW. We show that the basic
+LSH applies to DTW with the same linear approximation, space and query bounds of the
+discrete Fréchet distance. In contrast, the techniques to i mprove the approximation factor
+under the Fréchet distance do not provide improvements for D TW. The LSH schemes for
+constrained distances also yields linear approximation fo r DTW distance, but maintains the
+trade-oﬀ between space/query time and the approximation on the alignment parameter w.
+We remark that a data structure for the ( c, r)-approximate near neighbor problem can
+be used as a building block for solving the c-approximate nearest neighbor problem. We
+refer to [28] for more details.
+2 Preliminaries
+2.1 Distance measures for curves
+Atime series (ortrajectory )4is a series ( p1, t1), . . . , (pm, tm) of measurements piof a signal
+taken at times ti. We assume 0 = t1< t 2< . . . < t m= 1 and mis ﬁnite. A time series
+4Usually, these are referred to as time series when d= 1 and trajectories when d >1.
+
+A. Driemel and F. Silvestri 5
+may be viewed as a continuous function P: [0,1]→I Rdby linearly interpolating p1, . . . , p m
+in order of ti,i= 1, . . . m . We obtain a polygonal curve with vertices p1=P(t1), . . . , p m=
+P(tm) and segments between piandpi+1called edges pipi+1={xpi+(1−x)pi+1|x∈[0,1]}.
+We will simply refer to Pas acurve . We denote the space of all curves in I Rdwith ∆d.
+We now recall the deﬁnitions of discrete Fréchet distance an d of the dynamic time warping
+distance between two curves. To this end we deﬁne the concept of traversal. Given two
+polygonal curves P=p1, . . . , p m1andQ=q1, . . . , q m2, atraversal
+T={(i1, j1),(i2, j2), . . . , (iℓ, jℓ)}
+is a sequence of pairs of indices referring to a pairing of vertices from the two curves with
+the following properties:
+(i)i1= 1, j1= 1, iℓ=m1, and jℓ=m2
+(ii)∀(ik, jk)∈T: (ik+1−ik)∈ {0,1} ∧(jk+1−jk)∈ {0,1}.
+(iii) ∀(ik, jk)∈T: (ik+1−ik) + (jk+1−jk)≥1.
+Intuitively, one can think of the traversal as a prescribed s chedule for simultaneously tra-
+versing the two curves, starting at the ﬁrst vertex of each cu rve, in every step the traversal
+advances by one vertex, either on one of the curves, or on both curves simultaneously, ﬁnally
+the traversal has to end at the last vertices of the two curves .
+We consider the maximum distance of two vertices paired by a t raversal as the cost
+incurred by this traversal. Let Tbe the set of possible traversals for two curves PandQ,
+then the Fréchet distance corresponds to the minimal cost of a traversal of the two curves.
+Likewise, if we deﬁne the cost of a traversal as the sum of dist ances between paired vertices,
+then the traversal with minimum cost corresponds to the dyna mic time warping distance.
+◮Deﬁnition 1. LetTbe the set of possible traversals for two curves PandQ. The discrete
+Fréchet distance dF(P, Q) between curves PandQis deﬁned as
+dF(P, Q) = min
+T∈Tmax
+(ik,jk)∈T/bar⌈blpik−qjk/bar⌈bl.
+◮Deﬁnition 2. LetTbe the set of possible traversals for two curves PandQ. The dynamic
+time warping (DTW) distance dDTW(P, Q) between curves PandQis deﬁned as
+dDTW(P, Q) = min
+T∈T/summationdisplay
+(ik,jk)∈T/bar⌈blpik−qjk/bar⌈bl.
+The discrete Fréchet distance satisﬁes the triangle inequa lity and is a pseudo-metric.
+This is not true for the DTW distance, since it does not satisf y the triangle inequality.
+We refer to a traversal realizing the distance of two curves a s an optimal traversal . We
+can interpret a traversal as the edges of a bipartite graph wh ere the nodes are the vertices
+of the two curves and the edges connect the pairs. The followi ng simple lemma holds for
+all distance measures. As a consequence, we assume in the pap er that an optimal traversal
+consists of disconnected stars, that we call components .
+◮Lemma 3. For any two curves P=p1, . . . , p m1andQ=q1, . . . , q m2, there always exists
+an optimal traversal Twith the following two properties:
+(i)Tconsists of at most m= min {m1, m2}disconnected components.
+(ii) Each component is a star, i.e., all edges of this compone nt share a common vertex.
+Proof. The ﬁrst part is immediate, since we can charge each componen t to a vertex of the
+shorter curve that is contained in it. To see the second part o f the claim, assume for the sake
+
+6 Locality-sensitive hashing of curves
+of contradiction that an optimal traversal has the pairs ( i, j),(i, j+ 1)( i+ 1, j+ 1) for some
+i, j(or the symmetric conﬁguration ( i, j),(i+1, j)(i+1, j+1)). In this case, the middle pair
+(i, j+ 1) can be removed without increasing the cost and without in validating the traversal
+properties. We can apply this reasoning repeatedly until ea ch component is a star. ◭
+2.2 Distances measures with constraints
+Anchored distances. A traversal Tis said w-anchored traversal if each vertex is paired with a
+vertex at distance at most w/2 (for simplicity we assume wto be even): namely, |i−j| ≤w/2
+for each ( i, j)∈T. Parameter wis called the width of the traversal. Such a traversal exists
+only if |m1−m2| ≤w/2, otherwise there would be unpaired vertices (e.g., the las t vertex
+of the longest curve). For two curves PandQwith lengths satisfying |m1−m2| ≤w/2, we
+deﬁne the w-anchored discrete Fréchet distance dw,aF(P, Q) and w-anchored DTW distance
+dw,aDTW (P, Q) as in Deﬁnitions 1 and 2 where Tis deﬁned as the set of all possible w-
+anchored traversals.
+Speed-constrained distances. A traversal Tis aw-speed traversal if each vertex is aligned
+with at most wvertices of the other curve: in other terms, the bipartite gr aph representing
+the traversal has degree at most w. Parameter wis called the speed of the traversal. (We
+overload the meaning of wsince the width and speed parameters play a similar role in ou r
+algorithms.) Note that a w-anchored traversal is a ( w+ 1)-speed traversal, but the opposite
+is not necessary true. A w-speed traversal exists only if 1 /w≤m1/m2≤w. For two curves
+PandQwith lengths satisfying 1 /w≤m1/m2≤w, we deﬁned the w-speed discrete Fréchet
+distance dw,sF(P, Q) and w-speed DTW distance dw,sDTW (P, Q) as in Deﬁnitions 1 and 2
+where Tis deﬁned as the set of all possible w-speed traversals.
+2.3 Locality-sensitive hashing
+We use the notion of asymmetric locality-sensitive hashing (see, e.g. [29]), deﬁned as follows:
+◮Deﬁnition 4. LetSbe the set of curves in I Rdand let d:S × S → I R+be a distance
+measure deﬁned on them. Given real values r >0,c >1, 0≤α1≤1 and 0 ≤α2≤1 with
+α1> α 2, a family Hof pairs of hash functions ( h1, h2) is called ( r, c, α 1, α2)-sensitive if for
+any two curves P, Q ∈ S
+(i) if d(P, Q)≤r, then P r(h1,h2)∈H(h1(P) =h2(Q))≥α1;
+(ii) if d(P, Q)> cr, then P r(h1,h2)∈H(h1(P) =h2(Q))≤α2.
+When h1=h2, we have the traditional deﬁnition of (symmetric) locality -sensitive hashing.
+The above scheme is asymmetric in the sense that there are two diﬀerent schemes and the
+guarantees only hold for curves PandQwhere Pwas hashed using the ﬁrst scheme and Q
+was hashed using the second scheme. This is useful, e.g., if t he application of the LSH is
+a nearest neighbor data structure, where comparisons only n eed to be done between input
+objects and query objects.
+The results reported in Table 1 follow by applying the standa rd framework for solving
+the ( c, r)-near neighbor problem with an ( r, c, α 1, α2)-sensitive hashing scheme H. For the
+sake of completeness, we sketch this process here.5A new family H′of hashing is construc-
+ted by concatenating k= max {1,logα2(1/n)}hash functions from H, so that the collision
+5We observe that the LSH schemes presented in this paper have l ong hash values (curves or array
+of curves). However, they can be shortened with traditional hashing (i.e., by mapping each value
+in [0, O(n)]), that allows for a more eﬃcient search in the hash tables g enerated by the LSH. This
+technique increases α2by an additive O(1/n) term.
+
+A. Driemel and F. Silvestri 7
+probability of far points is at most 1 /n. Then, each point in Sis inserted into L= (1/α1)k
+hash tables, each corresponding to a diﬀerent randomly chos en hash function from H′. For
+a query point q, the algorithm searches among all points that collide with qin the Lhash
+tables and stops as soon as a cr-near neighbor is found. When α2>0, the data structure
+requires O/parenleftbig
+n1+ρ+nm/parenrightbig
+memory words and query time O(Γnρ), where Γ = Ω( m) is the
+time required for computing the distance between two curves andρ= log α1/logα2. When
+α2= 0, the data structure requires O(n/α 1) memory words and query time O(m/α 1). Note
+that in this case the query time does not include Γ: the algori thm does not need to compute
+distances between qand points in the buckets since there are no false positives. For a given
+query, the data structures returns an approximate cr-near neighbor with constant probabil-
+ity. In order to obtain high probability (i.e., at least 1 −1/n) we repeat the above process
+logntimes, leading to log ndiﬀerent data structures. This increases space and query ti me
+by a O(logn) term.
+3 Linear approximation factor
+We ﬁrst present the basic LSH scheme in Section 3.1, and then i n Section 3.2 we analyze
+its correctness and performance for the discrete Fréchet di stance. The basic LSH has an
+approximation factor that is linear in the number of vertice s that a curve can have.
+3.1 Algorithm
+We use a randomly shifted grid in our hashing scheme. Let the c anonical d-dimensional grid
+of resolution δbe deﬁned as an evenly spaced point set in I Rd, as follows:
+Gδ=/braceleftBig
+(x1, . . . , x d)∈I Rd| ∀1≤i≤d∃j∈I N : xi=j·δ/bracerightBig
+.
+Consider a family of such grids parametrized by a shift t:
+/hatwideGt
+δ={p+t|p∈Gδ}.
+Choosing tuniformly at random from the half-open hypercube [0 , δ)dwe obtain a family of
+randomly shifted grids. Let P∈∆dbe a polygonal curve with vertices p1, . . . , p mand let
+ht
+δ: ∆d→∆dbe a hash function. The curve ht
+δ(P) is deﬁned as the result of the following
+two-stage construction.
+(i) We snap the curve to the grid /hatwideGt
+δ. More precisely, we replace each vertex piwith its
+closest grid point p′
+i= arg minq∈/hatwideGt
+δ/bar⌈blpi−q/bar⌈blto obtain the curve P′.
+(ii) We remove consecutive duplicates in P′. That is, we remove the vertex p′
+iif it is
+identical to p′
+i−1.
+LetHL
+δbe the family of hash functions ht
+δconstructed this way.
+3.2 Analysis
+◮Lemma 5. LetP, Q ∈∆dbe two curves with m1andm2points, respectively, and let
+m= min {m1, m2}. For any δ >0, it holds that
+P rHL
+δ/parenleftbig
+ht
+δ(P) =ht
+δ(Q)/parenrightbig
+≥1−/parenleftbigg
+2dm·dF(P, Q)
+δ/parenrightbigg
+.
+Proof. We bound the probability that PandQdo not hash to the same sequence. To
+this end, consider an optimal traversal TofPandQwith respect to the discrete Fréchet
+
+8 Locality-sensitive hashing of curves
+distance. By Lemma 3, we can assume that |T| ≤mand each component is a star. Let ℓ
+denote the number of components of T. For 1 ≤k≤ℓdenote with Ekthe event that not
+all vertices of the k-th component are snapped to the same grid point. This happen s only if
+at least one pair of vertices is separated in at least one dime nsion by the random shift t.
+Since the component is a star, there exists a vertex vof either PorQ, such that vis
+involved in all pairs of Tin the k-th component. Therefore, all vertices in this component
+have distance at most dF(P, Q) tov. Since tis uniformly distributed in [0 , δ)d, the probability
+that any pair is separated along any ﬁxed dimension is 2 dF(P, Q)/δ. As a consequence, event
+Ekhappens with probability at most 2 d·dF(P, Q)/δ.
+By a union bound over the ℓcomponents in T, we have that the probability of PandQ
+not being hashed to the same sequence is bounded by
+P r
+/uniondisplay
+1≤k≤ℓEk
+≤/summationdisplay
+1≤k≤ℓP r(Ek) = 2 dm·dF(P, Q)
+δ
+and the lemma follows. ◭
+◮Lemma 6. For any value of δand for any P, Q ∈∆d, if there exists a value of t∈[0, δ)d
+such that ht
+δ(P) =ht
+δ(Q), then it holds that dF(P, Q)≤√
+d·δ.
+Proof. In the case that ht
+δ(P) =ht
+δ(Q), it holds that dF(ht
+δ(P), ht
+δ(Q)) = 0. Snapping a
+curve to the randomly shifted grid changes the position of ea ch vertex by at most√
+d
+2·δ.
+Therefore, it holds that dF(P, ht
+δ(P))≤√
+d
+2·δand similarily dF(Q, ht
+δ(Q))≤√
+d
+2·δ. By the
+triangle inequality,
+dF(P, Q)≤dF/parenleftbig
+ht
+δ(P), P/parenrightbig
++dF/parenleftbig
+ht
+δ(P), ht
+δ(Q)/parenrightbig
++dF/parenleftbig
+ht
+δ(Q), Q/parenrightbig
+≤√
+d·δ.
+◭
+The next theorem follows by plugging in the bounds of Lemmas 5 and 6.
+◮Theorem 7. LetP, Q ∈∆dbe two curves with m1andm2points, respectively, and let
+m= min {m1, m2},δ= 4dmr andc= 4d3
+2m. It holds that:
+(i) if dF(P, Q)< r, then P rHL
+δ(ht
+δ(P) =ht
+δ(Q))>1
+2;
+(ii) if dF(P, Q)> cr, then P rHL
+δ(ht
+δ(P) =ht
+δ(Q)) = 0 .
+Proof. The ﬁrst claim follows by plugging in the bounds of Lemma 5:
+P r/parenleftbig
+ht
+δ(P) =ht
+δ(Q)/parenrightbig
+>1−/parenleftbigg
+2dm·dF(P, Q)
+δ/parenrightbigg
+>1−dF(P, Q)
+2r>1
+2.
+On the other hand, the second claim follows from Lemma 6:
+dF(P, Q)> c·r= 4d3/2mr=√
+d·δ⇒ ht
+δ(P)/n⌉}ationslash=ht
+δ(Q).
+◭
+4 Constant approximation factor
+In the previous section we analyzed a very eﬃcient LSH with li near approximation factor.
+On the other end of the spectrum, we can also design an LSH with constant approximation
+factor, but higher running time. Conceptually, the easiest way to do this is to randomly and
+independently perturb the vertices of each curve and snap th em to a ﬁxed grid.
+
+A. Driemel and F. Silvestri 9
+4.1 Algorithm
+The described scheme is asymmetric. We assume that we have tw o types of curves, which
+we call input curves and query curves. Consider an input curv eP=p1, . . . , p m, and let Gδ
+be the canonical d-dimensional grid of resolution δdeﬁned in the previous section. Let tP=
+t1, . . . , t mbe a sequence of independent random variables which are unif ormly distributed
+in/bracketleftbig
+−δ
+2,δ
+2/bracketrightbigd. We perturb the vertices of P: Let P′=p′
+1, . . . , p′
+mbe the perturbed curve with
+p′
+i=pi+ti. We snap the curve P′to the grid Gδ. More precisely, we replace each vertex p′
+i
+with its closest grid point p′′
+i= arg minq∈Gδ/bar⌈blp′
+i−q/bar⌈blto obtain the curve P′′. In the next step
+we remove consecutive duplicates in P′′. That is, we remove the vertex p′′
+iif it is identical
+top′′
+i−1. We deﬁne htP
+δ(P) to be the result of this algorithm.
+For a query curve Q, the hash function is the same. However, a diﬀerent random se quence
+tQis used for randomly perturbing the curve. We let HC
+δdenote the LSH scheme deﬁned
+this way: namely, HC
+δcontains all pairs ( htP
+δ, htQ
+δ), where vectors tPandtQconsist of entries
+independent and identically distributed in/bracketleftbig
+−δ
+2,δ
+2/bracketrightbigd.
+4.2 Analysis
+◮Lemma 8. LetP, Q ∈∆dbe two curves with m1andm2points, respectively. Let m=
+min{m1, m2}and let M= max {m1, m2}. For any δ >0, it holds that
+P rHC
+δ/parenleftBig
+htP
+δ(P) =htQ
+δ(Q)/parenrightBig
+≥/parenleftbigg1
+2/parenrightbiggdm
+·/parenleftbigg1
+2−dF(P, Q)
+δ/parenrightbiggdM
+In particular, if δ >4dF(P, Q), then the probability is strictly lower bounded by 2−2d(m1+m2).
+Proof. Note that for dF(P, Q)≥δ
+2the claim is trivially true. Therefore, assume that
+dF(P, Q)<δ
+2. For simplicity assume ﬁrst that d= 1. We bound the probability that P
+andQdo not hash to the same sequence. To this end, consider an opti mal traversal Tof
+PandQwith respect to the discrete Fréchet distance. By Lemma 3, we can assume that
+|T| ≤m1+m2and each component is a star. Let ℓdenote the number of components of
+T. For 1 ≤k≤ℓdenote with Ekthe event that not all vertices of the k-th component
+are snapped to the same grid point. Assume that the center of t hek-th star is a vertex
+piofPand that the other vertices of the component are vertices qj, . . . , q j+ckofQ. The
+analysis for the case where the center is a vertex of Qis analogous. There must be a grid
+point in either one of the two intervals to the left and to the r ight of pi:Il= [pi−δ
+2, pi)
+andIr= [pi, pi+δ
+2). We analyze the case that there is a grid point in Ir, the other case is
+analogous. Let Xibe the event that p′
+i∈Ir. Since tPis uniformly random in/bracketleftbig
+−δ
+2,δ
+2/bracketrightbigm1, it
+holds that P r(Xi)≥1
+2. Now, let Yjbe the event that q′
+j∈Ir. Ifqjwas in pi’s component,
+then there are two cases. Either qjlies in Ilor in Ir. In the ﬁrst case, we have
+P r(Yi)≥δ
+2− |pi−qj|
+δ≥1
+2−d(P, Q)
+δ,
+and in the second case we have P r(Yi)≥1
+2. We can bound the probability that all vertices
+in the k-th component snap to the same grid point
+P r/parenleftbig
+Ek/parenrightbig
+≥P r(Xi∩Yj∩ · · · ∩ Yj+ck)≥1
+2·/parenleftbigg1
+2−d(P, Q)
+δ/parenrightbiggck
+If all components are preserved, then the two curves will has h to the same sequence,
+
+10 Locality-sensitive hashing of curves
+therefore
+P r/parenleftBig
+htP
+δ(P) =htQ
+δ(Q)/parenrightBig
+≥P r
+/intersectiondisplay
+1≤k≤ℓEk
+≥/productdisplay
+1≤k≤ℓP r/parenleftbig
+Ek/parenrightbig
+≥/productdisplay
+1≤k≤ℓ1
+2/parenleftbigg1
+2−d(P, Q)
+δ/parenrightbiggck
+≥/parenleftbigg1
+2/parenrightbiggℓ/parenleftbigg1
+2−d(P, Q)
+δ/parenrightbiggm1+m2−ℓ
+.
+The last inequality follows since/parenleftBig/summationtext
+1≤k≤ℓck/parenrightBig
+=m1+m2−ℓ. Indeed, each center of
+a component can be charged to this component and the remainin g vertices make up the
+sum of the leaves of all components. The lemma is now implied f ord= 1 observing that
+ℓ≤min{m1, m2}, as implied by Lemma 3. We get the lemma for general dby observing
+that the dimensions are independent. ◭
+The following result then holds.
+◮Theorem 9. LetP, Q ∈∆dbe two curves with m1andm2points, respectively, and let
+δ= 4drandc= 4d3/2. It holds that
+(i) if dF(P, Q)< r, then P rHC
+δ/parenleftBig
+htP
+δ(P) =htQ
+δ(Q)/parenrightBig
+>/parenleftbig1
+2/parenrightbig2d(m1+m2);
+(ii) if dF(P, Q)> cr, then P rHC
+δ/parenleftBig
+htP
+δ(P) =htQ
+δ(Q)/parenrightBig
+= 0.
+Proof. The theorem follows by plugging in the bounds of Lemma 8 and by using same
+arguments as in the proof of Lemma 6. ◭
+5 Trade-oﬀ between approximation factor and query time
+In the previous two sections we have seen schemes with linear and constant approximations.
+We now suggest a scheme exhibiting a trade-oﬀ between the col lision probability of near
+points and the approximation factor. The basic idea is to ran domly partition the input
+curves and to concatenate the outcome of the basic LSH (Secti on 3) applied to the diﬀerent
+parts of the curves.
+5.1 Algorithm
+The scheme is asymmetric. Again, we assume that we have two ty pes of curves, which we
+call input and query curves. The diﬀerence in how they are han dled lies in the way we create
+the partition. For an input curve P=p1, . . . , p m, we randomly sample a partition into K
+subsequences. To this end, we denote a partition of Pwith Φs(P) =/parenleftBig
+/hatwideP1, . . . , /hatwidePK/parenrightBig
+where
+the subsequences are deﬁned by a monotone sequence s∈[m]K−1as follows.
+/hatwideP1=p1, . . . , p s1; ∀1< i < K :/hatwidePi=psi−1, . . . , p si; /hatwidePK=psK−1, . . . , p m.
+There are at most/parenleftbigm+K−1
+K−1/parenrightbig
+ways to partition a curve of length min this way. We denote
+with PKthe family of all valid partitions for a given m. Let t=t1, . . . , t Kbe a sequence
+of independent random values evenly distributed in [0 , δ)d. Once we have partitioned the
+input curve PintoK(overlapping) subsequences, we apply the basic LSH to each i ndividual
+subsequence and concatenate the resulting curves:
+gt,s
+δ,K(P) =ht1
+δ/parenleftBig
+/hatwideP1/parenrightBig
+⊕ht2
+δ/parenleftBig
+/hatwideP2/parenrightBig
+⊕ · · · ⊕ htK
+δ/parenleftBig
+/hatwidePK/parenrightBig
+.
+
+A. Driemel and F. Silvestri 11
+A query curve Q=q1, . . . , q mis subdivided into Kequal-sized subsequences (determin-
+istically), where the last subsequence may be shorter and tw o consecutive sequences overlap
+by one element. We denote with Φ∗(Q) this partitioning into equal-sized subsequences. For
+query curves, we deﬁne gt,∗
+δ,K(Q) to be the resulting curve given by applying the basic LSH
+to each individual subsequence and concatenating the resul ting curves.
+For any given δ >0 and K≥1, we denote with HT
+δ,Kthe family of asymmetric hash
+functions created this way: that is, HT
+δ,Kconsists of tuples ( gt,s
+δ,K, gt,∗
+δ,K) where the entries of
+tare independently and identically distributed in [0 , δ)dand Φs(P) is uniformly chosen at
+random from PK.
+5.2 Analysis
+We have the following theorem which generalizes Theorem 7. U sing the parameter Kwe
+get a tradeoﬀ between approximation factor and query time.
+◮Theorem 10. LetP, Q ∈ S be two curves with m1andm2points, respectively, and let
+M= max {m1, m2}. Let K≥1be a given integer and let δ= 4dr·/ceilingleftbigM
+K/ceilingrightbig
+andc= 4d3
+2·/ceilingleftbigM
+K/ceilingrightbig
+.
+It holds that
+(i) if dF(P, Q)< r, then P rHT
+δ,K/parenleftBig
+gt,s
+δ,K(P) =gt,∗
+δ,K(Q)/parenrightBig
+≥/parenleftbig1
+2/parenrightbigK·/parenleftbigM+K−1
+K−1/parenrightbig−1;
+(ii) if dF(P, Q)> cr, then P rHT
+δ,K/parenleftBig
+gt,s
+δ,K(P) =gt,∗
+δ,K(Q)/parenrightBig
+= 0.
+Proof. We ﬁrst prove (i). Let Tbe an optimal traversal of PandQ. We say two partitions
+Φs(P) and Φr(Q) are consistent with respect to Tif and only if ( si, ri)∈Tfor all 1 ≤
+i≤K−1. Let Edenote the event that the partition Φs(P) used in the hash functions
+is consistent with Φ∗(Q) with respect to T. By construction this happens for at least
+one of the partitions in PK. Therefore, P r(E)≥1
+|PK|. Now, let Eibe the event that
+hti
+δ/parenleftBig
+/hatwidePi/parenrightBig
+=hti
+δ/parenleftBig
+/hatwideQi/parenrightBig
+.By Lemma 5 we have that
+P r(Ei|E)≥1−
+2dm′·dF/parenleftBig
+/hatwidePi,/hatwideQi/parenrightBig
+δ
+≥1−/parenleftbigg
+2d/ceilingleftbiggM
+K/ceilingrightbigg
+·dF(P, Q)
+δ/parenrightbigg
+≥1
+2
+Note that we can assume m′≤/ceilingleftbigM
+K/ceilingrightbig
+in the above inequality, since m′is the length of the
+shorter of the two subsequences in the lemma. By constructio n, the length of /hatwideQiwill be at
+most/ceilingleftbigM
+K/ceilingrightbig
+.
+Since the values tiare chosen pairwise independent, we have
+P rHT
+δ,K/parenleftBig
+gt,s
+δ,K(P) =gt,∗
+δ,K(Q)/parenrightBig
+≥
+/productdisplay
+1≤i≤KP r(Ei|E)
+·P r(E)≥/parenleftbigg1
+2/parenrightbiggK
+·1
+|PK|
+Using |PK| ≤/parenleftbigM+K−1
+K−1/parenrightbig
+, the ﬁrst part of the claim follows.
+As for the second part of the claim, we can use Lemma 6 applied t o the subsequences.
+If there exists a partition of P, and there exist t=t1, . . . , t K, such that for all 0 ≤i≤K
+hti
+δ/parenleftBig
+/hatwidePi/parenrightBig
+=hti
+δ/parenleftBig
+/hatwideQi/parenrightBig
+, then it holds by Lemma 6 that dF/parenleftBig
+/hatwidePi,/hatwideQi/parenrightBig
+≤√
+d·δ.In this case, we can
+combine the traversals of the subsequences to a traversal of the entire curves. This combined
+traversal has the same cost, therefore it follows that dF(P, Q)≤√
+d·δ.Consequently, if
+dF(P, Q)> cr =4d3
+2M
+Kr=√
+d·δ,
+
+12 Locality-sensitive hashing of curves
+then it cannot happen that gt,s
+δ(P) =gt,∗
+δ(Q) for any combination of t=t1, . . . , t Kand
+s. ◭
+◮Corollary 11. LetP, Q ∈ S be two curves with m1andm2points, respectively, and let
+M= max {m1, m2}. Let K≥1be a given integer and let δ= 4dr·/ceilingleftbigM
+K/ceilingrightbig
+andc= 4d3
+2·/ceilingleftbigM
+K/ceilingrightbig
+.
+It holds that
+(i) if dF(P, Q)< r, then P rHT
+δ,K/parenleftBig
+gt,s
+δ,K(P) =gt,∗
+δ,K(Q)/parenrightBig
+>/parenleftbig1
+4/parenrightbigK·/parenleftbig1
+M/parenrightbigK−1;
+(ii) if dF(P, Q)> cr, then P rHT
+δ,K/parenleftBig
+gt,s
+δ,K(P) =gt,∗
+δ,K(Q)/parenrightBig
+= 0.
+Proof. The result just follows from the previous Theorem 10 by obser ving that/parenleftbigM+K−1
+K−1/parenrightbig−1≥
+1/(2M)k−1. ◭
+6 Handling constrained alignments
+We now focus on LSH for discrete Fréchet distance with constr aints on the alignment. We
+ﬁrst target the w-anchored distance in Section 6.1, and then the w-speed distance in Sec-
+tion 6.2. As in the previous sections, the schemes are asymme tric and consist of a partitioning
+of the curve into subsequences and on the application of the b asic LSH scheme to each sub-
+sequence. However, the partitions are diﬀerent since they l everage on random processes on
+both input and query curves, consecutive subsequences do no t overlap, and the constraints
+are exploited. We let ℓ≥1 denote an arbitrary given integer that allows to trade-oﬀ t he
+collision probability of near curves with a bi-criteria app roximation on the distance and on
+the anchored alignment.
+6.1 LSH for anchored distances
+Consider an input curve P=p1, . . . , p mand let rP=rP,1, rP,2, . . . r P,mandt=t1, t2, . . . , t m
+denote sequences of independent and identically distribut ed random variables in [1 , w/2] and
+[0, δ)drespectively, where δis a suitable parameter deﬁned later. The partition of Pconsists
+of a ﬁxed partitioning into subsequences of length ℓ, followed by a random perturbation of
+subsequence lengths. Speciﬁcally, the following three ope rations are performed:
+(i) Partition Pinto subsequences /hatwiderP′1, . . . , /hatwiderP′K′with K′=⌈m/ℓ⌉of size ℓ, with the
+possible exception of the last subsequence. Let s′∈[m]K′+1be the vector denoting
+the ﬁnal indexes of each subsequence, that is /hatwidePi=p(s′
+i−1+1), . . . , p s′
+i: we have s′
+0= 0,
+s′
+K′=mands′
+i=iℓfor each 1 ≤i < K′.
+(ii) Random perturb the ﬁnal index of each subsequence with t he random vector rP: for
+each 1 ≤i < K′, set si= min {si+rp,2, m}.
+(iii) Clean the partition by removing overlaps among subseq uences: for each 1 ≤i < K′
+and starting from i= 1, remove each subsequence where s′
+i≤s′
+jfor some j < i . We
+let ΦrP(P) =/parenleftBig
+/hatwideP1, . . . , /hatwidePK/parenrightBig
+denote the resulting partition of Pwith K≤ ⌈m/ℓ⌉and
+letsP∈[m]K+1be the resulting vector denoting the ﬁnal indexes of each sub sequence
+(note that each subsequence has now length at most ℓ+w).
+Once curve Phas been partitioned into Ksubsequences, we apply the basic LSH in
+Section 3 to each subsequence using the random shifts given b y sequence t. Speciﬁcally, we
+snap the i-th subsequence /hatwidePion a grid of side δshifted by the random value tiand remove
+consecutive duplicates within each subsequence; the remai ning values denote the hash value
+of/hatwidePiand we denote them with hti
+δ/parenleftBig
+/hatwidePi/parenrightBig
+. The ﬁnal hash value gt,rP
+w,δ,ℓ(P) of curve Pis the
+
+A. Driemel and F. Silvestri 13
+array containing the hash of each subsequence, speciﬁcally :
+gt,rP
+w,δ,ℓ(P) =/parenleftBig
+ht1
+δ/parenleftBig
+/hatwideP1/parenrightBig
+, ht2
+δ/parenleftBig
+/hatwideP2/parenrightBig
+, . . . , htK
+δ/parenleftBig
+/hatwidePK/parenrightBig/parenrightBig
+.
+We observe that the ﬁnal hash value is not a curve as in previou s sections, but an array of
+curves. Equality between two curves then holds only if the tw o hash values have the same
+length and coincide in each position (i.e., the hash values ( (a, b),(c)) and (( a),(b, c)) do not
+collide, but they collide if their are considered as a single curve ( a, b, c )). This enforces the
+alignment constraint.
+The hash process of a query curve Qis the same: however, a diﬀerent random sequence
+rQis used to partition the curve, while the same sequence tof random shifts is kept. Due
+to the diﬀerent random bits in rQthe proposed LSH scheme is asymmetric. We let HA
+w,δ,ℓ
+denote the hash family consisting of all possible pairs of ha sh functions/parenleftBig
+gt,rP
+w,δ,ℓ, gt,rQ
+w,δ,ℓ/parenrightBig
+.
+The next Theorem 14 shows that the scheme has a bi-criteria ap proximation: In addition
+to the distance approximation c, the scheme has also an approximation on the alignment.
+As an example, we observe that two curves with a w-anchored distance larger than crcan
+still collide if they have a w+ 2(ℓ−1)-anchored distance lower than cr. In order to prove
+the theorem, we introduce the two following lemmas.
+◮Lemma 12. LetP, Q ∈ S be two curves with m1andm2points, respectively and let
+m= min {m1, m2}. Let wbe the traversal width, ℓ≥1be an arbitrary integer, δ= 4drℓ. If
+dw,aF(P, Q)< r, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+>/parenleftbig
+1/√
+2w/parenrightbig2m/ℓ.
+Proof. LetTbe an optimal w-anchored traversal of PandQ, and let c1, . . . c vdenote the
+vnon-overlapping components, and let πiandγidenote the indexes of the components
+containing piandqi, respectively. The two curves collide when the following tw o events
+happen for every 1 ≤i≤ ⌈m/ℓ⌉:
+Event E1,i:sP,i=MP,iandsQ,i=MQ,i, where MP,iandMQ,iare the indexes of the
+rightmost vertices of PandQincπiℓ−1andcγiℓ−1.
+Event E2,i:the hash values of the i-th subsequences of PandQare the same (i.e.,
+hti
+δ/parenleftBig
+/hatwidePi/parenrightBig
+=hti
+δ/parenleftBig
+/hatwideQi/parenrightBig
+).
+Intuitively, the ﬁrst event guarantees that the components ofTare not cut by the random
+partition, while the second event requires the basic LSH to w ork on each subsequence. We
+show by induction that event Ej=/intersectiontextj
+i=1(E1,i∩E2,i) (i.e., both events hold for the ﬁrst j
+subsequences) happens with probability at least 1 /(√
+2w)2j, for 1 ≤j < K =⌈m/ℓ⌉.
+Assume j= 1. By deﬁnition of w-anchored traversal, we have iℓ≤MP,1, MQ,1≤iℓ+w/2.
+Event E1,1happens with probability 1 /w2, that is when the random shift moves the ﬁnal
+indexes of /hatwidePiand /hatwideQiinMP,iandMQ,1, respectively. Conditioning on E1,1, event E2,1holds
+with probability at least 1 /2: indeed by Lemma 5 we have that
+P r(E2,1|E1,1)≥1−
+2dℓ·dF/parenleftBig
+/hatwidePi,/hatwideQi/parenrightBig
+δ
+≥1−/parenleftbigg
+2dℓ·dw,aF(P, Q)
+δ/parenrightbigg
+≥1
+2.
+Therefore, event E1happens with probability 1 /(2w2).
+Suppose now that Ej−1holds with probability 1 /(√
+2w)2(j−1)and let j < K . Since
+MP,j−1andMQ,j−1are the last indexes in segments /hatwidePj−1and/hatwideQj−1, we have P r(E1,j|Ej−1) =
+1/w2by mimic the argument with j= 1. Further, we have that P r(E2,j|E1,j)≥1/2. There-
+foreP r(Ej|Ej−1) =P r(E1,j|Ej−1)∗P r(E2,j|E1,j)≥1/(√
+2w)2j.
+
+14 Locality-sensitive hashing of curves
+When j=K, we have that P r(E1,K|EK−1) = 1 since the end points of /hatwidePKand /hatwideQK
+are ﬁxed on pm1andQm2. By the inductive assumption, the shortest sequence betwee n/hatwidePK
+and /hatwideQKcontains less than x=mmod ℓvertices. Then, we have
+P r(E2,K|E1,K)≥1−
+2dx·dF/parenleftBig
+/hatwidePi,/hatwideQi/parenrightBig
+δ
+≥1−x
+2ℓ≥1
+2x/ℓ.
+Since K=⌈m/ℓ⌉andx=mmod ℓ, the two curves PandQcollide with probability
+P r(EK−1)P r(E2,K)≥(1/(2w2)K−1)(1/2x/ℓ)≥1/(√
+2w)2m/ℓ. ◭
+◮Lemma 13. LetP, Q ∈ S be two curves with m1andm2points, respectively and let
+m= min {m1, m2}. Let wbe the traversal width, ℓ≥1be an arbitrary integer, δ= 4drℓ,
+andc= 4d3
+2ℓ. Ifd(w+2(ℓ−1)),aF(P, Q)> cr, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+= 0.
+Proof. By hypothesis, the two curves PandQhave wℓ-anchored Fréchet distance larger
+than cr, which implies there cannot be a wℓ-anchored traversal with cost smaller than or
+equal to cr. Assume that PandQcollide under the described hashing scheme; then both
+curves have been split into Ksubsequence and the hash values of /hatwidePiand /hatwideQi, for each
+1≤i≤Kcollide. By Lemma 6, there exists a traversal of cost at most√
+dδbetween /hatwidePi
+and /hatwideQi, for each i. Moreover, this traversal is a w+ 2(ℓ−1)-anchored traversal since the
+partitioning guarantees that the indexes of vertices in /hatwidePiand/hatwideQidiﬀer by at most w/2+ℓ−1.
+This however implies that there exist a w+ 2(ℓ−1)-traversal of PandQof cost at most√
+dδ=cr, which is a contradiction. Therefore, two curves with ( w+ 2(ℓ−1))-anchored
+discrete Fréchet distance cannot collide. ◭
+◮Theorem 14. LetP, Q ∈ S be two curves with m1andm2points, respectively and let
+m= min {m1, m2}. Let ℓ≥1be an arbitrary integer, δ= 4drℓ, and c= 4d3
+2ℓ. Then, it
+holds that:
+(i) if dw,aF(P, Q)< r, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+>/parenleftbig
+1/√
+2w/parenrightbig2m/ℓ;
+(ii) if d(w+2(ℓ−1)),aF(P, Q)> cr, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+= 0.
+Proof. The theorem follows from Lemmas 12 and 13. ◭
+6.2 LSH for bounded-speed distances
+Consider an input curve P=p1, . . . , p mand let rP=rP,1, rP,2, . . . , r P,mandt=t1, t2, . . . t m
+denote sequences of independent and identically distribut ed random variables in [1 , wℓ] and
+[0, δ)drespectively. We random partition curve Pinto non overlapping subsequences of
+length given by the random sequence rp. Speciﬁcally, let Φs(P) =/parenleftBig
+/hatwideP1, . . . , /hatwidePK/parenrightBig
+denote
+a partition of Pwith m/(wℓ)≤K≤mand let s∈[m]K+1be the vector denoting the
+initial and ﬁnal indexes of a subsequence, that is /hatwidePi=psi−1+1, . . . , p si. Then, ssatisﬁes the
+following conditions : (i) s0= 0 and sK=m, (ii) for 1 ≤i≤K,si−si−1=rp,1, which
+implies that si=/summationtexti
+j=1rp,1. Once we have partitioned curve PintoKsubsequences, we
+continue as in the w-anchored LSH by applying the basic LSH to each subsequence u sing
+the random shifts given by sequence t. For a query curve Q, the hash process is the same,
+but a diﬀerent random sequence rQis used to partition the curve. We let HS
+w,δ,ℓ denote the
+hash family consisting of all possible pairs of hash functio ns/parenleftBig
+gt,rP
+w,δ,ℓ, gt,rQ
+w,δ,ℓ/parenrightBig
+.
+The following Theorem 17 shows that the scheme has a bi-crite ria approximation (note
+that the alignment approximation in point ( ii) diﬀers from the one for the anchored distance).
+Its proof depends on the next two lemmas.
+
+A. Driemel and F. Silvestri 15
+◮Lemma 15. LetP, Q ∈ S be two curves with m1andm2points, respectively and let
+m= min {m1, m2}. Let wbe the traversal width, ℓ≥1be an arbitrary integer, δ= 4drℓ. If
+dw,sF(P, Q)< r, then P rHS
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+>/parenleftbig
+1/√
+2wℓ/parenrightbig2m/ℓ.
+Proof. LetTbe an optimal w-speed traversal of PandQ, and let c1, . . . c vdenote the v
+non-overlapping components. As for the anchored version, t he two curves collide when the
+following two events happen for every 1 ≤i≤ ⌈v/ℓ⌉(note a diﬀerent deﬁnition for event
+E1,i):
+Event E1,i:all nodes of PandQin components ciℓ+1, . . . , c (i+1)ℓare contained in the
+i-th subsequence of PandQ;
+Event E2,i:the hash values of the i-th subsequences of PandQare the same (i.e.,
+hti
+δ/parenleftBig
+/hatwidePi/parenrightBig
+=hti
+δ/parenleftBig
+/hatwideQi/parenrightBig
+).
+The proof continues as in Lemma 12, where the only diﬀerence i s in the probability of event
+E1,i. Indeed, we have that event E1,1happens with probability 1 /(wℓ)2, that is when P1
+andQ1contain only the at most wℓnodes of PandQin the ﬁrst ℓcomponents. The same
+probability holds for E1,i, conditioning on E1,i−1. ◭
+◮Lemma 16. LetP, Q ∈ S be two curves with m1andm2points, respectively and let
+m= min {m1, m2}. Let wbe the traversal width, ℓ≥1be an arbitrary integer, δ= 4drℓ,
+andc= 4d3
+2ℓ. Ifdwℓ,sF(P, Q)> cr, then P rHS
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+= 0.
+Proof. By hypothesis, the two curves PandQhave wℓ-speed discrte Fréchet distance larger
+than cr, which implies there cannot be wℓ-speed traversal with cost smaller than or equal
+tocr. Assume that PandQcollide under the described hashing scheme; then both curve s
+have been split into Ksubsequence and the hash values of PiandQi, for each 1 ≤i≤K
+collide. By Lemma 6, there exists a traversal of cost at most√
+dδbetween PiandQi, for
+each i. Moreover, this traversal is a wℓ-traversal since each subsequence contains at most
+wℓnodes. This however implies that there exist a wℓ-speed traversal of PandQof cost
+at most√
+dδ=cr, which is a contradiction. Therefore, two curves with wℓ-speed Fréchet
+distance cannot collide. ◭
+◮Theorem 17. LetP, Q ∈ S two curves with m1andm2points, respectively and let
+m= min {m1, m2}. Let ℓ≥1be an arbitrary integer, δ= 4drℓ, and c= 4d3
+2ℓ. Then, it
+holds that:
+(i) if dw,sF(P, Q)< r, then P rHS
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+>/parenleftbig
+1/√
+2wℓ/parenrightbig2m/ℓ;
+(ii) if dwℓ,sF(P, Q)> cr, then P rHS
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+= 0.
+Proof. The proof follows from Lemmas 15 and 16. ◭
+7 Extensions to dynamic time warping
+All our schemes can be applied to DTW without any algorithmic change, and in this section
+we analyze some of them. We ﬁrst investigate in Section 7.1 th e basic scheme in Section 3.1
+for this distance. Then, we provide a few insights on DTW with constrained alignments in
+Section 7.2. We do not analyze the techniques proposed in Sec tions 4 and 5 since they have
+the same linear approximation of the basic LSH, and—in contr ast to our previous results
+for the Fréchet distance—do not provide a sublinear approxi mation for DTW.
+
+16 Locality-sensitive hashing of curves
+7.1 Analysis of the basic LSH
+◮Lemma 18. LetP, Q ∈∆dbe two curves with m1andm2points, respectively. For any
+δ≥0, it holds that
+P rHL
+δ/parenleftbig
+ht
+δ(P) =ht
+δ(Q)/parenrightbig
+≥1−/parenleftbigg
+d·dDTW(P, Q)
+δ/parenrightbigg
+.
+Proof. LetTbe an optimal traversal of PandQwith respect to their DTW distance.
+Letℓ=|T|and denote with dkthe distance /bar⌈blpik−qjk/bar⌈blfor 1 ≤k≤ℓ. We have that
+dDTW(P, Q) =/summationtext
+1≤k≤ℓdk.
+Now, we bound the probability that pikandqjkfor some ﬁxed ( ik, jk)∈Tare not
+snapped to the same grid point. As in the proof of Lemma 5, two p oints are separated, if
+and only if they are separated in at least one of their coordin ate dimensions.
+Denote with Ekthe event that the pair is separated by the random shift t, where tis
+uniformly distributed in [0 , δ)d. By a union bound over the pairs in T, we have that the
+probability of PandQnot being hashed to the same curve is bounded by
+P r
+/uniondisplay
+1≤k≤ℓEk
+≤/summationdisplay
+1≤k≤ℓP r(Ek)≤/summationdisplay
+1≤k≤ℓd·/bar⌈blpik−qjk/bar⌈bl
+δ=/summationdisplay
+1≤k≤ℓd·dk
+δ=d·dDTW(P, Q)
+δ
+and the lemma follows. ◭
+◮Lemma 19. LetP, Q ∈∆dbe two curves with m1andm2points, respectively, and let
+M= max {m1, m2}andδ≥0. If there exists a value of t∈[0, δ)dsuch that ht
+δ(P) =ht
+δ(Q),
+then it holds that dDTW(P, Q)≤2M√
+d·δ.
+Proof. The DTW distance does not satisfy the triangle inequality, h owever we can use a
+similar argument as in the proof of Lemma 6. Assume that ht
+δ(P) =ht
+δ(Q) is true from some
+t∈[0, δ)dand denote /hatwideP=ht
+δ(P) and /hatwideQ=ht
+δ(Q). Let /hatwideP=/hatwidep1, . . . , /hatwidepsand /hatwideQ=/hatwideq1, . . . , /hatwideqs.
+We have for 0 ≤r≤sthat /bar⌈bl/hatwidepr−/hatwideqr/bar⌈bl= 0. Recall that /hatwideP(and respectively, /hatwideQ) was generated
+by snapping each point of Pto the grid /hatwideGt
+δand by contracting each sequence of identical
+vertices to one copy of the same vertex. We replace each /hatwideprby the original sequence of
+identical vertices /hatwidep(1)
+r, . . . , /hatwidep(a)
+r(and we do the same for each /hatwideqr, denoting its sequence of
+identical vertices by /hatwideq(1)
+r, . . . , /hatwideq(b)
+r). Now, consider a traversal Tof the resulting sequences
+that pairs each /hatwidep(1)
+rwith /hatwideq(1)
+r. Furthermore, if a >2, then Tpairs each /hatwidep(i)
+rwith /hatwideq(1)
+rand
+ifb >2, then Tpairs /hatwidep(a)
+rwith each /hatwideq(i)
+r. Finally, Tpairs /hatwidep(a)
+rwith /hatwideq(b)
+r, for each r. The
+resulting traversal Tcan also be applied to the original curves PandQ. By the construction
+of/hatwidePand /hatwideQ, any two paired vertices have distance at most√
+d·δ, since they snapped to the
+same grid point. It follows that
+dDTW(P, Q) = min
+T′∈T/summationdisplay
+(ik,jk)∈T′/bar⌈blpik−qjk/bar⌈bl ≤/summationdisplay
+(ik,jk)∈T/bar⌈blpik−qjk/bar⌈bl ≤/summationdisplay
+(ik,jk)∈T√
+d·δ≤2M√
+dδ,
+where the last step can be obtained by observing that |T| ≤m1+m2≤2M. ◭
+◮Theorem 20. LetP, Q ∈∆dbe two curves with m1andm2points, respectively, and let
+M= max {m1, m2},δ= 2drand let c= 4d3
+2M.
+(i) if dDTW(P, Q)< r, then P rHL
+δ(ht
+δ(P) =ht
+δ(Q))>1
+2;
+(ii) if dDTW(P, Q)> cr, then P rHL
+δ(ht
+δ(P) =ht
+δ(Q)) = 0 .
+Proof. The proof follows by plugging in the bounds of δin Lemmas 18 and 19. ◭
+
+A. Driemel and F. Silvestri 17
+7.2 Handling constrained alignments
+The schemes in Section 6 for w-anchored/speed traversals automatically apply to DTW
+distance, with the same collision probabilities stated in T heorems 14 and 17. However, the
+approximation factor is 4 d3/2(m1+m2), where m1andm2are curve lengths. The claim
+follows by mimicking the proofs for the Fréchet distance and use the bounds in Theorem 20.
+We provide the analysis only for the w-anchored DTW distance, being the one for w-speed
+DTW essentially the same.
+◮Lemma 21. LetP, Q ∈ S be two curves with m1andm2points, respectively and let
+m= min {m1, m2}. Let wbe the traversal width, ℓ≥1be an arbitrary integer, δ= 2dr. If
+dw,aDTW (P, Q)< r, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+>/parenleftbig
+1/√
+2w/parenrightbig2m/ℓ.
+Proof. The proof mimics the one for the w-anchored Fréchet distance in Lemma 12. The
+only diﬀerence is in the value of δrequired to get P r(E2,i|E1,i)≥1/2, since, by Lemma 18,
+the hash values of the i-th subsequences of PandQcollide with probability at least 1 −/parenleftbigg
+d·dF/parenleftbig/hatwidePi,/hatwideQi/parenrightbig
+δ/parenrightbigg
+, which is independent of the number of components. ◭
+◮Lemma 22. LetP, Q ∈ S be two curves with m1andm2points, respectively. Let wbe
+the traversal width, ℓ≥1be an arbitrary integer, δ= 2dr, and c= 4d3
+2(m1+m2). If
+d(w+2(ℓ−1)),aDTW (P, Q)> cr, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+= 0.
+Proof. The proof is almost the same of the one for Lemma 13 and the only diﬀerence is in
+the approximation provided by the basic LSH. Indeed, by Lemm a 6, there exists a traversal
+of cost at most√
+d2Miδbetween /hatwidePiand /hatwideQifor each i, where Midenote the length of the
+longest sequence. However, we have/summationtextK
+i=1Mi≤m1+m2andδ= 2dr. Therefore the ﬁnal
+approximation is c= 4d3/2(m1+m2). ◭
+◮Theorem 23. LetP, Q ∈ S be two curves with m1andm2points, respectively, and let
+m= min {m1, m2}. Let ℓ≥1be an arbitrary integer, δ= 2dr, and c= 4d3
+2(m1+m2).
+Then, the above hashing scheme guarantees that:
+(i) if dw,aDTW (P, Q)< r, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+>/parenleftbig
+1/√
+2w/parenrightbig2m/ℓ;
+(ii)d(w+2(ℓ−1)),aDTW (P, Q)> cr, then P rHA
+w,δ,ℓ/parenleftBig
+gt,rP
+w,δ,ℓ(P) =gt,rQ
+w,δ,ℓ(Q)/parenrightBig
+= 0.
+Proof. The theorem follows from Lemmas 21 and 22. ◭
+8 Conclusion
+To the best of our knowledge, this is the ﬁrst paper providing LSH schemes for curves. When
+applied to the near neighbor problem, our techniques improv e the state of the art for the
+discrete Fréchet distance [17] under diﬀerent settings, an d provide the ﬁrst data structure
+with theoretical guarantees for DTW. The methods presented are simple enough that they
+may be practical. We do not know if our bounds are tight. It wou ld be interesting to know if
+lower bounds can be obtained for the studied problem and/or t o improve the upper bounds.
+All of the presented LSH schemes exhibit the property that no collisions happen between
+far points (i.e., α2= 0). An open question is to understand if it is possible to sli ghtly
+increase this collision probability (say α2= 1/n) to get a better approximation factor.
+Another interesting direction would be to reduce space by ex ploiting the independence in
+the approach described in Section 4.1, or by using a multipro be approach [24]. Finally, we
+remark that our results only partially extend to DTW. As such , it is still open to get a
+
+18 Locality-sensitive hashing of curves
+sublinear approximation for DTW. We hope that our work inspi res further work in one of
+these directions.
+Acknowledgements The authors would like to thank Rasmus Pagh and the anonymous
+reviewers for useful comments. This research was initiated at the Dagstuhl Seminar 16101
+"Data Structures and Advanced Models of Computation on Big D ata, 2016".
+References
+1S. Arya, D. M. Mount, A. Vigneron, and J. Xia. Space-time trad eoﬀs for proximity searching
+in doubling spaces. In Proc. 16th European Symp. Algorithms (ESA) , pages 112–123, 2008.
+2A. Backurs and A. Sidiropoulos. Constant-distortion embed dings of Hausdorﬀ metrics into
+constant-dimensional lpspaces. In Proc. 19th Workshop on Approximation Algorithms for
+Combinatorial Optimization Problems (APPROX) , volume 60, pages 1:1–1:15, 2016.
+3Y. Bartal, L.-A. Gottlieb, and O. Neiman. On the impossibili ty of dimension reduction for
+doubling subsets of ℓp. In Proc. 13th Symp. on Computational Geometry (SOCG) , pages
+60:60–60:66, 2014.
+4K. Bringmann. Why walking the dog takes time: Fréchet distan ce has no strongly sub-
+quadratic algorithms unless seth fails. In Proc. 55th Symp. on Foundations of Computer
+Science (FOCS) , pages 661–670, 2014.
+5J. C. Brown and P. J. O. Miller. Automatic classiﬁcation of ki ller whale vocalizations using
+dynamic time warping. J. of the Acoustical Society of America , 122(2):1201–1207, 2007.
+6J. Campbell, J. Tremblay, and C. Verbrugge. Clustering play er paths. In Proc. 10th Int.
+Conf. on the Foundations of Digital Games (FDG) , 2015.
+7M. de Berg, A. F. Cook, and J. Gudmundsson. Fast Fréchet queri es.Comput. Geom. ,
+46(6):747–755, 2013.
+8A. Driemel and S. Har-Peled. Jaywalking your dog: Computing the Fréchet distance with
+shortcuts. SIAM J. Computing , 42(5):1830–1866, 2013.
+9A. Driemel, A. Krivošija, and C. Sohler. Clustering time ser ies under the Fréchet distance.
+InProc. 27th Symp. on Discrete Algorithms (SODA) , pages 766–785, 2016.
+10 G. Forestier, F. Lalys, L. Riﬀaud, B. Trelhu, and P. Jannin. C lassiﬁcation of surgical
+processes using dynamic time warping. J. Biomedical Informatics , 45(2):255 – 264, 2012.
+11 J. Gudmundsson and N. Valladares. A GPU approach to subtraje ctory clustering using the
+Fréchet distance. IEEE Transactions on Parallel and Distributed Systems , 26(4):924–937,
+2015.
+12 A. Gupta, R. Krauthgamer, and J. R. Lee. Bounded geometries, fractals, and low-distortion
+embeddings. In Proc. 44th Symp. Found. Comp. Science (FOCS) , pages 534–543, 2003.
+13 S. Har-Peled, P. Indyk, and R. Motwani. Approximate nearest neighbor: Towards removing
+the curse of dimensionality. Theory of Computing , 8(1):321–350, 2012.
+14 B. Huang and W. Kinsner. ECG frame classiﬁcation using dynam ic time warping. In Proc.
+Canadian Conf. on Electrical and Computer Engineering , volume 2, pages 1105–1110, 2002.
+15 P. Indyk. On approximate nearest neighbors in non-euclidea n spaces. In Proc. 39th Symp.
+on Foundations of Computer Science , pages 148–155, 1998.
+16 P. Indyk. On approximate nearest neighbors under l∞norm. J. Computer and System
+Sciences , 63(4):627 – 638, 2001.
+17 P. Indyk. Approximate nearest neighbor algorithms for Fréc het distance via product met-
+rics. In Proc. 18th Symp. on Computational Geometry (SOCG) , pages 102–106, 2002.
+18 P. Indyk and J. Matoušek. Low-distortion embeddings of ﬁnit e metric spaces. In Handbook
+of Discrete and Computational Geometry , pages 177–196. CRC Press, 2004.
+
+A. Driemel and F. Silvestri 19
+19 P. Indyk and R. Motwani. Approximate nearest neighbors: Tow ards removing the curse of
+dimensionality. In Proc. 30th Symp. Theory of Computing (STOC) , pages 604–613, 1998.
+20 R. J. Keneﬁc. Track clustering using Fréchet distance and mi nimum description length. J.
+of Aerospace Information Systems , 11(8):512–524, 2014.
+21 E. Keogh and C. A. Ratanamahatana. Exact indexing of dynamic time warping. Knowledge
+and Information Systems , 7(3):358–386, 2005.
+22 Z. Kovacs-Vajna. A ﬁngerprint veriﬁcation system based on t riangular matching and dy-
+namic time warping. IEEE Transactions on Pattern Analysis and Machine Intellig ence,
+22(11):1266–1276, 2000.
+23 B. Legrand, C. Chang, S. Ong, S.-Y. Neo, and N. Palanisamy. Ch romosome classiﬁcation
+using dynamic time warping. Pattern Recognition Letters , 29(3):215 – 222, 2008.
+24 Q. Lv, W. Josephson, Z. Wang, M. Charikar, and K. Li. Multi-pr obe lsh: Eﬃcient indexing
+for high-dimensional similarity search. In Proc. 33rd Int. Conf. on Very Large Data Bases ,
+VLDB ’07, pages 950–961. VLDB Endowment, 2007.
+25 J. Matoušek. Embedding ﬁnite metric spaces into euclidean s paces. In Lectures on Discrete
+Geometry , chapter 15. Springer, 2002.
+26 T. Rakthanmanon, B. Campana, A. Mueen, G. Batista, B. Westov er, Q. Zhu, J. Zakaria,
+and E. Keogh. Searching and mining trillions of time series s ubsequences under dynamic
+time warping. In Proc. 18th Conf. Knowl. Disc. and Data Mining , pages 262–270, 2012.
+27 C. A. Ratanamahatana and E. J. Keogh. Three myths about dynam ic time warping data
+mining. In Proc. SIAM Conf. on Data Mining (SDM) , pages 506–510, 2005.
+28 G. Shakhnarovich, T. Darrell, and P. Indyk, editors. Nearest-Neighbor Methods in Learning
+and Vision: Theory and Practice . MIT Press, 2006.
+29 A. Shrivastava and P. Li. Asymmetric LSH (ALSH) for sublinea r time maximum inner
+product search (MIPS). In Proc. 27th Conf. on Neural Information Processing Systems
+(NIPS) , pages 2321–2329, 2014.
+30 G. Vries. Kernel methods for vessel trajectories . PhD thesis, Univ. Amsterdam, 2012.
+31 H. Zhu, J. Luo, H. Yin, X. Zhou, J. Huang, and F. B. Zhan. Mining trajectory corridors
+using Fréchet distance and meshing grids. In Proc. 14th Paciﬁc-Asia Conference on Know-
+ledge Discovery and Data Mining (PAKDD) , pages 228–237, 2010.
+A Conditional lower bound
+There is a trivial reduction from the orthogonal vectors pro blem to the problem of ﬁnding
+a close pair under the ℓ∞distance up to approximation c < 3 [16]. Since ℓ∞embeds
+isometrically into the Fréchet distance (while preserving the dimension up to a constant
+factor), this implies a conditional time lower bound for the near-neighbor problem under
+the Fréchet distance. In detail, the orthogonal vectors pro blem can be stated as follows.
+Given two sets of vectors A, B ⊂ {0,1}dwith |A|=|B|=n, does there exist a pair a∈A
+andb∈Bsuch that aandbare orthogonal? The orthogonal vectors conjecture, which c an
+be related to the strong exponential time hypothesis, state s that for no ε >0, there exists an
+algorithm for the orthogonal vectors problem that runs in ti meO/parenleftbig
+n2−εpolyd/parenrightbig
+ifd >log2n.
+This conjecture implies that there exists no data structure for exact near-neighbor searching
+under the discrete Fréchet distance that achieves both prep rocessing time in O/parenleftbig
+n2−εpolym/parenrightbig
+and query time in O/parenleftbig
+n1−εpolym/parenrightbig
+for any ε >0. Indeed, if such a data structure would exist,
+then we could solve an instance of orthogonal vectors by stor ingAin this data structure
+and performing a query with each of the vectors of B.
+
+Hierarchy To Score
+
+Paper
+  - Introduction
+    - [Section Lead-in]
+      - Paragraph 1
+        - [14]
+        - [30]
+        - [19]
+        - [13]
+      - Paragraph 2
+    - State of the art
+      - Paragraph 1
+        - [17]
+        - [15]
+        - [18]
+        - [2]
+        - [25]
+        - [1]
+        - [12]
+        - [9]
+        - [3]
+      - Paragraph 2
+      - Paragraph 3
+        - [8]
+        - [4]
+        - [26]
+    - Our results
+      - Paragraph 1
+        - [17]
+      - Paragraph 2
+        - [17]
+        - [27]
+        - [21]
+        - [28]
+  - Preliminaries
+    - Distance measures for curves
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+    - Distances measures with constraints
+      - Paragraph 1
+      - Paragraph 2
+    - Locality-sensitive hashing
+      - Paragraph 1
+        - [29]
+      - Paragraph 2
+      - Paragraph 3
+  - Linear approximation factor
+    - [Section Lead-in]
+      - Paragraph 1
+    - Algorithm
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+    - Analysis
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+  - Constant approximation factor
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+    - Algorithm
+      - Paragraph 1
+      - Paragraph 2
+    - Analysis
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+      - Paragraph 10
+      - Paragraph 11
+      - Paragraph 12
+      - Paragraph 13
+      - Paragraph 14
+  - Trade-off between approximation factor and query time
+    - [Section Lead-in]
+      - Paragraph 1
+    - Algorithm
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+    - Analysis
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+      - Paragraph 10
+      - Paragraph 11
+  - Handling constrained alignments
+    - [Section Lead-in]
+      - Paragraph 1
+    - LSH for anchored distances
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+      - Paragraph 10
+      - Paragraph 11
+      - Paragraph 12
+      - Paragraph 13
+      - Paragraph 14
+      - Paragraph 15
+    - LSH for bounded-speed distances
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+  - Extensions to dynamic time warping
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+    - Analysis of the basic LSH
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+    - Handling constrained alignments
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+  - Conclusion
+    - Paragraph 1
+      - [17]
+      - [24]
+    - Paragraph 2
+  - A Conditional lower bound
+    - Paragraph 1
+      - [16]
+    - Paragraph 2
+[anthropic_full_paper_response] attempt=1/3
+Paper: 1.0 | 0.0
+
+Introduction: 0.08 | 0.0
+
+[Section Lead-in]: 0.04 | 0.0
+
+Paragraph 1: 0.025 | 0.02
+[14]: 0.002
+[30]: 0.002
+[19]: 0.008
+[13]: 0.008
+
+Paragraph 2: 0.015 | 0.0
+
+State of the art: 0.03 | 0.0
+
+Paragraph 1: 0.015 | 0.013
+[17]: 0.004
+[15]: 0.002
+[18]: 0.002
+[2]: 0.001
+[25]: 0.001
+[1]: 0.001
+[12]: 0.001
+[9]: 0.001
+[3]: 0.0
+
+Paragraph 2: 0.005 | 0.0
+
+Paragraph 3: 0.01 | 0.007
+[8]: 0.002
+[4]: 0.002
+[26]: 0.003
+
+Our results: 0.01 | 0.0
+
+Paragraph 1: 0.006 | 0.002
+[17]: 0.002
+
+Paragraph 2: 0.004 | 0.002
+[17]: 0.001
+[27]: 0.0
+[21]: 0.0
+[28]: 0.001
+
+Preliminaries: 0.05 | 0.0
+
+Distance measures for curves: 0.025 | 0.0
+
+Paragraph 1: 0.003 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.005 | 0.0
+Paragraph 5: 0.007 | 0.0
+
+Distances measures with constraints: 0.01 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.005 | 0.0
+
+Locality-sensitive hashing: 0.015 | 0.0
+
+Paragraph 1: 0.005 | 0.004
+[29]: 0.004
+
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+
+Linear approximation factor: 0.18 | 0.0
+
+[Section Lead-in]: 0.01 | 0.0
+
+Paragraph 1: 0.01 | 0.0
+
+Algorithm: 0.05 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.015 | 0.0
+Paragraph 3: 0.015 | 0.0
+Paragraph 4: 0.015 | 0.0
+
+Analysis: 0.12 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.02 | 0.0
+Paragraph 3: 0.01 | 0.0
+Paragraph 4: 0.005 | 0.0
+Paragraph 5: 0.02 | 0.0
+Paragraph 6: 0.01 | 0.0
+Paragraph 7: 0.005 | 0.0
+Paragraph 8: 0.045 | 0.0
+
+Constant approximation factor: 0.15 | 0.0
+
+[Section Lead-in]: 0.01 | 0.0
+
+Paragraph 1: 0.003 | 0.0
+Paragraph 2: 0.004 | 0.0
+Paragraph 3: 0.003 | 0.0
+
+Algorithm: 0.04 | 0.0
+
+Paragraph 1: 0.02 | 0.0
+Paragraph 2: 0.02 | 0.0
+
+Analysis: 0.1 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.005 | 0.0
+Paragraph 5: 0.01 | 0.0
+Paragraph 6: 0.01 | 0.0
+Paragraph 7: 0.005 | 0.0
+Paragraph 8: 0.01 | 0.0
+Paragraph 9: 0.01 | 0.0
+Paragraph 10: 0.005 | 0.0
+Paragraph 11: 0.005 | 0.0
+Paragraph 12: 0.005 | 0.0
+Paragraph 13: 0.01 | 0.0
+Paragraph 14: 0.01 | 0.0
+
+Trade-off between approximation factor and query time: 0.15 | 0.0
+
+[Section Lead-in]: 0.01 | 0.0
+
+Paragraph 1: 0.01 | 0.0
+
+Algorithm: 0.04 | 0.0
+
+Paragraph 1: 0.015 | 0.0
+Paragraph 2: 0.015 | 0.0
+Paragraph 3: 0.01 | 0.0
+
+Analysis: 0.1 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.01 | 0.0
+Paragraph 4: 0.01 | 0.0
+Paragraph 5: 0.01 | 0.0
+Paragraph 6: 0.01 | 0.0
+Paragraph 7: 0.01 | 0.0
+Paragraph 8: 0.01 | 0.0
+Paragraph 9: 0.01 | 0.0
+Paragraph 10: 0.01 | 0.0
+Paragraph 11: 0.01 | 0.0
+
+Handling constrained alignments: 0.18 | 0.0
+
+[Section Lead-in]: 0.01 | 0.0
+
+Paragraph 1: 0.01 | 0.0
+
+LSH for anchored distances: 0.1 | 0.0
+
+Paragraph 1: 0.01 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.005 | 0.0
+Paragraph 5: 0.005 | 0.0
+Paragraph 6: 0.005 | 0.0
+Paragraph 7: 0.005 | 0.0
+Paragraph 8: 0.01 | 0.0
+Paragraph 9: 0.01 | 0.0
+Paragraph 10: 0.01 | 0.0
+Paragraph 11: 0.005 | 0.0
+Paragraph 12: 0.005 | 0.0
+Paragraph 13: 0.005 | 0.0
+Paragraph 14: 0.005 | 0.0
+Paragraph 15: 0.005 | 0.0
+
+LSH for bounded-speed distances: 0.07 | 0.0
+
+Paragraph 1: 0.01 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.01 | 0.0
+Paragraph 5: 0.01 | 0.0
+Paragraph 6: 0.01 | 0.0
+Paragraph 7: 0.005 | 0.0
+Paragraph 8: 0.015 | 0.0
+
+Extensions to dynamic time warping: 0.12 | 0.0
+
+[Section Lead-in]: 0.01 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.005 | 0.0
+
+Analysis of the basic LSH: 0.07 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.015 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.015 | 0.0
+Paragraph 5: 0.005 | 0.0
+Paragraph 6: 0.005 | 0.0
+Paragraph 7: 0.01 | 0.0
+Paragraph 8: 0.01 | 0.0
+
+Handling constrained alignments: 0.04 | 0.0
+
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.01 | 0.0
+Paragraph 3: 0.015 | 0.0
+Paragraph 4: 0.01 | 0.0
+
+Conclusion: 0.02 | 0.0
+
+Paragraph 1: 0.015 | 0.002
+[17]: 0.001
+[24]: 0.001
+
+Paragraph 2: 0.005 | 0.0
+
+A Conditional lower bound: 0.04 | 0.0
+
+Paragraph 1: 0.02 | 0.005
+[16]: 0.005
+
+Paragraph 2: 0.02 | 0.0
+
+Citation Contributions
+
+[14]: 0.002
+[30]: 0.002
+[19]: 0.008
+[13]: 0.008
+[17]: 0.008
+[15]: 0.002
+[18]: 0.002
+[2]: 0.001
+[25]: 0.001
+[1]: 0.001
+[12]: 0.001
+[9]: 0.001
+[3]: 0.0
+[8]: 0.002
+[4]: 0.002
+[26]: 0.003
+[27]: 0.0
+[21]: 0.0
+[28]: 0.001
+[29]: 0.004
+[24]: 0.001
+[16]: 0.005

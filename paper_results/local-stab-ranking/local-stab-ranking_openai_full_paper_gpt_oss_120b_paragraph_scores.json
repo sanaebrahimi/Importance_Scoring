@@ -1,0 +1,1115 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Ranking items or individuals by their quantitative attributes often plays a key role in a wide range of domain applications, e.g.,in academia [ 6,31], hiring [ 22], or e-commerce [ 17]. A major underlying assumption of ranking is that a higher ranking reflects a meaningful improvement in utility over lower ranked items. However, if minor modifications to the data result in significant shifts in an item\u2019s position in the ranking, this fundamental assumption is undermined. As a simple example, consider the results of a motorsport event: if the driver finishing 1stdid so with a margin of only 0.2 seconds, the distinction from the runner-up may be practically negligible, whereas a 20-second lead would indicate a clearly superior performance. While the improvement in utility is clear for these simple cases, defining margins between items in more complex settings, such as learning-to-rank (LtR) [50] or rankings based on scores computed by multiple attributes, is not straightforward, as we next illustrate.",
+    "paragraph_id": "local-stab-ranking::Introduction::p1",
+    "technical_score": 0.0026666666666666657,
+    "citation_score": 0.010666666666666665
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Authors\u2019 Contact Information: Felix S. Campbell, Ben-Gurion University of the Negev, Beersheba, Israel, felixsal@post.bgu. ac.il; Yuval Moskovitch, Ben-Gurion University of the Negev, Beersheba, Israel, yuvalmos@bgu.ac.il. This work is licensed under a Creative Commons Attribution 4.0 International License. \u00a92026 Copyright held by the owner/author(s). ACM 2836-6573/2026/6-ART204 https://doi.org/10.1145/3802081",
+    "paragraph_id": "local-stab-ranking::Introduction::p2",
+    "technical_score": 0.0044444444444444444,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "204:2 Felix S. Campbell & Yuval Moskovitch Table 1. Top-10 computer science departments ranked according to adjusted average publication count. Each group of rows highlighted by a single color represents a dense region in the ranking in which the departments are similar.",
+    "paragraph_id": "local-stab-ranking::Introduction::p3",
+    "technical_score": 0.0044444444444444444,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "University AI Pubs.",
+    "paragraph_id": "local-stab-ranking::Introduction::p4",
+    "technical_score": 0.0044444444444444444,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Systems Pubs. Score \u2193 t1 Lakefront University 44 36 39.2 t2 Dempster University 42 35 37.9 t3 Western Polytechnic 43 33 36.7 t4 Prairie University 23 25 25.4 t5 Ogden University 22 24 24.4 t6 Kedzie Institute 20 24 23.8 t7University of Blue Island 21 22 22.7 t8 Plainfield College 7 13 11.9 t9 Irving University 8 11 11.0 t10 Kimball College 6 10 9.6 Example 1.1. When choosing a university to enroll in, students often consult a ranking of potential universities compiled by third parties ( e.g.,CSRankings [ 5]) in order to pick a program that can best help them achieve their goals. As a running example, we consider a ranking of fictitious universities based on a simplified version of CSRankings for the sake of exposition. Table 1 shows the top- 10 universities in descending order of their adjusted average publication counts, computed by \u03c6(t)=17\u221a\ufe01 (t.AI Pubs.+1)5\u00b7(t.Systems Pubs.+1)12 Intuitively, this score is the geometric mean of adjusted publication counts for the 5and12subfields of AI and systems, respectively. In this case, while Lakefront University is ranked 1staccording to the ranking function, with just four fewer publications in systems (keeping the rest of the data unchanged), it would be 3rd. As the number of publications can slightly vary over time, this may raise questions such as \u201chow much does this university deserve its position in the ranking?\u201d or\u201cwas this university a close second in the ranking?\u201d and questions on a broader level, such as \u201chow likely are the two universities to shift in the ranking?\u201d Quantifying the well-foundedness of the positions of items in a ranking is referred to as ranking stability , and has been studied in previous works [ 2,3,12,18,23,48]. In particular, in [ 3], ranking stability is used to measure the robustness of the ranking to changes in the ranking function used to produce it. This definition gives a global ranking stability score and provides insight into how stable the ranking is with respect to uncertainty in the ranking function. Rankings frequently feature items with comparable qualities, such as universities of comparable standing, which can create dense regions within the ranking, where small changes can reasonably lead to position swaps among the items. This phenomenon was recognized, for example, in the National Research Council\u2019s ranking of doctoral programs [ 31], which provides ranges of possible rankings for each university to account for uncertainty in the collected data. Example 1.2. The universities in Table 1 are divided into three dense regions. Each dense region corresponds to a group of universities with similar scores generated by the given ranking function. As shown in Example 1.1, with small (hypothetical) modifications to the number of publications ( 4 in total), the 1stranked university becomes 3rd. In contrast, the change in the number of publications that would shift Lakefront University to be ranked 4this17. The presence of dense regions in a ranking may impact decision-making. For example, consider a student admitted to the universities ranked 4ththrough 7th. Although the top choice should be the highest-ranked option, since all",
+    "paragraph_id": "local-stab-ranking::Introduction::p5",
+    "technical_score": 0.002222222222222224,
+    "citation_score": 0.019999999999999997
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Local Stability of Rankings 204:3 of these universities belong to a dense region, they may be considered as roughly equivalent in quality. Consequently, other factors, such as location or program fit, might be prioritized over the precise ranking order. The ranking stability measure presented in [ 3] has a coarse-grained nature, treating all changes in the ranking equally\u2014for instance, a transposition of a single pair of items is as significant as a complete reversal of the ranking. Thus, this measure may overlook dense regions in the data. This motivates us to propose the concept of local stability , which considers stability as a property of individual items within the ranking rather than the ranking as a whole. Considering stability as a property of an individual item leads to a more natural treatment of dense regions, which are themselves properties of local areas within the ranking. Our contribution may be summarized as follows. Local stability .We define a local stability measure aiming to quantify the effect of modifications to data on the outcome of the ranking for a given tuple by characterizing the magnitudes of changes (orrefinements ) to the tuple that can change its position significantly. To account for the effects of modifications to the data on the ranking we leverage the notion of counterfactual reasoning [30,39,44,45]. Intuitively, we consider small hypothetical (counterfactual) modifications to a single tuple in the data to determine its margin relative to other tuples in the ranking. Restricting attention to a single tuple yields a local stability measure that reflects a best-case analysis, assuming no uncertainty in the remaining tuples of the database, which would otherwise exacerbate instability in many cases. Intuitively, lower magnitude modifications that can change the tuple\u2019s position significantly correspond to a lower local stability. Our definition hinges on a user-given definition of what a significant change in positions is, and is specified by choosing a value krepresenting a range of positions around the tuple\u2019s original ranking. This parameter kcan then be used to account for dense regions when evaluating the local stability. Furthermore, our definition takes into account a set of reasonable changes which may be determined by domain-specific knowledge or in a data-driven manner, and bounds the magnitude of the refinements under consideration. Since local stability is focused on changes in the data, we are able to treat the ranking function as a black-box, allowing our definition to accommodate any ranking function, including those derived by complex LtR models. In a nutshell, refinements may be partially ordered by the magnitude of modifications applied to each attribute value. For instance, continuing Example 1.1, changing the number of AI publications by 3 and systems publications by 2 is considered to be a larger modification compared to only altering the number of AI publications by 2. Utilizing this partial order, we can define a stable zone , where, intuitively, any perturbations to the values of a given tuple do not cause its position in the ranking to change by more than the given value of k. The local stability value is then defined as the relative portion of the stable zone, compared to the overall space of reasonable changes given by the user. While useful and informative, computing the local stability of a tuple is intractable. To circumvent this challenge, we propose a relaxed definition, allowing the stable zone to possibly contain a small number of refinements that can modify the tuple\u2019s position in the ranking by more than k(which we refer to as k-unstable refinements), however keeping the probability that such a refinement is sampled (uniformly) from the stable zone low. Estimating local stability .We present a two-stage sampling-based algorithm that first samples from the space of reasonable changes to construct (an approximate) stable zone. It then verifies that the generated stable zone is approximately stable by sampling refinements within it. We show that by taking enough samples, verifying whether the computed stable zone is indeed approximately",
+    "paragraph_id": "local-stab-ranking::Introduction::p6",
+    "technical_score": 0.012444444444444445,
+    "citation_score": 0.018666666666666668
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Local stability measures the effect of small modifications to a tuple on its position in the ranking while also taking into account dense regions, where multiple tuples have a similar quality and small changes can reasonably lead to position swaps among the tuples. We assume that data modifications",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > [Section Lead-in]::p1",
+    "technical_score": 0.04,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Local Stability of Rankings 204:5 can be made independently, in the sense that changing one tuple does not require modifying any other tuple to preserve the semantics of the data. Under this assumption, we focus on modifications to individual tuples. We consider a ranking to be a permutation of a set of tuples [ 32]. Aranking function is a function fmapping a database Dto a permutation of its tuples. We use f(D)to denote the ranking resulting when applying fon a database D, andf(D)[t]for the position of tin the ranking. When working with any database D, we consider only its numerical attributes. This assumption is standard and follows prior work ( e.g.,[3, 13, 32]).",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > [Section Lead-in]::p2",
+    "technical_score": 0.017999999999999995,
+    "citation_score": 0.042
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Refinements"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Otherwise, we say that \u03b5(t)isk-unstable . 1In this paper, we discuss the symmetric case where the range extends in both directions of the ranking equally, for clarity of presentation. Extending our definitions and methods to make these ranges asymmetric is straightforward.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Refinements::p1",
+    "technical_score": 0.02,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Refinements"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "204:6 Felix S. Campbell & Yuval Moskovitch Example 2.6. Consider again the refinement \u03b5=\u27e8\u221210,\u22125\u27e9, as in Example 2.4. Since \u0394f(D)(t1,\u03b5(t1))=2, we have that \u03b5(t1)is1-unstable for t1overf(D).",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Refinements::p2",
+    "technical_score": 0.02,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to quantify the effect of small modifications to a tuple has on its position in the ranking, we use the magnitude of the changes required to do so. As smaller changes are more likely than larger changes, we are primarily interested in the smallest modifications that cause an item to move more than kpositions in the ranking. For instance, in our running example, having \u00b12 systems publications is more likely than having \u00b110systems publications. With this in mind, we first establish a partial order over refinements.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p1",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Definition 2.7 (Refinement containment). We say that a refinement \u03b5iscontained in a refinement \u03b5\u2032(and\u03b5\u2032contains\u03b5), and denote it by \u03b5\u2aaf\u03b5\u2032, if for every i\u2208[n],|\u03b5i|\u2264|\u03b5\u2032 i|.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p2",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Refinement containment is defined with respect to absolute values as we are primarily concerned with the magnitudes of the refinements being made. For example, the refinement \u03b5\u2032=\u27e810,6\u27e9 contains the refinement \u03b5=\u27e810,\u22125\u27e9since|\u22125|\u2264|6|. Naturally, we write \u03b5\u227a\u03b5\u2032when\u03b5\u2aaf\u03b5\u2032and there is anisuch that|\u03b5i|<|\u03b5\u2032 i|,i.e.,it is the strict refinement containment relation. We can now define ak-stable zone boundary of a tuple tas follows. Definition 2.8 (Stable zone boundary). Given a database D, a tuplet\u2208D, a ranking function f and a value k, letUbe the set of refinements such that \u03b5(t)isk-unstable, and U+be the projection ofUontoRn \u22650. Then, thek-stable zone boundary oftis the set k-SBt where",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p3",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Intuitively, the stable zone boundary consists of the k-unstable refinements of minimal magnitude, i.e.,there is nok-unstable refinement containing any refinement of the boundary (this is also known as a skyline [7]).",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p4",
+    "technical_score": 0.0031802120141342844,
+    "citation_score": 0.0031802120141342844
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Example 2.9. Consider a dataset Dwith two attributes and a ranking function fover tuples in D. Figure 1a illustrates the space of refinements around a tuple t\u2208Dwhere each axis corresponds to the values of tin each one of the attributes. Refinements in the green region are k-stable, and the red area consists of k-unstable refinements ( i.e.,refinements in the set U). Figure 1b shows the projection of the refinements onto Rn \u22650. In this illustration, all the refinements in the green area remain k-stable, whereas the lighter, cross-hatched red region corresponds to refinement magnitudes admitting bothk-stable and k-unstable refinements in the projected space. Consequently, the stable zone boundaryk-SBt f(D)is the curved black line that separates the green zone from the red zone. Definition 2.10 (Stable zone). For a set of refinements R, we denote by E(R)the set of refinements that do not contain any refinement in R,i.e.,",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p5",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "We refer to E(k-SBt f(D))as the stable zone .",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p6",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "By Definition 2.8, any refinement in the stable zone is guaranteed to be k-stable. Continuing Example 2.9, the green region in Figure 1b is the stable zone E(k-SBt f(D)).",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p7",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "The local stability of a tuple is defined with respect to a set of reasonable changes specified by the user, which bounds the values of possible refinements to small changes to the data for which",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p8",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Fig. 1. Illustrated examples of definitions in Section 2 the user believes should not result in significant changes to the tuple\u2019s ranking (either leveraging domain-specific knowledge or in a data-driven manner as we do in Section 6.2). More formally, we define\u03b5maxas a vector\u27e8\u03b5max 1,...,\u03b5max",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p9",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "\u22650, and consider only refinements \u03b5such that\u03b5\u2aaf\u03b5max.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p10",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Example 2.11. In the context of Example 1.1, the set of reasonable changes may depend on the amount of activity in the research area. For example, if we assume AI is a more active area than systems at these universities, we may assume that there is a larger variance in the number of AI papers than systems papers. Therefore, we may choose, e.g.,\u03b5max=\u27e85,3\u27e9, encoding the assumption that each university might have \u00b15AI publications, and \u00b13systems publications. We let RCdenote the set of refinements contained within the vector \u03b5max(i.e.,all\u03b5\u2aaf\u03b5max). For example, in Figure 1, RCis the set of refinements whose projection into Rn \u22650is in the area delineated by the dashed gray lines. We are finally ready to define the local stability of a tuple. Definition 2.12 (Local stability). The local stability of a tupletwith respect to a database D, a ranking function f, a set of reasonable changes RC, and a parameter kis defined as Stabilityf(D)(t,k|RC)=Vol\u0000RC\u2229E(k-SBt where Vol(\u00b7)is the volume of the sets ( i.e.,its Lebesgue measure). Intuitively, local stability measures the relative size between the stable zone restricted to the set of reasonable changes and the set of reasonable changes. Example 2.13. For the\u03b5maxandRCshown in Figure 1b, the local stability is the ratio between the green area restricted to RCand the area beneath RC. In this case, the local stability would be high, since the area is mostly green. f(D)is a non-trivial task. In fact, we can show Theorem 2.14. Unless FP=#P, there is no polynomial-time algorithm for computing k-SBt given a database D, a tuplet\u2208D, a ranking function f, and a value k.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p11",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "Proof Sketch. We prove this by showing that if k-SBt f(D)can be computed in polynomial time, then computing|k-SBt f(D)|is possible in polynomial time as well. However, we show that #DNF , a well-known #P-complete problem [ 43], is polynomial-time reducible to computing |k-SBt f(D)|.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p12",
+    "technical_score": 0.0009540636042402819,
+    "citation_score": 0.002226148409893992
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Therefore, if there is such an algorithm to compute k-SBt f(D), then FP=#P. We relieve the details to [10]. \u25a1",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p13",
+    "technical_score": 0.0012720848056537097,
+    "citation_score": 0.0019081272084805643
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Moreover, we expect that even if the stable zone boundary k-SBt f(D)is given, computing the stability measure remains intractable since it is closely related to the problem of computing the hypervolume indicator , which computes the volume of a union of hyperrectangles anchored at the origin and is known to be #P-hard [8, 24].",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p14",
+    "technical_score": 0.0006360424028268546,
+    "citation_score": 0.0025441696113074194
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "Following the complexity of local-stability computation, we define an approximate version of the problem. We start by defining an \u03b1-k-stable zone boundary as a set of refinements that is a k-stable boundary up to some error. Namely, the probability of sampling a k-unstable refinement from the set of refinements under an \u03b1-k-stable zone boundary is at most \u03b1when samples are drawn uniformly. (ii)P\u03b5\u223cU( RC)[\u03b5(t)isk-unstable|\u03b5\u2208E(\u03b1-k-SBt whereUis the uniform distribution.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p15",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "When\u03b1is small, we can assure that with high probability, refinements in RC\u2229E(\u03b1-k-SBt when made to the tuple will not cause its position in the ranking to shift by more than k. We can now define\u03b1-local stability.",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p16",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Problem Formulation",
+      "Local Stability"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Definition 2.16 ( \u03b1-local stability). An\u03b1-local stability of a tupletwith respect to a database D, a ranking function f, an\u03b1-k-SBt f(D)Sb, a set of reasonable changes RC, and a parameter kis defined as \u03b1-Stabilityf(D)(t,k|Sb,RC)=Vol(RC\u2229E(Sb))",
+    "paragraph_id": "local-stab-ranking::Problem Formulation > Local Stability::p17",
+    "technical_score": 0.0033922261484098924,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We propose LStability , a sampling-based algorithm to estimate \u03b1-local stability given a database D, a tuplet\u2208D, a ranking function f, a set of reasonable changes RC, a valuek, and parameters relating to the quality and confidence of the approximation which we discuss in the following. The algorithm relies on the fact that, despite the hardness of computing the stable zone boundary (Theorem 2.14), given a set of refinements R, we can efficiently bound \u03b1, such thatRis an\u03b1-k-SBt with high probability. We first show that with a sufficient number of samples, we can estimate the probability that a given set Rcontains ak-unstable refinement. Proposition 3.1. Given a database D, a ranking function f, a valuek, a tuplet\u2208D, a confidence level\u03b4, a confidence range \u03b7, and a set of refinements R, let p=P\u03b5\u223cU( RC\u2229E(R))[\u03b5(t)isk-unstable] bp=1",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p1",
+    "technical_score": 0.01923076923076923,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u03b5\u2208S1[\u03b5(t)isk-unstable] whereSis a set ofN=1 2\u03b72ln1 \u03b4samples drawn i.i.d. uniformly from RC\u2229E(R). Then we have that P[p\u2212bp\u2264\u03b7]\u22651\u2212\u03b4 Proof Sketch. This results as an immediate application of the Hoeffding inequality [25]. \u25a1",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p2",
+    "technical_score": 0.016346153846153885,
+    "citation_score": 0.016346153846153885
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Local Stability of Rankings 204:9",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p3",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Fig. 2. Illustrated example of the steps of LStability, based on the space of refinements shown in Figure 1. (a) Green (circular) points represent sampled stable refinements, while red (cross) points represent unstable refinements. (b) The projection of the k-unstable refinements in ContoRn",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p4",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "C). The gray (cross) points represent those along the estimated stable zone boundary. (c) Samples taken from the estimated stable zone RC\u2229E(Sb)for the verification step.",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p5",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "The following is a corollary of Proposition 3.1 Corollary 3.2. N=1 2\u03b72ln1 \u03b4samples drawn i.i.d. uniformly from RC\u2229E(R)are sufficient to confirm that Ris an\u03b1-k-SBt f(D)for\u03b1=bp+\u03b7with probability 1\u2212\u03b4.",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p6",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "LStability builds on this idea. It gets as input a database D, a tuplet\u2208D, a ranking function f, a valuek, a set of reasonable changes RC, a sample budget N, a confidence level \u03b4, a confidence range \u03b7, and consists of two phases. The first generates a set of refinements Sb, which is an \u03b1-k-SBt with high probability based on Corollary 3.2. In the second phase, LStability outputs an estimation of the ratio between the volume of the estimated stable zone defined by Sband the volume of RC. Figure 2 provides an illustrative overview of LStability . In the first phase, LStability computes a set of refinements Sb, which is an \u03b1-k-SBt f(D)with high probability. This is done in two sample-based steps: set construction andverification . In the construction step, illustrated in Figures 2a and 2b, the algorithm proceeds as follows:",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p7",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "(1)Samples a set CofNrefinements uniformly from RCand assigns to U+ Cthe projection of the k-unstable refinements in ContoRn \u22650(see Figure 2a).",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p8",
+    "technical_score": 0.03269230769230769,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "C)(see Figure 2b).",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p9",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "In the verification step, illustrated in Figure 2c, the algorithm performs the following:",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p10",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "(3)It samples a set Vof a sufficient number of refinements ( N=1 2\u03b72ln1 \u03b4samples) uniformly from",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p11",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "(4)It computes the proportion of k-unstable refinements in Vto the overall number of samples N, thereby determining \u03b1such thatSbis\u03b1-k-SBt f(D)with probability 1\u2212\u03b4based on Corollary 3.2 Finally, in the second phase, given Sbfrom the first phase, LStability applies standard Monte Carlo methods [ 38] to estimate \u03b1-Stabilityf(D)(t,k|Sb,RC). In cases where the stable zone is guaranteed to be convex ( e.g.,when the ranking function is based on scores computed by a linear combination of attributes), alternative methods may be used as a drop-in replacement. In particular, [ 16,21] describe efficient algorithms for estimating the volumes of convex polytopes with theoretical guarantees. While these methods offer stronger theoretical guarantees for both accuracy and efficiency when applicable, the Monte Carlo approach is generally efficient and sufficiently accurate for our purposes. Moreover, we note that the convexity assumption does not hold in many practical settings.",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p12",
+    "technical_score": 0.004615384615384615,
+    "citation_score": 0.006923076923076922
+  },
+  {
+    "section_path": [
+      "Computing Local Stability"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Fig. 3. The stability of refinements for Dempster Uni. and k=0. Refinements in the green (solid) area are0-stable and the red (hatched) area 0-unstable. The reduced set of reasonable changes containing all refinements on the stable zone boundary consists of those under the gray dashed line.",
+    "paragraph_id": "local-stab-ranking::Computing Local Stability::p13",
+    "technical_score": 0.011538461538461537,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We next outline three optimizations to LStability . The first reduces the set of reasonable changes RC, allowing the algorithm to utilize the sample budget more effectively. The second optimization aims to reduce the cost of evaluating the ranking function f. This optimization is applicable when a modification of a tuple in the data does not affect the relative order of other tuples obtained by the ranking function, which is a common property of ranking functions. Finally, we suggest bounding \u03b1to reduce the running time. This is done by iteratively running the construction and verification steps with a partial sample budget in each iteration, allowing early termination if a desired level of \u03b1has been reached.",
+    "paragraph_id": "local-stab-ranking::Optimizations > [Section Lead-in]::p1",
+    "technical_score": 0.06521739130434782,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reducing the Set of Reasonable Changes"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Example 4.1. Consider our running example and \u03b5max=\u27e85,3\u27e9defined in Example 2.11. Figure 3 depicts the stability of refinements for Dempster Uni. and k=0. Consider the refinement \u03b5=\u27e80,2\u27e9 as shown in Figure 3, \u03b5(t2)is0-unstable for f(D). Thus, any refinement with more than \u00b12systems publications cannot be in 0-SBt f(D). In fact, any refinement that lies above the gray line cannot be part of the stable zone boundary.",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reducing the Set of Reasonable Changes::p1",
+    "technical_score": 0.005869565217391304,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reducing the Set of Reasonable Changes"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "To reduce RC, a portion of the sampling budget is used to sample single-dimensional refinements \u03b5max ifor every attribute ai. Let\u03b5\u2217 idenote the minimal (absolute) value of \u03b5iin the sample such that \u03b5(t)isk-unstable for f(D). We then define RC\u2217as the set of reasonable changes where \u03b5max i=\u03b5\u2217 i.",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reducing the Set of Reasonable Changes::p2",
+    "technical_score": 0.005869565217391304,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reducing the Set of Reasonable Changes"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "LStability then uses RC\u2217instead of RC, and given an estimation of \u03b1-Stabilityf(D)(t,k|Sb,RC\u2217),",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reducing the Set of Reasonable Changes::p3",
+    "technical_score": 0.005869565217391304,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reducing the Set of Reasonable Changes"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Local Stability of Rankings 204:11 Construction Verification Vol.",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reducing the Set of Reasonable Changes::p4",
+    "technical_score": 0.005869565217391304,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reducing the Set of Reasonable Changes"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "EstimatorRanking func.",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reducing the Set of Reasonable Changes::p5",
+    "technical_score": 0.005869565217391304,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reducing the Set of Reasonable Changes"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "-local stability Fig. 4. Overview of the components of LStability we scale it by a factor ofVol(RC\u2217) Vol(RC)to obtain\u03b1-Stabilityf(D)(t,k|Sb,RC). When the ranking function is monotone [ 20], reducing RCcan be done efficiently using binary search, which we detail in [ 10].",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reducing the Set of Reasonable Changes::p6",
+    "technical_score": 0.003913043478260869,
+    "citation_score": 0.005869565217391304
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reduce Re-ranking Cost"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Tuple independence is a common feature of ranking functions. For instance, the scoring function based on the geometric mean of attributes in Example 1.1 is tuple-independent, since altering the attributes of one tuple only modifies the score of that tuple, leaving the relative ordering between the rest of the tuples unchanged.",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reduce Re-ranking Cost::p1",
+    "technical_score": 0.013043478260869565,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reduce Re-ranking Cost"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Given a tuple tand a refinement \u03b5, lett\u2191(t\u2193)be the tuple k+1positions above (below) tinf(D) wherefis a tuple-independent ranking function. Since the relative ordering between all tuples enough to check whether the relative order between \u03b5(t)andt\u2191(t\u2193) is different than that of tand t\u2191(t\u2193). Therefore, we only need to evaluate fover three tuples (a constant number), which can be significant when the database is large and the ranking function evaluation heavily depends on the data size ( e.g.,in LtR models), as we show in our experimental evaluation (Section 6.5).",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reduce Re-ranking Cost::p2",
+    "technical_score": 0.013043478260869565,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reduce Sampling for Bounded \u03b1"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "LStability returns the level of minimality \u03b1attained by the refinements boundary it computes. However, it is natural to opt for a desired \u03b1, and it may be unnecessary for the construction step to sample as many times as it does in order to obtain a set of refinements Sbsuch thatSbis a \u03b1-k-SBt f(D)with the desired \u03b1. To this end, we extend LStability with the ability to apply iteratively theconstruction and verification steps as depicted in Figure 4. In each iteration, the algorithm computes a set Sbusing a limited amount of samples, and then checks whether it is \u03b1-k-SBt for\u03b1\u2264the given bound. If so, the algorithm continues to the volume estimation of the Sband RC. Otherwise, the next construction step merges the unstable refinements from the previous verification step into Sbto improve its estimation using these counterexamples, and samples only ... ... ... (a) Scores of dataset",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reduce Sampling for Bounded \u03b1::p1",
+    "technical_score": 0.009782608695652173,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Optimizations",
+      "Reduce Sampling for Bounded \u03b1"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Items(b) Dataset visualized Fig. 5. Example showing two distant clusters in the space of attributes can map to similar scores, suggesting they are all part of a single dense region in the ranking from RC\u2229E(Sb)which ensures the sampled refinements can only improve our estimation of Sb. The process runs for literations, as determined by the user. The choice of the number of samples taken per iteration by the construction step introduces a trade-off. The goal is to take just enough samples to get a good enough estimated stable zone boundary, namely, a set which is \u03b1-k-SBt f(D)with the desired \u03b1. However, when more than a single iteration is required to obtain a set Sbsuch that it is \u03b1-k-SBt f(D)for the given \u03b1, the verification step is evaluated multiple times. We propose apportioning the budget equally to each iteration, taking into account the samples taken by the verification step in each iteration. Specifically, if N samples were allocated to the construction step and Vsamples to the verification step in the vanilla version of LStability , we allocateN+V l\u2212Vsamples to the construction step in each iteration. Under this allocation, we take as many samples as was originally budgeted in the worst case.",
+    "paragraph_id": "local-stab-ranking::Optimizations > Reduce Sampling for Bounded \u03b1::p2",
+    "technical_score": 0.009782608695652173,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Detecting Dense Regions"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The local stability of a tuple tis defined with respect to a given k, defining the range of positions with respect to which local stability is evaluated. This parameterization allows our definition of local stability to be useful in the presence of dense regions in the ranking. Thus far, we have focused on computing the local stability of a given tuple in a ranking. In our running example, the local stability measure evaluates how well a particular university aligns with its assigned position in the ranking. An interesting alternative perspective is to explore, for a given university, the potential bounds on its possible position within the ranking, based on the local stability measure. Namely, identifying the dense region around a tuple in the ranking, if it is in one. Intuitively, in order to identify dense regions, we need to cluster items in the ranking with similar utilities. However, this may be impossible when the ranking is not score-based ( e.g.,some list-wise LtR models [ 27]), so there is no meaningful measure of utility for a given item. Another nai\u0308ve solution involves clustering based on the tuples\u2019 attributes. However, this approach assumes that all tuples ranked similarly must be similar in their attributes, which may not always be the case, as we next illustrate. Example 5.1. Figure 5a shows items consisting of two attributes xandyranked in descending order ofx+y, each represented as a point in Figure 5b. As demonstrated in Figure 5b, two clusters may be observed based on their attribute values and are depicted as blue and green dashed circles in the figure. However, their scores, as shown in Figure 5a, are all similar, indicative of all items belonging to a single dense region. To this end, we propose Detect-Dense-Region , a heuristic for computing a value kfor a given tuple in the database, following the intuitive meaning of dense regions viewed through the lens",
+    "paragraph_id": "local-stab-ranking::Detecting Dense Regions::p1",
+    "technical_score": 0.020000000000000004,
+    "citation_score": 0.03
+  },
+  {
+    "section_path": [
+      "Detecting Dense Regions"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "204:14 Felix S. Campbell & Yuval Moskovitch k-stable refinements not containing any sampled k-unstable refinement (line 9) and estimate the local stability for kas1\u2212|S| N(line 10). Clustering-based suggestion of dense region .Given an estimation of the local stability for the observed values of k, according to our notion of a dense region, the extent of the dense region in which the tuple lies is the first value of kfor which the succeeding value of khas a significantly larger value of local stability. Therefore, Detect-Dense-Region computes the difference in stability (lines 11 - 13) for each value of k,dk, as the local stability for kminus the local stability for k\u22121 (and fixingd0=\u009cStability(t,0)). It then employs a Fisher-Jenks natural breaks [ 19] clustering to partition the differences into two groups, CsandClof small and large differences, respectively (lines 14). Finally, Detect-Dense-Region returnsk, wherekis the smallest value such that dkis in the set of large differences Cl(line 15).",
+    "paragraph_id": "local-stab-ranking::Detecting Dense Regions::p2",
+    "technical_score": 0.020000000000000004,
+    "citation_score": 0.03
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we present an experimental evaluation. We start with two case studies whose goal is to demonstrate the usefulness of our local stability definition. We then study the effect of the sample budgetN, the confidence level \u03b4, and the confidence range \u03b7on the performance of LStability . We examine the performance of Detect-Dense-Region using real and synthetic data, and show the scalability of the algorithm and the usefulness of our proposed optimizations. We conclude with a comparison to the definition of stability that was presented in [3].",
+    "paragraph_id": "local-stab-ranking::Experiments > [Section Lead-in]::p1",
+    "technical_score": 0.025714285714285714,
+    "citation_score": 0.059999999999999984
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Implementation details .Our experiments were evaluated on Google Cloud Compute Engine c4d-highcpu-4 servers, with 4 vCPUs (AMD EPYC 9005 series) and 7 GB of memory. We implement the algorithms as an extension of [ 9] in Python 3.13, using Polars21.29 to load and manipulate data. We repeat each experiment 10times, and show the averages of the quantities of interest ( e.g., runtime, estimated ( \u03b1-)local stability) in the figures. We implement the uniform sampling over the refinements under the estimated boundary Sb, used in the verification and optimized construction step of LStability , by rejection sampling. More concretely, we sample uniformly from RC, and reject refinements containing any refinement of Sb. The efficiency of rejection sampling can be poor when the volume of the area we want to sample from is relatively small compared to RC. Therefore, we use a threshold over the estimated volume\u03c4v, such that when the estimated ratio between the volume of the area and its containing hyperrectangle is below \u03c4vat the end of the construction step, we skip the verification step and stop early. We use \u03c4v=0.05, as improving the estimation below this point yields diminishing returns with respect to the verification cost. We evaluated 10,560 experiments in total, where the verification step was skipped due to \u03c4vin 7.6% of them. We evaluate LStability with all optimizations described in Section 4 enabled and compare its performance to the basic version of LStability without optimizations as presented in Section 3. Parameters setting .For the construction step, we set the total number of samples to be at most 750,455, where in each iteration 20,000 samples are taken when the maximal number of iterations l is20. We chose this number empirically from the sample budget parameter study in Section 6.3. For the verification step, unless otherwise specified, we set the bound on \u03b1to be 0.05and the confidence bound \u03b4=0.05. That is, we are satisfied if we are 95% sure that 95% of refinements contained in the estimated boundary are k-stable, for the given value of k. In order to have a decent chance of attaining \u03b1\u22640.05, we set the confidence range \u03b7=0.01. 2https://pola.rs",
+    "paragraph_id": "local-stab-ranking::Experiments > Experimental Setup::p1",
+    "technical_score": 0.011428571428571432,
+    "citation_score": 0.017142857142857147
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Local Stability of Rankings 204:15 Datasets & ranking functions .We evaluated our algorithms using both real and synthetic datasets, utilizing different types of ranking functions as follows. NBA (2023-2024): We consider a ranking of the top-100 players according to a popular sports website [ 37]. Since the ranking methodology is not provided, we learn a ranking function from the reference ranking using player statistics from the 2023-2024 season (collected from [ 34]) as the input features. We use LightGBM [ 28] to learn a regressor based on the same five statistics used in [ 13]: points ( PTS), total rebounds ( TRB), assists ( AST), steals ( STL), and blocks ( BLK). For these five statistics, we consider the season totals since we are interested in ranking overall season performance. By default, we let the set of reasonable changes ( RC) be approximately 5%of the maximum difference in each attribute. CSRankings: We use a dataset and ranking function from [ 32] (based on [ 5]), comprising 188 universities and the counts of their faculty and publications for four different fields of computer science: artificial intelligence ( AI), systems ( Sys), theory ( Thry ), and interdisciplinary research (Intdsc ). The count of publications is adjusted to account for the number of authors in each publication by dividing the credit equally, e.g.,a paper with 2authors from different institutions counts as 0.5publications for each of the involved institutions ( i.e.,fractional changes in the publication count for a given institution are valid and meaningful). The universities are ranked in descending order of their scores, which are computed as a variation of geometric mean over the adjusted publication counts in each area\u2013specifically, \u03c6(t)=27\u221a\ufe01 (t.AI+1)5\u00b7(t.Sys+1)12\u00b7(t.Thry+1)3\u00b7(t.Intdsc+1)7 We let RCbe approximately 5%of the maximum difference in each attribute\u2013about \u00b14adjusted publication count in AIand\u00b11adjusted publication count in the other fields. Synthetic: We generate synthetic datasets with dense regions specifically in mind. In order to generate a synthetic dataset of Ntuples anddattributes, we iteratively generate dense regions with a random number of tuples until Ntuples are in the dataset. Each dense region is assigned a scores, which is separated from the preceding dense region by a constant margin c. We then draw tuples from a multivariate Gaussian distribution whose mean is the one-vector scaled bys d, and the covariance matrix is a scaled identity matrix. We rank the resulting dataset by the ranking function, sorting the tuples in descending order of the sum of their attributes. We let RCbe defined by the vector \u03b5maxwhose components are proportional toc d, ensuring that local stability values are comparable across varying attribute counts for a fixed margin c.",
+    "paragraph_id": "local-stab-ranking::Experiments > Experimental Setup::p2",
+    "technical_score": 0.007142857142857145,
+    "citation_score": 0.028571428571428574
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We start with two case studies on the NBA and CSRankings datasets.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > [Section Lead-in]::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "decision-making in a number of contexts, e.g.,in fantasy leagues, drafts, and estimating the strength of a given team. In this case study, we investigate the local stability of NBA players in the 2023- 2024 season as ranked by a learned ranking function, with the goal of ranking players by their performance that season. Since the top of the ranking receives significantly more attention [ 17,42], we focus on the local stability of the top-10 ranked players. The local stability of the top-10 players for different values of kis depicted in Figure 6a. Assume we wish to choose the season\u2019s most valuable player (MVP). According to the ranking, a natural choice would be the top-ranked player of this season, Nikola Jokic\u0301. However, Figure 6a shows that his ranking in 1stis very unstable with local stability of 0.02fork=0. Indeed, with minor modifications to his total statistics that season, e.g.,+10.04inPTS,\u22123.04inTRB,\u22120.56inAST, \u22121.01inSTL, and\u22121.11inBLK, he would be ranked 2nd. Notice that these changes are particularly",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "204:16 Felix S. Campbell & Yuval Moskovitch 0 2 4 6 8 10 k0.000.250.500.751.00Stability N. Joki \u0301c (1st) L. Don \u02c7ci \u0301c (2nd) G.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Antetokounmpo (3rd) S.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p3",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Gilgeous-Alexander (4th) J.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p4",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Embiid (5th)S.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p5",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Curry (6th) A.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p6",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Davis (7th) A.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p7",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Edwards (8th) K.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p8",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Durant (9th) J. Tatum (10th) (a) Effect of kon stability values 0 2 4 6 8 10 k10203040Runtime [sec.] N. Joki \u0301c (1st) L. Don \u02c7ci \u0301c (2nd) G.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p9",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Antetokounmpo (3rd) S.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p10",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Gilgeous-Alexander (4th) J.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p11",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "Embiid (5th)S.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p12",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Curry (6th) A.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p13",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Davis (7th) A.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p14",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "Edwards (8th) K.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p15",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "Durant (9th) J. Tatum (10th) (b) Effect of kon runtime Fig. 6. Case study results for top-10 NBA players small in comparison to his overall season totals: in this season, Jokic\u0301 had 2,085 PTS, 976 TRB, 708 AST, 108 STL, and 68 BLK. Furthermore, his ranking among the top-3 is also unstable, with local stability of 0.36fork=2. This suggests that naming Jokic\u0301 as this season\u2019s MVP may not be well-founded under this ranking function. Based on this ranking function, we may instead conclude that choosing Luka Donc\u030cic\u0301 is more justifiable given that he is certainly in the top-4 (more likely than Jokic\u0301). Alternatively, we may refine the ranking function ( e.g.,by considering only a subset of the attributes) to obtain a ranking with higher local stability values that can be used to justify the chosen MVP. We observed that most of the top-10 players are not stable within their own position: the highest estimated stability when k=0is0.46, in the case of Anthony Davis. While most players are unstable for k=0, we observed that the majority of players are stable within \u00b13ranks of their initial ranking. Therefore, we may infer this particular ranking function is reasonably locally stable for the players in the top-10, and confirm that it is overall well-founded : namely, highly-ranked players remain highly-ranked even under small modifications in their statistics for this season. A notable exception is Joel Embiid, whose stability is very low for all evaluated values of k. This suggests that the learned ranking function has overfit to Embiid\u2019s statistics, as even very small modifications to his statistics cause him to drop out of the top-10 players. This interpretation is supported by the fact that Embiid played far fewer games than other players in the 2023-2024 season (only 39, compared to more than 70 for most other players), due to injuries. Therefore, his total statistics for the season are much lower than they would have been otherwise, making them more similar to lower-ranked players. Figure 6b shows the runtime of (the optimized) LStability for different values of kfor each of the top-10players. Broadly speaking, the runtime is decreasing for increasing values of k. Intuitively, this is explained by the fact that there are necessarily more k-unstable refinements for lower values ofk, often resulting in more iterations taking place in LStability to produce a good enough estimate. Notable exceptions are Stephen Curry and Joel Embiid, in which the runtime starts low (because they are below the estimation volume threshold \u03c4v), rises when just above \u03c4v, and then decreases again once their local stability increases. When compared to the basic version of LStability , as",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p16",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: NBA Player Rankings"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Local Stability of Rankings 204:17 0 2 4 6 8 10 k0.000.250.500.751.00Stability CMU (1st) UIUC (2nd) UCSD (3rd) MIT (4th) Georgia Tech (5th)Stanford (6th) UMich (7th) UW (8th) UCB (9th) Cornell (10th) (a) Effect of kon stability values 0 2 4 6 8 10 k102030Runtime [sec.] CMU (1st) UIUC (2nd) UCSD (3rd) MIT (4th) Georgia Tech (5th)Stanford (6th) UMich (7th) UW (8th) UCB (9th) Cornell (10th) (b) Effect of kon runtime Fig. 7. Case study results for top-10 universities presented in Section 3, our optimized algorithm is 51.6\u00d7faster in the best case, and 25.4\u00d7faster on average. We show the full results in [10].",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: NBA Player Rankings::p17",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: CSRankings"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "been the subject of significant study in order to develop methodologies that accurately reflect the perceptions of the quality of the institutions when compared with each other [ 6,31]. We consider evaluating the local stability of institutions in a more specialized ranking, CSRankings [ 5], which ranks institutions based on publication metrics in computer science conferences. Given the focus placed on high positions in the ranking, we again consider the local stability of the top-10 universities.",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: CSRankings::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Case Studies",
+      "Case Study: CSRankings"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Figure 7a shows that the ranking is substantially locally stable. In fact, the top 2 universities, Carnegie Mellon University (CMU) and the University of Illinois at Urbana-Champaign (UIUC), are estimated to be completely locally stable: no change made to them from the set of reasonable changes causes them to rank outside of 1stor 2nd, respectively. For the remaining universities, we see that fork=3, all of the universities have an estimated local stability of more than1 fromk\u22655, all of the universities are estimated to be completely locally stable. This lends credence to the claim of these universities fielding the top-ranked computer science departments, since small changes in the ranking do not result in drastic changes in their position. Figure 7b shows the runtime of (the optimized) LStability depending on the value of k. As expected, the runtime in general decreases with k. As in the NBA case study, there are universities with estimated stabilities just above the threshold \u03c4v, leading to higher runtimes for those values of k. We observed a speedup of up to 35.2\u00d7in the best case, and of 19.1\u00d7on average compared to the performance of the basic version of LStability . We show the full results in [10].",
+    "paragraph_id": "local-stab-ranking::Experiments > Case Studies > Case Study: CSRankings::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The next set of experiments study the effect of the sampling budget Nand verification parameters \u03b4 (confidence level) and the \u03b7(confidence range) on the running time of LStability and the computed stability values. The observed effects of the parameters on the stability values were negligible, and",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "204:18 Felix S. Campbell & Yuval Moskovitch 0 10000 20000 30000 Samples/iteration102030Runtime [sec.] N. Joki \u0301c (1st) L. Don \u02c7ci \u0301c (2nd) G.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Antetokounmpo (3rd) S.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p3",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Gilgeous-Alexander (4th) J.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p4",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Embiid (5th)S.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p5",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Curry (6th) A.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p6",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Davis (7th) A.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p7",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Edwards (8th) K.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p8",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Effect of Parameters"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Durant (9th) J. Tatum (10th) (a) NBA 0 10000 20000 30000 Samples/iteration10203040Runtime [sec.] CMU (1st) UIUC (2nd) UCSD (3rd) MIT (4th) Georgia Tech (5th)Stanford (6th) UMich (7th) UW (8th) UCB (9th) Cornell (10th) (b) CSRankings Fig. 8. Effect of the number of samples per round taken by the construction step on runtime thus are left to [ 10]. For each dataset, we set ksuch that a wide variety of values of local stability are observed across different tuples. Specifically, for NBA we chose k=5, andk=1for CSRankings. Sample budget .Figure 8 depicts the running time for increasing sampling budget Nbetween 1,000 and 32,000. We observed a tradeoff in running time between small and large per-iteration sample budgets. When the number of samples in a single iteration is insufficient to achieve the desired\u03b1, multiple iterations are required, incurring the cost of multiple executions of the verifica- tion step. This phenomenon is more pronounced for tuples with low values of local stability ( e.g., Cornell in Figure 8b). Verification parameters ( \u03b7,\u03b4).To assess the effect of \u03b7, we vary its value from 0.01to0.05. The results are shown in Figure 9. We observed an increase in running times. This can be explained as follows. Recall that \u03b1=bp+\u03b7wherebpis the estimated probability that the computed Sbcontains an unstable refinement as defined in Proposition 3.1. Thus, when \u03b1is fixed, as\u03b7increases, the acceptable upper bound on bpdecreases, meaning the portion of sampled unstable refinements under Sbshould decrease. Achieving a lower bpmay require an increase in the number of samples, and as a result growing number of iterations, which incurs higher computation time. Finally, Figure 10 shows the running time for values of \u03b4from 0.01to0.1. As expected, the runtime decreases with increasing\u03b4values, i.e.,for low confidence level, the running time is lower.",
+    "paragraph_id": "local-stab-ranking::Experiments > Effect of Parameters::p9",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Dense Region Detection"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We next evaluate Detect-Dense-Region in terms of accuracy and runtime. To this end, we use the CSRankings dataset and the Synthetic dataset to assess the quality of the output given the ground truth over dense regions in the data. We do not consider the NBA dataset in this experiment, as the learned ranking function treats items with similar statistics in a substantially disparate manner (e.g.,the case of Joel Embiid in the NBA dataset), leading to the absence of clear dense regions in the rankings. Table 3 presents the top-10 universities in CSRankings along with their computed score. We observe a clear separation between different groups in the data based on their scores, which is",
+    "paragraph_id": "local-stab-ranking::Experiments > Dense Region Detection::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Dense Region Detection"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "204:20 Felix S. Campbell & Yuval Moskovitch Table 3. Top-10 computer science departments according to CSRanking [ 32], with dense regions highlighted University AI Sys Thry Intdsc Score \u2193 1stCMU 71.4 11.9 21.1 13.8 19.53 2ndUIUC 46.1 12.6 16.0 7.2 15.39 3rdUCSD 31.6 9.0 10.1 10.3 13.00 4thMIT 28.1 8.6 16.2 7.9 12.33 5thGeorgia Tech 28.5 7.8 6.9 10.2 11.58 6thStanford 36.7 5.4 13.3 11.5 11.56 7thUMich 30.4 9.0 9.3 5.9 11.26 8thUW 28.0 6.2 12.2 10.0 11.13 9thUCB 23.2 7.4 15.9 6.4 10.69 10thCornell 42.0 5.7 12.8 6.8 10.66 (UW). Indeed, the local stability value for k=0is7\u00b710\u22126, fork=1is0.29and fork=2is0.83, i.e.,an increase of 0.29fromk=0tok=1, while the increase from k=1tok=2is0.54, which is significantly larger. However, the former is classified as being large by the clustering algorithm due to the smaller differences between other values of k(which are all less than 0.15). The observed k values for the rest of the tuples matched the dense regions as they are depicted in Table 3. These results highlight the usability of Detect-Dense-Region to detect dense regions in the rankings as a reasonable approach to solving the problem. When accounting for dense regions, the local stability of the ranking becomes evident. Specifically, when choosing kto span the dense area of the universities, we find that all the universities (except Cornell) have a local stability of at least",
+    "paragraph_id": "local-stab-ranking::Experiments > Dense Region Detection::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Dense Region Detection"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "2. In particular, Cornell has lower stability within its dense region than UC Berkeley (UCB) since UCB is buoyed by their relative strength in systems publications while Cornell is not, therefore making it feasible for Cornell to rank 11th. To further evaluate the performance of Detect-Dense-Region , we utilized the Synthetic dataset withd=2and100tuples, which was generated with dense regions and thus provides us with ground truth for kvalues that cover the dense region to which the tuple belongs. We executed Detect-Dense-Region on all 100tuples of the Synthetic dataset and compared the output kvalue for each tuple with the ground truth value of k. For all 100tuples, Detect-Dense-Region was correctly able to recommend the value of kthat fits the dense region according to the data generation process. Efficiency of Detect-Dense-Region .To show the efficiency of Detect-Dense-Region , we compared the runtime of Detect-Dense-Region to that of a variant where the stability values are computed using LStability . The evaluation was done on all 100tuples of the Synthetic dataset. The total runtime for Detect-Dense-Region was 7 minutes, compared to 141 minutes when using LStability for the local stability values computation. We observed a 20.3\u00d7improvement overall, where Detect-Dense-Region was up to 32\u00d7faster with an average of 20.4\u00d7improvement.",
+    "paragraph_id": "local-stab-ranking::Experiments > Dense Region Detection::p3",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Scalability & Optimizations"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We next examine the scalability of the optimized version of LStability (LSt) compared to the basic version presented in Section 3 (Basic), and quantify the effect of our proposed optimizations. Scalability .We evaluate the scalability of our methods with growing data sizes and numbers of attributes using synthetic datasets. Figure 11 shows the runtime of both the optimized and basic versions of LStability as a function of the data size. As expected, LSt outperforms Basic. We observed a linear increase in the Basic\u2019s running time, with increasing data size, while the impact on",
+    "paragraph_id": "local-stab-ranking::Experiments > Scalability & Optimizations::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Scalability & Optimizations"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Local Stability of Rankings 204:21 LSt\u2019s running time was negligible. This confirms that the dependence on data size can be eliminated for tuple-independent ranking functions by the optimization to reduce the re-ranking cost. The runtime as a function of the number of attributes is depicted in Figure 12. We note that the running time can be affected by the stability of the tuples, i.e.,tuples with stability below the threshold\u03c4vtypically incur shorter runtimes due to early termination. Due to the randomness involved in the data generation process and tuple selection, it is likely that each evaluated dataset has a mixture of high and low stabilities. Consequently, we report the maximum observed running time per tuple. For Basic, the runtime increases linearly with the number of attributes as each additional attribute incurs more overhead in e.g.,computingMin\u227aof a set of refinements. Furthermore, the runtime of LSt increases exponentially with the number of attributes, as additional iterations must be performed in order to attain the desired \u03b1. Interestingly, for more than 6 attributes, the performance of LSt degrades and becomes slower than Basic in the worst cases. In these cases, LSt is performing close to the maximum number of allotted iterations, and incurs overhead from e.g.,the increasing cost to perform the rejection sampling as the estimated stable zone shrinks. However, we emphasize that this is only true in the worst case (Figure 12 shows max runtimes). On average, LSt is 11.8\u00d7faster for 6 to 10 attributes. Ablation Study .We compare the runtime of different variants of LStability : (LSt) LStability equipped with all the optimizations, (LSt-I), denoting LStability where the iteration optimization for bounded \u03b1is disabled, (LSt-C), denoting LStability without the optimization for reducing the set of reasonable changes, (LSt-R), denoting LStability with no reduction of the re-ranking cost, and (Basic) denoting LStability with no optimizations enabled, as described in Section 3. To demonstrate the difference in performance, we report the overall running time for computing the stability values for every tuple in the top- 10for the values of kchosen in Section 6.3 for each variant of the algorithm. The results are shown in Figure 13. For the NBA dataset, the basic version was overall 28.6\u00d7slower than LSt and 13.2\u00d7slower for CSRankings. Interestingly, the performance gap between Basic and LSt-I is negligible on CSRankings, whereas on the NBA dataset Basic is 1.51\u00d7slower. This is because Basic and LSt-I draw the same number of samples, but LSt-I additionally incorporates an optimization that reduces re-ranking costs, which is more effective for the NBA dataset than CSRankings due to the higher cost of the learned ranking function used for the former. The use of iterative computation to achieve a bounded \u03b1value was shown to be the most effective, improving the runtime for a single tuple by a factor of 37\u00d7in the best case, and 18.9\u00d7overall for the NBA dataset, and 13.2\u00d7for CSRankings. A notably smaller effect was observed for the reduction of reasonable changes optimization: no change in the NBA dataset, and 1.23\u00d7faster for CSRankings. The higher effect on CSRankings is because small refinements to a single attribute can render a tuple locally unstable in this dataset, whereas in the NBA dataset, relatively complex interactions between attributes are learned by the LtR model, and so typically refinements to multiple attributes are necessary to move the tuple in the ranking. Additionally, we note that the ranking function in CSRankings is monotone, allowing for more efficient computation of the reduced RC. Finally, we see a higher gain for the optimization of reducing the cost of re-ranking in the NBA dataset, 1.51\u00d7in total runtime compared to no change in CSRankings. This is due to the fact that the ranking function\u2019s runtime depends on the data size. For CSRankings, the optimization makes almost no difference, since the runtime of evaluating a simple scoring function for a small dataset is negligible when compared to the other phases of LStability .",
+    "paragraph_id": "local-stab-ranking::Experiments > Scalability & Optimizations::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Scalability & Optimizations"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "204:22 Felix S. Campbell & Yuval Moskovitch",
+    "paragraph_id": "local-stab-ranking::Experiments > Scalability & Optimizations::p3",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Scalability & Optimizations"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Data Size0250500Runtime [sec.] LSt Basic Fig. 11. Effect of data size on runtime 5 10 Num. A/t_trs101102Max Runtime [sec.] LSt Basic Fig. 12.",
+    "paragraph_id": "local-stab-ranking::Experiments > Scalability & Optimizations::p4",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Scalability & Optimizations"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Effect of num. attrs. on runtime Basic LSt-I LSt-C LSt-R LSt Method103Total Runtime [sec.] (a) NBA Basic LSt-I LSt-C LSt-R LSt Method103 (b) CSRankings Fig. 13. Total runtimes for experiment suites under ablation of optimizations",
+    "paragraph_id": "local-stab-ranking::Experiments > Scalability & Optimizations::p5",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Local vs. Global Ranking Stability"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We next demonstrate the difference between our proposed definition for local stability and the (global) stability of ranking as was defined in [ 3]. We implement the Monte Carlo algorithm described in the paper for 2 dimensions, and sample 500,000 function weights to determine the global stability of the Synthetic ranking subject to changes of a,bin the scoring function used to rank\u03c6(t)=a\u00b7t.x+b\u00b7t.ywherea,b\u22650. The original ranking, obtained by setting a=1,b=1, has a global stability of 0.03(out of 1) while according to our definition, when taking into account the marked dense regions, most tuples are considerably locally stable (on average 0.45) given the margins between dense regions and the set of reasonable changes described in Section 6.1. In contrast, consider a variant of the Synthetic dataset with 10 tuples, where each of the attributes of the tuple ranked ithis greater by 1than the tuple ranked at the i+1position in each attribute. Clearly, this ranking is considered perfectly stable, as each tuple dominates all the others ranked below it. However, according to our local stability measure, the stability of each tuple is at most 0.08for values of kthat don\u2019t cover the entire ranking.",
+    "paragraph_id": "local-stab-ranking::Experiments > Local vs. Global Ranking Stability::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Ranking stability. The stability of ranking has been studied in a line of work [ 2,3,12,18,23,48]. Closest to our work is [ 3], which studies stability as the property of a ranking with respect to a family of ranking functions, which we deemed global stability. At a high level, stability measures how much the output may change in response to small changes in the input. Any concrete definition of stability, therefore, depends on how modifications are defined and on the notion of output effect. The specific choices for these components determine the semantics of the stability measure. Technically, [ 3] defines modifications as changes to the ranking function , and considers any change in the ranking order to constitute an output effect. In contrast, we study modifications to the data",
+    "paragraph_id": "local-stab-ranking::Related Work::p1",
+    "technical_score": 0.005999999999999998,
+    "citation_score": 0.024
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Local Stability of Rankings 204:23 and quantify the output effect as the magnitude of the change in the position ( i.e.,the valuek) of a given tuple. Conceptually, the stability notions in [ 3] are geared toward assessing how likely the (entire) ranking of the tuples is, and can be used to determine, e.g.,whether the ranking function was cherry-picked. In contrast, our definitions aim to measure how close tuples are in the ranking under the original ranking function , which is especially important in scenarios where no scores are available, or the scores are non-linear in the input attributes. Note that by focusing on data changes rather than methodology, we can treat the ranking process as a black box, making our framework model-agnostic. Moreover, our definitions overlook changes within the dense region, thereby making our measure more useful when similar tuples are present in the ranking. A form of local stability was studied in [ 12]; however, the analysis in [ 12] relies on strong assumptions about both the ranking function and the dataset, which together enable a closed- form characterization of the perturbation magnitude required to alter the ranking. In particular, beyond restricting the class of ranking functions considered, their results apply only to a perfect season dataset - one in which every team plays every other team exactly once, with no upsets: the top-ranked team defeats all others, the second-ranked team loses only to the first, and so forth. These assumptions render the analysis tractable but substantially limit its generality. Extending the framework of [ 12] to more general datasets or to alternative ranking functions is non-trivial and would require significant additional work. In contrast, our approach is model-agnostic and imposes no assumptions on the underlying data. Moreover, [ 12] does not explicitly provide a method to measure the local stability of a tuple when multiple attributes contribute to the score. Finally, we note that [ 12] considers perturbations affecting exactly two tuples, while we examine perturbations made to a single tuple.",
+    "paragraph_id": "local-stab-ranking::Related Work::p2",
+    "technical_score": 0.004499999999999999,
+    "citation_score": 0.0105
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Ranking explanations. Beyond ranking stability, the problem of explaining ranking outcomes has been studied extensively [ 1,13\u201315,20,32]. Many of these works explain rankings by identifying feature importance [ 1,13,14,20,32]. While related to stability, such approaches do not explicitly quantify the margin between tuples in the ranking, as we propose. In [ 13,14], linear scoring functions are fit to a dataset to either match the top- kof a given ranking or put a single tuple among the top-k. The weights of the resulting function may be interpreted as an explanation of feature importance. ShaRP [ 32] adopts Shapley values to explain why a given item ranks the way it does according to the contributions made by each of the individual attributes. Similarly, [ 1] employs existing feature importance methods ( e.g.,LIME [ 35]) to explain rankings. The work of [ 20] exploits monotonicity assumptions to derive importance measures of feature importance. Orthogonally, [15] finds sufficient subsets of attributes (called an abductive explanation) which, when agreed upon, result in the same ordering between tuples.",
+    "paragraph_id": "local-stab-ranking::Related Work::p3",
+    "technical_score": 0.006,
+    "citation_score": 0.009
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Robustness verification in ML. Verifying the robustness of machine learning models has been the subject of much recent attention [ 4,11,26,41,47,51,52]. Essentially, robustness quantifies how likely a perturbation to an input will change its prediction [11]. Recent work has focused on probabilistic definitions of robustness, similar to our definition of \u03b1-local stability; we refer readers to [52] for a recent survey. Many works ( e.g.,[4,26,41,47,51]) employ a framework similar to ours, leveraging sampling and concentration inequalities to estimate robustness with guarantees on their reliability and accuracy [ 41,47,51]. However, a key difference separates our definition from this line of work: the space of perturbations under consideration. Most often, robustness is considered as a function of an lp-ball [ 4]. This presupposes a cost function on the perturbations enabling the determination of a bound on the maximum cost of changes for which the model is robust. However, our notion of stable zone boundaries replaces this assumed cost function with a weaker assumption: that the cost of a change is monotone non-decreasing. This enables including parts of the stable area which are not included in any lp-ball ( e.g.,the arms of an \u201cL\u201d-shaped stable zone). Furthermore, in these works, the inference tasks are independent of other points ( i.e.,classification and regression),",
+    "paragraph_id": "local-stab-ranking::Related Work::p4",
+    "technical_score": 0.0012,
+    "citation_score": 0.0017999999999999997
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "204:24 Felix S. Campbell & Yuval Moskovitch while this is not the case in the ranking setting\u2014local stability is not only a property of the ranking function, but depends on the other tuples in the ranking as well ( e.g.,in the case of dense regions), motivating optimizations specific to this setting ( e.g.,Section 4.2).",
+    "paragraph_id": "local-stab-ranking::Related Work::p5",
+    "technical_score": 0.0029999999999999996,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Counterfactual explanations. Counterfactual explanations provide concrete examples of how to achieve recourse for an undesirable classification [ 30,33,39,40,44,46,49]. Most of the time, these methods focus on providing a few actionable options for recourse based on minimizing the cost of changing the input [ 39,46]. Instead, we focus on trying to characterize a broader set of options for recourse, essentially finding minimal recourse without specifying a cost function up front. Furthermore, many methods such as [ 30,44] are tailored to specific models assuming white-box access, while our sampling-based approach allows us to be model-agnostic. Local model-agnostic explanations. Local model-agnostic explanations [ 29,32,35,36] answer why a certain decision was made for the given input for any given model by treating it as a black box. In many cases, they take the form of feature importance measures, as in [ 29,32,35]. While feature importance correlates with the local stability of a single attribute, we principally consider changes to combinations of attributes instead.",
+    "paragraph_id": "local-stab-ranking::Related Work::p6",
+    "technical_score": 0.0025,
+    "citation_score": 0.0015
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We recognized the need for a local view of stability in rankings, due to the existence of dense regions in which small amounts of instability are reasonably expected and therefore tolerated. We defined this notion formally as a ratio between the refinements whose magnitude cannot incur a large change in positions to a user-defined set of reasonable changes chosen with the help of domain- specific knowledge. We showed that computing this set of changes exactly is intractable in the general case, leading us to propose a relaxed definition of local stability. We proposed LStability , a sampling-based estimation algorithm and showed a probably-approximately-correct type guarantee by applying a concentration inequality. We further proposed Detect-Dense-Region to suggest a range of positions around a given item in the ranking with which we may reasonably expect small changes to move the item due to being ranked next to similar items. Finally, we demonstrated that our definition of local stability can provide interesting insights through case studies on real-life datasets, demonstrated the suitability of Detect-Dense-Region for its intended purpose, and provided an experimental analysis of the parameters affecting the performance of our algorithms and optimizations.",
+    "paragraph_id": "local-stab-ranking::Conclusion::p1",
+    "technical_score": 0.025,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Our work introduces many avenues for further study into the local stability of rankings. Future work may consider additional classes of refinements, such as adding or removing data, or requiring refinements to satisfy constraints ( e.g.,denial constraints or tuples with correlated values), and handling categorical data. Extending our framework to categorical attributes may be possible in certain cases, but doing so is non-trivial, and modeling refinement magnitude appropriately depends on whether the categorical domain admits a natural order ( e.g.,small, medium, and large",
+    "paragraph_id": "local-stab-ranking::Conclusion::p2",
+    "technical_score": 0.025,
+    "citation_score": 0.0
+  }
+]

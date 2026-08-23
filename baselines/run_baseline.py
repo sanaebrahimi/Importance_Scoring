@@ -83,7 +83,7 @@ def main() -> None:
     parser.add_argument(
         "--api-key-env",
         default="OPENAI_API_KEY",
-        help="Environment variable that stores the API key. For anthropic_full_paper, the code automatically falls back to AWS_BEARER_TOKEN_BEDROCK when this is left at the OpenAI default.",
+        help="Environment variable that stores the API key. For anthropic_full_paper, the code automatically falls back to ANTHROPIC_API_KEY when this is left at the OpenAI default.",
     )
     parser.add_argument(
         "--api-endpoint",

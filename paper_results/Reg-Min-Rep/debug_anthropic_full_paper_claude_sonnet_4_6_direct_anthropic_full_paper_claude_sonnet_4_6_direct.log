@@ -1,0 +1,1720 @@
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+Use the provided hierarchy exactly as given.
+Do not add, remove, rename, merge, split, reorder, or invent nodes.
+Output every node exactly once, including nodes with score 0.
+Output nodes in the exact order they appear in the hierarchy.
+
+Scoring rules
+
+* The root paper node has total score 1.0.
+* For each parent node, distribute its score only among its immediate children.
+* Do not skip hierarchy levels or assign a parent's score directly to deeper descendants.
+* Child scores should approximately sum to the parent score. Exact normalization is handled after output.
+* Scores should be global scores relative to the entire paper, not local percentages.
+* Score scientific contribution, not length.
+* Assign higher scores to content central to the paper's technical contribution.
+* Assign lower scores to background, motivation, related work, summaries, and organizational text.
+
+Citation attribution
+
+* For a paragraph without citations, Citation Score = 0.
+* For a paragraph with citations, estimate what fraction of the paragraph's contribution depends on prior work. This is the paragraph Citation Score.
+* Allocate that citation-derived contribution across the cited references according to their importance in that paragraph.
+* If multiple citations play the same role, split them evenly.
+* Aggregate repeated appearances of the same citation into one final citation score.
+* Use citation identifiers exactly as they appear in the paper.
+
+Output Format
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+Regret­Minimizing Representative Databases
+Danupon
+Nanongkai Atish Das Sarma Ashwin Lall
+Richard J. Lipton Jun Xu∗
+Georgia Institute of Technology
+{danupon, atish, alall, rjl, jx }@cc.gatech.edu
+ABSTRACT
+We propose the k-representative regret minimization query
+(k-regret) as an operation to support multi-criteria decision
+making. Like top- k, the k-regret query assumes that users
+have some utility or scoring functions; however, it never
+asks the users to provide such functions. Like skyline, it
+ﬁlters out a set of interesting points from a potentially large
+database based on the users’ criteria; however, it never over-
+whelms the users by outputting too many tuples.
+In particular, for any number kand any class of util-
+ity functions, the k-regret query outputs ktuples from the
+database and tries to minimize the maximum regret ratio .
+This captures how disappointed a user could be had she
+seen krepresentative tuples instead of the whole database.
+We focus on the class of linear utility functions, which is
+widely applicable.
+The ﬁrst challenge of this approach is that it is not clear if
+the maximum regret ratio would be small, or even bounded.
+We answer this question aﬃrmatively. Theoretically, we
+prove that the maximum regret ratio can be bounded and
+this bound is independent of the database size. Moreover,
+our extensive experiments on real and synthetic datasets
+suggest that in practice the maximum regret ratio is rea-
+sonably small. Additionally, algorithms developed in this
+paper are practical as they run in linear time in the size of
+the database and the experiments show that their running
+time is small when they run on top of the skyline operation
+which means that these algorithm could be integrated into
+current database systems.
+1. INTRODUCTION
+Extracting a few tuples from the database to support
+multi-criteria decision making is an important functionality
+for database systems. This is important in many applica-
+tion domains where the end-users are more interested in the
+∗Supported in part
+by NSF grant CNS-0905169, funded un-
+der the American Recovery and Reinvestment Act of 2009
+(Public Law 111-5), and by NSF grant CNS-0716423.
+Permission to make digital or hard copies of all or part of this work for
+personal or classroom use is granted without fee provided that copies are
+not made or distributed for proﬁt or commercial advantage and that copies
+bear this notice and the full citation on the ﬁrst page. To copy otherwise, to
+republish, to post on servers or to redistribute to lists, requires prior speciﬁc
+permission and/or a fee. Articles from this volume were presented at The
+36th International Conference on Very Large Data Bases, September 13­17,
+2010, Singapore.
+Proceedings of the VLDB Endowment, V ol. 3, No. 1
+Copyright 2010 VLDB Endowment 2150­8097/10/09... $10.00.most important query answers in the potentially huge an-
+swer space. Top- k[17] and skyline [5, 13] queries are two
+well-studied tools in such settings. Consider the following
+example.
+Alice is looking for a car that has a high miles per gallon
+(MPG) and a high horse power (HP). However, the horse-
+power comes at the expense of the fuel economy. How can a
+car dealer’s database system best assist Alice in trading oﬀ
+between these two goals?
+One approach is the top-k operator (see [17] for a recent
+survey). This approach is based on a widely-accepted as-
+sumption that utility functions exist. It allows the users to
+input their utility functions. In particular, for the case of
+linear utility functions, we could use a well-developed system
+such as PREFER [16] and employ sophisticated techniques
+such as ONION [8] and Ranked Join Indices [28] to assist
+the customers. For example, in this case, Alice could indi-
+cate that she gives weights 70% to the MPG and 30% to the
+HP. However, she does not always know what weights she
+wants to give to each criterion. Moreover, it might be too
+much of an eﬀort for her to input all these weights.
+An alternative operator that helps in avoiding this prob-
+lem is the skyline operator proposed by B¨ orzs¨ onyi et al. [5].
+(For further details, see, e.g., [13] and references therein.)
+This operator asks the customers only for the sets of crite-
+ria they want and outputs everything that the users might
+be interested in. For example, with this operator, Alice can
+specify that she wants to maximize the MPG and the HP.
+Then, the operator will output allthe cars based on these
+criteria. Some car may not be shown if there is another
+car with more MPG and HP. After this, Alice can either
+go through the list of these “skyline cars” and ﬁnd the car
+that she likes the most, or she can use this list to get the
+“big picture” and then apply other queries such as top- kto
+get more speciﬁc results (as envisioned by the founders of
+skyline operator in their paper [5]). However, the size of the
+skyline is usually too large to even get the big picture of
+the database, let alone the use of it as a stand alone opera-
+tor. Theoretically, the size of the skyline could be arbitrarily
+large even when there are only two criteria involved. More-
+over, when there are many criteria involved, the skyline size
+grows exponentially in the number of criteria even when the
+values are randomly generated [3,12].
+In this paper, we consider the setting where users have
+unknown utility functions. Given a list of ktuples, we say
+that a user is x% happy with the list if the utility she obtains
+from the best tuple in this list is at least x% of the utility
+1114
+
+she obtains from the
+best tuple in the whole database.
+We attempt for an operator that has features from both
+top-kand skyline. That is, an operator that outputs a small
+set of ktuples without asking for users’ utility functions.
+Since it is impossible to display every user’s optimal tuple,
+we instead ask the following question.
+Does there exist one set of ktuples that makes
+every user at least x% happy?
+In this paper, we answer this question aﬃrmatively for lin-
+ear utility functions. Even more surprisingly, the happiness
+guarantee is independent of the size of the database.
+In particular, we propose the k-representative regret min-
+imization operator ( k-regret), as follows. Deﬁne the regret
+ratio of a user to be one minus the happiness of the user’s
+utility function for the ktuples. This operator aims at ﬁnd-
+ingktuples to minimize the maximum regret ratio, where
+the maximum is taken over a (possibly inﬁnite) class of func-
+tions. Our theoretical and experimental results for the class
+of non-decreasing linear utility functions are stated below.
+•We prove that, in the worst case, the maximum regret
+ratio is at most
+d−1
+(k−d+ 1)1
+d−1+d−1,
+where dis the num
+ber of criteria.
+In particular, for d= 2, this corresponds to a max-
+imum regret ratio of1
+k. Therefore, with k= 10
+the
+bound is at most 10% (i.e., everyone is 90% happy).
+Observe that the regret ratio guarantee is independent
+of the size of the database. To complement this, for
+d= 2, we show a theoretical lower bound on the max-
+imum regret to be Ω(1 /k2).
+•Our extensive experiments on many datasets and algo-
+rithms suggest that, in practice, the regret ratio might
+be much lower than the worst case guarantee. For
+example, in the case of two criteria we found that the
+regret ratio is at most 1% for all the datasets we exper-
+imented on with just k= 10. Moreover, even when we
+increase the number of criteria to six, the regret ratio
+is still at most 16% in all the datasets when k= 20.
+We show that the k-regret operator has the following nice
+properties. First, it is scale invariant . That is, even if we
+multiply values in some attribute with a constant, k-regret
+still outputs the same set of tuples. For example, whether
+the cars’ eﬃciencies are in miles per gallon or kilometers per
+liter, k-regret’s output is the same.
+Secondly, the k-regret operator is stable. Informally, this
+means that adding unimportant cars (i.e., cars no user will
+be interested in) to the database does not change the so-
+lution of k-regret. This avoids, e.g., car companies from
+adding cars to manipulate the database in the hope that
+their main products will be shown by the k-regret operator.
+We also note that the the algorithms developed in this pa-
+per run in time linear in n. Moreover, our experiments show
+that their running time is small when they are run on top of
+the skyline operator. This means that these algorithms can
+be immediately integrated into a system where skyline op-
+erator is available, while it is possible to completely remove
+skyline operator from the system in the future when fasteralgorithms for the k-regret operator, which might be faster
+than computing skyline, are available.
+Organization: In Section 2 we discuss previous work that
+is most relevant to this paper. We formally deﬁne the prob-
+lem that we solve and highlight some properties of this def-
+inition in Section 3. We give worst case upper and lower
+bounds in Section 4. In Section 5, we develop a heuristic
+which seems to work well in practice. We present experi-
+mental results in Section 6. We discuss possible future work
+and conclude in Section 7.
+2. RELATED WORK
+Motivated by the deﬁciencies of top- kand skyline dis-
+cussed above, there are many variations of top- kand skyline
+proposed recently to assist multi-criteria decision making.
+Lin et al. [22] and Tao et al. [27] consider ﬁnding kskyline
+tuples that best represent the contour of the entire skyline,
+called krepresentative skyline. [22] propose ﬁnding a set of
+kskyline tuples that dominate the most number of tuples.
+This approach is scale invariant but not stable. [27] illus-
+trates that the approach of [22] could lead to an undesirable
+solution. This is essentially because of the fact that it is
+unstable. They propose an alternative distance-based solu-
+tion which is to solve the k-center problem on the skyline
+tuples. This approach is stable in the sense that adding a
+non-skyline tuple will not change the solution but it is not
+scale invariant since their deﬁnition is based on distances.
+Yiu and Mamoulis [24, 31] propose the top-k dominating
+query. Brieﬂy, this query is the top- kquery with scoring
+function of each tuple as the number of tuples it dominates.
+The authors argue that this query has the features of both
+top-kand skyline; i.e., the output size can be controlled,
+and no scoring functions need to be speciﬁed by the users.
+Further, it is scale invariant. However, like [22], it is not sta-
+ble. This query has been explored further in the domains of
+uncertain databases [21,32] and continuous processing [19].
+Goncalves and Vidal [14] propose two operators called
+top-kskyline select and top- kskyline join. The idea is to let
+the user specify criteria and a ranking function. The opera-
+tor then uses the criteria to get skyline tuples and output the
+topkskyline tuples based on the ranking function. There-
+fore, the size of the skyline is controlled. However, the users
+still have to specify their utility functions.
+Several other approaches have been considered for con-
+trolling the size of the output. In particular, some of these
+works control the size of the output without explicitly spec-
+ifying a bound. Xia et al. [29] propose ϵ-skyline queries
+where users specify weights on attributes, and use the pa-
+rameter ϵto control the size of the output. Mindolin et
+al. [23] propose p-skyline queries which is a framework that
+allows attributes to have diﬀerent importance. To avoid
+asking users for weights explicitly, they oﬀer an alternative
+approach to discover importance from user feedback. Lee et
+al. [20] avoid asking users for utility functions by requesting
+only partial ranking over attributes. Chan et al. [7] intro-
+duce the concept of skyline frequency as a way to measure
+the importance of a point based on the number of subsets
+of dimensions for which it is in the skyline. A related con-
+cept of k-dominance proposed by Chan et al. [6] relaxes the
+deﬁnition of dominance to a point dominating another if it
+dominates on at least kdimensions. All these approaches
+are used to reduce the size of the output.
+1115
+
+Car MPG HP
+(p1) Toy ota Prius 51 134
+(p2) Honda Civic Hybrid 40 110
+(p3) Ford F
+usion 41 191
+(p4) Nissan Altima Hybrid 35 198
+(p5) Volkswagen
+Jetta TDI 30 140
+Figure 1: Car database
+Car f(0.2,0 .8) f(0.4,0.6) f(0.6,0.4) f(0.8,0.2)
+p1 117.4 100.8 84.2 67.6
+p2 96 82 68 54
+p3 161 131 101 71
+p4 165.4 132.8 100.2 67.6
+p5 118 96 74 52
+Figure 2: Car utilities
+3.
+PROBLEM DEFINITION
+We now deﬁne the problem considered in this paper for-
+mally. The input to our problem is a set of n d-dimensional
+points over positive reals, denoted by D. This set corre-
+sponds to the database of ntuples over dattributes. Ad-
+ditionally, an integer kwhich speciﬁes the output size is
+given. The goal is to ﬁnd a set of tuples, denoted by S,
+of size at most kthat minimizes the maximum regret ratio .
+Informally, Scorresponds to the set of representative tuples
+that will be displayed to the users and the maximum regret
+ratio measures how bad the users could feel if they have
+to choose from these ktuples instead of the entire database.
+We now deﬁne this important concept formally before giving
+the precise problem statement.
+3.1 Maximum regret ratio
+In order to deﬁne this notion, we need to develop the
+notions of utility function ,gain, regret, and regret ratio as
+follows. (Throughout, we use the car database in Figure 1
+as an example.) First, users’ happiness is measured by un-
+known utility functions.
+Denition 1. Utility Function. A utility function fis
+a mapping f:Rd
++→R+. The utility of a point pfor a user
+with utility function fisf(p).
+Each user attempts at getting an item that maximizes her
+utility. For example, consider the car database in Figure 1.
+If Alice has utility function f(p) = 0.2 ·MPG +0.8·HPthen
+her utility on Toyota Prius is f(p1) = 0. 2·51 + 0. 8·134 =
+117.4. Her utilities on other items are shown in the second
+column of Figure 2 and thus Nissan Altima Hybrid ( p4)
+maximizes her utility function.
+Next, we use the notion of gainto capture the user’s utility
+when she sees only a set of tuples. For a user with a utility
+function fand a subset of points S⊆D, the gain of the
+user is deﬁned to be the maximum utility derived from this
+subset of points.
+Denition 2. Gain. Deﬁne gain(S, f) = max p∈Sf(p).
+For example, using Alice’s utility function f(p) = 0 .2·
+MPG +0.8·HP,gain(D, f) = 165. 4 (achieved by p4) while
+gain({p1, p2}, f) = 117 .4 (achieved by p1). This means that
+if we represent the database by a set of two points S=
+{p1, p2}then Alice’s utility will be 117 .4 while her utility
+would be as large as 165 .4 if she sees the whole database.We say that she has regret rD(S, f) = 165. 4−117.4 = 48 and
+regret ratio rrD(S, f) = 48/165.4 = 0.29. In other words, by
+looking at two representative points, her happiness is about
+71% of what she can get when she goes through the whole
+database. Regret and regret ratio are deﬁned as follows.
+Denition 3. Regret and regret ratio. Deﬁne regret
+rD(S, f) =gain(D, f)−gain(S, f) and regret ratio rrD(S, f) =
+rD(S,f)
+gain (D,f).
+Notice that
+regret ratio is in the range [0 ,1]. When the
+regret ratio is close to 0, the user is very happy and when
+the regret ratio is close to 1 the user is very unhappy.
+Since we do not know users’ utility functions (even users
+themselves do not know their own utility functions), we as-
+sume that every user has some utility function in a broad
+class. Three examples of classes of utility functions include
+monotone, linear, and convex functions. Let the class of
+utility functions being considered be F. We now deﬁne the
+worst possible regret for any user with a utility function in
+F.1
+Denition 4. Maximum Regret Ratio. rrD(S,F) =
+supf∈FrrD(S, f) = supf∈Fmax p∈Df(p)−max p∈Sf(p)
+max p∈Df(p).
+To illustrate this
+deﬁnition, let us consider the car database
+in Figure 1 and suppose that we know that users’ utility
+functions are in a contrived class F={f(0.2,0.8) , f(0.4,0.6),
+f(0.6,0.4), f(0.8,0.2)}, where f(x,y)=x·MPG +y·HP. If we
+represent the database by S={p1, p2}then the maximum
+regret ratio is 0 .29. To see this, use values in Figure 2 to get
+the regret ratios rrD(S, f (0.2,0.8)) = 0 .29,rrD(S, f(0.4,0 .6)) =
+0.24,rrD(S, f(0.6,0.4) ) = 0. 17, and rrD(S, f(0.8,0.2) ) = 0 .05.
+3.2 Problem
+Given a database Dand the desired output size k, we
+are interested in handling situations where no information
+on users is available. In absence of any distributional in-
+formation on the utility functions, a natural approach is to
+assume a broad class of functions Fand maximize over the
+worst (i.e., the maximum regret ratio). This guarantees the
+happiness of allusers.
+As motivated in Section 1, this approach would be futile if
+we cannot guarantee that the optimal maximum regret ratio
+is always small. After all, it is possible that even when we
+show users half of all tuples in the database, the maximum
+regret ratio is still 80% which means that there is at least
+one user who cannot ﬁnd anything close to what she is in-
+terested most in the database. Motivated by this, the main
+problem in this paper is whether we can keep the maximum
+regret ratio low.
+Problem Denition. Given any integers k,dandnand a
+class of functions Fof interest, ﬁnd minimum ρ(k, d, n, F)
+such that the following holds. For any set Dofn d-dimensional
+points there exists a set of kpoints K⊆Dsuch that
+rrD(K,F)≤ρ(k, d, n, F).
+1Recall that sup( S) denotes
+the supremum of S. For sim-
+plicity, the reader can think of it as the maximum. Since F
+is allowed to be an inﬁnite class of functions, we need the
+supremum as a maximum may not exist.
+1116
+
+Throughout this paper,
+we implicitly assume that kis at
+least d; if this is not the case, the maximum regret ratio
+cannot be bounded. In this paper, we focus on the class of
+linear utility functions, denoted by L.
+Denition 5. Linear Utility Function. A utility func-
+tion fis linear if there exist non-negative reals a1, . . . , a d
+such that f(p) =∑d
+i=1aip[i] for any d-dimensional point p.
+Alternatively, a linear utility function can be represented by
+a vector v=⟨a1, . . . , a d⟩; i.e., f(p) is the dot product v·p.
+For linear utility functions, it is more natural to think of
+gain in term of vectors: observe that gain(S, v) =max p∈Sv·
+p. All other notions can be similarly deﬁned using v. We
+now state two desirable properties of our formulation.
+3.3 Properties
+We now discuss the scale invariance andstability proper-
+ties which are deﬁned on any measure and show that the
+regret ratio measure satisﬁes both properties. Throughout
+this section, we let hbe a function on any subset SofD.
+Essentially, h(S) measures how well a set Srepresents the
+database.
+Scale Invariance. Informally, scale invariant means that
+rescaling the attribute values (scaling by a positive value to
+maintain monotonicity), does not change the relative values
+of the solutions. Formally, we consider two databases D=
+{p1, p2, ..., p n}andD′={p′
+1, p′
+2, ..., p′
+n}. We assume that D′
+is arescaling ofD, i.e., there exists reals λ1, λ2, ..., λ dsuch
+that p′
+i[j] =λjpi[j] for all i= 1,2, . . . , n andj= 1,2, . . . , d .
+(For example, to convert MPG to kilometers per liter and
+HP to watts, we use λ1= 0.425 and λ2= 750, since 1 MPG
+= 0.425 kilometers per liter and 1 HP = 750 watts.) For
+any set S⊆D, we deﬁne S′to be the corresponding subsets
+inD′, i.e., if S={pi1, pi2, . . .}then S′={p′
+i1, p′
+i2, . . .}.
+Finally, we say that hisscale invariant ifh(S 1)/h(S 2) =
+h(S′
+1)/h(S′
+2) for any S1, S2⊆D.
+Theorem 1.The function h(S) =rrD(S,L)is scale in-
+variant.
+We in fact prove a stronger fact: rrD(S,L) = rrD(S′,L) for
+any set S. The formal proof is in Appendix A.
+Stability. Informally, we say that a function his stable
+if, for any S⊆D,h(S) is insensitive to adding or deleting
+junk points, i.e., points that are not optimal for any linear
+utility function. This captures the intuition that a car dealer
+should not be able to strategically insert cars not liked by
+anyone into the database to manipulate the solution.
+Formally, we say that a point pis ajunk point if, for any
+linear utility function h, there is a point q̸=pinDsuch
+that h(p)≤h(q). (This means that pis not desired by any
+user with a linear utility function.) We say that a function
+hisstable on Sifh(S) outputs the same value even after we
+add any junk point ptoD. Finally, we say that hisstable if
+it is stable on any set S⊆D. The following theorem follows
+naturally from deﬁnitions (see Appendix B).
+Theorem 2.The function h(S) =rrD(S,L)is stable.
+4. WORST CASE BOUNDS
+In this section, we answer the question from a theoretical
+standpoint. We show that in the worst case, the maximumAlgorithm 4.1 Cube algorithm(D ,k)
+Input: A database of d-dimensionalpoints D=
+{p1, p2, ..., p n}and an integer k, the desired output size.
+Output: A subset of Dof size k, denoted by S, that guar-
+antees that rrD(S,L)≤d−1
+t+d− 1where t=⌊(k−d+ 1)1
+d−1⌋.
+1: For i= 1,2,
+. . . , d −1, let p∗
+ibe the point with maximum
+value in the ithcoordinate, and let cibe such value; i.e.,
+p∗
+i= arg max p∈D(p[i]) and ci= max p∈D(p[i]).2
+2: Let S={p∗
+1, p∗
+2, ..., p∗
+d−1}.
+3: Let t=⌊(k−d+ 1)1
+d−1⌋.
+4:foreach group of
+(not necessarily distinct) integers
+j1, j2, . . . j d−1such that 0 ≤j1< t,0≤j2< t, . . . , 0≤
+jd−1< tdo
+5: Let Sj1,j2,...,j d−1={p∈D:jici
+t< p[i]≤(ji+
+1)ci
+tfor all 1 ≤i <
+d}.
+6: Let sj1,j2,...,j d−1be the point in Sj1,j2,...,j d−1
+with maximum value in the dthcoordinate; i.e.,
+sj1,j2,...,j d−1= arg max p∈S j1;j2;:::;jd−1(p[d]). Add
+sj1,j2,...,j d−1toS.
+7:end for
+8:return S.
+regret ratio is at
+mostd−1
+⌊(k−d+1)1
+d−1⌋+d− 1. (Note that this
+do
+es not depend on the database size n.) This is done by
+developing an algorithm called Cube. (See Section 4.1.)
+Additionally, we complement this with a lower bound; the
+optimal maximum regret ratio could be as bad as Ω(1 /k2).
+(See Section 4.2.) Simplifying (assuming dis constant),
+ρ(k, d, n, L) (cf. Section 3) has the following upper and lower
+bounds:
+Ω(1
+k2)
+≤ρ(k, d, n, L
+)≤O(1
+k1
+d−1)
+.
+4.1 Upper bound
+In this
+section, we develop an algorithm called Cube (cf.
+Algorithm 4.1). We then show that for any database Dof
+d-dimensional points and a parameter k,Cube outputs a
+setSof size at most ksuch that
+rrD(S,L)≤d−1
+⌊(k−d+ 1)1
+d−1⌋+d−1
+(cf. Theorem 3). The
+upper bound of the optimal maximum
+regret ratio thus follows.
+Informally, Cube does the following. First, it outputs the
+point with maximum value in each coordinate, except the
+last coordinate. Then, it divides every dimension, except the
+last dimension, into tequal-sized intervals, for some choice
+oft. That is, if the maximum value in the i-th coordinate
+iscithen we divide the i-th dimension into tintervals,
+(
+0,ci
+t]
+,(ci
+t,2ci
+t]
+, . . .(
+jci
+t,(j+ 1)ci
+t]
+, . . .
+,(
+(t−1)ci
+t, ci]
+.
+The algorithm then
+partitions the points into td−1“buck-
+ets” based on which intervals they are in, in each dimen-
+sion. These buckets are denoted by Sj1,j2,...,j d−1where
+j1, j2, . . . , j d−1are integers from 0 to t−1 (see formal deﬁ-
+nition in Algorithm 4.1). Then, Cube outputs the point in
+2argmax returns the
+point for which the value of the expres-
+sion attains its maximum value. argmin is deﬁned similarly.
+1117
+
+each buck
+et with highest value in the last coordinate. No-
+tice that Cube outputs td−1+d−1 points in total ( d−1
+points initially and td−1points from the buckets). Figure 8
+(Appendix) shows an example of Cube algorithm.
+The intuition behind this algorithm is that the points in
+the same bucket have gains not far from each other when we
+look only at coordinates 1 ,2, . . . , d −1. This is because their
+values in these coordinates are close to each other. More-
+over, since we pick from each bucket the point with max-
+imum value in the last coordinate, the gain of this point
+is close to the gain of other points in the same bucket.
+The regret is then bounded. Further, we pick the points
+p∗
+1, . . . , p∗
+d−1which are largest in the ﬁrst d−1 coordinates
+to ensure that the gain of the output is large. We can
+then bound the regret ratio by considering the gain of these
+points. This intuition leads to the following main theorem,
+the proof of which can be found in Appendix C.
+Theorem 3.Cube (cf. Algorithm 4.1) returns a set S
+such that rrD(S,L)≤d−1
+t+d− 1where t=⌊(k−d+
+1)1
+d−1⌋.
+Example: Ifk= 10 and d= 2,
+thenCube guarantees that
+the regret ratio is at most 10%.
+Running Time: We only need to ﬁnd what bucket each
+point is in and, in each bucket, ﬁnd the point with maximum
+value in the last coordinate. Moreover, there are td−1≤k
+buckets to examine. Therefore, Cube runs in time O(nd+k).
+4.2 Lower Bound
+In this section, we present the lower bound theorem for
+bounding the maximum possible regret ratio on 2-dimensional
+points. Informally, we show that it is impossible to guaran-
+tee a maximum regret ratio better than O(1/k2). We present
+the theorem and proof intuition below. The formal proof is
+presented in Appendix D
+Theorem 4.For any k, there exists nsuch that there is
+a set Dofnpoints such that, for any S⊆Dof size k,
+rrD(S,L) = Ω(1/k2).
+The proof relies on considering inﬁnitely many points spread
+as a quarter-circle (centered at (0, 0)) between coordinates
+(0,1) and (1 ,0). The proof can be suitably adapted to work
+for ﬁnite number of points as well. If kof these points are
+picked, consider the line segments formed by joining the ori-
+gin (0 ,0) to each of these points and also joining (0 ,0) to
+(0,1) and (1 ,0). The angle between some two consecutive
+line segments is at least π/2(k+ 1). Let pϕiandpϕi+1de-
+note the two points corresponding to these segments. We
+then consider a point pin the center of arc ( pϕi, pϕi+1). The
+proof considers the linear utility function fthat is maxi-
+mized by p. The regret ratio for fis then measured, and is
+determined by projecting pϕiandpϕi+1. This can be com-
+puted by considering the L2-distance of the projected point
+to origin. We argue (details in Appendix D) that this regret
+ratio is at least Ω(1 /k2).
+5. GREEDY HEURISTIC
+In this section, we present a natural greedy heuristic called
+Greedy (cf. Algorithm 5.1). This algorithm essentially fol-
+lows the framework of Ramer-Douglas-Peucker algorithm [11,
+25] for approximating curves and polygons, which, althoughAlgorithm 5.1 Greedy(
+D,k)
+Input: A set of d-dimensionalpoints D={p1, p2, ..., p n}
+and an integer k, the desired output size.
+Output: A subset of Dof size k, denoted by S.
+1: Let S={p∗
+1}where p∗
+1= arg max p∈Dp[1].
+{In the loop below, we ﬁnd a point p∈D\Swith
+maximum regret ratio. }
+2:fori=1 to k−1do
+3: Let r∗= 0 and p∗=null.
+4:foreach p∈D\Sdo
+5: Compute rrS∪{p}(S,L) using Linear Program (1).
+6: ifr∗< rr S∪{p}(S,L)then
+7: r∗=rrS∪{p}(S,L)
+8: p∗=p
+9: end if
+10: end for
+11: ifr∗= 0then return S
+12: else S=S∪ {p∗}endif
+13:end for
+14:return S
+does not ha
+ve any theoretical guarantees beyond the case
+of two dimensions [26,30], has been widely used and shown
+to perform well in higher dimensions in various applications
+with diﬀerent measures (see, e.g., [9, 10, 15] and references
+therein). Our greedy algorithm can be thought of as an-
+other application of Ramer-Douglas-Peucker algorithm with
+the maximum regret ratio as a measure.
+Informally, Greedy performs the following greedy pro-
+cess: First, it picks the point that maximizes the ﬁrst coor-
+dinate. In subsequent iterations it adds the “worst” point,
+i.e., the point that currently contributes to the maximum
+regret ratio. To be precise, for each round it adds the
+point pto the solution set Swhere pis the point such
+that rrD(S,L) = rrS∪{p}(S,L). This is done by computing
+rrS∪{p}(S,L) for each point p∈D\Sand keep the point
+with maximum value (as in Line 4–10), where rrS∪{p}(S,L)
+is computed using the following linear program (LP).
+Finding rrS∪{p}(S,L)using an LP. Given a point pand
+a set S, one can ﬁnd rrS∪{p}(S,L) by solving the LP (1)
+below.3
+max x
+s.t.∑d
+j=1(p[j]−p′[j])v[j]≥x ∀p′∈S
+∑d
+j=1p[j]v[j] = 1
+v[j]≥0 ∀j≤d
+x≥0(1)
+The above LP has a variable xand variables v[1],v[2],. . .,
+v[d] which denote a non-negative vector v= (v[1], v[2], . . . ).
+The idea is that for any ﬁxed value of v,xwill be equal to
+min p′∈S(p−p′)·v(by the ﬁrst constraint and the fact that
+we are maximizing x). Therefore, maximizing xis equiva-
+lent to ﬁnding a vector vsuch that min p′∈S(p−p′)·v(i.e.
+the regret ratio in the direction of v) is maximized. See Ap-
+3Note that Greedy can b
+e implemented with any linear
+constraints imposed on the class of utility functions since
+they can be added to the LP.
+1118
+
+pendix E for
+details on correctness and implementation.
+Running Time. Greedy has to run LP (1) at most nk
+times. Each LP has k+d+2 constraints and d+1 variables
+and thus has running time independent of n. In practice, an
+LP solver (such as variations of the Simplex method) will
+result in O(k2d) running time per LP call [4, Chapter 3], and
+hence O(nk3d) overall for Greedy . In the worst case, the
+time per LP could be exponential in kanddusing these LP
+solvers. However, by using the interior point method [18]
+we can guarantee a worst case running time of O(nk2d4.5).
+6. EXPERIMENTAL EVALUATION
+In this section, we show via experiments on both real and
+synthetic data that the maximum regret ratio is small (even
+for small k) in practice. We measured the maximum regret
+ratios and running times for the algorithms proposed in this
+paper as well as three previously proposed algorithms for
+representing the skyline by a ﬁxed set of points. All our
+implementations were done in C. The experiments were all
+performed on a 1.7GHz Intel Xeon machine running Linux
+2.6.9.
+We used both anti-correlated and independent synthetic
+data, as is standard in the skyline literature, using the dataset
+generator of [5]. We averaged the algorithms’ performance
+over 10 independently generated data sets. For our exper-
+iments on real data, we made use of some data sets that
+are available from Dr. Yufei Tao’s homepage4. Unless oth-
+erwise stated, our experiments all used ten thousand points
+(n= 10, 000) and picked the top-10 points (k = 10). We
+evaluated the maximum regret ratio for the algorithms us-
+ing LP (1) implemented in the GNU Linear Programming
+Kit (GLPK) package [1] (more details in Appendix E).
+We consider both the Cube algorithm and the Greedy
+algorithm suggested in this paper and also consider Max-
+Dom-Greedy [22], Naive-Greedy [27], and Ext-Two-Scan [6].
+•TheCube algorithm is our implementation of Algorithm 4.1
+with the modiﬁcation that we increment tuntil we have
+at least kdistinct points.
+•TheGreedy algorithm is our implementation of Algo-
+rithm 5.1, which outputs precisely kdistinct points.
+•TheNaive-Greedy algorithm is our implementation
+of the naive algorithm proposed in [27]. In the Naive-
+Greedy approach, the goal is to pick kpoints that admit
+the best k-center clustering on the skyline set.
+•TheMax-Dom-Greedy algorithm is our implementa-
+tion of the greedy algorithm in [22, Algorithm 1].5The
+objective of Max-Dom-Greedy is to pick kpoints that
+together dominate the largest number of points.
+•Finally, we implemented the Top- δExt-Two-Scan algo-
+rithm proposed in [6, Algorithm 5]. However, the max-
+imum regret ratio of this algorithm was so poor in the
+experiments that we do not include its results in the
+plots.
+In Figure 3, we compare algorithms for various number of
+dimensions on anti-correlated and independent data, respec-
+4http://www.cse.cuhk.edu.hk/ ~taoyf/
+5We only test
+the maximum regret ratio yielded by Max-
+Dom-Greedy here and note that, if desired, a more eﬃ-
+cient implementation of Max-Dom-Greedy (with a slightly
+worse solution) can be found in [22].
+ 0% 5%10%15%20%25%30%35%40%45%
+ 2 3 4 5 6 7 8 9 10Maximum regret ratio
+dCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy(a) anti-correlated data
+ 0% 5%10%15%20%25%30%35%40%45%
+ 2 3 4 5 6 7 8 9 10Maximum regret ratio
+dCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy (b) independent
+data
+Figure 3: Varying d(n= 10000 and k= 10)
+ 1e-05 0.0001 0.001 0.01 0.1 1 10 100
+ 2 3 4 5 6 7 8 9 10Time (seconds)
+dCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy
+ 0.0001 0.001 0.01 0.1 1 10 100 1000 10000 100000
+ 100 1000 10000 100000  1e+06
+nCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy
+ 0.001 0.01 0.1 1 10 100
+ 6 8 10 12 14 16 18 20
+kCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy
+Figure 7: Running time
+for anti-correlated data (De-
+fault: n= 10000 ,d= 6,k= 10)
+tively, when the number of points was ﬁxed to n= 10000
+andk= 10. Due to the curse of dimensionality, the regret
+ratio of the algorithms degrade with the increase in number
+of dimensions. However, as the number of dimensions in-
+creases, the regret ratio of all the algorithms appear to level
+oﬀ much below the theoretical bound.
+We varied the number of points using anti-correlated data
+in Figures 4(a) and 4(b), using d= 2 and d= 6, respec-
+tively. For the two-dimensional case, Greedy gives maxi-
+mum regret ratio almost zero but for higher dimensions the
+maximum regret ratio can be much larger (close to 25%
+for the Greedy andMax-Dom-Greedy algorithms on 6D
+data using k= 10). For 6D independent data (Figure 4(c)),
+theGreedy andMax-Dom-Greedy algorithms are consis-
+tently below 20% for k= 10.
+In Figure 5 we see the eﬀect of varying kon the four
+algorithms. As would be expected, the regret-ratio decreases
+monotonically with k. With only 20 representative points,
+Greedy makes the maximum regret ratio at most 16% in all
+three cases. We observe that the algorithms perform better
+than predicted by theory on these speciﬁc distributions.
+The results for other data sets that we considered are
+summarized in Figure 6. In all cases we used k= 10. The
+algorithms performed extremely well for this data (i.e., the
+best algorithm was under 1% regret ratio), except for the
+Color dataset. For this data, the maximum regret ratio
+went up to almost 17% for the Greedy algorithm, due to
+the high dimensionality of the data.
+Times
+In this section we discuss the running times of various algo-
+rithms. We compute the skyline ﬁrst before running these
+algorithms as our main objective is to illustrate that mini-
+mizing maximum regret ratio takes time negligible as com-
+pared to the running time of skyline computation. Also, we
+compute skyline ﬁrst to avoid the issue of computation with
+and without preprocessing (see, e.g., [13] for discussions). It
+is an interesting future work to explore more on the running
+time aspect of this problem, especially bypassing the whole
+skyline computation and considering the computation with
+and without preprocessing. The running time of skyline
+1119
+
+ 0% 1% 2% 3% 4% 5% 6%
+ 100  1000  10000  100000  1e+06Maximum regret ratio
+nCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy(a) 2D anti-correlated
+data
+ 0% 5%10%15%20%25%30%35%40%45%
+ 100  1000  10000  100000  1e+06Maximum regret ratio
+nCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy (b) 6D anti-correlated
+data
+ 0% 5%10%15%20%25%30%35%40%45%
+ 100  1000  10000  100000  1e+06Maximum regret ratio
+nCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy (c) 6D independen
+t data
+Figure 4: Varying number of points nwith k= 10
+ 0% 2% 4% 6% 8%10%12%
+ 2 4 6 8 10 12 14 16 18 20Maximum regret ratio
+kCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy
+(a) 2D anti-correlated
+data
+ 0% 5%10%15%20%25%30%35%40%45%
+ 6 8 10 12 14 16 18 20Maximum regret ratio
+kCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy (b) 6D anti-correlated
+data
+ 0% 5%10%15%20%25%30%35%40%45%
+ 6 8 10 12 14 16 18 20Maximum regret ratio
+kCube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy (c) 6D independen
+t data
+Figure 5: Varying k(n= 10000 )
+computation is not shown here.
+The running times on anti-correlated data, with d,n, and
+kvaried, are shown in loglog scale in Figure 7. In all cases,
+Cube andNaive-Greedy are very fast. (They ﬁnish within
+one second even when d= 6, n= 1,000,000 and k= 10.)
+Note, however, that their solution is inferior to Greedy and
+Max-Dom-Greedy as shown in the previous section. The
+running time of Greedy is usually within 10 seconds except
+in the case of d= 6, n≥100,000, and k= 10. We note
+that its running time is always negligible compared with the
+time taken to compute skyline. Max-Dom-Greedy runs
+much longer. However, as noted earlier, one can obtain a
+practical implementation by slightly sacriﬁcing the solution
+quality (see [22]).
+Summary
+Both Greedy andMax-Dom-Greedy work well in all data
+sets (except the Island data set for Max-Dom-Greedy ),
+giving solutions with maximum regret ratio much lower than
+the theoretical guarantee (cf. Section 4.1). Neither al-
+gorithm beats the other in all cases. This suggests that
+Greedy and an eﬃcient implementation of Max-Dom-Greedy
+(based on a randomized index-based algorithm available in
+[22]) could be used in practice. Note, however, that Max-
+Dom-Greedy is optimizing a measurement that is unstable
+(as discussed in Section 2). Finally, we observe that pick-
+ingkto be about twice of dis suﬃcient in practice since it
+bounds the regret ratio below 20%.
+7. CONCLUSIONS
+In this paper, we consider the problem of ﬁnding a few tu-
+ples to represent the database such that these representativetuples help users ﬁnd the best tuple based on their criteria
+and utility functions. Since it is impossible to display ev-
+ery user’s optimal tuple, we consider a natural relaxation
+where we want to minimize the maximum regret ratio which
+captures how unhappy the users may feel when they see k
+representative points instead of the whole database. Before
+considering the computational issue of this problem, it is
+more important to conﬁrm ﬁrst that we can always make
+this quantity small. We conﬁrm that this is possible by
+showing that for linear utility functions the maximum regret
+ratio can be bounded in terms of the number of represen-
+tative points ( k) and the dimensionality ( d). The bound is
+independent of the size of the database ( n). Moreover, our
+extensive experiments on various algorithms suggest that
+the bound could be much lower in practice. This opens a
+new door to multi-criteria decision support query in terms
+of regret minimization, and many open problems follow.
+The most important open problem is the computational
+issue of this problem. Although algorithms in this paper run
+in time linear in nand the experiments suggest that Greedy
+andMax-Dom-Greedy are practical enough, it would be
+interesting to explore the running time aspect of this prob-
+lem further. In particular, the restricted small output size
+(k) of this problem makes it possible to get an algorithm
+that runs faster than computing a huge skyline. The is-
+sue of external algorithms with and without preprocessing
+should also be thoroughly explored.
+On the theoretical side, it is still open whether we can
+compute the optimal solution . We conjecture that this is
+NP-hard and it would be interesting to develop algorithms
+with approximation guarantees. Moreover, for the theoret-
+ical guarantee of the maximum regret ratio, there is still
+1120
+
+House 6D 127,931 points0%1%2%3%4%5%6%7%
+NBA 5D 17,264 points0.0%0.7%0.6%
+0.4%
+0.16%
+0.09%
+Island 2D 63,383 points0%1%2%3%4%5%6%7%8%9%10%11%
+7.6%
+0.6%
+0%10.4%
+Cube
+Greedy
+Naive-Greedy
+Max-Dom-Greedy
+Color 9D 68,040 points0%10%20%30%40%50%
+31.7%49%
+16.9%
+19%
+1.9%6.3%
+0.04%
+0.04%Figure 6: Maximum
+regret ratios on other data sets
+a gap between the lower bound of Ω(1 /k2) and the upper
+bound of O(1/k1/(d−1)).
+Finally, our techniques are very speciﬁc to linear utility
+functions. It would be interesting to bound the maximum re-
+gret ratio in other classes of utility functions, such as Cobb-
+Douglas, weak gross substitutability, submodular, and con-
+vex functions. (See, e.g., [2, Chapter 11] for more functions
+that arise in Economics.) Ideally, we would like to be able
+to bound the regret ratio for the class of all monotone func-
+tions.
+Acknowledgement: We thank anonymous reviewers for
+very helpful comments on the paper.
+8. REFERENCES[1] Gnu linear programming kit, version 4.39,.
+http://www.gnu.org/software/glpk/glpk.html.
+[2]Algorithmic Game Theory . Cambridge University
+Press, September 2007.
+[3] J. L. Bentley, H. T. Kung, M. Schkolnick, and C. D.
+Thompson. On the average number of maxima in a set
+of vectors and applications. J. ACM, 25(4):536–543,
+1978.
+[4] D. Bertsimas and J. Tsitsiklis. Introduction to Linear
+Optimization . Athena Scientiﬁc, 1997.
+[5] S. B¨ orzs¨ onyi, D. Kossmann, and K. Stocker. The
+skyline operator. In ICDE, 2001.
+[6] C. Y. Chan, H. V. Jagadish, K.-L. Tan, A. K. H.
+Tung, and Z. Zhang. Finding k-dominant skylines in
+high dimensional space. In SIGMOD, 2006.
+[7] C. Y. Chan, H. V. Jagadish, K.-L. Tan, A. K. H.
+Tung, and Z. Zhang. On high dimensional skylines. In
+EDBT , 2006.
+[8] Y.-C. Chang, L. D. Bergman, V. Castelli, C.-S. Li,
+M.-L. Lo, and J. R. Smith. The onion technique:
+Indexing for linear optimization queries. In SIGMOD ,
+2000.
+[9] J. L. Cohon. Multiobjective programming and
+planning. Dover Publications, 2004.
+[10] D. L. Craft, T. F. Halabi, H. A. Shih, and T. R.
+Bortfeld. Approximating convex pareto surfaces in
+multiobjective radiotherapy planning. Med. Phys.,
+33(9):3399–3407, 2006.
+[11] D. Douglas and T. Peucker. Algorithms for the
+reduction of the number of points required to
+represent a digitized line or its caricature. The
+Canadian Cartographer , 10(2):112–122, 1973.
+[12] P. Godfrey. Skyline cardinality for relational
+processing. In FoIKS, 2004.
+[13] P. Godfrey, R. Shipley, and J. Gryz. Algorithms and
+analyses for maximal vector computation. VLDB J.,
+16(1):5–28, 2007. Also appeared in VLDB’05.[14] M. Goncalves and M.-E. Vidal. Top-k skyline: A
+uniﬁed approach. In OTM Workshops, 2005.
+[15] P. Heckbert and M. Garland. Survey of polygonal
+surface simpliﬁcation algorithms, 1997.
+[16] V. Hristidis, N. Koudas, and Y. Papakonstantinou.
+Prefer: A system for the eﬃcient execution of
+multi-parametric ranked queries. In SIGMOD , 2001.
+[17] I. F. Ilyas, G. Beskales, and M. A. Soliman. A survey
+of top-k query processing techniques in relational
+database systems. ACM Comput. Surv. , 40(4), 2008.
+[18] N. Karmarkar. A new polynomial-time algorithm for
+linear programming. Combinatorica , 4(4):373–396,
+1984.
+[19] M. Kontaki, A. N. Papadopoulos, and
+Y. Manolopoulos. Continuous top-k dominating
+queries in subspaces. In Panhellenic Conference on
+Informatics , 2008.
+[20] J. Lee, G. won You, and S. won Hwang. Personalized
+top-k skyline queries in high-dimensional space. Inf.
+Syst., 34(1):45–61, 2009.
+[21] X. Lian and L. C. 0002. Top-k dominating queries in
+uncertain databases. In EDBT , 2009.
+[22] X. Lin, Y. Yuan, Q. Zhang, and Y. Zhang. Selecting
+stars: The k most representative skyline operator. In
+ICDE, 2007.
+[23] D. Mindolin and J. Chomicki. Discovering relative
+importance of skyline attributes. PVLDB,
+2(1):610–621, 2009.
+[24] A. N. Papadopoulos, A. Lyritsis, A. Nanopoulos, and
+Y. Manolopoulos. Domination mining and querying.
+InDaWaK, 2007.
+[25] U. Ramer. An iterative procedure for the polygonal
+approximation of plane curves. Computer Graphics
+and Image Processing , 1(3):244–256, 1972.
+[26] G. Rote. The convergence rate of the sandwich
+algorithm for approximating convex functions.
+Computing , 48(3-4):337–361, 1992.
+[27] Y. Tao, L. Ding, X. Lin, and J. Pei. Distance-based
+representative skyline. In ICDE, 2009.
+[28] P. Tsaparas, T. Palpanas, Y. Kotidis, N. Koudas, and
+D. Srivastava. Ranked join indices. In ICDE , 2003.
+[29] T. Xia, D. Zhang, and Y. Tao. On skylining with
+ﬂexible dominance relation. In ICDE , 2008.
+[30] X. Q. Yang and C. J. Goh. A method for convex curve
+approximation. European Journal of Operational
+Research , 97(1):205–212, February 1997.
+[31] M. L. Yiu and N. Mamoulis. Multi-dimensional top-
+dominating queries. VLDB J., 18(3):695–718, 2009.
+Also VLDB’07.
+[32] W. Zhang, X. Lin, Y. Zhang, J. Pei, and W. Wang.
+Threshold-based Probabilistic Top-k Dominating
+Queries. VLDB J. , 19(2):283–305, 2009.
+1121
+
+APPENDIX
+A. SCALE INVARIANCE
+Pr
+oof of Theorem 1. Consider two sets of tpoints, D=
+{a1, a2, . . . a t}andD′={a′
+1, a′
+2, . . . , a′
+t}. Suppose that D
+andD′are a rescaling of each other, i.e., there exist pos-
+itive reals λ1, λ2, . . . , λ dsuch that for any 1 ≤i≤tand
+1≤j≤d,a′
+i[j] =λjai[j].
+Claim 5.For any vector v, there exists a vector v′such
+thatv·ai=v′·a′
+ifor any ai∈Danda′
+i∈D′.
+Proof. Given a vector v, we deﬁne each coordinate of
+vector v′to be v′[j] =v[j]/λjforj= 1,2, . . . , d . Observe
+that for any aianda′
+i,
+v·ai=d∑
+j=1v[j]ai[j]
+=d∑
+j=1(λjv′[j])(a′
+i[j]/λj)
+=d∑
+j=1v′[j]a′
+i[j]
+=v′·a′
+i
+as claimed.
+Now consider an
+y two sets S⊆DandS′⊆D′that
+are “equivalent” in the sense that if S={ai1, ai2, . . . , a is}
+then S′={a′
+i1, a′
+i2, . . . , a′
+is}. We claim that rrD(S,L) =
+rrD′(S′,L).
+To see this, let vbe the “worst” vector for S, i.e., vis
+such that rrD(S,L) = rrD(S, v). By Claim 5, there exists
+a vector v′such that v′·a′
+i=v·aifor all 1 ≤i≤t. This
+implies that rrD(S, v) =rrD′(S′, v′) because
+rrD(S, v) =max ai∈Dv·ai−max p∈Sv·p
+max ai∈Dv·ai
+=max a′
+i∈D′v′·a′
+i−max p′∈S′v′·p′
+max a′
+i∈D′v′·a′
+i
+=rrD′(S′, v′).
+Therefore, r
+rD(S,L)≤rrD′(S′,L). (There might be a vec-
+tor worse than v′forS′.) By the same argument (i.e.,
+start from v′that is “worst” for S′), we get rrD′(S′,L)≤
+rrD(S,L). Therefore, rrD′(S′,L) = rrD(S,L)
+Since the regret ratio is the same for every pair of equiv-
+alent sets, rrD(S1,L)/rr D(S2,L) =rrD(S′
+1,L)/rr D(S′
+2,L)
+for any sets S1, S2⊆Dand the equivalent sets S′
+1, S′
+2⊆D′.
+The theorem thus holds.
+B. STABILITY
+Proof
+of Theorem 2. Letpbe any junk point and D′=
+D∪ {p}. Let gbe any linear utility function. Since pis
+a junk point, there is a point q∈Dsuch that g(p)≤
+g(q). In particular, max p′∈D′g(p′) = max p′∈Dg(p′) and
+thus gain(D′, g) =gain(D, g). It follows from the equali-
+ties below that h(S) =rrD(S,L) satisﬁes the deﬁnition of
+k=3 ==> t=2p*
+1s1s2
+S1 S2Figure 8: Example of Cube when k=
+3(thus t= 2)
+stability:
+rrD′(S, g) =gain(D′, g)−gain(S, g )
+gain(D′, g)
+=gain(D
+, g)−gain(S, g)
+gain(D, g)
+=r
+rD(S, g).
+C. PROOF OF
+UPPER BOUND
+Proof of Theorem 3. Letvbe any vector whose en-
+tries are non-negative. Vector vrepresents a linear utility
+function of a user. Let pbe a point in Dthat maximizes
+this utility function; i.e., gain(D, v) = gain({p}, v ). Let
+j1, j2, ..., j d−1be integers such that p∈Sj1,...,j d−1. To pre-
+serve ink, let s=sj1,...,j d−1.
+First, we claim that p·v−s·v≤d−1
+tmax i≤d−1(p∗
+i·v).
+This claim follows
+from the following inequalities.
+p·v−s·v=d∑
+i=1(p[i]−s[i])·v[i]
+≤d−1∑
+i=1(p[i]−s[i])·v[i] (2)
+≤d−1∑
+i=1ci
+tv[i] (3)
+≤d−1
+tmax
+i≤d−1(civ[i])
+≤d−1
+tmax
+i≤d−1p∗
+i·v.
+Note that (2)
+uses the fact that s[d]≥p[d] and (3) is
+because both pandsare in Sj1,j2,...,j d. Since sis in S, the
+regret of the user with utility function vis
+rD(S, v)≤p·v−s·v.
+Moreover, since p∗
+1, p∗
+2, ..., p∗
+d−1are in S,
+gain(S, v)≥max
+i≤d−1(p∗
+i·v).
+The previous claim implies that
+rD(S, v)
+gain(S,
+v)≤d−1
+t.
+1122
+
+Figure 9: Proof
+idea of Theorem 4. Notations are
+dened in the proof.
+Note a simple observation that
+rD(S, v)
+gain({
+p}, v)=rD(S, v)
+rD(S, v) +gain
+(S, v).
+The right hand side is bounded byd−1
+t+d− 1.Therefore,
+rrD(S,L)
+= max
+vrD(S, v)
+gain(D
+, v)
+= max
+p,vrD(S, v)
+gain({
+p}, v)
+≤max
+p,vrD(S, v)
+rD(S, v) +gain
+(S, v)
+≤d−1
+t+d−1
+as desired.
+D. PROOF OF
+LOWER BOUND
+Proof of Theorem 4. Consider an inﬁnite set of points
+in 2-dimensions, D={p= (cos Θ ,sin Θ) |Θ∈[0, π/2]}.
+This forms quarter circle of unit radius (as in Figure 9).
+Each of the points in Dis maximal for some linear utility
+function. This is because for π/2≥Θ1>Θ2≥0, we have
+sin Θ 1>sin Θ 2and cos Θ 1<cos Θ 2.
+Consider any set Sofkrepresentative points. Let these
+points be deﬁned by angle parameters π/2≥ϕ1> ϕ 2>
+. . . > ϕ k≥0; i.e. the points are pϕifor all 1 ≤i≤k.
+Consider the angles subtended between lines obtained by
+joining the point O= (0, 0) with the points p0= (1, 0),
+pϕ1, pϕ2,. . .,pϕk,pπ/2= (0,1); that is, consider angles pϕi−
+O−pϕi+1for all 1 ≤i≤kand also consider p0−O−pϕ1and
+pϕk−O−pπ/2. We know that the sum of these k+ 1 angles
+is exactly π/2. Therefore, at least one of these k+1 angles is
+at leastπ
+2(k+1). Let this angle
+be deﬁned by pϕi−O−pϕi+1
+and denote it by γ.
+Setα=ϕi+1+γ
+2and consider a user
+with utility function
+f(x, y) =x·cosα+y·sinα. The utility of any point palong
+the utility function fis the L2-distance between the origin
+(0,0) and the projection of point ponto the line (0 ,0)−
+−(cosα,sinα).
+Consider the point (cos α,sinα). The utility of this point
+for function fis cos α·cosα+ sin α·sinα= 1. Notice that
+among the kselected points pϕ1, . . . , p ϕk, the two points that
+have the largest distance from (0 ,0) when projected onto the
+line corresponding to αarepϕiandpϕi+1. This follows from
+our construction and choice of α=ϕi+1+γ
+2where γis the
+angle subtended at
+the origin by pϕiandpϕi+1. Therefore,
+the closer a point p’s angle subtended between (0 ,0) and(1,0) is to α, the larger the L2distance of the projection is
+from (0 ,0). See Figure 9.
+Therefore, the best choice for f, among the representative
+points in S, ispϕi, giving a gain of cos ϕi·cosα+ sin ϕi·
+sinα. (In fact, pϕi+1is also another best choice which gives
+the same gain. To see this, observe that the line (0 ,0)−
+(cosα,sinα) is perpendicular to the line pϕi−pϕi+1.) The
+projection is the point (cos(γ/2) ·cosα,cos(γ/2) ·sinα). The
+utility therefore is cos( γ/2)·cosα·cosα+ cos(γ/2) ·sinα·
+sinα= cos(γ/2) ·(cos2α+ sin2α) = cos(γ/2).
+The regret ratio for ftherefore is1−cos(γ/ 2)
+1. Now using
+the
+series expansion for Cosine , we get a regret ratio of 1 −
+(1−(γ/2)2/2!+( γ/2)4/4!−. . .) = (γ/2)2/2!−(γ/2)4/4!+ . . ..
+Now using the fact that (γ )≥π
+2(k+1), we get
+that the regret
+ratio is at leastπ2
+32(k+1)2−O(1
+k4). Therefore, the regret
+ratio
+is at leastπ2
+32(k+1)2−o(1/k2) which is
+Ω(1
+k2).
+This completes the pro
+of. See Figure 9 for proof idea.
+E. LINEAR PROGRAM
+E.1
+Computing the regret ratio
+Given a set of d-dimensional points Sand a point p, we
+can ﬁnd the regret ratio when the database has only one
+point p, i.e. rrS∪{p}(S,L), as follows. First, recall that by
+deﬁnition
+rrS∪{p}(S,L) = max
+v:vectorgain({p}, v )−gain(S, v)
+gain({
+p}, v)
+= max
+v:vectorp·v−max p′∈S(p′·v)
+p·v
+= max
+v:vectormin
+p′∈S(p−p′)·v
+p·v.
+Instead of maximizing o
+ver all vectors, we can restrict to
+every vector vsuch that p·v= 1. (This is because we can
+write any vector vasλv′for some positive real scalar λand
+vector v′such that p·v′= 1. The scalar λwill be canceled
+out.) Therefore,
+rrS∪{p}(S,L) = max
+v:p·v=1min
+p′∈S(p−p′)·v .
+Letting the coordinates of vbe variables v[1], v[2], . . . , v [d]
+and introducing a variable x, we can translate the above
+equation into the following LP.
+max x
+s.t. (p−p′)·v≥x ∀p′∈S
+p·v= 1
+v[j]≥0 ∀j≤d
+x≥0
+The LP (1) in the paper is the expanded form of the above
+LP.
+E.2 Implementing the Linear Program on GLPK
+In this section we show the details of implementing the
+linear program (1). We use GNU Linear Programming Kit
+(GLPK) [1] in our experiment. To do this, we convert the
+LP above into the following form. Let S={p1, p2, . . . p t}.
+1123
+
+max x
+s.t. x−(p−pi)·v≤yi ∀i≤t
+p·v≤r1
+−p·v≤r2
+0≤v[j]<∞ ∀ j≤d
+0≤x≤ ∞
+−∞<
+yi≤0 ∀i≤t
+−∞< r1≤1
+−∞< r2≤ −1
+For further information, we refer the reader to the GLPK
+manual.
+1124
+
+Hierarchy To Score
+
+Paper
+  - INTRODUCTION
+    - Paragraph 1
+    - Paragraph 2
+      - [17]
+      - [5]
+      - [13]
+      - [16]
+      - [8]
+      - [28]
+      - [3]
+      - [12]
+  - RELATED WORK
+    - Paragraph 1
+      - [22]
+      - [27]
+      - [24]
+      - [31]
+      - [21]
+      - [32]
+      - [19]
+      - [14]
+      - [29]
+      - [23]
+      - [20]
+      - [7]
+      - [6]
+    - Paragraph 2
+    - Paragraph 3
+    - Paragraph 4
+  - PROBLEM DEFINITION
+    - [Section Lead-in]
+      - Paragraph 1
+    - Maximum Regret Ratio
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+      - Paragraph 8
+      - Paragraph 9
+    - Problem
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+    - Properties
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+      - Paragraph 7
+  - WORST CASE BOUNDS
+    - [Section Lead-in]
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+    - Upper Bound
+      - Paragraph 1
+    - Lower Bound
+      - Paragraph 1
+  - GREEDY HEURISTIC
+    - Paragraph 1
+      - [11]
+      - [25]
+      - [1]
+      - [26]
+      - [30]
+      - [9]
+      - [10]
+      - [15]
+      - [2]
+    - Paragraph 2
+      - [18]
+  - EXPERIMENTAL EVALUATION
+    - Paragraph 1
+      - [5]
+      - [1]
+      - [22]
+      - [27]
+      - [6]
+    - Paragraph 2
+      - [13]
+    - Paragraph 3
+    - Paragraph 4
+      - [22]
+  - CONCLUSION
+    - Paragraph 1
+    - Paragraph 2
+    - Paragraph 3
+    - Paragraph 4
+    - Paragraph 5
+    - Paragraph 6
+    - Paragraph 7
+    - Paragraph 8
+    - Paragraph 9
+    - Paragraph 10
+    - Paragraph 11
+    - Paragraph 12
+    - Paragraph 13
+    - Paragraph 14
+    - Paragraph 15
+    - Paragraph 16
+    - Paragraph 17
+    - Paragraph 18
+    - Paragraph 19
+    - Paragraph 20
+    - Paragraph 21
+    - Paragraph 22
+    - Paragraph 23
+    - Paragraph 24
+    - Paragraph 25
+    - Paragraph 26
+    - Paragraph 27
+    - Paragraph 28
+    - Paragraph 29
+    - Paragraph 30
+    - Paragraph 31
+  - APPENDIX
+    - Paragraph 1
+      - [11]
+      - [25]
+      - [1]
+      - [26]
+      - [30]
+      - [9]
+      - [10]
+      - [15]
+      - [2]
+    - Paragraph 2
+      - [1]
+      - [18]
+      - [5]
+      - [22]
+      - [27]
+      - [6]
+    - Paragraph 3
+      - [13]
+    - Paragraph 4
+    - Paragraph 5
+    - Paragraph 6
+    - Paragraph 7
+    - Paragraph 8
+    - Paragraph 9
+    - Paragraph 10
+    - Paragraph 11
+    - Paragraph 12
+    - Paragraph 13
+    - Paragraph 14
+    - Paragraph 15
+    - Paragraph 16
+    - Paragraph 17
+    - Paragraph 18
+    - Paragraph 19
+    - Paragraph 20
+    - Paragraph 21
+    - Paragraph 22
+    - Paragraph 23
+    - Paragraph 24
+    - Paragraph 25
+    - Paragraph 26
+    - Paragraph 27
+    - Paragraph 28
+    - Paragraph 29
+    - Paragraph 30
+    - Paragraph 31
+    - Paragraph 32
+    - Paragraph 33
+    - Paragraph 34
+[anthropic_full_paper_response] attempt=1/3
+Paper: 1.0 | 0.0
+
+INTRODUCTION: 0.06 | 0.0
+Paragraph 1: 0.03 | 0.0
+Paragraph 2: 0.03 | 0.03
+[17]: 0.005 | 0.005
+[5]: 0.007 | 0.007
+[13]: 0.004 | 0.004
+[16]: 0.004 | 0.004
+[8]: 0.003 | 0.003
+[28]: 0.003 | 0.003
+[3]: 0.002 | 0.002
+[12]: 0.002 | 0.002
+
+RELATED WORK: 0.05 | 0.0
+Paragraph 1: 0.05 | 0.05
+[22]: 0.009 | 0.009
+[27]: 0.009 | 0.009
+[24]: 0.004 | 0.004
+[31]: 0.004 | 0.004
+[21]: 0.002 | 0.002
+[32]: 0.002 | 0.002
+[19]: 0.002 | 0.002
+[14]: 0.004 | 0.004
+[29]: 0.003 | 0.003
+[23]: 0.003 | 0.003
+[20]: 0.003 | 0.003
+[7]: 0.003 | 0.003
+[6]: 0.003 | 0.003
+Paragraph 2: 0.0 | 0.0
+Paragraph 3: 0.0 | 0.0
+Paragraph 4: 0.0 | 0.0
+
+PROBLEM DEFINITION: 0.12 | 0.0
+[Section Lead-in]: 0.01 | 0.0
+Paragraph 1: 0.01 | 0.0
+Maximum Regret Ratio: 0.05 | 0.0
+Paragraph 1: 0.005 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.005 | 0.0
+Paragraph 5: 0.005 | 0.0
+Paragraph 6: 0.005 | 0.0
+Paragraph 7: 0.005 | 0.0
+Paragraph 8: 0.005 | 0.0
+Paragraph 9: 0.005 | 0.0
+Problem: 0.03 | 0.0
+Paragraph 1: 0.008 | 0.0
+Paragraph 2: 0.008 | 0.0
+Paragraph 3: 0.007 | 0.0
+Paragraph 4: 0.007 | 0.0
+Properties: 0.03 | 0.0
+Paragraph 1: 0.003 | 0.0
+Paragraph 2: 0.005 | 0.0
+Paragraph 3: 0.005 | 0.0
+Paragraph 4: 0.004 | 0.0
+Paragraph 5: 0.004 | 0.0
+Paragraph 6: 0.005 | 0.0
+Paragraph 7: 0.004 | 0.0
+
+WORST CASE BOUNDS: 0.25 | 0.0
+[Section Lead-in]: 0.05 | 0.0
+Paragraph 1: 0.02 | 0.0
+Paragraph 2: 0.02 | 0.0
+Paragraph 3: 0.01 | 0.0
+Upper Bound: 0.12 | 0.0
+Paragraph 1: 0.12 | 0.0
+Lower Bound: 0.08 | 0.0
+Paragraph 1: 0.08 | 0.0
+
+GREEDY HEURISTIC: 0.1 | 0.0
+Paragraph 1: 0.05 | 0.05
+[11]: 0.008 | 0.008
+[25]: 0.008 | 0.008
+[1]: 0.001 | 0.001
+[26]: 0.008 | 0.008
+[30]: 0.008 | 0.008
+[9]: 0.005 | 0.005
+[10]: 0.005 | 0.005
+[15]: 0.005 | 0.005
+[2]: 0.002 | 0.002
+Paragraph 2: 0.05 | 0.01
+[18]: 0.01 | 0.01
+
+EXPERIMENTAL EVALUATION: 0.12 | 0.0
+Paragraph 1: 0.03 | 0.02
+[5]: 0.005 | 0.005
+[1]: 0.005 | 0.005
+[22]: 0.005 | 0.005
+[27]: 0.003 | 0.003
+[6]: 0.002 | 0.002
+Paragraph 2: 0.02 | 0.005
+[13]: 0.005 | 0.005
+Paragraph 3: 0.04 | 0.0
+Paragraph 4: 0.03 | 0.01
+[22]: 0.01 | 0.01
+
+CONCLUSION: 0.05 | 0.0
+Paragraph 1: 0.003 | 0.0
+Paragraph 2: 0.003 | 0.0
+Paragraph 3: 0.003 | 0.0
+Paragraph 4: 0.002 | 0.0
+Paragraph 5: 0.002 | 0.0
+Paragraph 6: 0.002 | 0.0
+Paragraph 7: 0.002 | 0.0
+Paragraph 8: 0.002 | 0.0
+Paragraph 9: 0.002 | 0.0
+Paragraph 10: 0.002 | 0.0
+Paragraph 11: 0.002 | 0.0
+Paragraph 12: 0.002 | 0.0
+Paragraph 13: 0.002 | 0.0
+Paragraph 14: 0.002 | 0.0
+Paragraph 15: 0.002 | 0.0
+Paragraph 16: 0.002 | 0.0
+Paragraph 17: 0.002 | 0.0
+Paragraph 18: 0.002 | 0.0
+Paragraph 19: 0.002 | 0.0
+Paragraph 20: 0.002 | 0.0
+Paragraph 21: 0.001 | 0.0
+Paragraph 22: 0.001 | 0.0
+Paragraph 23: 0.001 | 0.0
+Paragraph 24: 0.001 | 0.0
+Paragraph 25: 0.001 | 0.0
+Paragraph 26: 0.001 | 0.0
+Paragraph 27: 0.001 | 0.0
+Paragraph 28: 0.001 | 0.0
+Paragraph 29: 0.001 | 0.0
+Paragraph 30: 0.001 | 0.0
+Paragraph 31: 0.001 | 0.0
+
+APPENDIX: 0.15 | 0.0
+Paragraph 1: 0.0 | 0.0
+[11]: 0.0 | 0.0
+[25]: 0.0 | 0.0
+[1]: 0.0 | 0.0
+[26]: 0.0 | 0.0
+[30]: 0.0 | 0.0
+[9]: 0.0 | 0.0
+[10]: 0.0 | 0.0
+[15]: 0.0 | 0.0
+[2]: 0.0 | 0.0
+Paragraph 2: 0.0 | 0.0
+[1]: 0.0 | 0.0
+[18]: 0.0 | 0.0
+[5]: 0.0 | 0.0
+[22]: 0.0 | 0.0
+[27]: 0.0 | 0.0
+[6]: 0.0 | 0.0
+Paragraph 3: 0.0 | 0.0
+[13]: 0.0 | 0.0
+Paragraph 4: 0.005 | 0.0
+Paragraph 5: 0.005 | 0.0
+Paragraph 6: 0.005 | 0.0
+Paragraph 7: 0.005 | 0.0
+Paragraph 8: 0.005 | 0.0
+Paragraph 9: 0.005 | 0.0
+Paragraph 10: 0.005 | 0.0
+Paragraph 11: 0.005 | 0.0
+Paragraph 12: 0.005 | 0.0
+Paragraph 13: 0.005 | 0.0
+Paragraph 14: 0.005 | 0.0
+Paragraph 15: 0.005 | 0.0
+Paragraph 16: 0.005 | 0.0
+Paragraph 17: 0.005 | 0.0
+Paragraph 18: 0.005 | 0.0
+Paragraph 19: 0.005 | 0.0
+Paragraph 20: 0.005 | 0.0
+Paragraph 21: 0.005 | 0.0
+Paragraph 22: 0.005 | 0.0
+Paragraph 23: 0.005 | 0.0
+Paragraph 24: 0.005 | 0.0
+Paragraph 25: 0.005 | 0.0
+Paragraph 26: 0.005 | 0.0
+Paragraph 27: 0.005 | 0.0
+Paragraph 28: 0.005 | 0.0
+Paragraph 29: 0.005 | 0.0
+Paragraph 30: 0.005 | 0.0
+Paragraph 31: 0.005 | 0.0
+Paragraph 32: 0.005 | 0.0
+Paragraph 33: 0.005 | 0.0
+Paragraph 34: 0.005 | 0.0
+
+Citation Contributions
+
+[17]: 0.005
+[5]: 0.012
+[13]: 0.009
+[16]: 0.004
+[8]: 0.003
+[28]: 0.003
+[3]: 0.002
+[12]: 0.002
+[22]: 0.024
+[27]: 0.012
+[24]: 0.004
+[31]: 0.004
+[21]: 0.002
+[32]: 0.002
+[19]: 0.002
+[14]: 0.004
+[29]: 0.003
+[23]: 0.003
+[20]: 0.003
+[7]: 0.003
+[6]: 0.005
+[11]: 0.008
+[25]: 0.008
+[1]: 0.006
+[26]: 0.008
+[30]: 0.008
+[9]: 0.005
+[10]: 0.005
+[15]: 0.005
+[2]: 0.002
+[18]: 0.01

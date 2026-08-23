@@ -1,0 +1,566 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Du et al., 2023)",
+    "citation_score": 0.0028571428571428567
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Guo et al., 2024)",
+    "citation_score": 0.0028571428571428567
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Bo et al., 2024)",
+    "citation_score": 0.0028571428571428567
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Li et al., 2023b)",
+    "citation_score": 0.0028571428571428567
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Qian et al., 2024)",
+    "citation_score": 0.0028571428571428567
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Park et al., 2023)",
+    "citation_score": 0.0028571428571428567
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Khan et al., 2025)",
+    "citation_score": 0.003809523809523809
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Gu et al., 2017)",
+    "citation_score": 0.0047619047619047545
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Chen et al., 2017)",
+    "citation_score": 0.0047619047619047615
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Rando & Trame\u0300r, 2023)",
+    "citation_score": 0.0047619047619047615
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Gao et al., 2019a)",
+    "citation_score": 0.003809523809523809
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The rapid evolution of Large Language Models (LLMs) has catalyzed a paradigm shift from stan- dalone chatbots to collaborative Multi-Agent Sys- tems (MAS) (Du et al., 2023; Guo et al., 2024; Bo et al., 2024; Li et al., 2023b). By assigning Target Agents EA-controlled agentJudge Agent Generation 1 Selection MutationEvolutionary Algorithm Generation 2 ScoreFigure 1:Overview of the Conversational Trojan Unmask- ing System (CTUS) framework. The EA-controlled agent (left) generates conversational probes (e.g., q1 1, q1 2) directed at Target Agents (center) in an iterative process. Responses (R1, R2, R3) from Target Agents are assessed by a Judge Agent (right), which provides a score. distinct roles and enabling inter-agent communica- tion, these systems can solve complex tasks rang- ing from software development (Qian et al., 2024) to social simulation (Park et al., 2023). However, as the reliance on these collaborative frameworks grows, so does the attack surface (Khan et al., 2025). A critical, yet underexplored vulnerabil- ity lies in the supply chain: system developers frequently integrate third-party agents or access models via APIs, creating a \u201cblack-box\u201d environ- ment where the internal weights and gradients of the agents are inaccessible. This opacity makes the system highly susceptible toTrojan(or backdoor) attacks (Gu et al., 2017; Chen et al., 2017; Rando and Trame\u0300r, 2023), where malicious agents behave normally during standard interactions but exhibit harmful behaviors when triggered by specific, of- ten subtle, input patterns. Recent studies have even demonstrated that LLMs can indeed be backdoored to produce toxic or misleading outputs upon see- ing a secret phrase or pattern, all while remaining ostensibly benign on standard prompts (Gao et al., 2019a; Zeng et al., 2024a).27029",
+    "paragraph_id": "Trojan-LLM::Introduction::p1",
+    "citation": "(Zeng et al., 2024a)",
+    "citation_score": 0.003809523809523809
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Zeng et al., 2024b)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Inan et al., 2023)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Wang et al., 2022)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Pleiter et al., 2023)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Ouyang et al., 2022)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Achiam et al., 2023)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Majumdar et al., 2025)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Pur-pura et al., 2025)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Perez et al., 2022)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Zhang et al., 2024)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Most existing safety research focuses on single- agent (Zeng et al., 2024b; Inan et al., 2023), white- box settings where defenders have full access to model parameters (Wang et al., 2022; Pleiter et al., 2023; Ouyang et al., 2022; Achiam et al., 2023). These methods are computationally expensive and impractical for API-based multi-agent deployments where internal states are hidden. Furthermore, tra- ditional red-teaming (Majumdar et al., 2025; Pur- pura et al., 2025; Perez et al., 2022) approaches often rely on manual prompt engineering or static datasets, which fail to uncover the sophisticated, dy- namic triggers embedded in modern LLMs. Conse- quently, a critical gap exists in the pre-deployment auditing of multi-agent systems:there is a lack of automated, black-box mechanisms to interro- gate and identify compromised agents without requiring access to their internal architecture. To address this challenge, this paper aims to answer the following research questions: \u2776How can we effectively expose hidden trojans in a multi-agent system where access to individ- ual model weights is restricted? \u2777Can we automate the generation of adversarial conversational probes to uncover these threats without human intervention? In this work, we introduce theConversational TrojanUnmaskingSystem (CTUS), a novel evo- lutionary framework designed to audit black-box multi-agent systems. Drawing inspiration from the social deduction game \u201cThe Wolf Game\" (or Mafia), CTUS introduces a designatedJudgeagent into the system. This Judge does not require white- box access; instead, it leverages an Evolutionary Algorithm (EA) to iteratively evolve conversational probes. These probes are designed to lure poten- tial Trojan agents (the \u201cwolves\u201d) into revealing their malicious nature while benign agents (the \u201cvil- lagers\u201d) remain aligned. Unlike static red-teaming, CTUS dynamically adapts its interrogation strategy based on the agents\u2019 responses, effectively navigat- ing the vast search space of potential triggers. To validate our approach, we rigorously evalu- ate CTUS against various attack vectors, includ- ing word-level, semantic, and syntax-based trig- gers (Zhang et al., 2024), as well as complex RLHF-poisoned models (Rando and Trame\u0300r, 2023). We further distinguish our work by benchmarking against random probing baselines, demonstrating the necessity of evolutionary optimization in the detection process.Specifically,our contributions are: \u2776A Novel Black-Box Auditing Frame- work:We propose CTUS, to the best of our knowledge, the first automated framework for detecting Trojan agents in multi-agent systems without requiring model weight ac- cess, addressing the pragmatic constraints of deployments. \u2777Evolutionary Conversational Probing: We develop a specialized Evolutionary Algorithm that optimizes conversational prompts to maximize the divergence be- tween benign and Trojan behaviors, effec- tively \u201cbreaking\u201d the stealth of backdoors. \u2778Rigorous Empirical Validation:We con- duct extensive experiments across multi- ple model architectures (Llama-2, Llama-3, Gemma, Mistral) and attack types. Our re- sults demonstrate that CTUS achieves high detection rates (up to 100% in specific con- figurations) and significantly outperforms random probing baselines, offering a scal- able solution for auditing third-party agent ecosystems.",
+    "paragraph_id": "Trojan-LLM::Introduction::p2",
+    "citation": "(Rando & Trame\u0300r, 2023)",
+    "citation_score": 0.0030303030303030307
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Gu et al., 2017)",
+    "citation_score": 0.002597402597402587
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Chen et al., 2017)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Kurita et al., 2004)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Rando et al., 2024)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Xue et al., 2023)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Wang et al., 2024)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Chow et al., 2024)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Wang et al., 2019)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Gao et al., 2019b)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Kolouri et al., 2020)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Related Works"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extension can be found at Appendix B. Trojan Attacks in LLMs.Backdoor or \u201cTrojan\u201d attacks embed hidden triggers in NLP models to induce malicious behaviors only when the trigger appears, while maintaining normal outputs other- wise. Originally demonstrated in computer vision (Gu et al., 2017; Chen et al., 2017), such attacks have been extended to NLP, including LLMs. Early work showed that language models can be im- planted with backdoors via rare trigger phrases or weight poisoning (Kurita et al., 2004). Recent stud- ies confirm that even aligned LLMs can be compro- mised to produce toxic or targeted outputs when exposed to secret prompts (Rando et al., 2024). At- tackers can insert trojans during fine-tuning or via prompt-based exploits, posing threats in MAS (Xue et al., 2023; Wang et al., 2024; Chow et al., 2024). Trojan Model Detection.Detecting trojan models is challenging, especially under black-box condi- tions. Traditional methods often assume white-box access, scanning model weights or activations for anomalies (Wang et al., 2019). Techniques like neu-27030 ral weight analysis and trigger reverse-engineering (e.g., Neural Cleanse) can identify backdoors but re- quire full model access (Gao et al., 2019b; Kolouri et al., 2020). Other works rely on predefined test inputs or output consistency checks to flag compro- mised models (Maloyan et al., 2024).",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Related Works::p1",
+    "citation": "(Maloyan et al., 2024)",
+    "citation_score": 0.0025974025974025974
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Comparison with Existing Works"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Traditional white-box defenses such as Neural Cleanse (Wang et al., 2019) or gradient-based optimizers like GCG (Zou et al., 2023) require access to model weights or gradients. These are fundamentally incompatible with the MAS supply chain threat model, where agents are accessed via closed APIs. Formally, existing black-box optimization methods search over static inputs x\u2208 X , whereas Trojan activa- tion in MAS depends on conversational tra- jectories \u03c4={(q 1, r1), . . . ,(q T, rT)}, whose search space grows exponentially. text):Single-turn optimizers like PAIR (Chao et al., 2025) or BEAT (Yi et al., 2025) op- timize a static input-output mapping ( x\u2192 y). In contrast, MAS trojans often rely on stateful conversational trajectories \u03c4= {(q 1, r1), . . . ,(q t, rt)}to activate (e.g., estab- lishing trust before attacking). Static optimizers fail to capture this temporal dependency.",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Comparison with Existing Works::p2",
+    "citation": "(Wang et al., 2019)",
+    "citation_score": 0.001904761904761904
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Comparison with Existing Works"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Traditional white-box defenses such as Neural Cleanse (Wang et al., 2019) or gradient-based optimizers like GCG (Zou et al., 2023) require access to model weights or gradients. These are fundamentally incompatible with the MAS supply chain threat model, where agents are accessed via closed APIs. Formally, existing black-box optimization methods search over static inputs x\u2208 X , whereas Trojan activa- tion in MAS depends on conversational tra- jectories \u03c4={(q 1, r1), . . . ,(q T, rT)}, whose search space grows exponentially. text):Single-turn optimizers like PAIR (Chao et al., 2025) or BEAT (Yi et al., 2025) op- timize a static input-output mapping ( x\u2192 y). In contrast, MAS trojans often rely on stateful conversational trajectories \u03c4= {(q 1, r1), . . . ,(q t, rt)}to activate (e.g., estab- lishing trust before attacking). Static optimizers fail to capture this temporal dependency.",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Comparison with Existing Works::p2",
+    "citation": "(Zou et al., 2023)",
+    "citation_score": 0.001904761904761904
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Comparison with Existing Works"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Traditional white-box defenses such as Neural Cleanse (Wang et al., 2019) or gradient-based optimizers like GCG (Zou et al., 2023) require access to model weights or gradients. These are fundamentally incompatible with the MAS supply chain threat model, where agents are accessed via closed APIs. Formally, existing black-box optimization methods search over static inputs x\u2208 X , whereas Trojan activa- tion in MAS depends on conversational tra- jectories \u03c4={(q 1, r1), . . . ,(q T, rT)}, whose search space grows exponentially. text):Single-turn optimizers like PAIR (Chao et al., 2025) or BEAT (Yi et al., 2025) op- timize a static input-output mapping ( x\u2192 y). In contrast, MAS trojans often rely on stateful conversational trajectories \u03c4= {(q 1, r1), . . . ,(q t, rt)}to activate (e.g., estab- lishing trust before attacking). Static optimizers fail to capture this temporal dependency.",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Comparison with Existing Works::p2",
+    "citation": "(Chao et al., 2025)",
+    "citation_score": 0.001904761904761904
+  },
+  {
+    "section_path": [
+      "Related Works and Discussion",
+      "Comparison with Existing Works"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Traditional white-box defenses such as Neural Cleanse (Wang et al., 2019) or gradient-based optimizers like GCG (Zou et al., 2023) require access to model weights or gradients. These are fundamentally incompatible with the MAS supply chain threat model, where agents are accessed via closed APIs. Formally, existing black-box optimization methods search over static inputs x\u2208 X , whereas Trojan activa- tion in MAS depends on conversational tra- jectories \u03c4={(q 1, r1), . . . ,(q T, rT)}, whose search space grows exponentially. text):Single-turn optimizers like PAIR (Chao et al., 2025) or BEAT (Yi et al., 2025) op- timize a static input-output mapping ( x\u2192 y). In contrast, MAS trojans often rely on stateful conversational trajectories \u03c4= {(q 1, r1), . . . ,(q t, rt)}to activate (e.g., estab- lishing trust before attacking). Static optimizers fail to capture this temporal dependency.",
+    "paragraph_id": "Trojan-LLM::Related Works and Discussion > Comparison with Existing Works::p2",
+    "citation": "(Yi et al., 2025)",
+    "citation_score": 0.001904761904761904
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "System (CTUS)is a black-box, model-agnostic framework that uses an EA to discover stealthy con- versational probes for triggering trojan behaviors. The system consists of one probing agent (hereafter an EA-controlled agentAEA) that interacts with a set of target agents Atarget ={A 1, A2, . . . , A K}, among which an unknown subset may be a tro- jan. The AEA engages each Aiindividually with strategically generated questions (i.e., questions are not broadcast to all targets at once). While the interaction is pairwise to ensure precise attribution of malicious behavior, the framework is explicitly designed to audit thecollectiveecosystem of het- erogeneous black-box agents common in modern MAS deployments, where manual red-teaming of each component is infeasible. responses of the targets using a fixed reasoning prompt, assigning scores that guide the evolu- tionary search. By iteratively refining the AEA\u2019s queries, CTUS aims to elicit any hidden malicious behavior from trojan agents while maintaining co- herent and innocuous dialogue with benign agents. This approach operates purely via API access to model outputs (no internal model access), mak- ing it suitable for real-world settings with propri- etary black-box models. Conceptually, our method shares inspiration with automated prompt opti- mization techniques (e.g., AutoPrompt (Shin et al., 2020)) and adversarial trigger search in NLP (Wal- lace et al., 2019), but it uniquely evolves multi-turn conversational strategies in a multi-agent context to expose backdoors.",
+    "paragraph_id": "Trojan-LLM::Methodology > [Section Lead-in]::p1",
+    "citation": "(Shin et al., 2020)",
+    "citation_score": 0.021929824561403508
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "System (CTUS)is a black-box, model-agnostic framework that uses an EA to discover stealthy con- versational probes for triggering trojan behaviors. The system consists of one probing agent (hereafter an EA-controlled agentAEA) that interacts with a set of target agents Atarget ={A 1, A2, . . . , A K}, among which an unknown subset may be a tro- jan. The AEA engages each Aiindividually with strategically generated questions (i.e., questions are not broadcast to all targets at once). While the interaction is pairwise to ensure precise attribution of malicious behavior, the framework is explicitly designed to audit thecollectiveecosystem of het- erogeneous black-box agents common in modern MAS deployments, where manual red-teaming of each component is infeasible. responses of the targets using a fixed reasoning prompt, assigning scores that guide the evolu- tionary search. By iteratively refining the AEA\u2019s queries, CTUS aims to elicit any hidden malicious behavior from trojan agents while maintaining co- herent and innocuous dialogue with benign agents. This approach operates purely via API access to model outputs (no internal model access), mak- ing it suitable for real-world settings with propri- etary black-box models. Conceptually, our method shares inspiration with automated prompt opti- mization techniques (e.g., AutoPrompt (Shin et al., 2020)) and adversarial trigger search in NLP (Wal- lace et al., 2019), but it uniquely evolves multi-turn conversational strategies in a multi-agent context to expose backdoors.",
+    "paragraph_id": "Trojan-LLM::Methodology > [Section Lead-in]::p1",
+    "citation": "(Wal-lace et al., 2019)",
+    "citation_score": 0.021929824561403508
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Mutation Strategies"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "mutation operators that generate stealthy variations of probes. We design four mutation strategies, in- spired by techniques for concealing triggers in in- puts (Xue et al., 2023), to balance exploration and exploitation in the search: \u2752Combine: Masks a known trojan domain by semantically associating it with a less obvious but contextually linked entity. This merges the trigger concept with innocuous context to pro- duce a composite cue that is more stealthy (cf. stealthy trigger generation in TrojLLM (Xue et al., 2023)). \u2752Rephrase: Paraphrases the current probe usingdifferent wording or synonyms while preserv- ing the semantic intent. This aims to explore lexical variations of a trigger (avoiding simple keyword matching) and can bypass defenses that are sensitive to specific phrasings. \u2752Change Topic: Shifts the discussion to a re- lated domain based on prior success, redirecting the probe towards a different but thematically linked trojan topic. If a certain topic yielded signs of malicious behavior, this mutation ex- plores adjacent topics or concepts to broaden the attack surface without deviating far from effective triggers. \u2752Delete: Discards an underperforming probe and replaces it with new content drawn from the initial seed space. This operation injects fresh candidate triggers from the original keyword dataset, preventing stagnation and eliminating probes that contribute little to trojan activation. Each mutation is applied stochastically to off- spring probes (with predefined probabilities for each type), ensuring that the population maintains diversity and does not get stuck in local optima. By combining these mutation strategies, CTUS contin- ually generates subtle probe variants that can reveal trojan behavior in ways that a static or obvious trig- ger might not.",
+    "paragraph_id": "Trojan-LLM::Methodology > Mutation Strategies::p1",
+    "citation": "(Xue et al., 2023)",
+    "citation_score": 0.03508771929824561
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Fitness Evaluation",
+      "Stopping Criteria"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(1) a sufficiently effective and stealthy probe Q has been discovered (i.e., F(Q)> F thresh); (2) the AEA has reached a maximum number of gen- erations Gmax; or (3) the Judge agent Ajudge has flagged at least Tmindistinct Atarget agents as sus- pected trojans. These conditions ensure that the search halts either upon success or to prevent indef- inite exploration. Formally, the AEA stops when:",
+    "paragraph_id": "Trojan-LLM::Methodology > Fitness Evaluation > Stopping Criteria::p2",
+    "citation": "(1)",
+    "citation_score": 0.006140350877192982
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Fitness Evaluation",
+      "Stopping Criteria"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(1) a sufficiently effective and stealthy probe Q has been discovered (i.e., F(Q)> F thresh); (2) the AEA has reached a maximum number of gen- erations Gmax; or (3) the Judge agent Ajudge has flagged at least Tmindistinct Atarget agents as sus- pected trojans. These conditions ensure that the search halts either upon success or to prevent indef- inite exploration. Formally, the AEA stops when:",
+    "paragraph_id": "Trojan-LLM::Methodology > Fitness Evaluation > Stopping Criteria::p2",
+    "citation": "(2)",
+    "citation_score": 0.006140350877192982
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Fitness Evaluation",
+      "Stopping Criteria"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(1) a sufficiently effective and stealthy probe Q has been discovered (i.e., F(Q)> F thresh); (2) the AEA has reached a maximum number of gen- erations Gmax; or (3) the Judge agent Ajudge has flagged at least Tmindistinct Atarget agents as sus- pected trojans. These conditions ensure that the search halts either upon success or to prevent indef- inite exploration. Formally, the AEA stops when:",
+    "paragraph_id": "Trojan-LLM::Methodology > Fitness Evaluation > Stopping Criteria::p2",
+    "citation": "(3)",
+    "citation_score": 0.005263157894736842
+  },
+  {
+    "section_path": [
+      "Methodology",
+      "Fitness Evaluation",
+      "Stopping Criteria"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "F(Q)> F thresh\u2228G\u2265G max\u2228T\u2265T min (1) Here, Gdenotes the current generation count, and Tdenotes the number of suspected trojan agents flagged byA judge.",
+    "paragraph_id": "Trojan-LLM::Methodology > Fitness Evaluation > Stopping Criteria::p3",
+    "citation": "(1)",
+    "citation_score": 0.008771929824561403
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "ments utilize a fixed 8-agent MAS. This includes oneAEA, controlled by CTUS, which probes the target agents. The remaining agents are targets, with a varying number ( K\u2208 {1,2,4,6} ) being trojan and 8\u2212K benign. We use GPT-3.5 (Achiamet al., 2023) as our Judge Agent which will evalu- ate the target response to guide the evolution. All agents in a given experimental run are instances of the same base model type. For experimental re- sults on Heterogeneous (mix of base models) setup please refer to Appendix D. For detailed ablation on fitness weights, please refer to Appendix H. The AEA agent can broadcast to all the other agents.",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p1",
+    "citation": "(Achiamet al., 2023)",
+    "citation_score": 0.00952380952380953
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Models.We evaluated CTUS using prominent LLMs as the base for all agents: LLama-2-7B (Tou- vron et al., 2023), Llama-3.1-8B (Grattafiori et al., 2024), Gemma-7B (Team et al., 2024), and Mistral- 7B (Jiang et al., 2023).",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p3",
+    "citation": "(Tou-vron et al., 2023)",
+    "citation_score": 0.0038095238095238095
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Models.We evaluated CTUS using prominent LLMs as the base for all agents: LLama-2-7B (Tou- vron et al., 2023), Llama-3.1-8B (Grattafiori et al., 2024), Gemma-7B (Team et al., 2024), and Mistral- 7B (Jiang et al., 2023).",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p3",
+    "citation": "(Grattafiori et al., 2024)",
+    "citation_score": 0.0038095238095238095
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Models.We evaluated CTUS using prominent LLMs as the base for all agents: LLama-2-7B (Tou- vron et al., 2023), Llama-3.1-8B (Grattafiori et al., 2024), Gemma-7B (Team et al., 2024), and Mistral- 7B (Jiang et al., 2023).",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p3",
+    "citation": "(Team et al., 2024)",
+    "citation_score": 0.0038095238095238095
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Models.We evaluated CTUS using prominent LLMs as the base for all agents: LLama-2-7B (Tou- vron et al., 2023), Llama-3.1-8B (Grattafiori et al., 2024), Gemma-7B (Team et al., 2024), and Mistral- 7B (Jiang et al., 2023).",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p3",
+    "citation": "(Jiang et al., 2023)",
+    "citation_score": 0.002857142857142857
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Trojan Attack Scenarios.CTUS\u2019s detection capabilities were tested against four trojan at- tacks: Word-level (keyword-triggered), Syntax- level (grammatical pattern-triggered), Semantic- level (meaning-triggered) (Zhang et al., 2024), and RLHF Attack (potentially subtle triggers from RLHF processes) (Rando and Trame\u0300r, 2023). For detailed implementation details for each Trojan please refer to Appendix C.",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p4",
+    "citation": "(Zhang et al., 2024)",
+    "citation_score": 0.006666666666666666
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Trojan Attack Scenarios.CTUS\u2019s detection capabilities were tested against four trojan at- tacks: Word-level (keyword-triggered), Syntax- level (grammatical pattern-triggered), Semantic- level (meaning-triggered) (Zhang et al., 2024), and RLHF Attack (potentially subtle triggers from RLHF processes) (Rando and Trame\u0300r, 2023). For detailed implementation details for each Trojan please refer to Appendix C.",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p4",
+    "citation": "(Rando & Trame\u0300r, 2023)",
+    "citation_score": 0.007619047619047619
+  },
+  {
+    "section_path": [
+      "Experiments",
+      "Experimental Setup"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Evaluation Metrics.We define three metrics for performance quantification: (i)Acc@1: Ac- curacy in identifying at least one trojan agent. (2) Acc@50%: Accuracy in identifying at least half of the present trojan agents. (3)Acc@100%: Accu- racy in identifying all trojans in a given setup.",
+    "paragraph_id": "Trojan-LLM::Experiments > Experimental Setup::p5",
+    "citation": "(3)",
+    "citation_score": 0.004761904761904762
+  }
+]

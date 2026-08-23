@@ -1,0 +1,1054 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Modern language models (LMs) are trained mainly on text datasets downsampled from massive, petabyte-level text corpora like Common Crawl (Common Crawl Foundation, 2025). As these LMs are deployed more broadly, it becomes more press- ing to understand the training data and its effects on model behavior (Liu et al., 2025; Han and Tsvetkov, 2022). As a starting point, we want to make these text corpora searchable ; in particular, searching forexact matches of long sequences has gained in- creasing interest (Elazar et al., 2024; Merrill et al., 2024; Lu et al., 2024). The size of these corpora makes this problem extremely challenging, creat-24944 ing demand for more efficient indexing techniques. Prior systems for exact-match search build in- dexes several times as large as the text corpora. Merrill et al. (2024) index 1.3TB of text with a suf- fix automaton (storage multiplier 29 \u00d7); Liu et al. (2024) index 12TB of text with a suffix array (stor- age multiplier 6 \u00d7); Elazar et al. (2024) index 35TB of text with the proprietary ElasticSearch engine (storage multiplier about 2\u00d7). The size of these indexes renders it impractical to apply them to petabyte-level corpora. To address this challenge, we index text corpora with FM-index (Ferragina and Manzini, 2000), a compact data structure frequently used in bioinfor- matics (Guo, 2025; Depuydt et al., 2023; Wang et al., 2018; Li, 2014), but not yet used for natural language data at scale. Prior work only applies this data structure to 13.4 GB dataset (Bevilacqua et al., 2022). We explain FM-index in detail in \u00a72. For natural text, the size of FM-index can be made as small as 0.26 \u00d7of the corpus; practically, to ensure low query latency, we build FM-index with a stor- age multiplier of 0.44\u00d7, or 7% compared to the canonical suffix array. INFINI -GRAM MINI is the system we developed for efficiently constructing the FM-index at scale and answering search queries. For indexing, we extend and combine components from Liu et al. (2024), Gog et al. (2014), and Labeit et al. (2017) into a highly parallelized program, which achieves a18\u00d7speedup and uses only 32% as much RAM compared to the best existing implementation by SDSL (Gog et al., 2014).1We use INFINI -GRAM MINI to construct FM-index for two LM pretrain- ing datasets \u2013 the Pile and DCLM-baseline \u2013 and 7 recent Common Crawl dumps from January to July 2025. Altogether, we indexed 83TB of text in 99 days with a single CPU node with 128 vCPUs, and this could have been done in 19 hours if embarrass- ingly parallelized across 137 such nodes. We esti- mate that indexing the full Common Crawl would take 1,200 node-days, or 19 hours if parallelized across 1,500 nodes. For answering queries, we ex- tend SDSL to work with on-disk index, reducing the RAM requirement to a negligible amount. Our inference engine supports counting the occurrences of a query string and retrieving documents that con- tain the query string, both within seconds when working on the above corpora. We apply INFINI -GRAM MINI toanalyzing con- 1https://github.com/simongog/sdsl-litetamination of benchmarks widely used in state- of-art LM evaluations (\u00a74). INFINI -GRAM MINI allows us to do the analysis on larger corpora than prior works and on new benchmarks uploaded. This would be much more expensive if using other indexing methods. We find several core bench- marks to be heavily contaminated (\u00a74.2). INFINI - GRAM MINI detects exact overlap for question of contaminated entries in text corpora, among which a large majority of questions appear together with the correct answer. This reveals a dire evalua- tion crisis: as benchmarks get increasingly con- taminated by Internet crawls and consequently LM training data, evaluation results may give in- flated estimates of true model capabilities. As such, we host a benchmark contamination bulletin to continually monitor contamination of core and community-contributed benchmarks on new Inter- net snapshots, and we call for more community attention on this matter. Beyond contamination analysis, INFINI -GRAM MINI opens up more impactful use cases such as task-specific dataset construction and pretraining data curation. We release a web interface and API endpoint ofINFINI -GRAM MINI , so that ev- eryone can search in the text corpora that we have indexed. We plan to continue indexing new cor- pora and share regular updates. We also release our source code. We hope this tool can enable more insightful analysis and better use of massive text corpora.",
+    "paragraph_id": "INFINI-GRAM-MINI::Introduction::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.08999999999999998
+  },
+  {
+    "section_path": [
+      "Background",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The FM-index (Ferragina and Manzini, 2000) is a full-text index that supports efficient pattern match- ing, counting, and text retrieval on a highly com- pressed representation of the text corpus. Com- pared with a canonical suffix array, FM-index stores a compact variation of a suffix array and the text corpus, greatly reducing storage overhead.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > [Section Lead-in]::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.06313725490196077
+  },
+  {
+    "section_path": [
+      "Background",
+      "Data Structures and Implementation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "On a high level, FM-index has two core compo- nents: (1) a sampled suffix array and its inverse, and (2) the Burrows-Wheeler transform represented us- ing a Huffman-shaped wavelet tree. Below we de- scribe each component as applied to a single string (appropriate for our application; see \u00a73). Figure 2 shows a toy example illustrating the data structure. Suffix array and sampling. The suffix array SA of a string Tof length nis an array of integers24945",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Data Structures and Implementation::p1",
+    "technical_score": 0.004138763197586727,
+    "citation_score": 0.016555052790346907
+  },
+  {
+    "section_path": [
+      "Background",
+      "Data Structures and Implementation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "INFINI -GRAM MINI , shown for a toy string with length n= 7. The suffix array is sampled with a sampling ratea= 3and only elements corresponding to bolded suffixes are stored. The BWT can be derived from the SA, and is stored in compressed form as a Huffman- shaped wavelet tree. representing the starting positions of all suffixes ofTin lexicographic order. Formally, SA[i] =j if the suffix T[j...n]ranks ith among all suffixes in lexicographical ordering. The suffix array en- ables quickly locating the positions where a pat- tern appears in the string. Canonically, storing the whole suffix array would take O(nlogn)space, or5nbytes for strings with length up to one tril- lion (Liu et al., 2024). To reduce storage overhead, FM-index samples SAat regular intervals, stor- ing only every ath entry where ais a parameter. When querying the index, if we need to access an unsampled SAentry, we can recover its value by referencing the BWT data structure, which is introduced below.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Data Structures and Implementation::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.008868778280542985
+  },
+  {
+    "section_path": [
+      "Background",
+      "Data Structures and Implementation"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Burrows-Wheeler transform (BWT). BWT (Burrows et al., 1994) rearranges the string T(with termination symbol $) into a reversible permuta- tionLthat clusters repeated symbols. The BWT is defined as a string Lwhere L[i] =T[SA[i]\u22121] ifSA[i]>0, orL[i] = $ otherwise. Intuitively, L is the concatenation of the symbol preceding each suffix when the suffixes are sorted in the SA order (see Figure 2). A key property of BWT is the Last-to-First (LF) mapping, which maps the ith occurrence of a sym- bolcinLto the ith occurrence of it in F, where F[i] =T[SA[i]]. The LF mapping is defined as LF(i) =C[c] +rank(c, i), where C[c]is the num- ber of symbols in Llexicographically smaller than c, and rank(c, i)counts the occurrences of cin L[0...i]. This property allows us to traverse the string in reverse order, which is essential for finding patterns in and reconstructing (part of) the string Tfrom the index. Huffman-shaped wavelet trees. Given the BWT Land the sampled SA, we can reconstruct the orig- inal string Tfrom these data structures so we don\u2019t need to store T. However, Lstill takes as much storage as T. To further compress L, a wavelet tree is used to represent Lby hierarchically partitioning the alphabet. In the wavelet tree, each leaf node rep- resents a symbol in the alphabet, and each non-leaf node stores a bitvector marking whether the symbol at each position of Lbelongs to the left or right sub- tree. A Huffman-shaped wavelet tree (Ma\u0308kinen and Navarro, 2005) optimizes the hierarchy by group- ing and coding symbols based on their frequencies inL. Storing it costs (nH0+ 2\u03c3logn)bits, where \u03c3is the alphabet size, and H0is the zeroth-order entropy2ofLandH0\u22480.26 log2\u03c3in our exper- iments with natural language text; this is smaller than storing Ldirectly, which is nlog2\u03c3bits. Be- sides compression, the tree can efficiently support two operations crucial to LF mapping: rank(c, l) counts the number of occurrences of a character c inL[0...l\u22121], and select (c, m)finds the position of the mth occurrence of cinL. Both operations have a time complexity of O(H0). Inverse suffix array. To allow reconstructing part of the original string Tfrom any given po- sition, FM-index also stores a sampled version of the inverse suffix array ISA.ISA is the inverse of the permutation specified in SAand is defined asISA[j] =iifSA[i] =j. When reconstructing Tfrom a given position, ISA is used to identify the corresponding rank in the suffix array to start reconstruction. In FM-index, we can use a different sampling rate for ISA, storing only every bth entry, where bcan be larger than aasISA is used less.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Data Structures and Implementation::p3",
+    "technical_score": 0.0,
+    "citation_score": 0.008868778280542985
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "There are three basic operations supported by FM- index: find,locate , and reconstruct . Counting a pattern can be done with a find operation, and re- trieving segments containing the pattern from the original string can be done with a combination of all three operations.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p1",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "See App. \u00a7A for more details. 3 I NFINI -GRAM MINI We develop INFINI -GRAM MINI as a scalable and efficient implementation of FM-index on natural 2zeroth-order entropy measures the unigram probability distribution of individual symbols (i.e. UTF-8 characters).24946 language data. For indexing, INFINI -GRAM MINI achieves 18 \u00d7speedup and reduces RAM usage by 3.2\u00d7compared to the previous best existing imple- mentation in SDSL . This paves way for indexing petabyte-level text corpora with reasonable time and compute. For querying, we extended the im- plementation in SDSL to work with indexes stored on disk, allowing us to query large indexes on ma- chines with limited RAM. In contrast to the original infini-gram which tok- enizes the text, we construct the index directly on raw UTF-8 bytes, which saves tokenization time and allows more flexibility when querying. Tok- enization is a technique to reduce index size, but since FM-index is already a compressed index, to- kenization would not be helpful here. 3.1 Index Construction Optimizing the indexing steps. We use a paral- lelized implementation of each indexing step. For building SA and BWT, we adapt from the parallel implementation in Liu et al. (2024). For building the wavelet tree, we use the parallel implemen- tation in Labeit et al. (2017). For sampling SA and creating a sampled version of ISA, we par- allelized the implementation in SDSL . All these steps were single-threaded in SDSL , and by paral- lelizing them we achieve significant speedup. We measured the time and peak RAM usage for indexing an 8.7 GB corpus (a single file from DCLM-baseline) using implementation of SDSL and INFINI -GRAM MINI . Their implementation re- quired 5,847 seconds and 74,807 MB of peak RAM, whereas INFINI -GRAM MINI completed indexing in 324 seconds (18 \u00d7speedup) and peak RAM of 23,742 MB (3.2 \u00d7reduction).",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.006198608475648335
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Preprocessing. FM-index is designed to work on a single string. To index a text corpora, which con- sists of a collection of documents, we encode all documents with UTF-8 and concatenate all these byte arrays with the \\xff byte (not used by UTF-8) to mark document boundaries. We then construct FM-index for this big byte string. We work on UTF-8 bytes rather than characters to keep the al- phabet size small ( \u03c3= 256 ). Along with this text index , we also store a text offset file that records the starting position of each document, which is useful for retrieving whole document and metadata. Aside from the actual text, we also index the metadata of the documents to make the metadata searchable while storing it in a similar compressed form.Partitioning. For large corpora, we partition it into multiple shards and index each shard indepen- dently. Searching across multiple shards produces the same result as searching a single, larger index, and this allows us to build indexes with limited RAM per node as well as embarrassingly paral- lelize across multiple nodes.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p3",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Indexed corpora. We have built the index for the following corpora: the Pile (1.3TB training set, 1.4GB validation set; Gao et al., 2020), DCLM- baseline (17TB; Li et al., 2024), and the Common Crawl between January and July 2025 ( \u201cCC-2025- 05\u201d to \u201cCC-2025-30\u201d ; 7 crawls and 65TB total; Common Crawl Foundation, 2025).3 Indexing time. We use CPU nodes with 128 vC- PUs and 2TiB RAM to construct indexes, and under this constraint, each shard can be as large as 700GB which can be indexed in 12\u201319 hours. Table 1 re- ports the time for indexing the above corpora. In- dexing time shows a slightly super-linear increase with respect to shard size, and we report detailed stepwise breakdown in App.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p4",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "\u00a7B. If we were to in- dex the full Common Crawl dataset (about 1PB), we would split it into 1,500 shards, which can be indexed in 1,200 node-days.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p5",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Index size. We choose the sampling rate empiri- cally to balance storage savings and query latency. In our implementation, we sample every a= 32 entries of SA and every b= 64 entries of ISA. This yields indexes with 0.44 \u00d7the size of the corpora (Table 1). Conceptually, if we set aandbto be very big, then the SA and ISA would have negligible size, and the index can be as small as 0.26 \u00d7the size of the corpus. 3.2 Querying with INFINI -GRAM MINI Similar to other exact-match search engines, INFINI -GRAM MINI supports two types of query: counting the number of occurrences of a string, and retrieving documents that contain a string. At query time, INFINI -GRAM MINI keeps all index files on disk as memory-mapped files, thus requiring only minimal CPU and RAM (loading all indexes uses only\u223c30MB if RAM and 1 vCPU in our setting). Querying in INFINI -GRAM MINI is slower and more complex than in canonical suffix arrays due to the compressive nature of FM-index. The SA is subsampled, and the original text is shuffled and 3We extract text from the CC crawls with resiliparse, fol- lowing Li et al. (2024).24947",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p6",
+    "technical_score": 0.0,
+    "citation_score": 0.0061986084756483215
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Dataset Original Size Indexing Time Index Size Num. Shards (TB) (CPU node-days) (TB) Pile-validation 0.0001345 0.00057 0.000602 (0.45 \u00d7) 1 Pile-train 1.308 1.31 0.588 (0.45 \u00d7) 2 DCLM-baseline 16.666 12.6 7.523 (0.45 \u00d7) 25 CC-2025-05 9.079 11.8 3.972 (0.44 \u00d7) 15 CC-2025-08 8.163 10.6 3.574 (0.44 \u00d7) 15 CC-2025-13 10.393 13.6 4.563 (0.44 \u00d7) 17 CC-2025-18 10.498 13.7 4.664 (0.44 \u00d7) 17 CC-2025-21 9.221 12.1 4.302 (0.46 \u00d7) 15 CC-2025-26 8.724 11.4 3.835 (0.44 \u00d7) 15 CC-2025-30 9.006 11.7 3.952 (0.44 \u00d7) 15 Total 83.059 98.8 36.884 (0.44 \u00d7) 137 numbers only include actual document content and do not include metadata. compressed, both requiring additional random disk reads to recover. The latency of queries is largely determined by the disk I/O performance. Counting a string. We use FM-index\u2019s findop- eration to count the number of occurrences of a query string. We parallelize this operation across allkshards, and report the sum of counts across all shards. The total number of random disk reads is O(k|Q|H0), where |Q|is the length of the query string. If the disk\u2019s I/O throughput is high enough, the query latency can be as low as O(|Q|H0).",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p7",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Retrieving documents. We first use the findop- eration to get the range in the SA that corresponds to the query string. Each element in this range indi- cates one appearance of the query string in the text corpus. If the index has multiple shards, we will have one range for each shard. For each element in this range, we can use the locate operation to find the position of the match in the original text T, then get the boundaries of the enclosing document with a binary search in the text offset file, and finally use the reconstruct operation to get the document text. The number of random disk reads for locate isO(aH0), and for reconstruct isO((b+d)H0) where dis the document length. We parallelize reconstruct operation by dividing document text into up to t= 10 chunks, or chunks of length 100 if d <1000 . Retrieving a single document is parallelized across tthreads, and it can be further parallelized for retrieving multiple documents.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p8",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Query latency. INFINI -GRAM MINI presents second-level latency on both types of query. We benchmark the query latency with the index filesstored on Google Cloud Platform (GCP) SSD disks with 80,000 IOPS and 1200 MB/s throughput. We measure the average latency over 100 queries for each query type and setting. For counting, short queries ( |Q| \u2264 10) can be handled within 0.4 seconds for all corpora we indexed, while longer queries ( |Q|= 1000 ) are handled in 8 seconds for CC-2025-05 and 25 seconds for DCLM-baseline. The difference in query latency is caused by the different number of shards in the corpora. For doc- ument retrieval, retrieving a snippet of d= 100 bytes can be done within 2 seconds for all corpora, and retrieving d= 3000 bytes takes up to 4.5 sec- onds.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p9",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "See App. \u00a7C for benchmarking details. 3.3 Web Interface and API Endpoint We host a Hugging Face interface for easy access to counting and document retrieval with 83 TB corpora (App.",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p10",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Background",
+      "Querying the FM-index"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "\u00a7E). We also release an API endpoint that allows programmatically submitting requests. 4 Analyzing and Monitoring Benchmark Contamination with INFINI -GRAM",
+    "paragraph_id": "INFINI-GRAM-MINI::Background > Querying the FM-index::p11",
+    "technical_score": 0.00289268395530255,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we showcase how INFINI -GRAM MINI can be used to analyze benchmark contam- ination at scale. INFINI -GRAM MINI allows us to search in the largest body of text ever in the open-source community with minimal storage over- head, enabling large-scale benchmark contamina- tion analysis at low cost. Our work also supports analyzing new benchmarks uploaded later. By identifying lexical overlap between 24 widely-used evaluation benchmarks and three ma-24948 jor corpora, we find non-trivial contamination across 12 benchmarks (\u00a74.2). We then retrieve doc- uments accounting for contamination for further analysis (\u00a74.3). Powered by INFINI -GRAM MINI , we develop a monitoring system with a bench- mark contamination bulletin, where we continu- ously monitor new crawls and report benchmarks\u2019 contamination status over time (\u00a74.4). We also invite the community to contribute by suggesting additional benchmarks or uploading new ones for analysis. INFINI -GRAM MINI has further potential applica- tions where exact-match search is needed, includ- ing (1) task-specific dataset construction, where creation of those datasets requires retrieving docu- ments containing specific terms or phrases, and (2) data curation, where INFINI -GRAM MINI can assist in identifying and removing duplicate, low-quality, or sensitive text and documents. We leave these directions for future exploration. 4.1 Setup Contamination detection method. We check contamination of test examples by measuring lex- ical overlap with the text corpus, following stan- dard practice in the literature (Brown et al., 2020; Llama Team, 2024). Given a text entry, we extract all 50-character substrings Swith a stride of one word, and determine entry contamination based on the proportion of substrings that appear at least once in the corpus: \u03b7=/summationtext s\u2208SI/bracketleftbig count (s)>0/bracketrightbig |S|. We classify an entry into three contamination levels using the same thresholds with different nam- ings as Touvron et al. (2023): \u2022 Clean, if \u03b7 <20% \u2022 Suspicious, if 20%\u2264\u03b7 <80% \u2022 Dirty, if \u03b7\u226580% Benchmarks. To comprehensively evaluate con- tamination, we analyze a broad range of bench- marks widely used to evaluate state-of-the-art LMs. We categorize benchmarks into five groups based on their primary focus: (1) knowledge and reason- ing, i.e., understanding and reasoning over factual and conceptual knowledge; (2) math , i.e., mathe- matical reasoning ability; (3) code generation and modification abilities; (4) commonsense under- standing , i.e., commonsense knowledge and rea- soning abilities; and (5) reading comprehensionof textual context. In total, we analyze 24 bench- marks; see App. \u00a7F for the full list and citations. For benchmarks with question-answering format, we specifically check the question entries for con- tamination. Questions are usually longer and con- tain sufficient contextual information to uniquely identify the benchmark example, whereas answers can be short, such as a multiple choice option or a number. For language understanding tasks that involve reading a context or paragraph before an- swering, we check the context entries for contami- nation. We evaluate on only the test set of benchmarks. For benchmarks with large test set, we downsam- ple to 1,000 entries for efficiency. For benchmarks with multiple subtasks, we sample proportionally from each subtask to maintain representative distri- bution. 4.2 Results Table 2 reports the percentage of dirty entries in benchmarks against the Pile (knowledge cutoff in 2020), DCLM-baseline (knowledge cutoff in 2022), and seven CC crawls (knowledge cutoff in January- July 2025). The detailed count of dirty and suspi- cious entries can be found in App.",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p1",
+    "technical_score": 0.0026052631578947385,
+    "citation_score": 0.026052631578947362
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u00a7G. Many widely-used benchmarks are highly contaminated. When checking against DCLM- baseline, MMLU has 27.70% dirty entries, MMLU- Pro has 16.20%, ARC-Challenge has 32.6%, and ARC-Easy has 32.3%. These benchmarks, espe- cially MMLU, have been used to evaluate virtually every new LM in recent years. We believe that the observed contamination levels are a strong signal that many recently reported results may overesti- mate language model abilities on truly new, unseen evaluation items. Larger and newer corpora show greater contam- ination. Compared with Pile-train, most bench- marks show a higher dirty rate on DCLM-baseline. For example, ARC-Challenge has 17 \u00d7more and MMLU has 1.1 \u00d7more dirty entries. However, CC- 2025-05 has lower contamination rate than DCLM- baseline on most benchmarks, which is likely be- cause DCLM-baseline corpus is larger and is a high-quality subset of crawls spanning a decade, while CC-2025-05 is an unfiltered single crawl. Contamination level varies by domain. Bench- marks in historically-significant domains, such as commonsense understanding (e.g., ARC,24949",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p2",
+    "technical_score": 0.0286578947368421,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "OpenbookQA) and reading comprehension (e.g., SQuAD, CoQA), tend to show higher dirty rates on all corpora, while those in emerging domains like math (e.g., GSM8K, MATH-500) and code (e.g., HumanEval, LiveCodeBench) remain rela- tively clean at this writing. New benchmarks are gradually getting contam- inated in recent corpora. Newer benchmarks are initially clean on earlier corpora. For example, AIME-2024 is uncontaminated on Pile-train and DCLM-baseline, but show 40.00% dirty rate on the more recent CC-2025-21; similarly, GPQA shows 2.70% dirty rate on CC-2025-26. GSM8K is very clean on Pile-train, DCLM-baseline, and earlier CC-2025 crawls, but has 74.2% dirty entries on CC-2025-21. 4.3 Analysis With INFINI -GRAM MINI , we can retrieve docu- ments from the corpus that contain contaminated examples for further analysis. We use LLM-as-a- judge to categorize all dirty instances in Pile-train, DCLM-baseline, and CC-2025-05 into following scenarios (see App. \u00a7I for more details), with ex-",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p3",
+    "technical_score": 0.0286578947368421,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "\u2022Type 1: Question and answer appear as-is in corpus. The question and correct answer appear in the corpus in the exact format as in bench- mark entry. The model may memorize entirely from these data instead of performing capabili- ties examined in benchmarks. This accounts for 72.5% of all dirty entries in Pile-train, 82.6% on DCLM-baseline, and 58% on CC-2025-05. \u2022Type 2: Question appeared, answer in natural language. The answer is expressed in natural language rather than the exact benchmark for- mat, and model may directly infer the correct an- swer from it. This accounts for 4.5% of all dirty entries in Pile-train, 2.1% on DCLM-baseline, and 6.2% on CC-2025-05. \u2022Type 3: Question appeared, no corresponding answer. The question (and maybe the multiple- choice options) appeared in the corpus, but correct answer is missing. This accounts for 18.1% of all dirty entries in Pile-train, 10.9% on DCLM-baseline, and 30.2% on CC-2025-05. \u2022Type 4: False positives. There are documents that superficially match the question but are un- related to the benchmark example. This happens on entries with a very short question. This ac- counts for 3.1% of all dirty entries in Pile-train,1% on DCLM-baseline, and 3% on CC-2025-05. We show 7 contamination examples in App. \u00a7H and their source of contamination. We found that contamination is caused by (1) the benchmark is sourced from the Internet (e.g., AIME-2024, Fig- ure 6; SWE-bench, Figure 8), (2) there are other benchmarks or online quizzes that are sourced from the benchmark (e.g, GSM8K, Figure 10), (3) blogs and papers cite a benchmark entry as example (e.g, GPQA, Figure 9; BigBenchHard, Figure 11; Open- bookQA, Figure 12), and (4) benchmark entry co- incide with online source (e.g., MMLU, Figure 7). Contamination could cause LLM to overperform on evaluation benchmarks by enabling models to re- trieve memorized answers from training data rather than performing task-specific reasoning. Our find- ing shows that a large majority of dirty entries con- tain exact matches of both question and answer, though even subtler forms of contamination such as question-only matches and paraphrased answers could inflate benchmark scores. As training cor- pora grow, the risk of benchmark contamination and the potential for rote memorization increase, making it more important to decontaminate training corpora and construct contamination-free bench- marks to avoid overestimating model capabilities. 4.4 Benchmark Contamination Bulletin Using INFINI -GRAM MINI , we implement a bench- mark contamination monitoring system that tracks benchmark contamination. In the future, we will keep indexing the latest crawl in Common Crawl and update contamination results to track bench- mark contamination as corpora evolve. The system also allows anyone to add or upload new bench- marks to be monitored, fostering collaboration in benchmark monitoring.",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p4",
+    "technical_score": 0.028657894736842122,
+    "citation_score": 0.057315789473684244
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "See App. \u00a7J for system interface. 5 Related Work Exact-match search in large text corpora. Prior work has used different techniques to enable exact- match full-text search in large text corpora, includ- ing suffix arrays, suffix automata, and proprietary search engines. Below we survey the largest-scale implementation of each technique known to us. Merrill et al. (2024) apply a suffix automaton to 1.3TB of text. Liu et al. (2024) apply a suffix array to 12TB of text. Elazar et al. (2024) use the pro- prietary ElasticSearch to index and analyze 35TB of text. All these methods have significant storage24950",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p5",
+    "technical_score": 0.0026052631578947385,
+    "citation_score": 0.026052631578947362
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Test Pile DCLM CC CC CC CC CC CC Size train baseline 2025-05 2025-08 2025-13 2025-18 2025-21 2025-26 Knowledge and Reasoning MMLU 1000 13.20 28.40 13.50 9.00 12.10 11.50 11.70 9.20 MMLU-Pro 1000 5.50 16.20 7.10 5.40 6.00 6.30 7.40 6.90 BigBenchHard 1000 0.00 0.10 1.40 1.40 3.20 2.30 1.80 1.70 AGIEval 1000 0.80 3.10 2.70 3.60 3.00 7.00 9.40 4.60 GPQA 448 0.00 0.00 0.90 2.00 1.30 0.70 0.90 2.70 HLE 881 0.00 0.30 0.10 0.00 0.10 0.00 0.00 0.00 Math AIME-2024 30 0.00 0.00 10.00 3.30 6.70 40.00 40.00 13.30 GSM8K 1000 0.00 5.00 5.00 0.80 6.90 0.70 74.20 7.30 MATH-500 500 0.60 3.20 0.60 7.80 0.80 0.80 0.80 8.20 MGSM 250 0.00 0.00 5.60 1.60 35.60 0.80 72.80 6.00 Code HumanEval 164 0.00 0.00 0.00 0.60 0.60 0.60 0.00 0.00 HumanEval+ 164 0.00 0.00 0.00 0.60 0.60 0.60 0.00 0.00 LiveCodeBench 880 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 SWE-bench 500 0.00 0.00 0.20 0.20 0.00 0.00 0.00 0.00 MBPP 500 0.00 0.40 1.00 1.40 1.20 1.80 1.00 1.40 Commonsense Understanding ARC-Challenge 1000 1.80 34.10 11.90 4.00 3.10 3.80 4.20 4.80 ARC-Easy 1000 1.30 31.70 5.40 9.50 5.50 5.50 6.10 6.20 CSQA 1000 0.10 1.00 0.10 0.10 0.20 0.10 0.00 0.10 HellaSwag 1000 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.10 OpenbookQA 500 10.80 15.60 14.60 30.20 13.20 13.40 13.20 12.20 Social IQa 1000 0.00 0.50 0.20 4.40 0.20 0.30 0.20 0.10 WinoGrande 1000 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 Reading Comprehension CoQA 500 8.00 18.40 7.40 8.80 8.60 7.20 7.60 8.80 SQuAD 1000 2.80 40.10 2.70 33.00 10.10 1.50 2.00 8.50",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p6",
+    "technical_score": 0.0286578947368421,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "2025. Full result is reported in Table 7. For benchmark entries with over 1000 entries, we report dirty rate on the downsampled subset. Cell background color indicates benchmark cleaniness, with more redness representing increasing levels of contamination. multiplier wrt the size of text indexed, ranging from ElasticSearch\u2019s 2 \u00d7to suffix automata\u2019s 29 \u00d7. In contrast, our FM-index-based index has a storage multiplier as small as 0.26 \u00d7, allowing us to index the largest body of text ever in the open-source community.",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p7",
+    "technical_score": 0.0286578947368421,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p8",
+    "technical_score": 0.0,
+    "citation_score": 0.04342105263157894
+  },
+  {
+    "section_path": [
+      "INFINI-GRAM MINI"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Magenta text is the mapping of answers. sive text corpus, and we show its scalability to a petabyte-scale corpus. We showcase INFINI -GRAM MINI \u2019s application on benchmark contamination analysis at scale. Limitations Although INFINI -GRAM MINI shows significant im- provements on text compression rate, document retrieval latency remains higher than a canoni- cal suffix array. For example, reconstructing a 3000-character document takes 1.8 seconds on Pile and 4.5 seconds on DCLM-baseline, compared to millisecond-level retrieval in system like Infini- gram (Liu et al., 2024). This is a trade-off with INFINI -GRAM MINI \u2019s compression rate: INFINI - GRAM MINI does not store the original text in a contiguous block. To retrieve a document, we need to reconstruct it character-by-character, leading to a large number of reads in random addresses. These process takes long time since the entire index is kept on disk at inference time. The high latency can potentially be reduced using techniques like disk page prefetching. Identifying co-occurrences of multiple patterns is inefficient with the FM-index, since mapping every match from the suffix array range back toits position in original text takes very long time thus making this operation impractical. In contrast, the original infini-gram supports this operation effi- ciently. INFINI -GRAM MINI only supports exact-match searches. As a result, our benchmark contami- nation analysis is limited to case-sensitive exact matching, which may fail to detect contamination of instances with minor textual discrepancies. As the text corpora may contain biased or toxic content, document retrieval output may contain content that can be perceived as ethically problem- atic, and may contain sensitive information. The output of INFINI -GRAM MINI does not reflect au- thors\u2019 views.",
+    "paragraph_id": "INFINI-GRAM-MINI::INFINI-GRAM MINI::p9",
+    "technical_score": 0.0026052631578947385,
+    "citation_score": 0.026052631578947362
+  },
+  {
+    "section_path": [
+      "Pile-train"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "(n= 1.3T) ( n= 16.7T) ( n= 9.1T) Complexity (S = 2) (S = 25) (S = 15) Counting a query of length |Q| O(|Q|H0) . . . (|Q|= 1) 0.004 s 0.005 s 0.032 s . . . (|Q|= 2) 0.015 s 0.017 s 0.094 s . . . (|Q|= 5) 0.061 s 0.207 s 0.206 s . . . (|Q|= 10) 0.106 s 0.402 s 0.350 s . . . (|Q|= 20) 0.182 s 0.868 s 0.638 s . . . (|Q|= 50) 0.393 s 1.743 s 1.063 s . . . (|Q|= 100) 0.696 s 2.857 s 1.642 s . . . (|Q|= 200) 1.281 s 5.699 s 2.753 s . . . (|Q|= 500) 2.763 s 12.46 s 4.626 s . . . (|Q|= 1000) 4.808 s 25.47 s 7.957 s Retrieving a text of length d O ((a+b+d)H0) . . . (d= 10) 0.426 s 0.895 s 1.101 s . . . (d= 50) 0.634 s 1.549 s 1.302 s . . . (d= 100) 0.734 s 1.991 s 1.326 s . . . (d= 500) 0.874 s 2.363 s 1.609 s . . . (d= 1000) 0.94 s 2.385 s 1.705 s . . . (d= 2000) 1.213 s 3.464 s 2.849 s . . . (d= 3000) 1.858 s 4.456 s 3.330 s number of bytes in the text corpus, S=number of shards for the index, |Q|=length of query in bytes, d= length of text (in bytes) to reconstruct from the index, a=sampling rate of SA, b=sampling rate of ISA, H0= zeroth-order entropy of the corpus. |Q|= 10 bytes |Q|= 20 bytes |Q|= 100 bytes infini-gram (Liu et al., 2024) 13 ms 14 ms 13 ms INFINI -GRAM MINI 106 ms 182 ms 696 ms",
+    "paragraph_id": "INFINI-GRAM-MINI::Pile-train::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.016666666666666663
+  },
+  {
+    "section_path": [
+      "Pile-train"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Benchmark Citation Source Knowledge and Reasoning MMLU Hendrycks et al., 2021 https://huggingface.co/datasets/cais/mmlu MMLU-Pro Wang et al., 2024 https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro BigBenchHard Suzgun et al., 2022 https://github.com/suzgunmirac/BIG-Bench-Hard/tree/main/bbh AGIEval Zhong et al., 2023 https://github.com/ruixiangcui/AGIEval/tree/main/data/v1_1 GPQA Rein et al., 2023 https://huggingface.co/datasets/Idavidrein/gpqa HLE Phan et al., 2025 https://huggingface.co/datasets/cais/hle Math AIME-2024 of Problem Solving, 2024 https://huggingface.co/datasets/Maxwell-Jia/AIME_2024 GSM8K Cobbe et al., 2021 https://huggingface.co/datasets/openai/gsm8k MATH-500 Lightman et al., 2023 https://huggingface.co/datasets/HuggingFaceH4/MATH-500 MGSM Shi et al., 2022 https://huggingface.co/datasets/juletxara/mgsm Code HumanEval Chen et al., 2021 https://huggingface.co/datasets/openai/openai_humaneval HumanEval+ Liu et al., 2023 https://huggingface.co/datasets/evalplus/humanevalplus LiveCodeBench Jain et al., 2024 https://huggingface.co/datasets/livecodebench/code_generation (code generation) SWE-bench Jimenez et al., 2024 https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified MBPP Austin et al., 2021 https://huggingface.co/datasets/google-research-datasets/mbpp Commonsense Understanding ARC-Challenge Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc ARC-Easy Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc CSQA Talmor et al., 2019 https://huggingface.co/datasets/tau/commonsense_qa HellaSwag Zellers et al., 2019 https://huggingface.co/datasets/Rowan/hellaswag Openbook QA Mihaylov et al., 2018 https://huggingface.co/datasets/allenai/openbookqa Social IQa Sap et al., 2019 https://huggingface.co/datasets/allenai/social_i_qa WinoGrande Sakaguchi et al., 2019 https://huggingface.co/datasets/allenai/winogrande Reading Comprehension CoQA Reddy et al., 2019 https://huggingface.co/datasets/stanfordnlp/coqa SQuAD Rajpurkar et al., 2016 https://huggingface.co/datasets/rajpurkar/squad",
+    "paragraph_id": "INFINI-GRAM-MINI::Pile-train::p2",
+    "technical_score": 0.0016666666666666661,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Pile-train"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Benchmark Test Set Pile-train DCLM-baseline CC-2025-05 CC-202508 CC-202513 CC-202518 CC-202521 CC-202526 Size Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Knowledge and Reasoning MMLU 1000 57 133 142 277 122 135 139 90 121 122 115 120 117 125 92 124 MMLU-Pro 1000 35 59 77 162 31 81 55 54 60 52 63 58 74 60 69 40 BigBenchHard 1000 7 0 54 1 357 14 296 14 306 32 302 23 396 18 338 17 AGIEval 1000 45 8 155 31 107 27 92 36 115 30 109 70 95 94 104 46 GPQA 448 1 0 5 0 6 4 10 9 5 6 6 3 5 4 15 12 HLE 881 3 0 6 0 8 0 3 0 4 1 5 0 3 0 2 0 Math AIME-2024 30 2 0 4 0 13 3 3 1 10 2 13 12 13 12 12 4 GSM8K 1000 1 0 5 4 33 76 8 8 37 69 10 7 210 742 20 73 MATH-500 500 9 3 48 16 26 3 46 39 25 4 27 4 26 4 41 41 MGSM 250 0 0 2 0 9 14 3 4 37 89 5 2 54 182 6 15 Code HumanEval 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 HumanEval+ 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 LiveCodeBench 880 2 0 2 0 188 0 241 0 221 0 274 0 167 0 168 0 SWE-bench 500 5 0 26 0 29 1 38 1 32 0 34 2 33 0 28 0 MBPP 500 16 0 64 2 87 5 58 7 89 6 75 9 76 5 84 7 Commonsense Understanding ARC-Challenge 1000 6 14 4 341 18 119 29 40 27 31 26 38 28 42 29 48 ARC-Easy 1000 15 15 5 317 31 54 30 95 31 55 37 55 28 61 31 62 CSQA 1000 0 1 1 10 1 1 0 1 0 2 0 1 0 0 0 1 HellaSwag 1000 27 0 341 0 36 0 29 0 34 0 29 0 30 0 28 1 OpenbookQA 500 2 54 3 78 5 73 2 151 2 66 3 67 3 66 2 61 Social IQa 1000 0 0 2 5 2 2 1 44 2 2 2 3 3 2 0 1 WinoGrande 1000 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 Reading Comprehension CoQA 500 189 40 188 92 121 37 113 44 123 43 134 36 123 38 125 44 SQuAD 1000 16 28 9 401 11 27 12 330 15 101 13 15 12 20 11 85",
+    "paragraph_id": "INFINI-GRAM-MINI::Pile-train::p3",
+    "technical_score": 0.0016666666666666661,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Pile-train"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "H Contamination Examples Figure 6 to Figure 12 shows example dirty entries in seven benchmarks and its contamination source retrieved from one of three corpus using INFINI - GRAM MINI . We also present the original webpage that is responsible for the contamination. I Dirty Entry Categorization using LLM-as-a-judge We use gpt-4o-mini to categorize all dirty entries into one of four categories described in \u00a74.3. For each dirty entry, we extract the 50-character sub- string that has least occurrence in the corpus. We then retrieve text snippet with context length of 400 characters (850 characters in total). We prompt gpt-4o-mini by providing both the dirty entry and the text snippet and let the model decide which cat- egory the dirty entry belongs. We use the following prompt: Y ou are an expert in evaluating benchmark contamination. Given an entry and detected overlap in the corpus, categorize how the en- try is contaminated in corpus into one of four categories: 1. Y ou can find exact match of question stem and the correct answer (correct choice if mul- tiple choices, or answer matching exactly the answer field) in corpus. 2. Y ou can find exact match of question stem, and the correct answer appears, though not in exact match. 3. Y ou can find exact match of question stem, but you cannot find the correct answer in any form. 4. False positive Output only the category number. J Interface of the Benchmark Contamination Monitoring System Figure 13 shows the interface of the system. It consists of two tabs: (1) Benchmark Contamination Bulletin, and (2) submission page for community to contribute. Benchmarks analyzed in this paper are reported in \u201ccore\u201d table, and submitted benchmarks will be added to \u201ccommunity\u201d table. K License of Corpora Used in the Paper Pile and DCLM are licensed under the MIT Li- cense. Common Crawl is licensed under its cus- tomized Limited License. We followed the listed intended use.24961",
+    "paragraph_id": "INFINI-GRAM-MINI::Pile-train::p4",
+    "technical_score": 0.0016666666666666661,
+    "citation_score": 0.0066666666666666645
+  },
+  {
+    "section_path": [
+      "Pile-train"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "AIME exams are published.24962 choice question in related fields.24963 requests for software developing.24964 example.24965 sourcing from GSM8K examples, and is the major source for GSM8K dirty entries. This new dataset contains erroneous \u201csteps\u201d field and final answer to examine LLM\u2019s ability to identify errors, so the correct answers do not appear.24966 history that list it as few-shot example.24967 from OpenbookQA benchmark.24968 to add new benchmarks or upload new ones for contamination analysis, which will be added to the bulletin.24969",
+    "paragraph_id": "INFINI-GRAM-MINI::Pile-train::p5",
+    "technical_score": 0.0016666666666666661,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "DCLM-baseline"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "(n= 1.3T) ( n= 16.7T) ( n= 9.1T) Complexity (S = 2) (S = 25) (S = 15) Counting a query of length |Q| O(|Q|H0) . . . (|Q|= 1) 0.004 s 0.005 s 0.032 s . . . (|Q|= 2) 0.015 s 0.017 s 0.094 s . . . (|Q|= 5) 0.061 s 0.207 s 0.206 s . . . (|Q|= 10) 0.106 s 0.402 s 0.350 s . . . (|Q|= 20) 0.182 s 0.868 s 0.638 s . . . (|Q|= 50) 0.393 s 1.743 s 1.063 s . . . (|Q|= 100) 0.696 s 2.857 s 1.642 s . . . (|Q|= 200) 1.281 s 5.699 s 2.753 s . . . (|Q|= 500) 2.763 s 12.46 s 4.626 s . . . (|Q|= 1000) 4.808 s 25.47 s 7.957 s Retrieving a text of length d O ((a+b+d)H0) . . . (d= 10) 0.426 s 0.895 s 1.101 s . . . (d= 50) 0.634 s 1.549 s 1.302 s . . . (d= 100) 0.734 s 1.991 s 1.326 s . . . (d= 500) 0.874 s 2.363 s 1.609 s . . . (d= 1000) 0.94 s 2.385 s 1.705 s . . . (d= 2000) 1.213 s 3.464 s 2.849 s . . . (d= 3000) 1.858 s 4.456 s 3.330 s number of bytes in the text corpus, S=number of shards for the index, |Q|=length of query in bytes, d= length of text (in bytes) to reconstruct from the index, a=sampling rate of SA, b=sampling rate of ISA, H0= zeroth-order entropy of the corpus. |Q|= 10 bytes |Q|= 20 bytes |Q|= 100 bytes infini-gram (Liu et al., 2024) 13 ms 14 ms 13 ms INFINI -GRAM MINI 106 ms 182 ms 696 ms",
+    "paragraph_id": "INFINI-GRAM-MINI::DCLM-baseline::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.013043478260869565
+  },
+  {
+    "section_path": [
+      "DCLM-baseline"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Benchmark Citation Source Knowledge and Reasoning MMLU Hendrycks et al., 2021 https://huggingface.co/datasets/cais/mmlu MMLU-Pro Wang et al., 2024 https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro BigBenchHard Suzgun et al., 2022 https://github.com/suzgunmirac/BIG-Bench-Hard/tree/main/bbh AGIEval Zhong et al., 2023 https://github.com/ruixiangcui/AGIEval/tree/main/data/v1_1 GPQA Rein et al., 2023 https://huggingface.co/datasets/Idavidrein/gpqa HLE Phan et al., 2025 https://huggingface.co/datasets/cais/hle Math AIME-2024 of Problem Solving, 2024 https://huggingface.co/datasets/Maxwell-Jia/AIME_2024 GSM8K Cobbe et al., 2021 https://huggingface.co/datasets/openai/gsm8k MATH-500 Lightman et al., 2023 https://huggingface.co/datasets/HuggingFaceH4/MATH-500 MGSM Shi et al., 2022 https://huggingface.co/datasets/juletxara/mgsm Code HumanEval Chen et al., 2021 https://huggingface.co/datasets/openai/openai_humaneval HumanEval+ Liu et al., 2023 https://huggingface.co/datasets/evalplus/humanevalplus LiveCodeBench Jain et al., 2024 https://huggingface.co/datasets/livecodebench/code_generation (code generation) SWE-bench Jimenez et al., 2024 https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified MBPP Austin et al., 2021 https://huggingface.co/datasets/google-research-datasets/mbpp Commonsense Understanding ARC-Challenge Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc ARC-Easy Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc CSQA Talmor et al., 2019 https://huggingface.co/datasets/tau/commonsense_qa HellaSwag Zellers et al., 2019 https://huggingface.co/datasets/Rowan/hellaswag Openbook QA Mihaylov et al., 2018 https://huggingface.co/datasets/allenai/openbookqa Social IQa Sap et al., 2019 https://huggingface.co/datasets/allenai/social_i_qa WinoGrande Sakaguchi et al., 2019 https://huggingface.co/datasets/allenai/winogrande Reading Comprehension CoQA Reddy et al., 2019 https://huggingface.co/datasets/stanfordnlp/coqa SQuAD Rajpurkar et al., 2016 https://huggingface.co/datasets/rajpurkar/squad",
+    "paragraph_id": "INFINI-GRAM-MINI::DCLM-baseline::p2",
+    "technical_score": 0.0008695652173913041,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "DCLM-baseline"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Benchmark Test Set Pile-train DCLM-baseline CC-2025-05 CC-202508 CC-202513 CC-202518 CC-202521 CC-202526 Size Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Knowledge and Reasoning MMLU 1000 57 133 142 277 122 135 139 90 121 122 115 120 117 125 92 124 MMLU-Pro 1000 35 59 77 162 31 81 55 54 60 52 63 58 74 60 69 40 BigBenchHard 1000 7 0 54 1 357 14 296 14 306 32 302 23 396 18 338 17 AGIEval 1000 45 8 155 31 107 27 92 36 115 30 109 70 95 94 104 46 GPQA 448 1 0 5 0 6 4 10 9 5 6 6 3 5 4 15 12 HLE 881 3 0 6 0 8 0 3 0 4 1 5 0 3 0 2 0 Math AIME-2024 30 2 0 4 0 13 3 3 1 10 2 13 12 13 12 12 4 GSM8K 1000 1 0 5 4 33 76 8 8 37 69 10 7 210 742 20 73 MATH-500 500 9 3 48 16 26 3 46 39 25 4 27 4 26 4 41 41 MGSM 250 0 0 2 0 9 14 3 4 37 89 5 2 54 182 6 15 Code HumanEval 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 HumanEval+ 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 LiveCodeBench 880 2 0 2 0 188 0 241 0 221 0 274 0 167 0 168 0 SWE-bench 500 5 0 26 0 29 1 38 1 32 0 34 2 33 0 28 0 MBPP 500 16 0 64 2 87 5 58 7 89 6 75 9 76 5 84 7 Commonsense Understanding ARC-Challenge 1000 6 14 4 341 18 119 29 40 27 31 26 38 28 42 29 48 ARC-Easy 1000 15 15 5 317 31 54 30 95 31 55 37 55 28 61 31 62 CSQA 1000 0 1 1 10 1 1 0 1 0 2 0 1 0 0 0 1 HellaSwag 1000 27 0 341 0 36 0 29 0 34 0 29 0 30 0 28 1 OpenbookQA 500 2 54 3 78 5 73 2 151 2 66 3 67 3 66 2 61 Social IQa 1000 0 0 2 5 2 2 1 44 2 2 2 3 3 2 0 1 WinoGrande 1000 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 Reading Comprehension CoQA 500 189 40 188 92 121 37 113 44 123 43 134 36 123 38 125 44 SQuAD 1000 16 28 9 401 11 27 12 330 15 101 13 15 12 20 11 85",
+    "paragraph_id": "INFINI-GRAM-MINI::DCLM-baseline::p3",
+    "technical_score": 0.0008695652173913041,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "DCLM-baseline"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "H Contamination Examples Figure 6 to Figure 12 shows example dirty entries in seven benchmarks and its contamination source retrieved from one of three corpus using INFINI - GRAM MINI . We also present the original webpage that is responsible for the contamination. I Dirty Entry Categorization using LLM-as-a-judge We use gpt-4o-mini to categorize all dirty entries into one of four categories described in \u00a74.3. For each dirty entry, we extract the 50-character sub- string that has least occurrence in the corpus. We then retrieve text snippet with context length of 400 characters (850 characters in total). We prompt gpt-4o-mini by providing both the dirty entry and the text snippet and let the model decide which cat- egory the dirty entry belongs. We use the following prompt: Y ou are an expert in evaluating benchmark contamination. Given an entry and detected overlap in the corpus, categorize how the en- try is contaminated in corpus into one of four categories: 1. Y ou can find exact match of question stem and the correct answer (correct choice if mul- tiple choices, or answer matching exactly the answer field) in corpus. 2. Y ou can find exact match of question stem, and the correct answer appears, though not in exact match. 3. Y ou can find exact match of question stem, but you cannot find the correct answer in any form. 4. False positive Output only the category number. J Interface of the Benchmark Contamination Monitoring System Figure 13 shows the interface of the system. It consists of two tabs: (1) Benchmark Contamination Bulletin, and (2) submission page for community to contribute. Benchmarks analyzed in this paper are reported in \u201ccore\u201d table, and submitted benchmarks will be added to \u201ccommunity\u201d table. K License of Corpora Used in the Paper Pile and DCLM are licensed under the MIT Li- cense. Common Crawl is licensed under its cus- tomized Limited License. We followed the listed intended use.24961",
+    "paragraph_id": "INFINI-GRAM-MINI::DCLM-baseline::p4",
+    "technical_score": 0.000869565217391304,
+    "citation_score": 0.003478260869565216
+  },
+  {
+    "section_path": [
+      "DCLM-baseline"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "AIME exams are published.24962 choice question in related fields.24963 requests for software developing.24964 example.24965 sourcing from GSM8K examples, and is the major source for GSM8K dirty entries. This new dataset contains erroneous \u201csteps\u201d field and final answer to examine LLM\u2019s ability to identify errors, so the correct answers do not appear.24966 history that list it as few-shot example.24967 from OpenbookQA benchmark.24968 to add new benchmarks or upload new ones for contamination analysis, which will be added to the bulletin.24969",
+    "paragraph_id": "INFINI-GRAM-MINI::DCLM-baseline::p5",
+    "technical_score": 0.0008695652173913041,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CC-2025-30",
+      "Web Interface and API Endpoint"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We host a Hugging Face interface for easy access to counting and document retrieval with 83 TB corpora (App.",
+    "paragraph_id": "INFINI-GRAM-MINI::CC-2025-30 > Web Interface and API Endpoint::p1",
+    "technical_score": 0.009999999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CC-2025-30",
+      "Web Interface and API Endpoint"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u00a7E). We also release an API endpoint that allows programmatically submitting requests.",
+    "paragraph_id": "INFINI-GRAM-MINI::CC-2025-30 > Web Interface and API Endpoint::p2",
+    "technical_score": 0.009999999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we showcase how INFINI -GRAM MINI can be used to analyze benchmark contam- ination at scale. INFINI -GRAM MINI allows us to search in the largest body of text ever in the open-source community with minimal storage over- head, enabling large-scale benchmark contamina- tion analysis at low cost. Our work also supports analyzing new benchmarks uploaded later. By identifying lexical overlap between 24 widely-used evaluation benchmarks and three ma-24948 jor corpora, we find non-trivial contamination across 12 benchmarks (\u00a74.2). We then retrieve doc- uments accounting for contamination for further analysis (\u00a74.3). Powered by INFINI -GRAM MINI , we develop a monitoring system with a bench- mark contamination bulletin, where we continu- ously monitor new crawls and report benchmarks\u2019 contamination status over time (\u00a74.4). We also invite the community to contribute by suggesting additional benchmarks or uploading new ones for analysis. INFINI -GRAM MINI has further potential applica- tions where exact-match search is needed, includ- ing (1) task-specific dataset construction, where creation of those datasets requires retrieving docu- ments containing specific terms or phrases, and (2) data curation, where INFINI -GRAM MINI can assist in identifying and removing duplicate, low-quality, or sensitive text and documents. We leave these directions for future exploration. 4.1 Setup Contamination detection method. We check contamination of test examples by measuring lex- ical overlap with the text corpus, following stan- dard practice in the literature (Brown et al., 2020; Llama Team, 2024). Given a text entry, we extract all 50-character substrings Swith a stride of one word, and determine entry contamination based on the proportion of substrings that appear at least once in the corpus: \u03b7=/summationtext s\u2208SI/bracketleftbig count (s)>0/bracketrightbig |S|. We classify an entry into three contamination levels using the same thresholds with different nam- ings as Touvron et al. (2023): \u2022 Clean, if \u03b7 <20% \u2022 Suspicious, if 20%\u2264\u03b7 <80% \u2022 Dirty, if \u03b7\u226580% Benchmarks. To comprehensively evaluate con- tamination, we analyze a broad range of bench- marks widely used to evaluate state-of-the-art LMs. We categorize benchmarks into five groups based on their primary focus: (1) knowledge and reason- ing, i.e., understanding and reasoning over factual and conceptual knowledge; (2) math , i.e., mathe- matical reasoning ability; (3) code generation and modification abilities; (4) commonsense under- standing , i.e., commonsense knowledge and rea- soning abilities; and (5) reading comprehensionof textual context. In total, we analyze 24 bench- marks; see App. \u00a7F for the full list and citations. For benchmarks with question-answering format, we specifically check the question entries for con- tamination. Questions are usually longer and con- tain sufficient contextual information to uniquely identify the benchmark example, whereas answers can be short, such as a multiple choice option or a number. For language understanding tasks that involve reading a context or paragraph before an- swering, we check the context entries for contami- nation. We evaluate on only the test set of benchmarks. For benchmarks with large test set, we downsam- ple to 1,000 entries for efficiency. For benchmarks with multiple subtasks, we sample proportionally from each subtask to maintain representative distri- bution. 4.2 Results Table 2 reports the percentage of dirty entries in benchmarks against the Pile (knowledge cutoff in 2020), DCLM-baseline (knowledge cutoff in 2022), and seven CC crawls (knowledge cutoff in January- July 2025). The detailed count of dirty and suspi- cious entries can be found in App.",
+    "paragraph_id": "INFINI-GRAM-MINI::Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI > [Section Lead-in]::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.028278688524590152
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u00a7G. Many widely-used benchmarks are highly contaminated. When checking against DCLM- baseline, MMLU has 27.70% dirty entries, MMLU- Pro has 16.20%, ARC-Challenge has 32.6%, and ARC-Easy has 32.3%. These benchmarks, espe- cially MMLU, have been used to evaluate virtually every new LM in recent years. We believe that the observed contamination levels are a strong signal that many recently reported results may overesti- mate language model abilities on truly new, unseen evaluation items. Larger and newer corpora show greater contam- ination. Compared with Pile-train, most bench- marks show a higher dirty rate on DCLM-baseline. For example, ARC-Challenge has 17 \u00d7more and MMLU has 1.1 \u00d7more dirty entries. However, CC- 2025-05 has lower contamination rate than DCLM- baseline on most benchmarks, which is likely be- cause DCLM-baseline corpus is larger and is a high-quality subset of crawls spanning a decade, while CC-2025-05 is an unfiltered single crawl. Contamination level varies by domain. Bench- marks in historically-significant domains, such as commonsense understanding (e.g., ARC,24949",
+    "paragraph_id": "INFINI-GRAM-MINI::Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI > [Section Lead-in]::p2",
+    "technical_score": 0.021680327868852454,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "OpenbookQA) and reading comprehension (e.g., SQuAD, CoQA), tend to show higher dirty rates on all corpora, while those in emerging domains like math (e.g., GSM8K, MATH-500) and code (e.g., HumanEval, LiveCodeBench) remain rela- tively clean at this writing. New benchmarks are gradually getting contam- inated in recent corpora. Newer benchmarks are initially clean on earlier corpora. For example, AIME-2024 is uncontaminated on Pile-train and DCLM-baseline, but show 40.00% dirty rate on the more recent CC-2025-21; similarly, GPQA shows 2.70% dirty rate on CC-2025-26. GSM8K is very clean on Pile-train, DCLM-baseline, and earlier CC-2025 crawls, but has 74.2% dirty entries on CC-2025-21. 4.3 Analysis With INFINI -GRAM MINI , we can retrieve docu- ments from the corpus that contain contaminated examples for further analysis. We use LLM-as-a- judge to categorize all dirty instances in Pile-train, DCLM-baseline, and CC-2025-05 into following scenarios (see App. \u00a7I for more details), with ex- \u2022Type 1: Question and answer appear as-is in corpus. The question and correct answer appear in the corpus in the exact format as in bench- mark entry. The model may memorize entirely from these data instead of performing capabili- ties examined in benchmarks. This accounts for 72.5% of all dirty entries in Pile-train, 82.6% on DCLM-baseline, and 58% on CC-2025-05. \u2022Type 2: Question appeared, answer in natural language. The answer is expressed in natural language rather than the exact benchmark for- mat, and model may directly infer the correct an- swer from it. This accounts for 4.5% of all dirty entries in Pile-train, 2.1% on DCLM-baseline, and 6.2% on CC-2025-05. \u2022Type 3: Question appeared, no corresponding answer. The question (and maybe the multiple- choice options) appeared in the corpus, but correct answer is missing. This accounts for 18.1% of all dirty entries in Pile-train, 10.9% on DCLM-baseline, and 30.2% on CC-2025-05. \u2022Type 4: False positives. There are documents that superficially match the question but are un- related to the benchmark example. This happens on entries with a very short question. This ac- We show 7 contamination examples in App. \u00a7H and their source of contamination. We found that contamination is caused by (1) the benchmark is sourced from the Internet (e.g., AIME-2024, Fig- ure 6; SWE-bench, Figure 8), (2) there are other benchmarks or online quizzes that are sourced from the benchmark (e.g, GSM8K, Figure 10), (3) blogs and papers cite a benchmark entry as example (e.g, GPQA, Figure 9; BigBenchHard, Figure 11; Open- bookQA, Figure 12), and (4) benchmark entry co- incide with online source (e.g., MMLU, Figure 7). Contamination could cause LLM to overperform on evaluation benchmarks by enabling models to re- trieve memorized answers from training data rather than performing task-specific reasoning. Our find- ing shows that a large majority of dirty entries con- tain exact matches of both question and answer, though even subtler forms of contamination such as question-only matches and paraphrased answers could inflate benchmark scores. As training cor- pora grow, the risk of benchmark contamination and the potential for rote memorization increase, making it more important to decontaminate training corpora and construct contamination-free bench- marks to avoid overestimating model capabilities.",
+    "paragraph_id": "INFINI-GRAM-MINI::Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI > [Section Lead-in]::p3",
+    "technical_score": 0.021680327868852454,
+    "citation_score": 0.04336065573770491
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "Benchmark Contamination Bulletin"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Using INFINI -GRAM MINI , we implement a bench- mark contamination monitoring system that tracks benchmark contamination. In the future, we will keep indexing the latest crawl in Common Crawl and update contamination results to track bench- mark contamination as corpora evolve. The system also allows anyone to add or upload new bench- marks to be monitored, fostering collaboration in benchmark monitoring.",
+    "paragraph_id": "INFINI-GRAM-MINI::Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI > Benchmark Contamination Bulletin::p1",
+    "technical_score": 0.05749999999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI",
+      "Benchmark Contamination Bulletin"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "See App. \u00a7J for system interface.",
+    "paragraph_id": "INFINI-GRAM-MINI::Analyzing and Monitoring Benchmark Contamination with INFINI-GRAM MINI > Benchmark Contamination Bulletin::p2",
+    "technical_score": 0.05749999999999999,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Exact-match search in large text corpora. Prior work has used different techniques to enable exact- match full-text search in large text corpora, includ- ing suffix arrays, suffix automata, and proprietary search engines. Below we survey the largest-scale implementation of each technique known to us. Merrill et al. (2024) apply a suffix automaton to 1.3TB of text. Liu et al. (2024) apply a suffix array to 12TB of text. Elazar et al. (2024) use the pro- prietary ElasticSearch to index and analyze 35TB of text. All these methods have significant storage24950",
+    "paragraph_id": "INFINI-GRAM-MINI::Related Work::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.014754098360655733
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Test Pile DCLM CC CC CC CC CC CC Size train baseline 2025-05 2025-08 2025-13 2025-18 2025-21 2025-26 Knowledge and Reasoning MMLU 1000 13.20 28.40 13.50 9.00 12.10 11.50 11.70 9.20 MMLU-Pro 1000 5.50 16.20 7.10 5.40 6.00 6.30 7.40 6.90 BigBenchHard 1000 0.00 0.10 1.40 1.40 3.20 2.30 1.80 1.70 AGIEval 1000 0.80 3.10 2.70 3.60 3.00 7.00 9.40 4.60 GPQA 448 0.00 0.00 0.90 2.00 1.30 0.70 0.90 2.70 HLE 881 0.00 0.30 0.10 0.00 0.10 0.00 0.00 0.00 Math AIME-2024 30 0.00 0.00 10.00 3.30 6.70 40.00 40.00 13.30 GSM8K 1000 0.00 5.00 5.00 0.80 6.90 0.70 74.20 7.30 MATH-500 500 0.60 3.20 0.60 7.80 0.80 0.80 0.80 8.20 MGSM 250 0.00 0.00 5.60 1.60 35.60 0.80 72.80 6.00 Code HumanEval 164 0.00 0.00 0.00 0.60 0.60 0.60 0.00 0.00 HumanEval+ 164 0.00 0.00 0.00 0.60 0.60 0.60 0.00 0.00 LiveCodeBench 880 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 SWE-bench 500 0.00 0.00 0.20 0.20 0.00 0.00 0.00 0.00 MBPP 500 0.00 0.40 1.00 1.40 1.20 1.80 1.00 1.40 Commonsense Understanding ARC-Challenge 1000 1.80 34.10 11.90 4.00 3.10 3.80 4.20 4.80 ARC-Easy 1000 1.30 31.70 5.40 9.50 5.50 5.50 6.10 6.20 CSQA 1000 0.10 1.00 0.10 0.10 0.20 0.10 0.00 0.10 HellaSwag 1000 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.10 OpenbookQA 500 10.80 15.60 14.60 30.20 13.20 13.40 13.20 12.20 Social IQa 1000 0.00 0.50 0.20 4.40 0.20 0.30 0.20 0.10 WinoGrande 1000 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 Reading Comprehension CoQA 500 8.00 18.40 7.40 8.80 8.60 7.20 7.60 8.80 SQuAD 1000 2.80 40.10 2.70 33.00 10.10 1.50 2.00 8.50",
+    "paragraph_id": "INFINI-GRAM-MINI::Related Work::p2",
+    "technical_score": 0.0029508196721311467,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "2025. Full result is reported in Table 7. For benchmark entries with over 1000 entries, we report dirty rate on the downsampled subset. Cell background color indicates benchmark cleaniness, with more redness representing increasing levels of contamination. multiplier wrt the size of text indexed, ranging from ElasticSearch\u2019s 2 \u00d7to suffix automata\u2019s 29 \u00d7. In contrast, our FM-index-based index has a storage multiplier as small as 0.26 \u00d7, allowing us to index the largest body of text ever in the open-source community.",
+    "paragraph_id": "INFINI-GRAM-MINI::Related Work::p3",
+    "technical_score": 0.0029508196721311467,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "paragraph_id": "INFINI-GRAM-MINI::Related Work::p4",
+    "technical_score": 0.0,
+    "citation_score": 0.024590163934426222
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Magenta text is the mapping of answers. sive text corpus, and we show its scalability to a petabyte-scale corpus. We showcase INFINI -GRAM MINI \u2019s application on benchmark contamination analysis at scale. Limitations Although INFINI -GRAM MINI shows significant im- provements on text compression rate, document retrieval latency remains higher than a canoni- cal suffix array. For example, reconstructing a 3000-character document takes 1.8 seconds on Pile and 4.5 seconds on DCLM-baseline, compared to millisecond-level retrieval in system like Infini- gram (Liu et al., 2024). This is a trade-off with INFINI -GRAM MINI \u2019s compression rate: INFINI - GRAM MINI does not store the original text in a contiguous block. To retrieve a document, we need to reconstruct it character-by-character, leading to a large number of reads in random addresses. These process takes long time since the entire index is kept on disk at inference time. The high latency can potentially be reduced using techniques like disk page prefetching. Identifying co-occurrences of multiple patterns is inefficient with the FM-index, since mapping every match from the suffix array range back toits position in original text takes very long time thus making this operation impractical. In contrast, the original infini-gram supports this operation effi- ciently. INFINI -GRAM MINI only supports exact-match searches. As a result, our benchmark contami- nation analysis is limited to case-sensitive exact matching, which may fail to detect contamination of instances with minor textual discrepancies. As the text corpora may contain biased or toxic content, document retrieval output may contain content that can be perceived as ethically problem- atic, and may contain sensitive information. The output of INFINI -GRAM MINI does not reflect au- thors\u2019 views.",
+    "paragraph_id": "INFINI-GRAM-MINI::Related Work::p5",
+    "technical_score": 0.0,
+    "citation_score": 0.014754098360655733
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "and challenging multi-task language understanding benchmark. Preprint , arXiv:2406.01574. Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. 2019. Hellaswag: Can a machine really finish your sentence? In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics . Wanjun Zhong, Ruixiang Cui, Yiduo Guo, Yaobo Liang, Shuai Lu, Yanlin Wang, Amin Saied, Weizhu Chen, and Nan Duan. 2023. Agieval: A human- centric benchmark for evaluating foundation models. Preprint , arXiv:2304.06364.24955",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p1",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "A Querying the FM-Index This section introduces in details three operations supported by FM-index: find,locate , and recon- struct .",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p2",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Find. Each occurrence of a pattern string Qin the haystack string Tcorresponds to an element in the SA, and all these occurrences live in a consecu- tive range in the SA. The findoperation computes this range with backward search: starting with the full range, it iterates through the symbols in Qin reverse order, with each iteration narrowing the range using the character table Cand the rank oper- ation of the BWT\u2019s wavelet tree. The length of the final range is the count of QinT. Figure 4 (left) illustrates finding pattern \u201cana\u201d in string \u201cbanana\u201d. The time complexity of findisO(|Q|H0), where |Q|is the length of the pattern.",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p3",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Locate. Thelocate operation maps any position in the SA to its corresponding position in T. Since the SA is sampled at interval a, for an unsampled position i, the algorithm applies LF mapping at most atimes to locate the nearest sampled SA en- try. Figure 4 (middle) illustrates locating the two occurrences of \u201cana\u201d in \u201cbanana\u201d. The time com- plexity of locating each position is O(tSA), where tSAis the complexity of accessing an SA entry, which is O(1)for sampled entries and O(aH0)for unsampled entries.",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p4",
+    "technical_score": 0.0004166666666666666,
+    "citation_score": 0.0008333333333333332
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Reconstruct. After getting the position of a pat- tern occurrence in T, we can reconstruct a sub- string of Tenclosing that occurrence with some additional context. Starting at the end position of the desired substring, we apply the LF mapping to traverse through the BWT and use ISA to recover the symbol, and reconstruct symbols in reverse order until reaching the start position of the de- sired substring. Figure 4 (right) shows reconstruct- ing the second occurrence of \u201cana\u201d with context length of 1. The time complexity of reconstruct isO(dH0+tISA), where dis the length to recon- struct, and tISAis the complexity of accessing an ISA entry, which is O(1)for sampled entries and O(bH0)for unsampled entries. B Indexing Time Table 3 presents indexing time for each shard of text corpora with stepwise breakdown. Suffix ar- ray construction scales super-linearly depending on the level of duplication (Lee et al., 2022). Con-structing alphabet, wavelet tree, and sampling are linear operations. Indexing time also varies across similar-size shards originated from different text corpora, showing the time also depend on text cor- pora properties. For example, over 60% duplicate documents in the Pile (Elazar et al., 2024) causes SA construction to take significantly longer com- pared to DCLM-baseline. C Benchmarking Query Latency We benchmark the query latency of INFINI - GRAM MINI , and report results in Table 4. For counting , we experiment with query lengths |Q| \u2208 { 1,2,5,10,50,100,500,1000}, and for each length, randomly sample the query strings from the corpus. For retrieving documents , we use queries of length 10 sampled from the cor- pus, and reconstruct text surrounding the query with total length of d\u2208 {10,50,100,500,1000}. For each corpus and parameter setting, we repeat with 100 random queries and report the average latency. For benchmarking, we store the indexes onpd-balanced SSD disks on GCP which has a max IOPS of 80,000 and max throughput of 1200 MB/s, and we experiment on an n2-highcpu-64 node where the max disk I/O performance can be achieved. DQuery Latency Comparison with Prior Works Table 5 reports query latency on Pile-train corpus using our method compared to prior work by Liu et al. (2024). E I NFINI -GRAM MINI Web Interface We host web interface for easy access to counting (Figure 5 left) and document retrieval (Figure 5 right) with the indexes we have built. F Details for Benchmarks in Contamination Analysis Table 6 shows the benchmarks we analyze under each category with citation and source. G Detailed Benchmark Contamination Result Table 7 reports the number of suspicious and dirty entries of each benchmark.24956 corresponding to all occurrences of the pattern. Middle: locate operation computes the position of pattern occurrence in the original string for each position in the SA range. Right: reconstruct operation gets a substring of the original string enclosing the second pattern occurrence with a context length of 1. The occurrence ranking is based on its order in SA. Step Pile-val Pile-train DCLM-baseline CC-2025-05 (1.4 GB) (653 GB) (667 GB) (654 GB) SA+BWT 29 s 41710 s 29543 s 55692 s alphabet 4 s 2584 s 2895 s 2580 s wavelet tree 13 s 5773 s 6257 s 5325 s sample SA 1 s 2540 s 2232 s 2013 s sample ISA 2 s 3975 s 2659 s 2313 s Total 49 s 15.7 h 12.1 h 18.9 h each shard is noted at the top. To get the indexing time of the full corpus on a single node, roughly multiply by the number of shards; though this can be embarrassingly parallelized across multiple nodes. Metadata size and metadata indexing time are excluded.",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p5",
+    "technical_score": 0.0004166666666666668,
+    "citation_score": 0.0025000000000000005
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Pile-train DCLM-baseline CC-2025-05 Time (n= 1.3T) ( n= 16.7T) ( n= 9.1T) Complexity (S = 2) (S = 25) (S = 15) Counting a query of length |Q| O(|Q|H0) . . . (|Q|= 1) 0.004 s 0.005 s 0.032 s . . . (|Q|= 2) 0.015 s 0.017 s 0.094 s . . . (|Q|= 5) 0.061 s 0.207 s 0.206 s . . . (|Q|= 10) 0.106 s 0.402 s 0.350 s . . . (|Q|= 20) 0.182 s 0.868 s 0.638 s . . . (|Q|= 50) 0.393 s 1.743 s 1.063 s . . . (|Q|= 100) 0.696 s 2.857 s 1.642 s . . . (|Q|= 200) 1.281 s 5.699 s 2.753 s . . . (|Q|= 500) 2.763 s 12.46 s 4.626 s . . . (|Q|= 1000) 4.808 s 25.47 s 7.957 s Retrieving a text of length d O ((a+b+d)H0) . . . (d= 10) 0.426 s 0.895 s 1.101 s . . . (d= 50) 0.634 s 1.549 s 1.302 s . . . (d= 100) 0.734 s 1.991 s 1.326 s . . . (d= 500) 0.874 s 2.363 s 1.609 s . . . (d= 1000) 0.94 s 2.385 s 1.705 s . . . (d= 2000) 1.213 s 3.464 s 2.849 s . . . (d= 3000) 1.858 s 4.456 s 3.330 s number of bytes in the text corpus, S=number of shards for the index, |Q|=length of query in bytes, d= length of text (in bytes) to reconstruct from the index, a=sampling rate of SA, b=sampling rate of ISA, H0= zeroth-order entropy of the corpus. |Q|= 10 bytes |Q|= 20 bytes |Q|= 100 bytes infini-gram (Liu et al., 2024) 13 ms 14 ms 13 ms INFINI -GRAM MINI 106 ms 182 ms 696 ms",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p6",
+    "technical_score": 0.0004166666666666666,
+    "citation_score": 0.0008333333333333332
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Benchmark Citation Source Knowledge and Reasoning MMLU Hendrycks et al., 2021 https://huggingface.co/datasets/cais/mmlu MMLU-Pro Wang et al., 2024 https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro BigBenchHard Suzgun et al., 2022 https://github.com/suzgunmirac/BIG-Bench-Hard/tree/main/bbh AGIEval Zhong et al., 2023 https://github.com/ruixiangcui/AGIEval/tree/main/data/v1_1 GPQA Rein et al., 2023 https://huggingface.co/datasets/Idavidrein/gpqa HLE Phan et al., 2025 https://huggingface.co/datasets/cais/hle Math AIME-2024 of Problem Solving, 2024 https://huggingface.co/datasets/Maxwell-Jia/AIME_2024 GSM8K Cobbe et al., 2021 https://huggingface.co/datasets/openai/gsm8k MATH-500 Lightman et al., 2023 https://huggingface.co/datasets/HuggingFaceH4/MATH-500 MGSM Shi et al., 2022 https://huggingface.co/datasets/juletxara/mgsm Code HumanEval Chen et al., 2021 https://huggingface.co/datasets/openai/openai_humaneval HumanEval+ Liu et al., 2023 https://huggingface.co/datasets/evalplus/humanevalplus LiveCodeBench Jain et al., 2024 https://huggingface.co/datasets/livecodebench/code_generation (code generation) SWE-bench Jimenez et al., 2024 https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified MBPP Austin et al., 2021 https://huggingface.co/datasets/google-research-datasets/mbpp Commonsense Understanding ARC-Challenge Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc ARC-Easy Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc CSQA Talmor et al., 2019 https://huggingface.co/datasets/tau/commonsense_qa HellaSwag Zellers et al., 2019 https://huggingface.co/datasets/Rowan/hellaswag Openbook QA Mihaylov et al., 2018 https://huggingface.co/datasets/allenai/openbookqa Social IQa Sap et al., 2019 https://huggingface.co/datasets/allenai/social_i_qa WinoGrande Sakaguchi et al., 2019 https://huggingface.co/datasets/allenai/winogrande Reading Comprehension CoQA Reddy et al., 2019 https://huggingface.co/datasets/stanfordnlp/coqa SQuAD Rajpurkar et al., 2016 https://huggingface.co/datasets/rajpurkar/squad",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p7",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark Test Set Pile-train DCLM-baseline CC-2025-05 CC-202508 CC-202513 CC-202518 CC-202521 CC-202526 Size Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Knowledge and Reasoning MMLU 1000 57 133 142 277 122 135 139 90 121 122 115 120 117 125 92 124 MMLU-Pro 1000 35 59 77 162 31 81 55 54 60 52 63 58 74 60 69 40 BigBenchHard 1000 7 0 54 1 357 14 296 14 306 32 302 23 396 18 338 17 AGIEval 1000 45 8 155 31 107 27 92 36 115 30 109 70 95 94 104 46 GPQA 448 1 0 5 0 6 4 10 9 5 6 6 3 5 4 15 12 HLE 881 3 0 6 0 8 0 3 0 4 1 5 0 3 0 2 0 Math AIME-2024 30 2 0 4 0 13 3 3 1 10 2 13 12 13 12 12 4 GSM8K 1000 1 0 5 4 33 76 8 8 37 69 10 7 210 742 20 73 MATH-500 500 9 3 48 16 26 3 46 39 25 4 27 4 26 4 41 41 MGSM 250 0 0 2 0 9 14 3 4 37 89 5 2 54 182 6 15 Code HumanEval 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 HumanEval+ 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 LiveCodeBench 880 2 0 2 0 188 0 241 0 221 0 274 0 167 0 168 0 SWE-bench 500 5 0 26 0 29 1 38 1 32 0 34 2 33 0 28 0 MBPP 500 16 0 64 2 87 5 58 7 89 6 75 9 76 5 84 7 Commonsense Understanding ARC-Challenge 1000 6 14 4 341 18 119 29 40 27 31 26 38 28 42 29 48 ARC-Easy 1000 15 15 5 317 31 54 30 95 31 55 37 55 28 61 31 62 CSQA 1000 0 1 1 10 1 1 0 1 0 2 0 1 0 0 0 1 HellaSwag 1000 27 0 341 0 36 0 29 0 34 0 29 0 30 0 28 1 OpenbookQA 500 2 54 3 78 5 73 2 151 2 66 3 67 3 66 2 61 Social IQa 1000 0 0 2 5 2 2 1 44 2 2 2 3 3 2 0 1 WinoGrande 1000 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 Reading Comprehension CoQA 500 189 40 188 92 121 37 113 44 123 43 134 36 123 38 125 44 SQuAD 1000 16 28 9 401 11 27 12 330 15 101 13 15 12 20 11 85",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p8",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "H Contamination Examples Figure 6 to Figure 12 shows example dirty entries in seven benchmarks and its contamination source retrieved from one of three corpus using INFINI - GRAM MINI . We also present the original webpage that is responsible for the contamination. I Dirty Entry Categorization using LLM-as-a-judge We use gpt-4o-mini to categorize all dirty entries into one of four categories described in \u00a74.3. For each dirty entry, we extract the 50-character sub- string that has least occurrence in the corpus. We then retrieve text snippet with context length of 400 characters (850 characters in total). We prompt gpt-4o-mini by providing both the dirty entry and the text snippet and let the model decide which cat- egory the dirty entry belongs. We use the following prompt: Y ou are an expert in evaluating benchmark contamination. Given an entry and detected overlap in the corpus, categorize how the en- try is contaminated in corpus into one of four categories: 1. Y ou can find exact match of question stem and the correct answer (correct choice if mul- tiple choices, or answer matching exactly the answer field) in corpus. 2. Y ou can find exact match of question stem, and the correct answer appears, though not in exact match. 3. Y ou can find exact match of question stem, but you cannot find the correct answer in any form. 4. False positive Output only the category number. J Interface of the Benchmark Contamination Monitoring System Figure 13 shows the interface of the system. It consists of two tabs: (1) Benchmark Contamination Bulletin, and (2) submission page for community to contribute. Benchmarks analyzed in this paper are reported in \u201ccore\u201d table, and submitted benchmarks will be added to \u201ccommunity\u201d table. K License of Corpora Used in the Paper Pile and DCLM are licensed under the MIT Li- cense. Common Crawl is licensed under its cus- tomized Limited License. We followed the listed intended use.24961",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p9",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0016666666666666661
+  },
+  {
+    "section_path": [
+      "MMLU-Pro"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "AIME exams are published.24962 choice question in related fields.24963 requests for software developing.24964 example.24965 sourcing from GSM8K examples, and is the major source for GSM8K dirty entries. This new dataset contains erroneous \u201csteps\u201d field and final answer to examine LLM\u2019s ability to identify errors, so the correct answers do not appear.24966 history that list it as few-shot example.24967 from OpenbookQA benchmark.24968 to add new benchmarks or upload new ones for contamination analysis, which will be added to the bulletin.24969",
+    "paragraph_id": "INFINI-GRAM-MINI::MMLU-Pro::p10",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "centric benchmark for evaluating foundation models. Preprint , arXiv:2304.06364.24955",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p1",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "A Querying the FM-Index This section introduces in details three operations supported by FM-index: find,locate , and recon- struct .",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p2",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Find. Each occurrence of a pattern string Qin the haystack string Tcorresponds to an element in the SA, and all these occurrences live in a consecu- tive range in the SA. The findoperation computes this range with backward search: starting with the full range, it iterates through the symbols in Qin reverse order, with each iteration narrowing the range using the character table Cand the rank oper- ation of the BWT\u2019s wavelet tree. The length of the final range is the count of QinT. Figure 4 (left) illustrates finding pattern \u201cana\u201d in string \u201cbanana\u201d. The time complexity of findisO(|Q|H0), where |Q|is the length of the pattern.",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p3",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Locate. Thelocate operation maps any position in the SA to its corresponding position in T. Since the SA is sampled at interval a, for an unsampled position i, the algorithm applies LF mapping at most atimes to locate the nearest sampled SA en- try. Figure 4 (middle) illustrates locating the two occurrences of \u201cana\u201d in \u201cbanana\u201d. The time com- plexity of locating each position is O(tSA), where tSAis the complexity of accessing an SA entry, which is O(1)for sampled entries and O(aH0)for unsampled entries.",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p4",
+    "technical_score": 0.0004166666666666666,
+    "citation_score": 0.0008333333333333332
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Reconstruct. After getting the position of a pat- tern occurrence in T, we can reconstruct a sub- string of Tenclosing that occurrence with some additional context. Starting at the end position of the desired substring, we apply the LF mapping to traverse through the BWT and use ISA to recover the symbol, and reconstruct symbols in reverse order until reaching the start position of the de- sired substring. Figure 4 (right) shows reconstruct- ing the second occurrence of \u201cana\u201d with context length of 1. The time complexity of reconstruct isO(dH0+tISA), where dis the length to recon- struct, and tISAis the complexity of accessing an ISA entry, which is O(1)for sampled entries and O(bH0)for unsampled entries. B Indexing Time Table 3 presents indexing time for each shard of text corpora with stepwise breakdown. Suffix ar- ray construction scales super-linearly depending on the level of duplication (Lee et al., 2022). Con-structing alphabet, wavelet tree, and sampling are linear operations. Indexing time also varies across similar-size shards originated from different text corpora, showing the time also depend on text cor- pora properties. For example, over 60% duplicate documents in the Pile (Elazar et al., 2024) causes SA construction to take significantly longer com- pared to DCLM-baseline. C Benchmarking Query Latency We benchmark the query latency of INFINI - GRAM MINI , and report results in Table 4. For counting , we experiment with query lengths |Q| \u2208 { 1,2,5,10,50,100,500,1000}, and for each length, randomly sample the query strings from the corpus. For retrieving documents , we use queries of length 10 sampled from the cor- pus, and reconstruct text surrounding the query with total length of d\u2208 {10,50,100,500,1000}. For each corpus and parameter setting, we repeat with 100 random queries and report the average latency. For benchmarking, we store the indexes onpd-balanced SSD disks on GCP which has a max IOPS of 80,000 and max throughput of 1200 MB/s, and we experiment on an n2-highcpu-64 node where the max disk I/O performance can be achieved. DQuery Latency Comparison with Prior Works Table 5 reports query latency on Pile-train corpus using our method compared to prior work by Liu et al. (2024). E I NFINI -GRAM MINI Web Interface We host web interface for easy access to counting (Figure 5 left) and document retrieval (Figure 5 right) with the indexes we have built. F Details for Benchmarks in Contamination Analysis Table 6 shows the benchmarks we analyze under each category with citation and source. G Detailed Benchmark Contamination Result Table 7 reports the number of suspicious and dirty entries of each benchmark.24956 corresponding to all occurrences of the pattern. Middle: locate operation computes the position of pattern occurrence in the original string for each position in the SA range. Right: reconstruct operation gets a substring of the original string enclosing the second pattern occurrence with a context length of 1. The occurrence ranking is based on its order in SA. Step Pile-val Pile-train DCLM-baseline CC-2025-05 (1.4 GB) (653 GB) (667 GB) (654 GB) SA+BWT 29 s 41710 s 29543 s 55692 s alphabet 4 s 2584 s 2895 s 2580 s wavelet tree 13 s 5773 s 6257 s 5325 s sample SA 1 s 2540 s 2232 s 2013 s sample ISA 2 s 3975 s 2659 s 2313 s Total 49 s 15.7 h 12.1 h 18.9 h each shard is noted at the top. To get the indexing time of the full corpus on a single node, roughly multiply by the number of shards; though this can be embarrassingly parallelized across multiple nodes. Metadata size and metadata indexing time are excluded.",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p5",
+    "technical_score": 0.0004166666666666668,
+    "citation_score": 0.0025000000000000005
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Pile-train DCLM-baseline CC-2025-05 Time (n= 1.3T) ( n= 16.7T) ( n= 9.1T) Complexity (S = 2) (S = 25) (S = 15) Counting a query of length |Q| O(|Q|H0) . . . (|Q|= 1) 0.004 s 0.005 s 0.032 s . . . (|Q|= 2) 0.015 s 0.017 s 0.094 s . . . (|Q|= 5) 0.061 s 0.207 s 0.206 s . . . (|Q|= 10) 0.106 s 0.402 s 0.350 s . . . (|Q|= 20) 0.182 s 0.868 s 0.638 s . . . (|Q|= 50) 0.393 s 1.743 s 1.063 s . . . (|Q|= 100) 0.696 s 2.857 s 1.642 s . . . (|Q|= 200) 1.281 s 5.699 s 2.753 s . . . (|Q|= 500) 2.763 s 12.46 s 4.626 s . . . (|Q|= 1000) 4.808 s 25.47 s 7.957 s Retrieving a text of length d O ((a+b+d)H0) . . . (d= 10) 0.426 s 0.895 s 1.101 s . . . (d= 50) 0.634 s 1.549 s 1.302 s . . . (d= 100) 0.734 s 1.991 s 1.326 s . . . (d= 500) 0.874 s 2.363 s 1.609 s . . . (d= 1000) 0.94 s 2.385 s 1.705 s . . . (d= 2000) 1.213 s 3.464 s 2.849 s . . . (d= 3000) 1.858 s 4.456 s 3.330 s number of bytes in the text corpus, S=number of shards for the index, |Q|=length of query in bytes, d= length of text (in bytes) to reconstruct from the index, a=sampling rate of SA, b=sampling rate of ISA, H0= zeroth-order entropy of the corpus. |Q|= 10 bytes |Q|= 20 bytes |Q|= 100 bytes infini-gram (Liu et al., 2024) 13 ms 14 ms 13 ms INFINI -GRAM MINI 106 ms 182 ms 696 ms",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p6",
+    "technical_score": 0.0004166666666666666,
+    "citation_score": 0.0008333333333333332
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Benchmark Citation Source Knowledge and Reasoning MMLU Hendrycks et al., 2021 https://huggingface.co/datasets/cais/mmlu MMLU-Pro Wang et al., 2024 https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro BigBenchHard Suzgun et al., 2022 https://github.com/suzgunmirac/BIG-Bench-Hard/tree/main/bbh AGIEval Zhong et al., 2023 https://github.com/ruixiangcui/AGIEval/tree/main/data/v1_1 GPQA Rein et al., 2023 https://huggingface.co/datasets/Idavidrein/gpqa HLE Phan et al., 2025 https://huggingface.co/datasets/cais/hle Math AIME-2024 of Problem Solving, 2024 https://huggingface.co/datasets/Maxwell-Jia/AIME_2024 GSM8K Cobbe et al., 2021 https://huggingface.co/datasets/openai/gsm8k MATH-500 Lightman et al., 2023 https://huggingface.co/datasets/HuggingFaceH4/MATH-500 MGSM Shi et al., 2022 https://huggingface.co/datasets/juletxara/mgsm Code HumanEval Chen et al., 2021 https://huggingface.co/datasets/openai/openai_humaneval HumanEval+ Liu et al., 2023 https://huggingface.co/datasets/evalplus/humanevalplus LiveCodeBench Jain et al., 2024 https://huggingface.co/datasets/livecodebench/code_generation (code generation) SWE-bench Jimenez et al., 2024 https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified MBPP Austin et al., 2021 https://huggingface.co/datasets/google-research-datasets/mbpp Commonsense Understanding ARC-Challenge Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc ARC-Easy Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc CSQA Talmor et al., 2019 https://huggingface.co/datasets/tau/commonsense_qa HellaSwag Zellers et al., 2019 https://huggingface.co/datasets/Rowan/hellaswag Openbook QA Mihaylov et al., 2018 https://huggingface.co/datasets/allenai/openbookqa Social IQa Sap et al., 2019 https://huggingface.co/datasets/allenai/social_i_qa WinoGrande Sakaguchi et al., 2019 https://huggingface.co/datasets/allenai/winogrande Reading Comprehension CoQA Reddy et al., 2019 https://huggingface.co/datasets/stanfordnlp/coqa SQuAD Rajpurkar et al., 2016 https://huggingface.co/datasets/rajpurkar/squad",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p7",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Benchmark Test Set Pile-train DCLM-baseline CC-2025-05 CC-202508 CC-202513 CC-202518 CC-202521 CC-202526 Size Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Knowledge and Reasoning MMLU 1000 57 133 142 277 122 135 139 90 121 122 115 120 117 125 92 124 MMLU-Pro 1000 35 59 77 162 31 81 55 54 60 52 63 58 74 60 69 40 BigBenchHard 1000 7 0 54 1 357 14 296 14 306 32 302 23 396 18 338 17 AGIEval 1000 45 8 155 31 107 27 92 36 115 30 109 70 95 94 104 46 GPQA 448 1 0 5 0 6 4 10 9 5 6 6 3 5 4 15 12 HLE 881 3 0 6 0 8 0 3 0 4 1 5 0 3 0 2 0 Math AIME-2024 30 2 0 4 0 13 3 3 1 10 2 13 12 13 12 12 4 GSM8K 1000 1 0 5 4 33 76 8 8 37 69 10 7 210 742 20 73 MATH-500 500 9 3 48 16 26 3 46 39 25 4 27 4 26 4 41 41 MGSM 250 0 0 2 0 9 14 3 4 37 89 5 2 54 182 6 15 Code HumanEval 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 HumanEval+ 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 LiveCodeBench 880 2 0 2 0 188 0 241 0 221 0 274 0 167 0 168 0 SWE-bench 500 5 0 26 0 29 1 38 1 32 0 34 2 33 0 28 0 MBPP 500 16 0 64 2 87 5 58 7 89 6 75 9 76 5 84 7 Commonsense Understanding ARC-Challenge 1000 6 14 4 341 18 119 29 40 27 31 26 38 28 42 29 48 ARC-Easy 1000 15 15 5 317 31 54 30 95 31 55 37 55 28 61 31 62 CSQA 1000 0 1 1 10 1 1 0 1 0 2 0 1 0 0 0 1 HellaSwag 1000 27 0 341 0 36 0 29 0 34 0 29 0 30 0 28 1 OpenbookQA 500 2 54 3 78 5 73 2 151 2 66 3 67 3 66 2 61 Social IQa 1000 0 0 2 5 2 2 1 44 2 2 2 3 3 2 0 1 WinoGrande 1000 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 Reading Comprehension CoQA 500 189 40 188 92 121 37 113 44 123 43 134 36 123 38 125 44 SQuAD 1000 16 28 9 401 11 27 12 330 15 101 13 15 12 20 11 85",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p8",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "H Contamination Examples Figure 6 to Figure 12 shows example dirty entries in seven benchmarks and its contamination source retrieved from one of three corpus using INFINI - GRAM MINI . We also present the original webpage that is responsible for the contamination. I Dirty Entry Categorization using LLM-as-a-judge We use gpt-4o-mini to categorize all dirty entries into one of four categories described in \u00a74.3. For each dirty entry, we extract the 50-character sub- string that has least occurrence in the corpus. We then retrieve text snippet with context length of 400 characters (850 characters in total). We prompt gpt-4o-mini by providing both the dirty entry and the text snippet and let the model decide which cat- egory the dirty entry belongs. We use the following prompt: Y ou are an expert in evaluating benchmark contamination. Given an entry and detected overlap in the corpus, categorize how the en- try is contaminated in corpus into one of four categories: 1. Y ou can find exact match of question stem and the correct answer (correct choice if mul- tiple choices, or answer matching exactly the answer field) in corpus. 2. Y ou can find exact match of question stem, and the correct answer appears, though not in exact match. 3. Y ou can find exact match of question stem, but you cannot find the correct answer in any form. 4. False positive Output only the category number. J Interface of the Benchmark Contamination Monitoring System Figure 13 shows the interface of the system. It consists of two tabs: (1) Benchmark Contamination Bulletin, and (2) submission page for community to contribute. Benchmarks analyzed in this paper are reported in \u201ccore\u201d table, and submitted benchmarks will be added to \u201ccommunity\u201d table. K License of Corpora Used in the Paper Pile and DCLM are licensed under the MIT Li- cense. Common Crawl is licensed under its cus- tomized Limited License. We followed the listed intended use.24961",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p9",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0016666666666666661
+  },
+  {
+    "section_path": [
+      "AGIEval"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "AIME exams are published.24962 choice question in related fields.24963 requests for software developing.24964 example.24965 sourcing from GSM8K examples, and is the major source for GSM8K dirty entries. This new dataset contains erroneous \u201csteps\u201d field and final answer to examine LLM\u2019s ability to identify errors, so the correct answers do not appear.24966 history that list it as few-shot example.24967 from OpenbookQA benchmark.24968 to add new benchmarks or upload new ones for contamination analysis, which will be added to the bulletin.24969",
+    "paragraph_id": "INFINI-GRAM-MINI::AGIEval::p10",
+    "technical_score": 0.00041666666666666653,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "GSM8K"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "clean on Pile-train, DCLM-baseline, and earlier CC-2025 crawls, but has 74.2% dirty entries on CC-2025-21. 4.3 Analysis With INFINI -GRAM MINI , we can retrieve docu- ments from the corpus that contain contaminated examples for further analysis. We use LLM-as-a- judge to categorize all dirty instances in Pile-train, DCLM-baseline, and CC-2025-05 into following scenarios (see App. \u00a7I for more details), with ex-",
+    "paragraph_id": "INFINI-GRAM-MINI::GSM8K::p1",
+    "technical_score": 8.620689655172414e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "GSM8K"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "\u2022Type 1: Question and answer appear as-is in corpus. The question and correct answer appear in the corpus in the exact format as in bench- mark entry. The model may memorize entirely from these data instead of performing capabili- ties examined in benchmarks. This accounts for 72.5% of all dirty entries in Pile-train, 82.6% on DCLM-baseline, and 58% on CC-2025-05. \u2022Type 2: Question appeared, answer in natural language. The answer is expressed in natural language rather than the exact benchmark for- mat, and model may directly infer the correct an- swer from it. This accounts for 4.5% of all dirty entries in Pile-train, 2.1% on DCLM-baseline, and 6.2% on CC-2025-05. \u2022Type 3: Question appeared, no corresponding answer. The question (and maybe the multiple- choice options) appeared in the corpus, but correct answer is missing. This accounts for 18.1% of all dirty entries in Pile-train, 10.9% on DCLM-baseline, and 30.2% on CC-2025-05. \u2022Type 4: False positives. There are documents that superficially match the question but are un- related to the benchmark example. This happens on entries with a very short question. This ac- counts for 3.1% of all dirty entries in Pile-train,1% on DCLM-baseline, and 3% on CC-2025-05. We show 7 contamination examples in App. \u00a7H and their source of contamination. We found that contamination is caused by (1) the benchmark is sourced from the Internet (e.g., AIME-2024, Fig- ure 6; SWE-bench, Figure 8), (2) there are other benchmarks or online quizzes that are sourced from the benchmark (e.g, GSM8K, Figure 10), (3) blogs and papers cite a benchmark entry as example (e.g, GPQA, Figure 9; BigBenchHard, Figure 11; Open- bookQA, Figure 12), and (4) benchmark entry co- incide with online source (e.g., MMLU, Figure 7). Contamination could cause LLM to overperform on evaluation benchmarks by enabling models to re- trieve memorized answers from training data rather than performing task-specific reasoning. Our find- ing shows that a large majority of dirty entries con- tain exact matches of both question and answer, though even subtler forms of contamination such as question-only matches and paraphrased answers could inflate benchmark scores. As training cor- pora grow, the risk of benchmark contamination and the potential for rote memorization increase, making it more important to decontaminate training corpora and construct contamination-free bench- marks to avoid overestimating model capabilities. 4.4 Benchmark Contamination Bulletin Using INFINI -GRAM MINI , we implement a bench- mark contamination monitoring system that tracks benchmark contamination. In the future, we will keep indexing the latest crawl in Common Crawl and update contamination results to track bench- mark contamination as corpora evolve. The system also allows anyone to add or upload new bench- marks to be monitored, fostering collaboration in benchmark monitoring.",
+    "paragraph_id": "INFINI-GRAM-MINI::GSM8K::p2",
+    "technical_score": 8.620689655172413e-05,
+    "citation_score": 0.00017241379310344826
+  },
+  {
+    "section_path": [
+      "GSM8K"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "See App. \u00a7J for system interface. 5 Related Work Exact-match search in large text corpora. Prior work has used different techniques to enable exact- match full-text search in large text corpora, includ- ing suffix arrays, suffix automata, and proprietary search engines. Below we survey the largest-scale implementation of each technique known to us. Merrill et al. (2024) apply a suffix automaton to 1.3TB of text. Liu et al. (2024) apply a suffix array to 12TB of text. Elazar et al. (2024) use the pro- prietary ElasticSearch to index and analyze 35TB of text. All these methods have significant storage24950",
+    "paragraph_id": "INFINI-GRAM-MINI::GSM8K::p3",
+    "technical_score": 0.0,
+    "citation_score": 0.002586206896551724
+  },
+  {
+    "section_path": [
+      "GSM8K"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Test Pile DCLM CC CC CC CC CC CC Size train baseline 2025-05 2025-08 2025-13 2025-18 2025-21 2025-26 Knowledge and Reasoning MMLU 1000 13.20 28.40 13.50 9.00 12.10 11.50 11.70 9.20 MMLU-Pro 1000 5.50 16.20 7.10 5.40 6.00 6.30 7.40 6.90 BigBenchHard 1000 0.00 0.10 1.40 1.40 3.20 2.30 1.80 1.70 AGIEval 1000 0.80 3.10 2.70 3.60 3.00 7.00 9.40 4.60 GPQA 448 0.00 0.00 0.90 2.00 1.30 0.70 0.90 2.70 HLE 881 0.00 0.30 0.10 0.00 0.10 0.00 0.00 0.00 Math AIME-2024 30 0.00 0.00 10.00 3.30 6.70 40.00 40.00 13.30 GSM8K 1000 0.00 5.00 5.00 0.80 6.90 0.70 74.20 7.30 MATH-500 500 0.60 3.20 0.60 7.80 0.80 0.80 0.80 8.20 MGSM 250 0.00 0.00 5.60 1.60 35.60 0.80 72.80 6.00 Code HumanEval 164 0.00 0.00 0.00 0.60 0.60 0.60 0.00 0.00 HumanEval+ 164 0.00 0.00 0.00 0.60 0.60 0.60 0.00 0.00 LiveCodeBench 880 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 SWE-bench 500 0.00 0.00 0.20 0.20 0.00 0.00 0.00 0.00 MBPP 500 0.00 0.40 1.00 1.40 1.20 1.80 1.00 1.40 Commonsense Understanding ARC-Challenge 1000 1.80 34.10 11.90 4.00 3.10 3.80 4.20 4.80 ARC-Easy 1000 1.30 31.70 5.40 9.50 5.50 5.50 6.10 6.20 CSQA 1000 0.10 1.00 0.10 0.10 0.20 0.10 0.00 0.10 HellaSwag 1000 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.10 OpenbookQA 500 10.80 15.60 14.60 30.20 13.20 13.40 13.20 12.20 Social IQa 1000 0.00 0.50 0.20 4.40 0.20 0.30 0.20 0.10 WinoGrande 1000 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 Reading Comprehension CoQA 500 8.00 18.40 7.40 8.80 8.60 7.20 7.60 8.80 SQuAD 1000 2.80 40.10 2.70 33.00 10.10 1.50 2.00 8.50",
+    "paragraph_id": "INFINI-GRAM-MINI::GSM8K::p4",
+    "technical_score": 8.620689655172414e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "GSM8K"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "2025. Full result is reported in Table 7. For benchmark entries with over 1000 entries, we report dirty rate on the downsampled subset. Cell background color indicates benchmark cleaniness, with more redness representing increasing levels of contamination. multiplier wrt the size of text indexed, ranging from ElasticSearch\u2019s 2 \u00d7to suffix automata\u2019s 29 \u00d7. In contrast, our FM-index-based index has a storage multiplier as small as 0.26 \u00d7, allowing us to index the largest body of text ever in the open-source community.",
+    "paragraph_id": "INFINI-GRAM-MINI::GSM8K::p5",
+    "technical_score": 8.620689655172414e-05,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "GSM8K"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Benchmark contamination. Benchmark con- tamination appeared as a critical concern in LLM evaluations in recent studies. Prior works has quan- tified benchmark contamination on open-sourced models using various matching strategies, includ- ing n-gram or token overlap (Soldaini et al., 2024; Llama Team, 2024; Soldaini et al., 2024; OLMo et al., 2025), longest substring match (Singh et al., 2024), skipgram match (Touvron et al., 2023), andfull-text exact match (Elazar et al., 2024). Sainz et al. (2024) reports data contamination from multi- ple sources through shared efforts. However, index- ing large-scale pretraining corpora and performing exhaustive searches is computationally expensive, and prior studies on open corpora are limited in their scale (up to RedPajama-1T and Dolma, 12TB). To the best of our knowledge, our work conducts contamination analysis on the largest open corpora to date. 6 Conclusion We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "paragraph_id": "INFINI-GRAM-MINI::GSM8K::p6",
+    "technical_score": 0.0,
+    "citation_score": 0.004310344827586205
+  },
+  {
+    "section_path": [
+      "GSM8K"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Magenta text is the mapping of answers. sive text corpus, and we show its scalability to a petabyte-scale corpus. We showcase INFINI -GRAM MINI \u2019s application on benchmark contamination analysis at scale. Limitations Although INFINI -GRAM MINI shows significant im- provements on text compression rate, document retrieval latency remains higher than a canoni- cal suffix array. For example, reconstructing a 3000-character document takes 1.8 seconds on Pile and 4.5 seconds on DCLM-baseline, compared to millisecond-level retrieval in system like Infini- gram (Liu et al., 2024). This is a trade-off with INFINI -GRAM MINI \u2019s compression rate: INFINI - GRAM MINI does not store the original text in a contiguous block. To retrieve a document, we need to reconstruct it character-by-character, leading to a large number of reads in random addresses. These process takes long time since the entire index is kept on disk at inference time. The high latency can potentially be reduced using techniques like disk page prefetching. Identifying co-occurrences of multiple patterns is inefficient with the FM-index, since mapping every match from the suffix array range back toits position in original text takes very long time thus making this operation impractical. In contrast, the original infini-gram supports this operation effi- ciently. INFINI -GRAM MINI only supports exact-match searches. As a result, our benchmark contami- nation analysis is limited to case-sensitive exact matching, which may fail to detect contamination of instances with minor textual discrepancies. As the text corpora may contain biased or toxic content, document retrieval output may contain content that can be perceived as ethically problem- atic, and may contain sensitive information. The output of INFINI -GRAM MINI does not reflect au- thors\u2019 views.",
+    "paragraph_id": "INFINI-GRAM-MINI::GSM8K::p7",
+    "technical_score": 0.0,
+    "citation_score": 0.002586206896551724
+  },
+  {
+    "section_path": [
+      "MATH-500"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "AIME-2024 30 2 0 4 0 13 3 3 1 10 2 13 12 13 12 12 4 GSM8K 1000 1 0 5 4 33 76 8 8 37 69 10 7 210 742 20 73 MATH-500 500 9 3 48 16 26 3 46 39 25 4 27 4 26 4 41 41 MGSM 250 0 0 2 0 9 14 3 4 37 89 5 2 54 182 6 15 Code HumanEval 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 HumanEval+ 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 LiveCodeBench 880 2 0 2 0 188 0 241 0 221 0 274 0 167 0 168 0 SWE-bench 500 5 0 26 0 29 1 38 1 32 0 34 2 33 0 28 0 MBPP 500 16 0 64 2 87 5 58 7 89 6 75 9 76 5 84 7 Commonsense Understanding ARC-Challenge 1000 6 14 4 341 18 119 29 40 27 31 26 38 28 42 29 48 ARC-Easy 1000 15 15 5 317 31 54 30 95 31 55 37 55 28 61 31 62 CSQA 1000 0 1 1 10 1 1 0 1 0 2 0 1 0 0 0 1 HellaSwag 1000 27 0 341 0 36 0 29 0 34 0 29 0 30 0 28 1 OpenbookQA 500 2 54 3 78 5 73 2 151 2 66 3 67 3 66 2 61 Social IQa 1000 0 0 2 5 2 2 1 44 2 2 2 3 3 2 0 1 WinoGrande 1000 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 Reading Comprehension CoQA 500 189 40 188 92 121 37 113 44 123 43 134 36 123 38 125 44 SQuAD 1000 16 28 9 401 11 27 12 330 15 101 13 15 12 20 11 85",
+    "paragraph_id": "INFINI-GRAM-MINI::MATH-500::p1",
+    "technical_score": 0.0014285714285714284,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "MATH-500"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "H Contamination Examples Figure 6 to Figure 12 shows example dirty entries in seven benchmarks and its contamination source retrieved from one of three corpus using INFINI - GRAM MINI . We also present the original webpage that is responsible for the contamination. I Dirty Entry Categorization using LLM-as-a-judge We use gpt-4o-mini to categorize all dirty entries into one of four categories described in \u00a74.3. For each dirty entry, we extract the 50-character sub- string that has least occurrence in the corpus. We then retrieve text snippet with context length of 400 characters (850 characters in total). We prompt gpt-4o-mini by providing both the dirty entry and the text snippet and let the model decide which cat- egory the dirty entry belongs. We use the following prompt: Y ou are an expert in evaluating benchmark contamination. Given an entry and detected overlap in the corpus, categorize how the en- try is contaminated in corpus into one of four categories: 1. Y ou can find exact match of question stem and the correct answer (correct choice if mul- tiple choices, or answer matching exactly the answer field) in corpus. 2. Y ou can find exact match of question stem, and the correct answer appears, though not in exact match. 3. Y ou can find exact match of question stem, but you cannot find the correct answer in any form. 4. False positive Output only the category number. J Interface of the Benchmark Contamination Monitoring System Figure 13 shows the interface of the system. It consists of two tabs: (1) Benchmark Contamination Bulletin, and (2) submission page for community to contribute. Benchmarks analyzed in this paper are reported in \u201ccore\u201d table, and submitted benchmarks will be added to \u201ccommunity\u201d table. K License of Corpora Used in the Paper Pile and DCLM are licensed under the MIT Li- cense. Common Crawl is licensed under its cus- tomized Limited License. We followed the listed intended use.24961",
+    "paragraph_id": "INFINI-GRAM-MINI::MATH-500::p2",
+    "technical_score": 0.0014285714285714281,
+    "citation_score": 0.0057142857142857125
+  },
+  {
+    "section_path": [
+      "MATH-500"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "AIME exams are published.24962 choice question in related fields.24963 requests for software developing.24964 example.24965 sourcing from GSM8K examples, and is the major source for GSM8K dirty entries. This new dataset contains erroneous \u201csteps\u201d field and final answer to examine LLM\u2019s ability to identify errors, so the correct answers do not appear.24966 history that list it as few-shot example.24967 from OpenbookQA benchmark.24968 to add new benchmarks or upload new ones for contamination analysis, which will be added to the bulletin.24969",
+    "paragraph_id": "INFINI-GRAM-MINI::MATH-500::p3",
+    "technical_score": 0.0014285714285714284,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Code HumanEval"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "HumanEval 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 HumanEval+ 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 LiveCodeBench 880 2 0 2 0 188 0 241 0 221 0 274 0 167 0 168 0 SWE-bench 500 5 0 26 0 29 1 38 1 32 0 34 2 33 0 28 0 MBPP 500 16 0 64 2 87 5 58 7 89 6 75 9 76 5 84",
+    "paragraph_id": "INFINI-GRAM-MINI::Code HumanEval::p1",
+    "technical_score": 0.009999999999999998,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Commonsense Understanding ARC-Challenge"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "ARC-Challenge 1000 6 14 4 341 18 119 29 40 27 31 26 38 28 42 29 48 ARC-Easy 1000 15 15 5 317 31 54 30 95 31 55 37 55 28 61 31 62 CSQA 1000 0 1 1 10 1 1 0 1 0 2 0 1 0 0 0 1 HellaSwag 1000 27 0 341 0 36 0 29 0 34 0 29 0 30 0 28 1 OpenbookQA 500 2 54 3 78 5 73 2 151 2 66 3 67 3 66 2 61 Social IQa 1000 0 0 2 5 2 2 1 44 2 2 2 3 3 2 0 1 WinoGrande 1000 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 Reading Comprehension CoQA 500 189 40 188 92 121 37 113 44 123 43 134 36 123 38 125 44 SQuAD 1000 16 28 9 401 11 27 12 330 15 101 13 15 12 20 11 85",
+    "paragraph_id": "INFINI-GRAM-MINI::Commonsense Understanding ARC-Challenge::p1",
+    "technical_score": 0.0014285714285714284,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Commonsense Understanding ARC-Challenge"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "H Contamination Examples Figure 6 to Figure 12 shows example dirty entries in seven benchmarks and its contamination source retrieved from one of three corpus using INFINI - GRAM MINI . We also present the original webpage that is responsible for the contamination. I Dirty Entry Categorization using LLM-as-a-judge We use gpt-4o-mini to categorize all dirty entries into one of four categories described in \u00a74.3. For each dirty entry, we extract the 50-character sub- string that has least occurrence in the corpus. We then retrieve text snippet with context length of 400 characters (850 characters in total). We prompt gpt-4o-mini by providing both the dirty entry and the text snippet and let the model decide which cat- egory the dirty entry belongs. We use the following prompt: Y ou are an expert in evaluating benchmark contamination. Given an entry and detected overlap in the corpus, categorize how the en- try is contaminated in corpus into one of four categories: 1. Y ou can find exact match of question stem and the correct answer (correct choice if mul- tiple choices, or answer matching exactly the answer field) in corpus. 2. Y ou can find exact match of question stem, and the correct answer appears, though not in exact match. 3. Y ou can find exact match of question stem, but you cannot find the correct answer in any form. 4. False positive Output only the category number. J Interface of the Benchmark Contamination Monitoring System Figure 13 shows the interface of the system. It consists of two tabs: (1) Benchmark Contamination Bulletin, and (2) submission page for community to contribute. Benchmarks analyzed in this paper are reported in \u201ccore\u201d table, and submitted benchmarks will be added to \u201ccommunity\u201d table. K License of Corpora Used in the Paper Pile and DCLM are licensed under the MIT Li- cense. Common Crawl is licensed under its cus- tomized Limited License. We followed the listed intended use.24961",
+    "paragraph_id": "INFINI-GRAM-MINI::Commonsense Understanding ARC-Challenge::p2",
+    "technical_score": 0.0014285714285714281,
+    "citation_score": 0.0057142857142857125
+  },
+  {
+    "section_path": [
+      "Commonsense Understanding ARC-Challenge"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "AIME exams are published.24962 choice question in related fields.24963 requests for software developing.24964 example.24965 sourcing from GSM8K examples, and is the major source for GSM8K dirty entries. This new dataset contains erroneous \u201csteps\u201d field and final answer to examine LLM\u2019s ability to identify errors, so the correct answers do not appear.24966 history that list it as few-shot example.24967 from OpenbookQA benchmark.24968 to add new benchmarks or upload new ones for contamination analysis, which will be added to the bulletin.24969",
+    "paragraph_id": "INFINI-GRAM-MINI::Commonsense Understanding ARC-Challenge::p3",
+    "technical_score": 0.0014285714285714284,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "machine comprehension of text. In Proceedings of the 2016 Conference on Empirical Methods in Natu- ral Language Processing , pages 2383\u20132392, Austin, Texas.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p1",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Association for Computational Linguistics.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p2",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Siva Reddy, Danqi Chen, and Christopher D.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p3",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Manning. 2019. CoQA: A conversational question answering challenge. Transactions of the Association for Com- putational Linguistics , 7:249\u2013266. David Rein, Betty Li Hou, Asa Cooper Stickland, Jackson Petty, Richard Yuanzhe Pang, Julien Di- rani, Julian Michael, and Samuel R.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p4",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Bowman. 2023. Gpqa: A graduate-level google-proof q&a bench- mark. Preprint , arXiv:2311.12022. Oscar Sainz, Iker Garci\u0301a-Ferrero, Alon Jacovi, Jon An- der Campos, Yanai Elazar, Eneko Agirre, Yoav Gold- berg, Wei-Lin Chen, Jenny Chim, Leshem Choshen, Luca D\u2019Amico-Wong, Melissa Dell, Run-Ze Fan, Shahriar Golchin, Yucheng Li, Pengfei Liu, Bhavish Pahwa, Ameya Prabhu, Suryansh Sharma, and 9 oth- ers. 2024. Data contamination report from the 2024 conda shared task. Preprint , arXiv:2407.21530. Keisuke Sakaguchi, Ronan Le Bras, Chandra Bhagavat- ula, and Yejin Choi. 2019. Winogrande: An adver- sarial winograd schema challenge at scale. Preprint , arXiv:1907.10641. Maarten Sap, Hannah Rashkin, Derek Chen, Ronan LeBras, and Yejin Choi. 2019. Socialiqa: Common- sense reasoning about social interactions. Preprint , arXiv:1904.09728. Freda Shi, Mirac Suzgun, Markus Freitag, Xuezhi Wang, Suraj Srivats, Soroush V osoughi, Hyung Won Chung, Yi Tay, Sebastian Ruder, Denny Zhou, Dipanjan Das, and Jason Wei. 2022. Language models are multilingual chain-of-thought reasoners. Preprint , arXiv:2210.03057.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p5",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "Aaditya K. Singh, Muhammed Yusuf Kocyigit, Andrew Poulton, David Esiobu, Maria Lomeli, Gergely Szil- vasy, and Dieuwke Hupkes. 2024. Evaluation data contamination in llms: how do we measure it and (when) does it matter? Preprint , arXiv:2411.03923. Luca Soldaini, Rodney Kinney, Akshita Bhagia, Dustin Schwenk, David Atkinson, Russell Authur, Ben Bogin, Khyathi Chandu, Jennifer Dumas, Yanai Elazar, Valentin Hofmann, Ananya Jha, Sachin Ku- mar, Li Lucy, Xinxi Lyu, Nathan Lambert, Ian Mag- nusson, Jacob Morrison, Niklas Muennighoff, and 17 others. 2024. Dolma: an open corpus of three trillion tokens for language model pretraining research. In Proceedings of the 62nd Annual Meeting of the As- sociation for Computational Linguistics (Volume 1: Long Papers) , pages 15725\u201315788, Bangkok, Thai- land. Association for Computational Linguistics.24954",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p6",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Mirac Suzgun, Nathan Scales, Nathanael Scha\u0308rli, Se- bastian Gehrmann, Yi Tay, Hyung Won Chung, Aakanksha Chowdhery, Quoc V Le, Ed H Chi, Denny Zhou, , and Jason Wei. 2022. Challenging big-bench tasks and whether chain-of-thought can solve them. arXiv preprint arXiv:2210.09261 .",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p7",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Alon Talmor, Jonathan Herzig, Nicholas Lourie, and Jonathan Berant. 2019. CommonsenseQA: A ques- tion answering challenge targeting commonsense knowledge. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Tech- nologies, Volume 1 (Long and Short Papers) , pages 4149\u20134158, Minneapolis, Minnesota.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p8",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Association for Computational Linguistics.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p9",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "Hugo Touvron, Louis Martin, Kevin R. Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Niko- lay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, Daniel M. Bikel, Lukas Blecher, Cris- tian Canto\u0301n Ferrer, Moya Chen, Guillem Cucurull, David Esiobu, Jude Fernandes, Jeremy Fu, Wenyin Fu, and 49 others. 2023. Llama 2: Open foundation and fine-tuned chat models. ArXiv , abs/2307.09288. Yuanrong Wang, Xueqi Li, Dawei Zang, Guangming Tan, and Ninghui Sun. 2018. Accelerating fm-index search for genomic data processing. In Proceedings of the 47th International Conference on Parallel Pro- cessing , ICPP \u201918, New York, NY , USA.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p10",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "Association for Computing Machinery. Yubo Wang, Xueguang Ma, Ge Zhang, Yuansheng Ni, Abhranil Chandra, Shiguang Guo, Weiming Ren, Aaran Arulraj, Xuan He, Ziyan Jiang, Tianle Li, Max Ku, Kai Wang, Alex Zhuang, Rongqi Fan, Xiang Yue, and Wenhu Chen. 2024. Mmlu-pro: A more robust and challenging multi-task language understanding benchmark. Preprint , arXiv:2406.01574. Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. 2019. Hellaswag: Can a machine really finish your sentence? In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics . Wanjun Zhong, Ruixiang Cui, Yiduo Guo, Yaobo Liang, Shuai Lu, Yanlin Wang, Amin Saied, Weizhu Chen, and Nan Duan. 2023. Agieval: A human- centric benchmark for evaluating foundation models. Preprint , arXiv:2304.06364.24955",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p11",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "A Querying the FM-Index This section introduces in details three operations supported by FM-index: find,locate , and recon- struct .",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p12",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "Find. Each occurrence of a pattern string Qin the haystack string Tcorresponds to an element in the SA, and all these occurrences live in a consecu- tive range in the SA. The findoperation computes this range with backward search: starting with the full range, it iterates through the symbols in Qin reverse order, with each iteration narrowing the range using the character table Cand the rank oper- ation of the BWT\u2019s wavelet tree. The length of the final range is the count of QinT. Figure 4 (left) illustrates finding pattern \u201cana\u201d in string \u201cbanana\u201d. The time complexity of findisO(|Q|H0), where |Q|is the length of the pattern.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p13",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "Locate. Thelocate operation maps any position in the SA to its corresponding position in T. Since the SA is sampled at interval a, for an unsampled position i, the algorithm applies LF mapping at most atimes to locate the nearest sampled SA en- try. Figure 4 (middle) illustrates locating the two occurrences of \u201cana\u201d in \u201cbanana\u201d. The time com- plexity of locating each position is O(tSA), where tSAis the complexity of accessing an SA entry, which is O(1)for sampled entries and O(aH0)for unsampled entries.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p14",
+    "technical_score": 0.00011904761904761905,
+    "citation_score": 0.0002380952380952381
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "Reconstruct. After getting the position of a pat- tern occurrence in T, we can reconstruct a sub- string of Tenclosing that occurrence with some additional context. Starting at the end position of the desired substring, we apply the LF mapping to traverse through the BWT and use ISA to recover the symbol, and reconstruct symbols in reverse order until reaching the start position of the de- sired substring. Figure 4 (right) shows reconstruct- ing the second occurrence of \u201cana\u201d with context length of 1. The time complexity of reconstruct isO(dH0+tISA), where dis the length to recon- struct, and tISAis the complexity of accessing an ISA entry, which is O(1)for sampled entries and O(bH0)for unsampled entries. B Indexing Time Table 3 presents indexing time for each shard of text corpora with stepwise breakdown. Suffix ar- ray construction scales super-linearly depending on the level of duplication (Lee et al., 2022). Con-structing alphabet, wavelet tree, and sampling are linear operations. Indexing time also varies across similar-size shards originated from different text corpora, showing the time also depend on text cor- pora properties. For example, over 60% duplicate documents in the Pile (Elazar et al., 2024) causes SA construction to take significantly longer com- pared to DCLM-baseline. C Benchmarking Query Latency We benchmark the query latency of INFINI - GRAM MINI , and report results in Table 4. For counting , we experiment with query lengths |Q| \u2208 { 1,2,5,10,50,100,500,1000}, and for each length, randomly sample the query strings from the corpus. For retrieving documents , we use queries of length 10 sampled from the cor- pus, and reconstruct text surrounding the query with total length of d\u2208 {10,50,100,500,1000}. For each corpus and parameter setting, we repeat with 100 random queries and report the average latency. For benchmarking, we store the indexes onpd-balanced SSD disks on GCP which has a max IOPS of 80,000 and max throughput of 1200 MB/s, and we experiment on an n2-highcpu-64 node where the max disk I/O performance can be achieved. DQuery Latency Comparison with Prior Works Table 5 reports query latency on Pile-train corpus using our method compared to prior work by Liu et al. (2024). E I NFINI -GRAM MINI Web Interface We host web interface for easy access to counting (Figure 5 left) and document retrieval (Figure 5 right) with the indexes we have built. F Details for Benchmarks in Contamination Analysis Table 6 shows the benchmarks we analyze under each category with citation and source. G Detailed Benchmark Contamination Result Table 7 reports the number of suspicious and dirty entries of each benchmark.24956 corresponding to all occurrences of the pattern. Middle: locate operation computes the position of pattern occurrence in the original string for each position in the SA range. Right: reconstruct operation gets a substring of the original string enclosing the second pattern occurrence with a context length of 1. The occurrence ranking is based on its order in SA. Step Pile-val Pile-train DCLM-baseline CC-2025-05 (1.4 GB) (653 GB) (667 GB) (654 GB) SA+BWT 29 s 41710 s 29543 s 55692 s alphabet 4 s 2584 s 2895 s 2580 s wavelet tree 13 s 5773 s 6257 s 5325 s sample SA 1 s 2540 s 2232 s 2013 s sample ISA 2 s 3975 s 2659 s 2313 s Total 49 s 15.7 h 12.1 h 18.9 h each shard is noted at the top. To get the indexing time of the full corpus on a single node, roughly multiply by the number of shards; though this can be embarrassingly parallelized across multiple nodes. Metadata size and metadata indexing time are excluded.",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p15",
+    "technical_score": 0.0,
+    "citation_score": 0.0035714285714285704
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 16,
+    "paragraph": "Pile-train DCLM-baseline CC-2025-05 Time (n= 1.3T) ( n= 16.7T) ( n= 9.1T) Complexity (S = 2) (S = 25) (S = 15) Counting a query of length |Q| O(|Q|H0) . . . (|Q|= 1) 0.004 s 0.005 s 0.032 s . . . (|Q|= 2) 0.015 s 0.017 s 0.094 s . . . (|Q|= 5) 0.061 s 0.207 s 0.206 s . . . (|Q|= 10) 0.106 s 0.402 s 0.350 s . . . (|Q|= 20) 0.182 s 0.868 s 0.638 s . . . (|Q|= 50) 0.393 s 1.743 s 1.063 s . . . (|Q|= 100) 0.696 s 2.857 s 1.642 s . . . (|Q|= 200) 1.281 s 5.699 s 2.753 s . . . (|Q|= 500) 2.763 s 12.46 s 4.626 s . . . (|Q|= 1000) 4.808 s 25.47 s 7.957 s Retrieving a text of length d O ((a+b+d)H0) . . . (d= 10) 0.426 s 0.895 s 1.101 s . . . (d= 50) 0.634 s 1.549 s 1.302 s . . . (d= 100) 0.734 s 1.991 s 1.326 s . . . (d= 500) 0.874 s 2.363 s 1.609 s . . . (d= 1000) 0.94 s 2.385 s 1.705 s . . . (d= 2000) 1.213 s 3.464 s 2.849 s . . . (d= 3000) 1.858 s 4.456 s 3.330 s number of bytes in the text corpus, S=number of shards for the index, |Q|=length of query in bytes, d= length of text (in bytes) to reconstruct from the index, a=sampling rate of SA, b=sampling rate of ISA, H0= zeroth-order entropy of the corpus. |Q|= 10 bytes |Q|= 20 bytes |Q|= 100 bytes infini-gram (Liu et al., 2024) 13 ms 14 ms 13 ms INFINI -GRAM MINI 106 ms 182 ms 696 ms",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p16",
+    "technical_score": 0.0,
+    "citation_score": 0.0035714285714285704
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "Benchmark Citation Source Knowledge and Reasoning MMLU Hendrycks et al., 2021 https://huggingface.co/datasets/cais/mmlu MMLU-Pro Wang et al., 2024 https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro BigBenchHard Suzgun et al., 2022 https://github.com/suzgunmirac/BIG-Bench-Hard/tree/main/bbh AGIEval Zhong et al., 2023 https://github.com/ruixiangcui/AGIEval/tree/main/data/v1_1 GPQA Rein et al., 2023 https://huggingface.co/datasets/Idavidrein/gpqa HLE Phan et al., 2025 https://huggingface.co/datasets/cais/hle Math AIME-2024 of Problem Solving, 2024 https://huggingface.co/datasets/Maxwell-Jia/AIME_2024 GSM8K Cobbe et al., 2021 https://huggingface.co/datasets/openai/gsm8k MATH-500 Lightman et al., 2023 https://huggingface.co/datasets/HuggingFaceH4/MATH-500 MGSM Shi et al., 2022 https://huggingface.co/datasets/juletxara/mgsm Code HumanEval Chen et al., 2021 https://huggingface.co/datasets/openai/openai_humaneval HumanEval+ Liu et al., 2023 https://huggingface.co/datasets/evalplus/humanevalplus LiveCodeBench Jain et al., 2024 https://huggingface.co/datasets/livecodebench/code_generation (code generation) SWE-bench Jimenez et al., 2024 https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified MBPP Austin et al., 2021 https://huggingface.co/datasets/google-research-datasets/mbpp Commonsense Understanding ARC-Challenge Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc ARC-Easy Clark et al., 2018 https://huggingface.co/datasets/allenai/ai2_arc CSQA Talmor et al., 2019 https://huggingface.co/datasets/tau/commonsense_qa HellaSwag Zellers et al., 2019 https://huggingface.co/datasets/Rowan/hellaswag Openbook QA Mihaylov et al., 2018 https://huggingface.co/datasets/allenai/openbookqa Social IQa Sap et al., 2019 https://huggingface.co/datasets/allenai/social_i_qa WinoGrande Sakaguchi et al., 2019 https://huggingface.co/datasets/allenai/winogrande Reading Comprehension CoQA Reddy et al., 2019 https://huggingface.co/datasets/stanfordnlp/coqa SQuAD Rajpurkar et al., 2016 https://huggingface.co/datasets/rajpurkar/squad",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p17",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "Benchmark Test Set Pile-train DCLM-baseline CC-2025-05 CC-202508 CC-202513 CC-202518 CC-202521 CC-202526 Size Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Sus Dirty Knowledge and Reasoning MMLU 1000 57 133 142 277 122 135 139 90 121 122 115 120 117 125 92 124 MMLU-Pro 1000 35 59 77 162 31 81 55 54 60 52 63 58 74 60 69 40 BigBenchHard 1000 7 0 54 1 357 14 296 14 306 32 302 23 396 18 338 17 AGIEval 1000 45 8 155 31 107 27 92 36 115 30 109 70 95 94 104 46 GPQA 448 1 0 5 0 6 4 10 9 5 6 6 3 5 4 15 12 HLE 881 3 0 6 0 8 0 3 0 4 1 5 0 3 0 2 0 Math AIME-2024 30 2 0 4 0 13 3 3 1 10 2 13 12 13 12 12 4 GSM8K 1000 1 0 5 4 33 76 8 8 37 69 10 7 210 742 20 73 MATH-500 500 9 3 48 16 26 3 46 39 25 4 27 4 26 4 41 41 MGSM 250 0 0 2 0 9 14 3 4 37 89 5 2 54 182 6 15 Code HumanEval 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 HumanEval+ 164 1 0 1 0 14 0 60 1 53 1 55 1 65 0 77 0 LiveCodeBench 880 2 0 2 0 188 0 241 0 221 0 274 0 167 0 168 0 SWE-bench 500 5 0 26 0 29 1 38 1 32 0 34 2 33 0 28 0 MBPP 500 16 0 64 2 87 5 58 7 89 6 75 9 76 5 84 7 Commonsense Understanding ARC-Challenge 1000 6 14 4 341 18 119 29 40 27 31 26 38 28 42 29 48 ARC-Easy 1000 15 15 5 317 31 54 30 95 31 55 37 55 28 61 31 62 CSQA 1000 0 1 1 10 1 1 0 1 0 2 0 1 0 0 0 1 HellaSwag 1000 27 0 341 0 36 0 29 0 34 0 29 0 30 0 28 1 OpenbookQA 500 2 54 3 78 5 73 2 151 2 66 3 67 3 66 2 61 Social IQa 1000 0 0 2 5 2 2 1 44 2 2 2 3 3 2 0 1 WinoGrande 1000 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 Reading Comprehension CoQA 500 189 40 188 92 121 37 113 44 123 43 134 36 123 38 125 44 SQuAD 1000 16 28 9 401 11 27 12 330 15 101 13 15 12 20 11 85",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p18",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "H Contamination Examples Figure 6 to Figure 12 shows example dirty entries in seven benchmarks and its contamination source retrieved from one of three corpus using INFINI - GRAM MINI . We also present the original webpage that is responsible for the contamination. I Dirty Entry Categorization using LLM-as-a-judge We use gpt-4o-mini to categorize all dirty entries into one of four categories described in \u00a74.3. For each dirty entry, we extract the 50-character sub- string that has least occurrence in the corpus. We then retrieve text snippet with context length of 400 characters (850 characters in total). We prompt gpt-4o-mini by providing both the dirty entry and the text snippet and let the model decide which cat- egory the dirty entry belongs. We use the following prompt: Y ou are an expert in evaluating benchmark contamination. Given an entry and detected overlap in the corpus, categorize how the en- try is contaminated in corpus into one of four categories: 1. Y ou can find exact match of question stem and the correct answer (correct choice if mul- tiple choices, or answer matching exactly the answer field) in corpus. 2. Y ou can find exact match of question stem, and the correct answer appears, though not in exact match. 3. Y ou can find exact match of question stem, but you cannot find the correct answer in any form. 4. False positive Output only the category number. J Interface of the Benchmark Contamination Monitoring System Figure 13 shows the interface of the system. It consists of two tabs: (1) Benchmark Contamination Bulletin, and (2) submission page for community to contribute. Benchmarks analyzed in this paper are reported in \u201ccore\u201d table, and submitted benchmarks will be added to \u201ccommunity\u201d table. K License of Corpora Used in the Paper Pile and DCLM are licensed under the MIT Li- cense. Common Crawl is licensed under its cus- tomized Limited License. We followed the listed intended use.24961",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p19",
+    "technical_score": 0.00011904761904761901,
+    "citation_score": 0.00047619047619047603
+  },
+  {
+    "section_path": [
+      "SQuAD"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "AIME exams are published.24962 choice question in related fields.24963 requests for software developing.24964 example.24965 sourcing from GSM8K examples, and is the major source for GSM8K dirty entries. This new dataset contains erroneous \u201csteps\u201d field and final answer to examine LLM\u2019s ability to identify errors, so the correct answers do not appear.24966 history that list it as few-shot example.24967 from OpenbookQA benchmark.24968 to add new benchmarks or upload new ones for contamination analysis, which will be added to the bulletin.24969",
+    "paragraph_id": "INFINI-GRAM-MINI::SQuAD::p20",
+    "technical_score": 0.00011904761904761902,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We introduce INFINI -GRAM MINI , an efficient sys- tem for indexing text with 0.44 \u00d7their original size, enabling efficient counting and searching in mas-24951",
+    "paragraph_id": "INFINI-GRAM-MINI::Conclusion::p1",
+    "technical_score": 0.00032258064516129027,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Magenta text is the mapping of answers. sive text corpus, and we show its scalability to a petabyte-scale corpus. We showcase INFINI -GRAM MINI \u2019s application on benchmark contamination analysis at scale. Limitations Although INFINI -GRAM MINI shows significant im- provements on text compression rate, document retrieval latency remains higher than a canoni- cal suffix array. For example, reconstructing a 3000-character document takes 1.8 seconds on Pile and 4.5 seconds on DCLM-baseline, compared to millisecond-level retrieval in system like Infini- gram (Liu et al., 2024). This is a trade-off with INFINI -GRAM MINI \u2019s compression rate: INFINI - GRAM MINI does not store the original text in a contiguous block. To retrieve a document, we need to reconstruct it character-by-character, leading to a large number of reads in random addresses. These process takes long time since the entire index is kept on disk at inference time. The high latency can potentially be reduced using techniques like disk page prefetching. Identifying co-occurrences of multiple patterns is inefficient with the FM-index, since mapping every match from the suffix array range back toits position in original text takes very long time thus making this operation impractical. In contrast, the original infini-gram supports this operation effi- ciently. INFINI -GRAM MINI only supports exact-match searches. As a result, our benchmark contami- nation analysis is limited to case-sensitive exact matching, which may fail to detect contamination of instances with minor textual discrepancies. As the text corpora may contain biased or toxic content, document retrieval output may contain content that can be perceived as ethically problem- atic, and may contain sensitive information. The output of INFINI -GRAM MINI does not reflect au- thors\u2019 views.",
+    "paragraph_id": "INFINI-GRAM-MINI::Conclusion::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.009677419354838708
+  }
+]

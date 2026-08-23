@@ -11,6 +11,8 @@ import argparse
 import json
 import os
 import re
+import socket
+import time
 import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
@@ -61,6 +63,27 @@ def ensure_parent(path: str) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
 
 
+def is_retryable_openai_network_error(exc: urllib.error.URLError) -> bool:
+    reason = getattr(exc, "reason", None)
+    if isinstance(reason, socket.gaierror):
+        return True
+    if isinstance(reason, TimeoutError):
+        return True
+
+    message = str(reason or exc).lower()
+    retryable_fragments = (
+        "nodename nor servname provided",
+        "name or service not known",
+        "temporary failure in name resolution",
+        "timed out",
+        "connection reset",
+        "connection refused",
+        "network is unreachable",
+        "no route to host",
+    )
+    return any(fragment in message for fragment in retryable_fragments)
+
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 HUMAN_ANNOTATION_INSTRUCTIONS_PATH = ROOT_DIR / "human_section_annotation_instructions.txt"
 NODE_SCORE_LINE_RE = re.compile(
@@ -71,6 +94,11 @@ NODE_SCORE_LINE_RE = re.compile(
     r"(?P<citation>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*$",
     flags=re.IGNORECASE,
 )
+SINGLE_VALUE_NODE_SCORE_LINE_RE = re.compile(
+    r"^(?:(?:node\s+title)\s*:\s*)?(?P<title>.+?)\s*(?::|[–—-])\s*"
+    r"(?P<score>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*$",
+    flags=re.IGNORECASE,
+)
 CITATION_SCORE_LINE_RE = re.compile(
     r"^(?P<citation>.+)\s*:\s*(?P<score>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*$"
 )
@@ -78,6 +106,27 @@ CITATION_SCORE_TABLE_ROW_RE = re.compile(
     r"^\|\s*(?P<citation>.+?)\s*\|\s*(?P<score>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*\|?\s*$"
 )
 PARAGRAPH_TITLE_RE = re.compile(r"^Paragraph\s+(?P<index>\d+)\s*$", flags=re.IGNORECASE)
+
+
+def parse_node_score_line(line: str) -> Optional[Tuple[str, float, float, bool]]:
+    match = NODE_SCORE_LINE_RE.match(line)
+    if match:
+        title = str(match.group("title")).strip()
+        if not title:
+            return None
+        total_score = max(0.0, safe_float(match.group("total"), 0.0))
+        citation_score = max(0.0, safe_float(match.group("citation"), 0.0))
+        return title, total_score, citation_score, True
+
+    match = SINGLE_VALUE_NODE_SCORE_LINE_RE.match(line)
+    if match:
+        title = str(match.group("title")).strip()
+        if not title:
+            return None
+        total_score = max(0.0, safe_float(match.group("score"), 0.0))
+        return title, total_score, 0.0, False
+
+    return None
 
 
 @dataclass
@@ -282,11 +331,9 @@ def extract_text_fallback_paragraph_payloads(
         if in_citation_section:
             continue
 
-        node_match = NODE_SCORE_LINE_RE.match(line)
+        node_match = parse_node_score_line(line)
         if node_match:
-            title = str(node_match.group("title")).strip()
-            total_score = max(0.0, safe_float(node_match.group("total"), 0.0))
-            citation_score = max(0.0, safe_float(node_match.group("citation"), 0.0))
+            title, total_score, citation_score, has_explicit_citation_score = node_match
             if current_paragraph_key is not None and looks_like_citation_child(title):
                 paragraph_payload = paragraph_lookup.get(current_paragraph_key)
                 if paragraph_payload is not None:
@@ -315,6 +362,8 @@ def extract_text_fallback_paragraph_payloads(
                         "paragraph_index": paragraph_index,
                         "technical_score": max(0.0, total_score - citation_score),
                         "citation_score": citation_score,
+                        "raw_total_score": total_score,
+                        "has_explicit_citation_score": has_explicit_citation_score,
                     }
                 )
                 current_paragraph_key = paragraph_key
@@ -339,6 +388,8 @@ def extract_text_fallback_paragraph_payloads(
                             "paragraph_index": paragraph_key[1],
                             "technical_score": max(0.0, total_score - citation_score),
                             "citation_score": citation_score,
+                            "raw_total_score": total_score,
+                            "has_explicit_citation_score": has_explicit_citation_score,
                         }
                     )
                     current_paragraph_key = paragraph_key
@@ -411,15 +462,13 @@ def parse_contribution_tree_text_response(
             citation_scores[citation]["citation_score"] += max(0.0, safe_float(match.group("score"), 0.0))
             continue
 
-        match = NODE_SCORE_LINE_RE.match(line)
+        match = parse_node_score_line(line)
         if not match:
             continue
-        title = str(match.group("title")).strip()
-        if not title:
-            continue
+        title, total_score, citation_score, _ = match
         entry = node_scores.setdefault(title, {"total_score": 0.0, "citation_score": 0.0})
-        entry["total_score"] = max(entry["total_score"], max(0.0, safe_float(match.group("total"), 0.0)))
-        entry["citation_score"] = max(entry["citation_score"], max(0.0, safe_float(match.group("citation"), 0.0)))
+        entry["total_score"] = max(entry["total_score"], total_score)
+        entry["citation_score"] = max(entry["citation_score"], citation_score)
 
     if not node_scores and not citation_scores:
         raise ValueError("Model response did not contain parseable contribution-tree lines.")
@@ -997,6 +1046,11 @@ def normalize_openai_paragraph_scores(
             raw_item = by_id.get(paragraph_id) or by_key.get(paragraph_key)
             raw_technical = _extract_channel_value(raw_item or {}, "technical_score", ("technical",))
             raw_citation = _extract_channel_value(raw_item or {}, "citation_score", ("citation",))
+            explicit_raw_total = max(
+                0.0,
+                safe_float((raw_item or {}).get("raw_total_score", (raw_item or {}).get("total_score", 0.0)), 0.0),
+            )
+            has_explicit_citation_score = bool((raw_item or {}).get("has_explicit_citation_score"))
             has_citations = bool(paragraph.get("has_citations"))
             has_explicit_citation_children = (
                 paragraph_id in paragraphs_with_raw_citation_children
@@ -1006,7 +1060,17 @@ def normalize_openai_paragraph_scores(
             if has_explicit_citation_children and raw_citation <= 0.0 and child_citation_total > 0.0:
                 raw_citation = child_citation_total
 
-            raw_total = raw_technical + raw_citation
+            if explicit_raw_total > 0.0:
+                raw_total = explicit_raw_total
+                if not has_explicit_citation_score:
+                    raw_technical = max(0.0, raw_total - raw_citation)
+                elif raw_technical + raw_citation > raw_total > 0.0:
+                    scale = raw_total / (raw_technical + raw_citation)
+                    raw_technical *= scale
+                    raw_citation *= scale
+            else:
+                raw_total = raw_technical + raw_citation
+
             if raw_total <= 0.0:
                 raw_total = float(max(1, token_count(str(paragraph.get("text", "")))))
 
@@ -1791,9 +1855,125 @@ class OpenAIFullPaperBaseline(BaselineModel):
     def _endpoint(self) -> str:
         if self.api_endpoint:
             return self.api_endpoint
+        if self._host_looks_like_bedrock_mantle():
+            base = self.host.rstrip("/")
+            if base.endswith("/v1"):
+                return base + "/chat/completions"
+            return base + "/v1/chat/completions"
         return self.host.rstrip("/") + "/chat/completions"
 
+    def _host_looks_like_bedrock(self) -> bool:
+        for candidate in (self.api_endpoint, self.host):
+            if candidate and "bedrock" in candidate.lower():
+                return True
+        return False
+
+    def _host_looks_like_bedrock_mantle(self) -> bool:
+        for candidate in (self.api_endpoint, self.host):
+            if candidate and "bedrock-mantle" in candidate.lower():
+                return True
+        return False
+
+    def _model_looks_like_bedrock(self) -> bool:
+        model_name = self.model.strip().lower()
+        return model_name.startswith(
+            (
+                "anthropic.",
+                "us.anthropic.",
+                "openai.",
+                "us.openai.",
+            )
+        )
+
+    def _uses_bedrock_converse_transport(self) -> bool:
+        if self._host_looks_like_bedrock_mantle():
+            return False
+        return (
+            self.api_key_env == "AWS_BEARER_TOKEN_BEDROCK"
+            or self._host_looks_like_bedrock()
+            or self._model_looks_like_bedrock()
+        )
+
+    def _resolved_aws_region(self) -> str:
+        for env_name in ("AWS_REGION", "AWS_DEFAULT_REGION"):
+            env_value = os.environ.get(env_name, "").strip()
+            if env_value:
+                return env_value
+
+        for candidate in (self.api_endpoint, self.host):
+            if not candidate:
+                continue
+            match = re.search(r"bedrock-(?:runtime|mantle)\.([a-z0-9-]+)\.", candidate)
+            if not match:
+                match = re.search(r"bedrock\.([a-z0-9-]+)\.", candidate)
+            if match:
+                return match.group(1)
+
+        return "us-east-1"
+
+    def _configure_bedrock_api_key(self) -> None:
+        if self.api_key:
+            os.environ["AWS_BEARER_TOKEN_BEDROCK"] = self.api_key
+            return
+        if self.api_key_env and self.api_key_env != "AWS_BEARER_TOKEN_BEDROCK":
+            env_value = os.environ.get(self.api_key_env, "").strip()
+            if env_value:
+                os.environ["AWS_BEARER_TOKEN_BEDROCK"] = env_value
+
+    def _resolved_bedrock_model_id(self) -> str:
+        return self.model.strip()
+
+    def _call_bedrock_converse_api(self, system_prompt: str, user_prompt: str) -> str:
+        try:
+            import boto3
+        except ImportError as exc:  # pragma: no cover - depends on local optional install
+            raise RuntimeError(
+                "Bedrock Converse support requires the 'boto3' package. "
+                "Install it with 'python3 -m pip install boto3'."
+            ) from exc
+
+        self._configure_bedrock_api_key()
+        try:
+            client = boto3.client(
+                service_name="bedrock-runtime",
+                region_name=self._resolved_aws_region(),
+            )
+            response = client.converse(
+                modelId=self._resolved_bedrock_model_id(),
+                system=[{"text": system_prompt}],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [{"text": user_prompt}],
+                    }
+                ],
+                inferenceConfig={
+                    "maxTokens": self.max_output_tokens,
+                    "temperature": self.temperature,
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(f"Bedrock Converse request failed: {exc}") from exc
+
+        try:
+            content = response["output"]["message"]["content"]
+            if not isinstance(content, list):
+                raise TypeError("content is not a list")
+            text_blocks = [
+                str(block.get("text", ""))
+                for block in content
+                if isinstance(block, dict) and block.get("text")
+            ]
+            joined = "\n".join(block for block in text_blocks if block.strip()).strip()
+            if not joined:
+                raise ValueError("response did not contain any text blocks")
+            return joined
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise RuntimeError(f"Unexpected Bedrock Converse response shape: {response}") from exc
+
     def _call_full_paper_api(self, system_prompt: str, user_prompt: str) -> str:
+        if self._uses_bedrock_converse_transport():
+            return self._call_bedrock_converse_api(system_prompt, user_prompt)
         return self._call_openai_compatible_api(system_prompt, user_prompt)
 
     def _build_prompt(
@@ -1865,16 +2045,31 @@ class OpenAIFullPaperBaseline(BaselineModel):
             method="POST",
         )
 
-        try:
-            with urllib.request.urlopen(request, timeout=self.request_timeout) as response:
-                response_data = json.loads(response.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:  # pragma: no cover - exercised only against live endpoints
-            body = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(
-                f"OpenAI-compatible request failed with HTTP {exc.code}: {body[:2000]}"
-            ) from exc
-        except urllib.error.URLError as exc:  # pragma: no cover - exercised only against live endpoints
-            raise RuntimeError(f"OpenAI-compatible request failed: {exc}") from exc
+        network_attempts = 5
+        backoff_seconds = (2, 5, 10, 20)
+        response_data: Dict[str, Any]
+        for network_attempt in range(1, network_attempts + 1):
+            try:
+                with urllib.request.urlopen(request, timeout=self.request_timeout) as response:
+                    response_data = json.loads(response.read().decode("utf-8"))
+                break
+            except urllib.error.HTTPError as exc:  # pragma: no cover - exercised only against live endpoints
+                body = exc.read().decode("utf-8", errors="replace")
+                raise RuntimeError(
+                    f"OpenAI-compatible request failed with HTTP {exc.code}: {body[:2000]}"
+                ) from exc
+            except urllib.error.URLError as exc:  # pragma: no cover - exercised only against live endpoints
+                if network_attempt >= network_attempts or not is_retryable_openai_network_error(exc):
+                    raise RuntimeError(f"OpenAI-compatible request failed: {exc}") from exc
+                delay = backoff_seconds[min(network_attempt - 1, len(backoff_seconds) - 1)]
+                append_debug_log(
+                    self.debug_log_path,
+                    (
+                        f"[{self.model_tag}_network_retry] attempt={network_attempt}/{network_attempts} "
+                        f"delay={delay}s error={exc}"
+                    ),
+                )
+                time.sleep(delay)
 
         try:
             return str(response_data["choices"][0]["message"]["content"])
@@ -2001,28 +2196,26 @@ class OpenAIFullPaperBaseline(BaselineModel):
 
 
 class AnthropicFullPaperBaseline(OpenAIFullPaperBaseline):
-    """One-request full-paper annotator via Anthropic's Messages API on Bedrock."""
+    """One-request full-paper annotator via Anthropic's direct Messages API."""
 
     model_tag = "anthropic_full_paper"
     ANTHROPIC_VERSION = "2023-06-01"
-    MESSAGES_API_MODEL_IDS = {
-        "anthropic.claude-fable-5",
-        "anthropic.claude-opus-4-8",
-        "anthropic.claude-opus-4-7",
-        "anthropic.claude-haiku-4-5",
-        "anthropic.claude-mythos-preview",
+    DIRECT_MODEL_ALIASES = {
+        "anthropic.claude-sonnet-4-6": "claude-sonnet-4-6",
+        "anthropic.claude-sonnet-4-6-20260217-v1": "claude-sonnet-4-6",
+        "anthropic.claude-sonnet-4-6-20260217-v1:0": "claude-sonnet-4-6",
     }
 
     def __init__(
         self,
         model: str = "",
-        host: str = "https://bedrock-mantle.us-east-2.api.aws",
+        host: str = "https://api.anthropic.com",
         temperature: float = 0.0,
         max_retries: int = 3,
         debug_log_path: str = "",
         pdf_path: str = "",
         api_key: str = "",
-        api_key_env: str = "AWS_BEARER_TOKEN_BEDROCK",
+        api_key_env: str = "ANTHROPIC_API_KEY",
         api_endpoint: str = "",
         request_timeout: int = 600,
         max_output_tokens: int = 12000,
@@ -2047,104 +2240,38 @@ class AnthropicFullPaperBaseline(OpenAIFullPaperBaseline):
             api_response_format=api_response_format,
         )
 
+    def _resolved_direct_model_name(self) -> str:
+        return self.DIRECT_MODEL_ALIASES.get(self.model.strip(), self.model.strip())
+
     def _endpoint(self) -> str:
         if self.api_endpoint:
             return self.api_endpoint
-        return self.host.rstrip("/") + "/anthropic/v1/messages"
-
-    def _resolved_aws_region(self) -> str:
-        for env_name in ("AWS_REGION", "AWS_DEFAULT_REGION"):
-            env_value = os.environ.get(env_name, "").strip()
-            if env_value:
-                return env_value
-
-        for candidate in (self.api_endpoint, self.host):
-            if not candidate:
-                continue
-            match = re.search(r"bedrock(?:-mantle)?\.([a-z0-9-]+)\.api\.aws", candidate)
-            if match:
-                return match.group(1)
-
-        return "us-east-2"
-
-    def _uses_messages_api_transport(self) -> bool:
-        return self.model in self.MESSAGES_API_MODEL_IDS
+        return self.host.rstrip("/") + "/v1/messages"
 
     def _call_messages_api_transport(self, system_prompt: str, user_prompt: str) -> str:
-        payload: Dict[str, Any] = {
-            "model": self.model,
-            "system": system_prompt,
-            "messages": [
-                {"role": "user", "content": user_prompt},
-            ],
-            "temperature": self.temperature,
-            "max_tokens": self.max_output_tokens,
-        }
-
-        encoded_payload = json.dumps(payload).encode("utf-8")
-        request = urllib.request.Request(
-            self._endpoint(),
-            data=encoded_payload,
-            headers={
-                "x-api-key": self._resolved_api_key(),
-                "anthropic-version": self.ANTHROPIC_VERSION,
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-
         try:
-            with urllib.request.urlopen(request, timeout=self.request_timeout) as response:
-                response_data = json.loads(response.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:  # pragma: no cover - exercised only against live endpoints
-            body = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(
-                f"Anthropic Messages request failed with HTTP {exc.code}: {body[:2000]}"
-            ) from exc
-        except urllib.error.URLError as exc:  # pragma: no cover - exercised only against live endpoints
-            raise RuntimeError(f"Anthropic Messages request failed: {exc}") from exc
-
-        try:
-            content = response_data["content"]
-            if not isinstance(content, list):
-                raise TypeError("content is not a list")
-            text_blocks = [
-                str(block.get("text", ""))
-                for block in content
-                if isinstance(block, dict) and block.get("type") == "text"
-            ]
-            joined = "\n".join(block for block in text_blocks if block.strip()).strip()
-            if not joined:
-                raise ValueError("response did not contain any text blocks")
-            return joined
-        except (KeyError, IndexError, TypeError, ValueError) as exc:
-            raise RuntimeError(f"Unexpected Anthropic response shape: {json.dumps(response_data)[:2000]}") from exc
-
-    def _call_legacy_bedrock_transport(self, system_prompt: str, user_prompt: str) -> str:
-        try:
-            from anthropic import AnthropicBedrock
+            from anthropic import Anthropic
         except ImportError as exc:  # pragma: no cover - depends on local optional install
             raise RuntimeError(
-                "Anthropic Bedrock support requires the 'anthropic' package. "
+                "Anthropic full-paper baseline requires the 'anthropic' package. "
                 "Install it with 'python3 -m pip install anthropic'."
             ) from exc
 
         try:
-            client = AnthropicBedrock(
+            client = Anthropic(
                 api_key=self._resolved_api_key(),
-                aws_region=self._resolved_aws_region(),
                 timeout=self.request_timeout,
                 max_retries=max(1, self.max_retries),
             )
             response = client.messages.create(
-                model=self.model,
+                model=self._resolved_direct_model_name(),
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}],
                 temperature=self.temperature,
                 max_tokens=self.max_output_tokens,
             )
         except Exception as exc:  # noqa: BLE001
-            raise RuntimeError(f"Anthropic Bedrock legacy request failed: {exc}") from exc
+            raise RuntimeError(f"Anthropic direct Messages request failed: {exc}") from exc
 
         text_blocks = []
         for block in getattr(response, "content", []):
@@ -2154,13 +2281,11 @@ class AnthropicFullPaperBaseline(OpenAIFullPaperBaseline):
                     text_blocks.append(str(text))
         joined = "\n".join(text_blocks).strip()
         if not joined:
-            raise RuntimeError(f"Unexpected Anthropic Bedrock response shape: {response}")
+            raise RuntimeError(f"Unexpected Anthropic response shape: {response}")
         return joined
 
     def _call_full_paper_api(self, system_prompt: str, user_prompt: str) -> str:
-        if self._uses_messages_api_transport():
-            return self._call_messages_api_transport(system_prompt, user_prompt)
-        return self._call_legacy_bedrock_transport(system_prompt, user_prompt)
+        return self._call_messages_api_transport(system_prompt, user_prompt)
 
 
 SINGLE_SHOT_CITATION_LINE_RE = re.compile(
@@ -2223,7 +2348,7 @@ class SingleShotCitationAPIBaseline(AnthropicFullPaperBaseline):
                 resolved_api_key_env = "OPENAI_API_KEY"
         else:
             if host == "http://localhost:11434":
-                resolved_host = "https://bedrock-mantle.us-east-2.api.aws"
+                resolved_host = "https://bedrock-runtime.us-east-1.amazonaws.com"
             if not resolved_api_key_env.strip() or resolved_api_key_env == "OPENAI_API_KEY":
                 resolved_api_key_env = "AWS_BEARER_TOKEN_BEDROCK"
 
@@ -2374,6 +2499,8 @@ class SingleShotCitationAPIBaseline(AnthropicFullPaperBaseline):
         return normalized_scores
 
     def _call_full_paper_api(self, system_prompt: str, user_prompt: str) -> str:
+        if self._uses_bedrock_converse_transport():
+            return self._call_bedrock_converse_api(system_prompt, user_prompt)
         if self.api_provider == "openai":
             return self._call_openai_compatible_api(system_prompt, user_prompt)
         if self._uses_messages_api_transport():
@@ -2459,10 +2586,10 @@ def build_baseline_model(
         baseline_name == "anthropic_full_paper"
         or (baseline_name == "single_shot_citation_api" and api_provider.strip().lower() == "anthropic")
     ) and api_key_env == "OPENAI_API_KEY":
-        resolved_api_key_env = "AWS_BEARER_TOKEN_BEDROCK"
+        resolved_api_key_env = "ANTHROPIC_API_KEY" if baseline_name == "anthropic_full_paper" else "AWS_BEARER_TOKEN_BEDROCK"
     if baseline_name == "anthropic_full_paper":
         if host == "http://localhost:11434":
-            resolved_host = "https://bedrock-mantle.us-east-2.api.aws"
+            resolved_host = "https://api.anthropic.com"
     if baseline_name in {"single_pass_llm", "openai_full_paper", "anthropic_full_paper", "single_shot_citation_api"} and not resolved_model.strip():
         raise ValueError(
             f"{baseline_name} requires an explicit model name; pass it via --model."

@@ -151,7 +151,7 @@ def main() -> None:
     parser.add_argument(
         "--api-key-env",
         default="OPENAI_API_KEY",
-        help="Environment variable that stores the API key. For anthropic baselines, the code automatically falls back to AWS_BEARER_TOKEN_BEDROCK when this is left at the OpenAI default.",
+        help="Environment variable that stores the API key. For anthropic_full_paper, the code automatically falls back to ANTHROPIC_API_KEY; single_shot_citation_api with --api-provider anthropic still falls back to AWS_BEARER_TOKEN_BEDROCK.",
     )
     parser.add_argument(
         "--api-endpoint",
@@ -196,6 +196,13 @@ def main() -> None:
         action="store_true",
         help="Continue running remaining papers if one paper fails.",
     )
+    parser.add_argument(
+        "--papers",
+        nargs="+",
+        default=[],
+        metavar="STEM",
+        help="Run only these paper stems (filename without .pdf). If omitted, all papers are run.",
+    )
     args = parser.parse_args()
 
     papers_dir = Path(args.papers_dir)
@@ -205,9 +212,12 @@ def main() -> None:
     assignments = load_assignment_names(sections_file)
     model_tag = compose_model_tag(args.baseline, args.model_tag, args.run_suffix, api_provider=args.api_provider)
     citation_only = args.baseline == "single_shot_citation_api"
+    paper_filter = set(args.papers)
     manifest = []
 
     for pdf_path in sorted(papers_dir.glob("*.pdf")):
+        if paper_filter and pdf_path.stem not in paper_filter:
+            continue
         section_var = sections_var_name(pdf_path)
         if section_var not in assignments:
             raise SystemExit(

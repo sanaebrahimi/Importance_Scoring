@@ -1,0 +1,1058 @@
+[
+  {
+    "section_path": [
+      "INTRODUCTION"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Extracting a few tuples from the database to support multi-criteria decision making is an important functionality for database systems. This is important in many applica- tion domains where the end-users are more interested in the \u2217Supported in part by NSF grant CNS-0905169, funded un- der the American Recovery and Reinvestment Act of 2009 (Public Law 111-5), and by NSF grant CNS-0716423. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. To copy otherwise, to republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Articles from this volume were presented at The 36th International Conference on Very Large Data Bases, September 13\u00ad17, 2010, Singapore.",
+    "paragraph_id": "Reg-Min-Rep::INTRODUCTION::p1",
+    "technical_score": 0.03333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "INTRODUCTION"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Proceedings of the VLDB Endowment, V ol. 3, No. 1 Copyright 2010 VLDB Endowment 2150\u00ad8097/10/09... $10.00.most important query answers in the potentially huge an- swer space. Top- k[17] and skyline [5, 13] queries are two well-studied tools in such settings. Consider the following example. Alice is looking for a car that has a high miles per gallon (MPG) and a high horse power (HP). However, the horse- power comes at the expense of the fuel economy. How can a car dealer\u2019s database system best assist Alice in trading off between these two goals? One approach is the top-k operator (see [17] for a recent survey). This approach is based on a widely-accepted as- sumption that utility functions exist. It allows the users to input their utility functions. In particular, for the case of linear utility functions, we could use a well-developed system such as PREFER [16] and employ sophisticated techniques such as ONION [8] and Ranked Join Indices [28] to assist the customers. For example, in this case, Alice could indi- cate that she gives weights 70% to the MPG and 30% to the HP. However, she does not always know what weights she wants to give to each criterion. Moreover, it might be too much of an effort for her to input all these weights. An alternative operator that helps in avoiding this prob- lem is the skyline operator proposed by B \u0308 orzs \u0308 onyi et al. [5]. (For further details, see, e.g., [13] and references therein.) This operator asks the customers only for the sets of crite- ria they want and outputs everything that the users might be interested in. For example, with this operator, Alice can specify that she wants to maximize the MPG and the HP. Then, the operator will output allthe cars based on these criteria. Some car may not be shown if there is another car with more MPG and HP. After this, Alice can either go through the list of these \u201cskyline cars\u201d and find the car that she likes the most, or she can use this list to get the \u201cbig picture\u201d and then apply other queries such as top- kto get more specific results (as envisioned by the founders of skyline operator in their paper [5]). However, the size of the skyline is usually too large to even get the big picture of the database, let alone the use of it as a stand alone opera- tor. Theoretically, the size of the skyline could be arbitrarily large even when there are only two criteria involved. More- over, when there are many criteria involved, the skyline size grows exponentially in the number of criteria even when the values are randomly generated [3,12]. In this paper, we consider the setting where users have unknown utility functions. Given a list of ktuples, we say that a user is x% happy with the list if the utility she obtains from the best tuple in this list is at least x% of the utility she obtains from the best tuple in the whole database. We attempt for an operator that has features from both top-kand skyline. That is, an operator that outputs a small set of ktuples without asking for users\u2019 utility functions. Since it is impossible to display every user\u2019s optimal tuple, we instead ask the following question. Does there exist one set of ktuples that makes every user at least x% happy? In this paper, we answer this question affirmatively for lin- ear utility functions. Even more surprisingly, the happiness guarantee is independent of the size of the database. In particular, we propose the k-representative regret min- imization operator ( k-regret), as follows. Define the regret ratio of a user to be one minus the happiness of the user\u2019s utility function for the ktuples. This operator aims at find- ingktuples to minimize the maximum regret ratio, where the maximum is taken over a (possibly infinite) class of func- tions. Our theoretical and experimental results for the class of non-decreasing linear utility functions are stated below. \u2022We prove that, in the worst case, the maximum regret ratio is at most d\u22121 (k\u2212d+ 1)1 d\u22121+d\u22121, where dis the num ber of criteria. In particular, for d= 2, this corresponds to a max- imum regret ratio of1 k. Therefore, with k= 10 the bound is at most 10% (i.e., everyone is 90% happy). Observe that the regret ratio guarantee is independent of the size of the database. To complement this, for d= 2, we show a theoretical lower bound on the max- imum regret to be \u03a9(1 /k2). \u2022Our extensive experiments on many datasets and algo- rithms suggest that, in practice, the regret ratio might be much lower than the worst case guarantee. For example, in the case of two criteria we found that the regret ratio is at most 1% for all the datasets we exper- imented on with just k= 10. Moreover, even when we increase the number of criteria to six, the regret ratio is still at most 16% in all the datasets when k= 20. We show that the k-regret operator has the following nice properties. First, it is scale invariant . That is, even if we multiply values in some attribute with a constant, k-regret still outputs the same set of tuples. For example, whether the cars\u2019 efficiencies are in miles per gallon or kilometers per liter, k-regret\u2019s output is the same. Secondly, the k-regret operator is stable. Informally, this means that adding unimportant cars (i.e., cars no user will be interested in) to the database does not change the so- lution of k-regret. This avoids, e.g., car companies from adding cars to manipulate the database in the hope that their main products will be shown by the k-regret operator. We also note that the the algorithms developed in this pa- per run in time linear in n. Moreover, our experiments show that their running time is small when they are run on top of the skyline operator. This means that these algorithms can be immediately integrated into a system where skyline op- erator is available, while it is possible to completely remove skyline operator from the system in the future when fasteralgorithms for the k-regret operator, which might be faster than computing skyline, are available. Organization: In Section 2 we discuss previous work that is most relevant to this paper. We formally define the prob- lem that we solve and highlight some properties of this def- inition in Section 3. We give worst case upper and lower bounds in Section 4. In Section 5, we develop a heuristic which seems to work well in practice. We present experi- mental results in Section 6. We discuss possible future work and conclude in Section 7.",
+    "paragraph_id": "Reg-Min-Rep::INTRODUCTION::p2",
+    "technical_score": 0.0,
+    "citation_score": 0.03333333333333333
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Motivated by the deficiencies of top- kand skyline dis- cussed above, there are many variations of top- kand skyline proposed recently to assist multi-criteria decision making. Lin et al. [22] and Tao et al. [27] consider finding kskyline tuples that best represent the contour of the entire skyline, called krepresentative skyline. [22] propose finding a set of kskyline tuples that dominate the most number of tuples. This approach is scale invariant but not stable. [27] illus- trates that the approach of [22] could lead to an undesirable solution. This is essentially because of the fact that it is unstable. They propose an alternative distance-based solu- tion which is to solve the k-center problem on the skyline tuples. This approach is stable in the sense that adding a non-skyline tuple will not change the solution but it is not scale invariant since their definition is based on distances. Yiu and Mamoulis [24, 31] propose the top-k dominating query. Briefly, this query is the top- kquery with scoring function of each tuple as the number of tuples it dominates. The authors argue that this query has the features of both top-kand skyline; i.e., the output size can be controlled, and no scoring functions need to be specified by the users. Further, it is scale invariant. However, like [22], it is not sta- ble. This query has been explored further in the domains of uncertain databases [21,32] and continuous processing [19]. Goncalves and Vidal [14] propose two operators called top-kskyline select and top- kskyline join. The idea is to let the user specify criteria and a ranking function. The opera- tor then uses the criteria to get skyline tuples and output the topkskyline tuples based on the ranking function. There- fore, the size of the skyline is controlled. However, the users still have to specify their utility functions. Several other approaches have been considered for con- trolling the size of the output. In particular, some of these works control the size of the output without explicitly spec- ifying a bound. Xia et al. [29] propose \u03b5-skyline queries where users specify weights on attributes, and use the pa- rameter \u03b5to control the size of the output. Mindolin et al. [23] propose p-skyline queries which is a framework that allows attributes to have different importance. To avoid asking users for weights explicitly, they offer an alternative approach to discover importance from user feedback. Lee et al. [20] avoid asking users for utility functions by requesting only partial ranking over attributes. Chan et al. [7] intro- duce the concept of skyline frequency as a way to measure the importance of a point based on the number of subsets of dimensions for which it is in the skyline. A related con- cept of k-dominance proposed by Chan et al. [6] relaxes the definition of dominance to a point dominating another if it dominates on at least kdimensions. All these approaches are used to reduce the size of the output.",
+    "paragraph_id": "Reg-Min-Rep::RELATED WORK::p1",
+    "technical_score": 0.0,
+    "citation_score": 3.1547731718089475e-05
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Car MPG HP (p1) Toy ota Prius 51 134 (p2) Honda Civic Hybrid 40 110 (p3) Ford F usion 41 191 (p4) Nissan Altima Hybrid 35 198 (p5) Volkswagen Jetta TDI 30 140",
+    "paragraph_id": "Reg-Min-Rep::RELATED WORK::p2",
+    "technical_score": 0.020821502933939053,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Car f(0.2,0 .8) f(0.4,0.6) f(0.6,0.4) f(0.8,0.2) p1 117.4 100.8 84.2 67.6 p2 96 82 68 54 p3 161 131 101 71 p4 165.4 132.8 100.2 67.6 p5 118 96 74 52",
+    "paragraph_id": "Reg-Min-Rep::RELATED WORK::p3",
+    "technical_score": 0.034071550255536626,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "RELATED WORK"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "3.",
+    "paragraph_id": "Reg-Min-Rep::RELATED WORK::p4",
+    "technical_score": 0.0006309546343617894,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We now define the problem considered in this paper for- mally. The input to our problem is a set of n d-dimensional points over positive reals, denoted by D. This set corre- sponds to the database of ntuples over dattributes. Ad- ditionally, an integer kwhich specifies the output size is given. The goal is to find a set of tuples, denoted by S, of size at most kthat minimizes the maximum regret ratio . Informally, Scorresponds to the set of representative tuples that will be displayed to the users and the maximum regret ratio measures how bad the users could feel if they have to choose from these ktuples instead of the entire database. We now define this important concept formally before giving the precise problem statement.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > [Section Lead-in]::p1",
+    "technical_score": 0.041666666666666664,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to define this notion, we need to develop the notions of utility function ,gain, regret, and regret ratio as follows. (Throughout, we use the car database in Figure 1 as an example.) First, users\u2019 happiness is measured by un- known utility functions.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p1",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "De nition 1.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p2",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Utility Function. A utility function fis a mapping f:Rd +\u2192R+. The utility of a point pfor a user with utility function fisf(p).",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p3",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Each user attempts at getting an item that maximizes her utility. For example, consider the car database in Figure 1. If Alice has utility function f(p) = 0.2 \u00b7MPG +0.8\u00b7HPthen her utility on Toyota Prius is f(p1) = 0. 2\u00b751 + 0. 8\u00b7134 = column of Figure 2 and thus Nissan Altima Hybrid ( p4) maximizes her utility function.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p4",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Next, we use the notion of gainto capture the user\u2019s utility when she sees only a set of tuples. For a user with a utility function fand a subset of points S\u2286D, the gain of the user is defined to be the maximum utility derived from this subset of points.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p5",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "De nition 2.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p6",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Gain. Define gain(S, f) = max p\u2208Sf(p). For example, using Alice\u2019s utility function f(p) = 0 .2\u00b7 MPG +0.8\u00b7HP,gain(D, f) = 165. 4 (achieved by p4) while gain({p1, p2}, f) = 117 .4 (achieved by p1). This means that if we represent the database by a set of two points S= {p1, p2}then Alice\u2019s utility will be 117 .4 while her utility would be as large as 165 .4 if she sees the whole database.We say that she has regret rD(S, f) = 165. 4\u2212117.4 = 48 and regret ratio rrD(S, f) = 48/165.4 = 0.29. In other words, by looking at two representative points, her happiness is about 71% of what she can get when she goes through the whole database. Regret and regret ratio are defined as follows. De nition 3. Regret and regret ratio. Define regret rD(S, f) =gain(D, f)\u2212gain(S, f) and regret ratio rrD(S, f) = rD(S,f) gain (D,f). regret ratio is in the range [0 ,1]. When the regret ratio is close to 0, the user is very happy and when the regret ratio is close to 1 the user is very unhappy. Since we do not know users\u2019 utility functions (even users themselves do not know their own utility functions), we as- sume that every user has some utility function in a broad class. Three examples of classes of utility functions include monotone, linear, and convex functions. Let the class of utility functions being considered be F. We now define the worst possible regret for any user with a utility function in",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p7",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "De nition 4.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p8",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Maximum Regret Ratio"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "Maximum Regret Ratio. rrD(S,F) = supf\u2208FrrD(S, f) = supf\u2208Fmax p\u2208Df(p)\u2212max p\u2208Sf(p) max p\u2208Df(p). To illustrate this definition, let us consider the car database in Figure 1 and suppose that we know that users\u2019 utility functions are in a contrived class F={f(0.2,0.8) , f(0.4,0.6), f(0.6,0.4), f(0.8,0.2)}, where f(x,y)=x\u00b7MPG +y\u00b7HP. If we represent the database by S={p1, p2}then the maximum regret ratio is 0 .29. To see this, use values in Figure 2 to get the regret ratios rrD(S, f (0.2,0.8)) = 0 .29,rrD(S, f(0.4,0 .6)) = 0.24,rrD(S, f(0.6,0.4) ) = 0. 17, and rrD(S, f(0.8,0.2) ) = 0 .05.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Maximum Regret Ratio::p9",
+    "technical_score": 0.004629629629629629,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Problem"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Given a database Dand the desired output size k, we are interested in handling situations where no information on users is available. In absence of any distributional in- formation on the utility functions, a natural approach is to assume a broad class of functions Fand maximize over the worst (i.e., the maximum regret ratio). This guarantees the happiness of allusers. As motivated in Section 1, this approach would be futile if we cannot guarantee that the optimal maximum regret ratio is always small. After all, it is possible that even when we show users half of all tuples in the database, the maximum regret ratio is still 80% which means that there is at least one user who cannot find anything close to what she is in- terested most in the database. Motivated by this, the main problem in this paper is whether we can keep the maximum regret ratio low.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Problem::p1",
+    "technical_score": 0.006666666666666667,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Problem"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Problem De nition. Given any integers k,dandnand a class of functions Fof interest, find minimum \u03c1(k, d, n, F) such that the following holds. For any set Dofn d-dimensional points there exists a set of kpoints K\u2286Dsuch that rrD(K,F)\u2264\u03c1(k, d, n, F). 1Recall that sup( S) denotes the supremum of S. For sim- plicity, the reader can think of it as the maximum. Since F is allowed to be an infinite class of functions, we need the supremum as a maximum may not exist.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Problem::p2",
+    "technical_score": 0.006666666666666667,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Problem"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Throughout this paper, we implicitly assume that kis at least d; if this is not the case, the maximum regret ratio cannot be bounded. In this paper, we focus on the class of linear utility functions, denoted by L. De nition 5.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Problem::p3",
+    "technical_score": 0.005833333333333334,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Problem"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Linear Utility Function. A utility func- tion fis linear if there exist non-negative reals a1, . . . , a d such that f(p) =\u2211d i=1aip[i] for any d-dimensional point p. Alternatively, a linear utility function can be represented by a vector v=\u27e8a1, . . . , a d\u27e9; i.e., f(p) is the dot product v\u00b7p. For linear utility functions, it is more natural to think of gain in term of vectors: observe that gain(S, v) =max p\u2208Sv\u00b7 p. All other notions can be similarly defined using v. We now state two desirable properties of our formulation.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Problem::p4",
+    "technical_score": 0.005833333333333334,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Properties"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We now discuss the scale invariance andstability proper- ties which are defined on any measure and show that the regret ratio measure satisfies both properties. Throughout this section, we let hbe a function on any subset SofD. Essentially, h(S) measures how well a set Srepresents the database.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Properties::p1",
+    "technical_score": 0.0025,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Properties"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Scale Invariance. Informally, scale invariant means that rescaling the attribute values (scaling by a positive value to maintain monotonicity), does not change the relative values of the solutions. Formally, we consider two databases D= {p1, p2, ..., p n}andD\u2032={p\u2032 1, p\u2032 2, ..., p\u2032 n}. We assume that D\u2032 is arescaling ofD, i.e., there exists reals \u03bb1, \u03bb2, ..., \u03bb dsuch that p\u2032 i[j] =\u03bbjpi[j] for all i= 1,2, . . . , n andj= 1,2, . . . , d . (For example, to convert MPG to kilometers per liter and HP to watts, we use \u03bb1= 0.425 and \u03bb2= 750, since 1 MPG = 0.425 kilometers per liter and 1 HP = 750 watts.) For any set S\u2286D, we define S\u2032to be the corresponding subsets inD\u2032, i.e., if S={pi1, pi2, . . .}then S\u2032={p\u2032 i1, p\u2032 i2, . . .}.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Properties::p2",
+    "technical_score": 0.004166666666666667,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Properties"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Finally, we say that hisscale invariant ifh(S 1)/h(S 2) =",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Properties::p3",
+    "technical_score": 0.004166666666666667,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Properties"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "2) for any S1, S2\u2286D.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Properties::p4",
+    "technical_score": 0.0033333333333333335,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Properties"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Theorem 1.The function h(S) =rrD(S,L)is scale in- variant.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Properties::p5",
+    "technical_score": 0.0033333333333333335,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Properties"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "We in fact prove a stronger fact: rrD(S,L) = rrD(S\u2032,L) for any set S. The formal proof is in Appendix A.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Properties::p6",
+    "technical_score": 0.004166666666666667,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "PROBLEM DEFINITION",
+      "Properties"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "Theorem 2.The function h(S) =rrD(S,L)is stable.",
+    "paragraph_id": "Reg-Min-Rep::PROBLEM DEFINITION > Properties::p7",
+    "technical_score": 0.0033333333333333335,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "WORST CASE BOUNDS",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we answer the question from a theoretical standpoint. We show that in the worst case, the maximumAlgorithm 4.1 Cube algorithm(D ,k) Input: A database of d-dimensionalpoints D= {p1, p2, ..., p n}and an integer k, the desired output size. Output: A subset of Dof size k, denoted by S, that guar- antees that rrD(S,L)\u2264d\u22121 t+d\u2212 1where t=\u230a(k\u2212d+ 1)1 d\u22121\u230b. . . . , d \u22121, let p\u2217 ibe the point with maximum value in the ithcoordinate, and let cibe such value; i.e., p\u2217 i= arg max p\u2208D(p[i]) and ci= max p\u2208D(p[i]).2",
+    "paragraph_id": "Reg-Min-Rep::WORST CASE BOUNDS > [Section Lead-in]::p1",
+    "technical_score": 0.022222222222222223,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "WORST CASE BOUNDS",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1, p\u2217 2, ..., p\u2217 d\u22121}. 3: Let t=\u230a(k\u2212d+ 1)1 d\u22121\u230b. 4:foreach group of (not necessarily distinct) integers j1, j2, . . . j d\u22121such that 0 \u2264j1< t,0\u2264j2< t, . . . , 0\u2264 jd\u22121< tdo 5: Let Sj1,j2,...,j d\u22121={p\u2208D:jici t< p[i]\u2264(ji+ tfor all 1 \u2264i < d}.",
+    "paragraph_id": "Reg-Min-Rep::WORST CASE BOUNDS > [Section Lead-in]::p2",
+    "technical_score": 0.022222222222222223,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "WORST CASE BOUNDS",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "6: Let sj1,j2,...,j d\u22121be the point in Sj1,j2,...,j d\u22121 with maximum value in the dthcoordinate; i.e., sj1,j2,...,j d\u22121= arg max p\u2208S j1;j2;:::;jd\u22121(p[d]). Add sj1,j2,...,j d\u22121toS. 7:end for 8:return S. regret ratio is at mostd\u22121 \u230a(k\u2212d+1)1 d\u22121\u230b+d\u2212 1. (Note that this do es not depend on the database size n.) This is done by developing an algorithm called Cube. (See Section 4.1.) Additionally, we complement this with a lower bound; the optimal maximum regret ratio could be as bad as \u03a9(1 /k2). (See Section 4.2.) Simplifying (assuming dis constant), \u03c1(k, d, n, L) (cf. Section 3) has the following upper and lower bounds: \u03a9(1 k2) \u2264\u03c1(k, d, n, L k1 d\u22121) .",
+    "paragraph_id": "Reg-Min-Rep::WORST CASE BOUNDS > [Section Lead-in]::p3",
+    "technical_score": 0.011111111111111112,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "WORST CASE BOUNDS",
+      "Upper Bound"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we develop an algorithm called Cube (cf. Algorithm 4.1). We then show that for any database Dof d-dimensional points and a parameter k,Cube outputs a setSof size at most ksuch that rrD(S,L)\u2264d\u22121 \u230a(k\u2212d+ 1)1 d\u22121\u230b+d\u22121 (cf. Theorem 3). The upper bound of the optimal maximum regret ratio thus follows. Informally, Cube does the following. First, it outputs the point with maximum value in each coordinate, except the last coordinate. Then, it divides every dimension, except the last dimension, into tequal-sized intervals, for some choice oft. That is, if the maximum value in the i-th coordinate iscithen we divide the i-th dimension into tintervals, ( 0,ci t] ,(ci t,2ci t] , . . .( jci t,(j+ 1)ci t] , . . . ,( (t\u22121)ci t, ci] . The algorithm then partitions the points into td\u22121\u201cbuck- ets\u201d based on which intervals they are in, in each dimen- sion. These buckets are denoted by Sj1,j2,...,j d\u22121where j1, j2, . . . , j d\u22121are integers from 0 to t\u22121 (see formal defi- nition in Algorithm 4.1). Then, Cube outputs the point in 2argmax returns the point for which the value of the expres- sion attains its maximum value. argmin is defined similarly. each buck et with highest value in the last coordinate. No- tice that Cube outputs td\u22121+d\u22121 points in total ( d\u22121 points initially and td\u22121points from the buckets). Figure 8 (Appendix) shows an example of Cube algorithm. The intuition behind this algorithm is that the points in the same bucket have gains not far from each other when we look only at coordinates 1 ,2, . . . , d \u22121. This is because their values in these coordinates are close to each other. More- over, since we pick from each bucket the point with max- imum value in the last coordinate, the gain of this point is close to the gain of other points in the same bucket. The regret is then bounded. Further, we pick the points p\u2217 1, . . . , p\u2217 d\u22121which are largest in the first d\u22121 coordinates to ensure that the gain of the output is large. We can then bound the regret ratio by considering the gain of these points. This intuition leads to the following main theorem, the proof of which can be found in Appendix C. Theorem 3.Cube (cf. Algorithm 4.1) returns a set S such that rrD(S,L)\u2264d\u22121 t+d\u2212 1where t=\u230a(k\u2212d+ 1)1 d\u22121\u230b. Example: Ifk= 10 and d= 2, thenCube guarantees that the regret ratio is at most 10%. Running Time: We only need to find what bucket each point is in and, in each bucket, find the point with maximum value in the last coordinate. Moreover, there are td\u22121\u2264k buckets to examine. Therefore, Cube runs in time O(nd+k).",
+    "paragraph_id": "Reg-Min-Rep::WORST CASE BOUNDS > Upper Bound::p1",
+    "technical_score": 0.13333333333333333,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "WORST CASE BOUNDS",
+      "Lower Bound"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we present the lower bound theorem for bounding the maximum possible regret ratio on 2-dimensional points. Informally, we show that it is impossible to guaran- tee a maximum regret ratio better than O(1/k2). We present the theorem and proof intuition below. The formal proof is",
+    "paragraph_id": "Reg-Min-Rep::WORST CASE BOUNDS > Lower Bound::p1",
+    "technical_score": 0.08888888888888889,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "GREEDY HEURISTIC"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we present a natural greedy heuristic called Greedy (cf. Algorithm 5.1). This algorithm essentially fol- lows the framework of Ramer-Douglas-Peucker algorithm [11, 25] for approximating curves and polygons, which, althoughAlgorithm 5.1 Greedy( D,k) Input: A set of d-dimensionalpoints D={p1, p2, ..., p n} and an integer k, the desired output size. Output: A subset of Dof size k, denoted by S. 1: Let S={p\u2217 1}where p\u2217 1= arg max p\u2208Dp[1]. {In the loop below, we find a point p\u2208D\\Swith maximum regret ratio. } 2:fori=1 to k\u22121do 3: Let r\u2217= 0 and p\u2217=null. 4:foreach p\u2208D\\Sdo 5: Compute rrS\u222a{p}(S,L) using Linear Program (1). 6: ifr\u2217< rr S\u222a{p}(S,L)then 7: r\u2217=rrS\u222a{p}(S,L) 8: p\u2217=p 9: end if 10: end for 11: ifr\u2217= 0then return S 12: else S=S\u222a {p\u2217}endif 13:end for 14:return S does not ha ve any theoretical guarantees beyond the case of two dimensions [26,30], has been widely used and shown to perform well in higher dimensions in various applications with different measures (see, e.g., [9, 10, 15] and references therein). Our greedy algorithm can be thought of as an- other application of Ramer-Douglas-Peucker algorithm with the maximum regret ratio as a measure. Informally, Greedy performs the following greedy pro- cess: First, it picks the point that maximizes the first coor- dinate. In subsequent iterations it adds the \u201cworst\u201d point, i.e., the point that currently contributes to the maximum regret ratio. To be precise, for each round it adds the point pto the solution set Swhere pis the point such that rrD(S,L) = rrS\u222a{p}(S,L). This is done by computing rrS\u222a{p}(S,L) for each point p\u2208D\\Sand keep the point with maximum value (as in Line 4\u201310), where rrS\u222a{p}(S,L) is computed using the following linear program (LP). Finding rrS\u222a{p}(S,L)using an LP. Given a point pand a set S, one can find rrS\u222a{p}(S,L) by solving the LP (1) below.3 max x s.t.\u2211d j=1(p[j]\u2212p\u2032[j])v[j]\u2265x \u2200p\u2032\u2208S \u2211d j=1p[j]v[j] = 1 v[j]\u22650 \u2200j\u2264d x\u22650(1) The above LP has a variable xand variables v[1],v[2],. . ., v[d] which denote a non-negative vector v= (v[1], v[2], . . . ). The idea is that for any fixed value of v,xwill be equal to min p\u2032\u2208S(p\u2212p\u2032)\u00b7v(by the first constraint and the fact that we are maximizing x). Therefore, maximizing xis equiva- lent to finding a vector vsuch that min p\u2032\u2208S(p\u2212p\u2032)\u00b7v(i.e. the regret ratio in the direction of v) is maximized. See Ap- 3Note that Greedy can b e implemented with any linear constraints imposed on the class of utility functions since they can be added to the LP. pendix E for details on correctness and implementation.",
+    "paragraph_id": "Reg-Min-Rep::GREEDY HEURISTIC::p1",
+    "technical_score": 0.0,
+    "citation_score": 0.05555555555555556
+  },
+  {
+    "section_path": [
+      "GREEDY HEURISTIC"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Running Time. Greedy has to run LP (1) at most nk times. Each LP has k+d+2 constraints and d+1 variables and thus has running time independent of n. In practice, an LP solver (such as variations of the Simplex method) will result in O(k2d) running time per LP call [4, Chapter 3], and hence O(nk3d) overall for Greedy . In the worst case, the time per LP could be exponential in kanddusing these LP solvers. However, by using the interior point method [18] we can guarantee a worst case running time of O(nk2d4.5).",
+    "paragraph_id": "Reg-Min-Rep::GREEDY HEURISTIC::p2",
+    "technical_score": 0.044444444444444446,
+    "citation_score": 0.011111111111111112
+  },
+  {
+    "section_path": [
+      "EXPERIMENTAL EVALUATION"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we show via experiments on both real and synthetic data that the maximum regret ratio is small (even for small k) in practice. We measured the maximum regret ratios and running times for the algorithms proposed in this paper as well as three previously proposed algorithms for representing the skyline by a fixed set of points. All our implementations were done in C. The experiments were all performed on a 1.7GHz Intel Xeon machine running Linux 2.6.9. We used both anti-correlated and independent synthetic data, as is standard in the skyline literature, using the dataset generator of [5]. We averaged the algorithms\u2019 performance over 10 independently generated data sets. For our exper- iments on real data, we made use of some data sets that are available from Dr. Yufei Tao\u2019s homepage4. Unless oth- erwise stated, our experiments all used ten thousand points (n= 10, 000) and picked the top-10 points (k = 10). We evaluated the maximum regret ratio for the algorithms us- ing LP (1) implemented in the GNU Linear Programming Kit (GLPK) package [1] (more details in Appendix E). We consider both the Cube algorithm and the Greedy algorithm suggested in this paper and also consider Max- Dom-Greedy [22], Naive-Greedy [27], and Ext-Two-Scan [6]. \u2022TheCube algorithm is our implementation of Algorithm 4.1 with the modification that we increment tuntil we have at least kdistinct points. \u2022TheGreedy algorithm is our implementation of Algo- rithm 5.1, which outputs precisely kdistinct points. \u2022TheNaive-Greedy algorithm is our implementation of the naive algorithm proposed in [27]. In the Naive- Greedy approach, the goal is to pick kpoints that admit the best k-center clustering on the skyline set. \u2022TheMax-Dom-Greedy algorithm is our implementa- tion of the greedy algorithm in [22, Algorithm 1].5The objective of Max-Dom-Greedy is to pick kpoints that together dominate the largest number of points. \u2022Finally, we implemented the Top- \u03b4Ext-Two-Scan algo- rithm proposed in [6, Algorithm 5]. However, the max- imum regret ratio of this algorithm was so poor in the experiments that we do not include its results in the plots. In Figure 3, we compare algorithms for various number of dimensions on anti-correlated and independent data, respec- 4http://www.cse.cuhk.edu.hk/ ~taoyf/ 5We only test the maximum regret ratio yielded by Max- Dom-Greedy here and note that, if desired, a more effi- cient implementation of Max-Dom-Greedy (with a slightly worse solution) can be found in [22]. 0% 5%10%15%20%25%30%35%40%45% 2 3 4 5 6 7 8 9 10Maximum regret ratio dCube Greedy Naive-Greedy Max-Dom-Greedy(a) anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 2 3 4 5 6 7 8 9 10Maximum regret ratio dCube Greedy Naive-Greedy Max-Dom-Greedy (b) independent data",
+    "paragraph_id": "Reg-Min-Rep::EXPERIMENTAL EVALUATION::p1",
+    "technical_score": 0.01111111111111111,
+    "citation_score": 0.022222222222222223
+  },
+  {
+    "section_path": [
+      "EXPERIMENTAL EVALUATION"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "1 e-05 0.0001 0.001 0.01 0.1 1 10 100 2 3 4 5 6 7 8 9 10Time (seconds) dCube Greedy Naive-Greedy Max-Dom-Greedy 0.0001 0.001 0.01 0.1 1 10 100 1000 10000 100000 100 1000 10000 100000 1e+06 nCube Greedy Naive-Greedy Max-Dom-Greedy 0.001 0.01 0.1 1 10 100 6 8 10 12 14 16 18 20 kCube Greedy Naive-Greedy Max-Dom-Greedy for anti-correlated data (De- fault: n= 10000 ,d= 6,k= 10) tively, when the number of points was fixed to n= 10000 andk= 10. Due to the curse of dimensionality, the regret ratio of the algorithms degrade with the increase in number of dimensions. However, as the number of dimensions in- creases, the regret ratio of all the algorithms appear to level off much below the theoretical bound. We varied the number of points using anti-correlated data tively. For the two-dimensional case, Greedy gives maxi- mum regret ratio almost zero but for higher dimensions the maximum regret ratio can be much larger (close to 25% for the Greedy andMax-Dom-Greedy algorithms on 6D data using k= 10). For 6D independent data (Figure 4(c)), theGreedy andMax-Dom-Greedy algorithms are consis- tently below 20% for k= 10. In Figure 5 we see the effect of varying kon the four algorithms. As would be expected, the regret-ratio decreases monotonically with k. With only 20 representative points, Greedy makes the maximum regret ratio at most 16% in all three cases. We observe that the algorithms perform better than predicted by theory on these specific distributions. The results for other data sets that we considered are summarized in Figure 6. In all cases we used k= 10. The algorithms performed extremely well for this data (i.e., the best algorithm was under 1% regret ratio), except for the Color dataset. For this data, the maximum regret ratio went up to almost 17% for the Greedy algorithm, due to the high dimensionality of the data. Times In this section we discuss the running times of various algo- rithms. We compute the skyline first before running these algorithms as our main objective is to illustrate that mini- mizing maximum regret ratio takes time negligible as com- pared to the running time of skyline computation. Also, we compute skyline first to avoid the issue of computation with and without preprocessing (see, e.g., [13] for discussions). It is an interesting future work to explore more on the running time aspect of this problem, especially bypassing the whole skyline computation and considering the computation with and without preprocessing. The running time of skyline",
+    "paragraph_id": "Reg-Min-Rep::EXPERIMENTAL EVALUATION::p2",
+    "technical_score": 0.016666666666666666,
+    "citation_score": 0.005555555555555556
+  },
+  {
+    "section_path": [
+      "EXPERIMENTAL EVALUATION"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "0% 1% 2% 3% 4% 5% 6% 100 1000 10000 100000 1e+06Maximum regret ratio nCube Greedy Naive-Greedy Max-Dom-Greedy(a) 2D anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 100 1000 10000 100000 1e+06Maximum regret ratio nCube Greedy Naive-Greedy Max-Dom-Greedy (b) 6D anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 100 1000 10000 100000 1e+06Maximum regret ratio nCube Greedy Naive-Greedy Max-Dom-Greedy (c) 6D independen t data",
+    "paragraph_id": "Reg-Min-Rep::EXPERIMENTAL EVALUATION::p3",
+    "technical_score": 0.044444444444444446,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "EXPERIMENTAL EVALUATION"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "0% 2% 4% 6% 8%10%12% 2 4 6 8 10 12 14 16 18 20Maximum regret ratio kCube Greedy Naive-Greedy Max-Dom-Greedy (a) 2D anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 6 8 10 12 14 16 18 20Maximum regret ratio kCube Greedy Naive-Greedy Max-Dom-Greedy (b) 6D anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 6 8 10 12 14 16 18 20Maximum regret ratio kCube Greedy Naive-Greedy Max-Dom-Greedy (c) 6D independen t data computation is not shown here. The running times on anti-correlated data, with d,n, and kvaried, are shown in loglog scale in Figure 7. In all cases, Cube andNaive-Greedy are very fast. (They finish within one second even when d= 6, n= 1,000,000 and k= 10.) Note, however, that their solution is inferior to Greedy and Max-Dom-Greedy as shown in the previous section. The running time of Greedy is usually within 10 seconds except in the case of d= 6, n\u2265100,000, and k= 10. We note that its running time is always negligible compared with the time taken to compute skyline. Max-Dom-Greedy runs much longer. However, as noted earlier, one can obtain a practical implementation by slightly sacrificing the solution quality (see [22]). Summary Both Greedy andMax-Dom-Greedy work well in all data sets (except the Island data set for Max-Dom-Greedy ), giving solutions with maximum regret ratio much lower than the theoretical guarantee (cf. Section 4.1). Neither al- gorithm beats the other in all cases. This suggests that Greedy and an efficient implementation of Max-Dom-Greedy (based on a randomized index-based algorithm available in [22]) could be used in practice. Note, however, that Max- Dom-Greedy is optimizing a measurement that is unstable (as discussed in Section 2). Finally, we observe that pick- ingkto be about twice of dis sufficient in practice since it bounds the regret ratio below 20%.",
+    "paragraph_id": "Reg-Min-Rep::EXPERIMENTAL EVALUATION::p4",
+    "technical_score": 0.02222222222222222,
+    "citation_score": 0.011111111111111112
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this paper, we consider the problem of finding a few tu- ples to represent the database such that these representativetuples help users find the best tuple based on their criteria and utility functions. Since it is impossible to display ev- ery user\u2019s optimal tuple, we consider a natural relaxation where we want to minimize the maximum regret ratio which captures how unhappy the users may feel when they see k representative points instead of the whole database. Before considering the computational issue of this problem, it is more important to confirm first that we can always make this quantity small. We confirm that this is possible by showing that for linear utility functions the maximum regret ratio can be bounded in terms of the number of represen- tative points ( k) and the dimensionality ( d). The bound is independent of the size of the database ( n). Moreover, our extensive experiments on various algorithms suggest that the bound could be much lower in practice. This opens a new door to multi-criteria decision support query in terms of regret minimization, and many open problems follow. The most important open problem is the computational issue of this problem. Although algorithms in this paper run in time linear in nand the experiments suggest that Greedy andMax-Dom-Greedy are practical enough, it would be interesting to explore the running time aspect of this prob- lem further. In particular, the restricted small output size (k) of this problem makes it possible to get an algorithm that runs faster than computing a huge skyline. The is- sue of external algorithms with and without preprocessing should also be thoroughly explored. On the theoretical side, it is still open whether we can compute the optimal solution . We conjecture that this is NP-hard and it would be interesting to develop algorithms with approximation guarantees. Moreover, for the theoret- ical guarantee of the maximum regret ratio, there is still",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p1",
+    "technical_score": 0.003086419753086432,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "House 6D 127,931 points 0% 1% 2% 3% 4% 5% 6% 7% NBA 5D 17,264 points 0.0% 0.7%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p2",
+    "technical_score": 0.0030864197530864183,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 3,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p3",
+    "technical_score": 0.0030864197530864183,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p4",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 5,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p5",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p6",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 7,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p7",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p8",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 9,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p9",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 10,
+    "paragraph": "% Island 2D 63,383 points 0% 1% 2% 3% 4% 5% 6% 7% 8% 9% 10% 11%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p10",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 11,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p11",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 12,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p12",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 13,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p13",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 14,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p14",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p15",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 16,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p16",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "% Cube Greedy Naive-Greedy Max-Dom-Greedy Color 9D 68,040 points 0% 10% 20% 30% 40% 50%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p17",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 18,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p18",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 19,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p19",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p20",
+    "technical_score": 0.0020576131687242787,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 21,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p21",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 22,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p22",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 23,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p23",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 24,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p24",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 25,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p25",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 26,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p26",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 27,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p27",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 28,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p28",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 29,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p29",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 30,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p30",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "CONCLUSION"
+    ],
+    "paragraph_index": 31,
+    "paragraph": "% regret ratios on other data sets a gap between the lower bound of \u03a9(1 /k2) and the upper bound of O(1/k1/(d\u22121)). Finally, our techniques are very specific to linear utility functions. It would be interesting to bound the maximum re- gret ratio in other classes of utility functions, such as Cobb- Douglas, weak gross substitutability, submodular, and con- vex functions. (See, e.g., [2, Chapter 11] for more functions that arise in Economics.) Ideally, we would like to be able to bound the regret ratio for the class of all monotone func- tions. Acknowledgement: We thank anonymous reviewers for very helpful comments on the paper.",
+    "paragraph_id": "Reg-Min-Rep::CONCLUSION::p31",
+    "technical_score": 0.0010288065843621394,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Theorem 4.For any k, there exists nsuch that there is a set Dofnpoints such that, for any S\u2286Dof size k, rrD(S,L) = \u03a9(1/k2). The proof relies on considering infinitely many points spread as a quarter-circle (centered at (0, 0)) between coordinates (0,1) and (1 ,0). The proof can be suitably adapted to work for finite number of points as well. If kof these points are picked, consider the line segments formed by joining the ori- gin (0 ,0) to each of these points and also joining (0 ,0) to (0,1) and (1 ,0). The angle between some two consecutive line segments is at least \u03c0/2(k+ 1). Let p\u03c6iandp\u03c6i+1de- note the two points corresponding to these segments. We then consider a point pin the center of arc ( p\u03c6i, p\u03c6i+1). The proof considers the linear utility function fthat is maxi- mized by p. The regret ratio for fis then measured, and is determined by projecting p\u03c6iandp\u03c6i+1. This can be com- puted by considering the L2-distance of the projected point to origin. We argue (details in Appendix D) that this regret ratio is at least \u03a9(1 /k2). 5. GREEDY HEURISTIC In this section, we present a natural greedy heuristic called Greedy (cf. Algorithm 5.1). This algorithm essentially fol- lows the framework of Ramer-Douglas-Peucker algorithm [11, 25] for approximating curves and polygons, which, althoughAlgorithm 5.1 Greedy( D,k) Input: A set of d-dimensionalpoints D={p1, p2, ..., p n} and an integer k, the desired output size. Output: A subset of Dof size k, denoted by S. 1: Let S={p\u2217 1}where p\u2217 1= arg max p\u2208Dp[1]. {In the loop below, we find a point p\u2208D\\Swith maximum regret ratio. } 2:fori=1 to k\u22121do 3: Let r\u2217= 0 and p\u2217=null. 4:foreach p\u2208D\\Sdo 5: Compute rrS\u222a{p}(S,L) using Linear Program (1). 6: ifr\u2217< rr S\u222a{p}(S,L)then 7: r\u2217=rrS\u222a{p}(S,L) 8: p\u2217=p 9: end if 10: end for 11: ifr\u2217= 0then return S 12: else S=S\u222a {p\u2217}endif 13:end for 14:return S does not ha ve any theoretical guarantees beyond the case of two dimensions [26,30], has been widely used and shown to perform well in higher dimensions in various applications with different measures (see, e.g., [9, 10, 15] and references therein). Our greedy algorithm can be thought of as an- other application of Ramer-Douglas-Peucker algorithm with the maximum regret ratio as a measure. Informally, Greedy performs the following greedy pro- cess: First, it picks the point that maximizes the first coor- dinate. In subsequent iterations it adds the \u201cworst\u201d point, i.e., the point that currently contributes to the maximum regret ratio. To be precise, for each round it adds the point pto the solution set Swhere pis the point such that rrD(S,L) = rrS\u222a{p}(S,L). This is done by computing rrS\u222a{p}(S,L) for each point p\u2208D\\Sand keep the point with maximum value (as in Line 4\u201310), where rrS\u222a{p}(S,L) is computed using the following linear program (LP). Finding rrS\u222a{p}(S,L)using an LP. Given a point pand a set S, one can find rrS\u222a{p}(S,L) by solving the LP (1) below.3 max x s.t.\u2211d j=1(p[j]\u2212p\u2032[j])v[j]\u2265x \u2200p\u2032\u2208S \u2211d j=1p[j]v[j] = 1 v[j]\u22650 \u2200j\u2264d x\u22650(1) The above LP has a variable xand variables v[1],v[2],. . ., v[d] which denote a non-negative vector v= (v[1], v[2], . . . ). The idea is that for any fixed value of v,xwill be equal to min p\u2032\u2208S(p\u2212p\u2032)\u00b7v(by the first constraint and the fact that we are maximizing x). Therefore, maximizing xis equiva- lent to finding a vector vsuch that min p\u2032\u2208S(p\u2212p\u2032)\u00b7v(i.e. the regret ratio in the direction of v) is maximized. See Ap- 3Note that Greedy can b e implemented with any linear constraints imposed on the class of utility functions since they can be added to the LP. pendix E for details on correctness and implementation.",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p1",
+    "technical_score": 0.04091321927052261,
+    "citation_score": 0.027275479513681745
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Running Time. Greedy has to run LP (1) at most nk times. Each LP has k+d+2 constraints and d+1 variables and thus has running time independent of n. In practice, an LP solver (such as variations of the Simplex method) will result in O(k2d) running time per LP call [4, Chapter 3], and hence O(nk3d) overall for Greedy . In the worst case, the time per LP could be exponential in kanddusing these LP solvers. However, by using the interior point method [18] we can guarantee a worst case running time of O(nk2d4.5). 6. EXPERIMENTAL EVALUATION In this section, we show via experiments on both real and synthetic data that the maximum regret ratio is small (even for small k) in practice. We measured the maximum regret ratios and running times for the algorithms proposed in this paper as well as three previously proposed algorithms for representing the skyline by a fixed set of points. All our implementations were done in C. The experiments were all performed on a 1.7GHz Intel Xeon machine running Linux 2.6.9. We used both anti-correlated and independent synthetic data, as is standard in the skyline literature, using the dataset generator of [5]. We averaged the algorithms\u2019 performance over 10 independently generated data sets. For our exper- iments on real data, we made use of some data sets that are available from Dr. Yufei Tao\u2019s homepage4. Unless oth- erwise stated, our experiments all used ten thousand points (n= 10, 000) and picked the top-10 points (k = 10). We evaluated the maximum regret ratio for the algorithms us- ing LP (1) implemented in the GNU Linear Programming Kit (GLPK) package [1] (more details in Appendix E). We consider both the Cube algorithm and the Greedy algorithm suggested in this paper and also consider Max- Dom-Greedy [22], Naive-Greedy [27], and Ext-Two-Scan [6]. \u2022TheCube algorithm is our implementation of Algorithm 4.1 with the modification that we increment tuntil we have at least kdistinct points. \u2022TheGreedy algorithm is our implementation of Algo- rithm 5.1, which outputs precisely kdistinct points. \u2022TheNaive-Greedy algorithm is our implementation of the naive algorithm proposed in [27]. In the Naive- Greedy approach, the goal is to pick kpoints that admit the best k-center clustering on the skyline set. \u2022TheMax-Dom-Greedy algorithm is our implementa- tion of the greedy algorithm in [22, Algorithm 1].5The objective of Max-Dom-Greedy is to pick kpoints that together dominate the largest number of points. \u2022Finally, we implemented the Top- \u03b4Ext-Two-Scan algo- rithm proposed in [6, Algorithm 5]. However, the max- imum regret ratio of this algorithm was so poor in the experiments that we do not include its results in the plots. In Figure 3, we compare algorithms for various number of dimensions on anti-correlated and independent data, respec- 4http://www.cse.cuhk.edu.hk/ ~taoyf/ 5We only test the maximum regret ratio yielded by Max- Dom-Greedy here and note that, if desired, a more effi- cient implementation of Max-Dom-Greedy (with a slightly worse solution) can be found in [22]. 0% 5%10%15%20%25%30%35%40%45% 2 3 4 5 6 7 8 9 10Maximum regret ratio dCube Greedy Naive-Greedy Max-Dom-Greedy(a) anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 2 3 4 5 6 7 8 9 10Maximum regret ratio dCube Greedy Naive-Greedy Max-Dom-Greedy (b) independent data",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p2",
+    "technical_score": 0.03344358587673401,
+    "citation_score": 0.022295723917822675
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "1 e-05 0.0001 0.001 0.01 0.1 1 10 100 2 3 4 5 6 7 8 9 10Time (seconds) dCube Greedy Naive-Greedy Max-Dom-Greedy 0.0001 0.001 0.01 0.1 1 10 100 1000 10000 100000 100 1000 10000 100000 1e+06 nCube Greedy Naive-Greedy Max-Dom-Greedy 0.001 0.01 0.1 1 10 100 6 8 10 12 14 16 18 20 kCube Greedy Naive-Greedy Max-Dom-Greedy for anti-correlated data (De- fault: n= 10000 ,d= 6,k= 10) tively, when the number of points was fixed to n= 10000 andk= 10. Due to the curse of dimensionality, the regret ratio of the algorithms degrade with the increase in number of dimensions. However, as the number of dimensions in- creases, the regret ratio of all the algorithms appear to level off much below the theoretical bound. We varied the number of points using anti-correlated data tively. For the two-dimensional case, Greedy gives maxi- mum regret ratio almost zero but for higher dimensions the maximum regret ratio can be much larger (close to 25% for the Greedy andMax-Dom-Greedy algorithms on 6D data using k= 10). For 6D independent data (Figure 4(c)), theGreedy andMax-Dom-Greedy algorithms are consis- tently below 20% for k= 10. In Figure 5 we see the effect of varying kon the four algorithms. As would be expected, the regret-ratio decreases monotonically with k. With only 20 representative points, Greedy makes the maximum regret ratio at most 16% in all three cases. We observe that the algorithms perform better than predicted by theory on these specific distributions. The results for other data sets that we considered are summarized in Figure 6. In all cases we used k= 10. The algorithms performed extremely well for this data (i.e., the best algorithm was under 1% regret ratio), except for the Color dataset. For this data, the maximum regret ratio went up to almost 17% for the Greedy algorithm, due to the high dimensionality of the data. Times In this section we discuss the running times of various algo- rithms. We compute the skyline first before running these algorithms as our main objective is to illustrate that mini- mizing maximum regret ratio takes time negligible as com- pared to the running time of skyline computation. Also, we compute skyline first to avoid the issue of computation with and without preprocessing (see, e.g., [13] for discussions). It is an interesting future work to explore more on the running time aspect of this problem, especially bypassing the whole skyline computation and considering the computation with and without preprocessing. The running time of skyline",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p3",
+    "technical_score": 0.03759715474873447,
+    "citation_score": 0.005126884738463791
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "0% 1% 2% 3% 4% 5% 6% 100 1000 10000 100000 1e+06Maximum regret ratio nCube Greedy Naive-Greedy Max-Dom-Greedy(a) 2D anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 100 1000 10000 100000 1e+06Maximum regret ratio nCube Greedy Naive-Greedy Max-Dom-Greedy (b) 6D anti-correlated data 0% 5%10%15%20%25%30%35%40%45% 100 1000 10000 100000 1e+06Maximum regret ratio nCube Greedy Naive-Greedy Max-Dom-Greedy (c) 6D independen t data",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p4",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "House 6D 127,931 points 0% 1% 2% 3% 4% 5% 6% 7% NBA 5D 17,264 points 0.0% 0.7%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p5",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 6,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p6",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p7",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 8,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p8",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 9,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p9",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 10,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p10",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 11,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p11",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 12,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p12",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 13,
+    "paragraph": "% Island 2D 63,383 points 0% 1% 2% 3% 4% 5% 6% 7% 8% 9% 10% 11%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p13",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 14,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p14",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 15,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p15",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 16,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p16",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 17,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p17",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 18,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p18",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 19,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p19",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 20,
+    "paragraph": "% Cube Greedy Naive-Greedy Max-Dom-Greedy Color 9D 68,040 points 0% 10% 20% 30% 40% 50%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p20",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 21,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p21",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 22,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p22",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 23,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p23",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 24,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p24",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 25,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p25",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 26,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p26",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 27,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p27",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 28,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p28",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 29,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p29",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 30,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p30",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 31,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p31",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 32,
+    "paragraph": "%",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p32",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 33,
+    "paragraph": ".",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p33",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "APPENDIX"
+    ],
+    "paragraph_index": 34,
+    "paragraph": "% regret ratios on other data sets a gap between the lower bound of \u03a9(1 /k2) and the upper bound of O(1/k1/(d\u22121)). Finally, our techniques are very specific to linear utility functions. It would be interesting to bound the maximum re- gret ratio in other classes of utility functions, such as Cobb- Douglas, weak gross substitutability, submodular, and con- vex functions. (See, e.g., [2, Chapter 11] for more functions that arise in Economics.) Ideally, we would like to be able to bound the regret ratio for the class of all monotone func- tions. Acknowledgement: We thank anonymous reviewers for very helpful comments on the paper.",
+    "paragraph_id": "Reg-Min-Rep::APPENDIX::p34",
+    "technical_score": 4.715677647593628e-07,
+    "citation_score": 0.0
+  }
+]

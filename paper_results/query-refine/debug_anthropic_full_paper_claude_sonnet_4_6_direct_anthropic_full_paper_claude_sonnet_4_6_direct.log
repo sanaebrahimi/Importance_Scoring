@@ -1,0 +1,1955 @@
+[anthropic_full_paper_prompt]
+Assign contribution scores to the provided hierarchy using the paper text.
+
+Use the provided hierarchy exactly as given.
+Do not add, remove, rename, merge, split, reorder, or invent nodes.
+Output every node exactly once, including nodes with score 0.
+Output nodes in the exact order they appear in the hierarchy.
+
+Scoring rules
+
+* The root paper node has total score 1.0.
+* For each parent node, distribute its score only among its immediate children.
+* Do not skip hierarchy levels or assign a parent's score directly to deeper descendants.
+* Child scores should approximately sum to the parent score. Exact normalization is handled after output.
+* Scores should be global scores relative to the entire paper, not local percentages.
+* Score scientific contribution, not length.
+* Assign higher scores to content central to the paper's technical contribution.
+* Assign lower scores to background, motivation, related work, summaries, and organizational text.
+
+Citation attribution
+
+* For a paragraph without citations, Citation Score = 0.
+* For a paragraph with citations, estimate what fraction of the paragraph's contribution depends on prior work. This is the paragraph Citation Score.
+* Allocate that citation-derived contribution across the cited references according to their importance in that paragraph.
+* If multiple citations play the same role, split them evenly.
+* Aggregate repeated appearances of the same citation into one final citation score.
+* Use citation identifiers exactly as they appear in the paper.
+
+Output Format
+
+For each document node output:
+
+Node Title: Total Score | Citation Score
+
+After all document nodes output:
+
+Citation Contributions
+
+Citation Identifier: Score
+
+Paper Text
+
+QueryRefinement forDiversityConstraintSatisfaction
+JinyangLi
+Universityof Michigan
+jinyli@umich.eduYuvalMoskovitch
+BenGurion Universityof theNegev
+yuvalmos@bgu.ac.il
+JuliaStoyanovich
+New York University
+stoyanovich@nyu.eduH.V.Jagadish
+Universityof Michigan
+jag@umich.edu
+ABSTRACT
+Diversity,grouprepresentation,andsimilarneedsoftenapplyto
+query results, which in turn require constraints on the sizes of
+varioussubgroupsintheresultset.Traditionalrelationalqueries
+onlyspecifyconditionsaspartofthequerypredicate(s),anddonot
+support such restrictions on the output. In this paper, we study the
+problem of modifying queries to have the result satisfy constraints
+on the sizes of multiple subgroups in it. This problem, in the worst
+case, cannot be solved in polynomial time. Yet, with the help of
+provenance annotation, we are able to develop a query refinement
+method that works quite efficiently, as we demonstrate through
+extensive experiments.
+PVLDBReference Format:
+Jinyang Li, Yuval Moskovitch, Julia Stoyanovich, and H. V. Jagadish. Query
+RefinementforDiversityConstraintSatisfaction. PVLDB, 17(2):106 -118,
+2023.
+doi:10.14778/3626292.3626295
+PVLDBArtifact Availability:
+Thesourcecode,data,and/orotherartifactshavebeenmadeavailableat
+https://github.com/JinyangLi01/Query_refinement.
+1 INTRODUCTION
+Withincreasingawarenessoftheneedtoimproverepresentationof
+historically underrepresented population groups, many companies,
+government agencies, educational institutions, professional soci-
+eties,and otherorganizationshave adopted diversity initiativesas
+partoftheirselectionprocessesforrecruitment,awardnomination,
+etc.,aimingtochallengelong-standingbiases,creatingadiverseen-
+vironment in the long run. For example, fellowship programs often
+requireadiversepoolofnominees,ensuringrepresentationfrom
+underrepresenteddemographicgroupsinaparticularfield[ 1,2].
+The NFL’s Rooney Rule [ 3] mandates that teams interview at least
+onecandidatefromraciallyorethnicallydiversebackgroundsfor
+seniorleadershippositions,aimingtodisruptentrenchedbiases,al-
+thoughitdoesnotdictatethefinalhiringdecision.Inthesecontexts,
+relationaldatabasesare frequentlyemployedto selectcandidates.
+Traditionalrelationalqueriesoutputtuplesthatmeetspecified
+conditionsinthequerypredicates.Ifaqueryisusedaspartofsome
+Thisworkis licensed under the CreativeCommons BY-NC-ND4.0International
+License. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to viewacopyof
+thislicense. Forany usebeyond thosecovered by thislicense, obtainpermissionby
+emailing info@vldb.org. Copyrightis heldby theowner/author(s).Publication rights
+licensed to the VLDBEndowment.
+Proceedingsof the VLDBEndowment, Vol. 17,No. 2 ISSN2150-8097.
+doi:10.14778/3626292.3626295Table 1: Applicants table with primary
+keyID.Jobapplicantsselectedbyqueries
+Q1,Q2,andQ3are marked with ✓.
+ID Gender Race Major GPA Q1 Q2 Q3
+1F White ME 3.65
+2F White CS 3.95 ✓ ✓ ✓
+3F Black CS 3.40
+4F White ME 3.60
+5F White EE 3.85 ✓
+6F Black EE 3.90 ✓ ✓
+7F Asian EE 3.85 ✓
+8M White CS 3.65
+9M White CS 3.90 ✓ ✓ ✓
+10M Black CS 3.85 ✓ ✓
+11M White CS 3.40
+12M White EE 3.85 ✓
+13M Asian EE 3.95 ✓ ✓
+14M Black ME 3.60Table 2:
+Internships
+table, with
+primary key
+(ID,Type).
+IDTypeHours
+2r.l. 80
+2t.c. 90
+3t.c. 90
+6g.a.120
+7t.c. 40
+7g.a. 60
+9r.l. 60
+13g.a.100
+14t.c.100
+high-stakes selection process, it would be natural to state diversity
+requirementsascardinalityconstraintsforincludingspecificdemo-
+graphicgroupsinthequeryresult,likeinvitingacertainnumberof
+individualsfromdifferentdemographicgroupsforjobinterviews.
+Unfortunately,suchconstraintsarecurrentlynotsupportedbyrela-
+tional systems: We can specify criteria on how to select candidates
+for a job interview, but cannot impose constraints on demographic
+groupmembershipoftheselectedcandidates.Inthispaper,wepro-
+poseamethodtoaugmentrelationalquerieswithgroupcardinality
+constraints to fulfill diversity requirements. Our approach is based
+onexisting queryrefinement literature,whichmodifiesqueriesto
+meetoverallcardinalitybounds[ 4ś12].However,existingmethods
+donothandleconstraintsoverspecificgroupsinthequeryresult.
+We further explain the need for such constraints and provide an
+overviewofour approach using an example.
+Example1.1. Table1showsadataset Dof14jobcandidatesap-
+plying to a tech company, with five attributes: ID, gender, race,
+(college) major, and GPA. Among these, gender and race are the
+sensitive attributes that denote demographic group membership.
+The employer may wish to state cardinality constraints w.r.t. such
+attributes,tocounteracttheeffectsofhistoricaldiscrimination.Ma-
+jorandGPAare qualificationattributes ,andcanbeusedinselection
+conditions.Thecompanywouldliketointerviewapplicantswho
+graduated from college with a technical major and a high GPA. To
+start,thedataanalystusesthefollowingquerytoselectcandidates:
+Q1: SELECT *
+FROM Applicants AS a
+WHERE a.Major = 'CS'AND a.GPA >= 3.85
+QueryQ1selectscandidates #2,#9,and#10,asmarkedinTable1.
+Notably, only one female applicant is chosen despite half of the
+106
+
+applicants being female, and no Asian is selected, although Whites,
+Blacks and Asians are all present in the applicant pool. To increase
+diversity, the company aims to interview at least twofemales, and
+at least one applicant of each race. These requirements can be
+expressed as group cardinality constraints , achieved by slightly ad-
+justingtheselectioncriteria,suchasexpandingthesetofmajorsto
+alsoinclude Electrical Engineering(EE), thus relaxingthe query:
+Q2: SELECT *
+FROM Applicants AS a
+WHERE (a.Major = 'CS'or a.Major = 'EE')
+AND a.GPA >= 3.85
+Inadditionto Q1,queryQ2addsapplicants #5,#6,#7,#12and#13
+tobeinterviewed,asmarkedinTable1.Theselectedsetincludes
+four women and at least one individual of each race, satisfying the
+diversityrequirement onboth gender andrace.
+Next,thedataanalystobservesthatatotalofeightcandidates
+willbeinterviewedbasedon Q2.Thiswillrequireasubstantialtime
+commitment from the company’s human resources department,
+who then impose an additional requirement Ð to limit the number
+of selected candidates to no more than five, thus introducing an
+upper-bound constraint on the size of the overall result set. To
+satisfy this additional constraint, the query can, once again, be
+refined,this time restricting the GPA range:
+Q3: SELECT *
+FROM Applicants AS a
+WHERE (a.Major = 'CS'or a.Major = 'EE')
+AND a.GPA >= 3.90
+The result of Q3consists of 4 applicants, #2,#6,#9, and#13, with 2
+of each gender and at least 1 of each race, satisfying all constraints.
+Example 1.2. Next, suppose the employer introduces an addi-
+tionalrequirementofselectingapplicantswithinternshipexperi-
+ence, with information in Table 2. To select applicants with at least
+80 internship hours, the data analystuses this query:
+Q4: SELECT *
+FROM Applicants, Internships AS a, i
+WHERE a.ID = i.ID
+WHERE (a.Major = 'CS'or a.Major = 'EE')
+AND a.GPA >= 3.85 AND i.Hours >= 80
+Tohaveateamwithdiverseprofessionalbackgrounds,thecompany
+may wish to interview at least one applicant for each internship
+type:researchlab(r.l.),techcompany(t.c.),andgovernmentagency
+(g.a.).Thiscan,onceagain,beexpressedasacardinalityconstraint,
+using attributes from Internships (Table2). Thus, together with
+predicatesandconstraintsfromExample1.1,wenowhavemultiple
+selectionpredicatesandcardinalityconstraintsinvolvingattributes
+from both tables. Then we can continue to refine the predicates in
+this query,as already discussed.
+Outlineofourapproach. Inthispaper,westudytheproblemof
+findingminimalrefinementsofaquerysothatitsresultsatisfiesthe
+givengroupcardinalityconstraints.Ourgoalistomodifyselection
+predicates just enough to meet all the constraints, while preserving
+theintentionoftheoriginalqueryasmuchaspossible.Notethat
+unliketherunningexample,oursolutiondoesnotdividethepro-
+cessintosteps.Instead,itconsidersallconstraintsandreturnsall
+minimal refinementsthat comply withthem.
+Finding minimal refinements presents two challenges: 1) the
+time-consumingexecutionofcandidatequeryrefinementstotest
+constraintsatisfaction,especiallyforlargedatasetsorremotedatabases,and 2) the computationally expensive exhaustive analysis due to
+the combinatorially large number of possible predicate changes.
+To address these challenges, we adopt a provenance model that
+annotatestupleswithrelevantpredicateinformationandtranslates
+cardinality constraints into algebraic expressions for constraint
+testing, following Green et al.[13]. Additionally, we introduce Pos-
+sibleValueLists(PVL),adatastructureencompassing allpossible
+predicate values, and employ an efficient searching algorithm with
+pruning techniques to identifyminimal refinements.
+Diversity is a compelling needwhen distributing resources and
+opportunities in a society, as we saw in our running example. Fur-
+thermore,itisalsodesirableinmanyothersettings.Forexample,
+weusuallywantsearchandrecommendationsystemstoproduce
+diverseresults[ 14].Whileweusearunningexampleaboutfairness
+(in the sense of representation), we underscore that the techniques
+we propose inthis paper can be appliedinmanyothercontexts.
+Alternativeapproaches. Onewaytosatisfygroupcardinalitycon-
+straintsistomodifytheresultsetdirectlyinapost-processingstep,
+addingorremovingtuples:Addingcandidate #7,whoisbothfemale
+andAsian,totheresultof Q1wouldmeetthediversityrequirements.
+However, this method may be illegal in some jurisdictions and ap-
+plication contexts (e.g., it would be illegal in the US in the context
+ofemployment,housing,andlending),becauseitusesdemographic
+groupmembershipexplicitlyaspartofdecisionmaking,effectively
+subjecting applicants from different demographic groups to differ-
+entprocesses.Evenwherelegal,thismethodmayhaveundesirable
+side effects, such as tarring all members of a group, including its
+best-qualifiedmembers,asłweakerž,onaccountoftherebeinga
+differentstandardappliedto the group.
+Unlikepost-processing,modifyingthequerypredicatesisusu-
+allylegal,asitappliesthesameevaluationprocesstoallindividuals.
+One famous caseinvolves theUniversityof Texas, which wasnot
+permittedtogiveAfricanAmericansexplicit(post-processing)pref-
+erenceinadmissions;however,itwasallowedtouserankinschool
+as the basis for admission, thereby admitting top students from
+poor-performingsegregatedschoolsinpreferencetosecond-tier
+white studentsfrom top schoolswhomayhave bettertest scores.
+Another alternative approach proposed by Shetiya et al.[15]
+shares similar motivation with our work but differs in four im-
+portantways.The firstthreearetechnical.First,theyonlyhandle
+constraints over a single binary sensitive attribute (e.g., male vs.
+female gender ormajority vs. minority ethnicity), while we handle
+multiplesensitiveattributesanddonotlimitthemtobebinary.Sec-
+ond, we support both query relaxation (i.e., generating more result
+tuples, asquery Q2) and query contraction (i.e., generating fewer
+result tuples, as Q3), while [ 15] only supports query relaxation.
+Third, [15] only focuses on queries over a single relation, while we
+support SPJ queries with predicates and constraints of attributes
+over multiple tables joinedtogether,as showninExample1.2.
+The fourth difference between our work and [ 15]is conceptual.
+Theirdiversityobjectiveaimstominimizethedistancebetweenthe
+result sets of the original query and the rewritten query, while our
+objectiveistominimizethedistancebetweenthe queriesthemselves .
+Althoughthisdifferencemightseemsubtle,itleadstofundamen-
+tally different objectives in the rewriting process: preserving the
+salient properties of the selection process while potentially chang-
+ing the result substantially vs. preserving the result as much as
+107
+
+possible while potentially making substantial changes to the selec-
+tionprocess.Forexample,intherunningExample1.1, Q2andQ3
+are two refinements of Q1. Shetiya et al. would consider Q3to have
+highersimilarity( 0.4)toQ1thanQ2(0.375),whileweconsider Q2
+to have higher similarityto Q1basedonthe query predicates.
+Contributions and roadmap. In Section 2, we formally define
+theQuery Refinement Problem , the problem of finding minimal
+refinementsofaquerysequencegivenadatasetandasetofcon-
+straints on the query results, analyze its theoretical complexity,
+andproveitshardness.InSection3,wedescribeourprovenance
+model based on [ 13]. Then, Section 4 introduces the Possible Value
+Lists(PVL),adatastructurethatrepresentspossiblerefinements
+based on provenance expressions. The PVL aims to enhance the
+efficiency of searching for minimal refinements. Our algorithm for
+generatingminimalrefinementsusingthePVLisdetailedinSection
+5,alongwithproposedoptimizationsforspecialcases.InSection
+6, we experimentally evaluate our solution with multiple datasets,
+queries,andconstraints.Wegiveanoverviewofrelatedworkin
+Section 7andconclude inSection 8.
+2 PROBLEM DEFINITION
+Inthissection,weintroducethenotionofqueryrefinement,car-
+dinalityconstraints,andformallydefinethe QueryRefinement
+Problem.Additionally,weprovethatthedefinedproblemisnot
+solvable in polynomial time, in the worst case. Table 3 summarizes
+the notations usedinthis paper.
+2.1 QueryRefinement
+Wesupporttheclassofqueriesconsideredin[ 4],conjunctiveSelect-
+Project-Join (SPJ) queries with selection predicates over numeri-
+calorcategorical attributes. Selection predicates over numerical
+attributes include range ( <,≤,≥,>) and equality ( =). Categorical
+predicates are of the form attribute = constant_1 OR...OR
+attribute = constant_n . For ease of presentation, in the rest
+of the paper, we assume numerical predicates are of the form
+attribute <op> constant .1,where<op>canbeoneof{ <,≤,≥,>}.
+Equalitypredicates attribute = constant aretranslatedintotwo
+predicates attribute >= constant andattribute <= constant .
+For a query 𝑄, we use𝑄𝑛and𝑄𝑐to denote the set of numer-
+ical and categorical selection predicates, respectively. The parts
+of a predicate are represented as 𝑝.𝐴,𝑝.𝑜𝑝, and𝑝.𝐶. Specifically,
+for numerical predicates in the form attribute >= constant ,
+𝑝.𝐴representstheattribute, 𝑝.𝑜𝑝representstheoperator >=,and
+𝑝.𝐶represents the constant. Similarly, for categorical predicates
+of the form attribute = constant_1 OR...OR attribute =
+constant_n ,𝑝.𝐴represents the attribute, and 𝑝.𝐶represents the
+setofconstants {constant_1,...,constant_n} inpredicate 𝑝.
+We use the notion of query refinement defined in [ 4] to for-
+mallystateourproblem.Foranumericalpredicate,refinementsare
+changes to the value of the constant; while for categorical predi-
+cates,arefinementisdonebyaddingand/orremovingpredicates
+fromtheoriginalconstantlist.Wesaythataquery 𝑄′isarefinement
+of query𝑄if𝑄′is obtained from 𝑄by refining some predicates of
+𝑄.Forexample,query Q3(selectingapplicantswithCSorEEmajor
+1Extending our solution to support other forms of numerical predicates, such as
+attribute1 <op> constant ·attribute2 isstraightforward,andwedonotdiscuss
+them in thispaper.Table 3:NotationTable
+Notation Description
+𝐷 dataset
+𝑄 query orrefinementquery
+𝑄(𝐷) result of executing 𝑄over𝐷
+𝑄𝑛,𝑄𝑐 numerical predicates, categorical predicates of 𝑄
+𝑝.𝐴,𝑝.𝐶,𝑝.𝑜𝑝 attribute,constant, andoperator of predicate 𝑝
+G conjunction of conditions
+𝑄(𝐷)G group of tuples in 𝑄(𝐷)satisfying G
+𝐶𝑟 cardinality constraintsdefining agroup
+V𝑄(𝐷) setofvariables inprovenance expressions
+𝑝𝑟𝑜𝑣(𝑡) annotation of tuple 𝑡∈𝐷
+I𝐶𝑟
+𝑄(𝐷)provenance expressionset
+𝑣𝑎𝑙𝑄′(𝐴𝑣)valuation of 𝐴𝑣∈ V𝑄(𝐷)withrefinement 𝑄′
+𝑇𝑣𝑎𝑙𝑄′(I𝐶𝑟
+𝑄(𝐷))truthvalueof expressionset I𝐶𝑟
+𝑄(𝐷)
+𝐿𝐷,𝑄 PVLgiven 𝐷,𝑄
+𝑄.𝑅 listofindicesrepresenting 𝑄inPVL𝐿𝐷,𝑄
+𝑄|𝑃 partialquery of 𝑄containingpredicates inset 𝑃
+and GPA at least 3.90) is a refinement of Q1(selecting applicants
+withCSmajorandGPA at least3.85)from Example1.1.
+2.2 GroupCardinalityConstraints
+Let𝑄(𝐷)be the result of executing query 𝑄over dataset 𝐷, andG
+be a group defined by a conjunction of conditions with specified
+the value of some attributes. For instance, the group of Black fe-
+malesis{𝐺𝑒𝑛𝑑𝑒𝑟=𝐹,𝑅𝑎𝑐𝑒=𝐵𝑙𝑎𝑐𝑘}.Weuse𝑄(𝐷)Gtodenotethe
+group of tuples in 𝑄(𝐷)that satisfy the condition G. A cardinality
+constraint 𝐶𝑟over𝑄(𝐷)Gis a conjunction of expressions of the
+form|𝑄(𝐷)G|𝑜𝑝 𝑥, where𝑜𝑝∈ {=,≤,<,>,≥}and𝑥is a constant,
+orafunctionofthesizeofsomeotherdatagroupdefinedusing G′.
+Wesaythat 𝑄(𝐷)satisfies𝐶𝑟ifalltheexpressionshold.Namely,
+multiple cardinality constraintsshould be satisfiedconjunctively.
+Givenadataset 𝐷,aquery𝑄,andasetofcardinalityconstraints
+𝐶𝑟such that 𝑄(𝐷)does not satisfy 𝐶𝑟, there can be multiple ways
+to refine𝑄so as to satisfy the constraints, as we demonstrate next.
+Example2.1. Recallinthatourrunningexample(Example1.1),
+theoriginalquery( Q1)selectsapplicantswithCSmajorandGPAof
+at least 3.85, resulting in only one female being selected. However,
+the company aims to select at least two females, which can be
+formally expressed as 𝑄(𝐷)𝐺𝑒𝑛𝑑𝑒𝑟=𝐹≥2. BothQ2(adding EE
+major)and Q3(addingEEmajorandrestritingGPAtobeatleast
+3.90)arerefinementsof Q1thatselectatleasttwofemales.Another
+plausible refinement that qualifies at least two females is to adjust
+the GPA predicate to be a.GPA >= 3.40 .
+Theaboveexamplesuggeststhatthecompanycanachieveitsdi-
+versitygoalthroughvariousquerymodifications.Minimalmodifica-
+tionstotheoriginalqueryarepreferred,prioritizing a.GPA >= 3.60
+overa.GPA >= 3.55 . However, refinements modifying different
+attributes might be incomparable without additional preference
+information provided by the end user (as long as they all satisfy
+the constraints).Thus, we definethe setof minimal refinements.
+For query 𝑄and its refinements 𝑄′and𝑄′′,𝑄′dominates 𝑄′′if
+𝑄′isłcloseržto 𝑄than𝑄′′foreveryrefinedpredicate.Forexam-
+ple, in the job applicant context, a.GPA >= 3.85 has refinement
+a.GPA >= 3.90 dominating a.GPA >= 3.60 . Similarly, for the
+predicate a.Major = 'CS', refinement a.Major = 'EE'domi-
+natesrefinement a.Major = 'EE'or a.Major = 'ME'.Amini-
+mal refinement of𝑄w.r.t.𝐶𝑟satisfies three conditions: (i) 𝑄′is a
+108
+
+refinement of 𝑄, (ii)𝑄′(𝐷)satisfies𝐶𝑟, and (iii) there is no other
+refinement 𝑄′′thatsatisfiesconditions(i)and(ii)whiledominating
+𝑄′. Our goal is to find all minimal refinements of a query with
+respectto asetofcardinality constraintsas we nextdefine.
+Problem 2.2 (Query Refinement Problem). Given a dataset
+𝐷, a SPJ query 𝑄, and a set of cardinality constraints 𝐶𝑟, find all
+minimal refinementsof 𝑄withrespectto 𝐶𝑟.
+Notethatmultipleminimalrefinementsmayexist,andourob-
+jectiveis toreport allofthem.Itisalso possiblethat norefinement
+meetstheconstraints,resultinginanemptyresultset.Astraightfor-
+ward approach to address the Query Refinement Problem would
+be to traverse all possible refinements. For each refinement, we
+would check whether it satisfies the constraints and if so, add it
+to a result set 𝑅. Queries in 𝑅that are dominated by others will
+finallyberemoved.However,thisnaiveapproachexhibitsexponen-
+tialtimecomplexity,andasdemonstratedshortly,nopolynomial
+timealgorithmcansolvethe QueryRefinementProblem . Due
+to spacelimitations,theproofisomittedandcan be foundin[16].
+Theorem2.3. Givenadataset,anSPJquery,andasetofcardi-
+nality constraints, no polynomial time algorithm in the number of
+selection predicates can guarantee the enumeration of the set of all
+minimal refinements.
+3 PROVENANCE MODEL
+Givenaquery,thenumberofpossiblerefinementqueriescanbe
+extremely large, especially when dealing with queries involving
+multipletablesandnumerousattributes.Evaluatingtheirsatisfac-
+tionofcardinalityconstraintscanbeexpensive,particularlywith
+large or remote databases, and/or a large number of constraints.
+However, this costly query evaluation process can be eliminated
+using data annotations based on provenance theory. In fact, we
+can generate provenance annotations within a linear pass over the
+dataset, and then propagate them throughout the query evaluation
+to generateprovenance expressionas we nextexplain.
+Our provenance model is inspired by the idea of hypothetical
+reasoningusingprovenancepresentedin[ 6].Intuitively,wegen-
+erate provenance expressions, using the data, the given SPJ query,
+and the cardinality constraints. We leverage the idea of conditional
+tables(c-tables)[ 17],wheretuplesareassociatedwithconditions.
+To capture the possible refinements, we annotate tuples in the data
+withthe query selection conditions.
+3.1 Provenanceexpressions
+Wefirstdefineasetofvariablesusedintheprovenanceexpressions.
+Givenaquery 𝑄overthedata 𝐷,thesetofvariables V𝑄isdefined
+asV𝑄(𝐷)={𝐴[𝑡.𝐴]| ∃𝑝∈𝑄𝑛∪𝑄𝑐,𝑝.𝐴=𝐴,𝑡∈𝐷}, where[𝑡.𝐴]
+denotesthe valueofthe attribute 𝐴in𝑡.
+Example3.1. InExamples1.1and1.2,whenthecompanyaims
+toselect jobapplicants basedon theirmajors ( 𝑀),GPAvalues ( 𝐺)
+(Table1),andinternshiphours( 𝐻)(Table2),wehavethefollowing
+variables involved in this query: V𝑄(𝐷)={𝑀𝐶𝑆,𝑀𝐸𝐸,𝑀𝑀𝐸,
+𝐺3.95,𝐺3.90,𝐺3.85,𝐺3.65,𝐺3.60,𝐺3.40,𝐻40,𝐻60,𝐻80,𝐻90,𝐻100,𝐻120}.
+We use the set of variables V𝑄(𝐷)to generate provenance an-
+notations, and use /tildewide𝑄to denote the query obtained from 𝑄when
+omitting the selection predicates. We generate provenance annota-
+tionsforeachtuple 𝑡∈/tildewide𝑄(𝐷):𝑝𝑟𝑜𝑣(𝑡)=/producttext.1𝑖=𝑘
+𝑖=1𝐴𝑖[𝑡.𝐴𝑖]whereeach
+𝐴𝑖isanattributethatisinvolvedin 𝑄(i.e.,∃𝑝∈𝑄𝑛∪𝑄𝑐,𝑝.𝐴=𝐴𝑖),and𝑘isthenumberofsuchattributes.Intuitively,theannotated
+output /tildewide𝑄(𝐷)includes all the tuples after executing only join oper-
+ations,anditrepresentstheoutputofallpossiblerefinementsof
+𝑄,wheretheprovenanceannotationofeachtuplecanbeusedto
+determinewhether itsatisfiesany given refinement.
+Finally,givenadataset 𝐷andaquery 𝑄,andacardinalitycon-
+straint𝑄(𝐷)G𝑜𝑝𝑥,where𝑜𝑝∈ {>,≥,<,≤},wedefineexpressions
+thatexpressthecardinalityconstraintsusingtheresultingprove-
+nance annotations:/parenleftBig/summationtext.1
+𝑡∈𝑄(𝐷)G𝑝𝑟𝑜𝑣(𝑡)/parenrightBig
+𝑜𝑝 𝑥. For a given set of
+cardinality constrains 𝐶𝑟over𝑄(𝐷)we useI𝐶𝑟
+𝑄(𝐷)to denote the
+corresponding setofprovenance expressions.
+Example3.2. Equation1representstheconstraintofselectingat
+leasttwofemalesbasedontheirmajors,GPAvaluesandinternship
+hoursinourjobapplicantexample(Example1.1and1.2).Weget
+this expression by joining Table 1 and Table 2 by attribute ID, and
+choosing annocations offemales applicants #2,#3,#6,#7.
+𝑀𝐶𝑆·𝐺3.95·𝐻170+𝑀𝐶𝑆·𝐺3.40·𝐻90+
+𝑀𝐸𝐸·𝐺3.90·𝐻120+𝑀𝐸𝐸·𝐺3.85·𝐻100≥2(1)
+3.2 Refinementsthroughvaluation
+For a query 𝑄on data𝐷, each possible refinement query 𝑄′cor-
+responds to an assignment to the variables set V𝑄(𝐷)in the cor-
+responding provenance expression, known as a valuation in the
+provenance literature. Variables that satisfy the query are assigned
+the value 1(𝑣𝑎𝑙𝑄′(𝐴𝑣)=1), while others get 0(𝑣𝑎𝑙𝑄′(𝐴𝑣)=0).
+Suchvalueassignmentscanthenbeusedforthevaluationofthe
+provenance expressions associated with each tuple in the data and
+inturn,thetruthvaluesoftheprovenanceexpressions.Givenprove-
+nanceexpressions I𝐶𝑟
+𝑄(𝐷)andthevalueassignment 𝑣𝑎𝑙𝑄′,weuse
+𝑇𝑣𝑎𝑙𝑄′(𝐼)to denote the truth value of the expression 𝐼∈ I𝐶𝑟
+𝑄(𝐷),
+obtainedbyapplying 𝑣𝑎𝑙𝑄′(𝐴𝑖𝑣)oneachvariable 𝐴𝑖𝑣in𝐼.Overload-
+ingnotationweuse 𝑇𝑣𝑎𝑙𝑄′(I𝐶𝑟
+𝑄(𝐷))todenotethetruthvalueofthe
+expressionset I𝐶𝑟
+𝑄(𝐷),namely𝑇𝑣𝑎𝑙𝑄′(I𝐶𝑟
+𝑄(𝐷))=∧𝐼∈I𝐶𝑟
+𝑄(𝐷)𝑇𝑣𝑎𝑙𝑄′(𝐼)
+Example3.3. Recallinourrunningexample(Example1.1and1.2),
+thecompanywouldliketohaveatleasttwofemalesselected,which
+gives us the provenance expression Equation (1) from Example 3.2.
+With query Q4(selecting applicants with CS or EE major, GPA
+at least 3.85 and at least 80 hours of internship experience), only
+variable𝐺3.40is0, andothersare 1, sothe truthvalueistrue.
+Proposition 3.4. Let𝐷be a dataset and 𝑄a query.𝑄satisfies a
+setofcardinalityconstraints 𝐶𝑟ifandonlyif 𝑇𝑣𝑎𝑙𝑄(I𝐶𝑟
+𝑄(𝐷))=𝑇𝑟𝑢𝑒.
+Namely, given the provenance expressions of the cardinality
+constraints, we can efficiently examine the effect of refinements
+on constraintsatisfaction withouttheneedtoaccess thedataand
+execute the potential refinements. Furthermore, the provenance
+expressionsmayguide the refinementsearch as we nextexplain.
+4 POSSIBLEVALUE LISTS(PVL)
+With a provenance model available for testing potential refine-
+mentswithoutaccessingthedataitselforrepetitivelyevaluating
+refinementqueries,thenextquestionishowtofindalltheminimal
+refinements efficiently. A straightforward method is to traverse all
+possiblerefinementsonebyone,butthiscanbecomputationally
+prohibitive given the combinatorial number of refinements. Our
+solution uses a set of lists depicting the possible refinements based
+109
+
+onthevariablesintheprovenanceexpression,calledthePossible
+ValueLists(PVL),as we nextdescribe.
+ThePVLisusedtoenumeratethepossiblerefinementqueries.
+Eachsuchquerycanbedefinedbythemodifications,totheoriginal
+query, in the predicates’ values. For numerical predicates, minimal
+refinementscanonlyincludenumericalvaluesfromthetuplesin
+thedatathatareinvolvedincardinalityconstraints.Forexample,
+for the constraint over the number of female applicants in our
+running example, a refinement changing the GPA predicate to
+a.GPA >= 3.45 cannot be minimal. This is because it yields the
+sameoutputasrefiningtheGPApredicateto a.GPA >= 3.60 since
+nofemaleapplicanthasaGPAwithintherangeof 3.45≤GPA<
+3.60.However,the latter refinementdominatesthe former.
+Givenadataset 𝐷,query𝑄,andcardinalityconstraints 𝐶𝑟,the
+PVL𝐿𝐷,𝑄,𝐶𝑟represents possible modifications using lists of values.
+Thevaluesinthelistsaresortedbasedontheirdistancefromthe
+valuesintheoriginalquery 𝑄.Eachnumericalpredicate 𝑝𝑛(𝐴𝑜𝑝𝑐)
+are stored in a single list ( 𝑙𝑝𝑛.𝐴) of possible values for 𝑝𝑛.𝐴, sorted
+by their absolute distance from 𝑐(|𝑥−𝑐|,𝑥∈𝑙𝑝𝑛.𝐴). Categorical
+predicates 𝑝𝑐(𝐴∈𝐶)arerepresentedusingmultiplelists,including
+𝑙𝐴𝑣for each possible value 𝑣of𝐴, with values of 1 (existence) or
+0 (absence) to indicate the presence of 𝑣in𝐶. The order of 1 and
+0isdeterminedbasedonwhether 𝑣isalreadypartof 𝑝𝑐.Inother
+words,1(existence) is placed higher than 0(absence) if 𝑣is already
+part ofthe originalpredicate 𝑝𝑐; andvice versa.
+Example 4.1. Figure 1a depicts the PVL 𝐿𝐷,𝑄1,𝐶𝑟of Example 1.1
+with dataset 𝐷, queryQ1(a.Major = 'CS'AND a.GPA >= 3.85 ),
+and𝐶𝑟over the number of females, people of each race, and the
+overall size of the result. The Major predicate has CS but not EE
+or ME, so 1is placed above 0in the list 𝑙𝑀𝐶𝑆, and0is placed above
+1in the lists 𝑙𝑀𝐸𝐸,𝑙𝑀𝑀𝐸. Note that values 4.00, 3.95, and 3.90 in
+𝑙𝐺correspondtovalues3.95,3.90and 3.85in 𝐷,respectively.The
+meaning of colors highlighting some values will be explained later.
+Note thatdependingon 𝑝𝑛.𝑜𝑝(operatorsinpredicates)and val-
+uesin𝐷,thevaluesinlist 𝑙𝑝𝑛.𝐴maybe𝑣±𝑝𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 (𝑝𝑛.𝐴),where
+𝑣isavalueofnumericalattribute 𝑝𝑛.𝐴in𝐷and𝑝𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 (𝑝𝑛.𝐴)is
+itsprecision,e.g.,inourrunningexample 𝑝𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 (𝐺𝑃𝐴)=0.05.
+Specifically, when 𝑝𝑛.𝑜𝑝is≥(<), for values 𝑣≥𝑝𝑛.𝐶,𝑙𝑝𝑛.𝐴should
+contain𝑣+𝑝𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 (𝑝𝑛.𝐴)instead of 𝑣; when𝑝𝑛.𝑜𝑝is≤ (>),
+for values 𝑣≤𝑝𝑛.𝐶,𝑙𝑝𝑛.𝐴should contain 𝑣−𝑝𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 (𝑝𝑛.𝐴)
+instead of 𝑣. In the running example, to contract GPA predicate
+(a.GPA >= 3.85 )sothatitdisqualifiesa3.85(3.90,3.95)GPAvalue,
+itneedsto be refinedto a.GPA >= 3.90 (3.95, 4.00) .
+Intuitively, each value in a list of PVL 𝐿𝐷,𝑄,𝐶𝑟demonstrates a
+possiblerefinementofaspecificpredicate.Acombinationofone
+value from each list corresponds to a refinement of the query 𝑄. In
+thismanner,PVLencompassesallminimalrefinements.Therela-
+tionshipbetween PVLandrefinementsof query 𝑄issummarized
+inthe following proposition.
+Proposition 4.2. Given a query 𝑄0over the dataset 𝐷and cardi-
+nalityconstraint 𝐶𝑟,letQ∗bethesetofallpossiblerefinementqueries
+that canbegenerated using values from 𝐷.
+(1) Everyminimal refinementquerymustbein Q∗.
+(2)∀𝑄′∈ Q∗,𝑄′can be represented using a set of indexes
+𝑄′.𝑅in the PVL 𝐿𝐷,𝑄0,𝐶𝑟such that 𝑄′.𝑅[𝑙]is the index in
+the list𝑙∈𝐿𝐷,𝑄0,𝐶𝑟.∀𝑝𝑛∈𝑄′𝑛,∃𝑙𝑝𝑛.𝐴∈𝐿𝐷,𝑄0,𝐶𝑟,𝑝𝑛.𝐶=
+𝑙𝑝𝑛.𝐴[𝑄′.𝑅[𝑙𝑝𝑛.𝐴]].∀𝑝𝑐∈𝑄′𝑐,∃𝑙𝑝𝑐.𝐴𝑣∈𝐿𝐷,𝑄0,𝐶𝑟such that𝑙𝑀𝐸𝐸𝑙𝑀𝑀𝐸𝑙𝑀𝐶𝑆𝑙𝐺
+10013.85
+21103.90
+3 3.95
+4 4.00
+5 3.65
+6 3.60
+7 3.40
+(a) The PVL 𝐿𝐷,𝑄1,𝐶𝑟of run-
+ningexample(Example1.1)𝑙𝑀𝑀𝐸𝑙𝑀𝐶𝑆𝑙𝐺
+1013.85
+2103.90
+3 3.65
+4 3.60
+5 3.40
+(b) The PVLof Example 5.3
+𝑙𝑀𝐸𝐸𝑙𝑀𝑀𝐸𝑙𝐺
+1003.85
+2113.65
+3 3.60
+4 3.40
+(c) The PVLof Example 5.6
+Figure 1:Possiblevalue lists (PVL).
+𝑙𝑝𝑐.𝐴𝑣consists of 0and1. If𝑣∈𝑝𝑐.𝐶then𝑄′.𝑅[𝑙𝑝𝑐.𝐴𝑣]is the
+index of1,and0otherwise.
+(3) Everypossible index set 𝑄′.𝑅correspondsto aquery 𝑄′∈ Q∗.
+Example4.3. RevisitingExample1.1withPVLinFigure1a,re-
+finement query Q2, compared to the original query Q1, adds EE
+asarecognizedmajor,socanberepresentedas 𝑄2.𝑅=[2,1,1,1].
+This corresponds to values 𝑙𝑀𝐸𝐸[2]=1,𝑙𝑀𝑀𝐸[1]=0,𝑙𝑀𝐶𝑆[1]=
+1,𝑙𝐺[1]=3.85. The refinement query Q3, which adds EE and
+adjust GPA range to be a.GPA >= 3.90 , can be represented as
+𝑄3.𝑅=[2,1,1,2],as highlightedinblue.
+Ouralgorithmforgeneratingminimalrefinementsutilizesthe
+PVL to traverse the possible refinements. As stated in Proposi-
+tion 4.2, all minimal refinements can be represented from the PVL.
+Thisrepresentationholdsthefollowingpropertiesthatserveasthe
+foundationfor the correctness of our algorithm.
+Proposition 4.4. Let𝐷be a dataset, 𝑄be a query, and 𝐶𝑟be
+constraints, and 𝐿𝐷,𝑄,𝐶𝑟be the corresponding PVL consisting of 𝑛𝑙
+lists. Additionally, let 𝑄1,𝑄2∈ Qbe two different refinement queries.
+(1)𝑄1dominates 𝑄2⇐⇒ ∀𝑗,1≤𝑗≤𝑛𝑙,𝑄1.𝑅[𝑗] ≤𝑄2.𝑅[𝑗].
+(2)If𝑄1and𝑄2are minimal refinements then ∃𝑗,1≤𝑗≤𝑛𝑙,
+such that 𝑄1.𝑅[𝑗] ≤𝑄2.𝑅[𝑗]and∃𝑗′,1≤𝑗′≤𝑛𝑙, such that
+𝑄1.𝑅[𝑗′]>𝑄2.𝑅[𝑗′]
+5 GENERATING MINIMALREFINEMENTS
+We present the algorithmfor searching minimal query refinements
+usingPVL.We willdescribethealgorithmandthendiscussopti-
+mizationsthat can be appliedinspecific scenarios.
+5.1 The algorithm
+The algorithm uses the notion of partial queries as we next define.
+Definition5.1(Partialqueries). Givenaquery 𝑄withthesetof
+predicates 𝑄𝑛∪𝑄𝑐and a subset 𝑃⊆𝑄𝑛∪𝑄𝑐, the query 𝑄|𝑃is
+similar to 𝑄but consists only of the predicates in the set 𝑃. We say
+that𝑄|𝑃isapartial query of𝑄.
+Example 5.2. Consider the original query Q1in Example 1.1
+with predicates a.Major = 'CS'AND a.GPA >= 3.85 . For
+𝑃={a.GPA >= 3.85 },𝑄1|𝑃isapartialquery of Q1.
+Thehigh-levelideaofthealgorithmistogeneraterefinement
+queries that satisfy the constraints by completing the predicate set
+of partial queries to obtain refinements of the given query 𝑄. This
+processisdonefordifferent partialqueriesusing a recursivefunc-
+tion.Wenextprovidedetailsonthedifferentpartsofthealgorithm.
+Finding a minimal refinement (from a partial query). Given a
+partialquery 𝑄′|𝑃(where𝑄′isarefinementof 𝑄),thealgorithm
+generatesoneminimalrefinementquerybycompletingthepred-
+icates of𝑃to obtain a refinement of the input query 𝑄, which is
+110
+
+Algorithm1: Searchfor allminimal refinements
+input :PVL𝐿, query𝑄, andcardinality constraints I.
+output:Allminimal relaxations
+Function Search(𝐿,𝑅𝑒𝑠,𝑄|𝑃,I):
+1𝑄𝑏←findRefinement (𝐿,I,𝑄|𝑃)
+2if𝑄𝑏.𝑅≠∅then
+3 update(𝑅𝑒𝑠,𝑄𝑏)
+4 ifthere are more thanone list in 𝐿then
+5 foreach𝑙∈𝐿do
+6 𝑘←𝑄𝑏.𝑅[𝑙]
+7 for𝑖from𝑘−1to1do
+8 𝑄′|𝑃′←addPredicate (𝑄|𝑃,𝑙[𝑖])
+9 I𝑟←inequalities of Irequiringrelaxations
+10 if𝑇𝑣𝑎𝑙𝑄′|𝑃′(I𝑟)=𝑇𝑟𝑢𝑒andthere are other
+lists𝑙′s.t.𝑄𝑏.𝑅[𝑙]is notthe last index in 𝑙′
+then
+11 𝐿′←remove𝑙from𝐿
+12 𝑅𝑒𝑠←Search(𝐿′,𝑅𝑒𝑠,𝑄′|𝑃′,I)
+13 removevaluesaboveindex 𝑄𝑏.𝑅[𝑙]in list𝑙
+14return𝑅𝑒𝑠
+procedure findRefinement (line 1). Procedure findRefinement
+traverses the PVL in a top-down manner, setting each predicate of
+𝑃according to values in the lists of PVL. It attempts all possible
+refinements by exhaustive search but with pruning methods (as
+showninparagraph"Reducingthesearchspace")untilasuitable
+refinement is found. Each refinement is represented by an index
+set, one in each list. The general principle is to check the index
+set with smaller indexes earlier. For instance, when searching in
+PVL in Figure 1a, we start from an index set with three 1’s and
+one2:[2,1,1,1],[1,2,1,1],[1,1,2,1],[1,1,1,2], but nothing works.
+Then we continue with an index set with two 1’s and two 2’s:
+[2,2,1,1],[2,1,2,1],···.Westopwhenwefindthefirstrefinement
+satisfyingthecardinalityconstraints.Sincethetraversalstartsfrom
+valuesatthetopofPVL,whicharetheclosesttotheoriginalpredi-
+cates, the first first satisfying refinement found must be a minimal
+one. There can be more than one minimal satisfying refinement,
+andfindRefinement returns the one itencounters first.
+Recursive search. The core of the algorithm is a recursive search
+functiondepictedinAlgorithm1.Givenapartialquery 𝑄|𝑃with
+a fixed predicate set 𝑃(as part of a minimal refinement), a tem-
+porary result set 𝑅𝑒𝑠, a PVL𝐿, and a set of provenance inequali-
+ties,Searchfunction performs the following steps. First, using the
+findRefinement procedure,the function identifiesa minimalre-
+finement 𝑄𝑏(line1).Ifnosuchrefinementexists,thecurrentresult
+set𝑅𝑒𝑠isreturned.Otherwise, 𝑅𝑒𝑠isupdatedwith 𝑄𝑏(line3).Next,
+the algorithm generates new refinements by adding a predicate
+withavaluefromalist 𝑙∈𝐿to𝑃(addPredicate ),removing 𝑙from
+𝐿, and recursively searching for new refinements (lines 4ś13). In
+this process, for each list 𝑙∈𝐿, the algorithm considers all possible
+predicates that can be generated using values above 𝑄𝑏.𝑅[𝑙]in𝑙.
+This addsa newpredicate to 𝑃and removes onelist from 𝐿ineach
+iteration.Therecursivesearchcontinuesuntilnorefinementsare
+foundinthe PVLorwhen the PVLcontains only one list.
+Reducing the search space. When we traverse the possible re-
+finements, the search space can be reduced using the notion of
+partialdissatisfaction aswenextexplain.Foragivensetofprove-
+nance inequalities I, we use I𝑟⊆ Ito denote the subset of in-
+equalities that are of the form 𝑄(𝐷)G𝑜𝑝 𝑥, where𝑜𝑝∈ {>,≥}
+and𝑥isaconstant.Theseconstraintsarereferredtoas relaxationconstraints .Foranygiven(refinement)query 𝑄′,ifthereexistsa
+predicate set 𝑃⊂𝑄′𝑛∪𝑄′𝑐such that 𝑇𝑣𝑎𝑙𝑄′|𝑃(I𝑟)=𝐹𝑎𝑙𝑠𝑒, then
+𝑇𝑣𝑎𝑙𝑄′(I𝐶𝑟
+𝑄(𝐷))=𝐹𝑎𝑙𝑠𝑒. In other words, if a partial query 𝑄|𝑃fails
+to satisfy certainrelaxationconstraints, it implies thatthe entire
+constraint set is not satisfied by 𝑄′. For example, if a partial query
+𝑄|𝑃disqualifies 6 out of 7 females, then any query 𝑄would not
+satisfy the constraintofselecting at least2females.
+Puttingitalltogether. Givenaquery 𝑄over𝐷andasetofprove-
+nanceinequalities I𝐶𝑟
+𝑄(𝐷)generatedformthecardinalityconstraints
+𝐶𝑟,wefindthesetofallminimalrefinementsbycallingthe Search
+function.Weinitiatethesearchbyinvoking Searchwiththeini-
+tialparameters: 𝐿𝐷,𝑄,𝐶𝑟 ,anemptyresultset 𝑅𝑒𝑠,apartialquery
+𝑄|𝑃where𝑃=∅, andI𝐶𝑟𝑄(𝐷).SearchcallsfindRefinement
+procedure,asdescribedearlier,togeneratenewrefinements.The
+search is optimized by avoiding refinements that can not satisfy
+the constraints based on partial dissatisfaction (lines 9 ś 10). More-
+over,topreventredundantchecks,attheendoftherecursivecall
+with values in list 𝑙, the algorithm removes all these values (values
+above index 𝑄𝑏.𝑅[𝑙]) from consideration(line 13). This isbecause
+refinementswiththesevalueshave already been examined.
+Example 5.3. Consider Example 1.1, where job applicants are
+selectedbased ontheirmajorsandGPAvaluesshowninFigure 1.
+The original query Q1(CS major and GPA at least 3.85) has con-
+straintsoverthenumberoffemales,individualsofeachrace,and
+theoverallresultsize.Provenanceexpressionsoftheconstraints
+are generated using the provenance model, and PVL is built as
+shown in Figure 1a. To reduce the search space, 3.95and4.00in
+𝑙𝐺(highlighted in grey) are removed since partial queries with
+a.GPA >= 3.95 (ora.GPA >= 4.00 ) do not satisfy the require-
+mentofselectingatleasttwofemales.WesearchinPVLforbase
+minimal refinement by a top-down traversal, and obtain 𝑄𝑏s.t.
+𝑄𝑏.𝑅=[2,1,1,2], as highlighted in blue, refining Major predicates
+toa.Major = 'EE'or a.Major = 'CS'and GPA predicate to
+a.GPA >= 3.90 .Next,weexplorefurtherrefinementsbychecking
+valuesabovetheblueonesinPVL.Weexaminethevaluein 𝑙𝑀𝐸𝐸[1]
+and𝑙𝐺[1].For𝑙𝑀𝐸𝐸[1],weaddEEtotheMajorpredicate,generate
+anewPVL(Figure1b),andrecursivelysearch,butnobaseminimal
+refinements are found. Similarly, when fixing GPA predicate with
+value𝑙𝐺[1]=3.85, wegenerate anothernewPVL(Figure 1a),and
+therecursivesearchdoesnotfindanymoreminimalrefinements
+either.The final result contains only one minimal refinement.
+Theorem 5.4. Given a dataset 𝐷, a SPJ query 𝑄, and a set of
+provenanceinequalities I𝐶𝑟
+𝑄(𝐷),ouralgorithmcanfindallminimal
+refinements,and all ofthosereported are minimal refinements.
+Theabovetheoremstatesthatouralgorithmcanfindallminimal
+refinements, without reporting any non-minimal refinements. The
+secondhalfofthetheoremistrivialasthealgorithmalwaysverifies
+each refinement before adding it. We use induction to prove the
+first half by showing that each iteration of Search( 𝐿,𝑅𝑒𝑠,𝑄′
+𝑃) of
+Algorithm 1 can find all minimal refinements. It is trivial when
+thereisonlyonelistinPVL.Weassumethattheabovestatementis
+trueforan 𝑥-listPVL,andthenproveitisstilltrueforan (𝑥+1)-list
+PVL. Dueto space limitations, the full proof can be found in[ 16].
+Complexityanalysis. Generatingtheprovenanceinequalitiesis
+polynomialinthedatasize,asitrequiresasinglelinearpassover
+thedatasettoannotatethedatainadditiontothequeryevaluation.
+111
+
+Algorithm2: Findaminimal relaxation
+input :A𝑃𝑉𝐿 𝐿andcardinality constraints I.
+output:Aminimal relaxation R
+1Procedure findRelaxation( 𝐿,I,𝑄|𝑃)
+2𝑄𝑏←binarySearch (𝐿,I,𝑄|𝑃)
+3if𝑄𝑏.𝑅≠∅then
+4 foreach𝑙∈𝐿do
+5 𝑓𝑜𝑢𝑛𝑑𝑀𝑖𝑛 ←𝐹𝑎𝑙𝑠𝑒
+6 while𝑄𝑏.𝑅[𝑙] ≥1or𝑓𝑜𝑢𝑛𝑑𝑀𝑖𝑛 do
+7 𝑄𝑏.𝑅[𝑙] ←𝑄𝑏.𝑅[𝑙] −1
+8 if𝑇𝑣𝑎𝑙𝑄𝑏(I)=𝐹𝑎𝑙𝑠𝑒then
+9 𝑄𝑏.𝑅[𝑙] ←𝑄𝑏.𝑅[𝑙] +1
+10 𝑓𝑜𝑢𝑛𝑑𝑀𝑖𝑛 ←𝑇𝑟𝑢𝑒
+11return𝑄𝑏
+Forthesearchingalgorithm,theworstcaseistotraverseallpossible
+refinements,sothetimecomplexityisthenumberofallpossible
+refinementsisthe product ofthe length ofalllistsinPVLis
+𝑂/parenleftBigg/parenleftBigg𝑁𝑛/productdisplay.1
+𝑖=1(|𝐷𝑜𝑚(𝐴𝑖)|+1)/parenrightBigg
+·2/summationtext.1𝑁𝑐
+𝑗=1|𝐷𝑜𝑚(𝐴𝑗)|/parenrightBigg
+where𝑁𝑛,𝑁𝑐denote the number of numeric predicates and cat-
+egorical predicates,respectively; 𝐴𝑖,𝐴𝑗denote numericattributes
+and categorical attributes, respectively, and 𝐷𝑜𝑚(𝐴)denotes the
+domainofattribute 𝐴.Intheworstcase, |𝐷𝑜𝑚(𝐴𝑖)|=|𝐷|=𝑛,thus
+we have𝑂/parenleftbigg/parenleftBig
+𝑛𝑁𝑛/parenrightBig
+·2/summationtext.1𝑁𝑐
+𝑗=1|𝐷𝑜𝑚(𝐴𝑗)|/parenrightbigg
+Whilethetimecomplexityisexponentialtothenumberofnu-
+mericalpredicatesandthesizeofdomainsofcategoricalpredicates
+in the worst case, we show in our experiments that in practice, the
+running time of our algorithm is typically much better, due to our
+searchspacepruning.
+5.2 Optimizations
+Wenextdescribesomeoptimizationsthatcanbeappliedwhen1)
+numericalpredicatesdonothaveanequality( =)operator;and2)
+alltheconstraintsarerelaxationconstraintsorallarecontraction
+constraints,i.e., 𝐶(𝐷)G𝑜𝑝 𝑥,where𝑥isaconstantand 𝑜𝑝∈ {>,≥}
+(or𝑜𝑝∈ {<,≤})foralltheconstraints.Forsimplicityofpresenta-
+tion,inwhatfollows,wepresentthecaseofrelaxation.Thecaseof
+contractionissymmetric.
+First of all, note that tuples in 𝐷that already satisfy the cardi-
+nality constraints do not impact the refinement process and can
+thereforebeexcludedfromboththeprovenanceinequalitiesandthe
+PVL. Furthermore, when all constraintsare relaxation constraints,
+theprocessoffindingaminimalrefinementfromapartialquery
+and the subsequent recursive searches can be optimized, owing to
+the monotonicityproperty ofrelaxationqueriesinthe following
+proposition. Details ofthe proofcan be foundin[16].
+Proposition5.5. Let𝐷beadataset, 𝑄beaquery,and 𝐿𝐷,𝑄,𝐶𝑟be
+thecorrespondingPVLwhichconsistsof 𝑛𝑐lists.LetI𝐶𝑟
+𝑄(𝐷)beasetof
+provenanceinequalitiessuchthat 𝐶𝑟areallrelaxationconstraints.Let
+𝑄1,𝑄2be two different relaxations such that 𝑇𝑣𝑎𝑙𝑄1(I𝐶𝑟
+𝑄(𝐷))=𝑇𝑟𝑢𝑒
+and𝑄1dominates 𝑄2.Then𝑇𝑣𝑎𝑙𝑄2(I𝐶𝑟
+𝑄(𝐷))=𝑇𝑟𝑢𝑒.
+Based on the above proposition, minimal refinements can be ef-
+ficiently identified. Rather than employing a top-down search that
+traversesallpotentialrefinements,weoptimizethisprocedureby
+implementingabinarysearchtolocatearefinementthatsatisfiesthe cardinality constraints. Following that, we "tighten" therefine-
+menttomakeitminimal.ThisprocessisdepictedinAlgorithm2.
+We first use a binary search (line 2) to obtain an initial query 𝑄𝑏
+suchthat ∀𝑙∈𝐿,𝑄𝑏.𝑅[𝑙]=𝑘and𝑣𝑎𝑙𝑄𝑏(I𝐶𝑟
+𝑄(𝐷))=𝑇𝑟𝑢𝑒.Forlists 𝑙
+withlengthsmallerthan 𝑘,weset𝑄.𝑅[𝑙]tobethelengthof 𝑙.Next,
+wetighten 𝑄𝑏śmakeitminimalbymovinguptheindexvaluesin
+eachlistas muchas possible(lines4ś10). The refinementwe get
+at the end ofthe processisaminimal relaxation.
+Proposition 4.4 also provides us with another optimization so
+thatsomerecursions can beavoided.Whenwerecursivelysearch
+for other relaxations by fixing a predicate with values above 𝑄𝑏.𝑅,
+(lines 7 ś 12 in Algorithm 2), if there is a value 𝑙[𝑖]that fixing it
+ends up adding no new minimal relaxation to the result set, we
+donotneed tocheckvaluesaboveindex 𝑖inlist𝑙.Inother words,
+from line 7 to line 12in Algorithm 2, if one of the iterations in the
+forloopdoesnotupdatetheresultset 𝑅𝑒𝑠withanynewminimal
+relaxations,weexecutea"break"afterline12toendtheforloopin
+advance, because the following iterations would check values that
+relax the query less, and based on monotonicity, will definitely not
+satisfy the cardinality constraints.
+Example 5.6. To show a simple example with relaxation con-
+straints, in our running example (Example 1.1) where job appli-
+cantsareselectedbasedontheirmajorsandGPAvaluesinTable
+1, we only consider the constraint that at least two females are
+selected. Asmentionedbefore,whenallconstraintsare relaxation
+constraints, provenance inequalities can be simplified by removing
+tuples satisfyingquery already,sothe provenance expressionis
+𝑀𝑀𝐸·𝐺3.65+𝑀𝐶𝑆·𝐺3.40+𝑀𝑀𝐸·𝐺3.60
++𝑀𝐸𝐸·𝐺3.85+𝑀𝐸𝐸·𝐺3.90+𝑀𝐸𝐸·𝐺3.85≥1(2)
+Compared toFigure 1a,the PVLinFigure 1cdoes notcontain list
+𝑙𝑀𝐶𝑆andvaluesgreaterthan 3.85inlist𝑙𝐺sincetheyalreadysatisfy
+Q1. Toget an initialrelaxation 𝑄𝑏, we do abinarysearch andfind
+that2is the smallest index 𝑘such that ∀𝑙∈𝐿,𝑄𝑏.𝑅[𝑙]=𝑘and
+𝑣𝑎𝑙𝑄𝑏(I𝐶𝑟
+𝑄1(𝐷))=𝑇𝑟𝑢𝑒.Thenwetighten 𝑄𝑏bymovingupvalues
+ineachlistasmuchaspossible,andget 𝑄′
+𝑏.𝑅=[2,1,1],highlighted
+in blue color, which is a minimal relaxation that adds EE to be a
+recognized major. Then, we fix the value in 𝑙𝑀𝐸𝐸[1]and search
+for other relaxations recursively, and find another two minimal
+relaxations: (1) modifying GPA predicate to be a.GPA >= 3.40 ;
+and (2) adding ME tothe major list, and modifying GPA predicate
+to bea.GPA >= 3.65 .
+6 EXPERIMENTS
+We empirically evaluate our proposed solutions to demonstrate
+their usefulness and effectiveness. We describe the experimental
+setupandprovideareal-worldcasestudy,andthenpresentaquan-
+titativestudyassessingtheefficiencyofouralgorithm,considering
+various datasets, queries, and cardinality constraints, and compar-
+ingittothebaselinesolution.Weanalyzetheimpactofdatasize,
+queryselectivity,andconstraintpropertiesonrunningtimeandthe
+numberofcheckedrefinements.Moreover,wevalidatetheeffec-
+tivenessoftheoptimizationpresentedin Section5.2,andprovide
+a comparison between our approach and [ 15]. The results show
+that our PVL-based search algorithm performs well across diverse
+scenarios, achieving up to 100 times faster execution than baseline
+traversal. The optimizations improve performance by up to 99.87%.
+For more comprehensive experiments, pleaserefer to [16].
+112
+
+𝑄𝐻
+1𝑄𝐻
+2
+SELECT*FROM HealthcareWHERE
+income>= 200K and
+num-children >= 3 and
+county in ("county2","county3")income<= 100K and
+complications >= 5 and
+num-children >= 4
+𝑄𝐴
+1𝑄𝐴
+2
+SELECT*FROM ACSIncome WHERE
+working_hours>= 40 and
+Educational_attainment >= 19 and
+Class_of_worker in ("local_gov",
+"state_gov","federal_gov")working_hours<= 40 and
+Educational_attainment <= 19 and
+incomein ("<20K","20K-40K")
+𝑄𝑇
+3
+SELECT*FROM customer,order,lineitemWHERE c_custkey =o_custkey and
+l_orderkey =o_orderkey and c_mktsegment= ’BUILDING’ and
+o_orderdate<date1995-03-28 andl_shipdate>date1995-03-28
+𝑄𝑇
+12
+SELECT*FROM order,lineitemWHERE l_orderkey =o_orderkey and
+l_commitdate<l_receiptdate andl_shipdate <l_commitdate
+l_shipmodein (’RAIL’,’AIR’) and
+l_receiptdate >= date1995-01-01 andl_shipdate<date1996-01-01
+Figure 2:Queriesused inexperiments
+𝐶𝐻
+1𝐶𝐻
+2𝐶𝐻
+3
+{𝑟𝑎𝑐𝑒=𝑟𝑎𝑐𝑒2}
+{𝑎𝑔𝑒=𝑔𝑟𝑜𝑢𝑝1}{𝑟𝑎𝑐𝑒=𝑟𝑎𝑐𝑒1}
+{𝑎𝑔𝑒=𝑔𝑟𝑜𝑢𝑝2}
+{𝑎𝑔𝑒=𝑔𝑟𝑜𝑢𝑝3}{𝑎𝑔𝑒=𝑔𝑟𝑜𝑢𝑝1}
+{𝑟𝑎𝑐𝑒=𝑟𝑎𝑐𝑒1}
+𝐶𝐴
+1𝐶𝐴
+2𝐶𝐴
+3
+{𝑠𝑒𝑥=𝐹,
+𝑚𝑎𝑟𝑖𝑡𝑎𝑙=𝑀𝑎𝑟𝑟𝑖𝑒𝑑}
+{𝑟𝑎𝑐𝑒=𝐵𝑙𝑎𝑐𝑘}{𝑠𝑒𝑥=𝑀,𝑟𝑒𝑙𝑎𝑡𝑖𝑜𝑛𝑠ℎ𝑖𝑝
+=ℎ𝑢𝑠𝑏𝑎𝑛𝑑/𝑤𝑖𝑓𝑒}
+{𝑎𝑔𝑒=30−60,
+𝑚𝑎𝑟𝑖𝑡𝑎𝑙=𝑑𝑖𝑣𝑜𝑟𝑐𝑒𝑑}{𝑠𝑒𝑥=𝑀,𝑟𝑎𝑐𝑒=𝐴𝑠𝑖𝑎𝑛}
+{𝑠𝑒𝑥=𝐹,𝑚𝑎𝑟𝑖𝑡𝑎𝑙 =𝑀𝑎𝑟𝑟𝑖𝑒𝑑}
+𝐶𝑇,3
+1𝐶𝑇,3
+2𝐶𝑇,3
+3
+{𝑐_𝑛𝑎𝑡𝑖𝑜𝑛𝑘𝑒𝑦 =23}
+{𝑙_𝑠ℎ𝑖𝑝𝑚𝑜𝑑𝑒 =MAIL}{𝑐_𝑛𝑎𝑡𝑖𝑜𝑛𝑘𝑒𝑦 =2}
+{𝑜_𝑜𝑟𝑑𝑒𝑟𝑠𝑡𝑎𝑡𝑢𝑠 =𝑃,
+𝑙_𝑟𝑒𝑡𝑢𝑟𝑛𝑓𝑙𝑎𝑔 =𝑁}
+{𝑙_𝑠ℎ𝑖𝑝𝑚𝑜𝑑𝑒 =MAIL}
+{𝑙_𝑠ℎ𝑖𝑝𝑖𝑛𝑠𝑡𝑟𝑢𝑐𝑡 =
+COLLECT COD }
+{𝑙_𝑙𝑖𝑛𝑒𝑛𝑢𝑚𝑏𝑒𝑟 =5}{𝑙_𝑙𝑖𝑛𝑒𝑛𝑢𝑚𝑏𝑒𝑟 =6,
+𝑙_𝑠ℎ𝑖𝑝𝑚𝑜𝑑𝑒 =SHIP,
+𝑜_𝑜𝑟𝑑𝑒𝑟𝑠𝑡𝑎𝑡𝑢𝑠 =𝐹,
+𝑜_𝑜𝑟𝑑𝑒𝑟𝑝𝑟𝑖𝑜𝑟𝑖𝑡𝑦 =1-URGENT },
+{𝑙_𝑠ℎ𝑖𝑝𝑖𝑛𝑠𝑡𝑟𝑢𝑐𝑡 =
+DELIVERIN PERSON,
+𝑜_𝑜𝑟𝑑𝑒𝑟𝑠𝑡𝑎𝑡𝑢𝑠 =𝑃,
+𝑜_𝑜𝑟𝑑𝑒𝑟𝑝𝑟𝑖𝑜𝑟𝑖𝑡𝑦 =2-HIGH}
+𝐶𝑇,12
+1𝐶𝑇,12
+2𝐶𝑇,12
+3
+{𝑜_𝑜𝑟𝑑𝑒𝑟𝑝𝑟𝑖𝑜𝑟𝑖𝑡𝑦
+=5-LOW,
+𝑙_𝑙𝑖𝑛𝑒𝑛𝑢𝑚𝑏𝑒𝑟 =3},
+{𝑙_𝑠ℎ𝑖𝑝𝑖𝑛𝑠𝑡𝑟𝑢𝑐𝑡 =
+COLLECT COD },
+{𝑙_𝑟𝑒𝑡𝑢𝑟𝑛𝑓𝑙𝑎𝑔 =𝐴}{𝑜_𝑜𝑟𝑑𝑒𝑟𝑝𝑟𝑖𝑜𝑟𝑖𝑡𝑦 =
+1-URGENT },
+{𝑙_𝑙𝑖𝑛𝑒𝑛𝑢𝑚𝑏𝑒𝑟 =1}
+{𝑙_𝑟𝑒𝑡𝑢𝑟𝑛𝑓𝑙𝑎𝑔 =𝐴,
+𝑜_𝑜𝑟𝑑𝑒𝑟𝑠𝑡𝑎𝑡𝑢𝑠 =𝐹};{𝑙_𝑙𝑖𝑛𝑒𝑛𝑢𝑚𝑏𝑒𝑟 =7,
+𝑙_𝑠ℎ𝑖𝑝𝑖𝑛𝑠𝑡𝑟𝑢𝑐𝑡 =NONE,
+𝑜_𝑜𝑟𝑑𝑒𝑟𝑝𝑟𝑖𝑜𝑟𝑖𝑡𝑦 =5-LOW,
+𝑜_𝑜𝑟𝑑𝑒𝑟𝑠𝑡𝑎𝑡𝑢𝑠 =𝐹},
+{𝑜_𝑜𝑟𝑑𝑒𝑟𝑝𝑟𝑖𝑜𝑟𝑖𝑡𝑦 =
+4-NOTSPECIFIED,
+𝑙_𝑠ℎ𝑖𝑝𝑖𝑛𝑠𝑡𝑟𝑢𝑐𝑡 =
+TAKE BACKRETURN,
+𝑙_𝑙𝑖𝑛𝑒𝑛𝑢𝑚𝑏𝑒𝑟 =7,
+𝑙_𝑟𝑒𝑡𝑢𝑟𝑛𝑓𝑙𝑎𝑔 =𝐴}
+Figure 3:Constraints used inexperiments
+6.1 Experiment Setup
+Datasets: We use three differentdatasets to do experiments:
+•The Healthcare dataset2is a dataset used in [ 18] to train a
+classifier identifying patients at risk for serious complications.
+It contains demographic and clinical history information of 887
+patients, with attributes like the number of children, income,
+number ofcomplications, county,race,age,etc..
+•ACSIncome dataset is one of five datasets created by [ 19] as
+animprovedalternativetothepopularUCIAdultdataset.The
+datawascompiledfromtheAmericanCommunitySurvey(ACS)
+Public Use Microdata Sample (PUMS). It covers all 50 states and
+Puerto Rico,with1,664,500rowsand11 features.
+2https://github.com/stefan-grafberger/mlinspect/tree/master/example_pipelines/
+healthcare•TPC-Hbenchmark3isa standard benchmark for measuring
+the performance of relational database management systems
+(RDBMS)anddatawarehousingsystems.Thebenchmarkcon-
+sistsofasuiteof22SQLqueriesandadatabaseschemawith8
+relational tables, and is designed to simulate the decision sup-
+portsystemsofatypicaldatawarehousingenvironment.Weuse
+TPC-H3.0.1to generatedatasets andqueries100M data size.
+To the best of our knowledge, there is no available benchmark
+for query refinement testing that provides datasets, queries, and
+constraints. For our evaluation, we choose the Healthcare and AC-
+SIncomedatasets,whicharecommonlyusedpublicdemographic
+datasetsinthecontextoffairnessanddiversity.Weselectattributes
+such as gender, race, age, marital status, and relationships to form
+the constraints, as these attributes are commonly employed as sen-
+sitive attributes that reflect membership in various demographic
+groups. Other attributes are usedto form the queries.We alsouse
+TPC-Hbenchmarkwhichincludesqueries,andweuseattributes
+such as order priority andorder status to form constraints.
+Queries: WegeneratedtwoquerieseachforHealthcareandAC-
+SIncomedataset(denotedas 𝑄𝐻
+1,𝑄𝐻
+2,𝑄𝐴
+1,𝑄𝐴
+2)withoutJOINoper-
+ations as each dataset has a single relation. From TPC-H bench-
+markqueries,werandomlychose#3and#12( 𝑄𝑇
+3,𝑄𝑇
+12),whichboth
+include JOIN operations. The TPC-H query was simplified by re-
+moving GROUPBY, ORDER BY,and LIMIT clauseswhich are not
+consideredinoursettingandonlyaffecttupledisplay.Thismodi-
+ficationdoesn’taffecttheexperiment’svalidity.Additionally,we
+replaced attribute sets in the query projections with SELECT * for
+simplicity and to ensure all attributes in the cardinality constraints
+were included. One predicate over l_receiptdate in query #12 is
+replaced with attribute l_shipdate, which enables us to explore
+different scenarios and apply optimizations. An overview of all
+queriesusedinthe experiments ispresentedinFigure 2.
+Cardinality constraints: Figure 3 summarizes the constraints
+used in experiments. We form three sets of cardinality constraints
+for each of the Healthcare, ACSIncome, and TPC-H datasets, by
+using representative sensitive attributes such as race and gender
+forthefirsttwodemographicdatasets,andattributesfrommultiple
+tables that are not used in queries for non-demographic TPC-H
+dataset.Eachsetcontains2to5constraintsthatmustbefulfilled
+simultaneously.Thefirstsetofconstraintsforeachdatasetcontains
+relaxation constraints, the second contains contraction constraints,
+and the third contains a combination of both: first group being
+relaxed to 105%and second being contracted to 95%. Similar re-
+sultswereobservedforotherqueriesandconstraints.Duetospace
+limitations,pleasereferto[ 16]formoredetailedexperimentsin-
+volving more queries and constraints (queries 𝑄𝐻
+3,𝑄𝐻
+4, constraints
+𝐶𝐻
+4,𝐶𝐻
+5,𝐶𝐻
+6on the Healthcare dataset, as well as queries 𝑄𝐴
+3,𝑄𝐴
+4,
+constraints 𝐶𝐴
+4,𝐶𝐴
+5,𝐶𝐴
+6onthe ACSIncome dataset).
+Compared algorithms: In the experimental section, we compare
+three approaches: a baseline method, our fully optimized proposed
+solution(asdetailedinSec.5.2),andourproposedsolutionwith-
+outoptimizations.Eachmethodoperatesonin-memorydataand
+utilizesprovenanceexpressionstoevaluatepotentialrefinements.
+Thebaselineapproachalsousesprovenanceexpressions,asman-
+aging data on an external database would be less efficient due
+3https://www.tpc.org/tpc_documents_current_versions/current_specifications5.asp
+113
+
+(a)ACSIncome
+ (b) Healthcare
+(c) TPC-H benchmark, 𝑄𝑇
+3
+(d)TPC-H benchmark, 𝑄𝑇
+12
+Figure 4:runningtime
+(a)ACSIncome
+ (b) Healthcare
+(c) TPC-H benchmark, 𝑄𝑇
+3
+(d)TPC-H benchmark, 𝑄𝑇
+12
+Figure 5:numberofrefinementschecked
+to multiple I/O accesses. In contrast, our solution only requires
+a single access to generate provenance inequalities. We begin by
+comparing our fully optimized proposed solution with the baseline
+approach.Then,weinvestigatetheimpactofvariousparameters
+ontheperformanceofouroptimizedsolution.Next,wecompare
+our optimized solution with the non-optimized version. Finally, we
+contrast our approach with existing work in the field. Here are the
+threeapproachesusedintheexperiments.Notethattheyallreport
+allminimalrefinements,sothequalityofresultsarethesame.They
+differinefficiency dueto differentsearching strategies.
+•Baseline Algorithm (Baseline). This naive algorithm, intro-
+ducedinSection4,utilizesaprovenancemodeltoavoidmultiple
+database accesses. However, it identifies minimal refinements by
+navigatingthroughallpotentialrefinements.
+•PVL-basedSearch (PS). This is Algorithm1with all optimiza-
+tionsinSection 5.2 to identifyminimal refinementswithPVL.
+•PVL-based Search without optimization (PS_no_opt). This
+versionofourproposedapproachisalsoAlgorithm1,butwithout
+the optimizations describedinSection 5.
+Metrics: We compare the running time and number of possible
+refinementscheckedbyeachalgorithm.
+Platform: AllexperimentswereperformedonamacOSVentura
+13.2 machine with an Apple M2 Max chip, 64 GB memory. The
+algorithms were implementedusing Python3.
+6.2 Real-worldapplications
+As mentioned in Section 1, adding cardinality constraints to query
+results has many important real-world applications, particularly
+where diversity matters. For example, query refinements can benecessaryintheselectionofindividualsfromtheHealthcaredataset
+andACSIncomedatasetforhealthcaresubsidies,governmentalsur-
+veys,andsocialsciencestudies,etc.,fordiversityconsiderations.
+Here we show a detailed scenario used in our experiments. Con-
+sider a hospital planning to offer financial assistance to patients
+in need, specifically those with low incomes, a high number of
+children,andahighcomplicationrate,usingtheHealthcaredataset.
+Theyexecutequery 𝑄𝐻
+2(pleaseseeFigure2)toselectpatientswith
+anincomelessthan100K,morethan4children,andmorethan5
+complications, resulting in 42 out of 887 patients being selected.
+However,thehospitalnoticesunder-representationofcertainde-
+mographic groups in the query result. Only 17% of the selected
+patientsbelongtorace2amongthethreeraces,andtherearefewer
+individuals from age group1 compared to other age groups. The
+hospital worries about criticism for a financial assistance program
+thatisskewedinthismanner.Toachieveamorebalanceddemo-
+graphic distribution among the recipients of financial assistance,
+thehospitalintroducescardinalityconstraint 𝐶𝐻
+1torelaxquery 𝑄𝐻
+2,
+aimingtoincreasetherepresentationofindividualsfromthesetwo
+groupsto105%.Ouralgorithmprovidesthreemethodstominimally
+refine𝑄𝐻
+2: 1) adjusting the lower bound of the number of children
+to 3, 2) modifying the lower bound of the number of complications
+to 4, and 3) changing the upper bound of income to 134K. The
+hospital can choose any of these refinement queries based on their
+preference. Additionally, the hospital may utilize constraint 𝐶𝐻
+2to
+limittheselectionofpatientsfromdominantgroups,orcombine
+both approaches,as demonstratedby 𝐶𝐻
+3.
+6.3 Experiment Results
+Wecomparetherunningtimeofouralgorithmwiththebaselinein
+experiments. Then,weanalyze theimpact ofdifferent parameters
+onouralgorithm’srunningtimebysystematicallyalteringthem,
+enabling usto identifythe scalability of our algorithm.
+Runningtime. Thefirstsetofexperimentscomparestherunning
+time of our algorithm with a baseline naive algorithm. In all tested
+scenarios,our algorithmconsistently outperformsthebaselineby
+more than 100 times, as shown in Figure 4. The blue bar represents
+the running time of our solution with PVL, while the green bar
+showstherunningtimeforthebaselinealgorithm.Thedarksection
+representsprovenancegenerationtime,andthelightsectionshows
+the searching time for minimal refinements. In some cases, the
+greenbarisomittedbecausethebaselineapproachcannotterminate
+within a 3-hour time-out. Our solution performs well with various
+constraintsets,includingrelaxation,contraction,andamixofboth,
+due to the efficient search checking fewer refinements using the
+PVL.Therunningtimefordifferentquery-constraintcombinations
+varies significantly due to factors such as the search space and
+the distance between the original query and queries satisfying
+cardinality constraints, as demonstratednext.
+Number of refinements checked. The number of refinements
+checkedby thealgorithms indicatesalgorithmeffectiveness.Fig-
+ure 5a and5b compare the refinements checked by the PVL-based
+search and the baseline. Figures 5c and 5d compare the PVL-based
+searchwiththetotalnumberofrefinementsrepresentedbyPVL,
+consideringthatthebaselinealgorithmcannotcompleteinmost
+cases (Figures 4c and 4d). In all scenarios, our algorithm checks up
+to 99% fewer refinements compared to both the baseline algorithm
+114
+
+(a)𝑄𝐴
+1,𝐶𝐴
+1
+(b)𝑄𝐴
+1,𝐶𝐴
+2
+(c)𝑄𝐴
+1,𝐶𝐴
+3
+(d)𝑄𝐴
+2,𝐶𝐴
+1
+(e)𝑄𝐴
+2,𝐶𝐴
+2
+(f)𝑄𝐴
+2,𝐶𝐴
+3
+Figure 6: Effect of query selectivity on the running time,
+ACSIncome data, x-axis varies constants in a predicate, y-
+axis isrunningtime(s)
+(a)𝑄𝐻
+1,𝐶𝐻
+1
+(b)𝑄𝐻
+1,𝐶𝐻
+2
+(c)𝑄𝐻
+1,𝐶𝐻
+3
+(d)𝑄𝐻
+2,𝐶𝐻
+1
+(e)𝑄𝐻
+2,𝐶𝐻
+2
+(f)𝑄𝐻
+2,𝐶𝐻
+3
+Figure 7: Effect of query selectivity on the running time,
+Healthcaredata,x-axisvariesconstantsinapredicate,y-axis
+isrunningtime(s)
+and the total number. This reduction is particularly notable for re-
+laxation/contraction constraints, benefiting from the optimizations
+described in Section 5.2. These results align with the running time
+comparison, as the running time is influenced by the search space,
+whichcanbeinferredfromthenumberofrefinementschecked.For
+simplicity,wefocusoncomparingtherunningtimeinthefollowing
+experiments andomit the number ofrefinementschecked.
+Datasize. Weexaminedtheeffectofdatasizeonrunningtime
+using the TPC-H dataset, and present our findings in Figures 4c
+and4d,whichshowstherunningtimefordatasizesof100M,1G,
+and10G.Datasizeaffectsrunningtimeintwoprimaryways:the
+time to generate provenance expressions and the search space size.
+The time needed to generate provenance expressions and assign
+values to them scales linearly with the data size, while the size
+oftheProvenanceValueList(PVL)generallywiththenumberof
+attribute values in larger datasets. Due to these factors, for each
+query and constraints pair, we observed a clear trend of increasing
+running time as the data size increased.
+Query Selectivity. We analyzed query selectivity by varying a
+single constant in each query’s predicate. Results are shown in
+Figures6,7,8,withthe 𝑥-axisindicatingtheconstant’svalueand
+the𝑦-axis showing running time. For relaxation constraints, in-
+creasing selectivity expands the search space, leading to longer
+runningtimes(Figures6a,6e,7a,7d,8b,8d).Ontheotherhand,for
+contraction constraints, the trend is opposite (Figures 6b, 6d, 7b,
+7e,8a,8d).Inthegeneralcase(constraintset 𝐶𝐴
+3,𝐶𝐻
+3,𝐶𝑇,3
+3,𝐶𝑇,12
+3),
+increasing the constant in a predicate does not affect the size of
+the provenance expression containing the entire data. However,
+it impacts the relaxation and contraction constraints in opposite
+ways,resulting ina trade-off betweenthe constraints. The running
+(a)𝑄3,𝐶𝑇,3
+1
+(b)𝑄3,𝐶𝑇,3
+2
+(c)𝑄3,𝐶𝑇,3
+3
+(d)𝑄12,𝐶𝑇,12
+1
+(e)𝑄12,𝐶𝑇,12
+2
+(f)𝑄12,𝐶𝑇,12
+3
+Figure8:Effectofqueryselectivityontherunningtime,TPC-
+Hbenchmark,100Mdatasizes,x-axisvariesconstantsina
+predicate,y-axis isrunningtime(s)
+(a)𝑄𝐴
+1,𝐶𝐴
+1
+(b)𝑄𝐴
+1,𝐶𝐴
+2
+(c)𝑄𝐴
+1,𝐶𝐴
+3
+(d)𝑄𝐴
+2,𝐶𝐴
+1
+(e)𝑄𝐴
+2,𝐶𝐴
+2
+(f)𝑄𝐴
+2,𝐶𝐴
+3
+Figure9:Effectofconstraintsontherunningtime,ACSIn-
+come dataset, x-axis shows howmuch groupsarerelaxed/-
+contracted,y-axis isrunningtime(s)
+timeisprimarilyinfluencedbythecontractionconstraintforlower
+selectivity and bymeeting therelaxation constraint for higherse-
+lectivity, which may result in a turning point. A similar trend is
+observed in Figure 8c. However, some figures, such as Figure 6c,
+6f, 7c, 7f, 8f, display a monotonic increase or decrease without a
+turningpoint.Thisoccurswheneitherthecontractionorrelaxation
+constraintsdominatethe overallrunning time of the algorithm.
+Constraintssatisfactionproperties. Toanalyzetheeffectofcar-
+dinalityconstraintsonrunningtime,wevariedtherelaxationor
+contraction ratio of one group to different percentages while keep-
+ing the ratios of other groups unchanged, as shown in Figures 9,
+10, and 11. The size of the Provenance Value List (PVL) remains
+unaffected by these changes since it depends on dataset, query,
+and group definitions rather than the constants. As constraints are
+tightenedorrelaxed,weexpectthealgorithmruntimetoincrease
+ordecrease,respectively,asqueriessatisfyingtheconstraintsmove
+furtherawayfromorclosertotheoriginalquery.Anincreasein
+runningtimeisobservedwhenconstraintsbecomemoredifficult
+tosatisfy,asseeninFigure9a,10a,10c,10d,10f,11a,11d,whilethe
+oppositetrendisobservedwhenqueriesbecomeeasiertosatisfy.
+However, some figures show minimal changes in running time
+when constraints are altered,such as Figure 9b, 9d, 9e, 9f, 11b, 11f.
+This can be attributed to the uneven data group distribution in
+theconstraints,whereadjustingapredicatetoaparticularvalue
+can simultaneously qualify or disqualify multiple tuples, satisfy-
+ing various relaxation/contraction ratios. This effect is particularly
+noticeablewhentherearemanytupleswiththesamevalueinan
+attribute,resultinginminimalrefinementsthatarenearlythesame
+for differentrelaxation/contraction ratios.
+115
+
+(a)𝑄𝐻
+1,𝐶𝐻
+1
+(b)𝑄𝐻
+1,𝐶𝐻
+2
+(c)𝑄𝐻
+1,𝐶𝐻
+3
+(d)𝑄𝐻
+2,𝐶𝐻
+1
+(e)𝑄𝐻
+2,𝐶𝐻
+2
+(f)𝑄𝐻
+2,𝐶𝐻
+3
+Figure 10: Effect of constraints on the running time, Health-
+caredataset,x-axisshowshowmuchgroupsarerelaxed/con-
+tracted,y-axis isrunningtime(s)
+(a)𝑄𝑇
+3,𝐶𝑇,3
+1
+(b)𝑄𝑇
+3,𝐶𝑇,3
+2
+(c)𝑄𝑇
+3,𝐶𝑇,3
+3
+(d)𝑄𝑇
+12,𝐶𝑇,12
+1
+(e)𝑄𝑇
+12,𝐶𝑇,12
+2
+(f)𝑄𝑇
+12,𝐶𝑇,12
+3
+Figure11: Effect ofconstraintsonthe runningtime,TPC-H
+benchmark, x-axis shows how much groups are relaxed/con-
+tracted,y-axis isrunningtime(s)
+Effectofoptimizations. Toassesstheimpactoftheoptimizations
+described in Section 5.2, we conducted experiments using algo-
+rithms both with and without optimizations and compared their
+search times. These optimizations incorporate the use of binary
+search instead of a top-down traversal when searching for a re-
+finement, exploiting the monotonicity property of queries when
+all constraints are relaxation constraints or all are contraction con-
+straints. We used queries ( 𝑄𝐻
+1,𝑄𝐻
+2,𝑄𝐴
+1,𝑄𝐴
+2,𝑄𝑇
+3,𝑄𝑇
+12) and the first
+two sets of constraints ( 𝐶𝐻
+1,𝐶𝐻
+2,𝐶𝐴
+1,𝐶𝐴
+2,𝐶𝑇,3
+1,𝐶𝑇,3
+2,𝐶𝑇,12
+1,𝐶𝑇,12
+2) for
+thethreedatasets,andtheresultsareshowninFigure12.Thelight
+bluebarrepresentsthesearchingtimewithoptimization,andthe
+lightorange barrepresents thetimewithout optimization.Ourre-
+sultsindicatethattheoptimizationssignificantlyreducedexecution
+times acrossall tested scenariosandenhancethe efficiencyofthe
+algorithm withgainsofupto 99.87%.
+6.4 Comparisonwith Related Work
+We compared our algorithm with the one by Shetiya et al.[15],
+which also addresses group cardinality constraints but with dif-
+ferentobjectivesandsettings.Since[ 15]onlysupportsnumerical
+predicateswithasinglebinarysensitiveattribute,allthecompar-
+ison experiments are conducted in this setting. We use the C++
+implementationprovidedbyShetiya et al.[15].
+Result comparison. To be consistent with [ 15] and allow for easy
+comparison,weuseTexasTribunedataset(usedby[ 15]),containing
+salary information for Texas state employees, to compare the re-
+turnedresults.Ourqueryimposesbothupperandlowerboundsfor
+thesalaryattribute( a.salary >= 10000 anda.salary <= 20000 ),
+resultinginagenderdisparityof69with100malesand169females
+intheresultset.For[ 15],thequeryselectstupleswithsalariesin
+(a)ACSIncome
+ (b) Healthcare
+ (c) TPC-H 100M
+Figure12:Effectofoptimizationsonthesearchingtime,y-
+axis issearching time(s)
+(a)1-attribute query
+ (b) 2-attribute query
+Figure 13: Comparison between [ 15] and our PVL-based
+searching algorithm, y-axis is runningtime(s)
+range[10000,20000]. As for cardinality constraints, we require the
+gender disparity to be no larger than 62 ( 90%of the original dispar-
+ity), resulting in constraint: |𝑄(𝐷)𝑔𝑒𝑛𝑑𝑒𝑟=𝑀−𝑄(𝐷)𝑔𝑒𝑛𝑑𝑒𝑟=𝐹| ≤
+62. The refinement returned by [ 15] is a salary range 𝑟1=
+[10135.7,19701.5](Jaccard similarity 0.95), whichis also returned
+byouralgorithm.Additionally,ouralgorithmreturnssevenother
+refinements: 𝑟2=[10000,19629.6],𝑟3=[11305.8,20000],𝑟4=
+[11274.1,19999.9],𝑟5=[11205.2,19999.2],𝑟6=[11138.4,19759.9],
+𝑟7=[11036.2,19723.8],and𝑟8=[10764.0,19705.7](Jaccardsimi-
+larity0.95,0.90,0.90,0.90,0.88,0.89,0.91, respectively). All the re-
+turnedrefinementsareminimal.Thedifferencesintheresultsare
+duetothedifferentminimalitydefinitions:distancebetweenqueries
+v.s.distance intheresultsets. Ourdefinitionofminimalityallows
+the user to select the most suitable refinement based on their pref-
+erences.Forinstance,iftheuserpreferstominimizechangestothe
+lowerboundofthesalary, 𝑟2wouldbethebestrefinementwiththe
+same bestJaccardsimilarityas 𝑟1,but itwouldbe ignoredby[15].
+Runningtimecomparison. Tocomparetherunningtimeofthe
+two algorithms, considering [ 15] uses different algorithms for
+single-attribute and multiple-attribute queries, we employ both
+theone-dimensionalTexasTribunedatasetusedearlierandatwo-
+dimensionaluniformdatasetfrom[ 15].Theuniformdatasetcon-
+sistsof 10,000 points uniformly sampled withina square of length
+1,000 units, with two numerical attributes ( 𝑥and𝑦) and a sensi-
+tive attribute (color). For each dataset, we use two queries with
+different disparities. For TexasTribune dataset, we use queries 1)
+selecting salary ∈ [5000,15000], with a disparity of 62, and 2) se-
+lecting salary ∈ [10000,20000], with a disparity of 69. For uniform
+dataset, we use queries 1)selecting records with 𝑥∈ [400,600]and
+𝑦∈ [400,600], with a disparity of 30, and 2) selecting records with
+𝑥∈ [550,700]and𝑦∈ [550,700], with a disparity of 35. We eval-
+uatetherunningtimefordifferent originalqueries, settingtarget
+disparities at percentages of the original disparity as cardinality
+constraints(rangingfrom80%to20%).Figures13presentsthecom-
+parison results with 1-attribute and 2-attribute queries, with the
+x-axis representing the target disparity and the y-axis showing
+the execution time. To account for the possibility of our algorithm
+outputting more than one refinement, the figures include a bar
+labeled "PVL-first,"representing the time tofind the first minimal
+refinementusingouralgorithm,incomparisonwith[ 15].Ingen-
+eral, the running time increases as the target disparities become
+116
+
+smaller,assatisfyingharderconstraintstakesmoretime.Forsingle-
+attributequeries,[ 15]maintainsstableruntimebecausedisparity
+has a limited impact on their algorithm, primarily depending on
+data size. In most cases, PVL-first and [ 15] exhibit comparable run-
+ningtimes, withthe sameorder ofmagnitude,indicatingsimilar
+efficiencyinfindingthefirstminimalrefinement.However,there
+is an exception in multiple-attribute queries, where [ 15] is much
+fasterwhenthetargetdisparityishigh( 90%or80%oftheoriginal),
+but even so, both algorithms finish within 3 seconds. It is worth
+noting that besides comparable execution times in the covered set-
+tings of [15], our algorithm handles multiple relations, constraints,
+andnon-binarysensitiveattributes,providingmoreversatilitythan
+[15].Additionally,our algorithm includesfurther optimizations to
+improve efficiency insome situations,as discussed in Section 5.2.
+7 RELATED WORK
+We nextoverviewmultiple linesofrelatedwork.
+Query refinement. The problem of query refinement has been
+addressedinpreviousstudiessuch as[4,5,15,20ś23].Theyfocus
+on modifying queries to satisfy cardinality constraints, mostly em-
+phasizingtheoveralloutputsizeratherthanspecificdatagroups
+withintheoutput.Forexample,[ 5,20]aimtorelaxquerieswithan
+emptyresultsettoproducesomeanswers.Otherworkslike[ 4,21]
+address the issues of too many or too few answers by refining
+queries to meet specific cardinality constraints on the result’s size.
+AnexceptionistherecentworkbyShetiyaetal.[ 15],whichaims
+torefinequeriestosatisfyconstraintsonthesizeofspecificdata
+groups in the result. We discuss and demonstrate the differences
+in Section6.4. Other related work by [ 24,25] aims to satisfy car-
+dinality constraints through minimal query refinement but does
+not consider categorical attributes and provides only cardinality
+estimationswithoutexactresults.Furthermore,theworkof[ 22,23]
+studiestheproblemofexplainingmissingtuplesinthequeryresult
+through query refinement. A key difference is that [ 22,23] aim
+to include user-specified missing tuples in the result set through
+refinement,ratherthanimposingconstraintsovergroups,where
+includingorremovingtuples not specifiedbythe usermayapply.
+Query result diversification. Query result diversification is an-
+otherrelatedtopicaimingtoincreaseresultdiversitywhilemain-
+tainingrelevanceofresults to the originalquery [26ś29].In some
+settings,relevanceanddiversityaretradeoffs[ 30],andinothers,
+user information is used to select the result set. However, there
+are two main differences between this line of research and our
+approach. First, query result diversification involves ranking items
+basedontheirrelevancetothequery,aimingtoselectitemsthatare
+ranked as high as possible and, at the same time, as diverse as pos-
+sible.Incontrast,ourapproachdoesnotinvolveranking:anitem
+is either selected or not based on the query. Second, while query
+result diversification explores item selection based on the given
+query but without modifying the query, our approach achieves
+result diversitythroughquery refinementitself.
+Provenance. Data provenance has been studied extensively in
+recent years. An early approach to user provenance for RDBMS
+[31,32] finds a set of tuples that contribute to a certain output
+tuple.Themodelproposedin[ 33]collectscontributinginputtuples
+separatelyforeachstepinthederivationoftheoutputtuplesothat
+it shows how the output is obtained. Then a general frameworkproposedin[ 13]introducedtupleannotationsusingasemiring 𝐾to
+evaluate queries over annotated relations. The Caravan system [ 6]
+enables efficient what-if analysis by creating provisioned represen-
+tationsforhypotheticalreasoning,eliminatingtheneedtoaccess
+original data or execute complex queries. MONDRIAN [ 34] pro-
+poses an annotation-oriented data model, facilitating manipulation
+andqueryingofbothdataandannotations.Itallowsannotations
+tobespecifiedonsetsofvalues,thusenablingefficientqueryingof
+informationbasedontheirassociation.Glavicetal.[ 35]outlined
+a propagation-based method forprovenance generation through
+operator instrumentation. Their approach modifies operators to
+generateandtransferdetailedprovenanceinformationacrossthe
+querynetwork.Ourprovenancemodelisinspiredby[ 6],withtuple
+annotations propagatedthroughquery valuation as in[13].
+Fairness constraints in other settings. While our work does not
+onlyapplytofairnesscontext,fairnessisanimportanttopicindata
+selection and there are many prior works focusing on satisfying
+fairness constraints in some settings. Some works aim to satisfy
+fairnessconstraintsunderacertaindiversitymodel[ 36ś38],and
+others focus on fairness constraints in the optimization of an addi-
+tiveutility[ 39].Thereisalsosomeworkonfairnessinsetselection
+andranking[ 40],fairnessinclassification[ 41],anddiversityintop-
+kresults[ 42ś44].Otherworksconsiderconstraintquerylanguages
+[45],presentingadeclarativelanguagewithextensionstoSQLto
+support fairnessconstraintsinqueries[46].
+8 CONCLUSION AND FUTUREWORK
+In this paper, we address the problem of finding all minimal refine-
+ments of a given query that satisfy specific cardinality constraints
+for data groups within the result set. Unlike many previous studies
+thatprimarilyexaminequeryrefinementbasedontheoverallresult
+setsize,ourfocusliesinsatisfyingsizeconstraintsforspecificdata
+groups within the result set. Furthermore, our approach extends
+beyondexistingresearchbysupportingawiderrangeofqueries
+and constraints. Specifically, we enable SPJ queries that involve
+multiple constraints on multiple relations, encompassing sensitive
+attributes that are more than binary, and supporting both query
+relaxationsandquerycontractions.Toachievethis,wehavepro-
+posedasolutionthatusesaprovenancemodeltoannotatetuples
+inthesourcedatawiththenecessarypredicateinformation.The
+cardinality constraints are translated into algebraic expressions,
+allowing for efficient verification of constraint satisfaction without
+accessing the original data. Furthermore, we also propose a search
+algorithm that efficiently explores the search space and finds po-
+tential refinements, which are then verified using our proposed
+provenance-based approach. Experimental results demonstrate the
+effectiveness and efficiency of our solution on a variety of datasets
+and constraints. For future work, it would be beneficial to inves-
+tigatethegeneralapplicabilityoftheproposedapproachtoother
+SQL clauses. For instance, queries involving NOT operators would
+requiresearchingthecomplementaryspace.Moreover,queriescom-
+bining ranges with both AND and OR operators would translate
+provenance expressions that incorporate both logical AND and OR
+operations. We left thesefor future research.
+ACKNOWLEDGMENTS
+This work was supported in part by NSF under grants 1916505,
+1922658, 1934565, 2106176, and2312931, andbyISFgrant 2121/22.
+117
+
+REFERENCES
+[1]https://www.microsoft.com/en-us/research/academic-program/phd-
+fellowship/canada-us/.
+[2] https://research.google/outreach/faq/?category=phd.
+[3] https://en.wikipedia.org/wiki/Rooney_Rule.
+[4]Chaitanya Mishra and Nick Koudas. Interactive query refinement. In EDBT,
+2009.
+[5]Nick Koudas,Chen Li,AnthonyK.H. Tung, and RaresVernica. Relaxing join
+and selectionqueries. In VLDB, 2006.
+[6]Daniel Deutch,ZacharyG. Ives,TovaMilo, andValTannen. Caravan: Provision-
+ingfor what-ifanalysis. In CIDR. www.cidrdb.org,2013.
+[7]BabakSalimi,JohannesGehrke,andDanSuciu. BiasinOLAPqueries:Detection,
+explanation,and removal. In SIGMOD, 2018.
+[8]BienvenidoVélez,RonWeiss,MarkASheldon,andDavidKGifford. Fastand
+effective query refinement. In ACM SIGIR Forum , volume 31(SI), pages 6ś15.
+ACM NewYork, NY, USA,1997.
+[9]Jessie Ooi, Xiuqin Ma, Hongwu Qin, and Siau Chuin Liew. A survey ofquery
+expansion, query suggestion and query refinement techniques. In 2015 4th
+InternationalConferenceonSoftwareEngineeringandComputerSystems(ICSECS) ,
+pages112ś117. IEEE,2015.
+[10]MichaelOrtega-Binderberger,KaushikChakrabarti,andSharadMehrotra. An
+approachtointegratingqueryrefinement insql. In InternationalConferenceon
+Extending DatabaseTechnology , pages15ś33. Springer, 2002.
+[11]KaushikChakrabarti,KriengkraiPorkaew,andSharadMehrotra. Efficientquery
+refinement in multimedia databases. In ICDE Conference , 2000.
+[12]YannisPapakonstantinouandVasilisVassalos. Queryrewritingforsemistruc-
+tured data. ACMSIGMODRecord , 28(2):455ś466,1999.
+[13]Todd J.Green,Gregory Karvounarakis, and ValTannen. Provenancesemirings.
+InPODS. ACM,2007.
+[14]MarinaDrosou,HVJagadish,EvaggeliaPitoura,andJuliaStoyanovich. Diversity
+in bigdata:A review. Big data, 5(2):73ś84, 2017.
+[15]SurajShetiya,IanPSwift,AbolfazlAsudeh,andGautamDas. Fairness-aware
+range queries for selecting unbiased data. In Proc. of the Int. Conf. on Data
+Engineering, ICDE , 2022.
+[16]https://github.com/JinyangLi01/Query_refinement/blob/master/FullPaper/
+Query_Refinement.pdf.
+[17]Tomasz Imielinski and Witold Lipski Jr. Incomplete information in relational
+databases. J.ACM, 31(4),1984.
+[18]StefanGrafberger,ShubhaGuha,JuliaStoyanovich,andSebastianSchelter. Mlin-
+spect:Adatadistributiondebuggerformachinelearningpipelines. In Proceedings
+ofthe2021InternationalConferenceonManagementofData ,pages2736ś2739,
+2021.
+[19]Frances Ding, Moritz Hardt,John Miller, and Ludwig Schmidt. Retiring adult:
+Newdatasetsforfairmachinelearning. AdvancesinNeuralInformationProcessing
+Systems, 34,2021.
+[20]Ion Muslea and Thomas J Lee. Online query relaxation via bayesian causal
+structuresdiscovery. In AAAI, pages831ś836, 2005.
+[21]Wesley W. Chu and Qiming Chen. A structured approach for cooperative query
+answering. IEEE Transactions on Knowledge and Data Engineering , 6(5):738ś749,
+1994.
+[22]Quoc Trung Tran and Chee-Yong Chan. How to conquer why-not questions. In
+Proceedingsofthe2010ACMSIGMODInternationalConferenceonManagement
+ofdata, pages15ś26, 2010.
+[23]Quoc Trung Tran, Chee-Yong Chan, and Srinivasan Parthasarathy. Query by
+output. In Proceedings of the 2009 ACM SIGMOD International Conference on
+Managementofdata , pages535ś548, 2009.
+[24] Chiara Accinelli, Barbara Catania, Giovanna Guerrini, and Simone Minisi. cov-
+rew:apythontoolkitforpre-processingpipelinerewritingensuringcoverage
+constraint satisfaction. In EDBT, pages698ś701, 2021.[25]ChiaraAccinelli,SimoneMinisi,andBarbaraCatania. Coverage-basedrewriting
+for data preparation. In EDBT/ICDTWorkshops , 2020.
+[26]MarcosRVieira,HumbertoLRazente,MariaCNBarioni,MariosHadjieleftheriou,
+Divesh Srivastava, Caetano Traina, and Vassilis J Tsotras. On query result
+diversification. In 2011IEEE27thInternationalConferenceonDataEngineering ,
+pages1163ś1174.IEEE,2011.
+[27]KaipingZheng,HongzhiWang,ZhixinQi,JianzhongLi,andHongGao. Asurvey
+ofqueryresultdiversification. KnowledgeandInformationSystems ,51(1):1ś36,
+2017.
+[28]Filip Radlinski, Robert Kleinberg, and Thorsten Joachims. Learning diverse
+rankings with multi-armed bandits. In Proceedings of the 25th international
+conference onMachinelearning , pages784ś791, 2008.
+[29]ReinierHVanLeuken,LluisGarcia,XimenaOlivares,andRoelofvanZwol.Visual
+diversificationofimagesearchresults. In Proceedingsofthe18thinternational
+conference onWorld wide web , pages341ś350, 2009.
+[30]TingDengandWenfeiFan. Onthecomplexityofqueryresultdiversification.
+Proceedingsofthe VLDBEndowment , 6(8):577ś588, 2013.
+[31]Yingwei Cui and JenniferWidom. Practical lineage tracing in data warehouses.
+InProceedings of 16th International Conference on Data Engineering (Cat. No.
+00CB37073) , pages367ś378. IEEE,2000.
+[32]YingweiCui,Jennifer Widom,and JanetLWiener. Tracing thelineageofview
+data in a warehousing environment. ACM Transactions on Database Systems
+(TODS), 25(2):179ś227,2000.
+[33]Peter Buneman, Sanjeev Khanna, and Tan Wang-Chiew. Why and where: A
+characterization of data provenance. In International conference on database
+theory, pages316ś330. Springer, 2001.
+[34]FlorisGeerts,AnastasiosKementsietsidis,andDiegoMilano. Mondrian:Anno-
+tatingandqueryingdatabasesthroughcolorsandblocks. In 22ndInternational
+Conference onDataEngineering (ICDE’06) , pages82ś82. IEEE,2006.
+[35]BorisGlavic,KyumarsSheykhEsmaili,PeterMichaelFischer,andNesimeTatbul.
+Ariadne:Managingfine-grainedprovenance on data streams. In Proceedings of
+the7thACMinternationalconferenceonDistributedevent-basedsystems ,pages
+39ś50, 2013.
+[36]Zafeiria Moumoulidou, Andrew McGregor, and Alexandra Meliou. Diverse data
+selectionunder fairness constraints. arXiv preprint arXiv:2010.09141 , 2020.
+[37] Elisa Celis,Vijay Keswani,Damian Straszak, Amit Deshpande, Tarun Kathuria,
+and Nisheeth Vishnoi. Fair and diverse dpp-based data summarization. In
+InternationalConference onMachineLearning , pages716ś725. PMLR, 2018.
+[38]KeYang,VasilisGkatzelis,andJuliaStoyanovich.Balancedrankingwithdiversity
+constraints. arXiv preprint arXiv:1906.01747 , 2019.
+[39]Julia Stoyanovich, Ke Yang, and HV Jagadish. Online set selection with fairness
+and diversityconstraints. In Proceedingsofthe EDBT Conference , 2018.
+[40]Meike Zehlike, Ke Yang, and Julia Stoyanovich. Fairness in ranking, Part I:
+Score-based ranking. ACMComput. Surv. , apr 2022.
+[41]AlexandraChouldechovaandAaronRoth. Asnapshotofthefrontiersoffairness
+in machinelearning. Commun. ACM , 63(5):82ś89,2020.
+[42]Albert Angel and Nick Koudas. Efficient diversity-aware search. In Proceedings
+ofthe2011ACMSIGMODInternationalConferenceonManagementofdata ,pages
+781ś792, 2011.
+[43]LuQin,JeffreyXuYu,andLijunChang. Diversifyingtop-kresults. arXivpreprint
+arXiv:1208.0076 , 2012.
+[44]Julia Stoyanovich, Sihem Amer-Yahia, and Tova Milo. Making interval-based
+clustering rank-aware. In Anastasia Ailamaki, Sihem Amer-Yahia, Jignesh M.
+Patel, Tore Risch, Pierre Senellart, and Julia Stoyanovich, editors, EDBT 2011,
+14thInternationalConferenceonExtendingDatabaseTechnology,Uppsala,Sweden,
+March 21-24, 2011, Proceedings , pages437ś448. ACM,2011.
+[45]Paris C Kanellakis, Gabriel M Kuper, and Peter Z Revesz. Constraint query
+languages. Journal ofcomputer and systemsciences , 51(1):26ś52,1995.
+[46]MatteoBrucato,AzzaAbouzied,andAlexandraMeliou.Packagequeries:efficient
+andscalablecomputationofhigh-orderconstraints. TheVLDBJournal ,27(5):693ś
+718, 2018.
+118
+
+Hierarchy To Score
+
+Paper
+  - INTRODUCTION
+    - Paragraph 1
+      - [1]
+      - [2]
+      - [3]
+    - Paragraph 2
+    - Paragraph 3
+      - [13]
+      - [14]
+    - Paragraph 4
+      - [15]
+    - Paragraph 5
+      - [13]
+  - PROBLEM DEFINITION
+    - [Section Lead-in]
+      - Paragraph 1
+    - QueryRefinement
+      - Paragraph 1
+        - [4]
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+    - Group Cardinality Constraints
+      - Paragraph 1
+        - [16]
+  - PROVENANCE MODEL
+    - [Section Lead-in]
+      - Paragraph 1
+        - [6]
+        - [17]
+    - Provenance Expressions
+      - Paragraph 1
+      - Paragraph 2
+        - (1)
+    - Refinements through Valuation
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+  - POSSIBLE VALUE LISTS (PVL)
+    - Paragraph 1
+    - Paragraph 2
+      - [2]
+      - [1]
+  - GENERATING MINIMAL REFINEMENTS
+    - [Section Lead-in]
+      - Paragraph 1
+    - The Algorithm
+      - Paragraph 1
+        - [1]
+        - [16]
+      - Paragraph 2
+    - Optimizations
+      - Paragraph 1
+      - Paragraph 2
+        - [16]
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+      - Paragraph 6
+        - [1]
+  - EXPERIMENTS
+    - [Section Lead-in]
+      - Paragraph 1
+        - [15]
+        - [16]
+      - Paragraph 2
+    - Experiment Setup
+      - Paragraph 1
+        - [18]
+        - [19]
+        - [16]
+      - Paragraph 2
+    - Real-world Applications
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+    - Experiment Results
+      - Paragraph 1
+      - Paragraph 2
+      - Paragraph 3
+      - Paragraph 4
+      - Paragraph 5
+    - Comparison with Related Work
+      - Paragraph 1
+        - [15]
+      - Paragraph 2
+        - [15]
+  - RELATED WORK
+    - Paragraph 1
+    - Paragraph 2
+      - [5]
+      - [20]
+      - [4]
+      - [21]
+      - [15]
+      - [24]
+      - [25]
+      - [22]
+      - [23]
+      - [30]
+    - Paragraph 3
+      - [31]
+      - [32]
+      - [33]
+      - [13]
+      - [6]
+      - [34]
+      - [35]
+      - [39]
+      - [40]
+      - [41]
+      - [45]
+      - [46]
+  - CONCLUSION AND FUTURE WORK
+    - Paragraph 1
+[anthropic_full_paper_response] attempt=1/3
+Paper: 1.0
+
+INTRODUCTION: 0.08
+Paragraph 1: 0.015
+[1]: 0.003
+[2]: 0.003
+[3]: 0.009
+Paragraph 2: 0.02
+Paragraph 3: 0.025
+[13]: 0.01
+[14]: 0.015
+Paragraph 4: 0.01
+[15]: 0.01
+Paragraph 5: 0.01
+[13]: 0.01
+
+PROBLEM DEFINITION: 0.12
+[Section Lead-in]: 0.01
+Paragraph 1: 0.01
+QueryRefinement: 0.05
+Paragraph 1: 0.015
+[4]: 0.015
+Paragraph 2: 0.01
+Paragraph 3: 0.015
+Paragraph 4: 0.01
+Group Cardinality Constraints: 0.06
+Paragraph 1: 0.06
+[16]: 0.005
+
+PROVENANCE MODEL: 0.18
+[Section Lead-in]: 0.02
+Paragraph 1: 0.02
+[6]: 0.01
+[17]: 0.01
+Provenance Expressions: 0.09
+Paragraph 1: 0.05
+Paragraph 2: 0.04
+(1): 0.0
+Refinements through Valuation: 0.07
+Paragraph 1: 0.025
+Paragraph 2: 0.025
+Paragraph 3: 0.02
+
+POSSIBLE VALUE LISTS (PVL): 0.15
+Paragraph 1: 0.08
+Paragraph 2: 0.07
+[2]: 0.0
+[1]: 0.0
+
+GENERATING MINIMAL REFINEMENTS: 0.25
+[Section Lead-in]: 0.01
+Paragraph 1: 0.01
+The Algorithm: 0.13
+Paragraph 1: 0.06
+[1]: 0.0
+[16]: 0.005
+Paragraph 2: 0.07
+Optimizations: 0.11
+Paragraph 1: 0.015
+Paragraph 2: 0.015
+[16]: 0.005
+Paragraph 3: 0.02
+Paragraph 4: 0.02
+Paragraph 5: 0.02
+Paragraph 6: 0.02
+[1]: 0.0
+
+EXPERIMENTS: 0.15
+[Section Lead-in]: 0.01
+Paragraph 1: 0.007
+[15]: 0.002
+[16]: 0.002
+Paragraph 2: 0.003
+Experiment Setup: 0.03
+Paragraph 1: 0.02
+[18]: 0.005
+[19]: 0.005
+[16]: 0.002
+Paragraph 2: 0.01
+Real-world Applications: 0.02
+Paragraph 1: 0.005
+Paragraph 2: 0.01
+Paragraph 3: 0.005
+Experiment Results: 0.06
+Paragraph 1: 0.015
+Paragraph 2: 0.015
+Paragraph 3: 0.01
+Paragraph 4: 0.01
+Paragraph 5: 0.01
+Comparison with Related Work: 0.03
+Paragraph 1: 0.015
+[15]: 0.01
+Paragraph 2: 0.015
+[15]: 0.01
+
+RELATED WORK: 0.03
+Paragraph 1: 0.005
+Paragraph 2: 0.015
+[5]: 0.001
+[20]: 0.001
+[4]: 0.001
+[21]: 0.001
+[15]: 0.004
+[24]: 0.001
+[25]: 0.001
+[22]: 0.002
+[23]: 0.002
+[30]: 0.001
+Paragraph 3: 0.01
+[31]: 0.001
+[32]: 0.001
+[33]: 0.001
+[13]: 0.001
+[6]: 0.001
+[34]: 0.001
+[35]: 0.001
+[39]: 0.0
+[40]: 0.0
+[41]: 0.0
+[45]: 0.0
+[46]: 0.0
+
+CONCLUSION AND FUTURE WORK: 0.02
+Paragraph 1: 0.02
+
+Citation Contributions
+
+[1]: 0.003
+[2]: 0.003
+[3]: 0.009
+[13]: 0.021
+[14]: 0.015
+[15]: 0.026
+[6]: 0.011
+[17]: 0.01
+[16]: 0.019
+[4]: 0.016
+[18]: 0.005
+[19]: 0.005
+[5]: 0.001
+[20]: 0.001
+[21]: 0.001
+[24]: 0.001
+[25]: 0.001
+[22]: 0.002
+[23]: 0.002
+[30]: 0.001
+[31]: 0.001
+[32]: 0.001
+[33]: 0.001
+[34]: 0.001
+[35]: 0.001
+[39]: 0.0
+[40]: 0.0
+[41]: 0.0
+[45]: 0.0
+[46]: 0.0
