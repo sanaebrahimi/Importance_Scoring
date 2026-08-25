@@ -1,0 +1,264 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In a common family of neural network language models, the current input word is represented as the vector c\u2208IRCand is projected to a dense representation using a word embedding matrix U.",
+    "technical_score": 0.03578947368421053,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Some computation is then performed on the word embedding U\u22a4c, which results in a vector of ac- tivationsh2. A second matrix Vthen projects h2 to a vector h3containing one score per vocabulary word:h3=Vh2. The vector of scores is then con- verted to a vector of probability values p, which represents the models\u2019 prediction of the next word, using the softmax function.",
+    "technical_score": 0.0536842105263158,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "For example, in the LSTM-based lan- guage models of (Sundermeyer et al., 2012; Zaremba et al., 2014), for vocabulary of size C, the one-hot encoding is used to represent the input candU\u2208IRC\u00d7H. An LSTM is then employed,which results in an activation vector h2that similarly to U\u22a4c, is also in IRH. In this case, U andVare of exactly the same size.",
+    "technical_score": 0.00805263157894737,
+    "citation_score": 0.01878947368421053
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "We callUthe input embedding, and Vthe output embedding. In both matrices, we expect rows that correspond to similar words to be sim- ilar: for the input embedding, we would like the network to react similarly to synonyms, while in the output embedding, we would like the scores of words that are interchangeable to be simi- lar (Mnih and Teh, 2012).",
+    "technical_score": 0.00805263157894737,
+    "citation_score": 0.01878947368421053
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "WhileUandVcan both serve as word embed- dings, in the literature, only the former serves this role. In this paper, we compare the quality of the input embedding to that of the output embedding, and we show that the latter can be used to improve neural network language models. Our main results are as follows: (i) We show that in the word2vec skip-gram model, the output embedding is only slightly inferior to the input embedding. This is shown using metrics that are commonly used in or- der to measure embedding quality. (ii) In recurrent neural network based language models, the output embedding outperforms the input embedding. (iii) By tying the two embeddings together, i.e., enforc- ingU=V, the joint embedding evolves in a more similar way to the output embedding than to the in- put embedding of the untied model. (iv) Tying the input and output embeddings leads to an improve- ment in the perplexity of various language mod- els. This is true both when using dropout or when not using it. (v) When not using dropout, we pro- pose adding an additional projection PbeforeV, and apply regularization to P. (vi) Weight tying in neural translation models can reduce their size (number of parameters) to less than half of their original size without harming their performance.",
+    "technical_score": 0.03578947368421053,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work Neural"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Neural network language models (NNLMs) assign probabilities to word sequences. Their resurgence was initiated by (Bengio et al., 2003). Recurrent neural networks were first used for language modeling in (Mikolov et al., 2010) and (Pascanu et al., 2013). The first model that implemented language modeling with was (Sundermeyer et al., 2012). Follow- ing that, (Zaremba et al., 2014) introduced a dropout (Srivastava, 2013) augmented NNLM. (Gal, 2015; Gal and Ghahramani, 2016) proposed a new dropout method, which is referred to as Bayesian Dropout below, that improves on the results of (Zaremba et al., 2014).",
+    "technical_score": 0.018947368421052643,
+    "citation_score": 0.028421052631578965
+  },
+  {
+    "section_path": [
+      "Related Work Neural"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "The skip-gram word2vec model introduced in (Mikolov et al., 2013a; Mikolov et al., 2013b) learns representations of words. This model learns a representation for each word in its vocabulary, both in an input embedding matrix and in an output embedding matrix. When training is complete, the vectors that are returned are the input embeddings. The output embedding is typically ignored, although (Mitra et al., 2016; Mnih and Kavukcuoglu, 2013) use both the output and input embeddings of words in order to compute word similarity. Re- cently, (Goldberg and Levy, 2014) argued that the output embedding of the word2vec skip- gram model needs to be different than the input embedding.",
+    "technical_score": 0.013263157894736848,
+    "citation_score": 0.019894736842105267
+  },
+  {
+    "section_path": [
+      "Related Work Neural"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "As we show, tying the input and the output em- beddings is indeed detrimental in word2vec. How- ever, it improves performance in NNLMs.",
+    "technical_score": 0.033157894736842115,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Related Work Neural"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "In neural machine translation (NMT) models (Kalchbrenner and Blunsom, 2013; Cho et al., 2014; Sutskever et al., 2014; Bahdanau et al., 2014), the decoder, which generates the translation of the input sentence in the target language, is a language model that is conditioned on both the previous words of the out- put sentence and on the source sentence. State of the art results in NMT have recently been achieved by systems that segment the source and target words into subword units (Sennrich et al., 2016a). One such method (Sennrich et al., 2016b) is based on the byte pair encoding (BPE) compression al- gorithm (Gage, 1994). BPE segments rare words into their more commonly appearing subwords.",
+    "technical_score": 0.007578947368421053,
+    "citation_score": 0.016105263157894737
+  },
+  {
+    "section_path": [
+      "Related Work Neural"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Weight tying was previously used in the log-bilinear model of (Mnih and Hinton, 2009), but the decision to use it was not explained, and its effect on the model\u2019s performance was not tested. Independently and concurrently with our work (Inan et al., 2016) presented an ex- planation for weight tying in NNLMs based on (Hinton et al., 2015).",
+    "technical_score": 0.008210526315789475,
+    "citation_score": 0.012315789473684212
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "\u2202Uitk=it 0 k/negationslash=it For the output embedding, row k\u2019s update is: \u2202Lt \u2202Vk=/braceleftBigg (pt(ot|i1:t)\u22121)h(t) 2k=ot pt(k|i1:t)\u00b7h(t) 2 k/negationslash=ot",
+    "technical_score": 0.1993846153846154,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Tab. 1 shows that up to 90% (85%) of BPE subwords between English and French (German) are shared. Based on this observation, we propose three- way weight tying (TWWT), where the input em- bedding of the decoder, the output embedding of the decoder and the input embedding of the en- coder are all tied. The single source/target vocab- ulary of this model is the union of both the source and target vocabularies. In this model, both in the encoder and decoder, all subwords are embedded in the same duo-lingual space. 4 Results Our experiments study the quality of various em- beddings, the similarity between them, and the impact of tying them on the word2vec skip-gram model, NNLMs, and NMT models. 4.1 Quality of Obtained Embeddings In order to compare the various embeddings, we pooled five embedding evaluation meth- ods from the literature. These evaluation methods involve calculating pairwise (cosine) 1http://statmt.org/wmt14/translation-task.html 2http://statmt.org/wmt15/translation-task.html",
+    "technical_score": 0.10260728744939271,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Input Output Tied Simlex999 0.30 0.29 0.17 Verb-143 0.41 0.34 0.12 MEN 0.66 0.61 0.50 Rare-Word 0.34 0.34 0.23 MTurk-771 0.59 0.54 0.37 learned by a word2vec skip-gram model. Results are also shown for the tied word2vec model. Spearman\u2019s correlation \u03c1 is reported for five word embedding evaluation benchmarks. PTB text8 Embedding In Out Tied In Out Tied Simlex999 0.02 0.13 0.14 0.17 0.27 0.28 Verb143 0.12 0.37 0.32 0.20 0.35 0.42 MEN 0.11 0.21 0.26 0.26 0.50 0.50 Rare-Word 0.28 0.38 0.36 0.14 0.15 0.17 MTurk771 0.17 0.28 0.30 0.26 0.48 0.45 small model from (Zaremba et al., 2014) and the embeddings from our weight tied variant. Spearman\u2019s correlation \u03c1is pre- sented. distances between embeddings and correlat- ing these distances with human judgments of the strength of relationships between con- cepts. We use: Simlex999 (Hill et al., 2016), Verb-143 (Baker et al., 2014), MEN (Bruni et al., 2014), Rare- Word (Luong et al., 2013) and MTurk- 771 (Halawi et al., 2012). We begin by training both the tied and un- tied word2vec models on the text83dataset, us- ing a vocabulary consisting only of words that appear at least five times. As can be seen in Tab. 2, the output embedding is almost as good as the input embedding. As expected, the embedding of the tied model is not com- petitive. The situation is different when train- ing the small NNLM model on either the Penn Treebank (Marcus et al., 1993) or text8 datasets (for PTB, we used the same train/validation/test set split and vocabulary as (Mikolov et al., 2011), while on text8 we used the split/vocabulary from (Mikolov et al., 2014)). These results are presented in Tab. 3. In this case, the input embed- ding is far inferior to the output embedding. The tied embedding is comparable to the output em- bedding. A natural question given these results and the analysis in Sec. 3 is whether the word embedding in the weight tied NNLM model is more similar to the input embedding or to the output embedding 3http://mattmahoney.net/dc/textdataA B \u03c1(A,B)\u03c1(A,B)\u03c1(A,B) word2vec NNLM(S) NNLM(L) In Out 0.77 0.13 0.16 In Tied 0.19 0.31 0.45 Out Tied 0.39 0.65 0.77 between all pairs of words evaluated for the different embed - dings: input/output embeddings (of the untied model) and th e embeddings of our tied model. We show the results for both the word2vec models and the small and large NNLM models from (Zaremba et al., 2014).",
+    "technical_score": 0.03591255060728745,
+    "citation_score": 0.008978137651821863
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Model Size Train Val. Test Large (Zaremba et al., 2014) 66M 37.8 82.2 78.4 Large + Weight Tying 51M 48.5 77.7 74.3 Large + BD (Gal, 2015) + WD 66M 24.3 78.1 75.2 Large + BD + WT 51M 28.2 75.8 73.2 RHN (Zilly et al., 2016) + BD 32M 67.4 71.2 68.5 RHN + BD + WT 24M 74.1 68.1 66.0 and size (number of parameters) of models that use either dropout (baseline model) or Bayesian dropout (BD). WD \u2013 weight decay. of the original model. We, therefore, run the fol- lowing experiment: First, for each embedding, we compute the cosine distances between each pair of words. We then compute Spearman\u2019s rank corre- lation between these vectors of distances. As can be seen in Tab. 4, the results are consistent with our analysis and the results of Tab. 2 and Tab. 3: for word2vec the input and output embeddings are similar to each other and differ from the tied em- bedding; for the NNLM models, the output em- bedding and the tied embeddings are similar, the input embedding is somewhat similar to the tied embedding, and differs considerably from the out- put embedding. 4.2 Neural Network Language Models We next study the effect of tying the embeddings on the perplexity obtained by the NNLM mod- els. Following (Zaremba et al., 2014), we study two NNLMs. The two models differ mostly in the size of the LSTM layers. In the small model, both LSTM layers contain 200 units and in the large model, both contain 1500 units. In addition, the large model uses three dropout layers, one placed right before the first LSTM layer, one between h1 andh2and one right after h2. The dropout proba- bility is0.65. For both the small and large models, we use the same hyperparameters (i.e. weight ini- tialization, learning rate schedule, batch size) as in (Zaremba et al., 2014).",
+    "technical_score": 0.006995951417004048,
+    "citation_score": 0.001748987854251012
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Model Size Train Val. Test KN 5-gram 141 RNN 123 LSTM 117 Stack RNN 8.48M 110 FOFE-FNN 108 Noisy LSTM 4.65M 111.7 108.0 Deep RNN 6.16M 107.5 Small model 4.65M 38.0 120.7 114.5 Small + WT 2.65M 36.4 117.5 112.4 Small + PR 4.69M 50.8 116.0 111.7 Small + WT + PR 2.69M 53.5 104.9 100.9 for models that do not use dropout. The com- pared models are: KN 5-gram (Mikolov et al., 2011), RNN (Mikolov et al., 2011), LSTM (Graves, 2013), Stack / Deep RNN (Pascanu et al., 2013), FOFE-FNN (Zhang et al., 2015), Noisy LSTM (G \u0308 ulc \u0327ehre et al., 2016), and the small model from (Zaremba et al., 2014). The last three models are our models, which extend the small model. PR \u2013 projection regularization. Model Small S + WT S + PR S + WT + PRtext8Train 90.4 95.6 92.6 95.3 Val. - - - - Test 195.3 187.1 199.0 183.2IMDBTrain 71.3 75.4 72.0 72.9 Val. 94.1 94.6 94.0 91.2 Test 94.3 94.8 94.4 91.5BBCTrain 28.6 30.1 42.5 45.7 Val. 103.6 99.4 104.9 96.4 Test 110.8 106.8 108.7 98.9",
+    "technical_score": 0.004663967611336033,
+    "citation_score": 0.0011659919028340082
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 6,
+    "paragraph": "BBC datasets. The last three models are our models, which extend the small model (S) of (Zaremba et al., 2014). In addition to training our models on PTB and text8, following (Miyamoto and Cho, 2016), we also compare the performance of the NNLMs on the BBC (Greene and Cunningham, 2006) and IMDB (Maas et al., 2011) datasets, each of which we process and split into a train/validation/test split (we use the same vocabularies as (Miyamoto and Cho, 2016)). In the first experiment, which was conducted on the PTB dataset, we compare the perplexity ob- tained by the large NNLM model and our ver- sion in which the input and output embeddings are tied. As can be seen in Tab. 5, weight tying significantly reduces perplexity on both the val- idation set and the test set, but not on the train- ing set. This indicates less overfitting, as expected due to the reduction in the number of parameters. Recently, (Gal and Ghahramani, 2016), proposed a modified model that uses Bayesian dropout and weight decay. They obtained improved perfor- mance. When the embeddings of this model areSize Validation Test EN\u2192FR Baseline 168M 29.49 33.13 Decoder WT 122M 29.47 33.26 TWWT 80M 29.43 33.46 EN\u2192DE Baseline 165M 20.96 16.79 Decoder WT 119M 21.09 16.54 TWWT 79M 21.02 17.15 various translation models. TWWT \u2013 three-way weight tying. tied, a similar amount of improvement is gained. We tried this with and without weight decay and got similar results in both cases, with slight im- provement in the latter model. Finally, by re- placing the LSTM with a recurrent highway net- work (Zilly et al., 2016), state of the art results are achieved when applying weight tying. The contri- bution of WT is also significant in this model. Perplexity results are often reported separately for models with and without dropout.",
+    "technical_score": 0.004663967611336033,
+    "citation_score": 0.0011659919028340082
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 7,
+    "paragraph": "In Tab. 6, we report the results of the small NNLM model, that does not utilize dropout, on PTB. As can be seen, both WT and projection regularization (PR) im- prove the results. When combining both methods together, state of the art results are obtained. An analog table for text8, IMDB and BBC is Tab. 7, which shows a significant reduction in perplexity across these datasets when both PR and WT are used. PR does not help the large models, which employ dropout for regularization. 4.3 Neural Machine Translation Finally, we study the impact of weight tying in at- tention based NMT models, using the DL4MT4 implementation. We train our EN \u2192FR mod- els on the parallel corpora provided by ACL WMT 2014. We use the data as processed by (Cho et al., 2014) using the data selection method of (Axelrod et al., 2011). For EN \u2192DE we train on data from the translation task of WMT 2015, validate on newstest2013 and test on newstest2014 and newstest2015. Follow- ing (Sennrich et al., 2016b) we learn the BPE seg- mentation on the union of the vocabularies that we are translating from and to (we use BPE with 89500 merge operations). All models were trained using Adadelta (Zeiler, 2012) for 300K updates, have a hidden layer size of 1000 and all embed- ding layers are of size 500.",
+    "technical_score": 0.004663967611336033,
+    "citation_score": 0.0011659919028340082
+  },
+  {
+    "section_path": [
+      "Weight Tying"
+    ],
+    "paragraph_index": 8,
+    "paragraph": "Tab. 8 shows that even though the weight tied models have about 28% fewer parameters than the 4https://github.com/nyu-dl/dl4mt-tutorial baseline models, their performance is similar. This is also the case for the three-way weight tied mod- els, even though they have about 52% fewer pa- rameters than their untied counterparts.",
+    "technical_score": 0.005829959514170041,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Quality of Obtained Embeddings"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to compare the various embeddings, we pooled five embedding evaluation meth- ods from the literature. These evaluation methods involve calculating pairwise (cosine) 1http://statmt.org/wmt14/translation-task.html 2http://statmt.org/wmt15/translation-task.html",
+    "technical_score": 0.05115789473684209,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Quality of Obtained Embeddings"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Input Output Tied Simlex999 0.30 0.29 0.17 Verb-143 0.41 0.34 0.12 MEN 0.66 0.61 0.50 Rare-Word 0.34 0.34 0.23 MTurk-771 0.59 0.54 0.37 learned by a word2vec skip-gram model. Results are also shown for the tied word2vec model. Spearman\u2019s correlation \u03c1 is reported for five word embedding evaluation benchmarks. PTB text8 Embedding In Out Tied In Out Tied Simlex999 0.02 0.13 0.14 0.17 0.27 0.28 Verb143 0.12 0.37 0.32 0.20 0.35 0.42 MEN 0.11 0.21 0.26 0.26 0.50 0.50 Rare-Word 0.28 0.38 0.36 0.14 0.15 0.17 MTurk771 0.17 0.28 0.30 0.26 0.48 0.45 small model from (Zaremba et al., 2014) and the embeddings from our weight tied variant. Spearman\u2019s correlation \u03c1is pre- sented. distances between embeddings and correlat- ing these distances with human judgments of the strength of relationships between con- cepts. We use: Simlex999 (Hill et al., 2016), Verb-143 (Baker et al., 2014), MEN (Bruni et al., 2014), Rare- Word (Luong et al., 2013) and MTurk- 771 (Halawi et al., 2012). We begin by training both the tied and un- tied word2vec models on the text83dataset, us- ing a vocabulary consisting only of words that appear at least five times. As can be seen in Tab. 2, the output embedding is almost as good as the input embedding. As expected, the embedding of the tied model is not com- petitive. The situation is different when train- ing the small NNLM model on either the Penn Treebank (Marcus et al., 1993) or text8 datasets (for PTB, we used the same train/validation/test set split and vocabulary as (Mikolov et al., 2011), while on text8 we used the split/vocabulary from (Mikolov et al., 2014)). These results are presented in Tab. 3. In this case, the input embed- ding is far inferior to the output embedding. The tied embedding is comparable to the output em- bedding. A natural question given these results and the analysis in Sec. 3 is whether the word embedding in the weight tied NNLM model is more similar to the input embedding or to the output embedding 3http://mattmahoney.net/dc/textdataA B \u03c1(A,B)\u03c1(A,B)\u03c1(A,B) word2vec NNLM(S) NNLM(L) In Out 0.77 0.13 0.16 In Tied 0.19 0.31 0.45 Out Tied 0.39 0.65 0.77 between all pairs of words evaluated for the different embed - dings: input/output embeddings (of the untied model) and th e embeddings of our tied model. We show the results for both the word2vec models and the small and large NNLM models from (Zaremba et al., 2014).",
+    "technical_score": 0.04263157894736841,
+    "citation_score": 0.04263157894736841
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Quality of Obtained Embeddings"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Model Size Train Val. Test Large (Zaremba et al., 2014) 66M 37.8 82.2 78.4 Large + Weight Tying 51M 48.5 77.7 74.3 Large + BD (Gal, 2015) + WD 66M 24.3 78.1 75.2 Large + BD + WT 51M 28.2 75.8 73.2 RHN (Zilly et al., 2016) + BD 32M 67.4 71.2 68.5 RHN + BD + WT 24M 74.1 68.1 66.0 and size (number of parameters) of models that use either dropout (baseline model) or Bayesian dropout (BD). WD \u2013 weight decay. of the original model. We, therefore, run the fol- lowing experiment: First, for each embedding, we compute the cosine distances between each pair of words. We then compute Spearman\u2019s rank corre- lation between these vectors of distances. As can be seen in Tab. 4, the results are consistent with our analysis and the results of Tab. 2 and Tab. 3: for word2vec the input and output embeddings are similar to each other and differ from the tied em- bedding; for the NNLM models, the output em- bedding and the tied embeddings are similar, the input embedding is somewhat similar to the tied embedding, and differs considerably from the out- put embedding.",
+    "technical_score": 0.017052631578947364,
+    "citation_score": 0.017052631578947364
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Neural Network Language Models"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We next study the effect of tying the embeddings on the perplexity obtained by the NNLM mod- els. Following (Zaremba et al., 2014), we study two NNLMs. The two models differ mostly in the size of the LSTM layers. In the small model, both LSTM layers contain 200 units and in the large model, both contain 1500 units. In addition, the large model uses three dropout layers, one placed right before the first LSTM layer, one between h1 andh2and one right after h2. The dropout proba- bility is0.65. For both the small and large models, we use the same hyperparameters (i.e. weight ini- tialization, learning rate schedule, batch size) as in (Zaremba et al., 2014).",
+    "technical_score": 0.005115789473684209,
+    "citation_score": 0.020463157894736836
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Neural Network Language Models"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Model Size Train Val. Test KN 5-gram 141 RNN 123 LSTM 117 Stack RNN 8.48M 110 FOFE-FNN 108 Noisy LSTM 4.65M 111.7 108.0 Deep RNN 6.16M 107.5 Small model 4.65M 38.0 120.7 114.5 Small + WT 2.65M 36.4 117.5 112.4 Small + PR 4.69M 50.8 116.0 111.7 Small + WT + PR 2.69M 53.5 104.9 100.9 for models that do not use dropout. The com- pared models are: KN 5-gram (Mikolov et al., 2011), RNN (Mikolov et al., 2011), LSTM (Graves, 2013), Stack / Deep RNN (Pascanu et al., 2013), FOFE-FNN (Zhang et al., 2015), Noisy LSTM (G \u0308 ulc \u0327ehre et al., 2016), and the small model from (Zaremba et al., 2014). The last three models are our models, which extend the small model. PR \u2013 projection regularization. Model Small S + WT S + PR S + WT + PRtext8Train 90.4 95.6 92.6 95.3 Val. - - - - Test 195.3 187.1 199.0 183.2IMDBTrain 71.3 75.4 72.0 72.9 Val. 94.1 94.6 94.0 91.2 Test 94.3 94.8 94.4 91.5BBCTrain 28.6 30.1 42.5 45.7 Val. 103.6 99.4 104.9 96.4 Test 110.8 106.8 108.7 98.9",
+    "technical_score": 0.01577368421052631,
+    "citation_score": 0.01577368421052631
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Neural Network Language Models"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "BBC datasets. The last three models are our models, which extend the small model (S) of (Zaremba et al., 2014). In addition to training our models on PTB and text8, following (Miyamoto and Cho, 2016), we also compare the performance of the NNLMs on the BBC (Greene and Cunningham, 2006) and IMDB (Maas et al., 2011) datasets, each of which we process and split into a train/validation/test split (we use the same vocabularies as (Miyamoto and Cho, 2016)). In the first experiment, which was conducted on the PTB dataset, we compare the perplexity ob- tained by the large NNLM model and our ver- sion in which the input and output embeddings are tied. As can be seen in Tab. 5, weight tying significantly reduces perplexity on both the val- idation set and the test set, but not on the train- ing set. This indicates less overfitting, as expected due to the reduction in the number of parameters. Recently, (Gal and Ghahramani, 2016), proposed a modified model that uses Bayesian dropout and weight decay. They obtained improved perfor- mance. When the embeddings of this model areSize Validation Test EN\u2192FR Baseline 168M 29.49 33.13 Decoder WT 122M 29.47 33.26 TWWT 80M 29.43 33.46 EN\u2192DE Baseline 165M 20.96 16.79 Decoder WT 119M 21.09 16.54 TWWT 79M 21.02 17.15 various translation models. TWWT \u2013 three-way weight tying. tied, a similar amount of improvement is gained. We tried this with and without weight decay and got similar results in both cases, with slight im- provement in the latter model. Finally, by re- placing the LSTM with a recurrent highway net- work (Zilly et al., 2016), state of the art results are achieved when applying weight tying. The contri- bution of WT is also significant in this model. Perplexity results are often reported separately for models with and without dropout.",
+    "technical_score": 0.00511578947368421,
+    "citation_score": 0.011936842105263155
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Neural Network Language Models"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "In Tab. 6, we report the results of the small NNLM model, that does not utilize dropout, on PTB. As can be seen, both WT and projection regularization (PR) im- prove the results. When combining both methods together, state of the art results are obtained. An analog table for text8, IMDB and BBC is Tab. 7, which shows a significant reduction in perplexity across these datasets when both PR and WT are used. PR does not help the large models, which employ dropout for regularization. 4.3 Neural Machine Translation Finally, we study the impact of weight tying in at- tention based NMT models, using the DL4MT4 implementation. We train our EN \u2192FR mod- els on the parallel corpora provided by ACL WMT 2014. We use the data as processed by (Cho et al., 2014) using the data selection method of (Axelrod et al., 2011). For EN \u2192DE we train on data from the translation task of WMT 2015, validate on newstest2013 and test on newstest2014 and newstest2015. Follow- ing (Sennrich et al., 2016b) we learn the BPE seg- mentation on the union of the vocabularies that we are translating from and to (we use BPE with 89500 merge operations). All models were trained using Adadelta (Zeiler, 2012) for 300K updates, have a hidden layer size of 1000 and all embed- ding layers are of size 500.",
+    "technical_score": 0.004689473684210525,
+    "citation_score": 0.004689473684210525
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Neural Network Language Models"
+    ],
+    "paragraph_index": 5,
+    "paragraph": "Tab. 8 shows that even though the weight tied models have about 28% fewer parameters than the 4https://github.com/nyu-dl/dl4mt-tutorial baseline models, their performance is similar. This is also the case for the three-way weight tied mod- els, even though they have about 52% fewer pa- rameters than their untied counterparts.",
+    "technical_score": 0.0017052631578947364,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Neural Machine Translation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Finally, we study the impact of weight tying in at- tention based NMT models, using the DL4MT4 implementation. We train our EN \u2192FR mod- els on the parallel corpora provided by ACL WMT 2014. We use the data as processed by (Cho et al., 2014) using the data selection method of (Axelrod et al., 2011). For EN \u2192DE we train on data from the translation task of WMT 2015, validate on newstest2013 and test on newstest2014 and newstest2015. Follow- ing (Sennrich et al., 2016b) we learn the BPE seg- mentation on the union of the vocabularies that we are translating from and to (we use BPE with 89500 merge operations). All models were trained using Adadelta (Zeiler, 2012) for 300K updates, have a hidden layer size of 1000 and all embed- ding layers are of size 500.",
+    "technical_score": 0.0015915789473684217,
+    "citation_score": 0.006366315789473687
+  },
+  {
+    "section_path": [
+      "\u2202Uit",
+      "Neural Machine Translation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Tab. 8 shows that even though the weight tied models have about 28% fewer parameters than the 4https://github.com/nyu-dl/dl4mt-tutorial baseline models, their performance is similar. This is also the case for the three-way weight tied mod- els, even though they have about 52% fewer pa- rameters than their untied counterparts.",
+    "technical_score": 0.02046315789473684,
+    "citation_score": 0.0
+  }
+]
