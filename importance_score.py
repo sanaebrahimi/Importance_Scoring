@@ -498,6 +498,16 @@ CITATION_STYLE_NUMERIC_PAREN = "numeric_paren"
 CITATION_STYLE_AUTHOR_YEAR = "author_year"
 
 
+def citation_style_family(citation_style: Optional[str]) -> Optional[str]:
+    if citation_style in {CITATION_STYLE_NUMERIC_BRACKET, CITATION_STYLE_NUMERIC_PAREN}:
+        return CITATION_STYLE_NUMERIC
+    return citation_style
+
+
+def citation_styles_compatible(left: Optional[str], right: Optional[str]) -> bool:
+    return citation_style_family(left) == citation_style_family(right)
+
+
 def normalize_author_year_authors(authors: str) -> str:
     normalized = normalize_for_match(authors)
     normalized = re.sub(r"\s+", " ", normalized).strip(" ,;:")
@@ -1102,7 +1112,7 @@ def extract_citations_by_section(
                 prefix_text=prefix_text,
                 suffix_text=suffix_text,
             )
-            if citation_style is None or citation_style != dominant_citation_style:
+            if citation_style is None or not citation_styles_compatible(citation_style, dominant_citation_style):
                 continue
             citation_start = match.start()
             citation_end = match.end()

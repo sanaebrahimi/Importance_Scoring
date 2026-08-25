@@ -30,6 +30,7 @@ from importance_score import (
     CITATION_BLOCK_PATTERN,
     build_citation_focus_text,
     canonicalize_citation_key,
+    citation_styles_compatible,
     classify_citation_block,
     detect_dominant_citation_style,
     extract_citations_by_section,
@@ -1382,7 +1383,7 @@ def iter_records(records: Iterable[SectionRecord]) -> Iterable[SectionRecord]:
 
 
 def scan_paragraph_citations(paragraph_text: str, expected_citations: Sequence[str]) -> Counter:
-    expected_set = set(expected_citations)
+    expected_set = {canonicalize_citation_key(citation) for citation in expected_citations}
     if not expected_set:
         return Counter()
 
@@ -1393,8 +1394,11 @@ def scan_paragraph_citations(paragraph_text: str, expected_citations: Sequence[s
         prefix = (paragraph_text or "")[max(0, match.start() - 24) : match.start()]
         suffix = (paragraph_text or "")[match.end() : min(len(paragraph_text or ""), match.end() + 24)]
         style = classify_citation_block(block, prefix_text=prefix, suffix_text=suffix)
-        if style is None or style != dominant_style:
+        if style is None or not citation_styles_compatible(style, dominant_style):
             continue
+        block_key = canonicalize_citation_key(block)
+        if block_key in expected_set:
+            mention_counter[block_key] += 1
         for citation in split_citation_block(block):
             key = canonicalize_citation_key(citation)
             if key in expected_set:
@@ -1513,6 +1517,11 @@ class BaselineModel(ABC):
                 f"Paragraph {idx + 1}": self.raw_paragraph_weight(paragraphs[idx], sum(paragraph_mentions[idx].values()))
                 for idx in range(len(paragraphs))
             }
+            if sum(float(value) for value in paragraph_raw.values()) <= 0.0:
+                paragraph_raw = {
+                    f"Paragraph {idx + 1}": 1.0
+                    for idx in range(len(paragraphs))
+                }
             paragraph_total = normalize_distribution(paragraph_raw, record.total_score)
 
             citation_fraction = max(0.0, min(0.95, self.leaf_citation_fraction(record)))
@@ -1627,7 +1636,7 @@ class LengthHeuristicBaseline(BaselineModel):
 
 
 class UniformBaseline(BaselineModel):
-    """Uniform section and paragraph weights with raw mention-count citation scoring.
+    """Uniform hierarchical section weights with raw mention-count citation scoring.
 
     Every section at each level receives equal score regardless of length.
     Within each leaf section, paragraphs are also weighted uniformly. Citations

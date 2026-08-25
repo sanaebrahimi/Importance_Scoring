@@ -5,8 +5,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Random access to data is a foundational operation in computer science, enabling efficient algorithms for search, selection, and exploration. However, this operation largely breaks down in mod- ern data systems where access is governed by ranking functions rather than static keys. In such systems, data items are ordered by a query-specific ,user-specific , ormachine-generated scoring function,1 often dynamically defined over high-dimensional feature spaces. Yet, accessing the items at arbitrary rank positions or within a rank window typically requires fully materializing or sequentially scanning the ranked list, using operations such as get-next . This limitation arises across a wide range of data-driven applica- tions, including database systems, interactive data exploration and analytics tools, information retrieval and recommendation systems, and machine learning pipelines [ 13,19,21,33,42,84]. Common scenarios include database queries on derived attributes[ 64,68], 1Also known as ranking functions.analytical exploration for business decisions [ 68], paged naviga- tion of search results [ 33], browsing ranked product lists in e- commerce [ 78], and scrolling through personalized feeds on social platforms [65]. A concrete example arises in web application APIs, which im- plement this through paged or offset-based navigation: Example 1. In web and e-commerce applications, APIs commonly useoffset-based pagination . For instance, a request such as [GET /items?offset=400&limit=5] retrieves items ranked 401\u2013405. More generally, this pattern requires efficient retrieval of results at deeper ranks without scanning all earlier entries [78, 90]. Similar scenarios also arise in data science and visual analyt- ics tooling, where analysts frequently interact with large, ranked datasets. Tools such as spreadsheets, notebooks, and visual analyt- ics platforms provide intuitive interfaces for exploration [ 30,82, 86,100], but the explosive growth of data volumes driven by big data and AI has placed heavy demands on their efficiency and re- sponsiveness [ 17]. For example, while using data science workflows such as Jupyter notebooks [ 62], analysts may need random access to particular ranks or quantiles (e.g., 10th, 20th, etc.) in a sorted dataframe, effectively skipping earlier-ranked items. Beyond ranked retrieval, closely related challenges arise in simi- larity search, where items are ordered by their distance or similarity to a query object. Example 2. In similarity search applications, such as nearest- neighbor queries over high-dimensional embeddings, items are ranked by their similarity to a query point. While existing systems efficiently retrieve the top- kmost similar items, users and downstream applica- tions may need to access items at arbitrary similarity ranks or within specific distance bands. For example, an analyst may wish to exam- ine the points whose similarity lies within a narrow range around a decision boundary. Traditionally, research on ranked retrieval has focused on top-k query processing, where the goal is to identify the highest-ranked tuples [ 34,44,53,54]. In this setting, results are retrieved sequen- tially from the top of the ranking up to position k, wherekis typically a small constant relative to the dataset size. Similarly, in the context of similarity search, k-nearest neighbor (kNN) search aims to retrieve the kmost similar points to a query [ 70,79,97]. These approaches are designed for small values of kand, as shown in our evaluations, become ineffective for random-access queries that seek to retrieve a tuple at an arbitrary rank position i, wherei may be as large as O(n).",
-    "technical_score": 0.02227891156462564,
-    "citation_score": 0.0015306122448979448
+    "technical_score": 0.020238095238095048,
+    "citation_score": 0.003571428571428538
   },
   {
     "section_path": [
@@ -195,8 +195,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "\u03b4 \u03b52log\u03b4 \u03b5+\u03b4 \u03b52log\u03b4 \u03c6)\ufe02 is an\u03b5-sample of(D,R)with probability at least 1\u2212\u03c6. \u25a1 In addition to random sampling, which provides a probabilistic method for constructing \u03b5-samples, there also exist deterministic construction algorithms based on discrepancy theory [27, 50].",
-    "technical_score": 0.005238095238095239,
-    "citation_score": 0.004285714285714286
+    "technical_score": 0.009523809523809525,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -302,8 +302,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "(Step i: Thresholding ) During the query phase , given a query pair (f,i), we begin by solving the 1-RAR problem on the \u03b5-sampleN\u03b5. Specifically, we identify the il-th andiu-th ranked points in N\u03b5 with respect to the scoring function f, where: il=\u230a\ufe03 m(\ufe03i n\u2212\u03b5)\ufe03\u230b\ufe03 , iu=\u2308\ufe03 m(\ufe03i n+\u03b5)\ufe03\u2309\ufe03 , (1) andm=|N\u03b5|. This step can be done by sorting the points in N\u03b5 according to scoref, or by using linear-time-in- mbaseline median- finding algorithms, such as median-of-medians. These two points serve as score-based thresholds that are guaranteed to bound the score of the i-th ranked point in the full dataset D, as stated in the following lemma.",
-    "technical_score": 0.0026190476190476194,
-    "citation_score": 0.002142857142857143
+    "technical_score": 0.004761904761904762,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -553,8 +553,8 @@
     ],
     "paragraph_index": 4,
     "paragraph": "Nearest Neighbor Search . A closely related problem to random- access similarity search (Problem 3) is Approximate Nearest Neighbor (ANN) search, which aims to retrieve the top- kmost similar points to a queryq. ANN has been extensively studied in the context of vector databases [ 10,55], and existing methods broadly fall into three categories: (a) graph-based indexing and traversal methods, (b) quantization-based approaches that compress the search space, and (c) hashing techniques inspired by locality-sensitive hashing. Graph-based methods construct a proximity graph over the dataset and perform greedy graph traversal at query time [81, 92]. Prominent examples include Navigable Small-World (NSW) graphs and their hierarchical variant HNSW [ 69,70], as well as Navigating Spread-out Graphs (NSG) [45] and DiskANN [57].",
-    "technical_score": 0.006349206349206349,
-    "citation_score": 0.0015873015873015873
+    "technical_score": 0.0052579365079365075,
+    "citation_score": 0.0026785714285714286
   },
   {
     "section_path": [
@@ -562,8 +562,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Quantization-based techniques aim to accelerate kNN search by compressing high-dimensional vectors. Widely used approaches include Product Quantization (PQ) [ 60] and Inverted File (IVF) in- dexing [ 40,59]. PQ and its variants decompose vectors into multiple low-dimensional subspaces and quantize each independently, en- abling fast approximate distance computation via lookup tables. For large-scale datasets, PQ is commonly combined with coarse partitioning schemes such as IVF, which clusters the dataset into centroid-based cells approximating Voronoi regions. The third category consists of hash-based methods such as locality- sensitive hashing, which provide theoretical guarantees [ 7,36, 67] but are known to degrade in high-dimensional real-world set- tings [56].",
-    "technical_score": 0.007142857142857143,
-    "citation_score": 0.0007936507936507937
+    "technical_score": 0.006597222222222221,
+    "citation_score": 0.0013392857142857143
   },
   {
     "section_path": [
@@ -580,8 +580,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Note that the term \u2225q\u22252 2is still needed to obtain the exact same value as the d(p,q)2term in Equation 5. But, as the term \u2225q\u22252 2is independent of p, and is missing for all pi\u2208D as part of the compu- tation off, there is no change in ranking. That is, while the scores for all points inDare offset by\u2225q\u22252 2, the ranking between points does not change. Hence, the transformation suffices to answer any l2norm based RAS query using a transformed RAR query with rank set to 1. A visual representation of this lifting transformation is shown in Figure 2. \u25a1 D.2 Cosine Distance: Proof of Lemma 2 Proof. For a query q, the cosine distance is given by, d(p,q)=1\u2212q\u22a4p \u2225q\u22252\u00b7\u2225p\u22252. (7) The numerator of the Equation 7, q\u22a4p, can be interpreted as a dot product between the linear function qandp. Therefore, d(p,q)=1\u2212(\ufe03q \u2225q\u22252)\ufe03\u22a4p \u2225p\u22252 =1+d\u2211\ufe02 j=1\u2212q[j] \u2225q\u22252p \u2225p\u22252 Removing the constant term from the scoring function, the rank- ing generated by Equation 8 is the same as Equation 7. figure shows an example of running KthLevel for i=3. The result of this query is the point D. Algorithm 1 KthLevel-Query(f,i) Input: The scoring function fand the order i Output: Thei-th highest scored point according to f:p(i) 1:Leveli\u2190preprocessed data structure \u22b2Get thei-th level 2:face\u2190Intersection(f,Level i) \u22b2Get the intersection 3:h\u2190The hyperplane corresponding to face in arrangement",
-    "technical_score": 0.0035639412997903563,
-    "citation_score": 0.00040431266846361187
+    "technical_score": 0.003548085901027077,
+    "citation_score": 0.0004201680672268908
   },
   {
     "section_path": [
@@ -589,8 +589,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "\u03b52log1 \u03b5)\ufe02 .Combining all steps, the total runtime is: T(Eps2D)=O(\ufe02 m+\u221an+|Do|log|Do|)\ufe02 . Using|Do|=O(\u03b5n)and choosing \u03b5=n\u22121/3(which minimizes the overall runtime), we get: T(Eps2D)=O(\ufe02 n2/3logn)\ufe02 . we proceed to steps iii and iv. In step iii, we solve an instance of range counting in ddimensions, which takes O(n1\u22121/d)[72] time and linear space. Finally, in step iv, we sort Do, which takes O(|Do|log|Do|).",
-    "technical_score": 0.0035639412997903563,
-    "citation_score": 0.00040431266846361187
+    "technical_score": 0.003548085901027077,
+    "citation_score": 0.0004201680672268908
   },
   {
     "section_path": [
@@ -706,8 +706,8 @@
     ],
     "paragraph_index": 3,
     "paragraph": "Query Answering . Letm=|N\u03b5|denote the size of the \u03b5-sample built during the preprocessing, where m\u226an.9We take the follow- ing steps to answer the query: (Step i: Thresholding ) During the query phase , given a query pair (f,i), we begin by solving the 1-RAR problem on the \u03b5-sampleN\u03b5. Specifically, we identify the il-th andiu-th ranked points in N\u03b5 with respect to the scoring function f, where: il=\u230a\ufe03 m(\ufe03i n\u2212\u03b5)\ufe03\u230b\ufe03 , iu=\u2308\ufe03 m(\ufe03i n+\u03b5)\ufe03\u2309\ufe03 , (1) andm=|N\u03b5|. This step can be done by sorting the points in N\u03b5 according to scoref, or by using linear-time-in- mbaseline median- finding algorithms, such as median-of-medians. These two points serve as score-based thresholds that are guaranteed to bound the score of the i-th ranked point in the full dataset D, as stated in the following lemma. Lemma 4. LetN\u03b5be an\u03b5-sample of the dataset Dfor some\u03b5>0. Then, for any linear scoring function f, the score of the i-th ranked pointp(i)inDis bounded as scoref(ql)\u2264scoref(p(i))\u2264scoref(qu), whereqlandquare theil-th andiu-th ranked points in N\u03b5underf, i.e.,qj=rank\u22121 N\u03b5,f(ij),forj\u2208{l,u}.",
-    "technical_score": 0.0019047619047619045,
-    "citation_score": 0.0010714285714285715
+    "technical_score": 0.002976190476190476,
+    "citation_score": 0.0
   },
   {
     "section_path": [

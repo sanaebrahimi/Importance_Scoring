@@ -1,0 +1,347 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Large language models (LLMs) (Zhang et al., 2022a; Chowdhery et al., 2022; Touvron et al., 2023a; Team et al., 2023; Brown et al., 2020; OpenAI, 2023) have significantly advanced the field of natural language understanding and generation in recent years. These models are pretrained on vast amounts of data and subsequently aligned with human preferences to generate helpful and coherent outputs (Ouyang et al., 2022). However, despite the plethora of LLMs and their impressive achievements, they still face inherent constraints on model size and training data. Further scaling up these models is exceptionally costly, often requiring extensive retraining on several trillion tokens. At the same time, different LLMs possess unique strengths and specialize in various tasks aspects. For instance, some models excel at complex instruction following (Xu et al., 2023a) while others may be better suited for code generation (Roziere et al., 2023; Guo et al., 2024). This diversity in skill sets among different LLMs presents an intriguing question: Can we harness the collective expertise of multiple LLMs to create a more capable and robust model? Our answer to this question is Yes. We identify an inherent phenomenon we term the collaborativeness of LLMs \u2014 wherein an LLM tends to generate better responses when presented with outputs from other models, even if these other models are less capable by itself. Figure 1 showcases the LC win rate on the AlpacaEval 2.0 benchmark (Dubois et al., 2024) for 6 popular LLMs. 1Our code can be found in: https://github.com/togethercomputer/moa .",
+    "citation": "(Ouyang et al., 2022)",
+    "citation_score": 0.008333333333333338
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Large language models (LLMs) (Zhang et al., 2022a; Chowdhery et al., 2022; Touvron et al., 2023a; Team et al., 2023; Brown et al., 2020; OpenAI, 2023) have significantly advanced the field of natural language understanding and generation in recent years. These models are pretrained on vast amounts of data and subsequently aligned with human preferences to generate helpful and coherent outputs (Ouyang et al., 2022). However, despite the plethora of LLMs and their impressive achievements, they still face inherent constraints on model size and training data. Further scaling up these models is exceptionally costly, often requiring extensive retraining on several trillion tokens. At the same time, different LLMs possess unique strengths and specialize in various tasks aspects. For instance, some models excel at complex instruction following (Xu et al., 2023a) while others may be better suited for code generation (Roziere et al., 2023; Guo et al., 2024). This diversity in skill sets among different LLMs presents an intriguing question: Can we harness the collective expertise of multiple LLMs to create a more capable and robust model? Our answer to this question is Yes. We identify an inherent phenomenon we term the collaborativeness of LLMs \u2014 wherein an LLM tends to generate better responses when presented with outputs from other models, even if these other models are less capable by itself. Figure 1 showcases the LC win rate on the AlpacaEval 2.0 benchmark (Dubois et al., 2024) for 6 popular LLMs. 1Our code can be found in: https://github.com/togethercomputer/moa .",
+    "citation": "(Xu et al., 2023a)",
+    "citation_score": 0.008333333333333338
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Large language models (LLMs) (Zhang et al., 2022a; Chowdhery et al., 2022; Touvron et al., 2023a; Team et al., 2023; Brown et al., 2020; OpenAI, 2023) have significantly advanced the field of natural language understanding and generation in recent years. These models are pretrained on vast amounts of data and subsequently aligned with human preferences to generate helpful and coherent outputs (Ouyang et al., 2022). However, despite the plethora of LLMs and their impressive achievements, they still face inherent constraints on model size and training data. Further scaling up these models is exceptionally costly, often requiring extensive retraining on several trillion tokens. At the same time, different LLMs possess unique strengths and specialize in various tasks aspects. For instance, some models excel at complex instruction following (Xu et al., 2023a) while others may be better suited for code generation (Roziere et al., 2023; Guo et al., 2024). This diversity in skill sets among different LLMs presents an intriguing question: Can we harness the collective expertise of multiple LLMs to create a more capable and robust model? Our answer to this question is Yes. We identify an inherent phenomenon we term the collaborativeness of LLMs \u2014 wherein an LLM tends to generate better responses when presented with outputs from other models, even if these other models are less capable by itself. Figure 1 showcases the LC win rate on the AlpacaEval 2.0 benchmark (Dubois et al., 2024) for 6 popular LLMs. 1Our code can be found in: https://github.com/togethercomputer/moa .",
+    "citation": "(Dubois et al., 2024)",
+    "citation_score": 0.008333333333333338
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "[Prompt] A1,1 A1,2 A1,3[Intermediate Output] A2,1 A2,2 A2,3[Intermediate Output] A4,1 Layer 1A3,1 A3,2 A3,3[Intermediate Output] Layer 2 Layer 3 Layer 4[Final Output] concatenateAgent: Token:Ai,jFigure 2: Illustration of the Mixture-of-Agents Structure. This example showcases 4 MoA layers with 3 agents in each layer. The agents here can share the same model. prove when provided with responses from other models.When these models are provided with answers gen- erated independently by these models, their LC win rates significantly improve. This indicates that the collaborativeness phenomenon is widespread among LLMs. Remarkably, this improvement occurs even when the auxiliary responses provided by the other models are of lower quality than what an individual LLM could generate independently. Based on this finding, this paper introduces a Mixture- of-Agents (MoA) methodology that leverages multi- ple LLMs to iteratively enhance the generation qual- ity. The structure of MoA is illustrated in Figure 2. Initially, LLMs in the first layer, denoted as agents A1,1, ...A 1,nindependently generate responses to a given prompt. These responses are then presented to agents in the next layer A2,1, ...A 2,n(which may reuse a model from the first layer) for further refinement. This iterative refinement process continues for several cycles until obtaining a more robust and comprehensive response. To ensure effective collaboration among models and improve overall response quality, careful selection of LLMs for each MoA layer is crucial. This selection process is guided by two primary criteria: (a) Performance Metrics: The average win rate of models in layer iplays a significant role in determining their suitability for inclusion in layer i+ 1. Therefore, selecting models based on their demonstrated performance metrics ensures higher-quality outputs. (b) Diversity Considerations: The diversity of model outputs is also crucial. Responses generated by heterogeneous models contribute significantly more than those produced by the same model as we show later in section 3.3. By leveraging these criteria \u2014 performance and diversity \u2014 MoA aims to mitigate individual model deficiencies and enhance overall response quality through collaborative synthesis. We conduct comprehensive evaluations using AlpacaEval 2.0, MT-Bench (Zheng et al., 2023), FLASK (Ye et al., 2023) benchmarks for assessing the response quality across various dimensions. The results demonstrate substantial improvements with our proposed method, achieving a new SOTA win rate of 65.8% on AlpacaEval 2.0 compared to the previous best of 57.5% achieved by GPT-4 Omni. The contributions of this work are summarized as follows: (1) Novel framework : we propose a Mixture-of-Agents framework designed to leverage the strengths of multiple LLMs, thereby improving their reasoning and language generation capabilities. (2) Finding of collaborativeness of language models : we highlight the inherit collaborativeness among LLMs, where models tend to generate better quality responses when they have access to outputs from other models, even if those outputs are of lower quality. (3) State-of-the-art LLM performance : we conducted extensive experiments using multiple highly-competitive benchmarks such as AlpacaEval 2.0, MT-Bench, and FLASK; our MoA framework achieves state-of-the-art performance on these benchmarks.",
+    "citation": "(Zheng et al., 2023)",
+    "citation_score": 0.010714285714285721
+  },
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "[Prompt] A1,1 A1,2 A1,3[Intermediate Output] A2,1 A2,2 A2,3[Intermediate Output] A4,1 Layer 1A3,1 A3,2 A3,3[Intermediate Output] Layer 2 Layer 3 Layer 4[Final Output] concatenateAgent: Token:Ai,jFigure 2: Illustration of the Mixture-of-Agents Structure. This example showcases 4 MoA layers with 3 agents in each layer. The agents here can share the same model. prove when provided with responses from other models.When these models are provided with answers gen- erated independently by these models, their LC win rates significantly improve. This indicates that the collaborativeness phenomenon is widespread among LLMs. Remarkably, this improvement occurs even when the auxiliary responses provided by the other models are of lower quality than what an individual LLM could generate independently. Based on this finding, this paper introduces a Mixture- of-Agents (MoA) methodology that leverages multi- ple LLMs to iteratively enhance the generation qual- ity. The structure of MoA is illustrated in Figure 2. Initially, LLMs in the first layer, denoted as agents A1,1, ...A 1,nindependently generate responses to a given prompt. These responses are then presented to agents in the next layer A2,1, ...A 2,n(which may reuse a model from the first layer) for further refinement. This iterative refinement process continues for several cycles until obtaining a more robust and comprehensive response. To ensure effective collaboration among models and improve overall response quality, careful selection of LLMs for each MoA layer is crucial. This selection process is guided by two primary criteria: (a) Performance Metrics: The average win rate of models in layer iplays a significant role in determining their suitability for inclusion in layer i+ 1. Therefore, selecting models based on their demonstrated performance metrics ensures higher-quality outputs. (b) Diversity Considerations: The diversity of model outputs is also crucial. Responses generated by heterogeneous models contribute significantly more than those produced by the same model as we show later in section 3.3. By leveraging these criteria \u2014 performance and diversity \u2014 MoA aims to mitigate individual model deficiencies and enhance overall response quality through collaborative synthesis. We conduct comprehensive evaluations using AlpacaEval 2.0, MT-Bench (Zheng et al., 2023), FLASK (Ye et al., 2023) benchmarks for assessing the response quality across various dimensions. The results demonstrate substantial improvements with our proposed method, achieving a new SOTA win rate of 65.8% on AlpacaEval 2.0 compared to the previous best of 57.5% achieved by GPT-4 Omni. The contributions of this work are summarized as follows: (1) Novel framework : we propose a Mixture-of-Agents framework designed to leverage the strengths of multiple LLMs, thereby improving their reasoning and language generation capabilities. (2) Finding of collaborativeness of language models : we highlight the inherit collaborativeness among LLMs, where models tend to generate better quality responses when they have access to outputs from other models, even if those outputs are of lower quality. (3) State-of-the-art LLM performance : we conducted extensive experiments using multiple highly-competitive benchmarks such as AlpacaEval 2.0, MT-Bench, and FLASK; our MoA framework achieves state-of-the-art performance on these benchmarks.",
+    "citation": "(Ye et al., 2023)",
+    "citation_score": 0.010714285714285721
+  },
+  {
+    "section_path": [
+      "Mixture-of-Agents Methodology",
+      "Analogy to Mixture-of-Experts"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Mixture-of-Experts (MoE) (Shazeer et al., 2017) is a prominent and well-established technique in machine learning where multiple expert networks specialize in different skill sets. The MoE approach has shown significant success across various applications due to its ability to leverage diverse model capabilities for complex problem-solving tasks. Our MoA method draws inspiration from this methodology.",
+    "citation": "(Shazeer et al., 2017)",
+    "citation_score": 0.009375
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Benchmarks We mainly evaluate models on AlpacaEval 2.0 (Dubois et al., 2024), a leading benchmark for assessing the alignment of LLMs with human preferences. It contains 805 instructions representative of real use cases. Each model\u2019s response is directly compared against that of the GPT-4 (gpt-4-1106-preview ), with a GPT-4-based evaluator determining the likelihood of preferring the evaluated model\u2019s response. To ensure fairness, the evaluation employs length-controlled (LC) win rates, effectively neutralizing length bias.2 Additionally, we also evaluate on MT-Bench (Zheng et al., 2023) and FLASK (Ye et al., 2023). MT-Bench uses GPT-4 to grade and give a score to model\u2019s answer. FLASK, on the other hand, offers a more granular evaluation with 12 skill-specific scores.",
+    "citation": "(Dubois et al., 2024)",
+    "citation_score": 0.001875
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Benchmarks We mainly evaluate models on AlpacaEval 2.0 (Dubois et al., 2024), a leading benchmark for assessing the alignment of LLMs with human preferences. It contains 805 instructions representative of real use cases. Each model\u2019s response is directly compared against that of the GPT-4 (gpt-4-1106-preview ), with a GPT-4-based evaluator determining the likelihood of preferring the evaluated model\u2019s response. To ensure fairness, the evaluation employs length-controlled (LC) win rates, effectively neutralizing length bias.2 Additionally, we also evaluate on MT-Bench (Zheng et al., 2023) and FLASK (Ye et al., 2023). MT-Bench uses GPT-4 to grade and give a score to model\u2019s answer. FLASK, on the other hand, offers a more granular evaluation with 12 skill-specific scores.",
+    "citation": "(Zheng et al., 2023)",
+    "citation_score": 0.001875
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Benchmarks We mainly evaluate models on AlpacaEval 2.0 (Dubois et al., 2024), a leading benchmark for assessing the alignment of LLMs with human preferences. It contains 805 instructions representative of real use cases. Each model\u2019s response is directly compared against that of the GPT-4 (gpt-4-1106-preview ), with a GPT-4-based evaluator determining the likelihood of preferring the evaluated model\u2019s response. To ensure fairness, the evaluation employs length-controlled (LC) win rates, effectively neutralizing length bias.2 Additionally, we also evaluate on MT-Bench (Zheng et al., 2023) and FLASK (Ye et al., 2023). MT-Bench uses GPT-4 to grade and give a score to model\u2019s answer. FLASK, on the other hand, offers a more granular evaluation with 12 skill-specific scores.",
+    "citation": "(Ye et al., 2023)",
+    "citation_score": 0.001875
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Models In our study, we constructed our default MoA by using only open-source models to achieve competitive performance. The models included are: Qwen1.5-110B-Chat (Bai et al., 2023), Qwen1.5- 72B-Chat, WizardLM-8x22B (Xu et al., 2023a), LLaMA-3-70B-Instruct (Touvron et al., 2023b), Mixtral-8x22B-v0.1 (Jiang et al., 2024), dbrx-instruct (The Mosaic Research Team, 2024). We construct 3 MoA layers and use the same set of models in each MoA layer. We use Qwen1.5-110B- Chat as the aggregator in the last layer. We also developed a variant called MoA w/ GPT-4o, which prioritizes high-quality outputs by using GPT-4o as the aggregator in the final MoA layer. Another variant, MoA-Lite, emphasizes cost-effectiveness. It uses the same set of models as proposers but includes only 2 MoA layers and employs Qwen1.5-72B-Chat as the aggregator. This makes it more cost-effective than GPT-4o while achieving a 1.8%improvement in quality on AlpacaEval 2.0. We ensure strict adherence to the licensing terms of all models utilized in this research. For open-source models, all inferences were ran through Together Inference Endpoint.3",
+    "citation": "(Bai et al., 2023)",
+    "citation_score": 0.0015
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Models In our study, we constructed our default MoA by using only open-source models to achieve competitive performance. The models included are: Qwen1.5-110B-Chat (Bai et al., 2023), Qwen1.5- 72B-Chat, WizardLM-8x22B (Xu et al., 2023a), LLaMA-3-70B-Instruct (Touvron et al., 2023b), Mixtral-8x22B-v0.1 (Jiang et al., 2024), dbrx-instruct (The Mosaic Research Team, 2024). We construct 3 MoA layers and use the same set of models in each MoA layer. We use Qwen1.5-110B- Chat as the aggregator in the last layer. We also developed a variant called MoA w/ GPT-4o, which prioritizes high-quality outputs by using GPT-4o as the aggregator in the final MoA layer. Another variant, MoA-Lite, emphasizes cost-effectiveness. It uses the same set of models as proposers but includes only 2 MoA layers and employs Qwen1.5-72B-Chat as the aggregator. This makes it more cost-effective than GPT-4o while achieving a 1.8%improvement in quality on AlpacaEval 2.0. We ensure strict adherence to the licensing terms of all models utilized in this research. For open-source models, all inferences were ran through Together Inference Endpoint.3",
+    "citation": "(Xu et al., 2023a)",
+    "citation_score": 0.0015
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Models In our study, we constructed our default MoA by using only open-source models to achieve competitive performance. The models included are: Qwen1.5-110B-Chat (Bai et al., 2023), Qwen1.5- 72B-Chat, WizardLM-8x22B (Xu et al., 2023a), LLaMA-3-70B-Instruct (Touvron et al., 2023b), Mixtral-8x22B-v0.1 (Jiang et al., 2024), dbrx-instruct (The Mosaic Research Team, 2024). We construct 3 MoA layers and use the same set of models in each MoA layer. We use Qwen1.5-110B- Chat as the aggregator in the last layer. We also developed a variant called MoA w/ GPT-4o, which prioritizes high-quality outputs by using GPT-4o as the aggregator in the final MoA layer. Another variant, MoA-Lite, emphasizes cost-effectiveness. It uses the same set of models as proposers but includes only 2 MoA layers and employs Qwen1.5-72B-Chat as the aggregator. This makes it more cost-effective than GPT-4o while achieving a 1.8%improvement in quality on AlpacaEval 2.0. We ensure strict adherence to the licensing terms of all models utilized in this research. For open-source models, all inferences were ran through Together Inference Endpoint.3",
+    "citation": "(Touvron et al., 2023b)",
+    "citation_score": 0.0015
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Models In our study, we constructed our default MoA by using only open-source models to achieve competitive performance. The models included are: Qwen1.5-110B-Chat (Bai et al., 2023), Qwen1.5- 72B-Chat, WizardLM-8x22B (Xu et al., 2023a), LLaMA-3-70B-Instruct (Touvron et al., 2023b), Mixtral-8x22B-v0.1 (Jiang et al., 2024), dbrx-instruct (The Mosaic Research Team, 2024). We construct 3 MoA layers and use the same set of models in each MoA layer. We use Qwen1.5-110B- Chat as the aggregator in the last layer. We also developed a variant called MoA w/ GPT-4o, which prioritizes high-quality outputs by using GPT-4o as the aggregator in the final MoA layer. Another variant, MoA-Lite, emphasizes cost-effectiveness. It uses the same set of models as proposers but includes only 2 MoA layers and employs Qwen1.5-72B-Chat as the aggregator. This makes it more cost-effective than GPT-4o while achieving a 1.8%improvement in quality on AlpacaEval 2.0. We ensure strict adherence to the licensing terms of all models utilized in this research. For open-source models, all inferences were ran through Together Inference Endpoint.3",
+    "citation": "(Jiang et al., 2024)",
+    "citation_score": 0.0015
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Setup"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Models In our study, we constructed our default MoA by using only open-source models to achieve competitive performance. The models included are: Qwen1.5-110B-Chat (Bai et al., 2023), Qwen1.5- 72B-Chat, WizardLM-8x22B (Xu et al., 2023a), LLaMA-3-70B-Instruct (Touvron et al., 2023b), Mixtral-8x22B-v0.1 (Jiang et al., 2024), dbrx-instruct (The Mosaic Research Team, 2024). We construct 3 MoA layers and use the same set of models in each MoA layer. We use Qwen1.5-110B- Chat as the aggregator in the last layer. We also developed a variant called MoA w/ GPT-4o, which prioritizes high-quality outputs by using GPT-4o as the aggregator in the final MoA layer. Another variant, MoA-Lite, emphasizes cost-effectiveness. It uses the same set of models as proposers but includes only 2 MoA layers and employs Qwen1.5-72B-Chat as the aggregator. This makes it more cost-effective than GPT-4o while achieving a 1.8%improvement in quality on AlpacaEval 2.0. We ensure strict adherence to the licensing terms of all models utilized in this research. For open-source models, all inferences were ran through Together Inference Endpoint.3",
+    "citation": "(Mosaic Research Team, 2024)",
+    "citation_score": 0.0015
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "Benchmark Results"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we present our evaluation results on three standard benchmarks: AlpacaEval 2.0, MT-Bench, and FLASK. These benchmarks were chosen to comprehensively assess the performance of our approach and compare with the state-of-the-art LLMs. 2This metric tracks closely with human preferences, achieving a Spearman correlation of 0.98 with actual human evaluations (Dubois et al., 2024). 3https://api.together.ai/playground/chat",
+    "citation": "(Dubois et al., 2024)",
+    "citation_score": 0.0075
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "What Makes Mixture-of-Agents Work Well?"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we conduct experiments that provide us better understandings of the internal mechanism of Mixture-of-Agents. We summarize key insights below. Mixture-of-Agents significantly outperforms LLM rankers. First, we compare Mixture-of- Agents with an LLM-based ranker which uses the aggregator model to select one of the answers that are generated by the proposers, instead of generating a new output. The results are shown in Figure 4, where we can observe that the MoA approach significantly outperforms an LLM-ranker baseline. The fact that MoA outperforms the ranking approach suggests that the aggregator does not simply select one of the generated answers by the proposers, but potentially performs sophisticated aggregation over all proposed generations. MoA tends to incorporate the best proposed answers. We also compare the aggregator\u2019s response with the proposers\u2019 responses via similarity scores such as BLEU (Papineni et al., 2002) which reflects n-gram overlaps. Within each sample, given nproposed answers by the proposers, we calculate the the Spearman\u2019s rank correlation coefficient between nsimilar scores and npreference scores determined by the GPT-4 based evaluator. The results in Figure 4 indeed confirms a positive correlation between the win rate and the BLEU score. We also provide results with Levenshtein similarity (RapidFuzz, 2023) or TF-IDF as opposed to BLEU scores in Appendix A. where both alternative approaches for textual similarities also yield positive correlation with the preference scores.",
+    "citation": "(Papineni et al., 2002)",
+    "citation_score": 0.00375
+  },
+  {
+    "section_path": [
+      "Evaluation",
+      "What Makes Mixture-of-Agents Work Well?"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this subsection, we conduct experiments that provide us better understandings of the internal mechanism of Mixture-of-Agents. We summarize key insights below. Mixture-of-Agents significantly outperforms LLM rankers. First, we compare Mixture-of- Agents with an LLM-based ranker which uses the aggregator model to select one of the answers that are generated by the proposers, instead of generating a new output. The results are shown in Figure 4, where we can observe that the MoA approach significantly outperforms an LLM-ranker baseline. The fact that MoA outperforms the ranking approach suggests that the aggregator does not simply select one of the generated answers by the proposers, but potentially performs sophisticated aggregation over all proposed generations. MoA tends to incorporate the best proposed answers. We also compare the aggregator\u2019s response with the proposers\u2019 responses via similarity scores such as BLEU (Papineni et al., 2002) which reflects n-gram overlaps. Within each sample, given nproposed answers by the proposers, we calculate the the Spearman\u2019s rank correlation coefficient between nsimilar scores and npreference scores determined by the GPT-4 based evaluator. The results in Figure 4 indeed confirms a positive correlation between the win rate and the BLEU score. We also provide results with Levenshtein similarity (RapidFuzz, 2023) or TF-IDF as opposed to BLEU scores in Appendix A. where both alternative approaches for textual similarities also yield positive correlation with the preference scores.",
+    "citation": "(RapidFuzz, 2023)",
+    "citation_score": 0.00375
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "LLM Reasoning"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to improve generation quality of LLMs, recent researches have experienced great progresses in optimizing LLMs to various downstream tasks through prompt engineering. Chain of Thought (CoT) (Wei et al., 2022; Kojima et al., 2022) prompting techniques represent a linear problem- solving approach where each step builds upon the previous one. Fu et al. (2022) applied CoT to multi-step reasoning tasks. To automate CoT prompting, Auto-CoT (Zhang et al., 2022b) constructs demonstrations by sampling diverse questions and generating reasoning chains. Active-Prompt (Diao 4For open-source models, we calculate the price using data from https://api.together.ai/models ; for OpenAI models, we use pricing details from https://openai.com/api/pricing/ . Pricing data was retrieved as of May 22, 2024. et al., 2023) focuses on selecting the most uncertain questions for task-specific annotations. PS Prompt (Wang et al., 2023) decomposes tasks into subtasks. Tree-of-Thought (ToT) (Yao et al., 2023a) expands on the reasoning process by considering multiple paths of reasoning and self-evaluating choices. Effective Graph-of-Thought (Yao et al., 2023b) frames thoughts as graphs. Natural Program prompting (Ling et al., 2023) is proposed for better solving deductive reasoning tasks. And re-reading prompt (Xu et al., 2023b) revisits question information embedded within input prompts.",
+    "citation": "(Fu et al., 2022)",
+    "citation_score": 0.004166666666666667
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "LLM Reasoning"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to improve generation quality of LLMs, recent researches have experienced great progresses in optimizing LLMs to various downstream tasks through prompt engineering. Chain of Thought (CoT) (Wei et al., 2022; Kojima et al., 2022) prompting techniques represent a linear problem- solving approach where each step builds upon the previous one. Fu et al. (2022) applied CoT to multi-step reasoning tasks. To automate CoT prompting, Auto-CoT (Zhang et al., 2022b) constructs demonstrations by sampling diverse questions and generating reasoning chains. Active-Prompt (Diao 4For open-source models, we calculate the price using data from https://api.together.ai/models ; for OpenAI models, we use pricing details from https://openai.com/api/pricing/ . Pricing data was retrieved as of May 22, 2024. et al., 2023) focuses on selecting the most uncertain questions for task-specific annotations. PS Prompt (Wang et al., 2023) decomposes tasks into subtasks. Tree-of-Thought (ToT) (Yao et al., 2023a) expands on the reasoning process by considering multiple paths of reasoning and self-evaluating choices. Effective Graph-of-Thought (Yao et al., 2023b) frames thoughts as graphs. Natural Program prompting (Ling et al., 2023) is proposed for better solving deductive reasoning tasks. And re-reading prompt (Xu et al., 2023b) revisits question information embedded within input prompts.",
+    "citation": "(Zhang et al., 2022b)",
+    "citation_score": 0.004166666666666667
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "LLM Reasoning"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to improve generation quality of LLMs, recent researches have experienced great progresses in optimizing LLMs to various downstream tasks through prompt engineering. Chain of Thought (CoT) (Wei et al., 2022; Kojima et al., 2022) prompting techniques represent a linear problem- solving approach where each step builds upon the previous one. Fu et al. (2022) applied CoT to multi-step reasoning tasks. To automate CoT prompting, Auto-CoT (Zhang et al., 2022b) constructs demonstrations by sampling diverse questions and generating reasoning chains. Active-Prompt (Diao 4For open-source models, we calculate the price using data from https://api.together.ai/models ; for OpenAI models, we use pricing details from https://openai.com/api/pricing/ . Pricing data was retrieved as of May 22, 2024. et al., 2023) focuses on selecting the most uncertain questions for task-specific annotations. PS Prompt (Wang et al., 2023) decomposes tasks into subtasks. Tree-of-Thought (ToT) (Yao et al., 2023a) expands on the reasoning process by considering multiple paths of reasoning and self-evaluating choices. Effective Graph-of-Thought (Yao et al., 2023b) frames thoughts as graphs. Natural Program prompting (Ling et al., 2023) is proposed for better solving deductive reasoning tasks. And re-reading prompt (Xu et al., 2023b) revisits question information embedded within input prompts.",
+    "citation": "(Wang et al., 2023)",
+    "citation_score": 0.004166666666666667
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "LLM Reasoning"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to improve generation quality of LLMs, recent researches have experienced great progresses in optimizing LLMs to various downstream tasks through prompt engineering. Chain of Thought (CoT) (Wei et al., 2022; Kojima et al., 2022) prompting techniques represent a linear problem- solving approach where each step builds upon the previous one. Fu et al. (2022) applied CoT to multi-step reasoning tasks. To automate CoT prompting, Auto-CoT (Zhang et al., 2022b) constructs demonstrations by sampling diverse questions and generating reasoning chains. Active-Prompt (Diao 4For open-source models, we calculate the price using data from https://api.together.ai/models ; for OpenAI models, we use pricing details from https://openai.com/api/pricing/ . Pricing data was retrieved as of May 22, 2024. et al., 2023) focuses on selecting the most uncertain questions for task-specific annotations. PS Prompt (Wang et al., 2023) decomposes tasks into subtasks. Tree-of-Thought (ToT) (Yao et al., 2023a) expands on the reasoning process by considering multiple paths of reasoning and self-evaluating choices. Effective Graph-of-Thought (Yao et al., 2023b) frames thoughts as graphs. Natural Program prompting (Ling et al., 2023) is proposed for better solving deductive reasoning tasks. And re-reading prompt (Xu et al., 2023b) revisits question information embedded within input prompts.",
+    "citation": "(Yao et al., 2023a)",
+    "citation_score": 0.004166666666666667
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "LLM Reasoning"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to improve generation quality of LLMs, recent researches have experienced great progresses in optimizing LLMs to various downstream tasks through prompt engineering. Chain of Thought (CoT) (Wei et al., 2022; Kojima et al., 2022) prompting techniques represent a linear problem- solving approach where each step builds upon the previous one. Fu et al. (2022) applied CoT to multi-step reasoning tasks. To automate CoT prompting, Auto-CoT (Zhang et al., 2022b) constructs demonstrations by sampling diverse questions and generating reasoning chains. Active-Prompt (Diao 4For open-source models, we calculate the price using data from https://api.together.ai/models ; for OpenAI models, we use pricing details from https://openai.com/api/pricing/ . Pricing data was retrieved as of May 22, 2024. et al., 2023) focuses on selecting the most uncertain questions for task-specific annotations. PS Prompt (Wang et al., 2023) decomposes tasks into subtasks. Tree-of-Thought (ToT) (Yao et al., 2023a) expands on the reasoning process by considering multiple paths of reasoning and self-evaluating choices. Effective Graph-of-Thought (Yao et al., 2023b) frames thoughts as graphs. Natural Program prompting (Ling et al., 2023) is proposed for better solving deductive reasoning tasks. And re-reading prompt (Xu et al., 2023b) revisits question information embedded within input prompts.",
+    "citation": "(Yao et al., 2023b)",
+    "citation_score": 0.004166666666666667
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "LLM Reasoning"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to improve generation quality of LLMs, recent researches have experienced great progresses in optimizing LLMs to various downstream tasks through prompt engineering. Chain of Thought (CoT) (Wei et al., 2022; Kojima et al., 2022) prompting techniques represent a linear problem- solving approach where each step builds upon the previous one. Fu et al. (2022) applied CoT to multi-step reasoning tasks. To automate CoT prompting, Auto-CoT (Zhang et al., 2022b) constructs demonstrations by sampling diverse questions and generating reasoning chains. Active-Prompt (Diao 4For open-source models, we calculate the price using data from https://api.together.ai/models ; for OpenAI models, we use pricing details from https://openai.com/api/pricing/ . Pricing data was retrieved as of May 22, 2024. et al., 2023) focuses on selecting the most uncertain questions for task-specific annotations. PS Prompt (Wang et al., 2023) decomposes tasks into subtasks. Tree-of-Thought (ToT) (Yao et al., 2023a) expands on the reasoning process by considering multiple paths of reasoning and self-evaluating choices. Effective Graph-of-Thought (Yao et al., 2023b) frames thoughts as graphs. Natural Program prompting (Ling et al., 2023) is proposed for better solving deductive reasoning tasks. And re-reading prompt (Xu et al., 2023b) revisits question information embedded within input prompts.",
+    "citation": "(Ling et al., 2023)",
+    "citation_score": 0.004166666666666667
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "LLM Reasoning"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In order to improve generation quality of LLMs, recent researches have experienced great progresses in optimizing LLMs to various downstream tasks through prompt engineering. Chain of Thought (CoT) (Wei et al., 2022; Kojima et al., 2022) prompting techniques represent a linear problem- solving approach where each step builds upon the previous one. Fu et al. (2022) applied CoT to multi-step reasoning tasks. To automate CoT prompting, Auto-CoT (Zhang et al., 2022b) constructs demonstrations by sampling diverse questions and generating reasoning chains. Active-Prompt (Diao 4For open-source models, we calculate the price using data from https://api.together.ai/models ; for OpenAI models, we use pricing details from https://openai.com/api/pricing/ . Pricing data was retrieved as of May 22, 2024. et al., 2023) focuses on selecting the most uncertain questions for task-specific annotations. PS Prompt (Wang et al., 2023) decomposes tasks into subtasks. Tree-of-Thought (ToT) (Yao et al., 2023a) expands on the reasoning process by considering multiple paths of reasoning and self-evaluating choices. Effective Graph-of-Thought (Yao et al., 2023b) frames thoughts as graphs. Natural Program prompting (Ling et al., 2023) is proposed for better solving deductive reasoning tasks. And re-reading prompt (Xu et al., 2023b) revisits question information embedded within input prompts.",
+    "citation": "(Xu et al., 2023b)",
+    "citation_score": 0.004166666666666667
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Jiang et al., 2023)",
+    "citation_score": 0.013636363636363622
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Chen et al., 2023b)",
+    "citation_score": 0.003409090909090909
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Huang et al., 2024)",
+    "citation_score": 0.003409090909090909
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Du et al., 2023)",
+    "citation_score": 0.003409090909090909
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Liang et al., 2023)",
+    "citation_score": 0.003409090909090909
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Chan et al., 2023)",
+    "citation_score": 0.003409090909090909
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Zhang et al., 2023)",
+    "citation_score": 0.003409090909090909
+  },
+  {
+    "section_path": [
+      "Related Work",
+      "Model Ensemble"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "different models. For instance, Jiang et al. (2023) introduce PAIRRANKER , which performs pairwise comparisons on candidate outputs to select the best one, showing improvements on a self-constructed instruction dataset. To address the substantial computational costs associated with multi-LLM inference, other studies have explored training a router that predicts the best-performing model from a fixed set of LLMs for a given input (Wang et al., 2024a; Shnitzer et al., 2024; Lu et al., 2023). Additionally, FrugalGPT (Chen et al., 2023b) proposed reducing the cost of using LLMs by employing different models in a cascading manner. In order to better leverage the responses of multiple models, Jiang et al. (2023) trained a GENFUSER , a model that was trained to generate an improved response to capitalize on the strengths of multiple candidates. Huang et al. (2024) proposed to fuse the outputs of different models by averaging their output probability distributions. Another line of work is multi-agent collaboration. Several studies explore using multiple large language models as agents that collectively discuss and reason through given problems interactively. Du et al. (2023) establishes a mechanism for symmetric discussions among agents. Around the same time, MAD (Liang et al., 2023) introduces an asymmetric mechanism design, with different roles, i.e., debater and judge. Other similar works include (Chan et al., 2023). Moreover, ReConcile (Chen et al., more deeply, Zhang et al. (2023) aim to explain such collaboration mechanism in a social psychology view. Wang et al. (2024b) systematically compared multi-agent approaches and found a single agent with a strong prompt including detailed demonstrations can achieve comparable response quality to multi-agent approaches.",
+    "citation": "(Wang et al., 2024b)",
+    "citation_score": 0.003409090909090909
+  },
+  {
+    "section_path": [
+      "Supplementary Material",
+      "MATH Task"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Here, we demonstrate that our approach is applicable to reasoning tasks, such as those in the MATH dataset Hendrycks et al. (2021). The results are presented in Table 8, where we show that our method consistently enhances accuracy by a significant margin. This indicates that our approach is also effective for this type of task. Notably, our method is complementary to existing reasoning techniques such as Chain of Thought Wei et al. (2022) and Self-consistency Wang et al. (2022).",
+    "citation": "(Hendrycks et al., 2021)",
+    "citation_score": 0.0008928571428571428
+  },
+  {
+    "section_path": [
+      "Supplementary Material",
+      "MATH Task"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Here, we demonstrate that our approach is applicable to reasoning tasks, such as those in the MATH dataset Hendrycks et al. (2021). The results are presented in Table 8, where we show that our method consistently enhances accuracy by a significant margin. This indicates that our approach is also effective for this type of task. Notably, our method is complementary to existing reasoning techniques such as Chain of Thought Wei et al. (2022) and Self-consistency Wang et al. (2022).",
+    "citation": "(Wei et al., 2022)",
+    "citation_score": 0.0008928571428571428
+  },
+  {
+    "section_path": [
+      "Supplementary Material",
+      "MATH Task"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Here, we demonstrate that our approach is applicable to reasoning tasks, such as those in the MATH dataset Hendrycks et al. (2021). The results are presented in Table 8, where we show that our method consistently enhances accuracy by a significant margin. This indicates that our approach is also effective for this type of task. Notably, our method is complementary to existing reasoning techniques such as Chain of Thought Wei et al. (2022) and Self-consistency Wang et al. (2022).",
+    "citation": "(Wang et al., 2022)",
+    "citation_score": 0.0008928571428571428
+  }
+]

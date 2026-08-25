@@ -1,0 +1,254 @@
+[
+  {
+    "section_path": [
+      "Introduction"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Large Language Models (LLMs) have exhibited ex- ceptional capabilities across various domains, such as reasoning (Wei et al., 2022), code generation (Zheng et al., 2023), and mathematics (Yang et al., 2024). The expansion of their capabilities and their increasing commoditization are establishing LLMs as building blocks in the development of agents ca- pable of performing more real-world tasks. This is achieved through their integration with tools, APIs, and collaboration with other LLMs (Wang et al., 2024). Similar to human interactions, collabora- tion between agents stands as a mechanism that can help solve more complex and real-world problems. Code: https://github.com/amayuelas/multi-agent-attack versarial attacks. Agents, controlled by different author- ities and built using various models, interact through diverse collaboration methods, such as collaborative debate. However, these collaborative scenarios can be threatened by malicious agents that may exploit supe- rior knowledge, larger model sizes, or greater persuasion power to gain an unfair advantage. Previous works suggest that LLM collaboration and debate lead to more divergent thinking (Liang et al., 2023), better reasoning and factuality (Du et al., 2023), and more faithful evaluations (Chan et al., 2023). These results demonstrate the impor- tance of collaboration in achieving more capable agents, at the expense of greater computational re- sources and more complexity to build them. In the near future, agents are destined to collab- orate with other agents controlled by different au- thorities and with varying capabilities. This raises critical questions: What if the agents do not share the same goal? What will the outcome be if one or more agents want to take advantage of or break the collaboration mechanism? How robust is the collaboration mechanism to an adversarial attack? In this work, we focus on answering these ques- tions, where models must interact through debate to answer questions or complete tasks. Some agents may act against the general goal and attempt to gain an unfair advantage through greater access to knowledge, larger model size, or superior persua-6929 sive power. We believe it is crucial to address these questions to develop more robust communication and collaboration methods between LLMs. To evaluate this scenario, we selected four rep- resentative tasks: reasoning (MMLU - Hendrycks et al. (2021)), trustworthiness (TruthFulQA - Lin et al. (2022)), (MedMCQA - Pal et al. (2022)), and legal (Scalr - Guha et al. (2024)). The first two tasks address LLM-specific challenges, while the latter two focus on high-risk applications. The eval- uation involves a debate between LLMs. Initially, the LLMs receive a question and independently pro- vide answers. Each response is then shared with the other models for reconsideration and revision over several rounds. An example of this debate is illustrated in Figure 2. To simulate an adversarial attack, the adversary selects an incorrect answer and tries to persuade the other agents to accept it as correct. This highlights the models\u2019 persuasive abilities and their suscep- tibility to persuasion. We evaluate this threat by measuring the drop in accuracy and the change in agreement with the adversary from the initial to the final rounds. Additionally, we explore methods for generating more convincing arguments. From the experiments and analysis described, we can highlight the following insights: 1. Collaboration via debate is usually vulnerable to an adversary . In general, the adversary is able to undermine the common objective with system accuracy decreases ranging from 10% to almost 40%, and individual accuracy decreases from the group models of up to 30%. 2. Model\u2019s persuasiveness is an important abil- ity to attack the collaborative setting . Persuasion is a skill that has traditionally not gained a lot of attention in language models. We show how to evaluate it based on accuracy and agreement. And we highlight its relevance in Language Models due to its effect on collaboration. 3. The effect of the #agents or #rounds is limited . The adversary still manages to effectively diminish the results, even when the number of rounds or agents increases. This work advances our understanding of LLM collaboration by investigating adversarial influence and foundational aspects of model persuasiveness. With the increasing deployment of LLMs and the growing relevance of collaboration, concerns about robustness and susceptibility to adversarial attacks are expected to grow.",
+    "technical_score": 0.08456937799043063,
+    "citation_score": 0.06919312744671596
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Cooperation and collaboration between agents have been extensively studied (Kraus, 1997). The emerg- ing capabilities of language models have prompted research into the collaborative abilities of deep learning models (Lazaridou and Baroni, 2020). Multi-agent networks can be very useful in appli- cations such as software development and court simulations (Talebirad and Nadiri, 2023).",
+    "technical_score": 0.00888245562084067,
+    "citation_score": 0.007267463689778731
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Multiagent Collaboration . Among agent col- laboration techniques, debate emerges as the most effective method of communication. Given that LLMs have become proficient in generating and understanding human language, they can leverage it to communicate with each other. Inspired by the concept of the Society of Mind (Minsky, 1988), debate among agents aims to harness collective knowledge, achieving superior results compared to individual efforts. This has been demonstrated in several studies: Du et al. (2023) shows that multi- agent debate can enhance factuality and reasoning, foster more divergent thinking (Liang et al., 2023), and even achieve state-of-the-art performance in mathematical reasoning (Wu et al., 2023). Other research works have focused on studying collabo- ration mechanisms (Zhang et al., 2023; Chen et al., 2023; Pham et al., 2023) (e.g., hierarchical vs. same-level or role-playing), attack (Gu et al.) or their implications in competitive settings (Wu et al., 2024). Recently, several frameworks have been developed to facilitate the implementation and inte- gration of different collaboration mechanisms and role-playing scenarios, including AutoGen (Wu et al., 2023), Camel (Li et al., 2023), and MetaGPT (Hong et al., 2023).",
+    "technical_score": 0.02568945498184312,
+    "citation_score": 0.02101864498514438
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Persuasiveness . As debate becomes the primary tool for LLM coordination, persuasion emerges as a critical trait, enabling agents to influence others to deviate from their prompted tasks. This raises several research questions that have only recently been explored. One focus is the overall persuasive- ness of LLMs, as studied by Breum et al. (2023). Another area of interest is the type of arguments that LLMs find convincing, discussed in Wan et al. (2024). The ability of LLMs to recognize convinc- ing arguments is explored in Rescala et al. (2024). Furthermore, the potential persuasiveness of LLMs is investigated in Salvi et al. (2024). Additionally, Khan et al. (2024) examines how a weaker model can assess a stronger one and how persuasiveness enables a model to identify truth in debates.6930",
+    "technical_score": 0.017137169280011362,
+    "citation_score": 0.012866847478443315
+  },
+  {
+    "section_path": [
+      "Related Work"
+    ],
+    "paragraph_index": 4,
+    "paragraph": "Debate : Initially, each model independently answers the question. In every round, models review each other\u2019s answers and can update their own. Adversary : The adversary is given a wrong answer and attempts to convince the other models it is correct, succeeding in this example. A detailed version of this example is provided in Appendix A.",
+    "technical_score": 0.004354144912176799,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methods",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Debate \u2014 Debate serves as the primary mode of communication among LLMs, using human lan- guage for interaction. In this protocol, models en- gage in argumentation to justify their responses to a given question. We select a predetermined number of group models that will engage in the collabora- tion:mj\u2208 GM, where the total number of models in the debate is M. The collaborative goal is to solve the task as accurately as possible. Following the setup introduced by Du et al. (2023), all models are initially presented with the same question ( qi), to which each model provides an initial response. The debate proceeds for a predetermined number of rounds rt, from a total of Trounds. During the debate rounds, each model receives the responses from the other models and generates updated an- swers. This process is depicted in Figure A. After Trounds, a final answer is selected through a Ma- jority V ote.",
+    "technical_score": 0.021432261832558346,
+    "citation_score": 0.017535486953911373
+  },
+  {
+    "section_path": [
+      "Methods",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Adversary \u2014 The goal of the adversary ( AM) is to convince other models in the debate to not provide the correct answer. The adversary is given an incorrect answer and prompted to convince the other agents that it is correct. After each round, the adversary is reminded to maintain its answer to avoid being influenced by the group. The attack is successful if the adversary manages to convince other models to change their answers. Changing other models\u2019 answers or opinions has not been thoroughly studied, and we believe persuasiveness can become a key aspect in agent or human collab- oration.Optimizing for more persuasive arguments \u2014 In our threat scenario, it is crucial for the models to generate convincing arguments capable of persuad- ing other agents involved in the conversation. We explore inference-time strategies to achieve this. Drawing inspiration from the work by Khan et al.",
+    "technical_score": 0.027834106276049802,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methods",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "(2024), we implement an argument selection mech- anism ( Best-of-N ). This mechanism generates mul- tiple requests to the adversary LLM ( AM) to pro- duce several completions supporting the adversarial answer. A preference model ( PM) then ranks these responses. Specifically, it compares each generated response to a dummy argument and computes the log probability for each response. The response with the highest rank is selected as the most con- vincing argument. Further details are included in Appendix C.",
+    "technical_score": 0.014972829582978513,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methods",
+      "Measuring Accuracy and Persuasiveness"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "We aim to quantify the debate outcomes and as- sess the adversary\u2019s influence on other models. To achieve this, we introduce metrics for evaluat- ing both debate results and adversarial capabilities. Given a dataset DofNquestions ( q) and their correct answers ( ac), where D={(qi, ai,c)}N i=1, a debate involves answers at i,jgenerated by each model mj\u2208 GMfor question qiacross multiple rounds rt. If the adversary is present, it is repre- sented as m\u2032 j\u2208 AM. Formally, the debate is: Debate (qi,GM,AM, T) = (a\u2032 i,0, ai,1, . . . , a i,j, . . . , a i,M\u22121)T\u22121 rt=0 (1)6931",
+    "technical_score": 0.023270987385819918,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methods",
+      "Measuring Accuracy and Persuasiveness"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "This formulation captures the sequence of answers overTrounds, enabling a comprehensive analysis of debate dynamics and adversarial impacts. Majority Vote \u2014 In the context of ensemble methods, majority vote involves combining multi- ple models to improve performance and robustness. Majority vote is a decision rule that selects the an- swer returned by the majority of the models and is considered the final answer for a given question. In this setting where each model mj\u2208 GMgener- ates an answer ai,jfor a question qi, the majority vote approach involves counting the occurrences of each unique answer among all the models\u2019 re- sponses. The answer that has the highest count is selected as the majority vote for an rt. Formally, ai,MV= arg max akM\u22121/summationdisplay j=0I(ai,j=ak) (2) where I(\u00b7)is the indicator function that equals 1 if the condition is true and 0 otherwise; ai,jthe answer of model mjto question qi; and akeach of the possible unique answers. We analyze the majority vote behavior in Appendix B.",
+    "technical_score": 0.03719008264462809,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methods",
+      "Measuring Accuracy and Persuasiveness"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "Measuring Agreement . In the collaboration scenario described, it is important to analyze how the agents reach a consensus. In particular, we are interested in comparing the agreement between the adversary and the group models. The joint compar- ison of the adversary agreement with the system accuracy serves as a proxy metric for understanding the persuasive power of the adversary over other models. We define pairwise agreement in the de- bate as the number of agents that concur on the same answer for a specific question: Agr(qi,rj, mj) =/summationdisplay mj\u0338=mzI(ai,j, ai,z) (3) We report on the normalized agreement for a model and all questions in the dataset. It is defined as:Agr(mj, rt) =1 N(M\u22121)/summationtextN\u22121 qi=0agr(qi,rj, mj) Adversary Persuasive Power . Finally, our goal is to measure the adversary, AMinfluence on the rest of the models in the debate, GM. We want to understand if the adversary is able to convince the rest of the agents of the wrong answer. First, we focus on the system Accuracy Change over all turns in the conversation: \u2206AccMV=AccMV|rt=T\u22121\u2212AccMV|rt=0(4)Similarly, we analyze the change in the adversary agreement over all turns: \u2206Agr(m\u2032 j) =Agr(m\u2032 j)|rt=T\u22121\u2212Agr(m\u2032 j)|rt=0 (5) If the adversary succeeds, we anticipate a de- crease in system accuracy and an increase in adver- sary agreement.",
+    "technical_score": 0.05241409308394954,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Methods",
+      "Experimental Details"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Tasks . We evaluate each model using four datasets that represent different tasks: (1) a general bench- mark that assesses the model\u2019s abilities across mul- tiple tasks; (2) a dataset that aims to evaluate the model\u2019s knowledge and its ability to discern the truth given common misconceptions. The remain- ing two datasets focus on application areas where autonomous models can pose significant risks: (3) legal and (4) medical domains. For all cases, we select a random subsample of 100 samples and evaluate 5 times to compute the standard deviation on the subset. 1.MMLU (Hendrycks et al., 2021). It is a com- prehensive benchmark that evaluates the mod- els\u2019 multitasking ability. The test covers a total of 57 tasks including elementary math- ematics, US history, computer science, law, and more. 2.TruthfulQA (Lin et al., 2022). This dataset presents a series of questions that some hu- mans would answer falsely due to a false be- lief or misconception. The goal is to evaluate the ability of a model to identify the truth and not believe plausible false statements. 3.MedMCQA (Pal et al., 2022). In this dataset, the questions are designed to address real- world medical entrance exams. It covers a wide range of medical and healthcare ques- tions from the AIIMS & NEET PG entrance exams. 4.Scalr \u2013 from LegalBench (Guha et al., 2024). LegalBench is a comprehensive legal reason- ing benchmark consisting of 162 tasks and covering six types of legal reasoning. We se- lect the SCALR task for our experiments. This task evaluates the legal reasoning and read- ing comprehension ability of the models with questions presented for review in supreme court cases.6932 round where all models answer faithfully. ( Bottom ) Change in Majority V ote Accuracy in the final round with an adversary aiming to convince other models to choose an incorrect answer. Language Models We use a combination of proprietary and open-source language models to demonstrate the validity of our methods and asso- ciated risks in different kinds of models. Specifi- cally, we employ GPT-3.5 and GPT-4o from Ope- nAI (OpenAI, 2024). For the open-source models, we use a variety of models on the basis that they achieved notable initial results in the original de- bate setting. The models chosen for this study are Meta\u2019s LLama 3 Instruct 8B (AI@Meta, 2024), Qwen 1.5 Chat 14B (Bai et al., 2023) and Yi 1.5 Chat 9B (Young et al., 2024).",
+    "technical_score": 0.05680940377429683,
+    "citation_score": 0.046480421269879224
+  },
+  {
+    "section_path": [
+      "Methods",
+      "Experimental Details"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Debate Settings . The aim of these experiments is to evaluate potential threats to collaboration among agents in a debate. We designed the de- bate configurations to balance the trade-off between computational cost and demonstrating the threat within the debate. When there are two agents, with one being adversarial, the majority vote is substan- tially compromised. Similarly, if the debate is lim- ited to two rounds, the agents interact in only one round. Therefore, in our general experiments, we utilize debates with three agents ( M= 3) and three rounds ( T= 3). Additionally, specific ablation studies are discussed in Section 4.3.",
+    "technical_score": 0.012847626021504657,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "[Section Lead-in]"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we evaluate the effectiveness of the adversary in the described setting based on multi- agent collaboration via debate. We present general results, improved attack, and fine-grained analysis to identify the model\u2019s persuasive power. We also introduce ablation studies and possible mitigation.",
+    "technical_score": 0.010004349717268378,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "General"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "System Accuracy Decrease . We generate the de- bate for the settings provided in Section 3.2, with 3 rounds and 3 agents. One of the agents is an adver- sary with the goal of convincing the other models to select an incorrect answer. The prompts used for this experiment are documented in Appendix E. The first question to address is how much the fi- nal accuracy drops when an adversary undermines the common goal. Figure 3 shows each model\u2019s performance in the debate and the total accuracy decreases when an adversary is part of the debate. It can be observed that all models exhibit a decline in performance, with GPT-4o demonstrating the highest resilience in the face of adversarial influ- ence. We introduce the behavior of the majority vote system under an adversary in Appendix B. Effects on Accuracy and Agreement over rounds . The final accuracy decrease does not fully explain how the adversary works. The general be- havior of the adversary can be better understood by looking at the accuracy over rounds and the agree- ment with the rest of the models participating in the debate. Figure 4 shows how accuracy and agree- ment evolve over the the 3 rounds. We observe the accuracy decrease is constant for all models, except for GPT-4o. This indicates the overall effectiveness of the attack. On the other side, when we look at the adversary agreement, we obtain the opposite behavior. The agreement generally increases, indi- cating the adversary is able to persuade the group models over rounds.6933 rounds. A decrease over rounds means the adversary is working. Bottom : Adversary Agreement evolution over rounds. An increase over rounds means the adversary is working. Therefore the 2 metrics together, system accuracy and adversary agreement, help us understand how the threat scenario. To understand the attacks better, we summarize the possibilities in Table 1. Adversary Agreement ( \u2206Agr) - +System Accuracy ( \u2206Acc)-Some other cause for the accuracy decrease.Attack is working. The adversary is dropping the Ac- curacy and per- suading the other models +Attack is not working. The adversary group models are not being persuaded and the accuracy increasesThe adversary is probably not working against the group models",
+    "technical_score": 0.08445992956766535,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "General"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "(-) Means a negative trend. (+) Means a positive trend. Measuring attack success . Finally, our goal is to understand the persuasiveness of the models. As indicated in Section 3.1, we use a combination of system accuracy and adversary agreement. Table 2 shows the results on the persuasive power of the evaluated models over the selected datasets. As described in Table 1, a higher decrease in system accuracy, along with an increase in adversary agree- ment, indicates better persuasion by the adversary.",
+    "technical_score": 0.01841088382946384,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "Improved attack: More persuasive"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "adversary The adversary\u2019s effectiveness in disrupting multi- agent collaboration through debate relies signifi- cantly on the models\u2019 persuasive power. We have previously shown the adversary\u2019s impact on system accuracy and agreement. Now, we explore methods to enhance the adversary\u2019s generated arguments. In Section 3, we have introduced the method Best-of-N , where several arguments are generated for every step and compared against a dummy ar- gument for the correct answer. The arguments are ranked by preference model and the best argument is then used by the adversary. In addition to this method, we also evaluate the impact of greater knowledge related to the question. We simulate a RAG system by using the context extracted from Portkey (2024) for TruthfulQA, where relevant text is extracted from identified URLs related to the question. We hypothesize that models can generate more convincing arguments when they have more knowledge related to the topic. In Table 3, we present the results from (1) Best- of-N and (2) Extra Knowledge to GPT-3.5-turbo and GPT-4o on TruthfulQA. We observe better re- sults when compared with the original attack for most cases. Only in the case of added context GPT3.5 performs slightly worse, which could be explained by the good results from the original at- tack in this case or the inability of the model to leverage the added knowledge.6934",
+    "technical_score": 0.0320700075547721,
+    "citation_score": 0.02623909709026808
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "Improved attack: More persuasive"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Truthful MMLU MedMCQA Scalr \u2206Acc \u2206Agr \u2206Acc \u2206Agr \u2206Acc \u2206Agr \u2206Acc \u2206Agr GPT-4o 0.026 -0.104 -0.06 -0.100 -0.056 -0.047 0.088 -0.059 GPT-3.5 -0.256 0.401 -0.296 0.275 -0.200 0.398 -0.222 0.35 Llama -0.122 0.329 -0.254 0.391 -0.232 0.429 -0.144 0.419 Qwen -0.092 0.177 -0.232 0.200 -0.118 0.265 -0.094 0.299 Yi -0.166 0.194 -0.086 0.098 -0.09 0.234 -0.106 0.233 the system accuracy decrease from rt=T\u22121andrt= 0.\u2206Agr refers to the Adversary Agreement difference between rt=T\u22121andrt= 0.",
+    "technical_score": 0.024930747922437674,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "Improved attack: More persuasive"
+    ],
+    "paragraph_index": 3,
+    "paragraph": "TruthfulQA Model Method \u2206Acc vs. original \u2206Agr vs. original GPT-4oOptim -0.05 \u2193-7.6% -0.092 \u21911.2% Context 0.005 \u2193-2.1% 0.025 \u219112.9% GPT-3.5Optim -0.324 \u2193-6.8% 0.300 \u2193-10.1% Context -0.233 \u21910.023 0.390 \u2193-1.1% through (1) Best-of-N and (2) Added Knowledge Con- text. It shows \u2206Accuracy, \u2206Adversary Agreement and their comparison with the original attack.",
+    "technical_score": 0.014628785971017149,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "Ablation Study"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "In this section, we evaluate the collaboration debate under different settings. We evaluate the effect of increasing the number of rounds or agents in the debate. While we would expect greater robustness with more agents or rounds, this is not always the case. In fact, increasing the number of rounds often has the opposite effect.",
+    "technical_score": 0.01219858827988062,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "Ablation Study"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Increasing the Number of Rounds . Figure 6 shows the Majority V ote Accuracy with 3 agents (N= 3) and an increasing number of rounds ( T= 1, . . . , 9) on TruthfulQA. We analyze whether agents can recover from the adversary attack with a higher number of rounds. We would like to see the models leveraging their own knowledge and reason- ing process to counteract the adversary. However, we observe this is not the case; once the models in the group change their answer to the wrong answer, they do not retract from it and the number of rounds is not an appropriate defence in this scenario. we analyze the network\u2019s robustness with a higher number of agents. We conduct the experiment with a fixed number of rounds, T=3, and an increas- ing number of agents participating in the debate (M= 2, ...,6). The results of these experiments on TruthfulQA are shown in Figure 7. As generally expected, when M=2, the accuracy of the systemis close to 0, as there is only the adversary answer and one other model to generate an answer. As the number of agents increases, the overall system accuracy also improves. However, the accuracy over rounds drops in a similar proportion. This can prove the adversary is effectively persuading the agents in the network, regardless of the number of agents collaborating. Therefore, we conclude the increased number of models in the debate, provides better results generally but still under the effect of an adversary.",
+    "technical_score": 0.055004543516552616,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "Mitigation"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "Communication robustness is an important element if we plan to allow one agent or a network of agents to independently execute actions on our behalf. Thus far, we have evaluated how the collabora- tion network can be influenced by an adversary. In this section, we aim to investigate a possible prompt-based mitigation strategy where the group models in the debate are warned about a potential adversary attempting to persuade them. The new prompts added to the group models are detailed in Appendix E. We conducted the experiment on TruthfulQA with all models, and the results are presented in Figure 5. If the mitigation is effective, we would expect the accuracy to be higher with the mitiga- tion and the adversary agreement to be lower. Upon examining the plots, we observe that this is gener- ally the case, although not for all models. From these observations, we can conclude that a simple prompt-based alert to the models is insufficient. Therefore, more sophisticated methods will need to be developed to counteract the effects of ad- versaries in multi-agent collaborations, especially when agents from different entities may interact.6935 possible adversary in the debate. Top: It presents the Majority V ote Accuracy (MV Acc).",
+    "technical_score": 0.04883574653978427,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Results and Analysis",
+      "Mitigation"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "Bottom : It shows the Adversary Agreement (Adv Agr). When the mitigation works, we expect its accuracy to go higher and adversary agreement to stay below. This may not be the case for all models, which showcases the need for better strategies. the number of rounds increases, we do not observe the group models recover from the adversary\u2019s influence on the results. A higher number of rounds is not a protection against the adversary",
+    "technical_score": 0.017714927666392336,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "This work studies the vulnerabilities of language model collaborations via debate. We foresee the collaboration of LLMs becoming more relevant in the coming years and the interaction between dis- tinct models controlled by different entities. There- fore, we consider this topic of high importance. In particular, we analyze the behavior of the collabo- ration under the presence of an adversary. In our experiments, we show that an adversary can undermine the common objective of other mod- els, highlighting the crucial skill of persuasion. The adversary\u2019s ability to persuade other models is key to the success of the attack. We measure this using a combination of system accuracy and adversary",
+    "technical_score": 0.024781257744143047,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Conclusion"
+    ],
+    "paragraph_index": 2,
+    "paragraph": "As the number of agents in the debate increases, the overall system accuracy is slightly higher. However, the accuracy drops after every round, indicating the network is not robust against the adversary. agreement, observing that the adversary generally convinces the other models. The attack remains effective with increasing debate rounds and agents, suggesting that model persuasion ability is the main driver. Additionally, we propose methods to gen- erate more convincing arguments based on added knowledge or improved argument generation at in- ference time. We believe this work is a first step toward de- veloping robust communication and collaboration systems with LLMs, as well as raising awareness of the importance of persuasiveness in such environ- ments. Future work should focus on refining defen- sive strategies, exploring alternative collaboration protocols, and improving the inherent persuasive abilities of LLMs to resist adversarial attacks.6936",
+    "technical_score": 0.031765066744765175,
+    "citation_score": 0.0
+  },
+  {
+    "section_path": [
+      "Limitations"
+    ],
+    "paragraph_index": 1,
+    "paragraph": "The debate presented in this work aims to exem- plify the collaboration between agents in an aca- demic setting. It is not representative of a real- world deployed application but it serves the pur- pose of the study. The debate generation is both resource and time-intensive and one of the main bottlenecks when trying to expand the experiment size. Nonetheless, we believe the ablation consti- tutes a good representation of an increased num- ber of rounds and agents in the debate. It also demonstrates that selecting three rounds for our experiments was appropriate, as three rounds were determined to be optimal using the elbow method to balance robustness and computational efficiency. Similarly, the open-source models selected and their parameter sizes represent a limitation, as they are not the top-performing models currently avail- able. Due to the need for GPUs for inference and their slower generation processes, these models were deemed appropriate for the study. However, we acknowledge their limited capabilities com- pared to larger and better-performing models.",
+    "technical_score": 0.0371900826446281,
+    "citation_score": 0.0
+  }
+]

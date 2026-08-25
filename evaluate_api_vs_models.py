@@ -7,7 +7,7 @@ import random
 import re
 import statistics
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import matplotlib
 
@@ -28,31 +28,57 @@ from evaluate_human_section_scores import (
 )
 
 
+plt.rcParams.update(
+    {
+        "font.family": "STIXGeneral",
+        "mathtext.fontset": "stix",
+        "font.size": 12,
+        "font.weight": "bold",
+        "axes.labelweight": "bold",
+        "axes.titleweight": "bold",
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "legend.fontsize": 10.5,
+    }
+)
+
+
 GPT_TAG = "openai_full_paper"
 DEFAULT_TOP_K = 4
 
-# These are the promptv2 local models already used in the repo's comparison plots.
-DEFAULT_MODEL_TAGS: Dict[str, str] = {
-    "llama3.2:1b": "llama3_2_1b_promptv2",
-    "llama3.2:3b": "llama3_2_promptv2",
-    "gemma2:2b": "gemma2_2b_promptv2",
-    "gemma3:4b": "gemma3_4b_promptv2",
-    "qwen3:4b": "qwen3_4b_promptv2",
-    "qwen3:1.7b": "qwen3_1_7_promptv2",
-    "phi3:medium": "phi3_medium_promptv2",
-    "qwen2.5:3b": "qwen2_5_3b_promptv2",
+# Keep models from the same family adjacent in the default plot order.
+DEFAULT_MODEL_TAGS: Dict[str, Tuple[str, ...]] = {
+    "gemma2:2b": ("gemma2_2b_promptv2", "gemma2_2b_promptv2_retry8"),
+    "gemma3:4b": ("gemma3_4b_promptv2", "gemma3_4b_promptv2_retry8"),
+    "llama3.2:1b": ("llama3_2_1b_promptv2", "llama3_2_1b_promptv2_retry8"),
+    "llama3.2:3b": (
+        "llama3_2_promptv2",
+        "llama3_2_3b_promptv2",
+        "llama3_2_3b_promptv2_retry8",
+    ),
+    "qwen2.5:3b": ("qwen2_5_3b_promptv2", "qwen2_5_3b_promptv2_retry8"),
+    "qwen3:1.7b": ("qwen3_1_7_promptv2", "qwen3_1_7b_promptv2_retry8"),
+    "qwen3:4b": ("qwen3_4b_promptv2", "qwen3_4b_promptv2_retry8"),
+    "phi3:medium": ("phi3_medium_promptv2", "phi3_med_promptv2", "phi3_medium_promptv2_retry8"),
+}
+
+EXTRA_BASELINE_TAGS: Dict[str, Tuple[str, ...]] = {
+    "Citation freq.": ("citation_frequency",),
+    "Length-wtd. freq.": ("length_weighted_frequency",),
 }
 
 MODEL_COLORS: Dict[str, str] = {
-    "llama3.2:1b": "#4e79a7",
-    "llama3.2:3b": "#f28e2b",
     "gemma2:2b": "#e15759",
     "gemma3:4b": "#76b7b2",
-    "qwen3:4b": "#9c755f",
-    "qwen3:1.7b": "#59a14f",
-    "phi3:medium": "#edc948",
+    "llama3.2:1b": "#4e79a7",
+    "llama3.2:3b": "#f28e2b",
     "qwen2.5:3b": "#b07aa1",
+    "qwen3:1.7b": "#59a14f",
+    "qwen3:4b": "#9c755f",
+    "phi3:medium": "#edc948",
 }
+
+TagSpec = Union[str, Sequence[str]]
 
 
 def mean(values: Sequence[float]) -> Optional[float]:
@@ -99,8 +125,11 @@ def load_json(path: Path) -> dict:
 
 
 def model_display_name(tag: str) -> str:
-    for display_name, model_tag in DEFAULT_MODEL_TAGS.items():
-        if model_tag == tag:
+    for display_name, model_tags in DEFAULT_MODEL_TAGS.items():
+        if tag in model_tags:
+            return display_name
+    for display_name, model_tags in EXTRA_BASELINE_TAGS.items():
+        if tag in model_tags:
             return display_name
     return tag
 
@@ -110,22 +139,42 @@ def reference_display_name(tag: str) -> str:
         return "OpenAI"
     if tag == "anthropic_full_paper":
         return "Anthropic"
+    if tag == "anthropic_full_paper_claude_sonnet_4_6_direct":
+        return "Sonnet-4.6"
     return model_display_name(tag)
+
+
+def tag_spec_to_list(tag_spec: TagSpec) -> List[str]:
+    if isinstance(tag_spec, str):
+        return [tag_spec]
+    return [str(tag) for tag in tag_spec]
 
 
 def score_file_path(results_root: Path, paper_id: str, tag: str) -> Path:
     return results_root / paper_id / f"{paper_id}_{tag}_citation_scores.json"
 
 
-def total_citation_mass(results_root: Path, paper_id: str, tag: str) -> float:
-    score_map = load_citation_score_map(score_file_path(results_root, paper_id, tag))
+def resolve_score_file_path(results_root: Path, paper_id: str, tag_spec: TagSpec) -> Path:
+    for tag in tag_spec_to_list(tag_spec):
+        path = score_file_path(results_root, paper_id, tag)
+        if path.exists():
+            return path
+    tried = ", ".join(tag_spec_to_list(tag_spec))
+    raise FileNotFoundError(f"No citation score file found for {paper_id} with tags: {tried}")
+
+
+def total_citation_mass(results_root: Path, paper_id: str, tag_spec: TagSpec) -> float:
+    score_map = load_citation_score_map(resolve_score_file_path(results_root, paper_id, tag_spec))
     return sum(float(score) for score in score_map.values())
 
 
-def discover_papers_for_tag(results_root: Path, tag: str) -> List[str]:
+def discover_papers_for_tag(results_root: Path, tag_spec: TagSpec) -> List[str]:
     paper_ids: List[str] = []
     for paper_dir in sorted(path for path in results_root.iterdir() if path.is_dir()):
-        if score_file_path(results_root, paper_dir.name, tag).exists():
+        if any(
+            score_file_path(results_root, paper_dir.name, tag).exists()
+            for tag in tag_spec_to_list(tag_spec)
+        ):
             paper_ids.append(paper_dir.name)
     return paper_ids
 
@@ -151,7 +200,7 @@ def prepare_resolver_for_tags(
     results_root: Path,
     papers_dir: Path,
     paper_ids: Sequence[str],
-    tags: Sequence[str],
+    tags: Sequence[TagSpec],
 ) -> CitationResolver:
     resolver = CitationResolver()
     resolver.register_corpus_papers(results_root, papers_dir)
@@ -159,17 +208,18 @@ def prepare_resolver_for_tags(
     for paper_id in paper_ids:
         keys: List[str] = []
         seen = set()
-        for tag in tags:
-            path = score_file_path(results_root, paper_id, tag)
-            if not path.exists():
-                continue
-            score_map = load_citation_score_map(path)
-            for citation_key in score_map:
-                normalized = re.sub(r"\s+", " ", citation_key).strip()
-                if normalized in seen:
+        for tag_spec in tags:
+            for tag in tag_spec_to_list(tag_spec):
+                path = score_file_path(results_root, paper_id, tag)
+                if not path.exists():
                     continue
-                seen.add(normalized)
-                keys.append(citation_key)
+                score_map = load_citation_score_map(path)
+                for citation_key in score_map:
+                    normalized = re.sub(r"\s+", " ", citation_key).strip()
+                    if normalized in seen:
+                        continue
+                    seen.add(normalized)
+                    keys.append(citation_key)
         resolver.parse_paper(paper_id, papers_dir / f"{paper_id}.pdf", keys)
     return resolver
 
@@ -227,13 +277,13 @@ def top_k_overlap_report(
 def compare_model_to_gpt_for_paper(
     paper_id: str,
     results_root: Path,
-    gpt_tag: str,
-    model_tag: str,
+    gpt_tag: TagSpec,
+    model_tag: TagSpec,
     resolver: CitationResolver,
     top_k: int,
 ) -> dict:
-    gpt_scores = load_citation_score_map(score_file_path(results_root, paper_id, gpt_tag))
-    model_scores = load_citation_score_map(score_file_path(results_root, paper_id, model_tag))
+    gpt_scores = load_citation_score_map(resolve_score_file_path(results_root, paper_id, gpt_tag))
+    model_scores = load_citation_score_map(resolve_score_file_path(results_root, paper_id, model_tag))
     gpt_grouped = aggregate_scores_by_target(paper_id, gpt_scores, resolver)
     model_grouped = aggregate_scores_by_target(paper_id, model_scores, resolver)
     target_ids, labels, gpt_values, model_values = align_score_vectors(gpt_grouped, model_grouped)
@@ -416,6 +466,11 @@ def save_summary_tsv(path: Path, model_summaries: Dict[str, dict], selection_sum
         )
     ]
 
+    def format_model_tag(value: object) -> str:
+        if isinstance(value, (list, tuple)):
+            return ",".join(str(item) for item in value)
+        return str(value)
+
     for display_name, summary in sorted(
         model_summaries.items(),
         key=lambda item: (
@@ -428,7 +483,7 @@ def save_summary_tsv(path: Path, model_summaries: Dict[str, dict], selection_sum
             "\t".join(
                 [
                     display_name,
-                    summary["model_tag"],
+                    format_model_tag(summary["model_tag"]),
                     str(summary["papers_evaluated"]),
                     format_float(summary["mean_kl_divergence"]),
                     format_ci_low(summary["mean_kl_divergence_ci"]),
@@ -482,7 +537,7 @@ def plot_metric_violin(
     path_prefix: Path,
     per_model_results: Dict[str, Sequence[dict]],
     metric_key: str,
-    title: str,
+    title: Optional[str],
     y_label: str,
 ) -> None:
     labels = list(per_model_results)
@@ -522,7 +577,8 @@ def plot_metric_violin(
             zorder=3,
         )
 
-    ax.set_title(title, fontsize=16, fontweight="semibold")
+    if title:
+        ax.set_title(title, fontsize=16, fontweight="semibold")
     ax.set_ylabel(y_label, fontsize=13)
     ax.set_xticks(range(1, len(labels) + 1))
     ax.set_xticklabels(labels, rotation=20, ha="right")
@@ -542,12 +598,13 @@ def plot_kl_violin(
     path_prefix: Path,
     per_model_results: Dict[str, Sequence[dict]],
     reference_label: str,
+    title: Optional[str] = None,
 ) -> None:
     plot_metric_violin(
         path_prefix=path_prefix,
         per_model_results=per_model_results,
         metric_key="kl_divergence",
-        title=f"KL Divergence to {reference_label} Across Papers",
+        title=title if title is not None else f"KL Divergence to {reference_label} Across Papers",
         y_label="KL Divergence",
     )
 
@@ -556,12 +613,13 @@ def plot_jsd_violin(
     path_prefix: Path,
     per_model_results: Dict[str, Sequence[dict]],
     reference_label: str,
+    title: Optional[str] = None,
 ) -> None:
     plot_metric_violin(
         path_prefix=path_prefix,
         per_model_results=per_model_results,
         metric_key="jensen_shannon_divergence",
-        title=f"JSD to {reference_label} Across Papers",
+        title=title if title is not None else f"JSD to {reference_label} Across Papers",
         y_label="Jensen-Shannon Divergence",
     )
 
@@ -570,31 +628,45 @@ def collect_selected_models(
     results_root: Path,
     gpt_tag: str,
     requested_tags: Optional[Sequence[str]] = None,
-) -> Tuple[Dict[str, str], Dict[str, dict], List[str], Dict[str, int]]:
+    include_baselines: bool = False,
+    keep_all_selected: bool = False,
+) -> Tuple[Dict[str, TagSpec], Dict[str, dict], List[str], Dict[str, int]]:
     gpt_papers = set(discover_papers_for_tag(results_root, gpt_tag))
     discovered_promptv2 = discover_promptv2_tags(results_root)
 
     if requested_tags:
-        selected_by_display = {model_display_name(tag): tag for tag in requested_tags}
+        selected_by_display: Dict[str, TagSpec] = {model_display_name(tag): (tag,) for tag in requested_tags}
     else:
         selected_by_display = dict(DEFAULT_MODEL_TAGS)
+        if include_baselines:
+            selected_by_display.update(EXTRA_BASELINE_TAGS)
 
     coverage_summary: Dict[str, dict] = {}
     max_common_count = 0
-    for display_name, tag in selected_by_display.items():
-        common_papers = sorted(gpt_papers.intersection(discover_papers_for_tag(results_root, tag)))
+    for display_name, tag_spec in selected_by_display.items():
+        common_papers = sorted(gpt_papers.intersection(discover_papers_for_tag(results_root, tag_spec)))
         coverage_summary[display_name] = {
-            "model_tag": tag,
+            "model_tag": list(tag_spec_to_list(tag_spec)),
             "gpt_common_papers": common_papers,
             "gpt_common_count": len(common_papers),
         }
         max_common_count = max(max_common_count, len(common_papers))
 
-    fully_covered = {
-        display_name: payload["model_tag"]
-        for display_name, payload in coverage_summary.items()
-        if payload["gpt_common_count"] == max_common_count and payload["gpt_common_count"] > 0
-    }
+    if keep_all_selected:
+        fully_covered = {
+            display_name: payload["model_tag"]
+            for display_name, payload in coverage_summary.items()
+            if payload["gpt_common_count"] > 0
+        }
+    else:
+        fully_covered = {
+            display_name: payload["model_tag"]
+            for display_name, payload in coverage_summary.items()
+            if payload["gpt_common_count"] == max_common_count and payload["gpt_common_count"] > 0
+        }
+
+    for display_name in list(fully_covered):
+        fully_covered[display_name] = selected_by_display[display_name]
 
     common_papers = sorted(
         set(gpt_papers).intersection(
@@ -612,7 +684,7 @@ def build_report(
     results_root: Path,
     papers_dir: Path,
     gpt_tag: str,
-    selected_models: Dict[str, str],
+    selected_models: Dict[str, TagSpec],
     coverage_summary: Dict[str, dict],
     common_papers: Sequence[str],
     discovered_promptv2: Dict[str, int],
@@ -623,7 +695,7 @@ def build_report(
     reference_label = reference_display_name(gpt_tag)
     comparable_papers: List[str] = []
     excluded_papers: List[dict] = []
-    required_tags = [gpt_tag, *selected_models.values()]
+    required_tags: List[TagSpec] = [gpt_tag, *selected_models.values()]
     for paper_id in common_papers:
         non_positive_tags = [
             tag for tag in required_tags
@@ -669,7 +741,7 @@ def build_report(
             n_bootstrap=n_bootstrap,
             bootstrap_seed=bootstrap_seed,
         )
-        summary["model_tag"] = model_tag
+        summary["model_tag"] = list(tag_spec_to_list(model_tag))
         model_summaries[display_name] = summary
 
     selection_summary = build_selection_summary(model_summaries, top_k=top_k)
@@ -684,7 +756,10 @@ def build_report(
         "shared_paper_count": len(comparable_papers),
         "shared_paper_ids": list(comparable_papers),
         "excluded_papers": excluded_papers,
-        "selected_models": selected_models,
+        "selected_models": {
+            display_name: list(tag_spec_to_list(tag_spec))
+            for display_name, tag_spec in selected_models.items()
+        },
         "coverage_summary": coverage_summary,
         "discovered_promptv2_tags": discovered_promptv2,
         "notes": [
@@ -716,6 +791,16 @@ def main() -> None:
         help="Optional explicit promptv2 model tags. Defaults to the repo's main promptv2 local models.",
     )
     parser.add_argument(
+        "--include-baselines",
+        action="store_true",
+        help="Also include the citation-frequency and length-weighted-frequency baselines.",
+    )
+    parser.add_argument(
+        "--keep-all-selected",
+        action="store_true",
+        help="Keep every selected model and compare on the shared intersection, even if coverage is lower.",
+    )
+    parser.add_argument(
         "--output-json",
         default="results/openai_promptv2_citation_model_comparison.json",
     )
@@ -726,6 +811,11 @@ def main() -> None:
     parser.add_argument(
         "--plot-prefix",
         default="results/plots/openai_promptv2_kl_violin",
+    )
+    parser.add_argument(
+        "--hide-plot-title",
+        action="store_true",
+        help="Suppress the plot title in the saved violin plots.",
     )
     parser.add_argument("--bootstrap-samples", type=int, default=5000)
     parser.add_argument("--bootstrap-seed", type=int, default=7)
@@ -738,6 +828,8 @@ def main() -> None:
         results_root=results_root,
         gpt_tag=args.gpt_tag,
         requested_tags=args.model_tags,
+        include_baselines=args.include_baselines,
+        keep_all_selected=args.keep_all_selected,
     )
 
     report = build_report(
@@ -767,11 +859,13 @@ def main() -> None:
         path_prefix=Path(args.plot_prefix),
         per_model_results=report["per_model_results"],
         reference_label=reference_display_name(args.gpt_tag),
+        title="" if args.hide_plot_title else None,
     )
     plot_jsd_violin(
         path_prefix=Path(str(args.plot_prefix).replace("_kl_violin", "_jsd_violin")),
         per_model_results=report["per_model_results"],
         reference_label=reference_display_name(args.gpt_tag),
+        title="" if args.hide_plot_title else None,
     )
 
     print(f"Saved JSON report to {output_json}")

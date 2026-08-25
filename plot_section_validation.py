@@ -66,9 +66,9 @@ LLM_MODELS = [
     "llama3.2:3b",
     "gemma2:2b",
     "gemma3:4b",
+    "phi3:medium",
     "qwen3:1.7b",
     "qwen3:4b",
-    "phi3:medium",
     "qwen2.5:3b",
 ]
 ALL_MODELS = BASELINES + LLM_MODELS
@@ -76,42 +76,54 @@ N_BASE = len(BASELINES)
 N = len(ALL_MODELS)
 Y = np.arange(N)
 
+MODEL_COLORS = {
+    "gemma2:2b": "#e15759",
+    "gemma3:4b": "#76b7b2",
+    "llama3.2:1b": "#4e79a7",
+    "llama3.2:3b": "#f28e2b",
+    "qwen2.5:3b": "#b07aa1",
+    "qwen3:1.7b": "#59a14f",
+    "qwen3:4b": "#9c755f",
+    "phi3:medium": "#edc948",
+    "Citation freq.": "#aaaaaa",
+    "Length-wtd. freq.": "#666666",
+}
+
 MODEL_TAGS = {
-    "Citation freq.": "citation_frequency",
-    "Length-wtd. freq.": "length_weighted_frequency",
-    "llama3.2:1b": "llama3_2_1b_promptv2",
-    "llama3.2:3b": "llama3_2_promptv2",
-    "gemma2:2b": "gemma2_2b_promptv2",
-    "gemma3:4b": "gemma3_4b_promptv2",
-    "qwen3:1.7b": "qwen3_1_7_promptv2",
-    "qwen3:4b": "qwen3_4b_promptv2",
-    "phi3:medium": "phi3_medium_promptv2",
-    "qwen2.5:3b": "qwen2_5_3b_promptv2",
+    "Citation freq.": ("citation_frequency",),
+    "Length-wtd. freq.": ("length_weighted_frequency",),
+    "llama3.2:1b": ("llama3_2_1b_promptv2", "llama3_2_1b_promptv2_retry8"),
+    "llama3.2:3b": ("llama3_2_promptv2", "llama3_2_3b_promptv2", "llama3_2_3b_promptv2_retry8"),
+    "gemma2:2b": ("gemma2_2b_promptv2", "gemma2_2b_promptv2_retry8"),
+    "gemma3:4b": ("gemma3_4b_promptv2", "gemma3_4b_promptv2_retry8"),
+    "qwen3:1.7b": ("qwen3_1_7_promptv2", "qwen3_1_7b_promptv2_retry8"),
+    "qwen3:4b": ("qwen3_4b_promptv2", "qwen3_4b_promptv2_retry8"),
+    "phi3:medium": ("phi3_medium_promptv2", "phi3_med_promptv2", "phi3_medium_promptv2_retry8"),
+    "qwen2.5:3b": ("qwen2_5_3b_promptv2", "qwen2_5_3b_promptv2_retry8"),
+}
+REFERENCE_TAGS = {
+    "human": (),
+    "openai": ("openai_full_paper_gpt_oss_120b",),
+    "anthropic": ("anthropic_full_paper_claude_sonnet_4_6_direct",),
 }
 
 REFERENCES = [
     {
         "key": "human",
         "label": "Human annotations",
-        "color": "#3a7fd5",
-        "marker_llm": "o",
-        "marker_base": "D",
+        "marker": "o",
         "offset": 0.24,
     },
     {
         "key": "openai",
-        "label": "OpenAI full-paper reference",
-        "color": "#c9472f",
-        "marker_llm": "s",
-        "marker_base": "D",
+        "label": "gpt-oss-120b reference",
+        "marker": "s",
         "offset": 0.00,
     },
     {
         "key": "anthropic",
-        "label": "Anthropic full-paper reference",
-        "color": "#1f9d55",
-        "marker_llm": "^",
-        "marker_base": "D",
+        "label": "Sonnet-4.6 reference",
+        "marker": "^",
         "offset": -0.24,
     },
 ]
@@ -133,7 +145,6 @@ DATA = {
 
 SEP_Y = N_BASE - 0.5
 
-
 def rgba(hex_color: str, alpha: float) -> tuple[float, float, float, float]:
     return (*mcolors.to_rgb(hex_color), alpha)
 
@@ -146,12 +157,23 @@ def load_human_reference_maps() -> dict[str, dict[str, float]]:
     }
 
 
-def load_section_score_maps(model_tag: str) -> dict[str, dict[str, float]]:
-    suffix = f"_{model_tag}_section_scores.json"
+def resolve_existing_tag(paper_id: str, tags: tuple[str, ...]) -> str | None:
+    for tag in tags:
+        path = ROOT / "paper_results" / paper_id / f"{paper_id}_{tag}_section_scores.json"
+        if path.exists():
+            return tag
+    return None
+
+
+def load_section_score_maps(tags: tuple[str, ...]) -> dict[str, dict[str, float]]:
     result: dict[str, dict[str, float]] = {}
-    for path_str in glob.glob(str(ROOT / "paper_results" / "*" / f"*{suffix}")):
-        path = Path(path_str)
-        paper_id = path.stem[: -len(f"_{model_tag}_section_scores")]
+    paper_root = ROOT / "paper_results"
+    for paper_dir in sorted(path for path in paper_root.iterdir() if path.is_dir()):
+        paper_id = paper_dir.name
+        resolved_tag = resolve_existing_tag(paper_id, tags)
+        if resolved_tag is None:
+            continue
+        path = paper_dir / f"{paper_id}_{resolved_tag}_section_scores.json"
         result[paper_id] = extract_top_level_model_scores(load_json(path))
     return result
 
@@ -203,8 +225,8 @@ def evaluate_against_reference(
 
 def build_summary() -> dict:
     human_maps = load_human_reference_maps()
-    openai_maps = load_section_score_maps("openai_full_paper")
-    anthropic_maps = load_section_score_maps("anthropic_full_paper")
+    openai_maps = load_section_score_maps(REFERENCE_TAGS["openai"])
+    anthropic_maps = load_section_score_maps(REFERENCE_TAGS["anthropic"])
 
     reference_maps = {
         "human": human_maps,
@@ -217,15 +239,15 @@ def build_summary() -> dict:
         "bootstrap_seed": BOOTSTRAP_SEED,
         "references": {
             "human": "human_expert_annotations.json",
-            "openai": "paper_results/*/*_openai_full_paper_section_scores.json",
-            "anthropic": "paper_results/*/*_anthropic_full_paper_section_scores.json",
+            "openai": list(REFERENCE_TAGS["openai"]),
+            "anthropic": list(REFERENCE_TAGS["anthropic"]),
         },
         "models": {},
     }
 
     for label in ALL_MODELS:
-        model_tag = MODEL_TAGS[label]
-        candidate_maps = load_section_score_maps(model_tag)
+        model_tags = MODEL_TAGS[label]
+        candidate_maps = load_section_score_maps(model_tags)
         common_papers = sorted(
             set(candidate_maps)
             & set(human_maps)
@@ -234,7 +256,8 @@ def build_summary() -> dict:
         )
 
         model_summary = {
-            "model_tag": model_tag,
+            "model_tag": model_tags[0],
+            "model_tags": list(model_tags),
             "common_papers": common_papers,
             "paper_count": len(common_papers),
             "references": {},
@@ -286,12 +309,11 @@ def main() -> None:
             ax.axvline(0, color="#c8c8c8", lw=1.0, zorder=1)
 
         for i, label in enumerate(ALL_MODELS):
-            is_base = i < N_BASE
+            color = MODEL_COLORS[label]
             for ref in REFERENCES:
                 point, lo, hi = cfg[ref["key"]][i]
                 y = Y[i] + ref["offset"]
-                marker = ref["marker_base"] if is_base else ref["marker_llm"]
-                color = ref["color"]
+                marker = ref["marker"]
 
                 if point is None:
                     ax.text(
@@ -323,7 +345,7 @@ def main() -> None:
                     y,
                     marker,
                     color=color,
-                    ms=7 if not is_base else 6.5,
+                    ms=7,
                     mec="white",
                     mew=1.4,
                     zorder=4,
@@ -347,57 +369,25 @@ def main() -> None:
         plt.Line2D(
             [0],
             [0],
-            marker=ref["marker_llm"],
+            marker=ref["marker"],
             color="none",
-            markerfacecolor=ref["color"],
-            markeredgecolor="white",
-            markeredgewidth=1.2,
+            markerfacecolor="#666666",
+            markeredgecolor="#666666",
+            markeredgewidth=1.0,
             markersize=8,
             label=ref["label"],
         )
         for ref in REFERENCES
     ]
-    legend_handles.extend(
-        [
-            plt.Line2D(
-                [0],
-                [0],
-                marker="D",
-                color="none",
-                markerfacecolor="#888",
-                markeredgecolor="white",
-                markeredgewidth=1.2,
-                markersize=7,
-                label="Baselines (diamond)",
-            ),
-            plt.Line2D(
-                [0],
-                [0],
-                color="#999",
-                lw=1.2,
-                ls=(0, (5, 4)),
-                label="LLM / baseline separator",
-            ),
-        ]
-    )
     fig.legend(
         handles=legend_handles,
         loc="upper center",
-        ncol=5,
+        ncol=3,
         frameon=False,
         bbox_to_anchor=(0.55, 1.01),
         handlelength=1.8,
         handletextpad=0.6,
         columnspacing=1.2,
-    )
-
-    paper_count = summary["models"]["qwen3:4b"]["paper_count"]
-    fig.suptitle(
-        f"Section-level validation vs. human, OpenAI, and Anthropic references — 95% bootstrap CIs (n = {paper_count} papers)",
-        x=0.55,
-        y=1.075,
-        fontsize=16,
-        fontweight="bold",
     )
 
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)

@@ -41,8 +41,8 @@
     ],
     "paragraph_index": 5,
     "paragraph": "Top-K looks the way it does. Python R PHP JS Candidate Attribute Values 2 2 1 1 Shapley Values 0.48 0.23 0.33 0.15 appears in the Top-Ks of the specific HRs . matters in these settings is the relative position (rank) of a user with respect to other users who \u201ccompete\u201d for the top-k posi- tions. Such competitive environments are naturally explainable byShapley values [7] \u2013 a game theory concept that identifies the contribution of each player (each attribute in our context) for deriving an outcome (e.g., a top-k match list). Shapley values have been proven repeatedly to solve explainability problems across different contexts [8\u201310]. Based on this observation, we consider Shapley values as the core of our system for our explanations. We consider a set of pos- sible explanation queries, and provide Shapely-based approaches to answer them. Exact computation of Shapley values is a com- binatorially hard problem, requiring algorithms that are expo- nential to the number of players. On the other hand, users might find accurate approximation of the values appropriate for expla- nation. Therefore, we propose a sampling-based approximation algorithm with provable guarantees on run-time and approxima- tion error. Our system enables explanations as demonstrated in Example 1.1 (Part 3). Example 1.1. (Part 3) Using Shapley-based methods, we generate an explanation for each of the previous queries. These explanations take the form of a value for each of the skills and other features on which the matching is generated. A high value indicates that the feature was largely responsible for each of the four cases. The individual can then be provided with a general explanation as to what about them resulted in the various outcomes. (1)(From Table 1) t3is informed that they failed to be matched to HRt20because they were not a good match with their PHP skills. However, based on their R skills alone, they would have been a good match for the job. (2)(From Table 2) t3can be told that the reason they were in the top-2of HRt19is because they were an excellent match on R skills. They can also be informed that their Python skills were less but still beneficial towards the matching as well. (3)(From Table 3) Top- 2oft3consisted of{t19,t20}. They are in- formed that this is largely because of the Python requirements of the HRs, and less so because of the R and JavaScript require- ments.(4)(From Table 4) Candidate t3is provided the information that they made it into the Top- 2of HRst14,t19because of their Python skills first, then their PHP skills, then their R skills, and finally their JavaScript skills, with each contributing slightly less than the previous.",
-    "technical_score": 0.015277777777777786,
-    "citation_score": 0.012500000000000008
+    "technical_score": 0.01840277777777779,
+    "citation_score": 0.009375000000000007
   },
   {
     "section_path": [
@@ -524,7 +524,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "tities are often not publicly available due to privacy concerns. Hence, in our experiments we considered two publicly-available real-world datasets, along with 12 configurations of synthetic datasets. \u2022Job candidates dataset ( real world dataset )4: 390 candidates were parsed from 22 columns, including 18 numerical columns, 3 categorical columns, and 1 set based column. Values for numerical columns were normalized to be a value between 0 and 1. To generate HR entities, uniform random values were selected for each column from the set of possible values for that column in the candidate dataset. \u2022Graduate admissions dataset[ 17](real world dataset ): The dataset consists of application details of 500 students to the graduate 4https://www.kaggle.com/datasets/saikrishna20/candidates-list590 program. There are a total of 6 numerical features and a cate- gorical feature. Each data point in the dataset also a dependant variable, chance of admit , which is a score between 0and1. \u2022Synthetic dataset: There are many parameters that can be var- ied when generating the datasets. We have used 3 main factors, probability distribution, correlation between the attributes, and the number of attributes. Since our experimental study aims to assess our method across different settings, we generate mul- tiple datasets for each setting and aggregate results for each setting. For the probability distribution, we consider Uniform andZipfian distributions. Linear and non-linear ranking func- tions; correlated, anti-correlated, and independent attributes were used to ensure variety of data in our experiments. For each of these 12 settings, 10 datasets were generated bringing the total to 120 datasets. Each dataset consists of 1000 items each with 9 dimensions.",
-    "technical_score": 0.010416666666666666,
+    "technical_score": 0.013888888888888888,
     "citation_score": 0.0
   },
   {
@@ -535,7 +535,7 @@
     ],
     "paragraph_index": 1,
     "paragraph": "formed on a work station with a Core i9 Intel X-series 3.5 GHz machine running Linux Ubuntu with 128 GB of DDR4 RAM. The algorithms were implemented in Python 35.",
-    "technical_score": 0.010416666666666666,
+    "technical_score": 0.013888888888888888,
     "citation_score": 0.0
   },
   {
@@ -545,52 +545,41 @@
       "Ranking function"
     ],
     "paragraph_index": 1,
-    "paragraph": "were not available for the real world datasets, we generated n linear ranking functions. The ranking functions are based on proximity to the candidate\u2019s skills/ HR\u2019s requirements. For syn- thetic dataset, we have used both linear and non-linear ranking functions. For non-linear ranking functions, weighted squares of the attributes have been used to rank the entities. In the user study, the ranking function used for contrasting LIME and Shap- ley values explanations is learned using machine learning models based on the other features using AutoML which is then used to predict the chance of admit .",
-    "technical_score": 0.010416666666666666,
+    "paragraph": "were not available for the real world datasets, we generated n linear ranking functions. The ranking functions are based on proximity to the candidate\u2019s skills/ HR\u2019s requirements. For syn- thetic dataset, we have used both linear and non-linear ranking functions. For non-linear ranking functions, weighted squares of the attributes have been used to rank the entities. In the user study, the ranking function used for contrasting LIME and Shap- ley values explanations is learned using machine learning models based on the other features using AutoML which is then used to predict the chance of admit . force Shapley value algorithm and the approximate Shapley value algorithms. We use the KernelSHAP library from github by Lund- berg6.",
+    "technical_score": 0.003472222222222222,
     "citation_score": 0.0
   },
   {
     "section_path": [
       "EXPERIMENTS",
       "Experiments setup",
-      "Algorithms Evaluated"
-    ],
-    "paragraph_index": 1,
-    "paragraph": "force Shapley value algorithm and the approximate Shapley value algorithms. We use the KernelSHAP library from github by Lund- berg6.",
-    "technical_score": 0.0026041666666666665,
-    "citation_score": 0.0
-  },
-  {
-    "section_path": [
-      "EXPERIMENTS",
-      "Experiments setup",
-      "Algorithms Evaluated"
+      "Ranking function"
     ],
     "paragraph_index": 2,
     "paragraph": "As baselines to compare against, we use the weight based algorithm described in \u00a7 3.1 and an attribute based baseline. The attribute based baseline ranks each of the attributes individually for a given query. More specifically, for a query we mask the set of attributes such that only one attribute is unmasked. We measure the effect of the individual attributes and then rank these attributes. For the PQ-NotMatch (PQ-Match resp.) query, we use the highest (least resp.) rank achieved by the entity when only using a single attribute as a measure to compare all attributes and rank them. As SQ-Single andSQ-Multiple queries are set based queries, we use the Jaccard similarity measure instead to rank the attributes. The comparison for these baselines is provided in \u00a7 4.2.2. provide details for the dataset in Example 1.1. The Example 1.1 dataset consists of 20entities with 4 attributes, Python ,R,PHP andJS. These 20entities are a part of the Candidates real world dataset discussed in \u00a7 4.1 of the paper.",
-    "technical_score": 0.0026041666666666665,
+    "technical_score": 0.003472222222222222,
     "citation_score": 0.0
   },
   {
     "section_path": [
       "EXPERIMENTS",
       "Experiments setup",
-      "Algorithms Evaluated"
+      "Ranking function"
     ],
     "paragraph_index": 3,
     "paragraph": "The Candidates entities are t1\u00b7\u00b7\u00b7t10and the HRs are t11\u00b7\u00b7\u00b7t20. As any HR entity would like to find candidates whose skills are similar to that of the job requirement , a weighted k-nearest neigh- bor function with l1distance is used. The distance function can be mathematically written as, fi(t)=I\u03014 j=1wj|ti[j]\u2212t[j]|The equation above obtains the distance between the requirement and hence smaller distance is preferred.",
-    "technical_score": 0.0026041666666666665,
+    "technical_score": 0.003472222222222222,
     "citation_score": 0.0
   },
   {
     "section_path": [
       "EXPERIMENTS",
       "Experiments setup",
-      "Algorithms Evaluated"
+      "Ranking function"
     ],
     "paragraph_index": 4,
     "paragraph": "Note that we have normalized each attribute between the values[0,1]. The normalization for an attribute Ajis performed for any entity tiusing,ti[j]=ti[j]\u2212min(Aj) max(Aj)whereminandmax find the minimum and maximum values for attribute Ajin the dataset D.",
-    "technical_score": 0.0026041666666666665,
+    "technical_score": 0.003472222222222222,
     "citation_score": 0.0
   },
   {

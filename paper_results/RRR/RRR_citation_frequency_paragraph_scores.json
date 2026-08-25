@@ -5,8 +5,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Given a dataset with multiple attributes, the challenge is to combine the values of multiple attributes to arrive at a rank. In many applications, especially in databases with numeric attributes, a weight vector \u00aewis used to express user prefer- ences in the form of a linear combination of the attributes, i.e.,I\u0301wiAi. Finding flights based on a linear combination of some criteria such as price and duration [ 1], diamonds based on depth and carat [ 2], and houses based on price and floor area [2] are a few examples. The difficulty is that the concept of \u201cbest\u201d lies in the eyes of the beholder. Different users may consider different at- tributes more important, and hence arrive at very different rankings. In the absence of explicit user preferences, the sys- tem can remove dominated items, and offer the remaining Pareto-optimal [ 3] set as representing the desirable items in the data set. Such a skyline (resp. convex hull) is the smallest subset of the data that is guaranteed to contain the top choice of a user based on any monotonic (resp. linear) ranking func- tion.",
-    "technical_score": 0.052272727272727276,
-    "citation_score": 0.010227272727272727
+    "technical_score": 0.05125,
+    "citation_score": 0.011250000000000001
   },
   {
     "section_path": [
@@ -320,8 +320,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "The problem of finding preferred items of a dataset has been extensively investigated in recent years, and research has spanned multiple directions, most notably in top- kquery processing [ 37] and skyline discovery [ 4]. In top- kquery processing, the approach is to model the user preferences by a ranking/utility function which is then used to preferen- tially select tuples. Fundamental results include access-based algorithms [ 38\u201341] and view-based algorithms [ 42,43]. In skyline research, the approach is to compute subsets of the data (such as skylines and convex hulls) that serve as the data representatives in the absence of explicit preference functions [ 3,4,44]. Skylines and convex hulls can also serve as effective indexes for top- kquery processing [19, 45, 46]. Efficiency and effectiveness have always been the chal- lenges in the above studies. While top- kalgorithms depend on the existence of a preference function and may require a complete pass over all of the data before answering a single query, representatives such as skylines may become over- whelmingly large and ineffective in practice [ 5,6]. Stud- ies such as [ 7,8] are focused towards reducing the skyline size. In an elegant effort towards finding a small representa- tive subset of the data, Nanongkai et al. [ 9] introduced the regret-ratio minimizing representative. The intuition is that a \u201cclose-to-top\u201d result may satisfy the users\u2019 need. Therefore, for a subset of data and a preference function, they consider the score difference between the top result of the subset versus the actual top result as the measure of regret, and seek the subset that minimizes its maximum regret over all possible linear functions. Since then, works such as [ 5,10\u2013 12,14\u201316,47] studied different challenges and variations of the problem. Chester et al. [ 13] generalize the regret-ratio notion to k-regret, in which the regret is considered to be the difference between the top result of the subset and the actual top- kresult (instead of the top-1 result). They also prove that the problem is NP-complete for variable number of dimensions. [ 14,15] prove that the k-regret problem is NP- complete even when d=3, using the polytope vertex cover problem [ 21] for the reduction. As explained in \u00a7 2, this also proves that our problem is NP-complete for d\u22653. For the case of two dimensional databases, [ 13] proposes a quadratic algorithm and [ 5] improves the running time to O(nlogn). The cube algorithm and a greedy heuristic [ 9] are the first algorithms proposed for regret-ratio in MD. Recently, [ 5,14]independently propose similar approximation algorithms for the problem, both discretizing the function space and applying the hitting set, thus, providing similar controllable additive approximation factors. The major difference is that [5] considers the original regret-ratio problem while [ 14] considers the k-regret variation. Note that the above prior works consider the score difference as the regret measure, making their problem setting different from ours, since we use the rank difference as the regret measure.",
-    "technical_score": 0.052455357142857144,
-    "citation_score": 0.010044642857142856
+    "technical_score": 0.051682692307692304,
+    "citation_score": 0.010817307692307692
   },
   {
     "section_path": [
@@ -329,8 +329,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "The geometric notions used in this paper, such as arrange- ment, dual space, and k-set, are explained in detail in [ 17]. Finding bounds on the number of k-sets of a point set do not lead to promising results on the upper bound of the size of S. Lovasz and Erdos [ 48,49] initiated the study of k-set notion and provided an upper bound on the maximum number of k-sets in R2. The problem in R2has also been studied in [ 50\u2013 53]. The best known upper bound on the number of k-sets in R2andR3areO(nk1/3)[26] and O(nk3/2)[27], respectively. For higher dimensions, finding an upper bound on the num- ber of k-sets has been extensively studied [ 17,28,51,54]; the best known upper bound is O(nd\u2212\u03b5)[28], where\u03b5>0is a small constant. The problem of enumerating all k-sets has been studied in [55, 56] for 2D and [30] for MD.",
-    "technical_score": 0.052455357142857144,
-    "citation_score": 0.010044642857142856
+    "technical_score": 0.05384615384615385,
+    "citation_score": 0.008653846153846154
   },
   {
     "section_path": [

@@ -362,8 +362,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Our algorithm is straightforward; we should compute the integer value of wg1such that Equation (5) holds. We note that Equation (5)may not hold for an integer value of wg1. In this case the goal is to compute the integer value of wg1such that the left side of Equation (5)is as close as possible to the right side of Equation (5). A naive implementation is to try every value of wg1and calculate the value of the left and right side of Equation (5)by simply evaluate every term in the sum. Such an implementation would take \u03a9(n3)time because we should try O(n) values ofwg1, and for each such value the calculation of each side of Equation (5)takes\u03a9(n2)time to evaluate the summations. We first show an exact near-linear time algorithm to compute the value of wg1that solves Equation 5 and then we briefly discuss an approximation algorithm that is used in our experiments to efficiently evaluate the sums of the binomial function. Efficient exact computation.We first assume that we have two groups, the unpopular elements g1and the popular elements g2. Then we extend our method to multiple groups G={ g1,..., gl}. Similarly, to the previous section, let E(n g1,d,w g1)be the function that represents the left side of Equation 5. Equivalently, the right side of Equation (5)is captured byE(n g2,d,w\u2212w g1). By definition, the function Ecomputes the expected error of group g1(resp. g2) elements. The values ng1,ng2, anddare fixed, so the more bins allocated to group g1(respectively, g2) elements, the smaller the expected error. Hence, the function E(n g1,d,w g1)is monotone decreasing with respect towg1, whileE(n g2,d,w\u2212w g1)is monotone increasing with respect to wg1. We formally establish the monotonicity ofEin the following proposition. The proof is shown in Appendix B. Proposition 1.For fixednandd, the functionE(n,d,w)is decreasing with respect tow. This property leads to the observation that instead of trying all values of wg1, we can run a binary search in the range [1,...,n] and compute the best value of wg1. The overall idea of our algorithm is the following. For every value of wg1in the binary search, we evaluate E(n g1,d,w g1) andE(n g2,d,w\u2212w g1). IfE(n g1,d,w g1)<E(n g2,d,w\u2212w g1)then we try larger values of wg1in the binary search. Otherwise, we continue the binary search with smaller values. In the end, we return the value of wg1found by the binary search such that |E(n g1,d,w g1)\u2212E(n g2,d,w\u2212w g1)|is minimized. Even if someone naively applies binary search, the running time would be \u03a9(n2)to evaluate the sums. Given a value of wg1we show how to compute E(n g1,d,w g1)in near-linear time with 3Proofs are provided in Appendix B.",
-    "technical_score": 0.013095238095238094,
-    "citation_score": 0.010714285714285714
+    "technical_score": 0.023809523809523808,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -420,8 +420,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "ej\u2208g\u03b5A(ej), where each sum\u2211\ufe01 ej\u2208g\u03b5A(ej)is computed using Equation (10)forwgbuckets. Since we do not have a closed form for the wgvalues (ford> 1) from Equation (5), we cannot directly compute PoF=LCM\u2212LFCM. Instead, we compute the PoF experimentally for real datasets in Section 6.6. Particularly, our experiments, including Figures 12 to 18 confirm the small PoF ford>1.",
-    "technical_score": 0.013095238095238094,
-    "citation_score": 0.010714285714285714
+    "technical_score": 0.023809523809523808,
+    "citation_score": 0.0
   },
   {
     "section_path": [
@@ -1018,8 +1018,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "179:22 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh a partition of the elements into low frequency and high frequency elements. While this partition is the same as the one we used in our analysis, our objective is orthogonal to their problem. They do not necessarily aim to achieve the same estimation error between low and high frequency elements. Instead, they process light and heavy elements separately trying to improve the overall estimation error. To the best of our knowledge, none of these traditional and learned schemes can handle fair count-min estimations with theoretical guarantees. Finally, learning has been used to obtain other data structures as well, such asB-trees [54] or bloom filters [54, 62, 86]. Fairness.Fairness in data-driven systems has been studied by various research communities but mostly in machine learning (ML) [ 14,60,67]. Most of the existing work is on training a ML model that satisfies some fairness constraints. Some pioneering fair-ML efforts include [ 20,21,36,39,46,52,88]. Biases in data has also been studied extensively [ 9,10,66,73,77,83] to ensure data has been prepared responsibly [ 64,74,75,79]. Recent studies of fair algorithm design include fair clustering [ 3,16,18, 24,25,49,57,76], fairness in resource allocation and facility location problem [ 17,34,42,47,51,93], min cut [ 55], max cover [ 7], set cover [ 30], game theoretic approaches [ 4,35,92], hiring [ 6,70], ranking [8, 80, 81, 89], recommendation [23, 56, 84], representation learning [48], etc. Fairness in data structures is significantly under-studied, with the existing work being limited to [11\u201313,78]. Aumuller et al. [ 11\u201313] study individual fairness in near-neighbor search, while to the best of our knowledge, Shahbazi et al. [ 78] is the only work that studies group fairness in data structure design, and more specifically in hashing. Both in nearest-neighbor search and fair hashing, the objective is fundamentally different, so these techniques cannot be used for our FCM sketch.",
-    "technical_score": 0.03214285714285714,
-    "citation_score": 0.003571428571428571
+    "technical_score": 0.030769230769230767,
+    "citation_score": 0.004945054945054945
   },
   {
     "section_path": [
@@ -1208,8 +1208,8 @@
     ],
     "paragraph_index": 1,
     "paragraph": "Proof of Lemma 1. LetCibe the total frequency counts in each low-frequency bucket i\u2208[w g1]. That is,C i=\u2211\ufe01 ej:h(ej)=if(ej). For every element ej\u2208g 1, the value of the bucket it hashed to is returned as its frequency estimation. That is, \u02c6f(ej)=C h(ej). Therefore, following the approximation factor definition, \u02c6f(ej)=f(ej) \u03b1(ej)=C h(ej). Hence, \u03b1(ej)=f(ej) Ch(ej)(11)",
-    "technical_score": 0.009226190476190476,
-    "citation_score": 0.002678571428571428
+    "technical_score": 0.008982683982683983,
+    "citation_score": 0.0029220779220779218
   },
   {
     "section_path": [
@@ -1217,8 +1217,8 @@
     ],
     "paragraph_index": 2,
     "paragraph": "179:30 Nima Shahbazi, Stavros Sintos, and Abolfazl Asudeh Therefore, E[\ufe01 \u03b1g1]\ufe01 =1 ng1\u2211\ufe02 ej\u2208g1\u03b1(ej)=1 ng1\u2211\ufe02 ej\u2208g1f(ej) Ch(ej) =1 ng1wg1\u2211\ufe02 i=1\u2211\ufe02 ej:h(ej)=if(ej) Ci//breaking the calculation per cell =1 ng1wg1\u2211\ufe02 i=11 Ci\u2211\ufe02 ej:h(ej)=if(ej)//factoring out the common term =1 ng1wg1\u2211\ufe02 i=11 CiCi //replacing sum of frequencies withC i =1 ng1wg1\u2211\ufe02 i=11=wg1 ng1(12) Similarly, the expected approximation factor for the groupg 2can be computed as E[\ufe01 \u03b1g2]\ufe01 =wg2 ng2=w\u2212w g1 n\u2212n g1 \u25a1 Proof of Lemma 2.We aim to find the expected value ofY: E[Y]=n\u2211\ufe02 x=1xP(Y=x) Since the domain of the random variable Yis the nonnegative integers {1,2,\u00b7\u00b7\u00b7} , the expected value can alternatively be computed using the following equation [40]. E[Y]=n\u2211\ufe02 x=1P(Y\u2265x) Pr(Y\u2265x)=Pr(min(X 1,\u00b7\u00b7\u00b7,Xd)\u2265x)=Pr(X 1\u2265x,\u00b7\u00b7\u00b7,X d\u2265x). SinceX 1,\u00b7\u00b7\u00b7,Xdare independent and identically distributed, the probability is computed as: Pr(Y\u2265x)=Pr(X 1\u2265x,\u00b7\u00b7\u00b7,X d\u2265x)=d\u220f\ufe02 i=1Pr(Xi\u2265x)=Pr(X\u2265x)d wherePr(X=x)=(\ufe01ng x)\ufe01\u00b7(\ufe02 wg)\ufe02x \u00b7(\ufe02wg\u22121 wg)\ufe02ng\u2212x . Hence, the probabilityPr(X\u2265x)is: Pr(X\u2265x)=ng\u2211\ufe02 i=x(\ufe03ng i)\ufe03 (\ufe031 wg)\ufe03i(\ufe03wg\u22121 wg)\ufe03ng\u2212i . Putting everything together, we obtain the expected value ofYas: E[Y]=ng\u2211\ufe02 x=1Pr(X\u2265x)d=ng\u2211\ufe02 x=1[\ufe04ng\u2211\ufe02 i=x(\ufe03ng i)\ufe03 (\ufe031 wg)\ufe03i(\ufe03wg\u22121 wg)\ufe03ng\u2212i]\ufe04d .",
-    "technical_score": 0.006547619047619048,
-    "citation_score": 0.005357142857142856
+    "technical_score": 0.006547619047619047,
+    "citation_score": 0.005357142857142857
   },
   {
     "section_path": [
