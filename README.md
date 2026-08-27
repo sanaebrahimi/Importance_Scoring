@@ -1,147 +1,239 @@
 # Normalized Reference Scoring
 
-This project scores the content of research papers at three levels:
+This repository scores scientific papers at three levels:
 
-- sections and subsections
+- top-level sections and subsections
 - paragraphs
-- citations inside paragraphs
+- cited references inside paragraphs
 
-It also now supports a full-paper OpenAI-compatible annotator that reads the entire extracted paper in one request and scores:
+It also includes baseline methods, evaluation scripts, and citation-graph tooling for corpus-level analysis.
 
-- sections and subsections directly
-- citations directly across the full paper
+## What The Pipeline Produces
 
-The code reads a PDF, matches its content to a predefined section tree, and then uses an Ollama-hosted language model to distribute importance scores across the paper. Scores are normalized so the full paper totals `1.0`.
+For each paper, the main pipeline writes normalized scores that sum to `1.0` at the paper level:
 
-## Example
+- `*_section_scores.json`: hierarchical section and subsection scores
+- `*_paragraph_scores.json`: paragraph-level technical and citation-derived scores
+- `*_citation_scores.json`: total contribution score assigned to each cited reference
+- `*_paragraph_citation_scores.json`: per-paragraph citation allocations
 
-```bash
-python3 visualize_graph.py \
-  --model-tag llama3_2 \
-  --load-mappings citation_mappings.json \
-  --top-k 40 \
-  --min-weight 0.005 \
-  --output graph_focused.html
-```
-`--top-k 40` pulls in more external cited works so you see the shared foundation across papers. `--min-weight 0.005` cuts the noise — only citations that carry real importance weight survive, so the edges you see are genuine dependencies rather than passing mentions. Using `--load-mappings` skips re-parsing the PDFs so it runs in a few seconds.
+These outputs can then be:
 
-## GitHub Pages
+- compared against human or API annotations
+- used to build weighted citation graphs
+- used to generate plots and downstream corpus-level analyses
 
-The repo is set up so the interactive graph can be published as a static site from `docs/`.
+## Repository Layout
 
-Rebuild the published site with:
+- `papers/`: input PDFs
+- `papers_section_titles.txt`: section/subsection trees for each paper
+- `paper_results/`: per-paper scoring outputs
+- `importance_score.py`: main hierarchical scoring pipeline for one paper
+- `run_importance_scores_all_papers.py`: batch runner for all papers
+- `baselines/run_baseline.py`: run one baseline on one paper
+- `baselines/run_baseline_all_papers.py`: batch runner for baselines
+- `extract_sections.py`: extract section trees from a single PDF
+- `evaluate_human_section_scores.py`: compare model outputs against annotations
+- `run_knowledge_graph.py`: build citation mappings and corpus-level graph metrics
+- `visualize_graph.py`: export an interactive HTML citation graph
 
-```bash
-./build_github_pages_site.sh \
-  --model-tag llama3_2 \
-  --load-mappings citation_mappings.json \
-  --top-k 40 \
-  --min-weight 0.005
-```
+## Requirements
 
-This writes the graph to `docs/index.html`, copies the local JS/CSS assets into `docs/lib`, and refreshes `docs/.nojekyll`.
+- Python 3.10+
+- PDF files placed in `papers/`
+- a section tree for each paper in `papers_section_titles.txt`
+- for local LLM scoring: an Ollama server with the model already pulled
+- for API baselines: valid API keys in environment variables
 
-The published page is not a fixed snapshot anymore. It includes input boxes for
-`top-k` and `min-weight`, so you can change those graph filters directly in the
-browser without regenerating the site.
+## Installation
 
-To publish it on `github.io`:
-
-1. Commit and push the `docs/` folder plus any graph updates you want online.
-2. In GitHub, open `Settings` -> `Pages`.
-3. Set `Source` to `Deploy from a branch`.
-4. Choose branch `main` and folder `/docs`.
-5. Save. GitHub will publish the site at `https://<your-username>.github.io/<repo-name>/`.
-
-## Main Files
-
-- [importance_score.py](importance_score.py): runs the scoring pipeline for one paper and writes JSON outputs for sections, paragraphs, and citations.
-- [run_importance_scores_all_papers.py](run_importance_scores_all_papers.py): runs `importance_score.py` for every PDF in `papers/`, creates one results folder per paper, and saves logs plus prompt snapshots.
-- [extract_sections.py](extract_sections.py): extracts the section/subsection tree from a **single** PDF without an LLM and appends the result to `papers_section_titles.txt`. Uses font-size analysis via pymupdf.
-- [extract_paper_sections.py](extract_paper_sections.py): batch version — extracts section titles from every PDF in `papers/` and rewrites `papers_section_titles.txt`.
-- [papers_section_titles.txt](papers_section_titles.txt): per-paper section trees used by the scorer.
-
-## Expected Inputs
-
-- PDF papers in [papers](papers)
-- a section mapping for each paper in [papers_section_titles.txt](papers_section_titles.txt)
-- an Ollama model running locally or on a reachable host
-- or an OpenAI-compatible `chat/completions` endpoint for the `openai_full_paper` baseline
-
-The scorer supports both author-year citations like `(Smith et al., 2024)` and numeric citations like `[2]` or `[7, 13]`.
-
-## Outputs
-
-For each paper, the batch runner creates a folder under [paper_results](paper_results) containing:
-
-- `<paper>_<model_tag>_section_scores.json`
-- `<paper>_<model_tag>_paragraph_scores.json`
-- `<paper>_<model_tag>_citation_scores.json`
-- `<paper>_<model_tag>_paragraph_citation_scores.json`
-- `debug_<model_tag>.log`
-- `prompts_<model_tag>.json`
-
-These four JSON files are also the inputs to the citation-graph and knowledge-discovery layer described below.
-
-## Typical Workflow
-
-1. Extract the section tree for each new paper (run once per paper, appends to `papers_section_titles.txt`):
+### 1. Create a virtual environment
 
 ```bash
-python3 extract_sections.py papers/your_paper.pdf --append papers_section_titles.txt
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install --upgrade pip
 ```
 
-The script detects sections automatically from the PDF — no LLM needed. It tries three strategies in order: embedded PDF bookmarks, font-size analysis, and numbered-heading patterns.
+### 2. Install Python dependencies
 
-To preview the output without writing it:
+Minimal dependencies for the core pipeline:
+
+```bash
+pip install pypdf PyPDF2 pymupdf ollama numpy matplotlib networkx python-louvain
+```
+
+Optional dependencies for API baselines:
+
+```bash
+pip install openai anthropic boto3
+```
+
+Notes:
+
+- `pymupdf` is used by `extract_sections.py` and is the recommended extractor for section headings.
+- `pypdf`/`PyPDF2` are used to read paper text for the scoring pipeline.
+- `openai` is needed only for OpenAI-compatible API baselines.
+- `anthropic` is needed only for the Anthropic full-paper baseline.
+- `boto3` is optional and only needed if you want to experiment with Bedrock outside the current scripts.
+
+### 3. If you use local models through Ollama
+
+Start Ollama and make sure your model is available.
+
+Example:
+
+```bash
+ollama serve
+ollama pull qwen3:1.7b
+```
+
+If Ollama is running on another port or host, pass it with `--host`.
+
+## Inputs The Repo Expects
+
+### PDFs
+
+Place PDF papers in `papers/`.
+
+### Section tree file
+
+Each paper needs a variable in `papers_section_titles.txt` named from the PDF stem.
+
+Example:
+
+- `papers/AFD.pdf` requires `AFD_SECTIONS`
+- `papers/fairRQ.pdf` requires `FAIRRQ_SECTIONS`
+
+The easiest way to create these is with `extract_sections.py`.
+
+## Quick Start
+
+### 1. Extract a section tree for one new paper
 
 ```bash
 python3 extract_sections.py papers/your_paper.pdf
 ```
 
-2. (Optional) Regenerate all section trees at once using the older batch extractor:
+To append it directly to `papers_section_titles.txt`:
 
 ```bash
-python3 extract_paper_sections.py
+python3 extract_sections.py papers/your_paper.pdf --append papers_section_titles.txt
 ```
 
-3. Score all papers for one model:
+What it does:
+
+- first tries embedded PDF bookmarks
+- then tries font-aware heading extraction with `pymupdf`
+- then falls back to numbered-heading detection
+
+### 2. Run the main scoring pipeline on one paper
+
+```bash
+mkdir -p paper_results/your_paper
+
+python3 importance_score.py \
+  --pdf papers/your_paper.pdf \
+  --pdf-text-backend pypdf \
+  --paper-id your_paper \
+  --sections-file papers_section_titles.txt \
+  --sections-var YOUR_PAPER_SECTIONS \
+  --output1 paper_results/your_paper/your_paper \
+  --output2 paper_results/your_paper/your_paper \
+  --output3 paper_results/your_paper/your_paper \
+  --model 'qwen3:1.7b' \
+  --model-tag qwen3_1_7b \
+  --host http://localhost:11434 \
+  --n-samples 5 \
+  --temperature 0 \
+  --sample-temperature-jitter 0.03 \
+  --seed 42 \
+  --max-retries 5 \
+  --paragraph-direct-max-tokens 1200 \
+  --paragraph-compressed-snippet-limit 8000 \
+  --debug-log paper_results/your_paper/debug_qwen3_1_7b.log \
+  --prompts-output paper_results/your_paper/prompts_qwen3_1_7b.json
+```
+
+This writes:
+
+- `paper_results/your_paper/your_paper_qwen3_1_7b_section_scores.json`
+- `paper_results/your_paper/your_paper_qwen3_1_7b_paragraph_scores.json`
+- `paper_results/your_paper/your_paper_qwen3_1_7b_citation_scores.json`
+- `paper_results/your_paper/your_paper_qwen3_1_7b_paragraph_citation_scores.json`
+- `paper_results/your_paper/debug_qwen3_1_7b.log`
+- `paper_results/your_paper/prompts_qwen3_1_7b.json`
+
+### 3. Run the main scoring pipeline on all papers
 
 ```bash
 python3 run_importance_scores_all_papers.py \
-  --model llama3.2 \
-  --model-tag llama3_2 \
+  --papers-dir papers \
+  --sections-file papers_section_titles.txt \
+  --results-root paper_results \
+  --pdf-text-backend pypdf \
+  --model 'qwen3:1.7b' \
+  --model-tag qwen3_1_7b \
   --host http://localhost:11434 \
   --n-samples 5 \
   --temperature 0 \
+  --sample-temperature-jitter 0.03 \
+  --seed 42 \
   --max-retries 5 \
   --paragraph-direct-max-tokens 1200 \
-  --paragraph-compressed-snippet-limit 800 \
-  --continue-on-error \
-  --skip-existing
+  --paragraph-compressed-snippet-limit 8000 \
+  --skip-existing \
+  --continue-on-error
 ```
 
-For long runs on a server:
+Useful options:
+
+- `--papers AFD fairRQ`: run only selected paper stems
+- `--run-suffix run2`: write a rerun to a new tag such as `qwen3_1_7b_run2`
+- `--dry-run`: print the generated commands without running them
+
+### 4. Run a long batch job with `nohup`
 
 ```bash
 nohup python3 run_importance_scores_all_papers.py \
-  --model qwen3:4b \
-  --model-tag qwen3_4b \
+  --papers-dir papers \
+  --sections-file papers_section_titles.txt \
+  --results-root paper_results \
+  --pdf-text-backend pypdf \
+  --model 'qwen3:1.7b' \
+  --model-tag qwen3_1_7b \
   --host http://localhost:11434 \
   --n-samples 5 \
   --temperature 0 \
+  --sample-temperature-jitter 0.03 \
+  --seed 42 \
   --max-retries 5 \
   --paragraph-direct-max-tokens 1200 \
-  --paragraph-compressed-snippet-limit 800 \
-  --continue-on-error \
+  --paragraph-compressed-snippet-limit 8000 \
   --skip-existing \
-  > nohup_run_qwen3_4b.out 2>&1 &
+  --continue-on-error \
+  > nohup_qwen3_1_7b.out 2>&1 &
 ```
 
-4. Score one paper directly:
+## Baselines
+
+The repository supports several baselines:
+
+- `citation_frequency`
+- `length_weighted_frequency`
+- `technical_section_prior`
+- `single_pass_llm`
+- `openai_full_paper`
+- `anthropic_full_paper`
+- `single_shot_citation_api`
+
+### Run one baseline on one paper
+
+Example: citation-frequency baseline
 
 ```bash
-python3 importance_score.py \
+python3 baselines/run_baseline.py \
+  --baseline citation_frequency \
   --pdf papers/your_paper.pdf \
   --paper-id your_paper \
   --sections-file papers_section_titles.txt \
@@ -149,22 +241,30 @@ python3 importance_score.py \
   --output1 paper_results/your_paper/your_paper \
   --output2 paper_results/your_paper/your_paper \
   --output3 paper_results/your_paper/your_paper \
-  --model llama3.2 \
-  --model-tag llama3_2 \
-  --host http://localhost:11434 \
-  --n-samples 5 \
-  --temperature 0 \
-  --max-retries 5 \
-  --paragraph-direct-max-tokens 1200 \
-  --paragraph-compressed-snippet-limit 800 \
-  --debug-log paper_results/your_paper/debug_llama3_2.log \
-  --prompts-output paper_results/your_paper/prompts_llama3_2.json
+  --model-tag citation_frequency
 ```
 
-5. Run the full-paper OpenAI-compatible annotator without paragraph redistribution:
+### Run one baseline on all papers
+
+Example: length-weighted frequency
 
 ```bash
-export OPENAI_API_KEY='your_api_key_here'
+python3 baselines/run_baseline_all_papers.py \
+  --baseline length_weighted_frequency \
+  --papers-dir papers \
+  --sections-file papers_section_titles.txt \
+  --results-root paper_results \
+  --model-tag length_weighted_frequency \
+  --skip-existing \
+  --continue-on-error
+```
+
+### OpenAI-compatible full-paper baseline
+
+This sends the full extracted paper text to an OpenAI-compatible `chat/completions` endpoint and writes standard output files.
+
+```bash
+export OPENAI_API_KEY='your_key_here'
 
 python3 baselines/run_baseline.py \
   --baseline openai_full_paper \
@@ -175,253 +275,234 @@ python3 baselines/run_baseline.py \
   --output1 paper_results/your_paper/your_paper \
   --output2 paper_results/your_paper/your_paper \
   --output3 paper_results/your_paper/your_paper \
-  --model gpt-4.1 \
-  --host https://api.openai.com/v1 \
+  --model-tag openai_full_paper \
+  --model 'gpt-oss-120b' \
   --api-key-env OPENAI_API_KEY \
-  --max-retries 3 \
+  --api-endpoint https://api.openai.com/v1/chat/completions \
   --request-timeout 600 \
   --max-output-tokens 12000 \
+  --api-response-format none \
   --debug-log paper_results/your_paper/debug_openai_full_paper.log
 ```
 
-This mode sends the full extracted paper text with the section hierarchy and citation inventory in one request. It writes standard section and citation JSON files, and it leaves the paragraph JSON files empty because it does not use the old paragraph-to-citation redistribution path.
+If you use another OpenAI-compatible endpoint, replace `--api-endpoint`.
 
-6. Inspect one paper's JSON outputs from the terminal:
-
-```bash
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_section_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_citation_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_citation_scores.json
-```
-
-7. Run the citation resolver and knowledge-discovery framework:
+### Anthropic full-paper baseline
 
 ```bash
-python3 run_knowledge_graph.py \
-  --model-tag llama3_2 \
-  --save-mappings citation_mappings.json
+export ANTHROPIC_API_KEY='your_key_here'
+
+python3 baselines/run_baseline.py \
+  --baseline anthropic_full_paper \
+  --pdf papers/your_paper.pdf \
+  --paper-id your_paper \
+  --sections-file papers_section_titles.txt \
+  --sections-var YOUR_PAPER_SECTIONS \
+  --output1 paper_results/your_paper/your_paper \
+  --output2 paper_results/your_paper/your_paper \
+  --output3 paper_results/your_paper/your_paper \
+  --model-tag anthropic_full_paper_claude_sonnet_4_6_direct \
+  --model 'claude-sonnet-4-6' \
+  --api-key-env ANTHROPIC_API_KEY \
+  --request-timeout 600 \
+  --max-output-tokens 12000 \
+  --debug-log paper_results/your_paper/debug_anthropic_full_paper.log
 ```
 
-8. Build an interactive graph for one model:
+### Single-shot citation API baseline
+
+This baseline only asks the API for citation scores from the full paper text. It does not produce meaningful section or paragraph scoring.
+
+Example with Anthropic:
 
 ```bash
-python3 visualize_graph.py \
-  --model-tag llama3_2 \
-  --load-mappings citation_mappings.json \
-  --top-k 40 \
-  --min-weight 0.005 \
-  --output graph_focused.html
-```
+export ANTHROPIC_API_KEY='your_key_here'
 
-If you omit `--model-tag`, the HTML bundles every discovered model and lets you switch between them in the browser.
+python3 baselines/run_baseline.py \
+  --baseline single_shot_citation_api \
+  --api-provider anthropic \
+  --pdf papers/your_paper.pdf \
+  --paper-id your_paper \
+  --sections-file papers_section_titles.txt \
+  --sections-var YOUR_PAPER_SECTIONS \
+  --output1 paper_results/your_paper/your_paper \
+  --output2 paper_results/your_paper/your_paper \
+  --output3 paper_results/your_paper/your_paper \
+  --model-tag single_shot_citation_anthropic \
+  --model 'claude-sonnet-4-6' \
+  --api-key-env ANTHROPIC_API_KEY \
+  --request-timeout 600 \
+  --max-output-tokens 12000 \
+  --debug-log paper_results/your_paper/debug_single_shot_citation_anthropic.log
+```
 
 ## Evaluation
 
-### Human-annotation evaluation
-
-To compare model outputs against [human_expert_annotations.json](human_expert_annotations.json):
+### Compare one model tag against human annotations
 
 ```bash
 python3 evaluate_human_section_scores.py \
   --annotations-file human_expert_annotations.json \
-  --model-tag llama3_2 \
+  --results-root paper_results \
+  --model-tag qwen3_1_7b \
+  --bootstrap-samples 5000 \
+  --seed 7 \
   --enable-citation-eval \
   --citation-top-k 4 \
-  --output-json results/human_eval_llama3_2.json
+  --output-json results/human_eval_qwen3_1_7b.json
 ```
 
-The same pattern works for other model tags, for example:
+This computes section-level agreement and, when enabled, citation top-k agreement.
 
-```bash
-python3 evaluate_human_section_scores.py \
-  --annotations-file human_expert_annotations.json \
-  --model-tag gemma2_2b_2 \
-  --enable-citation-eval \
-  --citation-top-k 4 \
-  --output-json results/human_eval_gemma2_2b_2.json
-```
+### Compare against another annotation file
 
-```bash
-python3 evaluate_human_section_scores.py \
-  --annotations-file human_expert_annotations.json \
-  --model-tag qwen3_4b \
-  --enable-citation-eval \
-  --citation-top-k 4 \
-  --output-json results/human_eval_qwen3_4b.json
-```
-
-### ChatGPT baseline evaluation
-
-To compare the same model outputs against [chatgpt_baseline_annotations.json](chatgpt_baseline_annotations.json):
+Example with API-produced annotations stored in JSON:
 
 ```bash
 python3 evaluate_human_section_scores.py \
   --annotations-file chatgpt_baseline_annotations.json \
-  --model-tag llama3_2 \
+  --results-root paper_results \
+  --model-tag qwen3_1_7b \
+  --bootstrap-samples 5000 \
+  --seed 7 \
   --enable-citation-eval \
   --citation-top-k 4 \
-  --output-json results/chatgpt_baseline_eval_llama3_2.json
+  --output-json results/api_eval_qwen3_1_7b.json
 ```
 
-### Sample-size citation analysis
+## Citation Resolution And Corpus-Level Graph Analysis
 
-The repo also includes a replay-based analysis over the saved `debug_<model_tag>.log` files, measuring how citation metrics change as the number of averaged samples increases from `1` to `5`:
+The graph layer resolves raw citation keys such as `(Smith et al., 2024)` or `[17]` into shared paper identities and then computes corpus-level influence metrics.
+
+### Build or reuse citation mappings
 
 ```bash
-python3 analyze_sample_prefix_citation_metrics.py \
-  --annotations-file human_expert_annotations.json \
-  --model-tags llama3.2_1b llama3_2 gemma2_2b_2 gemma3_4b phi3_medium_run2 qwen3_4b qwen2_5_3b \
-  --output-json results/sample_prefix_citation_metrics_all_models.json
+python3 run_knowledge_graph.py \
+  --results paper_results \
+  --papers papers \
+  --model-tag qwen3_1_7b \
+  --save-mappings citation_mappings.json
 ```
 
-Then plot the `W`-based curves with matplotlib:
+If mappings already exist:
 
 ```bash
-python3 plot_sample_prefix_metrics.py \
-  --input-json results/sample_prefix_citation_metrics_all_models.json \
-  --score-key w \
-  --output-dir results/plots
+python3 run_knowledge_graph.py \
+  --results paper_results \
+  --papers papers \
+  --model-tag qwen3_1_7b \
+  --load-mappings citation_mappings.json
 ```
 
-This produces:
+Useful options:
 
-- `sample_prefix_metrics_w_combined.pdf`
-- `sample_prefix_metrics_w_overlapat4.pdf`
-- `sample_prefix_metrics_w_recallat4.pdf`
-- `sample_prefix_metrics_w_hitat4.pdf`
-- `sample_prefix_metrics_w_mrr.pdf`
+- `--exclude-papers PaperA PaperB`
+- `--top-k 20`
+- `--influence-depth 3`
+- `--influence-decay 0.85`
 
-## Knowledge Discovery Layer
-
-The system has two layers that build on top of `importance_score.py`'s existing JSON outputs.
-
-### Layer 1 — CitationResolver (`citation_resolver.py`)
-
-Purpose: turn raw citation strings into structured, cross-paper identities.
-
-`importance_score.py` produces `*_citation_scores.json` files where each citation is just a string key such as `(Wu et al.,2023)` or `[7]`. These keys are paper-local and opaque: `[7]` in paper A and `[7]` in paper B refer to different works. The resolver fixes this.
-
-What it does:
-
-- Reads each paper's PDF and finds the `References` section.
-- For numeric citation style (`[1]`, `[2]`, ...), splits reference entries on `[N] ... [N+1]` boundaries. Resolution is **scoped per paper** so that `[2]` in paper A and `[2]` in paper B are resolved independently and never cross-contaminate.
-- For author-year style (`(Hong et al., 2023)`), searches for the expected last name, anchors on the year, verifies that the matched name is the first author rather than a co-author in the middle of the entry, and checks that the first year in the extracted window matches the expected year.
-- Parses each reference entry into authors, title, and year. Three reference formats are handled:
-  - **NeurIPS / ACL style** — `Authors. Year. Title. Venue.` — year appears immediately after the author block.
-  - **ACM style** — `Authors. Title. Venue, Year.` — year appears at the end, preceded by `,`.
-  - **IEEE style** — `Authors, "Title," Venue, Year.` — title is enclosed in double quotation marks. The year may be embedded in a conference date (e.g. `23–24 Feb 2018`) rather than preceded by `,`; the resolver detects this via the quoted title and switches to quote-based splitting, avoiding false splits on venue abbreviations such as `no.` or `vol.`.
-- Assigns a canonical identifier such as `hong_2023`, so two papers that cite the same resolved work share the same identifier.
-
-### Layer 2 — CitationGraph + Analyzers (`citation_graph_framework.py`)
-
-This layer is built on the four JSON outputs produced for each paper:
-
-| JSON file | What it stores |
-| --- | --- |
-| `*_citation_scores.json` | `{citation_str: score}` — total importance assigned from this paper to each cited work |
-| `*_paragraph_scores.json` | Per-paragraph `technical_score`, `citation_score`, and `section_path` |
-| `*_paragraph_citation_scores.json` | Per-paragraph, per-citation allocations with `section_path`, `paragraph_index`, `citation`, and `citation_score` |
-| `*_section_scores.json` | Hierarchical section tree with `total_score` and `citation_score` |
-
-The citation graph uses `W(p,q)` as the citation-derived importance that paper `p` assigns to cited work `q`. The resolver mappings convert `q` from a raw citation string into a canonical paper identity, which creates cross-paper edges.
-
-Section-level weights `W_s(p,q)` are built from the stored paragraph-level citation allocations by summing the `citation_score` values assigned to `q` over paragraphs that belong to section `s`.
-
-Technical citation weights `W_tech(p,q)` are built from the same paragraph-level citation allocations, but each paragraph-to-citation contribution is weighted by the `technical_score` of the paragraph in which that citation appears:
-
-`W_tech(p,q) = \sum_{r \in p,\ q \in r} w_r(p,q) \cdot technical_score(r)`
-
-where `w_r(p,q)` is the paragraph-local citation allocation to cited work `q` in paragraph `r`.
-
-## Score Definitions
-
-The framework uses the following core scores and derived quantities:
-
-| Symbol | Meaning |
-| --- | --- |
-| `technical_score(r)` | Technical contribution assigned to paragraph `r`. Higher values mean the paragraph contributes more of the paper's original technical content. |
-| `citation_score(r)` | Citation-derived contribution assigned to paragraph `r`. Higher values mean the paragraph's importance comes more from how it uses prior work. |
-| `total_score(s)` | Total normalized importance of section or subsection `s`. |
-| `citation_score(s)` | Citation-derived part of the importance assigned to section or subsection `s`. |
-| `W(p,q)` | Total citation importance that citing paper `p` assigns to cited work `q`. |
-| `W_s(p,q)` | Citation importance that paper `p` assigns to cited work `q` from section `s` only. |
-| `W_tech(p,q)` | Technical citation importance that paper `p` assigns to cited work `q`, computed by weighting each paragraph-local citation allocation by the `technical_score` of the paragraph where the citation appears. |
-| `IPR(q)` | Global importance of cited work `q` in the weighted citation graph, computed with PageRank-style propagation over `W(p,q)`. |
-| `Inf(q -> p)` | Multi-hop influence of cited work `q` on paper `p` through the weighted citation graph. |
-| `Q` | Weighted modularity score used to evaluate community structure in the citation graph. |
-| `TInf(q,t)` | Total incoming citation importance received by cited work `q` up to time `t`. |
-| `Orig(p)` | Originality of paper `p`, defined as the sum of `technical_score` over all paragraphs in `p`. |
-| `rho(p,q)` | Technical-versus-rhetorical role ratio for the citation from `p` to `q`. Larger values indicate that the citation is used more as a real technical dependency than as context or support. |
-| `Found(q)` | Importance received by cited work `q` from technical or foundational parts of papers such as methods, proofs, and results. |
-| `Periph(q)` | Importance received by cited work `q` from support-oriented parts of papers such as introduction, background, or related work. |
-| `Gap(C,t)` | Research-gap score for a paper set or cluster `C` at time `t`, combining originality with downstream technical adoption. |
-
-## Analyzers
-
-Each analyzer reads from the graph and computes one quantity from the framework:
-
-| Analyzer | What it computes | Key input |
-| --- | --- | --- |
-| `PageRankAnalyzer` | `IPR(q)` — global importance of each paper via weighted random walk | Edge weights `W(p,q)` |
-| `InfluenceAnalyzer` | `Inf(q -> p)` — how much paper `q` influenced paper `p` across up to `K` hops | Edge weights and decay factor λ |
-| `CommunityDetector` | Partition of papers into clusters by citation similarity | Weighted modularity `Q` |
-| `TemporalAnalyzer` | `TInf(q,t)` — incoming importance up to year `t` | Publication year per paper |
-| `OriginalityAnalyzer` | `Orig(p)` — sum of `technical_score` across all paragraphs | Paragraph scores |
-| `SectionCitationAnalyzer` | `W_s(p,q)` and `rho(p,q)` — technical vs rhetorical citation role | Paragraph text and section tree |
-| `FoundationalWorkAnalyzer` | `Found(q)` vs `Periph(q)` — cited in methods/results or only in support sections | Section classification |
-| `ResearchGapDetector` | `Gap(C,t)` — original work not yet adopted by others | Originality plus adoption weights |
-
-## How to Interpret the Results
-
-- **PageRank / importance propagation.** A high `IPR(q)` means the cited work is linked from high-importance parts of many papers. Unlike standard citation counts, a citation appearing once in a crucial methods section can outweigh several low-value introductory mentions.
-
-- **Originality.** A high `Orig(p)` means the paper's value comes mostly from its own technical content rather than from synthesizing prior work. A lower value indicates that much of the paper's importance is citation-derived.
-
-- **Foundational vs peripheral use.** If `Found(q) >> Periph(q)`, then the cited work is functioning as a real technical dependency. If `Periph(q) >> Found(q)`, the work is mostly used for context, motivation, or related work.
-
-- **Technical citation weight.** A high `W_tech(p,q)` means paper `p` relies on cited work `q` inside paragraphs that your framework judges to be technically important. This helps separate deep technical dependence from lighter background mention.
-
-- **Per-citation role ratio.** The ratio `rho(p,q)` gives the same intuition at the paper-citation level: large values indicate technical dependence, while small values indicate rhetorical or contextual use.
-
-- **Influence propagation.** A high total influence `sum_p Inf(q -> p)` suggests that many papers' core arguments depend directly or indirectly on work `q`. These are strong candidates for seminal works in the corpus.
-
-- **Community detection.** Communities become meaningful once the resolver maps raw citations to shared canonical works. Papers that lean on the same foundational literature will cluster together.
-
-- **Temporal influence.** `TInf(q,t)` requires publication years. Once provided, it can reveal whether the importance of a cited work is rising, stable, or declining over time.
-
-- **Research gap score.** Computed as:
-
-  
-$Gap(C) = \sum_{p \in C} Orig(p)  −  \sum_{q \notin C, p \in C} W_{tech}(q \rightarrow p)$
-
-
-  The first term is the total originality of the cluster — how much new technical content the papers contribute. The second term is the total technical citation weight with which papers *outside* the cluster cite papers *inside* the cluster, where each paragraph-local citation allocation is weighted by the `technical_score` of the citing paragraph. This measures how much those ideas have already been adopted as real technical dependencies.
-
-  | Situation | Gap score |
-  |---|---|
-  | High originality, rarely cited in methods by others | Large positive — underexplored |
-  | High originality, heavily cited in methods by others | Near zero or negative |
-  | Low originality, rarely cited | Near zero — nothing to gap |
-
-  A large positive value signals that a paper (or cluster) produced original technical work that the rest of the corpus has not yet built on. Note that the score is corpus-relative: it reflects adoption within the papers you scored, not globally.
-
-- **Corpus-relativity caveat.** All scores — gap, originality, PageRank, influence — are computed over the papers present in `paper_results/`. A small or domain-skewed corpus will produce scores that reflect that local view.
-
-## Terminal Commands to See Results
-
-### View one paper's raw scoring outputs
+### Export an interactive HTML graph
 
 ```bash
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_section_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_citation_scores.json
-python3 -m json.tool paper_results/your_paper/your_paper_llama3_2_paragraph_citation_scores.json
+python3 visualize_graph.py \
+  --results paper_results \
+  --papers papers \
+  --model-tag qwen3_1_7b \
+  --load-mappings citation_mappings.json \
+  --top-k 40 \
+  --min-weight 0.005 \
+  --output graph.html
 ```
 
+If you omit `--model-tag`, the graph exporter will include every discovered model tag and let you switch models in the browser.
 
-## Notes
+## GitHub Pages Export
 
-- `run_importance_scores_all_papers.py` currently defaults to `5` samples and `5` retries per sample.
-- Large sections may be retried with compression and smaller paragraph batches when the model struggles to return a complete allocation.
-- `extract_paper_sections.py` skips `Abstract` and stops at `References`.
+To rebuild the static site in `docs/`:
+
+```bash
+./build_github_pages_site.sh \
+  --model-tag qwen3_1_7b \
+  --load-mappings citation_mappings.json \
+  --top-k 40 \
+  --min-weight 0.005
+```
+
+This refreshes:
+
+- `docs/index.html`
+- `docs/lib/`
+- `docs/.nojekyll`
+
+## Output Naming Rules
+
+For the main pipeline, if your paper id is `AFD` and your model tag is `qwen3_1_7b`, the outputs are named:
+
+- `AFD_qwen3_1_7b_section_scores.json`
+- `AFD_qwen3_1_7b_paragraph_scores.json`
+- `AFD_qwen3_1_7b_citation_scores.json`
+- `AFD_qwen3_1_7b_paragraph_citation_scores.json`
+
+For reruns, `--run-suffix` appends a suffix to the effective model tag.
+
+Example:
+
+```bash
+--model-tag qwen3_1_7b --run-suffix run2
+```
+
+produces files tagged with `qwen3_1_7b_run2`.
+
+## Troubleshooting
+
+### Missing section mapping
+
+If you see an error like:
+
+```text
+Missing sections mapping for YourPaper.pdf. Expected variable 'YOURPAPER_SECTIONS'
+```
+
+run:
+
+```bash
+python3 extract_sections.py papers/YourPaper.pdf --append papers_section_titles.txt
+```
+
+### Ollama import error
+
+Install the Python client:
+
+```bash
+pip install ollama
+```
+
+and make sure the Ollama server is running.
+
+### PDF text extraction issues
+
+The current scoring pipeline only supports:
+
+- `--pdf-text-backend pypdf`
+
+If a paper extracts poorly, inspect the raw PDF text first before running a long scoring job.
+
+### Reusing outputs safely
+
+Use:
+
+- `--skip-existing` to avoid overwriting old results
+- `--run-suffix` to write a clean rerun into new files
+
+## Recommended First Run
+
+If you just want to verify that the repo works end to end:
+
+1. Put one PDF in `papers/`
+2. Run `extract_sections.py` on it and append to `papers_section_titles.txt`
+3. Run `importance_score.py` on that one paper with a local Ollama model
+4. Inspect the four JSON outputs in `paper_results/<paper>/`
+5. Run `run_knowledge_graph.py --save-mappings citation_mappings.json`
+6. Run `visualize_graph.py --load-mappings citation_mappings.json --output graph.html`
+
+That gives you a complete single-paper smoke test before you launch large experiments.
